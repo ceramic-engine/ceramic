@@ -148,13 +148,13 @@ class BaseShowcase extends Model implements Render {
             ]) {
                 final initials = entry.initials;
                 final background = entry.background;
-                new Avatar()
+                Avatar.component()
                     .size(px(34.))
                     .overflowHidden()
                     .border1()
                     .borderColor(exampleRgb(0xa3a3a3))
                     .fallback(
-                        new AvatarFallback()
+                        AvatarFallback.component()
                             .flex()
                             .size8()
                             .itemsCenter()
@@ -179,7 +179,7 @@ class BaseShowcase extends Model implements Render {
             .textXs()
             .child('Navigation is application-owned')
             .child(
-                new Link('example-link')
+                Link.component('example-link')
                     .href('/base/primitives/link')
                     .openWith((href, _, _, cx) -> cx.openUrl(href))
                     .h7()
@@ -192,7 +192,7 @@ class BaseShowcase extends Model implements Render {
                     .child('Open Link documentation  →')
             )
             .child(
-                new Link('disabled-link')
+                Link.component('disabled-link')
                     .href('/disabled')
                     .disabled(true)
                     .h7()
@@ -224,14 +224,14 @@ class BaseShowcase extends Model implements Render {
                     .child('68%')
             )
             .child(
-                new Progress('example-progress').value(68.).child(
-                    new ProgressTrack()
+                Progress.component('example-progress').value(68.).child(
+                    ProgressTrack.component()
                         .wFull()
                         .h(px(7.))
                         .border1()
                         .borderColor(exampleRgb(0x171717))
                         .child(
-                            new ProgressIndicator()
+                            ProgressIndicator.component()
                                 .w(px(177.))
                                 .hFull()
                                 .bg(exampleRgb(0x171717))
@@ -248,16 +248,16 @@ class BaseShowcase extends Model implements Render {
                     .child('32%')
             )
             .child(
-                new Progress('example-progress-secondary')
+                Progress.component('example-progress-secondary')
                     .value(32.)
                     .child(
-                        new ProgressTrack()
+                        ProgressTrack.component()
                             .wFull()
                             .h(px(6.))
                             .border1()
                             .borderColor(exampleRgb(0xa3a3a3))
                             .child(
-                                new ProgressIndicator()
+                                ProgressIndicator.component()
                                     .w(px(83.))
                                     .hFull()
                                     .bg(exampleRgb(0x737373))

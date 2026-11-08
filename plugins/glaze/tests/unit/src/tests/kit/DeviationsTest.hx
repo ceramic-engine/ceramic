@@ -84,7 +84,7 @@ class DeviationsTest extends TestCase {
      */
     function testDev001IconBadgeRingIsNotABorderQuad() {
         final opened = VisualTestContext.addWindowView(app, dispatcher,
-            (_, _:Context<Host>) -> new Host(() -> div().p(px(8.)).child(new Badge().icon(IconName.Check).child(div().size(px(32.))))), 64, 64);
+            (_, _:Context<Host>) -> new Host(() -> div().p(px(8.)).child(Badge.component().icon(IconName.Check).child(div().size(px(32.))))), 64, 64);
         cx = opened.cx;
         cx.update((window, _) -> window.draw());
         final scale = cx.window.scaleFactor();
@@ -167,13 +167,13 @@ class DeviationsTest extends TestCase {
      * button (wider than high); without the caret it stays a square.
      */
     function testDev003IconButtonWithCaretIsNotSquare() {
-        var quads = drawQuads(() -> div().p(px(8.)).child(new Button('caret').outline().small().icon(IconName.Ellipsis).dropdownCaret(true)));
+        var quads = drawQuads(() -> div().p(px(8.)).child(Button.component('caret').outline().small().icon(IconName.Ellipsis).dropdownCaret(true)));
         var border = quads.filter(q -> hasBorder(q));
         assertTrue(border.length > 0);
         assertTrue(border[0].boundsWidth > border[0].boundsHeight);
         cx.destroy();
         cx = null;
-        quads = drawQuads(() -> div().p(px(8.)).child(new Button('square').outline().small().icon(IconName.Ellipsis)));
+        quads = drawQuads(() -> div().p(px(8.)).child(Button.component('square').outline().small().icon(IconName.Ellipsis)));
         border = quads.filter(q -> hasBorder(q));
         assertTrue(border.length > 0);
         assertFloatEquals(border[0].boundsHeight, border[0].boundsWidth, 1e-4);
@@ -185,7 +185,7 @@ class DeviationsTest extends TestCase {
      */
     function testDev005DisabledSecondaryFades() {
         final alphaOf = (disabled:Bool) -> {
-            final quads = drawQuads(() -> div().p(px(8.)).child(new Button('secondary').secondary().label('Secondary').disabled(disabled)));
+            final quads = drawQuads(() -> div().p(px(8.)).child(Button.component('secondary').secondary().label('Secondary').disabled(disabled)));
             final fills = quads.filter(q -> !hasBorder(q) && q.backgroundSolidA > 0 && q.boundsX > 0);
             assertEquals(1, fills.length);
             final alpha = fills[0].backgroundSolidA;
@@ -225,7 +225,7 @@ class DeviationsTest extends TestCase {
             final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<Host>) -> {
                 final state = cx.app.newEntity((c:Context<ComboboxState<String>>) -> new ComboboxState(new SearchableVec(["Rust", "Go"]), [], window, c));
                 return new Host(() -> {
-                    final combobox = new Combobox(state).w(px(200.));
+                    final combobox = Combobox.component(state).w(px(200.));
                     if (explicit) combobox.placeholder("Please select");
                     return div().p(px(8.)).child(combobox);
                 });
@@ -261,8 +261,8 @@ class DeviationsTest extends TestCase {
             withPlaceholder = a;
             without = b;
             return new Host(() -> div().p(px(8.)).flex().flexCol().gap2()
-                .child(new NumberInput(a).placeholder("Quantity"))
-                .child(new NumberInput(b)));
+                .child(NumberInput.component(a).placeholder("Quantity"))
+                .child(NumberInput.component(b)));
         }, 240, 120);
         cx = opened.cx;
         cx.update((window, _) -> window.draw());
@@ -280,7 +280,7 @@ class DeviationsTest extends TestCase {
         final reports:Array<String> = [];
         final state = {open: [0]};
         var view:Null<Entity<ScriptView>> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> new Accordion('dev008')
+        final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> Accordion.component('dev008')
             .w(px(240.))
             .item(item -> item.title(new tests.kit.DebugProbe('dev008-general', 'General'))
                 .open(state.open.indexOf(0) != -1)
@@ -357,8 +357,8 @@ class DeviationsTest extends TestCase {
             final s = select;
             final c = combobox;
             return new Host(() -> div().p(px(8.)).w(px(488.)).flex().flexCol().gap2()
-                .child(new tests.kit.DebugProbe('dev010-select', new Select(s).w(px(160.))))
-                .child(new tests.kit.DebugProbe('dev010-combobox', new Combobox(c).w(px(160.)))));
+                .child(new tests.kit.DebugProbe('dev010-select', glaze.kit.select.Select.component(s).w(px(160.))))
+                .child(new tests.kit.DebugProbe('dev010-combobox', Combobox.component(c).w(px(160.)))));
         }, 520, 160);
         cx = opened.cx;
         cx.update((window, _) -> window.draw());
@@ -431,7 +431,7 @@ class DeviationsTest extends TestCase {
      */
     function testDev013IconOnlyTabKeepsItsWidth() {
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new Host(() -> hFlex().child(
-            new tests.kit.DebugProbe('dev013-tab', new Tab().withVariant(Segmented).icon(new Icon(IconName.BookOpen))))), 200, 80);
+            new tests.kit.DebugProbe('dev013-tab', glaze.kit.tab.Tab.component().withVariant(Segmented).icon(glaze.kit.Icon.component(IconName.BookOpen))))), 200, 80);
         cx = opened.cx;
         cx.update((window, _) -> window.draw());
         final tab = tests.kit.DebugProbe.bounds('dev013-tab');
@@ -447,11 +447,11 @@ class DeviationsTest extends TestCase {
      */
     function testDev014NoIndicatorUnderADisabledSelectedTab() {
         final primaryQuads = (variant:TabVariant, disabled:Bool) -> {
-            final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new Host(() -> new TabBar('dev014')
+            final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new Host(() -> TabBar.component('dev014')
                 .withVariant(variant)
                 .selectedIndex(1)
-                .child(new Tab().label('One'))
-                .child(new Tab().label('Two').disabled(disabled))), 320, 80);
+                .child(glaze.kit.tab.Tab.component().label('One'))
+                .child(glaze.kit.tab.Tab.component().label('Two').disabled(disabled))), 320, 80);
             final c = opened.cx;
             c.runUntilParked();
             c.update((window, _) -> window.draw());

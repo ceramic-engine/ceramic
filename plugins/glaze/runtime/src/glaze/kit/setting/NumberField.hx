@@ -138,7 +138,7 @@ class NumberField implements SettingFieldRender {
 
         final state = stateEntity.read(cx).value;
 
-        final input = new NumberInput(state.input)
+        final input = NumberInput.component(state.input)
             .accessibilityLabel(title)
             .disabled(options.isDisabled())
             .withSize(options.size());

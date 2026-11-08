@@ -237,7 +237,7 @@ abstract class TableDelegateBase implements TableDelegate {
     }
 
     public function renderLoading(size:Size, window:Window, cx:Context<TableState<Dynamic>>):IntoElement {
-        return new Loading().size(size);
+        return Loading.component().size(size);
     }
 
     public function hasMore(cx:App):Bool {
@@ -290,7 +290,7 @@ class TableDelegateDefaults {
             .sizeFull()
             .justifyCenter()
             .textColor(Theme.global(cx).mutedForeground.opacity(0.6))
-            .child(new Icon(IconName.Inbox).size12());
+            .child(Icon.component(IconName.Inbox).size12());
     }
 
     /** Rust `TableDelegate::render_last_empty_col` default. */

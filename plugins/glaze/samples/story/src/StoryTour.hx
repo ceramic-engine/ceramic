@@ -5,6 +5,7 @@ package;
 
 import ceramic.Platform;
 import glaze.App;
+import glaze.Glaze;
 import glaze.Entity;
 import glaze.Modifiers;
 import glaze.Point;
@@ -96,7 +97,7 @@ class StoryTour {
         waitFrames = intEnv('GLAZE_STORY_TOUR_FRAMES', 30);
         scrollFrames = intEnv('GLAZE_STORY_TOUR_SCROLL_FRAMES', 0);
 
-        final cx = App.current;
+        final cx = Glaze.app;
         final all = @:privateAccess gallery.read(cx).stories;
         names = [for (group in all) for (story in group.stories) story.read(cx).name];
         final only = Platform.getEnv('GLAZE_STORY_TOUR_ONLY');
@@ -133,7 +134,7 @@ class StoryTour {
             return;
         }
         final index = indices[position];
-        App.current.update(cx -> gallery.update(cx, (g, gcx) -> {
+        Glaze.app.update(cx -> gallery.update(cx, (g, gcx) -> {
             g.selectStoryIndex(new IndexPath(index, 0), window, gcx);
         }));
         frame = 0;
@@ -216,7 +217,7 @@ class StoryTour {
 
     function dispatchScroll(center:Point):Bool {
         final delta = new Point(0, scrollDown ? -SCROLL_STEP : SCROLL_STEP);
-        App.current.update(cx -> window.dispatchEvent(new ScrollEvent(center, ScrollDelta.Pixels(delta), Modifiers.none()), cx));
+        Glaze.app.update(cx -> window.dispatchEvent(new ScrollEvent(center, ScrollDelta.Pixels(delta), Modifiers.none()), cx));
         return window.dirty;
     }
 

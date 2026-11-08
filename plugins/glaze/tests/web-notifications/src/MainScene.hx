@@ -2,6 +2,7 @@ package;
 
 import ceramic.Scene;
 import glaze.App;
+import glaze.Glaze;
 import glaze.Context;
 import glaze.IntoElement;
 import glaze.Model;
@@ -30,7 +31,7 @@ import glaze.Prelude.*;
 class MainScene extends Scene {
 
     override function create() {
-        final cx = App.current;
+        final cx = Glaze.app;
         cx.setAppIdentity('com.example.webnotifications', 'Web notifications');
         cx.onSystemNotificationResponse((response, _) -> trace('WEBNOTIF response ${response.tag} ${response.actionId}'));
 

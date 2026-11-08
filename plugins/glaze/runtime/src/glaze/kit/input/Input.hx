@@ -155,7 +155,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
     }
 
     /**
-     * Places an input in a tree. With `state`, it is `new Input(state)`.
+     * Places an input in a tree. With `state`, it is `Input.component(state)`.
      * Without, the input creates its `InputState` the first time it is
      * rendered and keeps it as long as it is rendered, under the identity
      * of this call (its position in the code, or `.at(key)` in a loop); the
@@ -205,7 +205,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     /**
      * The `InputState` rendered by this input: the one given to
-     * `component(state)` or `new Input(state)`, or the one created by
+     * `component(state)` or `Input.component(state)`, or the one created by
      * `component()` once the input was rendered (`null` before, and for a
      * state of another kind, a textarea's for instance).
      */
@@ -249,7 +249,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
      */
     @:allow(glaze.kit)
     static function fromState(state:Entity<InputBaseState>):Input {
-        // Not `new Input(cast state)`: a textarea state is not an
+        // Not `Input.component(cast state)`: a textarea state is not an
         // `InputState`, and hxcpp checks class casts (it would give null).
         final input = new Input(null);
         input.textState = new TextInputState(state);
@@ -533,7 +533,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     static function renderToggleMaskButton(state:TextInputState, cx:App):Button {
         final masked = state.presentation(cx).isMasked();
-        return new Button("toggle-mask")
+        return glaze.kit.button.Button.component("toggle-mask")
             .icon(masked ? IconName.Eye : IconName.EyeOff)
             .accessibilityLabel(masked ? I18n.t("Input.Show Password") : I18n.t("Input.Hide Password"))
             .xsmall()
@@ -611,7 +611,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         final state = this.textState;
         final theme = Theme.global(cx);
         final secret = contentTypeValue == Password || contentTypeValue == NewPassword;
-        final renderer:InlineTokenRenderer = tokenRenderer != null ? tokenRenderer : (token, _, _) -> (new InputToken(token) : IntoElement);
+        final renderer:InlineTokenRenderer = tokenRenderer != null ? tokenRenderer : (token, _, _) -> (InputToken.component(token) : IntoElement);
         final clickListener = tokenClickListener;
         final hoverListener = tokenHoverListener;
         state.state.update(cx, (s, _) -> s.installTokenPresentation(renderer, clickListener, secret));
@@ -633,7 +633,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
             theme.highlightTheme.style.editorInvisible,
             theme.highlightTheme.style.editorActiveLine,
             theme.highlightTheme.style.editorGutterBackground,
-            (ix, isFolded) -> (new Button(ElementId.NamedInteger("fold-icon", ix))
+            (ix, isFolded) -> (glaze.kit.button.Button.component(ElementId.NamedInteger("fold-icon", ix))
                 .ghost()
                 .icon(isFolded ? IconName.ChevronRight : IconName.ChevronDown)
                 .xsmall()
@@ -732,7 +732,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         final appearance = appearanceValue;
         final bordered = borderedValue;
         final focusBordered = focusBorderedValue;
-        final frame = new InputBase(id)
+        final frame = InputBase.component(id)
             .semanticOwner(state.entityId())
             .focused(focused)
             .disabled(disabled)
@@ -782,7 +782,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
             frame.pr(size.inputPx());
             final suffixRow = hFlex().id("suffix").gap(glaze.Prelude.px(gapX)).itemsCenter().cursorDefault();
             if (presentation.isDisabled()) suffixRow.opacity(0.5);
-            if (presentation.isLoading()) suffixRow.child(new Spinner().color(theme.mutedForeground));
+            if (presentation.isLoading()) suffixRow.child(Spinner.component().color(theme.mutedForeground));
             if (maskToggleValue) suffixRow.child(renderToggleMaskButton(state, cx));
             if (showClearButton) {
                 suffixRow.child(ClearButton.clearButton(cx).onClick((_, window, cx) -> {

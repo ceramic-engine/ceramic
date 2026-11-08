@@ -196,7 +196,7 @@ class ComponentComboboxTest extends TestCase {
         app.update(cx -> {
             final state = newState(cx, vec(["Rust", "Go", "C++"]), [], window, false, true);
 
-            final cb = new Combobox(state)
+            final cb = Combobox.component(state)
                 .placeholder("Select language")
                 .searchPlaceholder("Search...")
                 .menuWidth(px(300.))
@@ -239,7 +239,7 @@ class ComponentComboboxTest extends TestCase {
         app.update(cx -> {
             final state = newState(cx, vec(["React", "Vue", "Angular"]), [new IndexPath(0)], window, true, true);
 
-            new Combobox(state)
+            Combobox.component(state)
                 .placeholder("Select frameworks")
                 .searchPlaceholder("Search...")
                 .menuWidth(px(300.))
@@ -502,7 +502,7 @@ private class Harness extends Model implements Render {
         final state:Entity<Harness> = cast cx.entity();
         final events = this.events;
 
-        return new glaze.kit.base.Combobox("combobox")
+        return glaze.kit.base.Combobox.component("combobox")
             .open(open)
             .focusHandle(triggerFocus)
             .contentFocusHandle(contentFocus)

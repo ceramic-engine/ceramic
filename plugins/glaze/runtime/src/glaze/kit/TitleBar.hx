@@ -227,7 +227,7 @@ class TitleBar implements RenderOnce implements Styled implements ParentElement 
         }
         inner.extend(childElements);
         bar.child(inner)
-            .child(new WindowControls(onCloseWindowHandler));
+            .child(WindowControls.component(onCloseWindowHandler));
 
         return div().flexShrink0().child(bar);
     }
@@ -374,7 +374,7 @@ private class ControlIconElement implements RenderOnce {
                     }
                 });
         }
-        return root.child(new Icon(ControlIconTools.icon(icon)).small());
+        return root.child(Icon.component(ControlIconTools.icon(icon)).small());
     }
 
 }
@@ -425,12 +425,12 @@ private class WindowControls implements RenderOnce {
             .flexShrink0()
             .hFull();
         if (supported.minimize) {
-            controls.child(new ControlIconElement(Minimize));
+            controls.child(ControlIconElement.component(Minimize));
         }
         if (supported.maximize) {
-            controls.child(new ControlIconElement(window.isMaximized() ? Restore : Maximize));
+            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize));
         }
-        return controls.child(new ControlIconElement(Close(onCloseWindow)));
+        return controls.child(ControlIconElement.component(Close(onCloseWindow)));
     }
 
 }

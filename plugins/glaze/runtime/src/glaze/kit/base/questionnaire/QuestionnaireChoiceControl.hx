@@ -67,7 +67,7 @@ class QuestionnaireChoiceControlTools {
         };
 
         if (multiple) {
-            final checkbox = new glaze.kit.base.Checkbox(id)
+            final checkbox = glaze.kit.base.Checkbox.component(id)
                 .state(selected ? CheckboxState.Checked : CheckboxState.Unchecked)
                 .disabled(disabled)
                 .accessibilityLabel(label);
@@ -84,7 +84,7 @@ class QuestionnaireChoiceControlTools {
             return QuestionnaireChoiceControl.Checkbox(checkbox);
         }
         else {
-            final radio = new glaze.kit.base.Radio(id)
+            final radio = glaze.kit.base.Radio.component(id)
                 .checked(selected)
                 .disabled(disabled)
                 .accessibilityLabel(label);

@@ -511,7 +511,7 @@ class SidebarToggleButton implements RenderOnce {
      * Create a new SidebarToggleButton.
      */
     public function new() {
-        btn = new Button('collapse').ghost().small();
+        btn = Button.component('collapse').ghost().small();
     }
 
     /**
@@ -564,7 +564,7 @@ class SidebarToggleButton implements RenderOnce {
         if (onClick != null) {
             btn.onClick((ev, window, cx) -> onClick(ev, window, cx));
         }
-        return btn.icon(new glaze.kit.Icon(icon).size4());
+        return btn.icon(glaze.kit.Icon.component(icon).size4());
     }
 
 }

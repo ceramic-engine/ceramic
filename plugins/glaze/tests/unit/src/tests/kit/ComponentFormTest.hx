@@ -58,16 +58,16 @@ class ComponentFormTest extends TestCase {
     }
 
     function testFormBuilder() {
-        for (form in [new Form(), new Form(), Form.vertical()]) {
+        for (form in [Form.component(), Form.component(), Form.vertical()]) {
             assertEquals(Axis.Vertical, form.props.layout);
             assertEquals(1, form.props.columns);
             assertTrue(form.footerValue == null);
         }
-        final form = new Form()
+        final form = Form.component()
             .columns(2)
             .labelLayout(Horizontal)
-            .child(new Field())
-            .footer(new Button('save').label('Save'));
+            .child(Field.component())
+            .footer(Button.component('save').label('Save'));
         assertEquals(Axis.Horizontal, form.props.layout);
         assertEquals(2, form.props.columns);
         assertEquals(1, form.fields.length);
@@ -184,10 +184,10 @@ private class FormHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final form = legacy ? Form.vertical().layout(layout) : new Form().labelLayout(layout);
+        final form = legacy ? Form.vertical().layout(layout) : Form.component().labelLayout(layout);
         form.columns(2)
             .labelWidth(80.)
-            .children([for (ix in 0...3) new Field()
+            .children([for (ix in 0...3) Field.component()
                 .labelFn((_, _) -> new DebugProbe('label-$ix', div().w(px(40.)).h(px(20.))))
                 .child(new DebugProbe('control-$ix', div().wFull().h(px(24.))))
             ]);
@@ -214,8 +214,8 @@ private class FormCompareHarness extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final form = styled ? Form.vertical().p(px(20.)).gapY(px(30.)) : Form.vertical();
         return div().w(px(400.)).child(
-            form.child(new Field().child(new DebugProbe('control-0', div().wFull().h(px(20.)))))
-                .child(new Field().child(new DebugProbe('control-1', div().wFull().h(px(20.)))))
+            form.child(Field.component().child(new DebugProbe('control-0', div().wFull().h(px(20.)))))
+                .child(Field.component().child(new DebugProbe('control-1', div().wFull().h(px(20.)))))
         );
     }
 
@@ -234,7 +234,7 @@ private class HiddenFieldHarness extends Model implements Render {
         final hide = this.hide;
         return div()
             .w(px(400.))
-            .child(new Form().children([for (ix in 0...3) new Field().visible(!(hide && ix == 1)).child(
+            .child(Form.component().children([for (ix in 0...3) Field.component().visible(!(hide && ix == 1)).child(
                 new DebugProbe('control-$ix', div().wFull().h(px(20.)))
             )]));
     }

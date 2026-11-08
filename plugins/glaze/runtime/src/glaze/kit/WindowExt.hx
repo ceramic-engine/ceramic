@@ -84,7 +84,7 @@ class WindowExt {
      * as `openDialog`.
      */
     public static function openAlertDialog(window:Window, cx:App, build:(AlertDialog, Window, App) -> AlertDialog):Void {
-        openDialog(window, cx, (_, window, cx) -> build(new AlertDialog(cx), window, cx).buildSurface(window, cx));
+        openDialog(window, cx, (_, window, cx) -> build(AlertDialog.component(cx), window, cx).buildSurface(window, cx));
     }
 
     /**

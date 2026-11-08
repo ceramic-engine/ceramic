@@ -35,7 +35,7 @@ class Spinner implements RenderOnce implements Sizable {
 
     var size:Size = Medium;
 
-    var iconValue:Icon = new Icon(IconName.Loader);
+    var iconValue:Icon = Icon.component(IconName.Loader);
 
     var speed:Float = 0.8;
 

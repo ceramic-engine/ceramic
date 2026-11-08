@@ -931,7 +931,7 @@ class CommandState extends Model implements Render {
         } else if (item.checkedValue) {
             // The binding owns the trailing slot, so only an item without
             // one can show its check there.
-            element.child(new Icon(IconName.Check).mlAuto().xsmall());
+            element.child(Icon.component(IconName.Check).mlAuto().xsmall());
         }
         return element.intoAnyElement();
     }
@@ -1011,8 +1011,8 @@ class CommandState extends Model implements Render {
                 .px3()
                 .borderB1()
                 .borderColor(theme.border)
-                .child(new Input(queryInput)
-                    .prefix(new Icon(IconName.Search).textColor(theme.mutedForeground))
+                .child(Input.component(queryInput)
+                    .prefix(Icon.component(IconName.Search).textColor(theme.mutedForeground))
                     .appearance(false)
                     .p0()));
         }

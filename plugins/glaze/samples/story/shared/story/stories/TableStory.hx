@@ -63,7 +63,7 @@ class TableStory extends Model implements Story {
             case 'Paid': Tag.success().outline().child(status);
             case 'Pending': Tag.warning().outline().child(status);
             case 'Unpaid': Tag.danger().outline().child(status);
-            case _: new Tag().child(status);
+            case _: Tag.component().child(status);
         }).xsmall();
     }
 
@@ -85,42 +85,42 @@ class TableStory extends Model implements Story {
             .gap6()
             .onAction(ChangeStorySize, (action, _, _) -> size = action.value)
             .child(storyToolbar(size))
-            .child(section('Default').wFull().child(new Table()
+            .child(section('Default').wFull().child(Table.component()
                 .withSize(size)
-                .child(new TableHeader().child(new TableRow()
-                    .child(new TableHead().w(px(150.)).child('Invoice'))
-                    .child(new TableHead().colSpan(2).child('Status'))
-                    .child(new TableHead().textRight().child('Amount'))
-                    .child(new TableHead().textRight().child('Date'))))
-                .child(new TableBody().children([for (row in invoices) (new TableRow()
-                    .child(new TableCell().w(px(150.)).child(row[0]))
-                    .child(new TableCell().child(statusTag(row[1])))
-                    .child(new TableCell().child(row[2]))
-                    .child(new TableCell().textRight().child(row[3]))
-                    .child(new TableCell().textRight().child(row[4])) : ChildElement)]))
-                .child(new TableFooter().child(new TableRow()
-                    .child(new TableCell().colSpan(3).child('Total'))
-                    .child(new TableCell().colSpan(2).textRight().child('$$2,250.00'))))
-                .child(new TableCaption().child('A list of your recent invoices.'))))
-            .child(section('Bordered').wFull().child(new Table()
+                .child(TableHeader.component().child(TableRow.component()
+                    .child(TableHead.component().w(px(150.)).child('Invoice'))
+                    .child(TableHead.component().colSpan(2).child('Status'))
+                    .child(TableHead.component().textRight().child('Amount'))
+                    .child(TableHead.component().textRight().child('Date'))))
+                .child(TableBody.component().children([for (row in invoices) (TableRow.component()
+                    .child(TableCell.component().w(px(150.)).child(row[0]))
+                    .child(TableCell.component().child(statusTag(row[1])))
+                    .child(TableCell.component().child(row[2]))
+                    .child(TableCell.component().textRight().child(row[3]))
+                    .child(TableCell.component().textRight().child(row[4])) : ChildElement)]))
+                .child(TableFooter.component().child(TableRow.component()
+                    .child(TableCell.component().colSpan(3).child('Total'))
+                    .child(TableCell.component().colSpan(2).textRight().child('$$2,250.00'))))
+                .child(TableCaption.component().child('A list of your recent invoices.'))))
+            .child(section('Bordered').wFull().child(Table.component()
                 .withSize(size)
                 .border1()
                 .borderColor(theme.border)
                 .rounded(theme.radius)
-                .child(new TableHeader().child(new TableRow()
-                    .child(new TableHead().w(px(100.)).child('Invoice'))
-                    .child(new TableHead().child('Method'))
-                    .child(new TableHead().textRight().child('Amount'))
-                    .child(new TableHead().textRight().child('Date'))))
-                .child(new TableBody().children([for (ix in 0...6) {
+                .child(TableHeader.component().child(TableRow.component()
+                    .child(TableHead.component().w(px(100.)).child('Invoice'))
+                    .child(TableHead.component().child('Method'))
+                    .child(TableHead.component().textRight().child('Amount'))
+                    .child(TableHead.component().textRight().child('Date'))))
+                .child(TableBody.component().children([for (ix in 0...6) {
                     final row = invoices[ix];
-                    final tableRow = new TableRow();
+                    final tableRow = TableRow.component();
                     if (ix % 2 != 0) tableRow.bg(theme.tableEven);
                     (tableRow
-                        .child(new TableCell().w(px(100.)).child(row[0]))
-                        .child(new TableCell().child(row[2]))
-                        .child(new TableCell().textRight().child(row[3]))
-                        .child(new TableCell().textRight().child(row[4])) : ChildElement);
+                        .child(TableCell.component().w(px(100.)).child(row[0]))
+                        .child(TableCell.component().child(row[2]))
+                        .child(TableCell.component().textRight().child(row[3]))
+                        .child(TableCell.component().textRight().child(row[4])) : ChildElement);
                 }]))));
     }
 

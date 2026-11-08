@@ -108,7 +108,7 @@ class BaseControlsTest extends TestCase {
             .tabGroup()
             .size(px(100.))
             .onClick((_, _, _) -> counts[1]++)
-            .child(new Button('button')
+            .child(glaze.kit.base.Button.component('button')
                 .disabled(disabled)
                 .sizeFull()
                 .onClick((event, _, _) -> {
@@ -203,7 +203,7 @@ class BaseControlsTest extends TestCase {
     function testFixedHeightButtonCentersOrdinaryChildGeometry() {
         var root:Null<Bounds> = null;
         var child:Null<Bounds> = null;
-        final cx = open((_, _) -> new Button('alignment-button')
+        final cx = open((_, _) -> glaze.kit.base.Button.component('alignment-button')
             .w(px(120.))
             .h(px(40.))
             .child(div().w(px(48.)).h(px(12.)).onPrepaint((bounds, _, _) -> child = bounds))
@@ -215,7 +215,7 @@ class BaseControlsTest extends TestCase {
     }
 
     function testButtonStateStylingMethodsAreAvailableToApplications() {
-        final button = new Button('states')
+        final button = glaze.kit.base.Button.component('states')
             .styles(styles -> styles.disabled(style -> style
                 .opacity(0.5)
                 .when(true, style -> style.border1())
@@ -228,20 +228,20 @@ class BaseControlsTest extends TestCase {
     }
 
     function testDisabledStyleAppliesOnlyWhileDisabledAndThenWins() {
-        final enabled = new Button('enabled').opacity(0.9).styles(styles -> styles.disabled(style -> style.opacity(0.5)));
+        final enabled = glaze.kit.base.Button.component('enabled').opacity(0.9).styles(styles -> styles.disabled(style -> style.opacity(0.5)));
         assertFloatEquals(0.9, opacityOf(enabled.resolvedStyle()));
 
-        final disabled = new Button('disabled').styles(styles -> styles.disabled(style -> style.opacity(0.5))).opacity(0.9).disabled(true);
+        final disabled = glaze.kit.base.Button.component('disabled').styles(styles -> styles.disabled(style -> style.opacity(0.5))).opacity(0.9).disabled(true);
         assertFloatEquals(0.5, opacityOf(disabled.resolvedStyle()));
 
-        final semanticOnly = new Button('semantic-only').styles(styles -> styles.disabled(style -> style.opacity(0.5))).disabled(true);
+        final semanticOnly = glaze.kit.base.Button.component('semantic-only').styles(styles -> styles.disabled(style -> style.opacity(0.5))).disabled(true);
         assertFloatEquals(0.5, opacityOf(semanticOnly.resolvedStyle()));
     }
 
     function testSelectedDisabledAndInstanceStylesFollowTheSharedPriority() {
         final selectedColor = hsla(0.6, 0.7, 0.5, 1.0);
         final disabledColor = hsla(0.1, 0.2, 0.3, 0.5);
-        final button = (selected:Bool, disabled:Bool) -> new Button('button')
+        final button = (selected:Bool, disabled:Bool) -> glaze.kit.base.Button.component('button')
             .selected(selected)
             .disabled(disabled)
             .styles(styles -> styles.selected(style -> style.bg(selectedColor)).disabled(style -> style.bg(disabledColor)));
@@ -253,8 +253,8 @@ class BaseControlsTest extends TestCase {
     }
 
     function testButtonAccessibilityRoleLabelAndDisabledActionSurface() {
-        final enabled = new Button('enabled').accessibilityLabel('Save').onClick((_, _, _) -> {});
-        final disabled = new Button('disabled').disabled(true).accessibilityLabel('Save').onClick((_, _, _) -> {});
+        final enabled = glaze.kit.base.Button.component('enabled').accessibilityLabel('Save').onClick((_, _, _) -> {});
+        final disabled = glaze.kit.base.Button.component('disabled').disabled(true).accessibilityLabel('Save').onClick((_, _, _) -> {});
         open((_, _) -> div().child(enabled).child(disabled));
         assertEquals(Role.Button, enabled.a11y.role);
         assertEquals('Save', enabled.a11y.label);
@@ -270,7 +270,7 @@ class BaseControlsTest extends TestCase {
     function toggleHarness(pressed:Bool, disabled:Bool):{cx:VisualTestContext, changes:Array<Bool>, keyboard:Array<Int>} {
         final changes:Array<Bool> = [];
         final keyboard = [0];
-        final cx = open((_, _) -> new Toggle('toggle')
+        final cx = open((_, _) -> Toggle.component('toggle')
             .pressed(pressed)
             .disabled(disabled)
             .size(px(100.))
@@ -310,7 +310,7 @@ class BaseControlsTest extends TestCase {
     function testFixedHeightToggleCentersOrdinaryChildGeometry() {
         var root:Null<Bounds> = null;
         var child:Null<Bounds> = null;
-        final cx = open((_, _) -> new Toggle('alignment-toggle')
+        final cx = open((_, _) -> Toggle.component('alignment-toggle')
             .w(px(120.))
             .h(px(40.))
             .child(div().w(px(48.)).h(px(12.)).onPrepaint((bounds, _, _) -> child = bounds))
@@ -321,15 +321,15 @@ class BaseControlsTest extends TestCase {
 
     function testToggleSemanticRootStylesFollowTogglePriority() {
         final styled = (toggle:Toggle) -> toggle.styles(styles -> styles.pressed(style -> style.opacity(0.8)).disabled(style -> style.opacity(0.5)));
-        assertNull(opacityOf(styled(new Toggle('normal')).resolvedStyle()));
-        assertFloatEquals(0.8, opacityOf(styled(new Toggle('pressed').pressed(true)).resolvedStyle()));
-        assertFloatEquals(0.5, opacityOf(styled(new Toggle('pressed-disabled').pressed(true).disabled(true)).resolvedStyle()));
-        assertFloatEquals(0.5, opacityOf(styled(new Toggle('state-over-instance').pressed(true).disabled(true).opacity(0.9)).resolvedStyle()));
+        assertNull(opacityOf(styled(Toggle.component('normal')).resolvedStyle()));
+        assertFloatEquals(0.8, opacityOf(styled(Toggle.component('pressed').pressed(true)).resolvedStyle()));
+        assertFloatEquals(0.5, opacityOf(styled(Toggle.component('pressed-disabled').pressed(true).disabled(true)).resolvedStyle()));
+        assertFloatEquals(0.5, opacityOf(styled(Toggle.component('state-over-instance').pressed(true).disabled(true).opacity(0.9)).resolvedStyle()));
     }
 
     function testToggleAccessibilityExposesButtonRoleToggledStateAndAction() {
-        final enabled = new Toggle('enabled').pressed(true).accessibilityLabel('Bold').onChange((_, _, _, _) -> {});
-        final disabled = new Toggle('disabled').disabled(true).onChange((_, _, _, _) -> {});
+        final enabled = Toggle.component('enabled').pressed(true).accessibilityLabel('Bold').onChange((_, _, _, _) -> {});
+        final disabled = Toggle.component('disabled').disabled(true).onChange((_, _, _, _) -> {});
         open((_, _) -> div().child(enabled).child(disabled));
         assertEquals(Role.Button, enabled.a11y.role);
         assertEquals('Bold', enabled.a11y.label);
@@ -344,7 +344,7 @@ class BaseControlsTest extends TestCase {
     function testCheckboxIndicatorProjectsStateStylesOverTheInstanceLayer() {
         final checkedColor = hsla(0.6, 0.7, 0.5, 1.0);
         final disabledColor = hsla(0.1, 0.2, 0.3, 0.5);
-        final indicator = (state:CheckboxState, disabled:Bool) -> new CheckboxIndicator()
+        final indicator = (state:CheckboxState, disabled:Bool) -> CheckboxIndicator.component()
             .state(state)
             .disabled(disabled)
             .styles(styles -> styles
@@ -366,7 +366,7 @@ class BaseControlsTest extends TestCase {
             .tabGroup()
             .size(px(100.))
             .onClick((_, _, _) -> parent[0]++)
-            .child(new Checkbox('checkbox')
+            .child(Checkbox.component('checkbox')
                 .state(state)
                 .disabled(disabled)
                 .sizeFull()
@@ -415,14 +415,14 @@ class BaseControlsTest extends TestCase {
             .checked(style -> style.opacity(0.8))
             .indeterminate(style -> style.opacity(0.7))
             .disabled(style -> style.opacity(0.5)));
-        assertNull(opacityOf(styles(new Checkbox('normal')).resolvedStyle()));
-        assertFloatEquals(0.8, opacityOf(styles(new Checkbox('checked').checked(true)).resolvedStyle()));
-        assertFloatEquals(0.7, opacityOf(styles(new Checkbox('indeterminate').indeterminate(true)).resolvedStyle()));
-        assertFloatEquals(0.5, opacityOf(styles(new Checkbox('disabled').disabled(true)).resolvedStyle()));
-        assertFloatEquals(0.5, opacityOf(styles(new Checkbox('checked-disabled').checked(true).disabled(true)).resolvedStyle()));
+        assertNull(opacityOf(styles(Checkbox.component('normal')).resolvedStyle()));
+        assertFloatEquals(0.8, opacityOf(styles(Checkbox.component('checked').checked(true)).resolvedStyle()));
+        assertFloatEquals(0.7, opacityOf(styles(Checkbox.component('indeterminate').indeterminate(true)).resolvedStyle()));
+        assertFloatEquals(0.5, opacityOf(styles(Checkbox.component('disabled').disabled(true)).resolvedStyle()));
+        assertFloatEquals(0.5, opacityOf(styles(Checkbox.component('checked-disabled').checked(true).disabled(true)).resolvedStyle()));
 
         final checkedColor = hsla(0.6, 0.7, 0.5, 1.0);
-        final combined = new Checkbox('combined')
+        final combined = Checkbox.component('combined')
             .checked(true)
             .disabled(true)
             .styles(styles -> styles.checked(style -> style.borderColor(checkedColor)).disabled(style -> style.opacity(0.5)))
@@ -430,15 +430,15 @@ class BaseControlsTest extends TestCase {
         assertTrue(sameColor(checkedColor, combined.borderColor));
         assertFloatEquals(0.5, opacityOf(combined));
 
-        final stateOverInstance = styles(new Checkbox('state-over-instance').checked(true).disabled(true).opacity(0.9));
+        final stateOverInstance = styles(Checkbox.component('state-over-instance').checked(true).disabled(true).opacity(0.9));
         assertFloatEquals(0.5, opacityOf(stateOverInstance.resolvedStyle()));
     }
 
     function testCheckboxAccessibilityExposesRoleLabelAndAllToggleStates() {
-        final unchecked = new Checkbox('unchecked').accessibilityLabel('Remember me').onChange((_, _, _, _) -> {});
-        final checked = new Checkbox('checked').checked(true).onChange((_, _, _, _) -> {});
-        final mixed = new Checkbox('mixed').indeterminate(true).onChange((_, _, _, _) -> {});
-        final disabled = new Checkbox('disabled').disabled(true).onChange((_, _, _, _) -> {});
+        final unchecked = Checkbox.component('unchecked').accessibilityLabel('Remember me').onChange((_, _, _, _) -> {});
+        final checked = Checkbox.component('checked').checked(true).onChange((_, _, _, _) -> {});
+        final mixed = Checkbox.component('mixed').indeterminate(true).onChange((_, _, _, _) -> {});
+        final disabled = Checkbox.component('disabled').disabled(true).onChange((_, _, _, _) -> {});
         open((_, _) -> div().child(unchecked).child(checked).child(mixed).child(disabled));
         assertEquals(Role.CheckBox, unchecked.a11y.role);
         assertEquals('Remember me', unchecked.a11y.label);
@@ -453,15 +453,15 @@ class BaseControlsTest extends TestCase {
 
     function testRadioSemanticRootStylesFollowRadioPriority() {
         final styled = (radio:Radio) -> radio.styles(styles -> styles.checked(style -> style.opacity(0.8)).disabled(style -> style.opacity(0.5)));
-        assertNull(opacityOf(styled(new Radio('normal')).resolvedStyle()));
-        assertFloatEquals(0.8, opacityOf(styled(new Radio('checked').checked(true)).resolvedStyle()));
-        assertFloatEquals(0.5, opacityOf(styled(new Radio('checked-disabled').checked(true).disabled(true)).resolvedStyle()));
-        assertFloatEquals(0.5, opacityOf(styled(new Radio('state-over-instance').checked(true).disabled(true).opacity(0.9)).resolvedStyle()));
+        assertNull(opacityOf(styled(Radio.component('normal')).resolvedStyle()));
+        assertFloatEquals(0.8, opacityOf(styled(Radio.component('checked').checked(true)).resolvedStyle()));
+        assertFloatEquals(0.5, opacityOf(styled(Radio.component('checked-disabled').checked(true).disabled(true)).resolvedStyle()));
+        assertFloatEquals(0.5, opacityOf(styled(Radio.component('state-over-instance').checked(true).disabled(true).opacity(0.9)).resolvedStyle()));
     }
 
     function radioHarness(checked:Bool, disabled:Bool):{cx:VisualTestContext, changes:Array<Int>} {
         final counts = [0, 0];
-        final cx = open((_, _) -> new Radio('radio')
+        final cx = open((_, _) -> Radio.component('radio')
             .checked(checked)
             .disabled(disabled)
             .size(px(100.))
@@ -494,7 +494,7 @@ class BaseControlsTest extends TestCase {
     }
 
     function testRadioAccessibilityExposesRoleStateAndAction() {
-        final radio = new Radio('probe').checked(true).accessibilityLabel('Choice');
+        final radio = Radio.component('probe').checked(true).accessibilityLabel('Choice');
         open((_, _) -> div().child(radio));
         assertEquals(Role.RadioButton, radio.a11y.role);
         assertEquals('Choice', radio.a11y.label);
@@ -509,7 +509,7 @@ class BaseControlsTest extends TestCase {
         final checkedColor = hsla(0.6, 0.7, 0.5, 1.0);
         final disabledColor = hsla(0.6, 0.7, 0.5, 0.5);
         final track = (checked:Bool, disabled:Bool) -> {
-            final track = new SwitchTrack(ElementId.NamedInteger('track', (checked ? 2 : 0) + (disabled ? 1 : 0))).checked(checked).disabled(disabled);
+            final track = SwitchTrack.component(ElementId.NamedInteger('track', (checked ? 2 : 0) + (disabled ? 1 : 0))).checked(checked).disabled(disabled);
             if (!checked) track.bg(normalColor);
             return track.styles(styles -> styles
                 .checked(style -> style.bg(checkedColor))
@@ -525,8 +525,8 @@ class BaseControlsTest extends TestCase {
     }
 
     function testSwitchTrackIdentityIsScopedToItsSwitch() {
-        final first = new SwitchTrack(ElementId.NamedChild(Name('first-switch'), 'track'));
-        final second = new SwitchTrack(ElementId.NamedChild(Name('second-switch'), 'track'));
+        final first = SwitchTrack.component(ElementId.NamedChild(Name('first-switch'), 'track'));
+        final second = SwitchTrack.component(ElementId.NamedChild(Name('second-switch'), 'track'));
         assertTrue(Type.enumEq(first.trackId, ElementId.NamedChild(Name('first-switch'), 'track')));
         assertTrue(Type.enumEq(second.trackId, ElementId.NamedChild(Name('second-switch'), 'track')));
         assertFalse(Type.enumEq(first.trackId, second.trackId));
@@ -535,7 +535,7 @@ class BaseControlsTest extends TestCase {
     function testSwitchThumbProjectsCheckedDisabledAndInstanceStylePriority() {
         final checkedColor = hsla(0.6, 0.7, 0.5, 1.0);
         final disabledColor = hsla(0.1, 0.2, 0.3, 0.5);
-        final thumb = (checked:Bool, disabled:Bool) -> new SwitchThumb(checked)
+        final thumb = (checked:Bool, disabled:Bool) -> SwitchThumb.component(checked)
             .disabled(disabled)
             .styles(styles -> styles.checked(style -> style.bg(checkedColor)).disabled(style -> style.bg(disabledColor)));
         assertTrue(sameColor(checkedColor, solidBackground(thumb(true, false).resolvedStyle())));
@@ -551,7 +551,7 @@ class BaseControlsTest extends TestCase {
             .tabGroup()
             .size(px(100.))
             .onClick((_, _, _) -> counts[2]++)
-            .child(new Switch('switch')
+            .child(glaze.kit.base.Switch.component('switch')
                 .checked(checked)
                 .disabled(disabled)
                 .sizeFull()
@@ -597,15 +597,15 @@ class BaseControlsTest extends TestCase {
 
     function testSwitchSemanticRootStylesFollowSwitchPriority() {
         final styled = (s:Switch) -> s.styles(styles -> styles.checked(style -> style.opacity(0.8)).disabled(style -> style.opacity(0.5)));
-        assertNull(opacityOf(styled(new Switch('normal')).resolvedStyle()));
-        assertFloatEquals(0.8, opacityOf(styled(new Switch('checked').checked(true)).resolvedStyle()));
-        assertFloatEquals(0.5, opacityOf(styled(new Switch('checked-disabled').checked(true).disabled(true)).resolvedStyle()));
-        assertFloatEquals(0.5, opacityOf(styled(new Switch('state-over-instance').checked(true).disabled(true).opacity(0.9)).resolvedStyle()));
+        assertNull(opacityOf(styled(glaze.kit.base.Switch.component('normal')).resolvedStyle()));
+        assertFloatEquals(0.8, opacityOf(styled(glaze.kit.base.Switch.component('checked').checked(true)).resolvedStyle()));
+        assertFloatEquals(0.5, opacityOf(styled(glaze.kit.base.Switch.component('checked-disabled').checked(true).disabled(true)).resolvedStyle()));
+        assertFloatEquals(0.5, opacityOf(styled(glaze.kit.base.Switch.component('state-over-instance').checked(true).disabled(true).opacity(0.9)).resolvedStyle()));
     }
 
     function testSwitchAccessibilityExposesSwitchRoleLabelAndToggledState() {
-        final enabled = new Switch('enabled').checked(true).accessibilityLabel('Airplane mode').onChange((_, _, _, _) -> {});
-        final disabled = new Switch('disabled').checked(false).disabled(true).accessibilityLabel('Airplane mode').onChange((_, _, _, _) -> {});
+        final enabled = glaze.kit.base.Switch.component('enabled').checked(true).accessibilityLabel('Airplane mode').onChange((_, _, _, _) -> {});
+        final disabled = glaze.kit.base.Switch.component('disabled').checked(false).disabled(true).accessibilityLabel('Airplane mode').onChange((_, _, _, _) -> {});
         open((_, _) -> div().child(enabled).child(disabled));
         assertEquals(Role.Switch, enabled.a11y.role);
         assertEquals('Airplane mode', enabled.a11y.label);
@@ -658,7 +658,7 @@ class BaseControlsTest extends TestCase {
     function testDrawingASliderAgainLeavesItsReadersRetained() {
         final renders = [0];
         final state = app.newEntity((_:Context<SliderState>) -> new SliderState());
-        final bar = app.newEntity((_:Context<ScriptView>) -> new ScriptView((_, _) -> div().w(px(120.)).h(px(24.)).child(new SliderIndicator(state).sizeFull())));
+        final bar = app.newEntity((_:Context<ScriptView>) -> new ScriptView((_, _) -> div().w(px(120.)).h(px(24.)).child(SliderIndicator.component(state).sizeFull())));
         final readout = app.newEntity((_:Context<ScriptView>) -> new ScriptView((_, cx) -> {
             renders[0]++;
             return div().child(state.read(cx).value().toDisplayString());
@@ -680,19 +680,19 @@ class BaseControlsTest extends TestCase {
     /// Toolbar
 
     function testToolbarBuilder() {
-        final toolbar = new Toolbar('toolbar').disabled(true).child(div());
+        final toolbar = glaze.kit.base.Toolbar.component('toolbar').disabled(true).child(div());
         assertTrue(toolbar.disabledValue);
         assertEquals(1, toolbar.childElements.length);
     }
 
     function testToolbarDefaults() {
-        final toolbar = new Toolbar('toolbar');
+        final toolbar = glaze.kit.base.Toolbar.component('toolbar');
         assertFalse(toolbar.disabledValue);
         assertEquals(0, toolbar.childElements.length);
     }
 
     function testToolbarGroupBuilder() {
-        final group = new ToolbarGroup('history-group').label('History').child(div()).child(div());
+        final group = ToolbarGroup.component('history-group').label('History').child(div()).child(div());
         assertEquals('History', group.labelValue);
         assertEquals(2, group.childElements.length);
     }
@@ -701,7 +701,7 @@ class BaseControlsTest extends TestCase {
         final items = [for (_ in 0...count) app.focusHandle().tabStop(true)];
         final names = ['first', 'second', 'third'];
         final cx = open((window, cx) -> {
-            final toolbar = new Toolbar('nav-toolbar').disabled(disabled);
+            final toolbar = glaze.kit.base.Toolbar.component('nav-toolbar').disabled(disabled);
             for (i in 0...count) toolbar.child(div().id(names[i]).size(px(20.)).trackFocus(items[i]));
             return toolbar;
         });
@@ -737,7 +737,7 @@ class BaseControlsTest extends TestCase {
 
     function testGroupExposesGroupRoleAndAccessibleName() {
         var group:ToolbarGroup = null;
-        open((_, _) -> div().child(group = new ToolbarGroup('history').label('History').child(div().size(px(20.)))));
+        open((_, _) -> div().child(group = ToolbarGroup.component('history').label('History').child(div().size(px(20.)))));
         assertEquals(Role.Group, group.a11y.role);
         assertEquals('History', group.a11y.label);
     }
@@ -753,7 +753,7 @@ class BaseControlsTest extends TestCase {
         final item = app.focusHandle().tabStop(true);
         final cx = open((_, _) -> div()
             .child(div().id('outside').size(px(20.)).trackFocus(outside))
-            .child(new Toolbar('click-toolbar')
+            .child(glaze.kit.base.Toolbar.component('click-toolbar')
                 .flex()
                 .w(px(100.))
                 .h(px(20.))
@@ -790,8 +790,8 @@ private class DisableDuringFocus extends Model implements Render {
             .sizeFull()
             .flex()
             .tabGroup()
-            .child(new Button('before').trackFocus(handles[0]).child('Before'))
-            .child(new Button('disable-self')
+            .child(glaze.kit.base.Button.component('before').trackFocus(handles[0]).child('Before'))
+            .child(glaze.kit.base.Button.component('disable-self')
                 .trackFocus(handles[1])
                 .disabled(isDisabled)
                 .child('Disable self')
@@ -799,7 +799,7 @@ private class DisableDuringFocus extends Model implements Render {
                     this_.isDisabled = true;
                     this_.activations++;
                 })))
-            .child(new Button('after').trackFocus(handles[2]).child('After'));
+            .child(glaze.kit.base.Button.component('after').trackFocus(handles[2]).child('After'));
     }
 
 }

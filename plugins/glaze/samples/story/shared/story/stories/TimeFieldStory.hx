@@ -99,21 +99,21 @@ class TimeFieldStory extends Model implements Story {
                 .description('Up/Down change the selected segment; digits type it and move to the next.')
                 .vFlex()
                 .gap3()
-                .child(new TimeField(minute).withSize(size))
+                .child(TimeField.component(minute).withSize(size))
                 .child(div()
                     .textSm()
                     .textColor(theme.mutedForeground)
                     .child('Value: ${value.toString()}')))
             .child(section('With seconds')
                 .description('Set the precision to edit seconds as well.')
-                .child(new TimeField(second).withSize(size)))
+                .child(TimeField.component(second).withSize(size)))
             .child(section('12-hour clock')
                 .description('An AM/PM segment follows the time; type a or p to set it.')
-                .child(new TimeField(twelveHour).withSize(size)))
-            .child(section('Disabled').child(new TimeField(disabled).withSize(size).disabled(true)))
+                .child(TimeField.component(twelveHour).withSize(size)))
+            .child(section('Disabled').child(TimeField.component(disabled).withSize(size).disabled(true)))
             .child(section('Invalid')
                 .description('Show a validation result from the owner.')
-                .child(new TimeField(invalid).withSize(size).invalid(true)));
+                .child(TimeField.component(invalid).withSize(size).invalid(true)));
     }
 
 }

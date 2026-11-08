@@ -41,7 +41,7 @@ class BoolField implements SettingFieldRender {
         final setValue:(Bool, App) -> Void = SettingField.setValueOf(field, cx);
 
         final control:IntoElement = if (useSwitch) {
-            new Switch('check')
+            Switch.component('check')
                 .accessibilityLabel(title)
                 .checked(checked)
                 .disabled(options.isDisabled())
@@ -50,7 +50,7 @@ class BoolField implements SettingFieldRender {
                     setValue(checked, cx);
                 });
         } else {
-            new Checkbox('check')
+            Checkbox.component('check')
                 .accessibilityLabel(title)
                 .checked(checked)
                 .disabled(options.isDisabled())

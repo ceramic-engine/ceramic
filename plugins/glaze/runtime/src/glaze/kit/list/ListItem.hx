@@ -97,7 +97,7 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
 
     /** Set to show check icon, default is None. */
     public function checkIcon(icon:IntoIcon):ListItem {
-        checkIconValue = new Icon(icon);
+        checkIconValue = Icon.component(icon);
         return this;
     }
 
@@ -342,9 +342,9 @@ class Loading implements RenderOnce {
         return vFlex()
             .py2p5()
             .gap3()
-            .child(new LoadingItem())
-            .child(new LoadingItem())
-            .child(new LoadingItem());
+            .child(LoadingItem.component())
+            .child(LoadingItem.component())
+            .child(LoadingItem.component());
     }
 
 }
@@ -358,8 +358,8 @@ private class LoadingItem implements RenderOnce {
             vFlex()
                 .gap1p5()
                 .overflowHidden()
-                .child(new Skeleton().h5().w48().maxWFull())
-                .child(new Skeleton().secondary().h3().w64().maxWFull())
+                .child(Skeleton.component().h5().w48().maxWFull())
+                .child(Skeleton.component().secondary().h3().w64().maxWFull())
         );
     }
 

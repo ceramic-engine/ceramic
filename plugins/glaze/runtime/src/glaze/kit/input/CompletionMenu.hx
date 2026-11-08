@@ -320,7 +320,7 @@ class CompletionMenu extends Model implements Render {
                 .testSupport()
                 .maxW(px(maxWidth))
                 .minW(px(120.))
-                .child(new List(list).maxH(px(MAX_MENU_HEIGHT))));
+                .child(List.component(list).maxH(px(MAX_MENU_HEIGHT))));
             if (selectedDocumentation != null) {
                 var doc:String = selectedDocumentation;
                 if (verticalLayout) {
@@ -454,7 +454,7 @@ class CompletionMenuItem implements ListDelegateItem implements ParentElement {
                 new TextHighlight(range.start, range.end, new HighlightStyle(theme.blue))
         ];
 
-        final element = new MenuItemElement(ix)
+        final element = MenuItemElement.component(ix)
             .ariaLabel(item.label)
             .selected(selected)
             .textSm()
@@ -470,7 +470,7 @@ class CompletionMenuItem implements ListDelegateItem implements ParentElement {
             .justifyBetween()
             .child(new StyledText(item.label).withHighlights(highlights));
         if (item.detail != null) {
-            final label = new Label(item.detail).textColor(theme.mutedForeground);
+            final label = Label.component(item.detail).textColor(theme.mutedForeground);
             if (deprecated) label.lineThrough();
             row.child(label.italic());
         }

@@ -84,7 +84,7 @@ class ComponentDisclosureTest extends TestCase {
     /// accordion.rs
 
     function testExpandedPanelKeepsContentBetweenItsHeaderAndTheNextItem() {
-        final h = open((_, _) -> new Accordion('accordion-layout')
+        final h = open((_, _) -> Accordion.component('accordion-layout')
             .w(px(240.))
             .h(px(100.))
             .item(item -> item.open(true)
@@ -102,7 +102,7 @@ class ComponentDisclosureTest extends TestCase {
 
     function testSettledClosedPanelUnmountsItsContent() {
         final state = {open: false};
-        final h = open((_, _) -> new Accordion('accordion-toggle')
+        final h = open((_, _) -> Accordion.component('accordion-toggle')
             .w(px(240.))
             .item(item -> item.open(state.open)
                 .title('Item')
@@ -138,7 +138,7 @@ class ComponentDisclosureTest extends TestCase {
     /// collapsible.rs
 
     function collapsibleHarness(isOpen:Bool):VisualTestContext {
-        return open((_, _) -> new Collapsible()
+        return open((_, _) -> Collapsible.component()
             .open(isOpen)
             .child(new DebugProbe('collapsible-trigger', div().size(px(10.))))
             .content(new DebugProbe('collapsible-content', div().size(px(10.))))).cx;
@@ -156,7 +156,7 @@ class ComponentDisclosureTest extends TestCase {
     }
 
     function testMotionIdKeepsClosedContentMountedForReversibleReveal() {
-        final cx = open((_, _) -> new Collapsible()
+        final cx = open((_, _) -> Collapsible.component()
             .motionId('details-motion')
             .open(false)
             .content(new DebugProbe('motion-content', div().size(px(10.))))).cx;
@@ -174,7 +174,7 @@ class ComponentDisclosureTest extends TestCase {
             .flexCol()
             .p4()
             .gap4()
-            .child(new DebugProbe('sections', new Accordion('sections')
+            .child(new DebugProbe('sections', Accordion.component('sections')
                 .hAuto()
                 .disabled(state.disabled)
                 .item(item -> item.title(new DebugProbe('trigger-0', 'General'))
@@ -188,12 +188,12 @@ class ComponentDisclosureTest extends TestCase {
                     state.open = open.copy();
                     view.update(cx, (_, cx) -> cx.notify());
                 })))
-            .child(new Stepper('wizard')
+            .child(Stepper.component('wizard')
                 .selectedIndex(state.step)
                 .disabled(state.disabled)
                 .items([
-                    new StepperItem().child(new DebugProbe('step-0', 'Account')),
-                    new StepperItem().child(new DebugProbe('step-1', 'Review')),
+                    StepperItem.component().child(new DebugProbe('step-0', 'Account')),
+                    StepperItem.component().child(new DebugProbe('step-1', 'Review')),
                 ])
                 .onClick((step, _, cx) -> {
                     state.step = step;

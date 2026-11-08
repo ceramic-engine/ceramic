@@ -84,7 +84,7 @@ class ComponentOverlaysTest extends TestCase {
 /// popover.rs
 
     function testPopoverBuilderChaining() {
-        final popover = new Popover('test')
+        final popover = Popover.component('test')
             .anchor(Anchor.BottomCenter)
             .mouseButton(MouseButton.Right)
             .defaultOpen(true)
@@ -260,8 +260,8 @@ class ComponentOverlaysTest extends TestCase {
             Popover.init(cx);
         });
         final changes:Array<Bool> = [];
-        final cx = open((_, _) -> new ScriptView((_, _) -> new Popover('runtime-popover')
-            .trigger(new Button('runtime-trigger').label('Open').size(px(100.)))
+        final cx = open((_, _) -> new ScriptView((_, _) -> Popover.component('runtime-popover')
+            .trigger(Button.component('runtime-trigger').label('Open').size(px(100.)))
             .content((_, _, _) -> new OverlayProbe('runtime-popover-content', div().size(px(40.))))
             .onOpenChange((open, _, _) -> changes.push(open)))).cx;
         draw(cx);
@@ -284,9 +284,9 @@ class ComponentOverlaysTest extends TestCase {
             glaze.kit.theme.Theme.init(cx);
             Popover.init(cx);
         });
-        final cx = open((_, _) -> new ScriptView((_, _) -> new Popover('default-open-popover')
+        final cx = open((_, _) -> new ScriptView((_, _) -> Popover.component('default-open-popover')
             .defaultOpen(true)
-            .trigger(new Button('default-open-trigger').label('Open'))
+            .trigger(Button.component('default-open-trigger').label('Open'))
             .child(new OverlayProbe('default-open-content', div().size(px(40.)))))).cx;
         draw(cx);
         draw(cx);
@@ -666,8 +666,8 @@ class ComponentOverlaysTest extends TestCase {
             .flex()
             .flexCol()
             .gap4()
-            .child(new Popover('popover-host')
-                .trigger(new Button('open').label('Open'))
+            .child(Popover.component('popover-host')
+                .trigger(Button.component('open').label('Open'))
                 .content((_, _, _) -> new OverlayProbe('popover-content', div().id('popover-content').w(px(120.)).h(px(50.)).child('Details')))))
         , 600, 500).cx;
         draw(cx);
@@ -693,15 +693,15 @@ class ComponentOverlaysTest extends TestCase {
             final trigger = app.update(cx -> cx.focusHandle());
             final apply = app.update(cx -> cx.focusHandle());
             // Rust `common::open_window` mounts the view in a gpui-kit `Root` (Tab, Shift-Tab).
-            final view = app.newEntity((_:Context<ScriptView>) -> new ScriptView((_, _) -> new Popover('keyboard-popover')
-                .trigger(new Button('keyboard-trigger').label('Compose').trackFocus(trigger))
+            final view = app.newEntity((_:Context<ScriptView>) -> new ScriptView((_, _) -> Popover.component('keyboard-popover')
+                .trigger(Button.component('keyboard-trigger').label('Compose').trackFocus(trigger))
                 .content((_, _, _) -> new OverlayProbe('keyboard-content', div()
                     .id('keyboard-content')
                     .w(px(280.))
                     .flex()
                     .flexCol()
                     .gap2()
-                    .child(new Button('keyboard-apply').label('Apply').trackFocus(apply).onClick((_, _, _) -> applied[0]++))))));
+                    .child(Button.component('keyboard-apply').label('Apply').trackFocus(apply).onClick((_, _, _) -> applied[0]++))))));
             final cx = open((window, rootCx:Context<Root>) -> new Root(view, window, rootCx), 600, 500).cx;
             draw(cx);
             cx.update((window, cx) -> window.focusNext(cx));
@@ -735,12 +735,12 @@ class ComponentOverlaysTest extends TestCase {
      */
     function testRealHoverCardOpensAndClosesAfterPointerDelays() {
         final cx = open((_, _) -> new ScriptView((_, _) -> div().sizeFull().flex().flexCol().gap8().children([
-            new glaze.kit.hovercard.HoverCard('help')
+            glaze.kit.hovercard.HoverCard.component('help')
                 .openDelay(0.03)
                 .closeDelay(0.02)
-                .trigger(new Button('help-trigger').label('Help'))
+                .trigger(Button.component('help-trigger').label('Help'))
                 .content((_, _, _) -> new OverlayProbe('help-content', div().id('help-content').w(px(100.)).h(px(40.)).child('Explanation'))),
-            new Button('away').label('Away').absolute().bottom0().right0()
+            Button.component('away').label('Away').absolute().bottom0().right0()
         ])), 640, 480).cx;
         draw(cx);
         assertTrue(bounds(cx, 'help-content') == null);
@@ -776,14 +776,14 @@ private class AnchorHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final popover = new Popover('positioned-popover')
+        final popover = Popover.component('positioned-popover')
             .defaultOpen(true)
             .appearance(false)
             .arrow(arrow)
             .anchor(anchor);
         if (offset != null) popover.offset(offset);
         popover
-            .trigger(new Button('positioned-trigger').size(px(40.)))
+            .trigger(Button.component('positioned-trigger').size(px(40.)))
             .child(new OverlayProbe('positioned-content', div().size(px(60.))));
         return div().sizeFull().child(
             div()
@@ -805,14 +805,14 @@ private class TriggerStyleHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final popover = new Popover('trigger-style-popover')
+        final popover = Popover.component('trigger-style-popover')
             .defaultOpen(true)
             .appearance(false)
             .offset(px(0.))
             .anchor(Anchor.TopRight);
         if (styled) popover.triggerStyle(new StyleBuilder().wFull().style());
         popover
-            .trigger(new Button('styled-trigger').size(px(40.)))
+            .trigger(Button.component('styled-trigger').size(px(40.)))
             .child(new OverlayProbe('styled-content', div().size(px(20.))));
         // Keep the trigger clear of the popup's window margin so the
         // content origin reflects only the trigger container's bounds.
@@ -936,7 +936,7 @@ private class TooltipButtons extends Model implements Render {
         final children:Array<IntoElement> = [];
         for (index in 0...2) {
             if (shown[index]) {
-                children.push(new Button(glaze.ElementId.NamedInteger('button', index))
+                children.push(Button.component(glaze.ElementId.NamedInteger('button', index))
                     .absolute()
                     .left(px(10. + index * 100.))
                     .top(px(10.))
@@ -976,13 +976,13 @@ private class HoverCardTriggerStyleHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final card = new glaze.kit.hovercard.HoverCard('trigger-style-hover-card')
+        final card = glaze.kit.hovercard.HoverCard.component('trigger-style-hover-card')
             .appearance(false)
             .openDelay(0.)
             .anchor(Anchor.TopRight);
         if (styled) card.triggerStyle(new StyleBuilder().wFull().style());
         card
-            .trigger(new Button('styled-trigger').size(px(40.)))
+            .trigger(Button.component('styled-trigger').size(px(40.)))
             .child(new OverlayProbe('styled-content', div().size(px(20.))));
         // Keep the trigger clear of the popup's window margin so the
         // content position reflects only the trigger container's bounds.

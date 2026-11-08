@@ -43,30 +43,30 @@ class Tag implements RenderOnce implements Styled implements ParentElement imple
 
     public function new() {}
 
-    public static function primary():Tag return new Tag().withVariant(Primary);
+    public static function primary():Tag return Tag.component().withVariant(Primary);
 
-    public static function secondary():Tag return new Tag().withVariant(Secondary);
+    public static function secondary():Tag return Tag.component().withVariant(Secondary);
 
-    public static function danger():Tag return new Tag().withVariant(Danger);
+    public static function danger():Tag return Tag.component().withVariant(Danger);
 
-    public static function success():Tag return new Tag().withVariant(Success);
+    public static function success():Tag return Tag.component().withVariant(Success);
 
-    public static function warning():Tag return new Tag().withVariant(Warning);
+    public static function warning():Tag return Tag.component().withVariant(Warning);
 
-    public static function info():Tag return new Tag().withVariant(Info);
+    public static function info():Tag return Tag.component().withVariant(Info);
 
     /**
      * Create a new tag with custom colors.
      */
     public static function custom(color:Hsla, foreground:Hsla, border:Hsla):Tag {
-        return new Tag().withVariant(Custom(color, foreground, border));
+        return Tag.component().withVariant(Custom(color, foreground, border));
     }
 
     /**
      * Create a new tag with a color of the palette.
      */
     public static function color(color:ColorName):Tag {
-        return new Tag().withVariant(Color(color));
+        return Tag.component().withVariant(Color(color));
     }
 
     public function withVariant(variant:TagVariant):Tag {

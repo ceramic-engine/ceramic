@@ -179,7 +179,7 @@ class Lib {
      * A titled section of a story (Rust `section`).
      */
     public static function section(title:String):StorySection {
-        return new StorySection(title, hFlex()
+        return StorySection.component(title, hFlex()
             .wFull()
             .flexWrap()
             .justifyCenter()
@@ -191,7 +191,7 @@ class Lib {
      * Rust `story_toolbar_group`.
      */
     public static function storyToolbarGroup():StoryToolbar {
-        return new StoryToolbar(hFlex().wFull().justifyEnd());
+        return StoryToolbar.component(hFlex().wFull().justifyEnd());
     }
 
     /**
@@ -206,7 +206,7 @@ class Lib {
             case Size(_): 'Custom';
         }
 
-        return storyToolbarGroup().dropdownChild(new Button('story-size').label('Size: $label'), (menu, _, _) -> menu
+        return storyToolbarGroup().dropdownChild(Button.component('story-size').label('Size: $label'), (menu, _, _) -> menu
             .menuWithCheck('XSmall', size.equals(XSmall), new ChangeStorySize(XSmall))
             .menuWithCheck('Small', size.equals(Small), new ChangeStorySize(Small))
             .menuWithCheck('Medium', size.equals(Medium), new ChangeStorySize(Medium))

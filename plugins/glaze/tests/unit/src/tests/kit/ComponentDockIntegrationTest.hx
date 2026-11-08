@@ -436,7 +436,7 @@ private class Document extends PanelBase {
             .trackFocus(focus)
             .sizeFull()
             .child(name)
-            .child(@:privateAccess DockDebugBounds.wrap(() -> 'editor-$name', new Input(input).id('editor'))));
+            .child(@:privateAccess DockDebugBounds.wrap(() -> 'editor-$name', Input.component(input).id('editor'))));
     }
 
 }

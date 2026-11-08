@@ -160,9 +160,9 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
         }
         state.read(cx).ensureNumberMask();
         final value = parseF64(state.read(cx).value());
-        final decrementButton = decrementDecorator != null ? decrementDecorator(new Button("decrement")) : new Button("decrement");
-        final incrementButton = incrementDecorator != null ? incrementDecorator(new Button("increment")) : new Button("increment");
-        final text = new NumberInputText();
+        final decrementButton = decrementDecorator != null ? decrementDecorator(glaze.kit.base.Button.component("decrement")) : glaze.kit.base.Button.component("decrement");
+        final incrementButton = incrementDecorator != null ? incrementDecorator(glaze.kit.base.Button.component("increment")) : glaze.kit.base.Button.component("increment");
+        final text = NumberInputText.component();
         if (inputElement != null) text.child(inputElement);
 
         // Stepping is driven from the focused editor, so the buttons never take
@@ -204,7 +204,7 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
                 .child(incrementButton);
         }
 
-        final root = new InputBase(ElementId.NamedInteger("number-input", state.entityId()))
+        final root = InputBase.component(ElementId.NamedInteger("number-input", state.entityId()))
             .trackFocus(state.read(cx).focusHandle);
         root.flex().itemsCenter();
         root.disabled(disabled).role(Explicit(Role.SpinButton));

@@ -81,7 +81,7 @@ class TouchSelectionOverlay {
         }
         final elements:Array<AnyElement> = [];
         if (onDrag != null) {
-            final handles = new SelectionHandles(source, onDrag);
+            final handles = SelectionHandles.component(source, onDrag);
             if (onPaintHandler != null) handles.onPaint(onPaintHandler);
             elements.push((handles : glaze.IntoElement).intoAnyElement());
         }
@@ -97,7 +97,7 @@ class TouchSelectionOverlay {
                     new glaze.Size(anchor.size.width, anchor.size.height + TouchHandle.EXTENT * 2.)
                 );
             }
-            final menu = new EditMenu(id, anchor).items(itemList);
+            final menu = EditMenu.component(id, anchor).items(itemList);
             if (onPaintHandler != null) menu.onPaint(onPaintHandler);
             elements.push((menu : glaze.IntoElement).intoAnyElement());
         }

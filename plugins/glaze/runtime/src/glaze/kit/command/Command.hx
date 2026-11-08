@@ -57,7 +57,7 @@ class CommandOptions {
  * ```haxe
  * final state = cx.newEntity(c -> new CommandState(window, c));
  *
- * new Command(state)
+ * Command.component(state)
  *     .group(new CommandGroup().label('Suggestions')
  *         .item(new CommandItem().label('Calendar').icon(IconName.Calendar)))
  *     .placeholder('Type a command or search...');

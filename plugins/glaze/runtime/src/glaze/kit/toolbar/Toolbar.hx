@@ -244,7 +244,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
 
     public function render(window:Window, cx:App):IntoElement {
         final size = sizeValue;
-        final toolbar = new glaze.kit.base.Toolbar(id).disabled(disabledValue);
+        final toolbar = glaze.kit.base.Toolbar.component(id).disabled(disabledValue);
         toolbar.flex().itemsCenter().flexShrink0();
         switch size {
             case XSmall: toolbar.minH7().p1().gap1().textXs();

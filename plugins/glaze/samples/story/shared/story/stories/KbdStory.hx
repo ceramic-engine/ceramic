@@ -57,14 +57,14 @@ class KbdStory extends Model implements Story {
                     .justifyCenter()
                     .gap2()
                     .flexWrap()
-                    .child(new Kbd(Keystroke.parse('cmd-shift-p')))
-                    .child(new Kbd(Keystroke.parse('cmd-ctrl-t')))
-                    .child(new Kbd(Keystroke.parse('cmd--')))
-                    .child(new Kbd(Keystroke.parse('cmd-+')))
-                    .child(new Kbd(Keystroke.parse('escape')))
-                    .child(new Kbd(Keystroke.parse('backspace')))
-                    .child(new Kbd(Keystroke.parse('/')))
-                    .child(new Kbd(Keystroke.parse('enter')))))
+                    .child(Kbd.component(Keystroke.parse('cmd-shift-p')))
+                    .child(Kbd.component(Keystroke.parse('cmd-ctrl-t')))
+                    .child(Kbd.component(Keystroke.parse('cmd--')))
+                    .child(Kbd.component(Keystroke.parse('cmd-+')))
+                    .child(Kbd.component(Keystroke.parse('escape')))
+                    .child(Kbd.component(Keystroke.parse('backspace')))
+                    .child(Kbd.component(Keystroke.parse('/')))
+                    .child(Kbd.component(Keystroke.parse('enter')))))
             .child(section('Outlined')
                 .description('An outlined treatment adds emphasis on dense surfaces.')
                 .w(px(560.))
@@ -73,9 +73,9 @@ class KbdStory extends Model implements Story {
                     .justifyCenter()
                     .gap2()
                     .flexWrap()
-                    .child(new Kbd(Keystroke.parse('cmd-shift-p')).outline())
-                    .child(new Kbd(Keystroke.parse('cmd-ctrl-t')).outline())
-                    .child(new Kbd(Keystroke.parse('enter')).outline())));
+                    .child(Kbd.component(Keystroke.parse('cmd-shift-p')).outline())
+                    .child(Kbd.component(Keystroke.parse('cmd-ctrl-t')).outline())
+                    .child(Kbd.component(Keystroke.parse('enter')).outline())));
     }
 
 }

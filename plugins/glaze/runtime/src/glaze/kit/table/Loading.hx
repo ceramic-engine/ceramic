@@ -64,7 +64,7 @@ private class LoadingRow implements RenderOnce {
     }
 
     function skeleton(height:Float, width:(Skeleton) -> Skeleton):Skeleton {
-        final skeleton = new Skeleton();
+        final skeleton = Skeleton.component();
         if (isHeader) skeleton.secondary();
         return width(skeleton.h(px(height)));
     }

@@ -271,7 +271,7 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
             element.child(button);
         }
         if (menu != null) {
-            final popup = new Button('popup')
+            final popup = Button.component('popup')
                 .dropdownCaret(true)
                 .accessibilityLabel(menuAccessibilityLabelValue != null ? menuAccessibilityLabelValue : I18n.t('DropdownButton.more_options'))
                 .withBorderCorners(false, true, true, false)

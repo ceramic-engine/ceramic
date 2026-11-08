@@ -86,14 +86,14 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
      */
     public function new(id:ElementIdArg) {
         this.id = id;
-        this.base = new glaze.kit.base.Radio(id);
+        this.base = glaze.kit.base.Radio.component(id);
     }
 
     /**
      * A radio labeled with `label`, which is also its id (Rust `From<&str>`).
      */
     public static function labeled(label:String):Radio {
-        return new Radio(label).label(label);
+        return Radio.component(label).label(label);
     }
 
     public inline function style():StyleRefinement {
@@ -317,14 +317,14 @@ class RadioGroup implements RenderOnce implements Styled {
      * Create a new Radio group with default Vertical layout.
      */
     public static function vertical(id:ElementIdArg):RadioGroup {
-        return new RadioGroup(id);
+        return RadioGroup.component(id);
     }
 
     /**
      * Create a new Radio group with Horizontal layout.
      */
     public static function horizontal(id:ElementIdArg):RadioGroup {
-        return new RadioGroup(id).layout(Axis.Horizontal);
+        return RadioGroup.component(id).layout(Axis.Horizontal);
     }
 
     public inline function style():StyleRefinement {
@@ -412,7 +412,7 @@ class RadioGroup implements RenderOnce implements Styled {
             }
             base.child(radio);
         }
-        return new glaze.kit.base.RadioGroup(id).axis(layoutValue).refineStyle(groupStyle).child(base);
+        return glaze.kit.base.RadioGroup.component(id).axis(layoutValue).refineStyle(groupStyle).child(base);
     }
 
 }

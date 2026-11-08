@@ -121,7 +121,7 @@ class ComponentWindowTest extends TestCase {
     /// integration/components.rs
 
     function titleBarWindow(?prepare:(Window) -> Void):VisualTestContext {
-        return open((_, _) -> div().sizeFull().child(new TitleBar().child('Library')), prepare);
+        return open((_, _) -> div().sizeFull().child(TitleBar.component().child('Library')), prepare);
     }
 
     function testTitleBarAndWindowControlsAreObservable() {
@@ -192,7 +192,7 @@ class ComponentWindowTest extends TestCase {
     function testLinuxCloseHandlerReplacesRemovingTheWindow() {
         OperatingSystem.current = Linux;
         var closes = 0;
-        final cx = open((_, _) -> div().sizeFull().child(new TitleBar().onCloseWindow((_, _, _) -> closes++)), window -> {
+        final cx = open((_, _) -> div().sizeFull().child(TitleBar.component().onCloseWindow((_, _, _) -> closes++)), window -> {
             window.platformDecorations = Client(new Tiling());
         });
         cx.simulateClick(new Point(583., 17.));

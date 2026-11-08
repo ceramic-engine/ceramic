@@ -262,7 +262,7 @@ class BaseOverlaysTest extends TestCase {
             .relative()
             .size(px(200.))
             .child(div().id('background').absolute().sizeFull().onMouseMove((_, _, _) -> backgroundHovered = true))
-            .child(new Popup('popup', div().size(px(100.))).content(div()
+            .child(Popup.component('popup', div().size(px(100.))).content(div()
                 .id('content')
                 .size(px(40.))
                 .onMouseMove((_, _, _) -> contentHovered = true))))).cx;
@@ -304,7 +304,7 @@ class BaseOverlaysTest extends TestCase {
     }
 
     function testTriggerCaptureEnablesDeferredContentOnTheNextFrame() {
-        final cx = open((_, _) -> new ScriptView((_, _) -> new Popup('popup', new OverlayProbe('popup-trigger', div().size(px(100.))))
+        final cx = open((_, _) -> new ScriptView((_, _) -> Popup.component('popup', new OverlayProbe('popup-trigger', div().size(px(100.))))
             .content(new OverlayProbe('popup-content', div().size(px(20.)))))).cx;
         draw(cx);
         draw(cx);
@@ -348,7 +348,7 @@ class BaseOverlaysTest extends TestCase {
     }
 
     function popoverHarness(changes:Array<Bool>, defaultOpen:Bool):VisualTestContext {
-        return open((_, _) -> new ScriptView((_, _) -> new Popover('base-popover')
+        return open((_, _) -> new ScriptView((_, _) -> Popover.component('base-popover')
             .defaultOpen(defaultOpen)
             .triggerWith((_, _, _) -> div().child('Open').intoAnyElement())
             .content((_, _, _) -> new OverlayProbe('base-popover-content', div().size(px(40.))))
@@ -382,8 +382,8 @@ class BaseOverlaysTest extends TestCase {
     function testAnOpenPopoverTellsItsTriggerItIsOpenNotSelected() {
         app.update(cx -> Base.init(cx));
         final calls:Array<String> = [];
-        final cx = open((_, _) -> new ScriptView((_, _) -> new Popover('recording-popover')
-            .trigger(new RecordingTrigger(calls))
+        final cx = open((_, _) -> new ScriptView((_, _) -> Popover.component('recording-popover')
+            .trigger(RecordingTrigger.component(calls))
             .content((_, _, _) -> div().size(px(40.))))).cx;
         draw(cx);
         calls.resize(0);
@@ -494,7 +494,7 @@ class BaseOverlaysTest extends TestCase {
     function hoverCardHarness(openChanges:Array<Bool>, tapToOpen:Bool):VisualTestContext {
         final delay = 0.1;
         return open((_, _) -> new ScriptView((_, _) -> {
-            final card = new HoverCard('hover-card');
+            final card = HoverCard.component('hover-card');
             @:privateAccess card.tapToOpen = tapToOpen;
             return card
                 .openDelay(delay)
@@ -642,7 +642,7 @@ private class ClosedHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final popup = new Popup('popup', new OverlayProbe('popup-trigger', div().size(px(100.))));
+        final popup = Popup.component('popup', new OverlayProbe('popup-trigger', div().size(px(100.))));
         if (open) {
             return popup.content(new OverlayProbe('popup-content', div().size(px(20.))));
         }
@@ -661,8 +661,8 @@ private class KeyboardPopoverHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new Popover('keyboard-popover')
-            .trigger(new glaze.kit.base.Button('keyboard-trigger').trackFocus(triggerFocus).child('Open'))
+        return Popover.component('keyboard-popover')
+            .trigger(glaze.kit.base.Button.component('keyboard-trigger').trackFocus(triggerFocus).child('Open'))
             .content((_, _, _) -> new OverlayProbe('keyboard-popover-content', div().size(px(40.))));
     }
 

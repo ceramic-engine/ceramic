@@ -33,7 +33,7 @@ import glaze.Prelude.div;
  * does under reduced motion.
  *
  * ```haxe
- * new NavStack(stack)
+ * NavStack.component(stack)
  *     .sizeFull()
  *     .transition(new Transition(0.2))
  *     .item((page, window, cx) -> page.left(px((1 - page.progress()) * 40)));

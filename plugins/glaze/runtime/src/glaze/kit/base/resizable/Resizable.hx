@@ -17,14 +17,14 @@ class Resizable {
      * Create a `ResizablePanelGroup` with horizontal resizing.
      */
     public static function hResizable(id:ElementIdArg):ResizablePanelGroup {
-        return new ResizablePanelGroup(id).axis(Horizontal);
+        return ResizablePanelGroup.component(id).axis(Horizontal);
     }
 
     /**
      * Create a `ResizablePanelGroup` with vertical resizing.
      */
     public static function vResizable(id:ElementIdArg):ResizablePanelGroup {
-        return new ResizablePanelGroup(id).axis(Vertical);
+        return ResizablePanelGroup.component(id).axis(Vertical);
     }
 
     /**

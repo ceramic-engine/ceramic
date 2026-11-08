@@ -177,7 +177,7 @@ class ComponentModalsTest extends TestCase {
     function testDialogButtonPropsMergeWithWhatTheDialogAlreadyCarries() {
         final cx = window(400, 300).cx;
         cx.update((_, cx) -> {
-            final dialog = new Dialog(cx)
+            final dialog = Dialog.component(cx)
                 .buttonProps(new DialogButtonProps().cancelText('Keep'))
                 .buttonProps(new DialogButtonProps().okText('Delete'))
                 .buttonProps(new DialogButtonProps().okVariant(Danger));
@@ -207,9 +207,9 @@ class ComponentModalsTest extends TestCase {
 
     function testDialogEntranceBuilder() {
         app.update(cx -> {
-            assertEquals(SlideDown, new Dialog(cx).props.entrance);
+            assertEquals(SlideDown, Dialog.component(cx).props.entrance);
             for (entrance in [SlideDown, Fade, FadeSlide, None]) {
-                assertEquals(entrance, new Dialog(cx).entrance(entrance).props.entrance);
+                assertEquals(entrance, Dialog.component(cx).entrance(entrance).props.entrance);
             }
         });
     }
@@ -418,7 +418,7 @@ class ComponentModalsTest extends TestCase {
         for (entrance in [SlideDown, Fade, FadeSlide, None]) {
             final cx = window(1000, 800).cx;
             cx.update((window, cx) -> {
-                final alert = new AlertDialog(cx)
+                final alert = AlertDialog.component(cx)
                     .title('Alert')
                     .entrance(entrance);
                 assertEquals(entrance, alert.buildSurface(window, cx).props.entrance);
@@ -489,7 +489,7 @@ class ComponentModalsTest extends TestCase {
     function testButtonPropsAfterConfirmKeepsTheCancelButton() {
         final cx = window(800, 600).cx;
         cx.update((_, cx) -> {
-            final alert = new AlertDialog(cx)
+            final alert = AlertDialog.component(cx)
                 .confirm()
                 .buttonProps(new DialogButtonProps().okText('Delete'));
 
@@ -502,7 +502,7 @@ class ComponentModalsTest extends TestCase {
     function testConfirmAfterButtonPropsKeepsTheOkText() {
         final cx = window(800, 600).cx;
         cx.update((_, cx) -> {
-            final alert = new AlertDialog(cx)
+            final alert = AlertDialog.component(cx)
                 .buttonProps(new DialogButtonProps().okText('Delete'))
                 .confirm();
 
@@ -519,7 +519,7 @@ class ComponentModalsTest extends TestCase {
         final cx = window(800, 600).cx;
         final confirmed = new Counter();
         cx.update((window, cx) -> {
-            final alert = new AlertDialog(cx)
+            final alert = AlertDialog.component(cx)
                 .onOk((_, _, _) -> {
                     confirmed.value++;
                     return true;
@@ -536,13 +536,13 @@ class ComponentModalsTest extends TestCase {
     function testTheDirectBuildersMatchButtonProps() {
         final cx = window(800, 600).cx;
         cx.update((_, cx) -> {
-            final direct = new AlertDialog(cx)
+            final direct = AlertDialog.component(cx)
                 .confirm()
                 .okText('Delete')
                 .okVariant(Danger)
                 .cancelText('Keep')
                 .cancelVariant(Ghost);
-            final bundled = new AlertDialog(cx).buttonProps(new DialogButtonProps()
+            final bundled = AlertDialog.component(cx).buttonProps(new DialogButtonProps()
                 .showCancel(true)
                 .okText('Delete')
                 .okVariant(Danger)
@@ -1537,25 +1537,25 @@ private class Workspace extends Model implements Render {
             .flexCol()
             .gap4()
             .child(div().id('name').h(px(30.)).trackFocus(name))
-            .child(new BoundsProbe('edit', new glaze.kit.button.Button('edit')
+            .child(new BoundsProbe('edit', glaze.kit.button.Button.component('edit')
                 .label('Edit')
                 .onClick((_, window, cx) -> window.openDialog(cx, (dialog, _, _) -> dialog
                     .title('Edit profile')
                     .child('body')))))
-            .child(new BoundsProbe('inspect', new glaze.kit.button.Button('inspect')
+            .child(new BoundsProbe('inspect', glaze.kit.button.Button.component('inspect')
                 .label('Inspect')
                 .onClick((_, window, cx) -> window.openSheet(cx, (sheet, _, _) -> sheet.title('Inspector').child('Details')))))
-            .child(new BoundsProbe('notify', new glaze.kit.button.Button('notify')
+            .child(new BoundsProbe('notify', glaze.kit.button.Button.component('notify')
                 .label('Notify')
                 .onClick((_, window, cx) -> window.pushNotification(new Notification().message('Updated').autohide(true), cx))))
-            .child(new BoundsProbe('open', new glaze.kit.button.Button('open')
+            .child(new BoundsProbe('open', glaze.kit.button.Button.component('open')
                 .label('Open')
                 .onClick((_, window, cx) -> window.openDialog(cx, (dialog, _, _) -> dialog
                     .title('Stolen focus')
-                    .footer(new glaze.kit.dialog.DialogFooter()
+                    .footer(glaze.kit.dialog.DialogFooter.component()
                         .child(new BoundsProbe('footer-close', new glaze.kit.dialog.DialogFooter.DialogClose().trigger(button -> button.label('Cancel'))))
-                        .child(new BoundsProbe('ok', new glaze.kit.dialog.DialogFooter.DialogAction().child(new glaze.kit.button.Button('ok').label('OK')))))))))
-            .child(new BoundsProbe('open-alert', new glaze.kit.button.Button('open-alert')
+                        .child(new BoundsProbe('ok', new glaze.kit.dialog.DialogFooter.DialogAction().child(glaze.kit.button.Button.component('ok').label('OK')))))))))
+            .child(new BoundsProbe('open-alert', glaze.kit.button.Button.component('open-alert')
                 .label('Alert')
                 .onClick((_, window, cx) -> window.openAlertDialog(cx, (dialog, _, _) -> dialog.title('Stolen focus').confirm()))));
     }

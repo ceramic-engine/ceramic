@@ -57,7 +57,7 @@ class MessageScrollerTest extends TestCase {
     /** The `ScrollerHarness` view of the Rust tests. */
     function harness(state:Entity<MessageScrollerState>):VisualTestContext {
         return open((_, _) -> div().size(px(400.)).child(
-            new MessageScroller('messages', state, (_, _, _) -> div().h(px(40.)))
+            MessageScroller.component('messages', state, (_, _, _) -> div().h(px(40.)))
                 .scrollbar(false)
                 .jumpButton(false)
         ));
@@ -162,7 +162,7 @@ class MessageScrollerTest extends TestCase {
 
         function extent(state:Entity<MessageScrollerState>, listStyle:StyleRefinement):Float {
             final context = open((_, _) -> div().size(px(400.)).child(
-                new MessageScroller('messages', state, (_, _, _) -> div().h(px(40.)))
+                MessageScroller.component('messages', state, (_, _, _) -> div().h(px(40.)))
                     .scrollbar(false)
                     .jumpButton(false)
                     .withListStyle(listStyle.clone())
@@ -188,7 +188,7 @@ class MessageScrollerTest extends TestCase {
 
     function testMessageScrollerBuilder() {
         final state = newState(0);
-        final scroller = new MessageScroller('message-scroller', state, (_, _, _) -> div())
+        final scroller = MessageScroller.component('message-scroller', state, (_, _, _) -> div())
             .scrollbar(false)
             .jumpButton(false)
             .withJumpButtonLabel('Latest')

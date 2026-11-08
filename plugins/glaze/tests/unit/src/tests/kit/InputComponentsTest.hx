@@ -231,8 +231,8 @@ class InputComponentsTest extends TestCase {
     function testOnPasteBuilder() {
         open((window, cx) -> {
             final state:Entity<InputState> = cx.newEntity((c:Context<InputState>) -> new InputState(window, c));
-            assertNull(@:privateAccess new Input(state).pasteHandler);
-            final input = new Input(state).onPaste((_, _, _) -> true);
+            assertNull(@:privateAccess Input.component(state).pasteHandler);
+            final input = Input.component(state).onPaste((_, _, _) -> true);
             assertNotNull(@:privateAccess input.pasteHandler);
             return div();
         });
@@ -241,8 +241,8 @@ class InputComponentsTest extends TestCase {
     function testOnTokenHoverBuilder() {
         open((window, cx) -> {
             final state:Entity<InputState> = cx.newEntity((c:Context<InputState>) -> new InputState(window, c));
-            assertNull(@:privateAccess new Input(state).tokenHoverListener);
-            final input = new Input(state).onTokenHover((_, _, _) -> {});
+            assertNull(@:privateAccess Input.component(state).tokenHoverListener);
+            final input = Input.component(state).onTokenHover((_, _, _) -> {});
             assertNotNull(@:privateAccess input.tokenHoverListener);
             return div();
         });
@@ -253,8 +253,8 @@ class InputComponentsTest extends TestCase {
     function testTextareaOnPasteBuilder() {
         open((window, cx) -> {
             final state:Entity<TextareaState> = cx.newEntity((c:Context<TextareaState>) -> new TextareaState(window, c));
-            assertNull(@:privateAccess new Textarea(state).pasteHandler);
-            final textarea = new Textarea(state).onPaste((_, _, _) -> true);
+            assertNull(@:privateAccess Textarea.component(state).pasteHandler);
+            final textarea = Textarea.component(state).onPaste((_, _, _) -> true);
             assertNotNull(@:privateAccess textarea.pasteHandler);
             return div();
         });
@@ -263,8 +263,8 @@ class InputComponentsTest extends TestCase {
     function testTextareaOnTokenHoverBuilder() {
         open((window, cx) -> {
             final state:Entity<TextareaState> = cx.newEntity((c:Context<TextareaState>) -> new TextareaState(window, c));
-            assertNull(@:privateAccess new Textarea(state).tokenHoverListener);
-            final textarea = new Textarea(state).onTokenHover((_, _, _) -> {});
+            assertNull(@:privateAccess Textarea.component(state).tokenHoverListener);
+            final textarea = Textarea.component(state).onTokenHover((_, _, _) -> {});
             assertNotNull(@:privateAccess textarea.tokenHoverListener);
             return div();
         });

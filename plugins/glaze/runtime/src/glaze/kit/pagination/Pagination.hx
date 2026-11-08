@@ -156,7 +156,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
 
         final targetPage = isPrev ? state.previousPage() : state.nextPage();
 
-        final button = new Button(id)
+        final button = Button.component(id)
             .ghost()
             .compact()
             .withSize(size)
@@ -171,7 +171,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
             if (isPrev) content.flexRowReverse();
             button.child(content
                 .child(label)
-                .child(new Icon(icon)));
+                .child(Icon.component(icon)));
         }
         if (targetPage != null && state.hasOnChange()) {
             final state = state.clone();
@@ -197,7 +197,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
         final isDisabled = disabledValue;
         final itemState = state.clone();
 
-        final root = new glaze.kit.base.Pagination(id, state.clone())
+        final root = glaze.kit.base.Pagination.component(id, state.clone())
             .hFlex()
             .px2()
             .py2()
@@ -210,7 +210,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
                 case Page(page):
                     final isSelected = page == currentPage;
 
-                    final button = new Button(page).withSize(size);
+                    final button = Button.component(page).withSize(size);
                     if (isSelected) button.outline() else button.ghost();
                     button.label(Std.string(page))
                         .compact()
@@ -224,7 +224,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
                     root.child(button);
                 case Ellipsis(range):
                     final state = itemState.clone();
-                    root.child(new Button('ellipsis-${range.start}-${range.end}')
+                    root.child(Button.component('ellipsis-${range.start}-${range.end}')
                         .ghost()
                         .withSize(size)
                         .compact()

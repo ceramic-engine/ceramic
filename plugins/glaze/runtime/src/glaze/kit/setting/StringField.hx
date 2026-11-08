@@ -64,7 +64,7 @@ class StringField implements SettingFieldRender {
 
         final state = stateEntity.read(cx).value;
 
-        final input = new Input(state.input)
+        final input = Input.component(state.input)
             .ariaLabel(title)
             .disabled(options.isDisabled())
             .withSize(options.size());

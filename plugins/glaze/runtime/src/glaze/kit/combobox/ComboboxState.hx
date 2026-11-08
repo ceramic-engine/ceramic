@@ -264,7 +264,7 @@ class ComboboxState<I> extends Model implements Render {
 
     /** Rust `Icon::new(IconName::Inbox).size(px(28.))` (`Styled::size`). */
     static function inboxIcon():Icon {
-        final icon = new Icon(IconName.Inbox);
+        final icon = Icon.component(IconName.Inbox);
         new glaze.StyleBuilder(icon.style()).size(px(28.));
         return icon;
     }
@@ -638,7 +638,7 @@ class ComboboxState<I> extends Model implements Render {
         } else if (triggerIcon != null) {
             (triggerIcon.clone().xsmall().textColor(theme.mutedForeground):IntoElement);
         } else {
-            (new Caret(size).textColor(theme.mutedForeground):IntoElement);
+            (Caret.component(size).textColor(theme.mutedForeground):IntoElement);
         };
 
         final toggleHandler:Null<(ClickEvent, Window, App) -> Void> = allowOpen
@@ -769,7 +769,7 @@ class ComboboxState<I> extends Model implements Render {
             case Auto: surface.w(px(bounds.size.width));
             case Definite(w): surface.w(w);
         }
-        final listElement = new List(list);
+        final listElement = List.component(list);
         if (searchPlaceholder != null) listElement.searchPlaceholder(searchPlaceholder);
         listElement.withSize(size).maxH(menuMaxH);
         listElement.paddingsEdges(glaze.Edges.all(SizeTools.DROPDOWN_LIST_PADDING));

@@ -676,9 +676,9 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
     static function removeButton(id:ElementId, onRemove:ControlHandler, cx:App):Button {
         final theme = Theme.global(cx);
         final tokens = theme.semanticTokens();
-        final icon = new Icon(IconName.Close).textColor(tokens.colors.foreground);
+        final icon = Icon.component(IconName.Close).textColor(tokens.colors.foreground);
         new StyleBuilder(icon.style()).size(px(10.));
-        return new Button(ElementId.NamedChild(id, 'remove'))
+        return Button.component(ElementId.NamedChild(id, 'remove'))
             // The custom variant thins its color to 20%; the disc must stay
             // opaque, so the surface is set on the instance instead.
             .custom(
@@ -707,9 +707,9 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
     static function retryButton(id:ElementId, onRetry:ControlHandler, cx:App):Button {
         final theme = Theme.global(cx);
         final tokens = theme.semanticTokens();
-        final icon = new Icon(IconName.RefreshCw).textColor(tokens.colors.destructive);
+        final icon = Icon.component(IconName.RefreshCw).textColor(tokens.colors.destructive);
         new StyleBuilder(icon.style()).size(px(12.));
-        return new Button(ElementId.NamedChild(id, 'retry'))
+        return Button.component(ElementId.NamedChild(id, 'retry'))
             .ghost()
             .accessibilityLabel(I18n.t('Attachment.Retry'))
             .child(icon)
@@ -863,13 +863,13 @@ class AttachmentMedia implements RenderOnce implements Styled implements ParentE
         // percentage, a spinner otherwise.
         function busy(color:Hsla):AnyElement {
             if (progress != null) {
-                final ring = new ProgressCircle(ringId)
+                final ring = ProgressCircle.component(ringId)
                     .value(progress)
                     .color(color);
                 new StyleBuilder(ring.style()).size(ringSize);
                 return (ring : IntoElement);
             }
-            return (new Spinner()
+            return (Spinner.component()
                 .withSize(spinnerSize)
                 .color(color) : IntoElement);
         }
@@ -883,7 +883,7 @@ class AttachmentMedia implements RenderOnce implements Styled implements ParentE
             if (retry != null) {
                 (Attachment.retryButton(retry.id, retry.handler, cx) : IntoElement);
             } else {
-                final icon = new Icon(IconName.Ban);
+                final icon = Icon.component(IconName.Ban);
                 new StyleBuilder(icon.style()).size(glyphSize);
                 (icon : IntoElement);
             }
@@ -903,7 +903,7 @@ class AttachmentMedia implements RenderOnce implements Styled implements ParentE
             if (retry != null) {
                 (Attachment.retryButton(retry.id, retry.handler, cx) : IntoElement);
             } else {
-                final icon = new Icon(IconName.Ban).textColor(white());
+                final icon = Icon.component(IconName.Ban).textColor(white());
                 new StyleBuilder(icon.style()).size(glyphSize);
                 (icon : IntoElement);
             }
@@ -1092,7 +1092,7 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
                                         .child('·')
                                 )
                                 .child(
-                                    new Button(ElementId.NamedChild(control.id, 'retry'))
+                                    Button.component(ElementId.NamedChild(control.id, 'retry'))
                                         .link()
                                         .xsmall()
                                         .label(I18n.t('Attachment.Retry'))
@@ -1161,7 +1161,7 @@ class AttachmentTitle implements RenderOnce implements Styled {
             .truncate()
             .fontMedium();
         if (loading) {
-            final shimmer = new ShimmerText(text);
+            final shimmer = ShimmerText.component(text);
             if (shimmerStyle != null) shimmer.withShimmerStyle(shimmerStyle);
             element.child(shimmer);
         } else {

@@ -38,7 +38,7 @@ class ScrollableElement {
 
     /** Adds a scrollbar to the element. */
     public static function scrollbar(self:Div, scrollHandle:ScrollbarHandle, axis:ScrollbarAxis, ?pos:haxe.PosInfos):Div {
-        return self.child(new ScrollbarLayer(callerId(pos), axis, scrollHandle));
+        return self.child(ScrollbarLayer.component(callerId(pos), axis, scrollHandle));
     }
 
     /** Adds a vertical scrollbar to the element. */

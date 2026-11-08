@@ -30,19 +30,19 @@ enum ButtonIconVariant {
 abstract IntoButtonIcon(ButtonIcon) from ButtonIcon to ButtonIcon {
 
     @:from static inline function fromIcon(icon:glaze.kit.Icon):IntoButtonIcon {
-        return new ButtonIcon(Icon(icon));
+        return ButtonIcon.component(Icon(icon));
     }
 
     @:from static inline function fromIconName(name:glaze.kit.IconName):IntoButtonIcon {
-        return new ButtonIcon(Icon(new glaze.kit.Icon(name)));
+        return ButtonIcon.component(Icon(glaze.kit.Icon.component(name)));
     }
 
     @:from static inline function fromSpinner(spinner:glaze.kit.spinner.Spinner):IntoButtonIcon {
-        return new ButtonIcon(Spinner(spinner));
+        return ButtonIcon.component(Spinner(spinner));
     }
 
     @:from static inline function fromProgressCircle(progress:glaze.kit.progress.ProgressCircle):IntoButtonIcon {
-        return new ButtonIcon(Progress(progress));
+        return ButtonIcon.component(Progress(progress));
     }
 
 }
@@ -117,7 +117,7 @@ class ButtonIcon implements RenderOnce implements Sizable {
             if (isSpinner(icon) || isProgress(icon)) {
                 return sized(icon, size);
             } else {
-                final spinner = new glaze.kit.spinner.Spinner();
+                final spinner = glaze.kit.spinner.Spinner.component();
                 if (loadingIconValue != null) spinner.icon(loadingIconValue);
                 return spinner.withSize(size);
             }

@@ -259,7 +259,7 @@ class SidebarStory extends Model implements Story {
                 .child(storyToolbarGroup()
                     .wAuto()
                     .flexShrink0()
-                    .dropdownChild(new Button('sidebar-options').label('Options'), (menu, _, _) -> menu
+                    .dropdownChild(Button.component('sidebar-options').label('Options'), (menu, _, _) -> menu
                         .menuWithCheck('Icon mode', collapsible == SidebarCollapsible.Icon, new SidebarOptionIcon())
                         .menuWithCheck('Offcanvas mode', collapsible == SidebarCollapsible.Offcanvas, new SidebarOptionOffcanvas())
                         .menuWithCheck('Fixed mode', collapsible == SidebarCollapsible.None, new SidebarOptionNone())
@@ -314,7 +314,7 @@ class SidebarStory extends Model implements Story {
                         .justifyCenter()
                         .roundedFullStyle(cx.app)
                         .bg(theme.muted)
-                        .child(new Icon(row.icon).small()))
+                        .child(glaze.kit.Icon.component(row.icon).small()))
                     .child(vFlex()
                         .minW0()
                         .flex1()
@@ -343,12 +343,12 @@ class SidebarStory extends Model implements Story {
             .textColor(theme.successForeground)
             .size8()
             .flexShrink0()
-            .when(!iconCollapsed, this_ -> this_.child(new Icon(IconName.GalleryVerticalEnd)))
+            .when(!iconCollapsed, this_ -> this_.child(glaze.kit.Icon.component(IconName.GalleryVerticalEnd)))
             .when(iconCollapsed, this_ -> this_.size4()
                 .bg(theme.transparent)
                 .textColor(theme.foreground)
-                .child(new Icon(IconName.GalleryVerticalEnd)));
-        final header = new SidebarHeader().child(logo);
+                .child(glaze.kit.Icon.component(IconName.GalleryVerticalEnd)));
+        final header = SidebarHeader.component().child(logo);
         if (!iconCollapsed) {
             header.child(vFlex()
                 .gap0()
@@ -359,7 +359,7 @@ class SidebarStory extends Model implements Story {
                 .textEllipsis()
                 .child('Company Name')
                 .child(div().child('Enterprise').textXs()));
-            header.child(new Icon(IconName.ChevronsUpDown).size4().flexShrink0());
+            header.child(glaze.kit.Icon.component(IconName.ChevronsUpDown).size4().flexShrink0());
         }
 
         final platform = new SidebarMenu().children([for (ix => item in groups[0]) {
@@ -378,7 +378,7 @@ class SidebarStory extends Model implements Story {
                         .disable(subItem.isDisabled());
                     if (subIx == 0) {
                         final checked = this.checked;
-                        sub.suffix((_, _) -> new Switch('switch')
+                        sub.suffix((_, _) -> Switch.component('switch')
                             .xsmall()
                             .checked(checked)
                             .onClick((checked, _, _) -> switchCheckedHandler(checked)))
@@ -404,27 +404,27 @@ class SidebarStory extends Model implements Story {
                 ]);
             }
             if (ix == 0) {
-                menuItem.suffix((_, _) -> new Badge().dot().count(1).child(div().p0p5().child(new Icon(IconName.Bell))));
+                menuItem.suffix((_, _) -> Badge.component().dot().count(1).child(div().p0p5().child(glaze.kit.Icon.component(IconName.Bell))));
             }
             if (ix == 1) {
-                menuItem.suffix((_, _) -> new Icon(IconName.Settings2));
+                menuItem.suffix((_, _) -> glaze.kit.Icon.component(IconName.Settings2));
             }
             menuItem.onClick((_, _, _) -> itemHandler(item));
         }]);
 
-        final footer = new SidebarFooter()
+        final footer = SidebarFooter.component()
             .justifyBetween()
             .child(hFlex()
                 .gap2()
-                .child(new Icon(IconName.CircleUser))
+                .child(glaze.kit.Icon.component(IconName.CircleUser))
                 .when(!iconCollapsed, this_ -> this_.child('Jason Lee')));
-        if (!iconCollapsed) footer.child(new Icon(IconName.ChevronsUpDown).size4());
+        if (!iconCollapsed) footer.child(glaze.kit.Icon.component(IconName.ChevronsUpDown).size4());
 
-        final breadcrumb = new Breadcrumb()
+        final breadcrumb = Breadcrumb.component()
             .child('Breadcrumb')
-            .child(new BreadcrumbItem('Home').onClick((_, _, _) -> lastActiveItem = Item.Playground))
-            .child(new BreadcrumbItem(lastActiveItem.label()).onClick((_, _, _) -> activeSubitem = null));
-        if (activeSubitem != null) breadcrumb.child(new BreadcrumbItem(activeSubitem.label()));
+            .child(BreadcrumbItem.component('Home').onClick((_, _, _) -> lastActiveItem = Item.Playground))
+            .child(BreadcrumbItem.component(lastActiveItem.label()).onClick((_, _, _) -> activeSubitem = null));
+        if (activeSubitem != null) breadcrumb.child(BreadcrumbItem.component(activeSubitem.label()));
 
         return hFlex()
             .onAction(SidebarOptionIcon, (_, _, _) -> this.collapsible = SidebarCollapsible.Icon)
@@ -438,7 +438,7 @@ class SidebarStory extends Model implements Story {
             .borderColor(theme.border)
             .hFull()
             .when(isRight, this_ -> this_.flexRowReverse())
-            .child(new Sidebar<SidebarGroup<SidebarMenu>>('sidebar-story')
+            .child(Sidebar.component('sidebar-story')
                 .side(side)
                 .collapsible(collapsible)
                 .collapsed(collapsed)
@@ -463,7 +463,7 @@ class SidebarStory extends Model implements Story {
                     .gap3()
                     .when(isRight && collapsible != SidebarCollapsible.None, this_ -> this_.flexRowReverse().justifyBetween())
                     .when(collapsible != SidebarCollapsible.None, this_ -> this_
-                        .child(new SidebarToggleButton()
+                        .child(SidebarToggleButton.component()
                             .side(side)
                             .collapsed(toggleCollapsed)
                             .onClick((_, _, _) -> collapsed = !collapsed))

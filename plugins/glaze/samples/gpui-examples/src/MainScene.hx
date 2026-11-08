@@ -61,7 +61,7 @@ class MainScene extends Scene {
         }
 
         final example = Examples.ALL[index];
-        final cx = App.current;
+        final cx = Glaze.app;
         if (example.setup != null && !setupDone.exists(example.id)) {
             setupDone.set(example.id, true);
             example.setup(cx);

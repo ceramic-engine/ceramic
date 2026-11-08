@@ -450,7 +450,7 @@ class PieChart<T> extends Plot {
         // Follow the cursor; the lifted slice marks the datum. One number per
         // slice fits one row, so there is no title.
         final text = tooltipValueFn != null ? tooltipValueFn(d, value, share) : '${ChartFormat.display32(value)} (${ChartFormat.fixed(share, 1)}%)';
-        final tooltip = new Tooltip(cursor, bounds.size).gap(8.).row(sliceColor(d, cx), name, text);
+        final tooltip = Tooltip.component(cursor, bounds.size).gap(8.).row(sliceColor(d, cx), name, text);
         return (tooltip : IntoElement).intoAnyElement();
     }
 

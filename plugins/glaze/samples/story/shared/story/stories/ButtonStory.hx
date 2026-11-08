@@ -100,7 +100,7 @@ class ButtonStory extends Model implements Story {
         final compact = this.compact;
         final toggleMultiple = this.toggleMultiple;
         final size = this.size;
-        final button = (id:String) -> new Button(id).withSize(size);
+        final button = (id:String) -> Button.component(id).withSize(size);
         // `.disabled(disabled).selected(selected)[.loading(loading)].when(compact, compact)[.on_click][.on_hover]`
         final full = (b:Button, click:Bool, hover:Bool) -> {
             b.disabled(disabled).selected(selected).loading(loading);
@@ -168,8 +168,8 @@ class ButtonStory extends Model implements Story {
                 .description('Icons can lead labels or appear in custom content.')
                 .child(full(button('button-icon-1').outline().label('Confirm').icon(IconName.Check), true, false))
                 .child(full(button('button-icon-2').outline().label('Abort').icon(IconName.Close), true, false))
-                .child(full(button('button-icon-3').outline().label('Maximize').icon(new Icon(IconName.Maximize)), true, false))
-                .child(full(button('button-icon-4').child(hFlex().itemsCenter().gap2().child('Custom Child').child(new Icon(IconName.ChevronDown)).child(new Icon(IconName.Eye))), true, false))
+                .child(full(button('button-icon-3').outline().label('Maximize').icon(Icon.component(IconName.Maximize)), true, false))
+                .child(full(button('button-icon-4').child(hFlex().itemsCenter().gap2().child('Custom Child').child(Icon.component(IconName.ChevronDown)).child(Icon.component(IconName.Eye))), true, false))
                 .child(full(button('button-icon-5-ghost').ghost().icon(IconName.Check).label('Confirm'), true, false))
                 .child(full(button('button-icon-6-link').link().icon(IconName.Check).label('Link'), true, false))
                 .child(full(button('button-icon-6-text').text().icon(IconName.Check).label('Text Button'), true, false)))
@@ -179,18 +179,18 @@ class ButtonStory extends Model implements Story {
                     .gap4()
                     .child(button('progress-button-1')
                         .primary()
-                        .icon(new ProgressCircle('circle-progress-1')
+                        .icon(ProgressCircle.component('circle-progress-1')
                             .color(theme.primaryForeground)
                             .value(25.))
                         .label('Installing...'))
                     .child(button('progress-button-2')
-                        .icon(new ProgressCircle('circle-progress-2').value(35.))
+                        .icon(ProgressCircle.component('circle-progress-2').value(35.))
                         .label('Installing...'))
                     .child(button('progress-button-3')
-                        .icon(new ProgressCircle('circle-progress-3').value(68.))
+                        .icon(ProgressCircle.component('circle-progress-3').value(68.))
                         .label('Installing...'))
                     .child(button('progress-button-4')
-                        .icon(new ProgressCircle('circle-progress-4').value(85.))
+                        .icon(ProgressCircle.component('circle-progress-4').value(85.))
                         .label('Installing...'))))
             .child(section('Outline')
                 .description('Outlined treatments keep actions visually quiet.')
@@ -213,13 +213,13 @@ class ButtonStory extends Model implements Story {
                 .child(full(button('button-dropdown-caret-ghost').ghost().dropdownCaret(true).label('Ghost Button'), true, false))
                 .child(full(button('button-dropdown-caret-link').link().dropdownCaret(true).label('Link Button'), true, false))
                 .child(full(button('button-dropdown-caret-small').outline().dropdownCaret(true).label('Small Button'), true, false)))
-            .child(section('Horizontal group').child(new ButtonGroup('button-group')
+            .child(section('Horizontal group').child(ButtonGroup.component('button-group')
                 .outline()
                 .disabled(disabled)
                 .child(groupItem(button('button-one').label('One')))
                 .child(groupItem(button('button-two').label('Two')))
                 .child(groupItem(button('button-three').label('Three')))))
-            .child(section('Vertical group').child(new ButtonGroup('button-group-vertical')
+            .child(section('Vertical group').child(ButtonGroup.component('button-group-vertical')
                 .outline()
                 .layout(Vertical)
                 .disabled(disabled)
@@ -228,7 +228,7 @@ class ButtonStory extends Model implements Story {
                 .child(groupItem(button('button-vertical-three').label('Three')))))
             .child(section('Selection group')
                 .description('Groups support single or multiple selection.')
-                .child(new ButtonGroup('toggle-button-group')
+                .child(ButtonGroup.component('toggle-button-group')
                     .outline()
                     .compact()
                     .multiple(toggleMultiple)

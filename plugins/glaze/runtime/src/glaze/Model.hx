@@ -13,7 +13,7 @@ package glaze;
  *
  * Create models with `app.newEntity(cx -> new MyModel(...))` or, from another
  * entity, `cx.newEntity(...)` (the new entity is then owned by the creating one).
- * A model constructed directly is attached to `App.current` the first time it
+ * A model constructed directly is attached to `Glaze.app` the first time it
  * is used as an entity.
  *
  * Haxe has no `Drop`: entities are released explicitly with `destroy()`, which
@@ -39,7 +39,7 @@ class Model extends ceramic.Entity implements tracker.Observable {
     @:allow(glaze)
     function slot():EntitySlot {
         if (_slot == null) {
-            App.current.attachEntity(this);
+            Glaze.app.attachEntity(this);
         }
         return _slot;
     }

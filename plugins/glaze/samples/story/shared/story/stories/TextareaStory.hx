@@ -195,15 +195,15 @@ class TextareaStory extends Model implements Story {
         final attachments = this.attachments;
         final composerColumn = vFlex().gap2().wFull();
         if (attachments.length > 0) {
-            composerColumn.child(new AttachmentGroup('composer-attachments').children([for (attachment in attachments) {
+            composerColumn.child(AttachmentGroup.component('composer-attachments').children([for (attachment in attachments) {
                 final id = attachment.id;
-                (new HoverCard(ElementId.NamedInteger('pasted-preview', id))
-                    .trigger(new Attachment()
-                        .media(new AttachmentMedia().child(new Icon(IconName.FileText).small()))
-                        .content(new AttachmentContent()
-                            .title(new AttachmentTitle(attachment.title))
-                            .description(new AttachmentDescription(attachment.detail)))
-                        .actions(new AttachmentActions().child(new Button(ElementId.NamedInteger('remove-pasted', id))
+                (HoverCard.component(ElementId.NamedInteger('pasted-preview', id))
+                    .trigger(Attachment.component()
+                        .media(AttachmentMedia.component().child(Icon.component(IconName.FileText).small()))
+                        .content(AttachmentContent.component()
+                            .title(AttachmentTitle.component(attachment.title))
+                            .description(AttachmentDescription.component(attachment.detail)))
+                        .actions(AttachmentActions.component().child(Button.component(ElementId.NamedInteger('remove-pasted', id))
                             .ghost()
                             .xsmall()
                             .icon(IconName.Close)
@@ -211,7 +211,7 @@ class TextareaStory extends Model implements Story {
                     .child(div().textSm().child(attachment.detail)) : IntoElement);
             }]));
         }
-        composerColumn.child(new Textarea(composer)
+        composerColumn.child(Textarea.component(composer)
             .withSize(size)
             .onPaste((item:ClipboardItem, _, cx) -> {
                 final images = [for (entry in item.entries) switch entry {
@@ -241,17 +241,17 @@ class TextareaStory extends Model implements Story {
             .child(section('Textarea').w(px(560.)).child(vFlex()
                 .gap2()
                 .wFull()
-                .child(new Textarea(textarea).withSize(size).h(px(320.)))
+                .child(Textarea.component(textarea).withSize(size).h(px(320.)))
                 .child(hFlex()
                     .justifyBetween()
                     .child(hFlex()
                         .gap2()
-                        .child(new Button('btn-insert-text').outline().xsmall().label('Insert Text').onClick(onInsertTextToTextarea))
-                        .child(new Button('btn-replace-text').outline().xsmall().label('Replace Text').onClick(onReplaceTextToTextarea)))
+                        .child(Button.component('btn-insert-text').outline().xsmall().label('Insert Text').onClick(onInsertTextToTextarea))
+                        .child(Button.component('btn-replace-text').outline().xsmall().label('Replace Text').onClick(onReplaceTextToTextarea)))
                     .child('${loc.line}:${loc.character}'))))
-            .child(section('No Wrap').w(px(560.)).child(new Textarea(textareaNoWrap).withSize(size).h(px(200.))))
-            .child(section('Auto Grow').w(px(560.)).child(new Textarea(textareaAutoGrow).withSize(size)))
-            .child(section('Auto Grow with No Wrap').w(px(560.)).child(new Textarea(textareaAutoGrowNoWrap).withSize(size)))
+            .child(section('No Wrap').w(px(560.)).child(Textarea.component(textareaNoWrap).withSize(size).h(px(200.))))
+            .child(section('Auto Grow').w(px(560.)).child(Textarea.component(textareaAutoGrow).withSize(size)))
+            .child(section('Auto Grow with No Wrap').w(px(560.)).child(Textarea.component(textareaAutoGrowNoWrap).withSize(size)))
             .child(section('Submit on Enter (Chat)').w(px(560.)).child(vFlex()
                 .gap2()
                 .wFull()
@@ -262,7 +262,7 @@ class TextareaStory extends Model implements Story {
                     .rounded(theme.radius)
                     .bg(theme.muted)
                     .child(msg) : IntoElement)]))
-                .child(new Textarea(chatInput).withSize(size))))
+                .child(Textarea.component(chatInput).withSize(size))))
             .child(section('Paste Images (Composer)')
                 .description('Paste a screenshot, it lands as an attachment pill above.')
                 .w(px(560.))

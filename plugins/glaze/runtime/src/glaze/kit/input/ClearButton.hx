@@ -16,8 +16,8 @@ class ClearButton {
 
     @:allow(glaze.kit)
     static function clearButton(cx:App):Button {
-        return new Button("clean")
-            .icon(new Icon(IconName.Close))
+        return Button.component("clean")
+            .icon(Icon.component(IconName.Close))
             // Icon-only: screen readers have nothing else to announce.
             .accessibilityLabel(I18n.t("Input.Clear"))
             .text()

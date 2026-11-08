@@ -191,7 +191,7 @@ class Toggle implements RenderOnce implements Styled implements ParentElement im
         final pressedForeground = theme.accentForeground;
         final instanceStyle = toggleStyle.clone();
 
-        final toggle = new glaze.kit.base.Toggle(id).pressed(checked).disabled(disabled);
+        final toggle = glaze.kit.base.Toggle.component(id).pressed(checked).disabled(disabled);
         if (tooltipText != null) toggle.accessibilityLabel(tooltipText);
         final onClick = onClickHandler;
         if (onClick != null) {
@@ -358,7 +358,7 @@ class ToggleGroup implements RenderOnce implements Styled implements Sizable imp
             row.child(item);
         }
 
-        final group = new glaze.kit.base.ToggleGroup(id).axis(Axis.Horizontal).child(row);
+        final group = glaze.kit.base.ToggleGroup.component(id).axis(Axis.Horizontal).child(row);
         final onClick = onClickHandler;
         if (!disabled && onClick != null) {
             group.onClick((_, window, cx) -> {

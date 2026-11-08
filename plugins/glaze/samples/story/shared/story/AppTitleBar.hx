@@ -70,7 +70,7 @@ class AppTitleBar extends Model implements Render {
             left.child(div().textSm().fontWeight(FontWeight.MEDIUM).child(titleValue));
         }
 
-        return new TitleBar()
+        return TitleBar.component()
             // left side
             .child(left)
             .child(div()
@@ -82,12 +82,12 @@ class AppTitleBar extends Model implements Render {
                 .onMouseDown(MouseButton.Left, (_, _, cx) -> cx.stopPropagation())
                 .child(childFn(window, cx.app))
                 .child(fontSizeSelector)
-                .child(new Button('github')
+                .child(Button.component('github')
                     .icon(IconName.Github)
                     .small()
                     .ghost()
                     .onClick((_, _, cx) -> cx.openUrl('https://github.com/longbridge/gpui-kit')))
-                .child(div().relative().child(new Badge().count(notificationsCount).max(99).child(new Button('bell')
+                .child(div().relative().child(Badge.component().count(notificationsCount).max(99).child(Button.component('bell')
                     .small()
                     .ghost()
                     .compact()
@@ -162,7 +162,7 @@ class FontSizeSelector extends Model implements Render {
             .onAction(ToggleListActiveHighlight, self.listener((this_:FontSizeSelector, a:ToggleListActiveHighlight, w, c) -> this_.onToggleListActiveHighlight(a, w, c)))
             .onAction(ToggleFpsMonitor, self.listener((this_:FontSizeSelector, a:ToggleFpsMonitor, w, c) -> this_.onToggleFpsMonitor(a, w, c)))
             .onAction(ToggleAppMenuBar, self.listener((this_:FontSizeSelector, a:ToggleAppMenuBar, w, c) -> this_.onToggleAppMenuBar(a, w, c)))
-            .child(new Button('btn')
+            .child(Button.component('btn')
                 .small()
                 .ghost()
                 .icon(IconName.Settings2)

@@ -1661,7 +1661,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
             .hover(s -> s.bg(theme.tokens.secondary.background).opacity(7.))
             .active(s -> s.bg(theme.tokens.secondaryActive.background).opacity(1.))
             .onClick(cx.listener((table:TableState<D>, _, window, cx) -> table.performSort(colIx, window, cx)))
-            .child(new Icon(icon)
+            .child(Icon.component(icon)
                 .size3()
                 .textColor(theme.secondaryForeground));
     }

@@ -76,7 +76,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
 
     /**
      * The `SelectState` rendered: the one given to `component(state)` or
-     * `new Select(state)`, or the one created by `component()` once the
+     * `Select.component(state)`, or the one created by `component()` once the
      * select was rendered (`null` before).
      */
     public var state(default, null):Null<Entity<SelectState<I>>>;
@@ -108,7 +108,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
     }
 
     /**
-     * Places a select in a tree. With `state`, it is `new Select(state)`.
+     * Places a select in a tree. With `state`, it is `Select.component(state)`.
      * Without, the select creates its `SelectState` over `.options(items)`
      * the first time it is rendered and keeps it as long as it is rendered,
      * under the identity of this call (its position in the code, or
@@ -250,7 +250,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
 
     /** Override the trailing icon, replacing the default chevron. */
     public function icon(icon:IntoIcon):Select<I> {
-        builderOptions.icon = new Icon(icon);
+        builderOptions.icon = Icon.component(icon);
         return this;
     }
 
@@ -363,7 +363,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
         final contentFocusHandle = state.read(cx).state.list.read(cx).focusHandle(cx);
         final openState = state;
 
-        final root = new glaze.kit.base.Select(idValue)
+        final root = glaze.kit.base.Select.component(idValue)
             .open(isOpen)
             .disabled(disabled);
         if (accessibilityLabel != null) root.accessibilityLabel(accessibilityLabel);

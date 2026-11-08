@@ -99,7 +99,7 @@ class Icon implements RenderOnce implements Styled implements Sizable {
     var transformation:Null<Transformation> = null;
 
     /**
-     * `new Icon(IconName.Search)` (Rust `Icon::new`), or `new Icon()` for an
+     * `Icon.component(IconName.Search)` (Rust `Icon::new`), or `Icon.component()` for an
      * empty icon (Rust `Icon::default()`).
      */
     public function new(?icon:IntoIcon) {
@@ -122,14 +122,14 @@ class Icon implements RenderOnce implements Styled implements Sizable {
      */
     @:allow(glaze.kit)
     static function build(path:String):Icon {
-        return new Icon().path(path);
+        return Icon.component().path(path);
     }
 
     /**
      * A copy of this icon (data bytes are shared, like Rust's `Arc<[u8]>`).
      */
     public function clone():Icon {
-        final icon = new Icon();
+        final icon = Icon.component();
         icon.copyFrom(this);
         return icon;
     }
@@ -176,7 +176,7 @@ class Icon implements RenderOnce implements Styled implements Sizable {
      * An icon without source (Rust `Icon::empty()`).
      */
     public static function empty():Icon {
-        return new Icon();
+        return Icon.component();
     }
 
     /**

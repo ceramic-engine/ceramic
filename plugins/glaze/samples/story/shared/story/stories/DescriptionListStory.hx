@@ -119,10 +119,10 @@ class DescriptionListStory extends Model implements Story {
             .sizeFull()
             .itemsCenter()
             .gap6()
-            .child(storyToolbar(size).dropdownChild(new Button('description-list-options').label('Options'), (menu, _, _) -> menu
+            .child(storyToolbar(size).dropdownChild(Button.component('description-list-options').label('Options'), (menu, _, _) -> menu
                 .menuWithCheck('Vertical', vertical, new DescriptionListToggleOption(Vertical))
                 .menuWithCheck('Bordered', bordered, new DescriptionListToggleOption(Bordered))))
-            .child(div().w(px(720.)).child(new DescriptionList()
+            .child(div().w(px(720.)).child(DescriptionList.component()
                 .columns(3)
                 .layout(layout)
                 .bordered(bordered)

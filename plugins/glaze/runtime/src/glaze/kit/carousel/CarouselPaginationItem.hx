@@ -91,7 +91,7 @@ class CarouselPaginationItem implements RenderOnce implements Styled implements 
         final state = this.state;
         final index = this.index;
 
-        final button = new Button(id)
+        final button = Button.component(id)
             .compact()
             .withSize(size)
             .selected(selected)

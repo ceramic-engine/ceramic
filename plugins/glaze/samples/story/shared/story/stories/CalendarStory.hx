@@ -62,15 +62,15 @@ class CalendarStory extends Model implements Story {
             .child(section('Single month')
                 .description('Single-date selection.')
                 .w128()
-                .child(new Calendar(calendar)))
+                .child(Calendar.component(calendar)))
             .child(section('Multiple months')
                 .description('Three months shown together.')
                 .w128()
-                .child(new Calendar(calendarWide).numberOfMonths(3)))
+                .child(Calendar.component(calendarWide).numberOfMonths(3)))
             .child(section('Disabled dates')
                 .description('Recurring unavailable weekdays.')
                 .w128()
-                .child(new Calendar(calendarWithDisabledMatcher)));
+                .child(Calendar.component(calendarWithDisabledMatcher)));
     }
 
 }

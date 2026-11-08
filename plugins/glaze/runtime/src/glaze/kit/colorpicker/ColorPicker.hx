@@ -220,14 +220,14 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
         final root = vFlex()
             .p0p5()
             .gap3()
-            .child(new TabBar('mode')
+            .child(TabBar.component('mode')
                 .segmented()
                 .selectedIndex(activeTab)
                 .onClick((ix, _, cx) -> {
                     tabState.update(cx, (state, cx) -> state.setActiveTab(ix, cx));
                 })
-                .child(new Tab().flex1().label(I18n.t('ColorPicker.Palette')))
-                .child(new Tab().flex1().label(I18n.t('ColorPicker.HSLA'))))
+                .child(Tab.component().flex1().label(I18n.t('ColorPicker.Palette')))
+                .child(Tab.component().flex1().label(I18n.t('ColorPicker.HSLA'))))
             .child(activeTab == 0 ? renderPalettePanel(cx) : renderSliderTabPanel(sliderColor, cx));
         if (hoveredColor != null) {
             root.child(Separator.horizontal()).child(hFlex()
@@ -240,7 +240,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
                     .borderColor(hoveredColor.darken(0.2))
                     .size5()
                     .rounded(theme.radius))
-                .child(new Input(state.read(cx).hexInput()).small().px2p5()));
+                .child(Input.component(state.read(cx).hexInput()).small().px2p5()));
         }
         return root;
     }
@@ -342,10 +342,10 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
 
         return vFlex()
             .gap2()
-            .child(sliderRow(I18n.t('ColorPicker.Hue'), renderSliderTrack(hueColors, cx), new Slider(sliders.hue()), formatInteger(f32(sliderColor.h * 360.)), cx))
-            .child(sliderRow(I18n.t('ColorPicker.Saturation'), renderSliderTrackGradient(saturationStart, saturationEnd, cx), new Slider(sliders.saturation()), formatInteger(f32(sliderColor.s * 100.)), cx))
-            .child(sliderRow(I18n.t('ColorPicker.Lightness'), renderSliderTrack(lightnessColors, cx), new Slider(sliders.lightness()), formatInteger(f32(sliderColor.l * 100.)), cx))
-            .child(sliderRow(I18n.t('ColorPicker.Alpha'), renderSliderTrackGradient(alphaStart, alphaEnd, cx), new Slider(sliders.alpha()), formatInteger(f32(sliderColor.a * 100.)), cx));
+            .child(sliderRow(I18n.t('ColorPicker.Hue'), renderSliderTrack(hueColors, cx), Slider.component(sliders.hue()), formatInteger(f32(sliderColor.h * 360.)), cx))
+            .child(sliderRow(I18n.t('ColorPicker.Saturation'), renderSliderTrackGradient(saturationStart, saturationEnd, cx), Slider.component(sliders.saturation()), formatInteger(f32(sliderColor.s * 100.)), cx))
+            .child(sliderRow(I18n.t('ColorPicker.Lightness'), renderSliderTrack(lightnessColors, cx), Slider.component(sliders.lightness()), formatInteger(f32(sliderColor.l * 100.)), cx))
+            .child(sliderRow(I18n.t('ColorPicker.Alpha'), renderSliderTrackGradient(alphaStart, alphaEnd, cx), Slider.component(sliders.alpha()), formatInteger(f32(sliderColor.a * 100.)), cx));
     }
 
     function renderSliderTrack(colors:Array<Hsla>, cx:App):IntoElement {
@@ -379,7 +379,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
         final openState = state;
         final popoverState = state;
 
-        final picker = new glaze.kit.base.ColorPicker(id);
+        final picker = glaze.kit.base.ColorPicker.component(id);
         if (field) picker.wFull();
         picker.refineStyle(pickerStyle)
             .open(open)
@@ -390,7 +390,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
             openState.update(cx, (state, cx) -> state.setOpen(open, cx));
         });
 
-        final popover = new Popover('popover')
+        final popover = Popover.component('popover')
             .open(open)
             .w72()
             .onOpenChange((open, _, cx) -> {
@@ -399,7 +399,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
         if (field) {
             popover.triggerStyle(new StyleBuilder(new StyleRefinement()).wFull().style());
         }
-        popover.trigger(new ColorPickerButton(
+        popover.trigger(ColorPickerButton.component(
             'trigger',
             size,
             labelValue,
@@ -435,7 +435,7 @@ class ColorSelect implements RenderOnce implements Styled implements Sizable {
 
     /** Create a new color select with the given `ColorPickerState`. */
     public function new(state:Entity<ColorPickerState>) {
-        picker = new ColorPicker(state);
+        picker = ColorPicker.component(state);
         picker.id = ElementId.NamedInteger('color-select', state.entityId());
         picker.field = true;
     }
@@ -590,7 +590,7 @@ class ColorPickerButton implements RenderOnce implements Selectable implements S
         }
         return row.child(swatch)
             .child(text)
-            .child(new Caret(size).textColor(theme.mutedForeground))
+            .child(Caret.component(size).textColor(theme.mutedForeground))
             .intoAnyElement();
     }
 

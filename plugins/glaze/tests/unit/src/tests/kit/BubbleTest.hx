@@ -14,11 +14,11 @@ import testing.TestCase;
 class BubbleTest extends TestCase {
 
     function testBubbleBuilder() {
-        final bubble = new Bubble()
+        final bubble = Bubble.component()
             .alignment(End)
             .withVariant(Outline)
-            .content(new BubbleContent().child('Hello'))
-            .reactions(new BubbleReactions().child('👍'));
+            .content(BubbleContent.component().child('Hello'))
+            .reactions(BubbleReactions.component().child('👍'));
 
         assertEquals(MessageAlignment.End, bubble.alignmentValue);
         assertEquals(BubbleVariant.Outline, bubble.variant);
@@ -27,15 +27,15 @@ class BubbleTest extends TestCase {
 
         // Direct children survive a later `content(...)` call and stay in
         // front of the new surface's own children.
-        final reordered = new Bubble()
+        final reordered = Bubble.component()
             .child('Existing')
-            .content(new BubbleContent().child('Configured'));
+            .content(BubbleContent.component().child('Configured'));
         assertEquals(2, reordered.contentValue.childElements.length);
 
-        final group = new BubbleGroup().child('First').child('Second');
+        final group = BubbleGroup.component().child('First').child('Second');
         assertEquals(2, group.childElements.length);
 
-        final reactions = new BubbleReactions()
+        final reactions = BubbleReactions.component()
             .side(Top)
             .alignment(Start)
             .child('👍 2');
@@ -44,8 +44,8 @@ class BubbleTest extends TestCase {
         assertEquals(MessageAlignment.Start, reactions.alignmentValue);
         assertEquals(1, reactions.childElements.length);
 
-        final reactions = new BubbleReactions()
-            .action(new Button('reaction-action'))
+        final reactions = BubbleReactions.component()
+            .action(Button.component('reaction-action'))
             .child('👍');
         assertEquals(2, reactions.childElements.length);
         assertTrue(reactions.childElements[0].match(Action(_)));

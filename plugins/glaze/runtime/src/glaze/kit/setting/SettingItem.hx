@@ -245,7 +245,7 @@ class SettingItem {
                 } else {
                     heading.wFull();
                 }
-                heading.child(new Label(title).textSm());
+                heading.child(Label.component(title).textSm());
                 if (description != null) {
                     heading.child(
                         div()

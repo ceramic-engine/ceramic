@@ -106,7 +106,7 @@ class DropdownMenuPopover implements RenderOnce {
             case Name(name): 'popover:' + name;
             case _: 'popover:' + ContextMenu.debugElementId(id);
         };
-        final popover = new Popover(popoverId)
+        final popover = Popover.component(popoverId)
             .appearance(false)
             .overlayClosable(false)
             .trigger(trigger)

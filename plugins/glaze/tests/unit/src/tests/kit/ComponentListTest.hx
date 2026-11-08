@@ -265,7 +265,7 @@ private class BounceList extends Model implements Render {
         return div()
             .w(px(240.))
             .h(px(200.))
-            .child(new List(state).scrollBounce(true).sizeFull());
+            .child(List.component(state).scrollBounce(true).sizeFull());
     }
 
 }

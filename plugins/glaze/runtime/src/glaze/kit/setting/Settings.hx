@@ -185,15 +185,15 @@ class Settings implements RenderOnce implements Sizable {
     }
 
     static function renderNoResults():IntoElement {
-        return new Empty().sizeFull().header(
-            new EmptyHeader()
+        return Empty.component().sizeFull().header(
+            EmptyHeader.component()
                 .media(
-                    new EmptyMedia()
+                    EmptyMedia.component()
                         .withVariant(EmptyMediaVariant.Icon)
-                        .child(new Icon(IconName.Search))
+                        .child(glaze.kit.Icon.component(IconName.Search))
                 )
-                .title(new EmptyTitle().child(I18n.t('Settings.no_results')))
-                .description(new EmptyDescription().child(I18n.t('Settings.no_results_description')))
+                .title(EmptyTitle.component().child(I18n.t('Settings.no_results')))
+                .description(EmptyDescription.component().child(I18n.t('Settings.no_results_description')))
         );
     }
 
@@ -246,9 +246,9 @@ class Settings implements RenderOnce implements Sizable {
         final header = div()
             .wFull()
             .refineStyle(headerStyleValue)
-            .child(new Input(searchInput).prefix(new Icon(IconName.Search)));
+            .child(Input.component(searchInput).prefix(glaze.kit.Icon.component(IconName.Search)));
 
-        final sidebar = new Sidebar<SidebarMenu>('settings-sidebar')
+        final sidebar = Sidebar.component('settings-sidebar')
             .w(relative(1.))
             .border0()
             .refineStyle(sidebarStyleValue)

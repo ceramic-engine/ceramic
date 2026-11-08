@@ -28,7 +28,7 @@ using glaze.kit.base.StyledExt;
  * A styled source-code editor.
  *
  * Keep the state on your view (`cx.newEntity(c -> new EditorState(window, c).language('json'))`)
- * and render it with `new Editor(state)`.
+ * and render it with `Editor.component(state)`.
  */
 class Editor implements RenderOnce implements Styled implements Sizable {
 

@@ -38,7 +38,7 @@ class Caret implements RenderOnce {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final icon = new Icon(IconName.ChevronDown).withSize(switch size {
+        final icon = Icon.component(IconName.ChevronDown).withSize(switch size {
             case XSmall: XSmall;
             case Small: Small;
             case _: Medium;

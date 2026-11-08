@@ -64,7 +64,7 @@ class GroupBoxStory extends Model implements Story {
     }
 
     function emailCheckbox(self:Context<GroupBoxStory>, id:String, label:String, ix:Int):Checkbox {
-        return new Checkbox(id)
+        return Checkbox.component(id)
             .label(label)
             .checked(emailOptions[ix])
             .onClick(self.listener((this_:GroupBoxStory, checked:Bool, _, cx) -> {
@@ -80,13 +80,13 @@ class GroupBoxStory extends Model implements Story {
             .sizeFull()
             .itemsCenter()
             .gap6()
-            .child(section('Default').w128().child(new GroupBox()
+            .child(section('Default').w128().child(GroupBox.component()
                 .title('Email notifications')
                 .child(emailCheckbox(self, 'all', 'All activity', 0))
                 .child(emailCheckbox(self, 'news-letter', 'Product updates', 1))
                 .child(emailCheckbox(self, 'account-activity', 'Account activity', 2))
-                .child(new Button('ok').primary().label('Save preferences'))))
-            .child(section('Filled').w128().child(new GroupBox()
+                .child(Button.component('ok').primary().label('Save preferences'))))
+            .child(section('Filled').w128().child(GroupBox.component()
                 .id('activity')
                 .fill()
                 .title('Contributions & activity')
@@ -94,7 +94,7 @@ class GroupBoxStory extends Model implements Story {
                 .child(hFlex()
                     .justifyBetween()
                     .child('Make profile private and hide activity')
-                    .child(new Switch('profile-private')
+                    .child(Switch.component('profile-private')
                         .checked(profilePrivate)
                         .onClick(self.listener((this_:GroupBoxStory, checked:Bool, _, cx) -> {
                             this_.profilePrivate = checked;
@@ -103,36 +103,36 @@ class GroupBoxStory extends Model implements Story {
                 .child(hFlex()
                     .justifyBetween()
                     .child('Include private contributions on my profile')
-                    .child(new Switch('private-contributions')
+                    .child(Switch.component('private-contributions')
                         .checked(privateContributions)
                         .onClick(self.listener((this_:GroupBoxStory, checked:Bool, _, cx) -> {
                             this_.privateContributions = checked;
                             cx.notify();
                         }))))
-                .child(new Button('btn-1').primary().label('Save'))))
-            .child(section('Outlined').w128().child(new GroupBox()
+                .child(Button.component('btn-1').primary().label('Save'))))
+            .child(section('Outlined').w128().child(GroupBox.component()
                 .id('appearance')
                 .outline()
                 .title('Appearance')
                 .child(RadioGroup.vertical('theme')
-                    .child(new Radio('light').label('Light'))
-                    .child(new Radio('dark').label('Dark'))
-                    .child(new Radio('system').label('System'))
+                    .child(Radio.component('light').label('Light'))
+                    .child(Radio.component('dark').label('Dark'))
+                    .child(Radio.component('system').label('System'))
                     .selectedIndex(theme)
                     .onClick(self.listener((this_:GroupBoxStory, selected:Int, _, cx) -> {
                         this_.theme = selected;
                         cx.notify();
                     })))))
-            .child(section('Without Title').w128().child(new GroupBox().outline().child(hFlex()
+            .child(section('Without Title').w128().child(GroupBox.component().outline().child(hFlex()
                 .justifyBetween()
                 .child('Make profile private and hide activity')
-                .child(new Switch('compact-private')
+                .child(Switch.component('compact-private')
                     .checked(compactPrivate)
                     .onClick(self.listener((this_:GroupBoxStory, checked:Bool, _, cx) -> {
                         this_.compactPrivate = checked;
                         cx.notify();
                     }))))))
-            .child(section('Custom Style').w128().child(new GroupBox()
+            .child(section('Custom Style').w128().child(GroupBox.component()
                 .outline()
                 .bg(colors.groupBox)
                 .roundedXl()

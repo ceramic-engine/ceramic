@@ -498,17 +498,17 @@ class ComponentCarouselTest extends TestCase {
 
     function testCarouselControlsAcceptSemanticSizes() {
         final state = newState(() -> new CarouselState(2));
-        assertEquals(glaze.kit.Size.Medium, new CarouselPrevious(state).size);
-        assertEquals(glaze.kit.Size.Medium, new CarouselNext(state).size);
-        assertEquals(glaze.kit.Size.Large, new CarouselPrevious(state).large().size);
-        assertEquals(glaze.kit.Size.XSmall, new CarouselNext(state).xsmall().size);
-        assertEquals(glaze.kit.Size.Small, new CarouselPaginationItem('pagination', 0, state).small().size);
+        assertEquals(glaze.kit.Size.Medium, CarouselPrevious.component(state).size);
+        assertEquals(glaze.kit.Size.Medium, CarouselNext.component(state).size);
+        assertEquals(glaze.kit.Size.Large, CarouselPrevious.component(state).large().size);
+        assertEquals(glaze.kit.Size.XSmall, CarouselNext.component(state).xsmall().size);
+        assertEquals(glaze.kit.Size.Small, CarouselPaginationItem.component('pagination', 0, state).small().size);
     }
 
     function testCarouselFocusRingIsConfigurable() {
         final state = newState(() -> new CarouselState(2));
-        assertTrue(new Carousel('carousel', state).isFocusRingEnabled());
-        assertFalse(new Carousel('carousel', state).focusRing(false).isFocusRingEnabled());
+        assertTrue(Carousel.component('carousel', state).isFocusRingEnabled());
+        assertFalse(Carousel.component('carousel', state).focusRing(false).isFocusRingEnabled());
     }
 
     function openHarness<V:Model & Render>(build:(Context<V>) -> V):VisualTestContext {
@@ -625,8 +625,8 @@ class ComponentCarouselTest extends TestCase {
 
     function testCarouselControlsAcceptAccessibilityLabelsAndChildren() {
         final state = newState(() -> new CarouselState(2));
-        final previous = new CarouselPrevious(state).accessibilityLabel('Previous project').child('Back');
-        final next = new CarouselNext(state).accessibilityLabel('Next project').child('Forward');
+        final previous = CarouselPrevious.component(state).accessibilityLabel('Previous project').child('Back');
+        final next = CarouselNext.component(state).accessibilityLabel('Next project').child('Forward');
 
         assertEquals('Previous project', previous.accessibilityLabelValue);
         assertEquals('Next project', next.accessibilityLabelValue);
@@ -730,12 +730,12 @@ private class KeyboardHarness extends Model implements Render {
     }
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
-        return div().tabGroup().child(new Carousel('carousel', state)
+        return div().tabGroup().child(Carousel.component('carousel', state)
             .w(px(100.))
             .h(px(100.))
-            .child(new CarouselContent(state)
+            .child(CarouselContent.component(state)
                 .h(px(100.))
-                .children([for (index in 0...3) new CarouselItem(ElementId.NamedInteger('carousel-item', index), index, state).child(Std.string(index))])));
+                .children([for (index in 0...3) CarouselItem.component(ElementId.NamedInteger('carousel-item', index), index, state).child(Std.string(index))])));
     }
 
 }
@@ -759,12 +759,12 @@ private class PropagationHarness extends Model implements Render {
             .onAction(SelectDown, (_, _, _) -> outerActions[0]++)
             .onAction(SelectLeft, (_, _, _) -> outerActions[0]++)
             .onAction(SelectRight, (_, _, _) -> outerActions[0]++)
-            .child(new Carousel('carousel', state)
+            .child(Carousel.component('carousel', state)
                 .w(px(100.))
                 .h(px(100.))
-                .child(new CarouselContent(state)
+                .child(CarouselContent.component(state)
                     .h(px(100.))
-                    .children([for (index in 0...3) new CarouselItem(ElementId.NamedInteger('carousel-item', index), index, state).child(Std.string(index))])));
+                    .children([for (index in 0...3) CarouselItem.component(ElementId.NamedInteger('carousel-item', index), index, state).child(Std.string(index))])));
     }
 
 }
@@ -779,14 +779,14 @@ private class ControlsHarness extends Model implements Render {
     }
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
-        return div().tabGroup().child(new Carousel('carousel', state)
+        return div().tabGroup().child(Carousel.component('carousel', state)
             .w(px(100.))
             .h(px(100.))
-            .child(new CarouselContent(state)
+            .child(CarouselContent.component(state)
                 .h(px(100.))
-                .children([for (index in 0...3) new CarouselItem(ElementId.NamedInteger('carousel-item', index), index, state).child(Std.string(index))]))
-            .child(new CarouselPrevious(state))
-            .child(new CarouselNext(state)));
+                .children([for (index in 0...3) CarouselItem.component(ElementId.NamedInteger('carousel-item', index), index, state).child(Std.string(index))]))
+            .child(CarouselPrevious.component(state))
+            .child(CarouselNext.component(state)));
     }
 
 }
@@ -805,18 +805,18 @@ private class ButtonDragHarness extends Model implements Render {
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
         final clicks = this.clicks;
-        return new Carousel('button-drag-carousel', state)
+        return Carousel.component('button-drag-carousel', state)
             .w(px(100.))
             .h(px(40.))
-            .child(new CarouselContent(state)
+            .child(CarouselContent.component(state)
                 .h(px(40.))
-                .child(new CarouselItem('button-slide', 0, state)
+                .child(CarouselItem.component('button-slide', 0, state)
                     .h(px(40.))
-                    .child(new Button('slide-button')
+                    .child(Button.component('slide-button')
                         .wFull()
                         .h(px(40.))
                         .onClick((_, _, _) -> clicks[0]++)))
-                .child(new CarouselItem('plain-slide', 1, state)
+                .child(CarouselItem.component('plain-slide', 1, state)
                     .h(px(40.))
                     .child('Second')));
     }
@@ -842,12 +842,12 @@ private class NestedVerticalCarouselHarness extends Model implements Render {
             .h(px(100.))
             .overflowYScroll()
             .trackScroll(outerHandle)
-            .child(new Carousel('vertical-carousel', state)
+            .child(Carousel.component('vertical-carousel', state)
                 .w(px(100.))
                 .h(px(60.))
-                .child(new CarouselContent(state)
+                .child(CarouselContent.component(state)
                     .hFull()
-                    .children([for (index in 0...2) new CarouselItem(ElementId.NamedInteger('vertical-slide', index), index, state).child(Std.string(index))])))
+                    .children([for (index in 0...2) CarouselItem.component(ElementId.NamedInteger('vertical-slide', index), index, state).child(Std.string(index))])))
             .child(div().wFull().h(px(400.)));
     }
 

@@ -74,22 +74,22 @@ class SkeletonStory extends Model implements Story {
                 .child(hFlex()
                     .wFull()
                     .gap3()
-                    .child(new Skeleton().size12().roundedFullStyle(cx.app))
+                    .child(Skeleton.component().size12().roundedFullStyle(cx.app))
                     .child(vFlex()
                         .flex1()
                         .gap2()
-                        .child(new Skeleton().wFull().h4().rounded(theme.radius))
-                        .child(new Skeleton().w2_3().h4().rounded(theme.radius)))))
+                        .child(Skeleton.component().wFull().h4().rounded(theme.radius))
+                        .child(Skeleton.component().w2_3().h4().rounded(theme.radius)))))
             .child(section('Card')
                 .description('Combines media and text placeholders in a content card.')
                 .w(px(360.))
                 .child(vFlex()
                     .gap2()
-                    .child(new Skeleton().wFull().h(px(180.)).rounded(theme.radius))
+                    .child(Skeleton.component().wFull().h(px(180.)).rounded(theme.radius))
                     .child(vFlex()
                         .gap2()
-                        .child(new Skeleton().wFull().h4().rounded(theme.radius))
-                        .child(new Skeleton().w(px(200.)).h4().rounded(theme.radius)))));
+                        .child(Skeleton.component().wFull().h4().rounded(theme.radius))
+                        .child(Skeleton.component().w(px(200.)).h4().rounded(theme.radius)))));
     }
 
 }

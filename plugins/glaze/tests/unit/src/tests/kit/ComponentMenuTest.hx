@@ -124,7 +124,7 @@ class ComponentMenuTest extends TestCase {
     /// menu_item.rs
 
     function testAriaLabelSetsAccessibleName() {
-        final item = new MenuItemElement('open').ariaLabel('Open');
+        final item = MenuItemElement.component('open').ariaLabel('Open');
         assertEquals('Open', item.ariaLabelValue);
     }
 
@@ -421,7 +421,7 @@ class ComponentMenuTest extends TestCase {
                         .keyContext(DROPDOWN_CONTEXT)
                         .onAction(CopyText, (_, _, _) -> {})
                         .child(
-                            new Button('trigger')
+                            Button.component('trigger')
                                 .label('Edit')
                                 .w(px(100.))
                                 .h(px(30.))
@@ -462,8 +462,8 @@ class ComponentMenuTest extends TestCase {
     /// dropdown_button.rs
 
     function testDropdownButtonBuilder() {
-        final button = new Button('inner').label('Action');
-        final dropdown = new DropdownButton('complex-dropdown')
+        final button = Button.component('inner').label('Action');
+        final dropdown = DropdownButton.component('complex-dropdown')
             .button(button)
             .primary()
             .outline()
@@ -487,8 +487,8 @@ class ComponentMenuTest extends TestCase {
      * caller can style the halves from either level.
      */
     function testInnerButtonKeepsItsOwnVariantAndSize() {
-        final dropdown = new DropdownButton('dropdown')
-            .button(new Button('inner').label('Action').danger().small())
+        final dropdown = DropdownButton.component('dropdown')
+            .button(Button.component('inner').label('Action').danger().small())
             .dropdownMenu((menu, _, _) -> menu);
 
         assertEquals(null, dropdown.variant);
@@ -496,16 +496,16 @@ class ComponentMenuTest extends TestCase {
     }
 
     function testInnerGhostBecomesTheSplitVariant() {
-        final dropdown = new DropdownButton('dropdown')
-            .button(new Button('inner').label('Action').ghost())
+        final dropdown = DropdownButton.component('dropdown')
+            .button(Button.component('inner').label('Action').ghost())
             .dropdownMenu((menu, _, _) -> menu);
 
         assertTrue(dropdown.effectiveVariant().equals(Ghost));
     }
 
     function testInnerSizeBecomesTheSplitSize() {
-        final dropdown = new DropdownButton('dropdown')
-            .button(new Button('inner').label('Action').small())
+        final dropdown = DropdownButton.component('dropdown')
+            .button(Button.component('inner').label('Action').small())
             .dropdownMenu((menu, _, _) -> menu);
 
         assertTrue(dropdown.effectiveSize().equals(Small));
@@ -518,23 +518,23 @@ class ComponentMenuTest extends TestCase {
      * built with are checked.
      */
     function testDropdownButtonNamesItsMenuTrigger() {
-        final save = new DropdownButton('save')
-            .button(new Button('save-action').label('Save'))
+        final save = DropdownButton.component('save')
+            .button(Button.component('save-action').label('Save'))
             .menuAccessibilityLabel('More save options')
             .dropdownMenu((menu, _, _) -> menu);
-        final plain = new DropdownButton('plain')
-            .button(new Button('plain-action').label('Run'))
+        final plain = DropdownButton.component('plain')
+            .button(Button.component('plain-action').label('Run'))
             .dropdownMenu((menu, _, _) -> menu);
         assertEquals('More save options', @:privateAccess save.menuAccessibilityLabelValue);
         assertEquals(null, @:privateAccess plain.menuAccessibilityLabelValue);
         assertEquals('More options', glaze.kit.I18n.t('DropdownButton.more_options'), 'the caret-only trigger needs a name without a caller-provided label');
         final opened = open((_, _) -> new ScriptView((_, _) -> div()
-            .child(new DropdownButton('save')
-                .button(new Button('save-action').label('Save'))
+            .child(DropdownButton.component('save')
+                .button(Button.component('save-action').label('Save'))
                 .menuAccessibilityLabel('More save options')
                 .dropdownMenu((menu, _, _) -> menu))
-            .child(new DropdownButton('plain')
-                .button(new Button('plain-action').label('Run'))
+            .child(DropdownButton.component('plain')
+                .button(Button.component('plain-action').label('Run'))
                 .dropdownMenu((menu, _, _) -> menu))));
         draw(opened.cx);
     }
@@ -893,7 +893,7 @@ class ComponentMenuTest extends TestCase {
                     .id('card-title')
                     .h(px(40.))
                     .child('Card')))
-                .child(new Probe('share', new Button('share')
+                .child(new Probe('share', Button.component('share')
                     .label('Share')
                     .contextMenu((menu, _, cx) -> {
                         innerMenu = cx.weakEntity();
@@ -964,7 +964,7 @@ class ComponentMenuTest extends TestCase {
     function testOpenWithoutDismissReleasesTheMenu() {
         var menu:Null<WeakEntity<PopupMenu>> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> div().sizeFull().child(
-            new Button('trigger')
+            Button.component('trigger')
                 .label('Edit')
                 .w(px(100.))
                 .h(px(30.))
@@ -996,7 +996,7 @@ class ComponentMenuTest extends TestCase {
     function testDismissedDropdownMenuIsReleased() {
         var menu:Null<WeakEntity<PopupMenu>> = null;
         final opened = open((_, _) -> new ScriptView((_, _) -> div().sizeFull().child(
-            new Button('trigger')
+            Button.component('trigger')
                 .label('Edit')
                 .w(px(100.))
                 .h(px(30.))
@@ -1095,7 +1095,7 @@ private class Commands extends Model implements Render {
             .p4()
             .onAction(Save, (_, _, _) -> saved = true)
             .onAction(Unavailable, (_, _, _) -> throw 'disabled command dispatched')
-            .child(new Probe('commands', new Button('commands')
+            .child(new Probe('commands', Button.component('commands')
                 .label('Commands')
                 .dropdownMenu((menu, window, cx) -> {
                     this.menu = cx.weakEntity();
@@ -1151,7 +1151,7 @@ private class ScrollableCommands extends Model implements Render {
             .trackFocus(focus)
             .sizeFull()
             .p4()
-            .child(new Probe('commands', new Button('commands')
+            .child(new Probe('commands', Button.component('commands')
                 .label('Commands')
                 .dropdownMenu((menu, window, cx) -> {
                     this.menu = cx.weakEntity();
@@ -1206,7 +1206,7 @@ private class LongPressMenus extends Model implements Render {
                 })))
             .child(div()
                 .w(px(320.))
-                .child(new Probe('row-input', new glaze.kit.input.Input(input).id('row-input')))
+                .child(new Probe('row-input', glaze.kit.input.Input.component(input).id('row-input')))
                 .contextMenu((menu, _, cx) -> {
                     menus.push(cx.weakEntity());
                     return menu.menu('Copy', new glaze.kit.base.input.InputActions.Copy());

@@ -323,7 +323,7 @@ private class Screen extends Model implements Render {
             .flexCol()
             .gap4()
             .p4()
-            .child(new Probe('input', new Input(input).id('input').w(px(320.))))
+            .child(new Probe('input', Input.component(input).id('input').w(px(320.))))
             .child(new Probe('text', div()
                 .id('text')
                 .w(px(320.))

@@ -5,6 +5,7 @@
 package glaze.kit;
 
 import glaze.App;
+import glaze.Glaze;
 import glaze.AppContext;
 import glaze.kit.base.Base;
 import glaze.kit.base.GlobalState;
@@ -114,7 +115,7 @@ class Kit {
      * before the first render applies to it.
      */
     public static function setLocale(locale:String, ?cx:AppContext):Void {
-        ensureInit(cx != null ? cx : App.current);
+        ensureInit(cx != null ? cx : Glaze.app);
         I18n.setLocale(locale);
     }
 

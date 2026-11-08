@@ -225,13 +225,13 @@ class DiffStory extends Model implements Story {
             .gap2()
             .child(storyToolbarGroup()
                 .wAuto()
-                .child(new Button('diff-unified')
+                .child(Button.component('diff-unified')
                     .label('Unified')
                     .selected(mode == DiffMode.Unified)
                     .onClick(cx.listener((this_:DiffStory, _, _, cx) -> {
                         this_.state.update(cx, (state, cx) -> state.setMode(DiffMode.Unified, cx));
                     })))
-                .child(new Button('diff-split')
+                .child(Button.component('diff-split')
                     .label('Split')
                     .selected(mode == DiffMode.Split)
                     .onClick(cx.listener((this_:DiffStory, _, _, cx) -> {
@@ -239,7 +239,7 @@ class DiffStory extends Model implements Story {
                     }))))
             .child(storyToolbarGroup()
                 .wAuto()
-                .child(new Button('diff-previous')
+                .child(Button.component('diff-previous')
                     .icon(IconName.ArrowUp)
                     .accessibilityLabel('Previous change')
                     .tooltip('Previous change')
@@ -247,7 +247,7 @@ class DiffStory extends Model implements Story {
                     .onClick(cx.listener((this_:DiffStory, _, _, cx) -> {
                         this_.state.update(cx, (state, cx) -> state.previousChange(cx));
                     })))
-                .child(new Button('diff-next')
+                .child(Button.component('diff-next')
                     .icon(IconName.ArrowDown)
                     .accessibilityLabel('Next change')
                     .tooltip('Next change')
@@ -256,7 +256,7 @@ class DiffStory extends Model implements Story {
                         this_.state.update(cx, (state, cx) -> state.nextChange(cx));
                     }))))
             .child(div().flex1())
-            .child(storyToolbarGroup().wAuto().dropdownChild(new Button('diff-options').label('Options'), (menu, window, cx) -> {
+            .child(storyToolbarGroup().wAuto().dropdownChild(Button.component('diff-options').label('Options'), (menu, window, cx) -> {
                 menu.submenu('Example', window, cx, (menu, _, _) -> {
                     for (index in 0...EXAMPLES.length) {
                         menu = menu.menuWithCheck(EXAMPLES[index], example == index, new DiffStoryAction(Example(index)));
@@ -303,7 +303,7 @@ class DiffStory extends Model implements Story {
         final story:WeakEntity<DiffStory> = cast cx.weakEntity();
         final addStory = story;
 
-        final diff = new Diff(state)
+        final diff = Diff.component(state)
             .wFull()
             .h(rems(32.))
             .hunkSeparator(SEPARATORS[separator].separator)
@@ -317,7 +317,7 @@ class DiffStory extends Model implements Story {
             final diagnostic = new DiffLinePosition('src/retry.rs', DiffSide.Modified, 21);
             diff.decorations([new DiffDecoration(new DiffLineRange('src/retry.rs', DiffSide.Modified, 21, 21))])
                 .gutterMarkers([new DiffGutterMarker(ElementId.Name('overflow'), diagnostic).withLabel('Possible overflow')])
-                .renderGutterMarker((marker, _, _) -> new Button(marker.id())
+                .renderGutterMarker((marker, _, _) -> Button.component(marker.id())
                     .ghost()
                     .xsmall()
                     .icon(IconName.TriangleAlert)
@@ -356,7 +356,7 @@ class DiffStory extends Model implements Story {
                                     .textXs()
                                     .textColor(theme.mutedForeground)
                                     .child(resolved ? 'Resolved' : 'Review comment')))
-                            .child(new Button(id)
+                            .child(Button.component(id)
                                 .wAuto()
                                 .ghost()
                                 .xsmall()

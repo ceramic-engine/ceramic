@@ -668,7 +668,7 @@ class Diff implements RenderOnce implements Styled {
         final partial = pairs.len() > lines;
         function expand(id:ElementId, expansion:FoldExpansion):Button {
             final state = code.state;
-            return new Button(id).ghost().xsmall().wAuto().textColor(theme.mutedForeground).onClick((_, _, cx) -> {
+            return Button.component(id).ghost().xsmall().wAuto().textColor(theme.mutedForeground).onClick((_, _, cx) -> {
                 state.update(cx, (state:DiffState, cx:Context<DiffState>) -> state.expandFold(file, pairs, expansion, cx));
             });
         }
@@ -701,7 +701,7 @@ class Diff implements RenderOnce implements Styled {
         final resolution = code.state.read(cx).conflictResolution(document.path(), ix);
         function choose(id:String, label:String, resolution:Null<DiffConflictResolution>):Button {
             final state = code.state;
-            return new Button(ElementId.NamedInteger(id, ix)).ghost().xsmall().wAuto().label(label).onClick((_, _, cx) -> {
+            return Button.component(ElementId.NamedInteger(id, ix)).ghost().xsmall().wAuto().label(label).onClick((_, _, cx) -> {
                 state.update(cx, (state:DiffState, cx:Context<DiffState>) -> state.chooseConflict(file, ix, resolution, cx));
             });
         }
@@ -823,7 +823,7 @@ class Diff implements RenderOnce implements Styled {
                 .pr3()
                 .py1()
                 .gap1()
-                .child(new Button('collapse-file').ghost()
+                .child(Button.component('collapse-file').ghost()
                     .xsmall()
                     .icon(collapsed ? IconName.ChevronRight : IconName.ChevronDown)
                     .accessibilityLabel(collapsed ? I18n.t('Diff.ExpandFile', {name: name}) : I18n.t('Diff.CollapseFile', {name: name}))
@@ -997,7 +997,7 @@ class Diff implements RenderOnce implements Styled {
             .bg(theme.primary)
             .textColor(theme.primaryForeground)
             .when(!atSelectionEnd, d -> d.opacity(0.).groupHover('diff-line', s -> s.opacity(1.)))
-            .child(new Icon(IconName.Plus).xsmall())
+            .child(Icon.component(IconName.Plus).xsmall())
             .onMouseDown(MouseButton.Left, (_, _, cx) -> cx.stopPropagation())
             .onClick((_, window, cx) -> handler(range, window, cx))
             .intoAnyElement();

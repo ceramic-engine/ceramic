@@ -188,10 +188,10 @@ class StoryContainer extends PanelBase {
 
     override public function toolbarButtons(window:Window, cx:Context<Dynamic>):Null<Array<Button>> {
         return [
-            new Button('info').icon(IconName.Info).onClick((_, window, cx) -> {
+            Button.component('info').icon(IconName.Info).onClick((_, window, cx) -> {
                 window.pushNotification('You have clicked info button', cx);
             }),
-            new Button('search').icon(IconName.Search).onClick((_, window, cx) -> {
+            Button.component('search').icon(IconName.Search).onClick((_, window, cx) -> {
                 window.pushNotification('You have clicked search button', cx);
             }),
         ];

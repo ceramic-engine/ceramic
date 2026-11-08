@@ -76,7 +76,7 @@ class WindowBorder implements RenderOnce implements ParentElement {
      * Create a new window border.
      */
     public static function windowBorder():WindowBorder {
-        return new WindowBorder();
+        return WindowBorder.component();
     }
 
     /**

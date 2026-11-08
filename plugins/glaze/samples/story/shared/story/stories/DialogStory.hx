@@ -179,8 +179,8 @@ class DialogStory extends Model implements Story {
 
         return section('Default')
             .description('Compose form controls and footer actions.')
-            .child(new Dialog(cx.app)
-                .trigger(new Button('show-dialog').outline().label('Open Dialog'))
+            .child(Dialog.component(cx.app)
+                .trigger(Button.component('show-dialog').outline().label('Open Dialog'))
                 .overlay(dialogOverlay)
                 .keyboard(keyboard)
                 .closeButton(closeButton)
@@ -195,23 +195,23 @@ class DialogStory extends Model implements Story {
                 })
                 .p0()
                 .content((content, _, cx) -> content
-                    .child(new DialogHeader()
+                    .child(DialogHeader.component()
                         .p4()
-                        .child(new DialogTitle().child('Basic Dialog'))
-                        .child(new DialogDescription().child('This is a basic dialog created using the declarative API.')))
+                        .child(DialogTitle.component().child('Basic Dialog'))
+                        .child(DialogDescription.component().child('This is a basic dialog created using the declarative API.')))
                     .child(vFlex()
                         .px4()
                         .pb4()
                         .gap3()
                         .child('This is a dialog dialog, you can put anything here.')
-                        .child(new Input(input1))
-                        .child(new Select(select))
-                        .child(new DatePicker(date).placeholder('Date of Birth')))
-                    .child(new DialogFooter()
+                        .child(Input.component(input1))
+                        .child(Select.component(select))
+                        .child(DatePicker.component(date).placeholder('Date of Birth')))
+                    .child(DialogFooter.component()
                         .p4()
                         .bg(Theme.global(cx).muted)
                         .justifyBetween()
-                        .child(new Button('new-dialog')
+                        .child(Button.component('new-dialog')
                             .label('Open Other Dialog')
                             .outline()
                             .onClick((_, window, cx) -> {
@@ -223,8 +223,8 @@ class DialogStory extends Model implements Story {
                             }))
                         .child(hFlex()
                             .gap2()
-                            .child(new DialogClose().child(new Button('cancel').label('Cancel').outline()))
-                            .child(new DialogAction().child(new Button('confirm')
+                            .child(DialogClose.component().child(Button.component('cancel').label('Cancel').outline()))
+                            .child(DialogAction.component().child(Button.component('confirm')
                                 .primary()
                                 .label('Confirm')))))));
     }
@@ -253,8 +253,8 @@ class DialogStory extends Model implements Story {
                 .child(div()
                     .minW0()
                     .flex1()
-                    .child(new Input(input2).wFull()))
-                .child(new Button('test-action')
+                    .child(Input.component(input2).wFull()))
+                .child(Button.component('test-action')
                     .outline()
                     .label('Run Action')
                     .flexShrink0()
@@ -270,7 +270,7 @@ class DialogStory extends Model implements Story {
 
         return section('Without title')
             .description('Render content without a heading.')
-            .child(new Button('dialog-no-title')
+            .child(Button.component('dialog-no-title')
                 .outline()
                 .label('Dialog without Title')
                 .onClick(cx.listener((_, _, window, cx) -> {
@@ -287,7 +287,7 @@ class DialogStory extends Model implements Story {
 
         return section('Custom actions')
             .description('Replace the default footer actions.')
-            .child(new Button('confirm-dialog1')
+            .child(Button.component('confirm-dialog1')
                 .outline()
                 .label('Custom Buttons')
                 .onClick(cx.listener((_, _, window, cx) -> {
@@ -308,11 +308,11 @@ class DialogStory extends Model implements Story {
                                     .bg(theme.warning.opacity(0.2))
                                     .size12()
                                     .textColor(theme.warning)
-                                    .child(new Icon(IconName.TriangleAlert).size8()))
+                                    .child(Icon.component(IconName.TriangleAlert).size8()))
                                 .child('Update successful, we need to restart the application.'))
-                            .footer(new DialogFooter()
-                                .child(new DialogClose().child(new Button('cancel').label('Later').outline()))
-                                .child(new DialogAction().child(new Button('ok').label('Restart Now').primary())))
+                            .footer(DialogFooter.component()
+                                .child(DialogClose.component().child(Button.component('cancel').label('Later').outline()))
+                                .child(DialogAction.component().child(Button.component('ok').label('Restart Now').primary())))
                             .onOk((_, window, cx) -> {
                                 window.pushNotification('You have pressed restart.', cx);
                                 return true;
@@ -331,7 +331,7 @@ class DialogStory extends Model implements Story {
 
         return section('Scrollable')
             .description('Keep long content inside a fixed dialog size.')
-            .child(new Button('scrollable-dialog')
+            .child(Button.component('scrollable-dialog')
                 .outline()
                 .label('Scrollable Dialog')
                 .onClick(cx.listener((_, _, window, cx) -> {
@@ -342,10 +342,10 @@ class DialogStory extends Model implements Story {
                         .overlayClosable(overlayClosable)
                         .title('Dialog with scrollbar')
                         .child(TextView.markdownAt(Include.str('README.md')))
-                        .footer(new DialogFooter()
+                        .footer(DialogFooter.component()
                             .gap2()
-                            .child(new DialogClose().child(new Button('cancel').label('Cancel').outline()))
-                            .child(new DialogAction().child(new Button('confirm').label('Confirm').primary()))));
+                            .child(DialogClose.component().child(Button.component('cancel').label('Cancel').outline()))
+                            .child(DialogAction.component().child(Button.component('confirm').label('Confirm').primary()))));
                 })));
     }
 
@@ -355,7 +355,7 @@ class DialogStory extends Model implements Story {
 
         return section('Data table')
             .description('Embed a full interactive component.')
-            .child(new Button('table-dialog')
+            .child(Button.component('table-dialog')
                 .outline()
                 .label('Table Dialog')
                 .onClick(cx.listener((this_:DialogStory, _, window, cx) -> {
@@ -370,14 +370,14 @@ class DialogStory extends Model implements Story {
                             .sizeFull()
                             .gap3()
                             .child('This is a dialog contains a table component.')
-                            .child(new DataTable(table))));
+                            .child(DataTable.component(table))));
                 })));
     }
 
     function renderCustomPaddings(cx:Context<DialogStory>):IntoElement {
         return section('Padding')
             .description('Control spacing around dialog content.')
-            .child(new Button('custom-dialog-paddings')
+            .child(Button.component('custom-dialog-paddings')
                 .outline()
                 .label('Custom Paddings')
                 .onClick(cx.listener((_, _, window, cx) -> {
@@ -389,7 +389,7 @@ class DialogStory extends Model implements Story {
     function renderCustomStyle(cx:Context<DialogStory>):IntoElement {
         return section('Custom style')
             .description('Customize color, radius, and foreground.')
-            .child(new Button('custom-dialog-style')
+            .child(Button.component('custom-dialog-style')
                 .outline()
                 .label('Custom Dialog Style')
                 .onClick(cx.listener((_, _, window, cx) -> {
@@ -408,25 +408,25 @@ class DialogStory extends Model implements Story {
     function renderDialogWithContent(cx:Context<DialogStory>):IntoElement {
         return section('Custom content')
             .description('Compose header, body, and footer explicitly.')
-            .child(new Button('custom-width-dialog-btn')
+            .child(Button.component('custom-width-dialog-btn')
                 .outline()
                 .label('Custom Width (400px)')
                 .onClick(cx.listener((_, _, window, cx) -> {
                     window.openDialog(cx.app, (dialog, _, _) -> dialog.w(px(400.)).content((content, _, _) -> content
-                        .child(new DialogHeader()
-                            .child(new DialogTitle().child('Custom Width'))
-                            .child(new DialogDescription().child('This dialog has a custom width of 400px.')))
+                        .child(DialogHeader.component()
+                            .child(DialogTitle.component().child('Custom Width'))
+                            .child(DialogDescription.component().child('This dialog has a custom width of 400px.')))
                         .child('Content area with custom width configuration, and the footer is used flex 1 button widths.')
-                        .child(new DialogFooter()
+                        .child(DialogFooter.component()
                             .justifyCenter()
-                            .child(new Button('cancel')
+                            .child(Button.component('cancel')
                                 .flex1()
                                 .outline()
                                 .label('Cancel')
                                 .onClick((_, window, cx) -> {
                                     window.closeDialog(cx);
                                 }))
-                            .child(new Button('done')
+                            .child(Button.component('done')
                                 .flex1()
                                 .primary()
                                 .label('Done')
@@ -441,8 +441,8 @@ class DialogStory extends Model implements Story {
         final overlayClosable = this.overlayClosable;
         return section('Selectable text')
             .description('Embed selectable rich text.')
-            .child(new Dialog(cx.app)
-                .trigger(new Button('textview-dialog-btn')
+            .child(Dialog.component(cx.app)
+                .trigger(Button.component('textview-dialog-btn')
                     .outline()
                     .label('TextView Dialog'))
                 .overlay(dialogOverlay)
@@ -451,17 +451,17 @@ class DialogStory extends Model implements Story {
                 .overlayClosable(overlayClosable)
                 .p0()
                 .content((content, _, cx) -> content
-                    .child(new DialogHeader()
+                    .child(DialogHeader.component()
                         .p4()
-                        .child(new DialogTitle().child('TextView Dialog')))
+                        .child(DialogTitle.component().child('TextView Dialog')))
                     .child(vFlex().px4().pb4().gap3().child(TextView.markdown('dialog-textview',
                         'This is a dialog with a selectable TextView in it. This text should be selectable.')
                         .selectable(true)))
-                    .child(new DialogFooter()
+                    .child(DialogFooter.component()
                         .p4()
                         .bg(Theme.global(cx).muted)
-                        .child(new DialogClose().child(new Button('cancel').label('Cancel').outline()))
-                        .child(new DialogAction().child(new Button('confirm').primary().label('Confirm'))))));
+                        .child(DialogClose.component().child(Button.component('cancel').label('Cancel').outline()))
+                        .child(DialogAction.component().child(Button.component('confirm').primary().label('Confirm'))))));
     }
 
     public function render(_:Window, cx:Context<Dynamic>):IntoElement {
@@ -474,7 +474,7 @@ class DialogStory extends Model implements Story {
 
         final column = vFlex()
             .gap6()
-            .child(storyToolbarGroup().dropdownChild(new Button('dialog-options').label('Options'), (menu, window, cx) -> menu
+            .child(storyToolbarGroup().dropdownChild(Button.component('dialog-options').label('Options'), (menu, window, cx) -> menu
                 .menuWithCheck('Overlay', overlay, new ToggleDialogOption(Overlay))
                 .menuWithCheck('Close on overlay click', overlayClosable, new ToggleDialogOption(OverlayClosable))
                 .menuWithCheck('Close button', closeButton, new ToggleDialogOption(CloseButton))

@@ -93,7 +93,7 @@ private class OpenURLSettingField implements SettingFieldElement {
 
     public function renderField(options:RenderOptions, _:Window, _:App):AnyElement {
         final url = this.url;
-        return (new Button('open-url')
+        return (Button.component('open-url')
             .outline()
             .label(label)
             .withSize(options.size())
@@ -149,8 +149,8 @@ class SettingsStory extends Model implements Story {
             new SettingPage('General')
                 .resettable(resettable)
                 .defaultOpen(true)
-                .icon(new Icon(IconName.Settings2))
-                .titleSuffix((_, _) -> new Button('help')
+                .icon(Icon.component(IconName.Settings2))
+                .titleSuffix((_, _) -> Button.component('help')
                     .icon(IconName.Info)
                     .ghost()
                     .xsmall()
@@ -241,7 +241,7 @@ class SettingsStory extends Model implements Story {
                             .gap3()
                             .child('View source, report issues, and follow project updates.')
                             .when(options.isDisabled(), this_ -> this_.opacity(0.5))
-                            .child(new Button('action')
+                            .child(Button.component('action')
                                 .icon(IconName.Globe)
                                 .label('Repository...')
                                 .outline()
@@ -254,7 +254,7 @@ class SettingsStory extends Model implements Story {
                             return hFlex()
                                 .gap1()
                                 .children([for (value in ['Comfortable', 'Compact']) {
-                                    final button = new Button(value).label(value).withSize(options.size());
+                                    final button = Button.component(value).label(value).withSize(options.size());
                                     (current == value ? button.primary() : button.outline())
                                         .onClick((_, _, cx) -> AppSettings.globalMut(cx).density = value);
                                 }]);
@@ -279,7 +279,7 @@ class SettingsStory extends Model implements Story {
                 ]),
             new SettingPage('Software Update')
                 .resettable(resettable)
-                .icon(new Icon(IconName.Cpu))
+                .icon(Icon.component(IconName.Cpu))
                 .groups([new SettingGroup().title('Updates').items([
                     SettingItem.create('Enable Notifications', SettingField.switch_(
                         cx -> AppSettings.global(cx).notificationsEnabled,
@@ -296,15 +296,15 @@ class SettingsStory extends Model implements Story {
                 ])]),
             new SettingPage('About')
                 .resettable(resettable)
-                .icon(new Icon(IconName.Info))
+                .icon(Icon.component(IconName.Info))
                 .group(new SettingGroup().item(SettingItem.render((_, _, cx) -> vFlex()
                     .gap3()
                     .wFull()
                     .itemsCenter()
                     .justifyCenter()
-                    .child(new Icon(IconName.GalleryVerticalEnd).size16())
+                    .child(Icon.component(IconName.GalleryVerticalEnd).size16())
                     .child('GPUI Component')
-                    .child(new Label('Rust GUI components for building fantastic cross-platform desktop application by using GPUI.')
+                    .child(Label.component('Rust GUI components for building fantastic cross-platform desktop application by using GPUI.')
                         .textSm()
                         .textColor(Theme.global(cx).mutedForeground)))))
                 .group(new SettingGroup().title('Links').items([
@@ -312,7 +312,7 @@ class SettingsStory extends Model implements Story {
                         .description('Open the GitHub repository in your default browser.'),
                     SettingItem.create('Documentation', SettingField.element(new OpenURLSettingField('Rust Docs...', 'https://docs.rs/gpui-component')))
                         .description(TextView.markdownAt('Rust doc for the `gpui-component` crate.')),
-                    SettingItem.create('Website', SettingField.render((options, _, _) -> new Button('open-url')
+                    SettingItem.create('Website', SettingField.render((options, _, _) -> Button.component('open-url')
                         .outline()
                         .label('Website...')
                         .withSize(options.size())
@@ -323,7 +323,7 @@ class SettingsStory extends Model implements Story {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new Settings('app-settings')
+        return Settings.component('app-settings')
             .withSize(size)
             .withGroupVariant(groupVariant)
             .pages(settingPages(window, cx));

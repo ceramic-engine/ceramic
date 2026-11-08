@@ -71,7 +71,7 @@ class ComponentQuestionnaireTest extends TestCase {
     }
 
     function testCompoundPartsSupportBuilderCustomization() {
-        final description = new QuestionnaireChoiceDescription().opacity(0.8).child('Description');
+        final description = QuestionnaireChoiceDescription.component().opacity(0.8).child('Description');
         assertEquals(0.8, description.style().opacity);
     }
 
@@ -166,13 +166,13 @@ class ComponentQuestionnaireTest extends TestCase {
         });
         final state = opened.view.read(app).state;
         opened.cx.update((window, cx) -> {
-            final progress = new QuestionnaireProgress(state);
+            final progress = QuestionnaireProgress.component(state);
             progress.render(window, cx);
             assertEquals(1., progress.a11y.numericValue);
             assertEquals(0., progress.a11y.minNumericValue);
             assertEquals(2., progress.a11y.maxNumericValue);
 
-            final root = new Questionnaire(state);
+            final root = Questionnaire.component(state);
             root.render(window, cx);
             assertEquals(Role.Form, root.a11y.role);
         });
@@ -494,7 +494,7 @@ class ComponentQuestionnaireTest extends TestCase {
     }
 
     function testInvalidErrorProjectsAlertRole() {
-        final error = new QuestionnaireError(null, 'item');
+        final error = QuestionnaireError.component(null, 'item');
         assertEquals(Role.Alert, error.a11y.role);
     }
 
@@ -515,24 +515,24 @@ private class QuestionnaireHarness extends Model implements Render {
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final state = this.state;
-        final skip = new QuestionnaireSkip(state);
+        final skip = QuestionnaireSkip.component(state);
         if (overrideSkipMargin) skip.ml(px(0.));
-        return new OverlayProbe('root', new Questionnaire(state)
+        return new OverlayProbe('root', Questionnaire.component(state)
             .size(px(480.))
-            .child(new QuestionnaireItem(state, 'choice')
-                .child(new QuestionnaireChoices(state, 'choice').child(new QuestionnaireChoice(state, 'choice', 'alpha')))
-                .child(new QuestionnaireInput(state, 'choice')))
-            .child(new QuestionnaireItem(state, 'first')
-                .child(new QuestionnaireChoices(state, 'first')
-                    .child(new QuestionnaireChoice(state, 'first', 'alpha'))
-                    .child(new QuestionnaireChoice(state, 'first', 'beta')))
-                .child(new QuestionnaireInput(state, 'first')))
-            .child(new QuestionnaireItem(state, 'second').child(new QuestionnaireInput(state, 'second')))
-            .child(new OverlayProbe('actions', new QuestionnaireActions(state)
-                .child(new OverlayProbe('Previous', new QuestionnairePrevious(state)))
+            .child(QuestionnaireItem.component(state, 'choice')
+                .child(QuestionnaireChoices.component(state, 'choice').child(QuestionnaireChoice.component(state, 'choice', 'alpha')))
+                .child(QuestionnaireInput.component(state, 'choice')))
+            .child(QuestionnaireItem.component(state, 'first')
+                .child(QuestionnaireChoices.component(state, 'first')
+                    .child(QuestionnaireChoice.component(state, 'first', 'alpha'))
+                    .child(QuestionnaireChoice.component(state, 'first', 'beta')))
+                .child(QuestionnaireInput.component(state, 'first')))
+            .child(QuestionnaireItem.component(state, 'second').child(QuestionnaireInput.component(state, 'second')))
+            .child(new OverlayProbe('actions', QuestionnaireActions.component(state)
+                .child(new OverlayProbe('Previous', QuestionnairePrevious.component(state)))
                 .child(new OverlayProbe('Skip', skip))
-                .child(new OverlayProbe('Next', new QuestionnaireNext(state)))
-                .child(new OverlayProbe('Submit', new QuestionnaireSubmit(state))))));
+                .child(new OverlayProbe('Next', QuestionnaireNext.component(state)))
+                .child(new OverlayProbe('Submit', QuestionnaireSubmit.component(state))))));
     }
 
 }
@@ -554,15 +554,15 @@ private class ScaleHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final item = new QuestionnaireItem(state, 'scale');
-        final choices = new QuestionnaireChoices(state, 'scale');
-        final choice = new QuestionnaireChoice(state, 'scale', 'alpha');
+        final item = QuestionnaireItem.component(state, 'scale');
+        final choices = QuestionnaireChoices.component(state, 'scale');
+        final choice = QuestionnaireChoice.component(state, 'scale', 'alpha');
         if (partSize != null) {
             item.withSize(partSize);
             choices.withSize(partSize);
             choice.withSize(partSize);
         }
-        return new Questionnaire(state)
+        return Questionnaire.component(state)
             .withSize(rootSize)
             .size(px(480.))
             .child(item.child(choices.child(new OverlayProbe('scale-choice', div().id('scale-choice').child(choice)))));
@@ -601,18 +601,18 @@ private class ComponentChooseHarness extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final state = this.state;
         final choice = (item:String, value:String) -> new OverlayProbe('choice-' + item + '-' + value,
-            div().id('choice-' + item + '-' + value).child(new QuestionnaireChoice(state, item, value)));
-        return new Questionnaire(state)
+            div().id('choice-' + item + '-' + value).child(QuestionnaireChoice.component(state, item, value)));
+        return Questionnaire.component(state)
             .size(px(480.))
-            .child(new QuestionnaireItem(state, 'first').child(new QuestionnaireChoices(state, 'first')
+            .child(QuestionnaireItem.component(state, 'first').child(QuestionnaireChoices.component(state, 'first')
                 .child(choice('first', 'alpha'))
                 .child(choice('first', 'beta'))))
-            .child(new QuestionnaireItem(state, 'second').child(new QuestionnaireChoices(state, 'second')
+            .child(QuestionnaireItem.component(state, 'second').child(QuestionnaireChoices.component(state, 'second')
                 .child(choice('second', 'x'))
                 .child(choice('second', 'y'))))
-            .child(new QuestionnaireItem(state, 'third')
-                .child(new QuestionnaireChoices(state, 'third').child(choice('third', 'omega')))
-                .child(new QuestionnaireInput(state, 'third')));
+            .child(QuestionnaireItem.component(state, 'third')
+                .child(QuestionnaireChoices.component(state, 'third').child(choice('third', 'omega')))
+                .child(QuestionnaireInput.component(state, 'third')));
     }
 
 }

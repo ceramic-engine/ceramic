@@ -102,7 +102,7 @@ class BaseNavigationTest extends TestCase {
     }
 
     function testExposesANamedNavigationLandmark() {
-        final pagination = new Pagination('pagination', new PaginationState(1, 5))
+        final pagination = Pagination.component('pagination', new PaginationState(1, 5))
             .accessibilityLabel('Search results pages');
         withWindow((window, cx) -> {
             pagination.render(window, cx);

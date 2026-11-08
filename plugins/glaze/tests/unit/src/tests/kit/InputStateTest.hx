@@ -1548,7 +1548,7 @@ class InputStateTest extends InputStateTestCase {
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<ScriptView>) -> {
             input = cx.app.newEntity((cx:Context<InputState>) -> new InputState(window, cx).defaultValue("a"));
             final state = input;
-            return new ScriptView((_, _) -> new glaze.kit.base.input.InputBase("frame").h(px(60.)).child(new glaze.kit.base.input.Input(state)));
+            return new ScriptView((_, _) -> glaze.kit.base.input.InputBase.component("frame").h(px(60.)).child(glaze.kit.base.input.Input.component(state)));
         }, 400, 100);
         contexts.push(opened.cx);
         opened.cx.update((window, _) -> window.draw());

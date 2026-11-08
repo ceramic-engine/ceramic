@@ -160,7 +160,7 @@ class MenuStory extends Model implements Story {
             .child(section('Popup Menu')
                 .description('Supports actions, links, checks, icons, custom rows, and nested menus.')
                 .w(px(640.))
-                .child(new Button('popup-menu-1')
+                .child(Button.component('popup-menu-1')
                     .outline()
                     .label('Edit')
                     .dropdownMenu((this_, window, cx) -> this_.minW(250.)
@@ -283,7 +283,7 @@ class MenuStory extends Model implements Story {
             .child(section('Scrollable')
                 .description('Long menus constrain their height while short menus stay compact.')
                 .w(px(640.))
-                .child(new Button('dropdown-menu-scrollable-1')
+                .child(Button.component('dropdown-menu-scrollable-1')
                     .outline()
                     .label('Scrollable Menu (100 items)')
                     .dropdownMenuWithAnchor(Anchor.TopRight, (this_, window, cx) -> {
@@ -305,7 +305,7 @@ class MenuStory extends Model implements Story {
                         }
                         return this_.minW(px(100.));
                     }))
-                .child(new Button('dropdown-menu-scrollable-2')
+                .child(Button.component('dropdown-menu-scrollable-2')
                     .outline()
                     .label('Scrollable Menu (5 items)')
                     .dropdownMenuWithAnchor(Anchor.TopRight, (this_, _, _) -> {

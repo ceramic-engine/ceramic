@@ -1419,7 +1419,7 @@ class TextViewTest extends KitTestCase {
                 case _: null;
             }
         }).renderWith((_, _, _, _) -> {
-            return new InlineElement(new glaze.kit.base.HoverCard("mention-hover")
+            return new InlineElement(glaze.kit.base.HoverCard.component("mention-hover")
                 .anchor(TopCenter)
                 .trigger(div().child("@member"))
                 .content((_, _, cx) -> {

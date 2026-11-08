@@ -581,7 +581,7 @@ class DialogClose implements RenderOnce implements Styled implements ParentEleme
      */
     public function trigger(build:(glaze.kit.base.Button) -> IntoElement):DialogClose {
         final anchor = this.anchor;
-        final button = new glaze.kit.base.Button('close')
+        final button = glaze.kit.base.Button.component('close')
             .accessibilityLabel('Close')
             .onClick((_, window, cx) -> activate(anchor, window, cx));
         this.triggerElement = build(button);

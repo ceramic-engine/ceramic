@@ -210,7 +210,7 @@ class TabGroupSkin extends TabGroupRendererBase {
         }
 
         final area = shared.area();
-        return DockDebugBounds.wrap(() -> '$DOCK_TOGGLE_SELECTOR-$placement', new Button('toggle-dock:$placement')
+        return DockDebugBounds.wrap(() -> '$DOCK_TOGGLE_SELECTOR-$placement', Button.component('toggle-dock:$placement')
             .icon(icon)
             .xsmall()
             .ghost()
@@ -249,7 +249,7 @@ class TabGroupSkin extends TabGroupRendererBase {
             {id: 'zoom-in', icon: IconName.Maximize, tooltip: I18n.t('Dock.Zoom In')};
         } else null;
         if (zoom != null) {
-            toolbar.child(DockDebugBounds.wrap(() -> ZOOM_CONTROL_SELECTOR, new Button(zoom.id)
+            toolbar.child(DockDebugBounds.wrap(() -> ZOOM_CONTROL_SELECTOR, Button.component(zoom.id)
                 .icon(zoom.icon)
                 .xsmall()
                 .ghost()
@@ -258,7 +258,7 @@ class TabGroupSkin extends TabGroupRendererBase {
                 .selected(zoomed)
                 .onClick((_, window, cx) -> group.toggleZoom(window, cx))));
         }
-        return toolbar.child(new Button('menu')
+        return toolbar.child(Button.component('menu')
             .icon(IconName.Ellipsis)
             .xsmall()
             .ghost()
@@ -379,7 +379,7 @@ class TabGroupSkin extends TabGroupRendererBase {
             if (visibleIx != -1) scrollHandle.scrollToItem(visibleIx);
         }
 
-        final bar = new TabBar('tab-bar').trackScroll(scrollHandle);
+        final bar = TabBar.component('tab-bar').trackScroll(scrollHandle);
         if (hasLeading) {
             final prefix = hFlex()
                 .itemsCenter()
@@ -403,7 +403,7 @@ class TabGroupSkin extends TabGroupRendererBase {
             final handle = PanelHandle.of(panel);
             final drag = tabDrag(group, ix, cx);
 
-            final tab:Tab = DockDebugBounds.enabled ? new DebugSelectorTab(() -> '$TAB_SELECTOR-$ix') : new Tab();
+            final tab:Tab = DockDebugBounds.enabled ? new DebugSelectorTab(() -> '$TAB_SELECTOR-$ix') : Tab.component();
             tab.withIx(ix).tabBarPrefix(hasLeading);
             final tabName = handle != null ? handle.tabName(cx) : null;
             tab.child(tabName != null ? (tabName : IntoElement) : DragPanelPreview.panelTitle(panel, window, cx));
@@ -413,7 +413,7 @@ class TabGroupSkin extends TabGroupRendererBase {
             // without also selecting the tab.
             if (!collapsed && shared.closeButtonVisible && group.isPanelClosable(panel.panelId(cx), cx)) {
                 final panelId = panel.panelId(cx);
-                final close = new Button(ElementId.NamedInteger('close-tab', ix))
+                final close = Button.component(ElementId.NamedInteger('close-tab', ix))
                     .icon(IconName.Close)
                     .xsmall()
                     // The regular ghost hover matches the inactive tab bar

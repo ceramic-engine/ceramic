@@ -79,7 +79,7 @@ class ComponentDiffRenderTest extends TestCase {
     function testDiffBuilder() {
         final document = Fixture.document(['before.rs', 'let value = 1;\n'], ['after.rs', 'let value = 2;\n']);
         final state = newState([document]);
-        final defaults = new Diff(state);
+        final defaults = Diff.component(state);
         assertEquals(state.entityId(), @:privateAccess defaults.state.entityId());
         assertTrue(@:privateAccess defaults._headerVisible && @:privateAccess defaults._lineNumber);
         assertTrue(@:privateAccess defaults._syntaxHighlight);
@@ -91,7 +91,7 @@ class ComponentDiffRenderTest extends TestCase {
         final position = new DiffLinePosition('after.rs', Modified, 1);
         final annotation = DiffAnnotation.line(ElementId.Name('review-comment'), position);
         final annotationCalls:Array<DiffLinePosition> = [];
-        final diff = new Diff(state)
+        final diff = Diff.component(state)
             .headerVisible(false)
             .lineNumber(false)
             .syntaxHighlight(false)
@@ -116,7 +116,7 @@ class ComponentDiffRenderTest extends TestCase {
         assertEquals('0', @:privateAccess diff._annotations.lines.get(position.key()).join(','));
 
         // Existing consumers keep the original builder spellings.
-        final compatibility = new Diff(state)
+        final compatibility = Diff.component(state)
             .headerWith((_, _, _) -> div().child('header'))
             .headerPrefix((_, _, _) -> div().child('prefix'))
             .headerTitleSuffix((_, _, _) -> div().child('title suffix'))
@@ -226,7 +226,7 @@ private class ScrollHost extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return div().w(px(400.)).h(px(200.)).child(new Diff(state).sizeFull());
+        return div().w(px(400.)).h(px(200.)).child(Diff.component(state).sizeFull());
     }
 
 }
@@ -253,7 +253,7 @@ private class MarkerHost extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final clicked = this.clicked;
         final markers = this.markers;
-        return div().w(px(600.)).h(px(400.)).child(new Diff(state)
+        return div().w(px(600.)).h(px(400.)).child(Diff.component(state)
             .sizeFull()
             .decorations([new DiffDecoration(new DiffLineRange('file.txt', Modified, 1, 3))])
             .gutterMarkers([

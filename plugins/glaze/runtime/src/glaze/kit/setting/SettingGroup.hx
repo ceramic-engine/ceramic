@@ -140,14 +140,14 @@ class SettingGroup implements Styled {
     @:allow(glaze.kit.setting, tests)
     function render(query:String, options:RenderOptions, window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final group = new GroupBox()
+        final group = GroupBox.component()
             .id('group-${options.groupIx()}')
             .withVariant(variantValue != null ? variantValue : options.groupVariant());
         if (titleValue != null) {
             final heading = vFlex().gap1().child(titleValue);
             if (descriptionValue != null) {
                 heading.child(
-                    new Label(descriptionValue)
+                    Label.component(descriptionValue)
                         .textSm()
                         .textColor(theme.mutedForeground)
                 );

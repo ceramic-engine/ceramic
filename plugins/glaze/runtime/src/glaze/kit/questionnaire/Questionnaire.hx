@@ -784,7 +784,7 @@ class QuestionnaireChoices implements RenderOnce implements Styled implements Pa
                 .children(cast childElements);
         }
         else {
-            return new RadioGroup(QuestionnaireStyles.elementId(this.state, 'choices-' + item))
+            return glaze.kit.base.RadioGroup.component(QuestionnaireStyles.elementId(this.state, 'choices-' + item))
                 .flex()
                 .flexCol()
                 .gap(metrics.choicesGap)
@@ -1034,7 +1034,7 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
             if (keystroke == null) {
                 return any(new Empty());
             }
-            return any(new Kbd(keystroke)
+            return any(Kbd.component(keystroke)
                 .outline()
                 .flex()
                 .itemsCenter()
@@ -1169,7 +1169,7 @@ class QuestionnaireInput implements RenderOnce implements Styled implements Siza
         final size = QuestionnaireSizes.resolve(sizeValue, this.state, cx);
         final metrics = new QuestionnaireMetrics(size, cx);
 
-        final input = new Input(inputDefinition.state())
+        final input = Input.component(inputDefinition.state())
             .ariaLabel(inputDefinition.accessibilityLabel())
             .disabled(itemState.isDisabled() || inputDefinition.isDisabled())
             .withSize(size)
@@ -1361,7 +1361,7 @@ class QuestionnaireActionPart {
         }
         final hasChildren = childElements.length > 0;
         // Rust adds the debug selector `questionnaire-<id>-<action>` (test builds only).
-        final button = new glaze.kit.button.Button(QuestionnaireStyles.elementId(state, action.name()))
+        final button = glaze.kit.button.Button.component(QuestionnaireStyles.elementId(state, action.name()))
             .withSize(QuestionnaireSizes.resolve(sizeValue, state, cx));
         if (outline) button.outline();
         if (primary) button.primary();

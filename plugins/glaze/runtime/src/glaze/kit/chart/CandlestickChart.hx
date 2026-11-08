@@ -365,9 +365,9 @@ class CandlestickChart<T> extends Plot {
         if (x == null) {
             return null;
         }
-        final crossLine = new CrossLine(state.crossLine).span(0., plotHeight(bounds)).band(x.bandWidth());
+        final crossLine = CrossLine.component(state.crossLine).span(0., plotHeight(bounds)).band(x.bandWidth());
 
-        final tooltip = new Tooltip(cursor, bounds.size).gap(8.).crossLine(crossLine);
+        final tooltip = Tooltip.component(cursor, bounds.size).gap(8.).crossLine(crossLine);
         final result = tooltipContentValue.apply(tooltip, d, () -> xFn(d), () -> [
             {swatch: color, name: I18n.t('Chart.open'), value: open},
             {swatch: color, name: I18n.t('Chart.high'), value: highFn(d)},

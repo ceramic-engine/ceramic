@@ -395,7 +395,7 @@ class CompletionExample extends Model implements Render {
                     this_.accept(window, cx);
                 }
             }))
-            .child(new Input(input));
+            .child(Input.component(input));
         if (menu != null) {
             field.child(deferred(div()
                 .absolute()

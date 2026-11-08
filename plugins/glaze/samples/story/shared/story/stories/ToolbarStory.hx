@@ -114,7 +114,7 @@ class ToolbarStory extends Model implements Story {
     }
 
     static function iconButton(id:String, icon:IconName, tooltip:String, disabled:Bool):Button {
-        return new Button(id).icon(icon).tooltip(tooltip).disabled(disabled);
+        return Button.component(id).icon(icon).tooltip(tooltip).disabled(disabled);
     }
 
     static function toolbarOptions(size:Size, disabled:Bool):IntoElement {
@@ -123,7 +123,7 @@ class ToolbarStory extends Model implements Story {
             case Small: 'Small';
             case _: 'Medium';
         }
-        return storyToolbarGroup().dropdownChild(new Button('toolbar-options').label('Size: $label'), (menu, _, _) -> menu
+        return storyToolbarGroup().dropdownChild(Button.component('toolbar-options').label('Size: $label'), (menu, _, _) -> menu
             .menuWithCheck('XSmall', size.equals(XSmall), new ChangeStorySize(XSmall))
             .menuWithCheck('Small', size.equals(Small), new ChangeStorySize(Small))
             .menuWithCheck('Medium', size.equals(Medium), new ChangeStorySize(Medium))
@@ -150,46 +150,46 @@ class ToolbarStory extends Model implements Story {
             .child(section('Default')
                 .description('Keep document, history, and formatting commands in one compact editor toolbar.')
                 .w(px(640.))
-                .child(new Toolbar('default-toolbar')
+                .child(glaze.kit.toolbar.Toolbar.component('default-toolbar')
                     .wFull()
                     .withSize(size)
                     .disabled(disabled)
                     .border1()
                     .borderColor(theme.border)
                     .rounded(theme.radius)
-                    .child(new ToolbarGroup('document-group')
+                    .child(ToolbarGroup.component('document-group')
                         .label('Document')
                         .gap1()
-                        .child(new Button('new-document').icon(IconName.Plus).label('New').disabled(disabled))
-                        .child(new Button('save-document').icon(Icon.empty().path(SAVE_ICON_PATH)).label('Save').disabled(disabled)))
+                        .child(Button.component('new-document').icon(IconName.Plus).label('New').disabled(disabled))
+                        .child(Button.component('save-document').icon(Icon.empty().path(SAVE_ICON_PATH)).label('Save').disabled(disabled)))
                     .content(Separator.vertical().h5())
-                    .child(new ToolbarGroup('history-group')
+                    .child(ToolbarGroup.component('history-group')
                         .label('History')
                         .gap1()
                         .child(iconButton('undo', IconName.Undo2, 'Undo', disabled))
                         .child(iconButton('redo', IconName.Redo2, 'Redo', disabled)))
                     .content(Separator.vertical().h5())
-                    .child(new ToolbarGroup('formatting-group')
+                    .child(ToolbarGroup.component('formatting-group')
                         .label('Formatting')
                         .gap1()
-                        .child(new Toggle('bold').label('B').checked(formats[0]).disabled(disabled).onClick((checked, _, _) -> setFormat(0, checked)))
-                        .child(new Toggle('italic').label('I').checked(formats[1]).disabled(disabled).onClick((checked, _, _) -> setFormat(1, checked)))
-                        .child(new Toggle('underline').label('U').checked(formats[2]).disabled(disabled).onClick((checked, _, _) -> setFormat(2, checked))))
+                        .child(Toggle.component('bold').label('B').checked(formats[0]).disabled(disabled).onClick((checked, _, _) -> setFormat(0, checked)))
+                        .child(Toggle.component('italic').label('I').checked(formats[1]).disabled(disabled).onClick((checked, _, _) -> setFormat(1, checked)))
+                        .child(Toggle.component('underline').label('U').checked(formats[2]).disabled(disabled).onClick((checked, _, _) -> setFormat(2, checked))))
                     .content(Separator.vertical().h5())
-                    .child(new Select(font).placeholder('Font').disabled(disabled).w40())))
+                    .child(glaze.kit.select.Select.component(font).placeholder('Font').disabled(disabled).w40())))
             .child(section('Mixed controls')
                 .description('Select and Combobox inherit the same density while preserving their own popup behavior.')
                 .w(px(640.))
-                .child(new Toolbar('mixed-toolbar')
+                .child(glaze.kit.toolbar.Toolbar.component('mixed-toolbar')
                     .wFull()
                     .withSize(size)
                     .disabled(disabled)
                     .border1()
                     .borderColor(theme.border)
                     .rounded(theme.radius)
-                    .child(new Input(query).prefix(new Icon(IconName.Search)).disabled(disabled).w40())
-                    .child(new Select(market).placeholder('Market').disabled(disabled).w32())
-                    .child(new Combobox(status).placeholder('Order status').disabled(disabled).w40())
+                    .child(Input.component(query).prefix(Icon.component(IconName.Search)).disabled(disabled).w40())
+                    .child(glaze.kit.select.Select.component(market).placeholder('Market').disabled(disabled).w32())
+                    .child(Combobox.component(status).placeholder('Order status').disabled(disabled).w40())
                     .content(div().flex1())
                     .child(iconButton('refresh', IconName.RotateCw, 'Refresh', disabled))
                     .child(iconButton('settings', IconName.Settings2, 'Configure columns', disabled))));

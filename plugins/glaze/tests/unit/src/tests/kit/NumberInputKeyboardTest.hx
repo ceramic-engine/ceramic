@@ -269,10 +269,10 @@ private class NumberFields extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final column = div().flex().flexCol().gap(px(4.)).p(px(4.));
         for (state in [signed, negativeMin, decimal, commaGrouped, dotGrouped, spaceGrouped, dotInteger, ungroupedNoFraction, integer]) {
-            column.child(div().w(px(200.)).h(px(36.)).child(new NumberInput(state)));
+            column.child(div().w(px(200.)).h(px(36.)).child(NumberInput.component(state)));
         }
         for (state in [plain, plainWithMin]) {
-            column.child(div().w(px(200.)).h(px(36.)).child(new Input(state)));
+            column.child(div().w(px(200.)).h(px(36.)).child(Input.component(state)));
         }
         return column;
     }

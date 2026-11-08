@@ -120,7 +120,7 @@ private class ButtonView extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return div().child(new Button('save').label('Save'));
+        return div().child(Button.component('save').label('Save'));
     }
 
 }

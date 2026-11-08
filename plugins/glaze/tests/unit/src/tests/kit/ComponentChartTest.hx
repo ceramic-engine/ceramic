@@ -157,7 +157,7 @@ class ComponentChartTest extends KitTestCase {
         content.setValueColor((_, _, value) -> value >= 0. ? green() : red());
         final opened = openWindow(_ -> new ChartTestView());
         final tooltip = content.apply(
-            new Tooltip(new Point(0, 0), new Size(100, 100)),
+            Tooltip.component(new Point(0, 0), new Size(100, 100)),
             1.,
             () -> 'Jan',
             () -> [{swatch: blue(), name: 'Open', value: 2.}, {swatch: blue(), name: 'Close', value: -1.}],
@@ -177,7 +177,7 @@ class ComponentChartTest extends KitTestCase {
         final content = new TooltipContent<Float>();
         final opened = openWindow(_ -> new ChartTestView());
         final tooltip = content.apply(
-            new Tooltip(new Point(0, 0), new Size(100, 100)),
+            Tooltip.component(new Point(0, 0), new Size(100, 100)),
             1.,
             () -> null,
             () -> [{swatch: blue(), name: 'Alpha', value: 80.}],
@@ -199,7 +199,7 @@ class ComponentChartTest extends KitTestCase {
         var built = false;
         final opened = openWindow(_ -> new ChartTestView());
         final tooltip = content.apply(
-            new Tooltip(new Point(0, 0), new Size(100, 100)),
+            Tooltip.component(new Point(0, 0), new Size(100, 100)),
             1.,
             () -> {
                 built = true;
@@ -559,7 +559,7 @@ class ComponentChartTest extends KitTestCase {
 /// plot/tooltip.rs
 
     function testAValueColorColorsOnlyTheRowAddedLast() {
-        final tooltip = new Tooltip(new Point(0, 0), new Size(100, 100))
+        final tooltip = Tooltip.component(new Point(0, 0), new Size(100, 100))
             .valueColor(red())
             .row(blue(), 'Open', '1')
             .row(blue(), 'Close', '2')
@@ -570,7 +570,7 @@ class ComponentChartTest extends KitTestCase {
     }
 
     function testAPlainRowHasNoSwatchAndTakesAValueColor() {
-        final tooltip = new Tooltip(new Point(0, 0), new Size(100, 100))
+        final tooltip = Tooltip.component(new Point(0, 0), new Size(100, 100))
             .row(blue(), 'Call', '1')
             .plainRow('Total', '3')
             .valueColor(red());
@@ -582,7 +582,7 @@ class ComponentChartTest extends KitTestCase {
     }
 
     function testPlainRowsKeepASwatchSlotOnlyBesideSeriesRows() {
-        final tooltip = () -> new Tooltip(new Point(0, 0), new Size(100, 100));
+        final tooltip = () -> Tooltip.component(new Point(0, 0), new Size(100, 100));
         final mixed = tooltip().row(blue(), 'Call', '1').plainRow('Total', '3');
         final plain = tooltip().plainRow('Total', '3').plainRow('Ratio', '0.5');
         assertTrue(@:privateAccess Tooltip.hasSwatches(@:privateAccess mixed.rows));
@@ -592,18 +592,18 @@ class ComponentChartTest extends KitTestCase {
 /// progress/progress_circle.rs, button/button_icon.rs
 
     function testStoresAnExplicitAccessibilityLabel() {
-        final plain = new ProgressCircle('upload');
+        final plain = ProgressCircle.component('upload');
         assertEquals(null, @:privateAccess plain.accessibilityLabelValue);
 
-        final named = new ProgressCircle('upload').accessibilityLabel('Upload progress');
+        final named = ProgressCircle.component('upload').accessibilityLabel('Upload progress');
         assertEquals('Upload progress', @:privateAccess named.accessibilityLabelValue);
     }
 
     function testButtonIconProgressVariant() {
-        final progress = Progress(new ProgressCircle(75));
+        final progress = Progress(ProgressCircle.component(75));
         assertFalse(@:privateAccess ButtonIcon.isSpinner(progress));
         assertTrue(@:privateAccess ButtonIcon.isProgress(progress));
-        assertFalse(@:privateAccess ButtonIcon.isProgress(Icon(new glaze.kit.Icon(glaze.kit.IconName.Plus))));
+        assertFalse(@:privateAccess ButtonIcon.isProgress(Icon(glaze.kit.Icon.component(glaze.kit.IconName.Plus))));
     }
 
 /// kit/tests/integration/exports.rs

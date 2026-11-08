@@ -95,7 +95,7 @@ class DropdownButtonStory extends Model implements Story {
         final view = self.entity();
         final shadow = theme.shadow;
 
-        final exportButton = new Button('export-default')
+        final exportButton = Button.component('export-default')
             .label('Export')
             .onClick((_, _, cx) -> view.update(cx, (this_, cx) -> {
                 this_.lastAction = 'Exported current view';
@@ -103,7 +103,7 @@ class DropdownButtonStory extends Model implements Story {
             }));
         if (this.compact) exportButton.compact();
 
-        final saveButton = new Button('save-default')
+        final saveButton = Button.component('save-default')
             .label('Save')
             .tooltip('Save the current document');
         if (compact) saveButton.compact();
@@ -137,7 +137,7 @@ class DropdownButtonStory extends Model implements Story {
                 }
                 cx.notify();
             }))
-            .child(storyToolbar(size).dropdownChild(new Button('dropdown-button-options').label('Options'), (menu, _, _) -> menu
+            .child(storyToolbar(size).dropdownChild(Button.component('dropdown-button-options').label('Options'), (menu, _, _) -> menu
                 .menuWithCheck('Disabled', disabled, new DropdownButtonAction(Disabled))
                 .menuWithCheck('Loading', loading, new DropdownButtonAction(Loading))
                 .menuWithCheck('Selected', selected, new DropdownButtonAction(Selected))
@@ -149,7 +149,7 @@ class DropdownButtonStory extends Model implements Story {
                 .textColor(theme.mutedForeground)
                 .child('Last action:')
                 .child(lastAction))
-            .child(section('Basic split').child(new DropdownButton('export')
+            .child(section('Basic split').child(DropdownButton.component('export')
                 .withSize(size)
                 .primary()
                 .button(exportButton)
@@ -158,7 +158,7 @@ class DropdownButtonStory extends Model implements Story {
                 .dropdownMenuWithAnchor(Anchor.TopRight, (menu, _, _) -> menu
                     .menu('Export all rows (.csv)', new DropdownButtonAction(ExportCsv))
                     .menu('Download report (.pdf)', new DropdownButtonAction(ExportPdf)))))
-            .child(section('Inner button options').child(new DropdownButton('save')
+            .child(section('Inner button options').child(DropdownButton.component('save')
                 .withSize(size)
                 .outline()
                 .button(saveButton)
@@ -166,8 +166,8 @@ class DropdownButtonStory extends Model implements Story {
                 .dropdownMenu((menu, _, _) -> menu
                     .menu('Save as new file…', new DropdownButtonAction(SaveCopy))
                     .menu('Save as template…', new DropdownButtonAction(SaveTemplate)))))
-            .child(section('Inherited styling').child(new DropdownButton('recent')
-                .button(new Button('recent-default')
+            .child(section('Inherited styling').child(DropdownButton.component('recent')
+                .button(Button.component('recent-default')
                     .label('Open latest')
                     .ghost()
                     .small()

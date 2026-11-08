@@ -174,7 +174,7 @@ class SliderStory extends Model implements Story {
             .gap3()
             .itemsCenter()
             .justifyCenter()
-            .child(new Slider(slider).vertical().disabled(disabled))
+            .child(Slider.component(slider).vertical().disabled(disabled))
             .child(vFlex().itemsCenter().child(label).child(ChartFormat.fixed(value, 0)));
     }
 
@@ -200,7 +200,7 @@ class SliderStory extends Model implements Story {
             .itemsCenter()
             .gap3()
             .onAction(ToggleDisabled, (_, _, _) -> this.disabled = !this.disabled)
-            .child(storyToolbarGroup().dropdownChild(new Button('slider-options').label('Options'),
+            .child(storyToolbarGroup().dropdownChild(Button.component('slider-options').label('Options'),
                 (menu, _, _) -> menu.menuWithCheck('Disabled', disabled, new ToggleDisabled())))
             .child(section('Default')
                 .description('Adjust a single value within a defined range.')
@@ -214,7 +214,7 @@ class SliderStory extends Model implements Story {
                     .border1()
                     .borderColor(theme.border)
                     .child(labelRow(app, 'Output volume', display(slider1Value)))
-                    .child(new Slider(slider1).disabled(disabled))))
+                    .child(Slider.component(slider1).disabled(disabled))))
             .child(section('Range')
                 .description('Choose minimum and maximum values together.')
                 .w128()
@@ -226,7 +226,7 @@ class SliderStory extends Model implements Story {
                     .rounded(theme.radiusLg)
                     .bg(theme.muted.opacity(0.4))
                     .child(labelRow(app, 'Price range', '$$' + displayValue(slider3.read(app).value())))
-                    .child(new Slider(slider3).disabled(disabled))))
+                    .child(Slider.component(slider3).disabled(disabled))))
             .child(section('Reverse')
                 .description('Reverse the fill direction for remaining capacity.')
                 .w128()
@@ -235,7 +235,7 @@ class SliderStory extends Model implements Story {
                     .w(px(360.))
                     .gap4()
                     .child(labelRow(app, 'Storage remaining', '${display(glaze.SpringMath.f32(10. - sliderReverse.read(app).value().start()))} GB'))
-                    .child(new Slider(sliderReverse).horizontal().reverse().disabled(disabled))))
+                    .child(Slider.component(sliderReverse).horizontal().reverse().disabled(disabled))))
             .child(section('Duration')
                 .description('Compose a slider with a labeled tick scale.')
                 .w128()
@@ -246,7 +246,7 @@ class SliderStory extends Model implements Story {
                     .child(labelRow(app, 'Duration (months)', ChartFormat.fixed(durationMonths, 0)))
                     .child(vFlex()
                         .px4()
-                        .child(new Slider(sliderDuration).disabled(disabled))
+                        .child(Slider.component(sliderDuration).disabled(disabled))
                         .child(div().relative().wFull().h(px(34.)).children([for (month in 0...13) {
                             final major = month % 2 == 0;
                             (vFlex()
@@ -286,13 +286,13 @@ class SliderStory extends Model implements Story {
                             .hFull()
                             .cornerRadii(new Corners(0., temperatureRadius, temperatureRadius, 0.))
                             .bg(linearGradient(90., linearColorStop(neutralTemperature, 0.), linearColorStop(coolTemperature, 1.)))))
-                    .child(new Slider(sliderTemperature).disabled(disabled))))
+                    .child(Slider.component(sliderTemperature).disabled(disabled))))
             .child(section('Color Picker')
                 .subTitle(hFlex()
                     .gap2()
                     .itemsCenter()
                     .child(hFlex().textColor(sliderHslValue).child(rgb))
-                    .child(new Clipboard('copy-hsl').value(rgb).onCopied((_, window, cx) -> window.pushNotification('Color copied to clipboard.', cx))))
+                    .child(Clipboard.component('copy-hsl').value(rgb).onCopied((_, window, cx) -> window.pushNotification('Color copied to clipboard.', cx))))
                 .w128()
                 .itemsCenter()
                 .justifyAround()
@@ -312,7 +312,7 @@ class SliderStory extends Model implements Story {
                         .justifyBetween()
                         .child(div().fontMedium().child('Speed'))
                         .child('${ChartFormat.fixed(sliderLogarithmic.read(app).value().start(), 2)}×'))
-                    .child(new Slider(sliderLogarithmic).horizontal().disabled(disabled))));
+                    .child(Slider.component(sliderLogarithmic).horizontal().disabled(disabled))));
     }
 
 }

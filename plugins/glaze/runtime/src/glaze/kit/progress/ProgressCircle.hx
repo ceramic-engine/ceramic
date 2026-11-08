@@ -174,7 +174,7 @@ class ProgressCircle implements RenderOnce implements Styled implements ParentEl
 
         final color:Hsla = colorValue != null ? colorValue : theme.progressBar;
 
-        final progress = new glaze.kit.base.Progress(id).value(value).indeterminate(loading);
+        final progress = glaze.kit.base.Progress.component(id).value(value).indeterminate(loading);
         if (accessibilityLabelValue != null) {
             progress.accessibilityLabel(accessibilityLabelValue);
         }

@@ -251,7 +251,7 @@ class EditorStory extends Model implements Story {
         final size = this.fontSize;
         final highlight = completionHighlight.value;
 
-        return storyToolbarGroup().dropdownChild(new Button('editor-options').label('Options'), (menu, window, _) -> {
+        return storyToolbarGroup().dropdownChild(Button.component('editor-options').label('Options'), (menu, window, _) -> {
             menu = menu.item(PopupMenuItem.create('Readonly').checked(readonly).onClick((_, _, cx) -> story.update(cx, (this_, cx) -> {
                 this_.readonly = !this_.readonly;
                 cx.notify();
@@ -311,7 +311,7 @@ class EditorStory extends Model implements Story {
     }
 
     function styledEditor(state:Entity<EditorState>):Editor {
-        final editor = new Editor(state);
+        final editor = Editor.component(state);
         if (fontFamily != null) editor.fontFamily(fontFamily);
         return editor
             .textSize(fontSize)
@@ -328,7 +328,7 @@ class EditorStory extends Model implements Story {
             case _: vFlex()
                     .sizeFull()
                     .gap2()
-                    .child(new Label('Type fl or log to compare highlights.')
+                    .child(Label.component('Type fl or log to compare highlights.')
                         .textSm()
                         .textColor(theme.mutedForeground))
                     .child(styledEditor(completionsState)
@@ -341,7 +341,7 @@ class EditorStory extends Model implements Story {
             .gap3()
             .child(hFlex()
                 .justifyBetween()
-                .child(new TabBar('editor-story-tabs')
+                .child(TabBar.component('editor-story-tabs')
                     .w(px(420.))
                     .underline()
                     .selectedIndex(activeTab)

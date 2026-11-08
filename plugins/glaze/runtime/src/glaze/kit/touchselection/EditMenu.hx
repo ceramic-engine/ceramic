@@ -106,7 +106,7 @@ class EditMenu implements RenderOnce {
             // The items fill the bar edge to edge, so each one's press
             // surface takes the bar's own corners: the first the left pair,
             // the last the right pair, the ones between none.
-            final button = new Button(ix)
+            final button = Button.component(ix)
                 .custom(itemStyle)
                 // This is a finger's menu wherever it shows: body text in a
                 // 32px row.

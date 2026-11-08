@@ -71,7 +71,7 @@ class AlertStory extends Model implements Story {
             .child(section('Default')
                 .description('Title, icon, and rich text content.')
                 .w2_3()
-                .child(new Alert('alert-default', TextView.markdownAt('Your workspace is ready for the team.\n'
+                .child(Alert.component('alert-default', TextView.markdownAt('Your workspace is ready for the team.\n'
                     + '- **12 members** have access\n'
                     + '- Billing remains with the workspace owner'))
                     .withSize(size)
@@ -106,7 +106,7 @@ class AlertStory extends Model implements Story {
                 .child(vFlex()
                     .wFull()
                     .gap2()
-                    .child(new Alert('banner-1', 'Reporting is read-only while the nightly ledger closes.')
+                    .child(Alert.component('banner-1', 'Reporting is read-only while the nightly ledger closes.')
                         .banner()
                         .onClose(self.listener((this_:AlertStory, _, _, cx) -> {
                             this_.bannerVisible = !this_.bannerVisible;
@@ -129,7 +129,7 @@ class AlertStory extends Model implements Story {
             .child(section('Custom icon')
                 .description('Custom icon and long content.')
                 .w2_3()
-                .child(new Alert('other-1', 'The quarterly planning review overlaps with the APAC operations call. '
+                .child(Alert.component('other-1', 'The quarterly planning review overlaps with the APAC operations call. '
                     + 'Move one event or invite another owner before sending the agenda.')
                     .title('Two events overlap by 30 minutes')
                     .withSize(size)

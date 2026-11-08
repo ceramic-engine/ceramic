@@ -205,7 +205,7 @@ class CodeActionMenu extends Model implements Render {
                     .testSupport()
                     .maxW(px(maxWidth))
                     .minW(px(120.))
-                    .child(new List(list).maxH(px(MAX_MENU_HEIGHT))))
+                    .child(List.component(list).maxH(px(MAX_MENU_HEIGHT))))
                 .onMouseDownOut((_:MouseDownEvent, _:Window, cx:App) -> {
                     final menu = menu.upgrade();
                     if (menu != null) {

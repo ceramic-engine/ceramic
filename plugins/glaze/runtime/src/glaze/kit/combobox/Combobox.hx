@@ -232,7 +232,7 @@ class Combobox<I> implements RenderOnce implements Styled implements Sizable imp
         final openState = state;
         final confirmState = state;
 
-        return new glaze.kit.base.Combobox(id)
+        return glaze.kit.base.Combobox.component(id)
             .open(isOpen)
             .disabled(disabled)
             .focusHandle(focusHandle)

@@ -484,11 +484,11 @@ class RadarChart<T> extends Plot {
 
         // No crosshair: a radar has no cartesian axis to snap to; the dots
         // mark the hovered dimension's vertices instead.
-        final tooltip = new Tooltip(cursor, bounds.size)
+        final tooltip = Tooltip.component(cursor, bounds.size)
             .gap(8.)
             .dots([
                 for (i in 0...state.dots.length)
-                    new Dot(state.dots[i])
+                    Dot.component(state.dots[i])
                         .size(Chart.HOVER_DOT_SIZE)
                         .halo(Chart.HOVER_HALO_SIZE)
                         .stroke(dotStroke)

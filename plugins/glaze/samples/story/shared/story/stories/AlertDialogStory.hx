@@ -63,9 +63,9 @@ class AlertDialogStory extends Model implements Story {
             .gap6()
             .child(section('Default')
                 .description('Compose the header, message, and footer actions.')
-                .child(new AlertDialog(app)
+                .child(AlertDialog.component(app)
                     .p0()
-                    .trigger(new Button('info-alert').outline().label('Discard Draft'))
+                    .trigger(Button.component('info-alert').outline().label('Discard Draft'))
                     .onOk((_, window, cx) -> {
                         window.pushNotification('Draft discarded', cx);
                         return true;
@@ -75,21 +75,21 @@ class AlertDialogStory extends Model implements Story {
                         return true;
                     })
                     .content((content, _, cx) -> content
-                        .child(new DialogHeader().p4().child(new DialogTitle().child('Discard unsaved changes?')).child(new DialogDescription()
+                        .child(DialogHeader.component().p4().child(DialogTitle.component().child('Discard unsaved changes?')).child(DialogDescription.component()
                             .child('Your edits since the last save will be permanently lost.')))
-                        .child(new DialogFooter()
+                        .child(DialogFooter.component()
                             .p4()
                             .borderT1()
                             .borderColor(Theme.global(cx).border)
                             .bg(Theme.global(cx).muted)
-                            .child(new DialogClose().child(new Button('cancel').outline().label('Cancel')))
-                            .child(new DialogAction().child(new Button('ok').label('Discard').danger()))))))
-            .child(section('Imperative API').description('Open an alert directly from the window.').child(new Button('confirm-alert')
+                            .child(DialogClose.component().child(Button.component('cancel').outline().label('Cancel')))
+                            .child(DialogAction.component().child(Button.component('ok').label('Discard').danger()))))))
+            .child(section('Imperative API').description('Open an alert directly from the window.').child(Button.component('confirm-alert')
                 .outline()
                 .label('Delete File')
                 .onClick(self.listener((_, _, window, cx) -> {
                     window.openAlertDialog(cx.app, (alert, _, cx) -> alert
-                        .icon(new Icon(IconName.Info).textColor(Theme.global(cx).danger))
+                        .icon(Icon.component(IconName.Info).textColor(Theme.global(cx).danger))
                         .title('Delete File')
                         .description('Are you sure you want to delete this file? This action cannot be undone.')
                         .confirm()
@@ -100,43 +100,43 @@ class AlertDialogStory extends Model implements Story {
                             return true;
                         }));
                 }))))
-            .child(section('Icon').description('Add a visual cue above the title.').child(new AlertDialog(app)
+            .child(section('Icon').description('Add a visual cue above the title.').child(AlertDialog.component(app)
                 .w(px(320.))
-                .trigger(new Button('icon-alert').outline().label('Request Permission'))
+                .trigger(Button.component('icon-alert').outline().label('Request Permission'))
                 .onOk((_, window, cx) -> {
                     window.pushNotification('Thank you for allowing network access', cx);
                     return true;
                 })
                 .content((content, _, cx) -> content
-                    .child(new DialogHeader()
+                    .child(DialogHeader.component()
                         .itemsCenter()
-                        .child(new Icon(IconName.TriangleAlert).size10().textColor(Theme.global(cx).warning))
-                        .child(new DialogTitle().child('Network Permission Required'))
-                        .child(new DialogDescription().child('We need your permission to access the network to provide better services. '
+                        .child(Icon.component(IconName.TriangleAlert).size10().textColor(Theme.global(cx).warning))
+                        .child(DialogTitle.component().child('Network Permission Required'))
+                        .child(DialogDescription.component().child('We need your permission to access the network to provide better services. '
                             + 'Please allow network access in your system settings.')))
-                    .child(new DialogFooter()
+                    .child(DialogFooter.component()
                         .vFlex()
-                        .child(new DialogAction().child(new Button('agree').wFull().primary().label('Allow')))
-                        .child(new DialogClose().child(new Button('disagree').wFull().outline().label('Deny')))))))
+                        .child(DialogAction.component().child(Button.component('agree').wFull().primary().label('Allow')))
+                        .child(DialogClose.component().child(Button.component('disagree').wFull().outline().label('Deny')))))))
             .child(section('Destructive')
                 .description('Use a destructive action for irreversible choices.')
-                .child(new AlertDialog(app)
-                    .trigger(new Button('destructive-action').outline().danger().label('Delete Account'))
+                .child(AlertDialog.component(app)
+                    .trigger(Button.component('destructive-action').outline().danger().label('Delete Account'))
                     .onOk((_, window, cx) -> {
                         window.pushNotification('Your account has been deleted', cx);
                         return true;
                     })
                     .content((content, _, _) -> content
-                        .child(new DialogHeader().child(new DialogTitle().child('Delete Account')).child(new DialogDescription()
+                        .child(DialogHeader.component().child(DialogTitle.component().child('Delete Account')).child(DialogDescription.component()
                             .child('This will permanently delete your account and all associated data. This action cannot be undone.')))
-                        .child(new DialogFooter()
-                            .child(new DialogClose().child(new Button('cancel').flex1().outline().label('Cancel')))
-                            .child(new DialogAction().child(new Button('delete')
+                        .child(DialogFooter.component()
+                            .child(DialogClose.component().child(Button.component('cancel').flex1().outline().label('Cancel')))
+                            .child(DialogAction.component().child(Button.component('delete')
                                 .flex1()
                                 .outline()
                                 .danger()
                                 .label('Delete')))))))
-            .child(section('Without title').description('Render content without a heading.').child(new Button('without-title')
+            .child(section('Without title').description('Render content without a heading.').child(Button.component('without-title')
                 .outline()
                 .label('Continue without Title')
                 .onClick(self.listener((_, _, window, cx) -> {
@@ -144,7 +144,7 @@ class AlertDialogStory extends Model implements Story {
                         .confirm()
                         .child('Continue with this action?'));
                 }))))
-            .child(section('Custom footer').description('Replace the default action row.').child(new Button('session-timeout')
+            .child(section('Custom footer').description('Replace the default action row.').child(Button.component('session-timeout')
                 .outline()
                 .label('Show Session Expiry')
                 .onClick(self.listener((_, _, window, cx) -> {
@@ -155,13 +155,13 @@ class AlertDialogStory extends Model implements Story {
                         })
                         .title('Session Expired')
                         .description('Your session has expired due to inactivity.Please log in again to continue.')
-                        .footer(new DialogFooter().child(new Button('sign-in').label('Sign in').primary().flex1().onClick((_, window, cx) -> {
+                        .footer(DialogFooter.component().child(Button.component('sign-in').label('Sign in').primary().flex1().onClick((_, window, cx) -> {
                             window.pushNotification('Redirecting to login...', cx);
                             window.closeDialog(cx);
                         }))));
                 }))))
-            .child(section('Custom content').description('Style header and footer regions independently.').child(new AlertDialog(app)
-                .trigger(new Button('update').outline().label('Install Update'))
+            .child(section('Custom content').description('Style header and footer regions independently.').child(AlertDialog.component(app)
+                .trigger(Button.component('update').outline().label('Install Update'))
                 .onCancel((_, window, cx) -> {
                     window.pushNotification('Update postponed', cx);
                     return true;
@@ -171,13 +171,13 @@ class AlertDialogStory extends Model implements Story {
                     return true;
                 })
                 .content((content, _, cx) -> content
-                    .child(new DialogHeader().child(new DialogTitle().child('Update Available')).child(new DialogDescription()
+                    .child(DialogHeader.component().child(DialogTitle.component().child('Update Available')).child(DialogDescription.component()
                         .child('A new version (v2.0.0) is available.This update includes new features and bug fixes.')))
-                    .child(new DialogFooter()
+                    .child(DialogFooter.component()
                         .bg(Theme.global(cx).muted)
-                        .child(new DialogClose().child(new Button('later').flex1().outline().label('Later')))
-                        .child(new DialogAction().child(new Button('update-now').flex1().primary().label('Update')))))))
-            .child(section('Keyboard').description('Disable keyboard dismissal when required.').child(new Button('keyboard-disabled')
+                        .child(DialogClose.component().child(Button.component('later').flex1().outline().label('Later')))
+                        .child(DialogAction.component().child(Button.component('update-now').flex1().primary().label('Update')))))))
+            .child(section('Keyboard').description('Disable keyboard dismissal when required.').child(Button.component('keyboard-disabled')
                 .outline()
                 .label('Review Notice')
                 .onClick(self.listener((_, _, window, cx) -> {
@@ -187,7 +187,7 @@ class AlertDialogStory extends Model implements Story {
                         .okText('Got It')
                         .keyboard(false));
                 }))))
-            .child(section('Confirm mode').description('Provide standard OK and Cancel actions.').child(new Button('overlay-closable')
+            .child(section('Confirm mode').description('Provide standard OK and Cancel actions.').child(Button.component('overlay-closable')
                 .outline()
                 .label('Open Confirmation')
                 .onClick(self.listener((_, _, window, cx) -> {
@@ -196,7 +196,7 @@ class AlertDialogStory extends Model implements Story {
                         .title('Are you sure?')
                         .child('Continue with this action?'));
                 }))))
-            .child(section('Prevent close').description('Callbacks can keep the dialog open.').child(new Button('prevent-close')
+            .child(section('Prevent close').description('Callbacks can keep the dialog open.').child(Button.component('prevent-close')
                 .outline()
                 .label('Close During Sync')
                 .onClick(self.listener((_, _, window, cx) -> {

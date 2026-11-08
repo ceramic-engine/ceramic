@@ -251,14 +251,14 @@ class TokenExample extends Model implements Render {
 
     static function token(token:InlineTokenContext):IntoElement {
         final reference = Reference.of(token.token());
-        final element = new InputToken(token);
+        final element = InputToken.component(token);
         if (reference != null) element.icon(reference.icon());
         return element;
     }
 
     function insertButton(reference:Reference):InputGroupButton {
         final action = reference.action();
-        return new InputGroupButton(action.id)
+        return InputGroupButton.component(action.id)
             .icon(reference.icon())
             .accessibilityLabel(action.label)
             .tooltip(action.label)
@@ -273,7 +273,7 @@ class TokenExample extends Model implements Render {
     }
 
     function sendButton():InputGroupButton {
-        return new InputGroupButton('send-message')
+        return InputGroupButton.component('send-message')
             .primary()
             .label('Send')
             .onClick((_, _, cx) -> self().update(cx, (this_, _) -> this_.send(cx)));
@@ -283,21 +283,21 @@ class TokenExample extends Model implements Render {
         final inserts:Array<IntoElement> = [for (reference in Reference.ALL) insertButton(reference)];
         final open = (event:InlineTokenClickEvent, _:Window, cx:App) -> self().update(cx, (this_, _) -> this_.open(event));
         final group = switch state {
-            case Input(input): new InputGroup('token-composer')
-                .input(new Input(input)
+            case Input(input): InputGroup.component('token-composer')
+                .input(glaze.kit.input.Input.component(input)
                     .ariaLabel('Message')
                     .token((token, _, _) -> TokenExample.token(token))
                     .onTokenClick(open))
-                .addon(new InputGroupAddon('composer-actions')
+                .addon(InputGroupAddon.component('composer-actions')
                     .align(InputGroupAddonAlignment.InlineEnd)
                     .children(inserts)
                     .child(sendButton()));
-            case Textarea(input): new InputGroup('token-composer')
-                .input(new Textarea(input)
+            case Textarea(input): InputGroup.component('token-composer')
+                .input(glaze.kit.input.Textarea.component(input)
                     .ariaLabel('Message')
                     .token((token, _, _) -> TokenExample.token(token))
                     .onTokenClick(open))
-                .addon(new InputGroupAddon('composer-actions')
+                .addon(InputGroupAddon.component('composer-actions')
                     .align(InputGroupAddonAlignment.BlockEnd)
                     .children(inserts)
                     .child(sendButton().mlAuto()));
@@ -332,7 +332,7 @@ class TokenExample extends Model implements Render {
                 .gap6()
                 .child(hFlex()
                     .gap2()
-                    .child(new Button('save-draft')
+                    .child(Button.component('save-draft')
                         .outline()
                         .small()
                         .label('Save draft')
@@ -340,7 +340,7 @@ class TokenExample extends Model implements Render {
                             saved = readContent(cx);
                             status = 'Draft saved';
                         }))
-                    .child(new Button('restore-draft')
+                    .child(Button.component('restore-draft')
                         .outline()
                         .small()
                         .label('Restore draft')
@@ -352,12 +352,12 @@ class TokenExample extends Model implements Render {
                         })))
                 .child(hFlex()
                     .gap4()
-                    .child(new Checkbox('tokens-readonly')
+                    .child(Checkbox.component('tokens-readonly')
                         .small()
                         .label('Readonly')
                         .checked(readonly)
                         .onClick((value, _, _) -> readonly = value))
-                    .child(new Checkbox('tokens-disabled')
+                    .child(Checkbox.component('tokens-disabled')
                         .small()
                         .label('Disabled')
                         .checked(disabled)

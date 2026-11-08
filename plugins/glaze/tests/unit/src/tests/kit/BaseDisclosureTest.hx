@@ -59,7 +59,7 @@ class BaseDisclosureTest extends TestCase {
 
     function testTriggerProjectsExpandedAccessibilityState() {
         final requested:Array<Bool> = [];
-        final trigger = new AccordionTrigger('trigger')
+        final trigger = AccordionTrigger.component('trigger')
             .open(true)
             .onChange((open, _, _, _) -> requested.push(open));
         open((_, _) -> div().child(trigger));
@@ -72,7 +72,7 @@ class BaseDisclosureTest extends TestCase {
 
     function harness(open:Bool, disabled:Bool):{cx:VisualTestContext, requested:Array<Bool>} {
         final requested:Array<Bool> = [];
-        final cx = this.open((_, _) -> new AccordionTrigger('trigger')
+        final cx = this.open((_, _) -> AccordionTrigger.component('trigger')
             .open(open)
             .disabled(disabled)
             .size(px(100.))
@@ -91,10 +91,10 @@ class BaseDisclosureTest extends TestCase {
     }
 
     function testHeaderAndPanelProjectStructuralRoles() {
-        final header = new AccordionHeader(new AccordionTrigger('trigger'))
+        final header = AccordionHeader.component(AccordionTrigger.component('trigger'))
             .id('header')
             .level(2);
-        final panel = new AccordionPanel()
+        final panel = AccordionPanel.component()
             .id('panel')
             .open(true);
         open((_, _) -> div().child(header).child(panel));
@@ -107,7 +107,7 @@ class BaseDisclosureTest extends TestCase {
     /// collapsible.rs
 
     function collapsibleHarness(isOpen:Bool):VisualTestContext {
-        return open((_, _) -> new BaseCollapsible()
+        return open((_, _) -> BaseCollapsible.component()
             .open(isOpen)
             .child(new DebugProbe('trigger', div().size(px(10.))))
             .content(new DebugProbe('content', div().size(px(10.)))));

@@ -650,9 +650,9 @@ class ListState<D:ListDelegate> extends Model implements Render {
             root.child(wrapper
                 .borderB1()
                 .borderColor(theme.border)
-                .child(new Input(queryInput)
+                .child(Input.component(queryInput)
                     .withSize(options.size)
-                    .prefix(new Icon(IconName.Search).textColor(theme.mutedForeground))
+                    .prefix(Icon.component(IconName.Search).textColor(theme.mutedForeground))
                     .cleanable(true)
                     .p0()
                     .appearance(false)));

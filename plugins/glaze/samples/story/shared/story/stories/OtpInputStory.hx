@@ -104,7 +104,7 @@ class OtpInputStory extends Model implements Story {
         final defaultSection = section('Default')
             .description('Six cells with masking and value updates.')
             .vFlex()
-            .child(new OtpInput(otpState).withSize(size));
+            .child(OtpInput.component(otpState).withSize(size));
         if (otpValue != null) defaultSection.child('Value: $otpValue');
         return vFlex()
             .id('otp-input-story')
@@ -112,21 +112,21 @@ class OtpInputStory extends Model implements Story {
             .gap5()
             .onAction(ChangeStorySize, (action, _, _) -> size = action.value)
             .onAction(ToggleMasked, (_, window, cx) -> toggleOptMasked(false, window, cx))
-            .child(storyToolbar(size).dropdownChild(new Button('otp-options').label('Options'),
+            .child(storyToolbar(size).dropdownChild(Button.component('otp-options').label('Options'),
                 (menu, _, _) -> menu.menuWithCheck('Masked', masked, new ToggleMasked())))
             .child(defaultSection)
             .child(section('Grouping')
                 .description('Cells can be shown as one or several groups.')
                 .vFlex()
                 .gap4()
-                .child(new OtpInput(otpStateSmall).groups(1).withSize(size))
-                .child(new OtpInput(otpStateLarge).groups(3).withSize(size)))
+                .child(OtpInput.component(otpStateSmall).groups(1).withSize(size))
+                .child(OtpInput.component(otpStateLarge).groups(3).withSize(size)))
             .child(section('Custom size')
                 .description('Custom cell dimensions.')
-                .child(new OtpInput(otpStateSized).groups(1).withSize(px(55.))))
+                .child(OtpInput.component(otpStateSized).groups(1).withSize(px(55.))))
             .child(section('Disabled')
                 .description('Disabled input with a value.')
-                .child(new OtpInput(otpStateDisabled).withSize(size).disabled(true)));
+                .child(OtpInput.component(otpStateDisabled).withSize(size).disabled(true)));
     }
 
 }

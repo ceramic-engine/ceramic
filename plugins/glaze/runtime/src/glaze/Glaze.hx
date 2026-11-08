@@ -35,11 +35,16 @@ class Glaze extends ceramic.Visual {
      * ```
      */
     public static var app(get, set):App;
-    static inline function get_app():App {
-        return App.current;
+    static var _app:Null<App> = null;
+    static function get_app():App {
+        if (_app == null) {
+            // A default app, with a `CeramicDispatcher` (its constructor sets `app`)
+            new App();
+        }
+        return _app;
     }
-    static inline function set_app(app:App):App {
-        return App.current = app;
+    static function set_app(app:App):App {
+        return _app = app;
     }
 
     /**
@@ -52,14 +57,14 @@ class Glaze extends ceramic.Visual {
      * visual.
      * @param build Builds the root view of the window (Rust `open_window`'s builder)
      * @param options Window options; the size of the visual is taken from them (512 x 512 by default)
-     * @param app The app owning the window, `App.current` by default
+     * @param app The app owning the window, `Glaze.app` by default
      */
     public function new(build:(Window, App) -> AnyView, ?options:WindowOptions, ?app:App) {
 
         super();
 
         if (options == null) options = {};
-        if (app == null) app = App.current;
+        if (app == null) app = Glaze.app;
 
         _width = options.width;
         _height = options.height;

@@ -56,7 +56,7 @@ class DropdownField implements SettingFieldRender {
             }
         }
 
-        final button = new Button('btn');
+        final button = Button.component('btn');
         if (options.layout().isVertical()) button.wFull();
         final popover = button
             .accessibilityLabel('$title: $oldLabel')

@@ -112,7 +112,7 @@ class ComponentLeavesTest extends TestCase {
 
     function testReducedMotionSpinnerIsStaticAndRequestsNoFrame() {
         app.setReduceMotion(true);
-        open(() -> new Spinner(), 100, 100);
+        open(() -> glaze.kit.spinner.Spinner.component(), 100, 100);
         cx.runUntilParked();
         assertEquals(0, cx.window.simulateNextFrame());
     }
@@ -125,21 +125,21 @@ class ComponentLeavesTest extends TestCase {
                 final b = new Map<String, Bounds>();
                 open(() -> {
                     final media:IntoElement = grouped
-                        ? (new AvatarGroup().small().child(new Avatar().name('Alex')).child(new Avatar().name('Taylor')).child(new Avatar().name('Sam')) : IntoElement)
-                        : (new Avatar().small().name('Alex') : IntoElement);
-                    final empty = new Empty();
+                        ? (AvatarGroup.component().small().child(Avatar.component().name('Alex')).child(Avatar.component().name('Taylor')).child(Avatar.component().name('Sam')) : IntoElement)
+                        : (Avatar.component().small().name('Alex') : IntoElement);
+                    final empty = Empty.component();
                     if (leading) empty.itemsStart().textLeft();
-                    final content = new EmptyContent();
+                    final content = EmptyContent.component();
                     if (leading) content.itemsStart();
-                    final header = new EmptyHeader();
+                    final header = EmptyHeader.component();
                     if (leading) header.itemsStart();
                     return empty
                         .child(div().size4().onPrepaint((x, _, _) -> b.set('trailing', x)))
                         .content(content.child(div().size4().onPrepaint((x, _, _) -> b.set('content', x))))
                         .header(header
-                            .description(new EmptyDescription().child('Supporting content'))
-                            .title(new EmptyTitle().child(div().size4().onPrepaint((x, _, _) -> b.set('title', x))))
-                            .media(new EmptyMedia().child(div().onPrepaint((x, _, _) -> b.set('media-content', x)).child(media))));
+                            .description(EmptyDescription.component().child('Supporting content'))
+                            .title(EmptyTitle.component().child(div().size4().onPrepaint((x, _, _) -> b.set('title', x))))
+                            .media(EmptyMedia.component().child(div().onPrepaint((x, _, _) -> b.set('media-content', x)).child(media))));
                 });
                 for (rem in [14., 20.]) {
                     cx.update((window, _) -> {
@@ -166,21 +166,21 @@ class ComponentLeavesTest extends TestCase {
 
     function testEmptyBuilder() {
         final rootStyle = new glaze.StyleBuilder().p4().border1().style();
-        final empty = new Empty();
+        final empty = Empty.component();
         empty.style().refine(rootStyle);
         empty.child('Before the named setters, still after the slots')
-            .header(new EmptyHeader().media(new EmptyMedia()))
-            .content(new EmptyContent().child('Replaced content'))
+            .header(EmptyHeader.component().media(EmptyMedia.component()))
+            .content(EmptyContent.component().child('Replaced content'))
             .header(
-                new EmptyHeader()
-                    .title(new EmptyTitle().child('Replaced title'))
-                    .description(new EmptyDescription().child('Replaced description'))
-                    .media(new EmptyMedia().child('Replaced media'))
-                    .description(new EmptyDescription().children(['Description', 'Custom content']))
-                    .title(new EmptyTitle().child('Title'))
-                    .media(new EmptyMedia().withVariant(EmptyMediaVariant.Icon).child(new Icon(IconName.Search)))
+                EmptyHeader.component()
+                    .title(EmptyTitle.component().child('Replaced title'))
+                    .description(EmptyDescription.component().child('Replaced description'))
+                    .media(EmptyMedia.component().child('Replaced media'))
+                    .description(EmptyDescription.component().children(['Description', 'Custom content']))
+                    .title(EmptyTitle.component().child('Title'))
+                    .media(EmptyMedia.component().withVariant(EmptyMediaVariant.Icon).child(glaze.kit.Icon.component(IconName.Search)))
             )
-            .content(new EmptyContent().children(['First action', 'Second action']))
+            .content(EmptyContent.component().children(['First action', 'Second action']))
             .child('Trailing content');
         assertEquals(2, empty.childElements.length);
         final header = empty.headerValue;
@@ -189,11 +189,11 @@ class ComponentLeavesTest extends TestCase {
         assertEquals(1, header.titleValue.childElements.length);
         assertEquals(2, header.descriptionValue.childElements.length);
         assertEquals(2, empty.contentValue.childElements.length);
-        final empty = new Empty();
+        final empty = Empty.component();
         assertNull(empty.headerValue);
         assertNull(empty.contentValue);
         assertEquals(0, empty.childElements.length);
-        assertTrue(new EmptyMedia().variant == EmptyMediaVariant.Default);
+        assertTrue(EmptyMedia.component().variant == EmptyMediaVariant.Default);
     }
 
     // description_list.rs
@@ -234,7 +234,7 @@ class ComponentLeavesTest extends TestCase {
 
     function legacyLink(disabled:Bool, ?bounds:Map<String, Bounds>):{clicks:Int} {
         final state = {clicks: 0};
-        open(() -> new glaze.kit.link.Link('legacy-link')
+        open(() -> glaze.kit.link.Link.component('legacy-link')
             .href('https://example.com')
             .disabled(disabled)
             .size(px(100.))
@@ -282,7 +282,7 @@ class ComponentLeavesTest extends TestCase {
             .size(px(100.))
             .onClick((_, _, _) -> state.parentClicks++)
             .child(
-                new glaze.kit.base.Link('link')
+                glaze.kit.base.Link.component('link')
                     .href('app://settings')
                     .disabled(disabled)
                     .sizeFull()
@@ -313,7 +313,7 @@ class ComponentLeavesTest extends TestCase {
 
     function testOpenStrategyRunsBeforeActivationCallback() {
         final order:Array<String> = [];
-        open(() -> new glaze.kit.base.Link('ordered-link')
+        open(() -> glaze.kit.base.Link.component('ordered-link')
             .href('app://ordered')
             .size(px(100.))
             .openWith((_, _, _, _) -> order.push('open'))
@@ -340,7 +340,7 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testHrefWithoutStrategyNeverOpensExternally() {
-        open(() -> new glaze.kit.base.Link('target-only').href('https://example.com').size(px(100.)));
+        open(() -> glaze.kit.base.Link.component('target-only').href('https://example.com').size(px(100.)));
         cx.simulateClick(point(10., 10.));
         assertNull(PlatformUrl.openedUrl);
     }
@@ -356,7 +356,7 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testVisualStateStylesRemainApplicationOwned() {
-        new glaze.kit.base.Link('states')
+        glaze.kit.base.Link.component('states')
             .styles(styles -> styles.disabled(style -> style.opacity(0.5)))
             .hover(style -> style.opacity(0.9))
             .active(style -> style.opacity(0.8))
@@ -365,17 +365,17 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testDisabledStyleAppliesOnlyWhileDisabledAndThenWins() {
-        final enabled = new glaze.kit.base.Link('enabled').opacity(0.9).styles(styles -> styles.disabled(style -> style.opacity(0.5)));
+        final enabled = glaze.kit.base.Link.component('enabled').opacity(0.9).styles(styles -> styles.disabled(style -> style.opacity(0.5)));
         assertEquals(0.9, enabled.resolvedStyle().opacity);
-        final disabled = new glaze.kit.base.Link('disabled').styles(styles -> styles.disabled(style -> style.opacity(0.5))).opacity(0.9).disabled(true);
+        final disabled = glaze.kit.base.Link.component('disabled').styles(styles -> styles.disabled(style -> style.opacity(0.5))).opacity(0.9).disabled(true);
         assertEquals(0.5, disabled.resolvedStyle().opacity);
-        final semanticOnly = new glaze.kit.base.Link('semantic-only').styles(styles -> styles.disabled(style -> style.opacity(0.5))).disabled(true);
+        final semanticOnly = glaze.kit.base.Link.component('semantic-only').styles(styles -> styles.disabled(style -> style.opacity(0.5))).disabled(true);
         assertEquals(0.5, semanticOnly.resolvedStyle().opacity);
     }
 
     function testAccessibilityExposesLinkRoleLabelAndActionSurface() {
-        final enabled = new glaze.kit.base.Link('enabled').href('app://settings').accessibilityLabel('Settings').openWith((_, _, _, _) -> {});
-        final disabled = new glaze.kit.base.Link('disabled').disabled(true).accessibilityLabel('Settings').onActivate((_, _, _) -> {});
+        final enabled = glaze.kit.base.Link.component('enabled').href('app://settings').accessibilityLabel('Settings').openWith((_, _, _, _) -> {});
+        final disabled = glaze.kit.base.Link.component('disabled').disabled(true).accessibilityLabel('Settings').onActivate((_, _, _) -> {});
         open(() -> div().child(enabled).child(disabled));
         assertTrue(enabled.a11y.role == glaze.kit.base.A11y.Role.Link);
         assertEquals('Settings', enabled.a11y.label);
@@ -389,43 +389,43 @@ class ComponentLeavesTest extends TestCase {
     // marker.rs
 
     function testMarkerBuilder() {
-        final marker = new Marker()
+        final marker = Marker.component()
             .withVariant(Separator)
             .loading(true)
             .withLoadingStyle(Shimmer)
             .withShimmerStyle(new ShimmerStyle().reverse(true))
             .separatorStyle(new StyleRefinement())
-            .content(new MarkerContent().child('Today'));
+            .content(MarkerContent.component().child('Today'));
         assertTrue(marker.variant == Separator);
         assertTrue(marker.loadingValue);
         assertTrue(marker.loadingStyle == Shimmer);
         assertEquals(1, marker.markerChildren.length);
-        assertTrue(new Marker().variant == Plain);
-        assertNull(new Marker().alignmentValue);
-        assertFalse(new Marker().loadingValue);
-        assertTrue(new Marker().loadingStyle == Spinner);
-        assertTrue(new Marker().alignment(Center).alignmentValue == Center);
+        assertTrue(Marker.component().variant == Plain);
+        assertNull(Marker.component().alignmentValue);
+        assertFalse(Marker.component().loadingValue);
+        assertTrue(Marker.component().loadingStyle == Spinner);
+        assertTrue(Marker.component().alignment(Center).alignmentValue == Center);
 
-        final contentFirst = new Marker().content(new MarkerContent().text('Thinking')).withLoadingStyle(Shimmer).loading(true);
+        final contentFirst = Marker.component().content(MarkerContent.component().text('Thinking')).withLoadingStyle(Shimmer).loading(true);
         assertTrue(contentFirst.loadingValue);
         assertTrue(contentFirst.markerChildren[0].match(MContent(_)));
 
-        final customIcon = new Marker().loading(true).icon(new MarkerIcon().child('custom')).content(new MarkerContent().text('Loading'));
+        final customIcon = Marker.component().loading(true).icon(MarkerIcon.component().child('custom')).content(MarkerContent.component().text('Loading'));
         assertEquals(2, customIcon.markerChildren.length);
         assertTrue(customIcon.markerChildren[0].match(MIcon(_)));
 
-        assertTrue(new Marker().roleValue.match(Implicit));
-        assertNull(new Marker().idValue);
-        final status = new Marker().id('sync-status').role(Explicit(glaze.kit.base.A11y.Role.Status));
+        assertTrue(Marker.component().roleValue.match(Implicit));
+        assertNull(Marker.component().idValue);
+        final status = Marker.component().id('sync-status').role(Explicit(glaze.kit.base.A11y.Role.Status));
         assertTrue(Type.enumEq(glaze.ElementId.Name('sync-status'), status.idValue));
         assertTrue(status.roleValue.match(Explicit(Status)));
 
-        final styled = new Marker().opacity(0.37).child('Status').child('Details');
+        final styled = Marker.component().opacity(0.37).child('Status').child('Details');
         assertEquals(0.37, styled.markerStyle.opacity);
         assertEquals(2, styled.markerChildren.length);
-        assertEquals(1, new MarkerIcon().child('icon').childElements.length);
+        assertEquals(1, MarkerIcon.component().child('icon').childElements.length);
 
-        final content = new MarkerContent().text('Thinking').child('…').text('正在思考');
+        final content = MarkerContent.component().text('Thinking').child('…').text('正在思考');
         assertEquals(3, content.contentChildren.length);
         assertTrue(content.contentChildren[0].match(Text(_)));
         assertTrue(content.contentChildren[1].match(Element(_)));
@@ -433,11 +433,11 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testMarkerResolvedAlignment() {
-        assertTrue(new Marker().resolvedAlignment() == Start);
-        assertTrue(new Marker().withVariant(Border).resolvedAlignment() == Start);
-        assertTrue(new Marker().withVariant(Separator).resolvedAlignment() == Center);
-        assertTrue(new Marker().alignment(End).withVariant(Separator).resolvedAlignment() == End);
-        assertTrue(new Marker().withVariant(Plain).alignment(Center).resolvedAlignment() == Center);
+        assertTrue(Marker.component().resolvedAlignment() == Start);
+        assertTrue(Marker.component().withVariant(Border).resolvedAlignment() == Start);
+        assertTrue(Marker.component().withVariant(Separator).resolvedAlignment() == Center);
+        assertTrue(Marker.component().alignment(End).withVariant(Separator).resolvedAlignment() == End);
+        assertTrue(Marker.component().withVariant(Plain).alignment(Center).resolvedAlignment() == Center);
     }
 
     // shimmer.rs
@@ -451,7 +451,7 @@ class ComponentLeavesTest extends TestCase {
         assertTrue(style.reverseValue);
         assertTrue(style.onceValue);
 
-        final text = new ShimmerText('Thinking').id('thinking').withShimmerStyle(style).duration(4.).spread(Relative(0.5)).reverse(false).once(false).opacity(0.8);
+        final text = ShimmerText.component('Thinking').id('thinking').withShimmerStyle(style).duration(4.).spread(Relative(0.5)).reverse(false).once(false).opacity(0.8);
         assertEquals('Thinking', text.text);
         assertEquals(4., text.shimmerStyle.durationValue);
         assertTrue(Type.enumEq(text.shimmerStyle.spreadValue, Relative(0.5)));
@@ -561,7 +561,7 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testAvatarBuilder() {
-        final avatar = new Avatar().name('Jason Lee').placeholder(new Icon(IconName.User)).large();
+        final avatar = Avatar.component().name('Jason Lee').placeholder(glaze.kit.Icon.component(IconName.User)).large();
         assertEquals('Jason Lee', avatar.nameValue);
         assertEquals('JL', avatar.shortName);
         assertTrue(avatar.size.equals(Large));
@@ -570,11 +570,11 @@ class ComponentLeavesTest extends TestCase {
     // avatar/avatar_group.rs
 
     function testAvatarGroupBuilder() {
-        final group = new AvatarGroup()
-            .child(new Avatar().name('Alice'))
-            .child(new Avatar().name('Bob'))
-            .child(new Avatar().name('Charlie'))
-            .child(new Avatar().name('David'))
+        final group = AvatarGroup.component()
+            .child(Avatar.component().name('Alice'))
+            .child(Avatar.component().name('Bob'))
+            .child(Avatar.component().name('Charlie'))
+            .child(Avatar.component().name('David'))
             .large()
             .limit(3)
             .ellipsis();
@@ -587,8 +587,8 @@ class ComponentLeavesTest extends TestCase {
     // progress/progress.rs and kit/tests/integration/components.rs
 
     function testStoresAnExplicitAccessibilityLabel() {
-        assertNull(new glaze.kit.progress.Progress('upload').getAccessibilityLabel());
-        assertEquals('Upload progress', new glaze.kit.progress.Progress('upload').accessibilityLabel('Upload progress').getAccessibilityLabel());
+        assertNull(glaze.kit.progress.Progress.component('upload').getAccessibilityLabel());
+        assertEquals('Upload progress', glaze.kit.progress.Progress.component('upload').accessibilityLabel('Upload progress').getAccessibilityLabel());
     }
 
 }

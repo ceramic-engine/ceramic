@@ -1106,7 +1106,7 @@ class PopupMenu extends Model implements Render {
             icon.clone();
         }
         else if (checked) {
-            new Icon(IconName.Check);
+            Icon.component(IconName.Check);
         }
         else {
             Icon.empty();
@@ -1150,7 +1150,7 @@ class PopupMenu extends Model implements Render {
         final hasLeftIcon = options.hasLeftIcon;
         final isLeftCheck = options.checkSide.isLeft() && item.isChecked();
         final rightCheckIcon = if (options.checkSide.isRight() && item.isChecked()) {
-            new Icon(IconName.Check).xsmall();
+            Icon.component(IconName.Check).xsmall();
         }
         else {
             null;
@@ -1165,7 +1165,7 @@ class PopupMenu extends Model implements Render {
         final itemHeight:Pixels = size == Small ? px(20.) : px(26.);
         final radius:Pixels = size == Small ? options.radius * 0.5 : options.radius;
 
-        final element = new MenuItemElement(ix)
+        final element = MenuItemElement.component(ix)
             .relative()
             .textSm()
             .py0()
@@ -1262,7 +1262,7 @@ class PopupMenu extends Model implements Render {
                             .gap1p5()
                             .child(item.labelValue)
                             .child(
-                                new Icon(IconName.ExternalLink)
+                                Icon.component(IconName.ExternalLink)
                                     .xsmall()
                                     .textColor(theme.mutedForeground)
                             )
@@ -1299,7 +1299,7 @@ class PopupMenu extends Model implements Render {
                                     .justifyBetween()
                                     .child(item.labelValue)
                                     .child(
-                                        new Icon(IconName.ChevronRight)
+                                        Icon.component(IconName.ChevronRight)
                                             .xsmall()
                                             .textColor(theme.mutedForeground)
                                     )

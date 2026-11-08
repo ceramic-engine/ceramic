@@ -91,7 +91,7 @@ class ComponentFoundationsTest extends TestCase {
 
     function testIconBuilderPreservesOwnedDataAndTransformOnClone() {
         final transformation = Transformation.scaled(size(0.5, 0.5)).withRotation(radians(Math.PI / 2));
-        final icon = new Icon().data(SVG).large().textColor(red()).transform(transformation);
+        final icon = Icon.component().data(SVG).large().textColor(red()).transform(transformation);
         final cloned = icon.clone();
         switch [icon.source, cloned.source] {
             case [Data(original), Data(copy)]:
@@ -112,7 +112,7 @@ class ComponentFoundationsTest extends TestCase {
     }
 
     function testIconSourceBuildersReplacePreviousSource() {
-        var icon = new Icon(IconName.Search).data(SVG);
+        var icon = Icon.component(IconName.Search).data(SVG);
         assertTrue(icon.source.match(Data(_)));
         icon = icon.path('icons/replacement.svg');
         assertTrue(icon.source.match(Path('icons/replacement.svg')));
@@ -133,17 +133,17 @@ class ComponentFoundationsTest extends TestCase {
             }
         }
         final search = IconName.Search.path();
-        assertEquals(search, drawnPath(new Icon(IconName.Search)));
+        assertEquals(search, drawnPath(Icon.component(IconName.Search)));
 
         final asked:Array<String> = [];
         Icon.setIconResolver(app, (path, _) -> {
             asked.push(path);
             return path == search ? 'icons/alt/search.svg' : null;
         });
-        assertEquals('icons/alt/search.svg', drawnPath(new Icon(IconName.Search)));
-        assertEquals(IconName.Check.path(), drawnPath(new Icon(IconName.Check)));
+        assertEquals('icons/alt/search.svg', drawnPath(Icon.component(IconName.Search)));
+        assertEquals(IconName.Check.path(), drawnPath(Icon.component(IconName.Check)));
         assertEquals('', drawnPath(Icon.empty()));
-        assertTrue(new Icon().data(SVG).resolved(app).source.match(Data(_)));
+        assertTrue(Icon.component().data(SVG).resolved(app).source.match(Data(_)));
         assertEquals([search, IconName.Check.path()].join(','), asked.join(','));
     }
 
@@ -164,51 +164,51 @@ class ComponentFoundationsTest extends TestCase {
 
     function testMaskedSecondaryTextAndHighlightsRender() {
         app.update(cx -> Theme.init(cx));
-        final label = new Label('é🙂').secondary('世界').highlights('🙂 世').masked(true);
+        final label = Label.component('é🙂').secondary('世界').highlights('🙂 世').masked(true);
         assertNull(label.measureHighlights(len('é🙂 世界'), app));
     }
 
     function testHighlightRanges() {
         // No highlights
-        assertEquals('', ranges(new Label('Hello World'), len('Hello World')));
+        assertEquals('', ranges(Label.component('Hello World'), len('Hello World')));
         // Secondary text ranges only
-        assertEquals('0..5 5..11', ranges(new Label('Hello').secondary('World'), len('Hello World')));
+        assertEquals('0..5 5..11', ranges(Label.component('Hello').secondary('World'), len('Hello World')));
         // Single match with case insensitive
-        assertEquals('6..11', ranges(new Label('Hello World').highlights('WORLD'), len('Hello World')));
+        assertEquals('6..11', ranges(Label.component('Hello World').highlights('WORLD'), len('Hello World')));
         // Multiple matches
-        assertEquals('0..5 6..11 12..17', ranges(new Label('Hello Hello Hello').highlights('Hello'), len('Hello Hello Hello')));
+        assertEquals('0..5 6..11 12..17', ranges(Label.component('Hello Hello Hello').highlights('Hello'), len('Hello Hello Hello')));
         // No match and empty search
-        assertEquals('', ranges(new Label('Hello World').highlights('xyz'), len('Hello World')));
-        assertEquals('', ranges(new Label('Hello World').highlights(''), len('Hello World')));
+        assertEquals('', ranges(Label.component('Hello World').highlights('xyz'), len('Hello World')));
+        assertEquals('', ranges(Label.component('Hello World').highlights(''), len('Hello World')));
         // Secondary + highlights in main text
-        assertEquals('0..5 5..11 2..5', ranges(new Label('Hello').secondary('World').highlights('llo'), len('Hello World')));
+        assertEquals('0..5 5..11 2..5', ranges(Label.component('Hello').secondary('World').highlights('llo'), len('Hello World')));
         // Highlight in secondary text
-        assertEquals('0..5 5..11 6..11', ranges(new Label('Hello').secondary('World').highlights('World'), len('Hello World')));
+        assertEquals('0..5 5..11 6..11', ranges(Label.component('Hello').secondary('World').highlights('World'), len('Hello World')));
         // Cross-boundary highlight
-        assertEquals('0..5 5..11 4..7', ranges(new Label('Hello').secondary('World').highlights('o W'), len('Hello World')));
+        assertEquals('0..5 5..11 4..7', ranges(Label.component('Hello').secondary('World').highlights('o W'), len('Hello World')));
         // Overlapping matches
-        final overlapping = new Label('aaaa').highlights('aa').highlightRanges(4);
+        final overlapping = Label.component('aaaa').highlights('aa').highlightRanges(4);
         assertTrue(overlapping.length >= 2);
         assertEquals('0,2', overlapping[0].join(','));
         assertEquals('1,3', overlapping[1].join(','));
         // Unicode text
         final text = '你好世界，Hello World';
         final start = len('你好');
-        assertEquals('$start..${start + len('世界')}', ranges(new Label(text).highlights('世界'), len(text)));
+        assertEquals('$start..${start + len('世界')}', ranges(Label.component(text).highlights('世界'), len(text)));
     }
 
     function testHighlightRangesPrefix() {
-        assertEquals('0..2', ranges(new Label('aaaa').highlights(Prefix('aa')), 4));
-        assertEquals(2, new Label('Hello Hello').highlights(Full('Hello')).highlightRanges(11).length);
-        assertEquals('0..5', ranges(new Label('Hello Hello').highlights(Prefix('Hello')), 11));
-        assertEquals('0..5', ranges(new Label('Hello hello HELLO').highlights(Prefix('hello')), 17));
-        assertEquals('', ranges(new Label('Hello World').highlights(Prefix('xyz')), 11));
-        assertEquals('', ranges(new Label('Hello World').highlights(Prefix('')), 11));
-        assertEquals('0..5 5..17 0..5', ranges(new Label('Hello').secondary('Hello World').highlights(Prefix('Hello')), len('Hello Hello World')));
-        assertEquals('0..3 3..15 0..3', ranges(new Label('abc').secondary('def abc def').highlights(Prefix('abc')), len('abc def abc def')));
-        assertEquals('0..6', ranges(new Label('你好世界你好').highlights(Prefix('你好')), len('你好世界你好')));
-        assertEquals('0..4', ranges(new Label('abababab').highlights(Prefix('abab')), 8));
-        assertEquals('', ranges(new Label('xyz Hello abc Hello').highlights(Prefix('Hello')), len('xyz Hello abc Hello')));
+        assertEquals('0..2', ranges(Label.component('aaaa').highlights(Prefix('aa')), 4));
+        assertEquals(2, Label.component('Hello Hello').highlights(Full('Hello')).highlightRanges(11).length);
+        assertEquals('0..5', ranges(Label.component('Hello Hello').highlights(Prefix('Hello')), 11));
+        assertEquals('0..5', ranges(Label.component('Hello hello HELLO').highlights(Prefix('hello')), 17));
+        assertEquals('', ranges(Label.component('Hello World').highlights(Prefix('xyz')), 11));
+        assertEquals('', ranges(Label.component('Hello World').highlights(Prefix('')), 11));
+        assertEquals('0..5 5..17 0..5', ranges(Label.component('Hello').secondary('Hello World').highlights(Prefix('Hello')), len('Hello Hello World')));
+        assertEquals('0..3 3..15 0..3', ranges(Label.component('abc').secondary('def abc def').highlights(Prefix('abc')), len('abc def abc def')));
+        assertEquals('0..6', ranges(Label.component('你好世界你好').highlights(Prefix('你好')), len('你好世界你好')));
+        assertEquals('0..4', ranges(Label.component('abababab').highlights(Prefix('abab')), 8));
+        assertEquals('', ranges(Label.component('xyz Hello abc Hello').highlights(Prefix('Hello')), len('xyz Hello abc Hello')));
         assertTrue(Prefix('test').match(Prefix(_)));
         assertFalse(Full('test').match(Prefix(_)));
     }

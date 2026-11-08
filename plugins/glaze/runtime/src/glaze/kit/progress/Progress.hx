@@ -129,14 +129,14 @@ class Progress implements RenderOnce implements Styled implements Sizable {
             cx
         );
 
-        final progress = new glaze.kit.base.Progress(id).value(value).indeterminate(loading);
+        final progress = glaze.kit.base.Progress.component(id).value(value).indeterminate(loading);
         if (accessibilityLabelValue != null) {
             progress.accessibilityLabel(accessibilityLabelValue);
         }
         progress.wFull().relative().h(height).rounded(radius).refineStyle(progressStyle);
 
         progress.child(
-            new ProgressTrack()
+            ProgressTrack.component()
                 .absolute()
                 .sizeFull()
                 .bg(bg.opacity(0.2))
@@ -144,7 +144,7 @@ class Progress implements RenderOnce implements Styled implements Sizable {
                 .refineStyle(innerStyle)
         );
 
-        final indicator = new ProgressIndicator()
+        final indicator = ProgressIndicator.component()
             .absolute()
             .top0()
             .left0()

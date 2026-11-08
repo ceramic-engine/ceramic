@@ -122,7 +122,7 @@ private class Files extends Model implements Render {
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
         return div()
             .sizeFull()
-            .child(new Tree(tree, (ix, entry, _, _, _) -> new ListItem(ElementId.NamedInteger('file', ix)).child(entry.item().label)));
+            .child(Tree.component(tree, (ix, entry, _, _, _) -> new ListItem(ElementId.NamedInteger('file', ix)).child(entry.item().label)));
     }
 
 }

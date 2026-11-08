@@ -246,7 +246,7 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
         if (frameSize != null) wrapper.w(glaze.Prelude.px(frameSize.width)).h(glaze.Prelude.px(frameSize.height));
         if (frameSize == null) wrapper.right0().bottom0();
 
-        final button = new Button(id)
+        final button = Button.component(id)
             .outline()
             .withSize(size);
         if (!hasCustomContent) button.icon(icon);

@@ -109,7 +109,7 @@ class StorySection implements RenderOnce implements Styled implements ParentElem
         titleRow.extend(subTitleElements);
 
         base.extend(childElements);
-        return new GroupBox()
+        return GroupBox.component()
             .id(titleValue)
             .outline()
             .mb6()

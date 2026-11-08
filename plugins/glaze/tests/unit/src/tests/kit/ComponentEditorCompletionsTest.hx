@@ -1404,8 +1404,8 @@ private class CompletionEditor extends Model implements Render {
             .p4()
             .flex()
             .flexCol()
-            .child(new Input(other).id("other"))
-            .child(new Editor(state).readonly(readonly).disabled(disabled).flex1());
+            .child(Input.component(other).id("other"))
+            .child(Editor.component(state).readonly(readonly).disabled(disabled).flex1());
     }
 
 }

@@ -87,7 +87,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
      */
     public function new(id:ElementIdArg) {
         this.id = id;
-        this.base = new glaze.kit.base.Checkbox(id);
+        this.base = glaze.kit.base.Checkbox.component(id);
     }
 
     public inline function style():StyleRefinement {
@@ -318,7 +318,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
         }
         base.refineStyle(checkboxStyle);
 
-        final indicator = new CheckboxIndicator()
+        final indicator = CheckboxIndicator.component()
             .checked(checked)
             .disabled(disabledValue)
             .relative()

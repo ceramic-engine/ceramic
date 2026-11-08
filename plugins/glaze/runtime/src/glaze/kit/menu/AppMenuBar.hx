@@ -295,7 +295,7 @@ class AppMenu extends Model implements Render {
             .id(ix)
             .relative()
             .child(
-                new Button('menu')
+                Button.component('menu')
                     .small()
                     .py0p5()
                     .compact()

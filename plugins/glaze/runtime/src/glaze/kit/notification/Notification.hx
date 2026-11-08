@@ -56,10 +56,10 @@ enum abstract NotificationType(Int) {
     function icon(cx:App):Icon {
         final theme = Theme.global(cx);
         return switch (cast this : NotificationType) {
-            case Info: new Icon(IconName.Info).textColor(theme.info);
-            case Success: new Icon(IconName.CircleCheck).textColor(theme.success);
-            case Warning: new Icon(IconName.TriangleAlert).textColor(theme.warning);
-            case Error: new Icon(IconName.CircleX).textColor(theme.danger);
+            case Info: Icon.component(IconName.Info).textColor(theme.info);
+            case Success: Icon.component(IconName.CircleCheck).textColor(theme.success);
+            case Warning: Icon.component(IconName.TriangleAlert).textColor(theme.warning);
+            case Error: Icon.component(IconName.CircleX).textColor(theme.danger);
         }
     }
 }
@@ -400,7 +400,7 @@ class Notification extends Model implements Render implements Styled {
         final hasIcon = icon != null;
         final placement = placementValue != null ? placementValue : theme.notification.placement;
 
-        final toast = new Toast('notification')
+        final toast = Toast.component('notification')
             .transitionStatus(transitionStatus)
             .hFlex()
             .group('')
@@ -442,7 +442,7 @@ class Notification extends Model implements Render implements Styled {
             .right1()
             .invisible()
             .groupHover('', s -> s.visible())
-            .child(new Button('close')
+            .child(Button.component('close')
                 .icon(IconName.Close)
                 .ghost()
                 .xsmall()
@@ -899,7 +899,7 @@ class NotificationList extends Model implements Render {
                 stacks.push({anchor: anchor, stack: stack});
             }
 
-            final element = new ToastStack(group.stackId, stack.state);
+            final element = ToastStack.component(group.stackId, stack.state);
             for (item in group.items) {
                 element.item(key(item.id), item.item);
             }

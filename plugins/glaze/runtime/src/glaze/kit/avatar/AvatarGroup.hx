@@ -83,7 +83,7 @@ class AvatarGroup implements RenderOnce implements Styled implements Sizable {
         base.hFlex().flexRowReverse().refineStyle(groupStyle);
         if (ellipsisValue && avatarsLen > limitValue) {
             base.child(
-                new Avatar()
+                Avatar.component()
                     .name('⋯')
                     .bg(theme.tokens.secondary.background)
                     .textColor(theme.mutedForeground)

@@ -858,8 +858,8 @@ class BarChart<T> extends Plot {
             : (alignmentValue.isHorizontal() ? new Point(state.crossLine.x, hover.center) : new Point(hover.center, state.crossLine.y));
         final extent = valueExtent(bounds);
         final crossLine = alignmentValue.isHorizontal()
-            ? new CrossLine(center).horizontal().hSpan(extent[0], extent[1]).band(bandWidth)
-            : new CrossLine(center).span(extent[0], extent[1]).band(bandWidth);
+            ? CrossLine.component(center).horizontal().hSpan(extent[0], extent[1]).band(bandWidth)
+            : CrossLine.component(center).span(extent[0], extent[1]).band(bandWidth);
 
         var frame = barFrame(d, bandScale, bounds);
         if (frame == null) {
@@ -868,7 +868,7 @@ class BarChart<T> extends Plot {
         final swatch = barColor(d, frame, bounds, cx);
 
         // Follow the cursor; `updateHover` already glides the band.
-        final tooltip = new Tooltip(cursor, bounds.size).glide(false).gap(8.).crossLine(crossLine);
+        final tooltip = Tooltip.component(cursor, bounds.size).glide(false).gap(8.).crossLine(crossLine);
 
         final result = tooltipContentValue.apply(tooltip, d, () -> bandFn(d), () -> [{swatch: swatch, name: name, value: valueFn(d)}], window, cx);
         return result != null ? (result : IntoElement).intoAnyElement() : null;

@@ -159,35 +159,35 @@ class NullChildTest extends TestCase {
         final expected = renderLog(log -> div().id('root').flex().flexCol()
             .child(anchored().child(probe(log, 'anchored', true)))
             .child(div().withAnimation('anim', new glaze.Animation(1.0), (d, _) -> d).child(probe(log, 'animated', true)))
-            .child(new StatusBar().left(probe(log, 'left', true)).right(probe(log, 'right', true)).child(probe(log, 'bar', true)))
-            .child(new Table()
-                .child(new TableHeader().child(new TableRow()
-                    .child(new TableHead().child(probe(log, 'h0', true)))
-                    .child(new TableHead().child(probe(log, 'h1', true)))
+            .child(StatusBar.component().left(probe(log, 'left', true)).right(probe(log, 'right', true)).child(probe(log, 'bar', true)))
+            .child(Table.component()
+                .child(TableHeader.component().child(TableRow.component()
+                    .child(TableHead.component().child(probe(log, 'h0', true)))
+                    .child(TableHead.component().child(probe(log, 'h1', true)))
                 ))
-                .child(new TableBody().children([
-                    new TableRow().child(new TableCell().child(probe(log, 'r0', true))),
-                    new TableRow().child(new TableCell().child(probe(log, 'r1', true)))
+                .child(TableBody.component().children([
+                    TableRow.component().child(TableCell.component().child(probe(log, 'r0', true))),
+                    TableRow.component().child(TableCell.component().child(probe(log, 'r1', true)))
                 ]))
             )
         );
         final actual = renderLog(log -> div().id('root').flex().flexCol()
             .child(anchored().child(null).child(probe(log, 'anchored', true)).child(element))
             .child(div().withAnimation('anim', new glaze.Animation(1.0), (d, _) -> d).child(text).child(probe(log, 'animated', true)).child(null))
-            .child(new StatusBar().left(null).left(probe(log, 'left', true)).right(element).right(probe(log, 'right', true)).child(null).child(probe(log, 'bar', true)))
-            .child(new Table()
+            .child(StatusBar.component().left(null).left(probe(log, 'left', true)).right(element).right(probe(log, 'right', true)).child(null).child(probe(log, 'bar', true)))
+            .child(Table.component()
                 .child(null)
-                .child(new TableHeader().child(new TableRow()
+                .child(TableHeader.component().child(TableRow.component()
                     .child(null)
-                    .child(new TableHead().child(probe(log, 'h0', true)).child(null))
+                    .child(TableHead.component().child(probe(log, 'h0', true)).child(null))
                     .children([null])
-                    .child(new TableHead().child(text).child(probe(log, 'h1', true)))
+                    .child(TableHead.component().child(text).child(probe(log, 'h1', true)))
                 ))
-                .child(new TableBody().children([
+                .child(TableBody.component().children([
                     null,
-                    new TableRow().child(new TableCell().child(probe(log, 'r0', true))),
+                    TableRow.component().child(TableCell.component().child(probe(log, 'r0', true))),
                     null,
-                    new TableRow().children([null, new TableCell().child(probe(log, 'r1', true))])
+                    TableRow.component().children([null, TableCell.component().child(probe(log, 'r1', true))])
                 ]))
             )
         );

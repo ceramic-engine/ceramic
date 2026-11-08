@@ -66,7 +66,7 @@ class Tree implements RenderOnce implements Styled {
 
     /** Create a `Tree` (Rust `tree::tree`). */
     public static function tree(state:Entity<TreeState>, renderItem:TreeComponentRenderItem):Tree {
-        return new Tree(state, renderItem);
+        return Tree.component(state, renderItem);
     }
 
     public inline function style():StyleRefinement {

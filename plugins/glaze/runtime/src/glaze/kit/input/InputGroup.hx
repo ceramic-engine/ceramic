@@ -482,7 +482,7 @@ class InputGroupButton implements RenderOnce implements Styled implements Sizabl
     var inheritedDisabled:Bool = false;
 
     public function new(id:ElementIdArg) {
-        button = new Button(id).ghost();
+        button = glaze.kit.button.Button.component(id).ghost();
     }
 
     /** The direct `InputGroupButton` child of an addon (Rust `InputGroupButtonElement::from_element`). */

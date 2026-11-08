@@ -1240,7 +1240,7 @@ private class EditorFixture extends Model implements Render {
         return div()
             .sizeFull()
             .p4()
-            .child(new Editor(state).readonly(readonly).sizeFull());
+            .child(Editor.component(state).readonly(readonly).sizeFull());
     }
 
 }

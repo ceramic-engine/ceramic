@@ -1249,7 +1249,7 @@ class DataTableStory extends Model implements Story {
         final showGroupHeaders = delegate.showGroupHeaders;
         final extraColumnsCount = delegate.extraColumnsCount;
 
-        final dataTable = new DataTable(this.table).withSize(size);
+        final dataTable = DataTable.component(this.table).withSize(size);
         if (headerRowHeight != null) dataTable.headerRowHeight(headerRowHeight);
         dataTable.stripe(stripe);
 
@@ -1257,7 +1257,7 @@ class DataTableStory extends Model implements Story {
             .itemsCenter()
             .justifyEnd()
             .gap2();
-        if (delegate.loadingValue) status.child(new Spinner().xsmall());
+        if (delegate.loadingValue) status.child(Spinner.component().xsmall());
         status.child('Current · rows ${delegate.visibleRows.start}..${delegate.visibleRows.end} · columns ${delegate.visibleCols.start}..${delegate.visibleCols.end}');
         final selectedCell = table.selectedCell();
         if (selectedCell != null) status.child('· cell ${selectedCell.row}:${selectedCell.col}');
@@ -1340,30 +1340,30 @@ class DataTableStory extends Model implements Story {
             .textSm()
             .gap4()
             .child(storyToolbarGroup()
-                .dropdownChild(new Button('size').label('Size: ${debugSize(this.size)}'), (menu, _, _) -> menu
+                .dropdownChild(Button.component('size').label('Size: ${debugSize(this.size)}'), (menu, _, _) -> menu
                     .menuWithCheck('48px', sizeEquals(size, Size(px(48.))), new ChangeSize(Size(px(48.))))
                     .menuWithCheck('Large', sizeEquals(size, Large), new ChangeSize(Large))
                     .menuWithCheck('Medium', sizeEquals(size, Medium), new ChangeSize(Medium))
                     .menuWithCheck('Small', sizeEquals(size, Small), new ChangeSize(Small))
                     .menuWithCheck('XSmall', sizeEquals(size, XSmall), new ChangeSize(XSmall)))
-                .dropdownChild(new Button('header-row-height')
+                .dropdownChild(Button.component('header-row-height')
                     .label('Header Row Height: ${headerRowHeight == null ? 'Default' : pixelsString(headerRowHeight)}'), (menu, _, _) -> menu
                     .menuWithCheck('Default', headerRowHeight == null, new ChangeHeaderRowHeight(null))
                     .menuWithCheck('40px', headerRowHeight != null && headerRowHeight == px(40.), new ChangeHeaderRowHeight(px(40.)))
                     .menuWithCheck('48px', headerRowHeight != null && headerRowHeight == px(48.), new ChangeHeaderRowHeight(px(48.))))
-                .dropdownChild(new Button('rows').label('Rows: $rowsCount'), (menu, _, _) -> menu
+                .dropdownChild(Button.component('rows').label('Rows: $rowsCount'), (menu, _, _) -> menu
                     .menuWithCheck('100', rowsCount == 100, new ChangeRows(100))
                     .menuWithCheck('500', rowsCount == 500, new ChangeRows(500))
                     .menuWithCheck('5,000', rowsCount == 5000, new ChangeRows(5000))
                     .menuWithCheck('10,000', rowsCount == 10000, new ChangeRows(10000))
                     .menuWithCheck('1,000,000', rowsCount == 1000000, new ChangeRows(1000000)))
-                .dropdownChild(new Button('extra-columns').label('Extra Columns: $extraColumnsCount'), (menu, _, _) -> menu
+                .dropdownChild(Button.component('extra-columns').label('Extra Columns: $extraColumnsCount'), (menu, _, _) -> menu
                     .menuWithCheck('None', extraColumnsCount == 0, new ChangeExtraColumns(0))
                     .menuWithCheck('4', extraColumnsCount == 4, new ChangeExtraColumns(4))
                     .menuWithCheck('8', extraColumnsCount == 8, new ChangeExtraColumns(8))
                     .menuWithCheck('16', extraColumnsCount == 16, new ChangeExtraColumns(16))
                     .menuWithCheck('32', extraColumnsCount == 32, new ChangeExtraColumns(32)))
-                .dropdownChild(new Button('table-options').label('Options'), (menu, _, _) -> menu
+                .dropdownChild(Button.component('table-options').label('Options'), (menu, _, _) -> menu
                     .menuWithCheck('Loop Selection', loopSelection, new ToggleTableOption(LoopSelection))
                     .menuWithCheck('Column Resize', colResizable, new ToggleTableOption(ColumnResize))
                     .menuWithCheck('Column Order', colMovable, new ToggleTableOption(ColumnOrder))
@@ -1381,13 +1381,13 @@ class DataTableStory extends Model implements Story {
                     .menuWithCheck('Group Headers', showGroupHeaders, new ToggleTableOption(GroupHeaders))
                     .separator()
                     .menu('Clear Selection', new ClearTableSelection()))
-                .dropdownChild(new Button('go-to').label('Go To'), (menu, _, _) -> menu
+                .dropdownChild(Button.component('go-to').label('Go To'), (menu, _, _) -> menu
                     .menu('Top', new GoToTablePosition(Top))
                     .menu('Bottom', new GoToTablePosition(Bottom))
                     .separator()
                     .menu('Cell 5:3', new GoToTablePosition(Cell53))
                     .menu('Cell 10:7', new GoToTablePosition(Cell107)))
-                .child(new Button('dump-csv')
+                .child(Button.component('dump-csv')
                     .label('Export CSV')
                     .onClick(self.listener((this_:DataTableStory, e:ClickEvent, window, cx) -> this_.dumpCsv(e, window, cx)))))
             .child(vFlex()

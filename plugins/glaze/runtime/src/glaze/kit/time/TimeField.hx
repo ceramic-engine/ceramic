@@ -142,7 +142,7 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
         if (disabledValue) frame.opacity(0.5);
         if (focused && !disabledValue) frame.focusRingStyle(window, cx);
         if (invalidValue) frame.borderColor(theme.danger);
-        frame.child(new glaze.kit.base.TimeField(id, state)
+        frame.child(glaze.kit.base.TimeField.component(id, state)
             .disabled(disabledValue)
             // The base field fills the frame, so a press anywhere inside it lands on the
             // field rather than on the frame around it.

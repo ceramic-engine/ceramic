@@ -111,7 +111,7 @@ class Clipboard implements RenderOnce implements Sizable {
         final valueFn = valueFnValue;
         final onCopied = onCopiedFn;
 
-        final button = new Button(id)
+        final button = Button.component(id)
             .icon(copied ? IconName.Check : IconName.Copy)
             .ghost()
             .withSize(size);

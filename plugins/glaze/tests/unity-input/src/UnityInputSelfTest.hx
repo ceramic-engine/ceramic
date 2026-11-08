@@ -525,13 +525,13 @@ class UnityInputSelfTest {
 
     function inputValue():String {
 
-        return keyboardInput.read(glaze.App.current).value();
+        return keyboardInput.read(glaze.Glaze.app).value();
 
     }
 
     function inputFocused():Bool {
 
-        return keyboardInput.read(glaze.App.current).focusHandle.isFocused(keyboardWindow);
+        return keyboardInput.read(glaze.Glaze.app).focusHandle.isFocused(keyboardWindow);
 
     }
 
@@ -548,7 +548,7 @@ class UnityInputSelfTest {
             keyboard = new FakeVirtualKeyboard();
             textInput.virtualKeyboard = keyboard;
             // A gpui-kit input in a second window
-            final cx = glaze.App.current;
+            final cx = glaze.Glaze.app;
             keyboardWindow = Window.open(cx, {width: 400, height: 60}, (window, cx) -> {
                 return cx.newEntity((rootCx:Context<Root>) -> {
                     final content = rootCx.newEntity((viewCx:Context<KeyboardView>) -> {
@@ -568,7 +568,7 @@ class UnityInputSelfTest {
 
         steps.push(() -> {
             check(!textInput.keyboardOpen, 'keyboard closed before the focus');
-            keyboardInput.read(glaze.App.current).focusHandle.focus(keyboardWindow, glaze.App.current);
+            keyboardInput.read(glaze.Glaze.app).focusHandle.focus(keyboardWindow, glaze.Glaze.app);
             0.4;
         });
 
@@ -781,7 +781,7 @@ class KeyboardView extends Model implements Render {
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
 
-        return div().sizeFull().p2().bg(hsla(0, 0, 1, 1)).child(new Input(input));
+        return div().sizeFull().p2().bg(hsla(0, 0, 1, 1)).child(Input.component(input));
 
     }
 

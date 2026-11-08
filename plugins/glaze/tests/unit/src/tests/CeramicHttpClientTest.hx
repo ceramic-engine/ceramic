@@ -3,6 +3,7 @@ package tests;
 #if plugin_http
 
 import glaze.App;
+import glaze.Glaze;
 import glaze.CeramicDispatcher;
 import glaze.CeramicHttpClient;
 import glaze.HttpClient;
@@ -32,7 +33,7 @@ class CeramicHttpClientTest extends TestCase {
     var app:App;
 
     override function setup() {
-        previousApp = @:privateAccess App._current;
+        previousApp = @:privateAccess Glaze._app;
         app = new App(new CeramicDispatcher());
     }
 
@@ -41,7 +42,7 @@ class CeramicHttpClientTest extends TestCase {
             server.stop();
             server = null;
         }
-        App.current = previousApp;
+        Glaze.app = previousApp;
     }
 
     /** PNG bytes of a `width` x `height` opaque red image */

@@ -46,7 +46,7 @@ class Form implements RenderOnce implements Styled implements Sizable {
      * Create a new `Field`.
      */
     public static function field():Field {
-        return new Field();
+        return Field.component();
     }
 
     final formStyle:StyleRefinement = new StyleRefinement();
@@ -69,14 +69,14 @@ class Form implements RenderOnce implements Styled implements Sizable {
      * Creates a new form with labels beside their controls.
      */
     public static function horizontal():Form {
-        return new Form().layout(Horizontal);
+        return Form.component().layout(Horizontal);
     }
 
     /**
      * Creates a new form with labels above their controls.
      */
     public static function vertical():Form {
-        return new Form().layout(Vertical);
+        return Form.component().layout(Vertical);
     }
 
     /**

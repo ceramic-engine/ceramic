@@ -244,7 +244,7 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
         // thumb is when the switch is toggled again mid-travel.
         final thumbX = Motion.spring(TransitionId.named(id, 'thumb'), checked ? bgWidth - barWidth - inset * 2 : 0., theme.motionTokens().springMove, window, cx);
 
-        final base = new glaze.kit.base.Switch(id)
+        final base = glaze.kit.base.Switch.component(id)
             .checked(checked)
             .disabled(disabledValue)
             .styles(styles -> styles.disabled(s -> s.textColor(disabledLabelColor).cursorNotAllowed()));
@@ -255,7 +255,7 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
         if (labelSide.isLeft()) base.flexRowReverse();
 
         // Switch Bar
-        final track = new SwitchTrack(ElementId.NamedChild(id, 'track'))
+        final track = SwitchTrack.component(ElementId.NamedChild(id, 'track'))
             .checked(checked)
             .disabled(disabledValue)
             .w(bgWidth)
@@ -278,7 +278,7 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
         if (isFocused && focusRingEnabled) track.focusRingStyle(window, cx);
         ComponentTooltip.of(tooltipText, tooltipShowDelayValue).apply(track, @:privateAccess track.base);
         // Switch Toggle
-        track.child(new SwitchThumb(checked).rounded(radius).size(barWidth).left(glaze.Prelude.px(thumbX)).bg(toggleBg));
+        track.child(SwitchThumb.component(checked).rounded(radius).size(barWidth).left(glaze.Prelude.px(thumbX)).bg(toggleBg));
         base.child(track);
 
         if (labelValue != null) {

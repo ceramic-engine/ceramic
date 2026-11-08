@@ -1,6 +1,7 @@
 package tests;
 
 import glaze.App;
+import glaze.Glaze;
 import glaze.Context;
 import glaze.Entity;
 import glaze.EntityReleasedError;
@@ -357,7 +358,7 @@ class AppTest extends TestCase {
         assertTrue(a.entityId() != b.entityId());
         assertTrue(a.equals(a));
         assertFalse(a.equals(b));
-        // A model constructed directly gets an id from App.current when first used
+        // A model constructed directly gets an id from Glaze.app when first used
         final c = new AppCounter(0);
         assertTrue(c.entityId > 0);
         assertTrue(c.entityId != a.entityId());

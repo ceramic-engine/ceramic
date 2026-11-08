@@ -152,7 +152,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
             cell.onMouseDown(Left, (_, window, cx) -> entity.read(cx).focusHandle.focus(window, cx));
             if (c != null) {
                 if (state.isMasked()) {
-                    final icon = new Icon(IconName.Asterisk).textColor(theme.secondaryForeground);
+                    final icon = Icon.component(IconName.Asterisk).textColor(theme.secondaryForeground);
                     if (disabledValue) icon.textColor(theme.mutedForeground);
                     cell.child(icon);
                 } else {
@@ -168,7 +168,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
             groups[groupIx].push(cell);
         }
 
-        return new glaze.kit.base.OtpInput(this.state)
+        return glaze.kit.base.OtpInput.component(this.state)
             .disabled(disabledValue)
             .child(
                 vFlex()

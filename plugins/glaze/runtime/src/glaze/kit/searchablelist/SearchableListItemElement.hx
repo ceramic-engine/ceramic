@@ -65,7 +65,7 @@ class SearchableListItemElement implements RenderOnce implements Styled implemen
 
     public function new(ix:Int) {
         this.id = ElementId.NamedInteger("searchable-list-item", ix);
-        this.checkIconValue = new Icon(IconName.Check);
+        this.checkIconValue = Icon.component(IconName.Check);
     }
 
     /**

@@ -124,7 +124,7 @@ class AccordionStory extends Model implements Story {
                 .justifyCenter()
                 .rounded(style.iconRadius)
                 .bg(style.iconBg)
-                .child(new Icon(icon).small().textColor(style.muted)))
+                .child(glaze.kit.Icon.component(icon).small().textColor(style.muted)))
             .child(div().fontSemibold().child(title));
         if (tag != null) heading.child(tag.small());
 
@@ -172,14 +172,14 @@ class AccordionStory extends Model implements Story {
             .child(storyToolbar(size)
                 .itemsCenter()
                 .flexWrap()
-                .dropdownChild(new Button('accordion-options').label('Options'), (menu, _, _) -> menu
+                .dropdownChild(Button.component('accordion-options').label('Options'), (menu, _, _) -> menu
                     .menuWithCheck('Multiple', multiple, new ToggleOption(Multiple))
                     .menuWithCheck('Icons', showIcon, new ToggleOption(Icon))
                     .menuWithCheck('Disabled', disabled, new ToggleOption(Disabled))
                     .menuWithCheck('Bordered', bordered, new ToggleOption(Bordered))))
             .child(section('Default')
                 .description('Expand one item at a time by default.')
-                .child(div().w(px(480.)).child(new Accordion('test')
+                .child(div().w(px(480.)).child(Accordion.component('test')
                     .bordered(bordered)
                     .withSize(size)
                     .disabled(disabled)
@@ -203,8 +203,8 @@ class AccordionStory extends Model implements Story {
                                     + 'whatever you put in it.')
                                 .child(hFlex()
                                     .gap4()
-                                    .child(new Switch('switch1').label('Switch'))
-                                    .child(new Checkbox('checkbox1').label('Or a Checkbox'))));
+                                    .child(Switch.component('switch1').label('Switch'))
+                                    .child(Checkbox.component('checkbox1').label('Or a Checkbox'))));
                     })
                     .item(item -> {
                         item.open(openIxs.indexOf(2) >= 0);
@@ -229,7 +229,7 @@ class AccordionStory extends Model implements Story {
                     .bg(theme.secondary.opacity(0.5))
                     .border1()
                     .borderColor(theme.border.opacity(0.5))
-                    .child(new Accordion('custom-style')
+                    .child(Accordion.component('custom-style')
                         .multiple(multiple)
                         .disabled(disabled)
                         .item(item -> settingsItem(item, IconName.Settings, 'Account Settings', Tag.success().outline().child('New'),

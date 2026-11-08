@@ -266,13 +266,13 @@ class Inspector {
                         .gapX2()
                         .textSm()
                         .child(
-                            new Link('source-location')
+                            Link.component('source-location')
                                 .href('file://' + sourceLocation)
                                 .child(sourceLocation)
                                 .flex1()
                                 .overflowXHidden()
                         )
-                        .child(new Clipboard('copy-source-location').value(sourceLocation))
+                        .child(Clipboard.component('copy-source-location').value(sourceLocation))
                 );
             });
         if (elementGlobalId != null) {
@@ -305,7 +305,7 @@ class Inspector {
                             .gap2()
                             .textSm()
                             .child(
-                                new Button('inspect')
+                                Button.component('inspect')
                                     .icon(IconName.Inspector)
                                     .selected(inspector.isPicking())
                                     .toggled(inspector.isPicking())
@@ -319,7 +319,7 @@ class Inspector {
                             .child('Inspector')
                     )
                     .child(
-                        new Button('close')
+                        Button.component('close')
                             .icon(IconName.Close)
                             .small()
                             .ghost()
@@ -544,7 +544,7 @@ class DivInspector extends Model implements Render {
             .gapY1()
             .fontFamily(theme.monoFontFamily)
             .textSize(theme.monoFontSize)
-            .child(new Editor(rustState.state).h(relative(1.)));
+            .child(Editor.component(rustState.state).h(relative(1.)));
         if (rustState.error != null) {
             rustEditor.child(Alert.error('rust-error', rustState.error).textXs());
         }
@@ -553,13 +553,13 @@ class DivInspector extends Model implements Render {
             .gapY1()
             .fontFamily(theme.monoFontFamily)
             .textSize(theme.monoFontSize)
-            .child(new Editor(jsonState.state).h(relative(1.)));
+            .child(Editor.component(jsonState.state).h(relative(1.)));
         if (jsonState.error != null) {
             jsonEditor.child(Alert.error('json-error', jsonState.error).textXs());
         }
         return root
             .child(
-                new DescriptionList()
+                DescriptionList.component()
                     .columns(1)
                     .labelWidth(px(110.))
                     .bordered(false)
@@ -577,7 +577,7 @@ class DivInspector extends Model implements Render {
                             .justifyBetween()
                             .gapX2()
                             .child('Rust Styles')
-                            .child(new Button('rust-reset').label('Reset').small().onClick(
+                            .child(Button.component('rust-reset').label('Reset').small().onClick(
                                 cx.listener((this_:DivInspector, _, window:Window, cx:Context<DivInspector>) -> {
                                     this_.resetStyle(window, cx);
                                 })
@@ -595,7 +595,7 @@ class DivInspector extends Model implements Render {
                         hFlex()
                             .gapX2()
                             .child(div().flex1().child('JSON Styles'))
-                            .child(new Button('json-reset').label('Reset').small().onClick(
+                            .child(Button.component('json-reset').label('Reset').small().onClick(
                                 cx.listener((this_:DivInspector, _, window:Window, cx:Context<DivInspector>) -> {
                                     this_.resetStyle(window, cx);
                                 })

@@ -362,7 +362,7 @@ private class SettingsHost extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final settings = new Settings('search-test')
+        final settings = Settings.component('search-test')
             .pages([for (page in pages) page.clone()])
             .defaultSelectedIndex(new glaze.kit.setting.Settings.SelectIndex(1, null))
             .render(window, cx.app)
@@ -386,7 +386,7 @@ private class VariantHost extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        var settings = new Settings('variant-test').pages([for (page in pages) page.clone()]);
+        var settings = Settings.component('variant-test').pages([for (page in pages) page.clone()]);
         if (outline) {
             settings = settings.withGroupVariant(GroupBoxVariant.Outline);
         }

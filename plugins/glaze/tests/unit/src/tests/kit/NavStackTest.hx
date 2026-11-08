@@ -38,7 +38,7 @@ class NavTestHost extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new NavStack(stack).sizeFull().transition(new Transition(0.2));
+        return NavStack.component(stack).sizeFull().transition(new Transition(0.2));
     }
 
 }

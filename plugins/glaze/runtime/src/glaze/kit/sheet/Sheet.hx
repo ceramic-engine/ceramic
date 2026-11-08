@@ -234,7 +234,7 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
                     .wFull()
                     .fontSemibold()
                     .child(titleElement != null ? titleElement : div())
-                    .child(new Button('close')
+                    .child(Button.component('close')
                         .small()
                         .ghost()
                         .icon(IconName.Close)
@@ -262,7 +262,7 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
         final scopedSurface = glaze.kit.base.TextSelection.textSelectionScope(selectionScope, animated);
 
         final onClose = onCloseHandler;
-        return new glaze.kit.base.Sheet(cx)
+        return glaze.kit.base.Sheet.component(cx)
             .top(glaze.Prelude.px(frameTop))
             .left(glaze.Prelude.px(frameLeft))
             .w(glaze.Prelude.px(sizeWidth))

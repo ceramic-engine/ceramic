@@ -52,17 +52,17 @@ class BreadcrumbStory extends Model implements Story {
         final interactive = vFlex()
             .gap4()
             .itemsCenter()
-            .child(new Breadcrumb()
+            .child(Breadcrumb.component()
                 .child('Home')
-                .child(new BreadcrumbItem('Documents').onClick(self.listener((this_:BreadcrumbStory, _, _, cx) -> {
+                .child(BreadcrumbItem.component('Documents').onClick(self.listener((this_:BreadcrumbStory, _, _, cx) -> {
                     this_.clickedItem = 'Documents';
                     cx.notify();
                 })))
-                .child(new BreadcrumbItem('Projects').onClick(self.listener((this_:BreadcrumbStory, _, _, cx) -> {
+                .child(BreadcrumbItem.component('Projects').onClick(self.listener((this_:BreadcrumbStory, _, _, cx) -> {
                     this_.clickedItem = 'Projects';
                     cx.notify();
                 })))
-                .child(new BreadcrumbItem('Current').onClick(self.listener((this_:BreadcrumbStory, _, _, cx) -> {
+                .child(BreadcrumbItem.component('Current').onClick(self.listener((this_:BreadcrumbStory, _, _, cx) -> {
                     this_.clickedItem = 'Current';
                     cx.notify();
                 }))));
@@ -73,7 +73,7 @@ class BreadcrumbStory extends Model implements Story {
             .child(section('Default')
                 .description('Shows the current location in a hierarchy.')
                 .w(px(480.))
-                .child(new Breadcrumb()
+                .child(Breadcrumb.component()
                     .child('Home')
                     .child('Documents')
                     .child('Projects')))

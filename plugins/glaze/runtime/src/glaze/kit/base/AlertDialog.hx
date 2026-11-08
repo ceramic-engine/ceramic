@@ -219,7 +219,7 @@ class AlertDialog implements RenderOnce implements Styled implements ParentEleme
     var inner:Dialog;
 
     public function new(cx:App) {
-        inner = new Dialog(cx)
+        inner = glaze.kit.base.Dialog.component(cx)
             .role(Role.AlertDialog)
             .closeOnBackdropPress(false);
     }

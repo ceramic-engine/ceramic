@@ -139,7 +139,7 @@ class DockStory extends Model implements Story {
         final story = self.entity();
         return vFlex()
             .sizeFull()
-            .child(storyToolbarGroup().p2().dropdownChild(new Button('dock-options').label('Options'), (menu, _, _) -> menu
+            .child(storyToolbarGroup().p2().dropdownChild(Button.component('dock-options').label('Options'), (menu, _, _) -> menu
                 .item(PopupMenuItem.create('Tab close buttons')
                     .checked(closeButtonVisible)
                     // Rust `window.listener_for(&story, ...)`

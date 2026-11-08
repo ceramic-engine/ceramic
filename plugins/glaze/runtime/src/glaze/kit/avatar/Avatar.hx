@@ -101,7 +101,7 @@ class AvatarSizing {
  */
 class Avatar implements RenderOnce implements Styled implements Sizable {
 
-    final base:glaze.kit.base.Avatar = new glaze.kit.base.Avatar();
+    final base:glaze.kit.base.Avatar = glaze.kit.base.Avatar.component();
 
     final avatarStyle:StyleRefinement = new StyleRefinement();
 
@@ -113,7 +113,7 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
     @:allow(tests)
     var shortName:String = '';
 
-    var placeholderValue:Icon = new Icon(IconName.User);
+    var placeholderValue:Icon = Icon.component(IconName.User);
 
     @:allow(tests)
     var size:Size = Medium;
@@ -168,7 +168,7 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
         // placeholder, keeps the neutral border.
         final borderColor = identity != null && srcValue == null ? identity.border : theme.border;
 
-        final fallback = new AvatarFallback()
+        final fallback = AvatarFallback.component()
             .sizeFull()
             .flex()
             .itemsCenter()
@@ -196,7 +196,7 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
             .fallback(fallback);
         if (srcValue != null) {
             base.image(
-                new AvatarImage(srcValue)
+                AvatarImage.component(srcValue)
                     .sizeFull()
                     .roundedFullStyle(cx)
                     .refineStyle(innerStyle)

@@ -3,6 +3,7 @@ package;
 import ceramic.Scene;
 import ceramic.ScrollUnit;
 import glaze.App;
+import glaze.Glaze;
 import glaze.Context;
 import glaze.IntoElement;
 import glaze.Model;
@@ -45,7 +46,7 @@ class MainScene extends Scene {
 
     override function create() {
 
-        final cx = App.current;
+        final cx = Glaze.app;
         window = Window.open(cx, {width: width, height: height}, (window, cx) -> {
             return cx.newEntity((viewCx:Context<CalibrationView>) -> {
                 view = new CalibrationView();

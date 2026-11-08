@@ -374,10 +374,10 @@ class SidebarMenuItem implements SidebarItem implements Styled {
             if (suffixValue != null) labelBox.child(suffixValue(window, cx));
             row.h7().child(labelBox);
             if (openState != null) {
-                final caretIcon = new Icon(IconName.ChevronRight).size4();
+                final caretIcon = Icon.component(IconName.ChevronRight).size4();
                 if (isOpen) caretIcon.rotate(percentage(90. / 360.));
                 row.child(
-                    new Button('caret')
+                    Button.component('caret')
                         .xsmall()
                         .ghost()
                         .accessibilityLabel(caretAccessibilityLabel())

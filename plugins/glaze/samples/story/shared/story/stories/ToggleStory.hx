@@ -73,11 +73,11 @@ class ToggleStory extends Model implements Story {
     }
 
     function iconGroup(id:String, start:Int):ToggleGroup {
-        return new ToggleGroup(id)
+        return ToggleGroup.component(id)
             .withSize(size)
-            .child(new Toggle(0).icon(IconName.Bell).checked(checked[start]))
-            .child(new Toggle(1).icon(IconName.Inbox).checked(checked[start + 1]))
-            .child(new Toggle(2).icon(IconName.Check).checked(checked[start + 2]))
+            .child(Toggle.component(0).icon(IconName.Bell).checked(checked[start]))
+            .child(Toggle.component(1).icon(IconName.Inbox).checked(checked[start + 1]))
+            .child(Toggle.component(2).icon(IconName.Check).checked(checked[start + 2]))
             .onClick((values, _, _) -> copyChecked(start, values));
     }
 
@@ -95,12 +95,12 @@ class ToggleStory extends Model implements Story {
                 .gap3()
                 .child(hFlex()
                     .gap2()
-                    .child(new Toggle('preview')
+                    .child(Toggle.component('preview')
                         .label('Preview')
                         .withSize(size)
                         .checked(singleToggle == 1)
                         .onClick((checked, _, _) -> singleToggle = checked ? 1 : 0))
-                    .child(new Toggle('favorite')
+                    .child(Toggle.component('favorite')
                         .icon(IconName.Star)
                         .withSize(size)
                         .checked(checked[0])
@@ -126,13 +126,13 @@ class ToggleStory extends Model implements Story {
                 .w128()
                 .vFlex()
                 .itemsCenter()
-                .child(new ToggleGroup('segmented-group')
+                .child(ToggleGroup.component('segmented-group')
                     .segmented()
                     .outline()
                     .withSize(size)
-                    .child(new Toggle(0).label('Bold').checked(checked[7]))
-                    .child(new Toggle(1).label('Italic').checked(checked[8]))
-                    .child(new Toggle(2).label('Code').checked(checked[9]))
+                    .child(Toggle.component(0).label('Bold').checked(checked[7]))
+                    .child(Toggle.component(1).label('Italic').checked(checked[8]))
+                    .child(Toggle.component(2).label('Code').checked(checked[9]))
                     .onClick((values, _, _) -> copyChecked(7, values))));
     }
 

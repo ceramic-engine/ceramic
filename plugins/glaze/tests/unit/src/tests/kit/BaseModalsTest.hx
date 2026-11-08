@@ -87,7 +87,7 @@ class BaseModalsTest extends TestCase {
     function testCloseTriggerSuppliesAccessibleButton() {
         var captured:Null<glaze.kit.base.Button> = null;
         final cx = open((window, cx) -> {
-            new DialogClose().trigger(button -> {
+            DialogClose.component().trigger(button -> {
                 button.render(window, cx.app);
                 captured = button;
                 return button;
@@ -107,14 +107,14 @@ class BaseModalsTest extends TestCase {
         var attempts = 0;
         final focus = app.focusHandle();
         final buttonFocus = app.focusHandle();
-        final cx = open((_, cx) -> new Dialog(cx.app)
+        final cx = open((_, cx) -> Dialog.component(cx.app)
             .handle(handle)
             .focusHandle(focus)
             .onCancel((_, _, _) -> {
                 attempts++;
                 return attempts > 1;
             })
-            .popup(new DialogClose().trigger(button -> button.size(px(100.)).trackFocus(buttonFocus))));
+            .popup(DialogClose.component().trigger(button -> button.size(px(100.)).trackFocus(buttonFocus))));
         final viewport = cx.update((window, cx) -> {
             focus.focus(window, cx);
             window.draw();
@@ -142,7 +142,7 @@ class BaseModalsTest extends TestCase {
         final handle = new DialogHandle(false);
         final changes:Array<String> = [];
         @:privateAccess handle.onOpenChange = (open, reason, _, _) -> changes.push('$open ${reason.toString()}');
-        final cx = open((_, _) -> new DialogTrigger(div().size(px(100.))).handle(handle));
+        final cx = open((_, _) -> DialogTrigger.component(div().size(px(100.))).handle(handle));
         draw(cx);
         cx.simulateClick(new Point(20., 20.));
 
@@ -159,7 +159,7 @@ class BaseModalsTest extends TestCase {
         app.update(cx -> Base.init(cx));
         final focus = app.focusHandle();
         final backdrop = new BoundsCell();
-        final cx = open((_, cx) -> new Dialog(cx.app)
+        final cx = open((_, cx) -> Dialog.component(cx.app)
             .open(true)
             .focusHandle(focus)
             .backdrop(canvas((bounds, _, _) -> {
@@ -182,7 +182,7 @@ class BaseModalsTest extends TestCase {
     function testPressingThePopupDoesNotDismiss() {
         app.update(cx -> Base.init(cx));
         final handle = new DialogHandle(true);
-        final cx = open((_, cx) -> new Dialog(cx.app)
+        final cx = open((_, cx) -> Dialog.component(cx.app)
             .handle(handle)
             .backdrop(div().absolute().sizeFull())
             .popup(new DialogPopup().size(px(100.))));
@@ -201,7 +201,7 @@ class BaseModalsTest extends TestCase {
     function testThePopupIsCenteredByDefault() {
         app.update(cx -> Base.init(cx));
         final popup = new BoundsCell();
-        final cx = open((_, cx) -> new Dialog(cx.app).popup(canvas((bounds, _, _) -> {
+        final cx = open((_, cx) -> Dialog.component(cx.app).popup(canvas((bounds, _, _) -> {
             popup.bounds = bounds;
             return null;
         }, (_, _, _, _) -> {}).size(px(100.))));
@@ -218,7 +218,7 @@ class BaseModalsTest extends TestCase {
     function testBackdropIsNotClosableByDefault() {
         app.update(cx -> Base.init(cx));
         var closeRequested = false;
-        final cx = open((_, cx) -> new AlertDialog(cx.app)
+        final cx = open((_, cx) -> AlertDialog.component(cx.app)
             .requestClose((_, _, _) -> closeRequested = true)
             .backdrop(div().size(px(200.))));
         draw(cx);
@@ -235,7 +235,7 @@ class BaseModalsTest extends TestCase {
     function testHostStylePositionsThePopup() {
         app.update(cx -> Base.init(cx));
         final popup = new BoundsCell();
-        final cx = open((_, cx) -> new AlertDialog(cx.app).itemsStart().justifyStart().popup(canvas((bounds, _, _) -> {
+        final cx = open((_, cx) -> AlertDialog.component(cx.app).itemsStart().justifyStart().popup(canvas((bounds, _, _) -> {
             popup.bounds = bounds;
             return null;
         }, (_, _, _, _) -> {}).size(px(100.))));
@@ -251,7 +251,7 @@ class BaseModalsTest extends TestCase {
         final focus = app.focusHandle();
         final events:Array<String> = [];
         final cx = open((_, cx) -> {
-            final sheet = new Sheet(cx.app)
+            final sheet = Sheet.component(cx.app)
                 .focusHandle(focus)
                 .overlayClosable(closable)
                 .requestClose((_, _) -> events.push('request'))
@@ -387,13 +387,13 @@ class BaseModalsTest extends TestCase {
     }
 
     function testToastExposesAlertSemantics() {
-        final toast = new Toast('toast');
+        final toast = Toast.component('toast');
         assertEquals(glaze.kit.base.A11y.Role.Alert, toast.a11y.role);
     }
 
     function testStackBootstrapsMeasurementWithoutZeroHeightClipping() {
         final state = new ToastStackState();
-        final cx = open((_, _) -> new ToastStack('stack', state)
+        final cx = open((_, _) -> ToastStack.component('stack', state)
             .w(px(300.))
             .item('first', div().h(px(80.)).child('Visible')));
         draw(cx);
@@ -403,7 +403,7 @@ class BaseModalsTest extends TestCase {
     function testStackExpandsForHoverAndFocus() {
         final state = new ToastStackState();
         final focus = app.focusHandle().tabStop(true);
-        final cx = open((_, _) -> new ToastStack('stack', state)
+        final cx = open((_, _) -> ToastStack.component('stack', state)
             .focusHandle(focus)
             .w(px(300.))
             .item('first', div().h(px(80.))));
@@ -573,7 +573,7 @@ private class ReflowHarness extends Model implements Render {
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         if (bottom) {
-            final stack = new ToastStack('bottom-stack', state)
+            final stack = ToastStack.component('bottom-stack', state)
                 .placement(Anchor.BottomRight)
                 .absolute()
                 .bottom0()
@@ -582,7 +582,7 @@ private class ReflowHarness extends Model implements Render {
             if (showSecond) stack.item('bottom-second', div().h(px(80.)));
             return div().relative().size(px(300.)).child(stack);
         }
-        final stack = new ToastStack('stack', state)
+        final stack = ToastStack.component('stack', state)
             .w(px(300.))
             .item('first', new BoundsProbe('first-toast', div().h(px(40.))));
         if (showSecond) stack.item('second', new BoundsProbe('second-toast', div().h(px(80.))));

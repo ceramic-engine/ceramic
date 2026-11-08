@@ -98,7 +98,7 @@ class BreadcrumbItem implements RenderOnce implements Styled {
 abstract IntoBreadcrumbItem(BreadcrumbItem) from BreadcrumbItem to BreadcrumbItem {
 
     @:from static inline function fromString(label:String):IntoBreadcrumbItem {
-        return label != null ? new BreadcrumbItem(label) : null;
+        return label != null ? BreadcrumbItem.component(label) : null;
     }
 
 }
@@ -140,7 +140,7 @@ class Breadcrumb implements RenderOnce implements Styled {
             final isLast = ix == itemsCount - 1;
             element.child(items[ix].withId(ix).isLast(isLast));
             if (!isLast) {
-                element.child(new Icon(IconName.ChevronRight).textColor(theme.mutedForeground).size3p5());
+                element.child(Icon.component(IconName.ChevronRight).textColor(theme.mutedForeground).size3p5());
             }
         }
         return element;

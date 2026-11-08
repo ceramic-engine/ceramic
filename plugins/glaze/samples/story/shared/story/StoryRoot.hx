@@ -206,7 +206,7 @@ class StoryRoot extends Model implements Render {
                     final entries = root != null ? root.read(cx).themeEntries.copy() : [];
                     final selectOwner = contentOwner;
                     final confirmOwner = contentOwner;
-                    return content.child(Lib.withCommandEntries(new Command(themePalette)
+                    return content.child(Lib.withCommandEntries(Command.component(themePalette)
                         .bordered(false)
                         .rounded(Theme.global(cx).radiusLg)
                         .placeholder('Search themes...')
@@ -265,7 +265,7 @@ class StoryRoot extends Model implements Render {
                     final root = contentOwner.upgrade();
                     final entries = root != null ? root.read(cx).componentEntries.copy() : [];
                     final confirmOwner = contentOwner;
-                    return content.child(Lib.withCommandEntries(new Command(componentPalette)
+                    return content.child(Lib.withCommandEntries(Command.component(componentPalette)
                         .bordered(false)
                         .rounded(Theme.global(cx).radiusLg)
                         .placeholder('Search components...')

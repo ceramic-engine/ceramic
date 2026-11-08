@@ -158,7 +158,7 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
             (cast state : Entity<glaze.kit.base.input.InputBaseState>).update(cx, (input, cx) -> input.setPlaceholder(placeholder, window, cx));
         }
         final baseState = state;
-        final content = new glaze.kit.base.NumberInput(baseState).disabled(disabledValue);
+        final content = glaze.kit.base.NumberInput.component(baseState).disabled(disabledValue);
         if (accessibilityLabelValue != null) content.accessibilityLabel(accessibilityLabelValue);
         content.sizeFull();
         content.decrementButton(button -> {
@@ -177,9 +177,9 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
                 case Size(size): button.minW(size);
             }
             // Only the outer corners are rounded, to follow the frame.
-            return button.roundedTl(buttonRadius).roundedBl(buttonRadius).child(new Icon(IconName.Minus).withSize(buttonSize));
+            return button.roundedTl(buttonRadius).roundedBl(buttonRadius).child(Icon.component(IconName.Minus).withSize(buttonSize));
         });
-        final input = new Input(state).appearance(false).withSize(buttonSize).hFull().disabled(disabledValue);
+        final input = Input.component(state).appearance(false).withSize(buttonSize).hFull().disabled(disabledValue);
         input.gap0().roundedNone().textAlign(glaze.TextAlign.Center);
         if (prefixElement != null) input.prefix(prefixElement);
         if (suffixElement != null) input.suffix(suffixElement);
@@ -197,7 +197,7 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
                 case Medium | Large: button.minW8();
                 case Size(size): button.minW(size);
             }
-            return button.roundedTr(buttonRadius).roundedBr(buttonRadius).child(new Icon(IconName.Plus).withSize(buttonSize));
+            return button.roundedTr(buttonRadius).roundedBr(buttonRadius).child(Icon.component(IconName.Plus).withSize(buttonSize));
         });
 
         // The visual frame wraps the complete spinbutton. BaseNumberInput routes

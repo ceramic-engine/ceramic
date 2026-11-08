@@ -132,10 +132,10 @@ class ComponentTableTest extends TestCase {
 /// table.rs
 
     function testStoresAnExplicitAccessibilityLabel() {
-        final plain = new Table();
+        final plain = Table.component();
         assertEquals(null, plain.accessibilityLabelValue);
 
-        final named = new Table().accessibilityLabel('Recent invoices');
+        final named = Table.component().accessibilityLabel('Recent invoices');
         assertEquals('Recent invoices', named.accessibilityLabelValue);
     }
 
@@ -165,9 +165,9 @@ class ComponentTableTest extends TestCase {
     function testDataTableBuilder() {
         final opened = openWindow(1920, 1080, (window, cx:Context<FocusRingHarness>) -> new FocusRingHarness(cx.newEntity((c:Context<TableState<RowsDelegate>>) -> new TableState(new RowsDelegate(), window, c)), true));
         final state = opened.view.read(app).state;
-        assertTrue(new DataTable(state).isFocusRingEnabled());
+        assertTrue(DataTable.component(state).isFocusRingEnabled());
 
-        final table = new DataTable(state)
+        final table = DataTable.component(state)
             .stripe(true)
             .bordered(false)
             .scrollBounce(false)
@@ -894,9 +894,9 @@ private class TableView<D:TableDelegate> extends Model implements Render {
             return div()
                 .sizeFull()
                 .child(div().id('outside').h(px(40.)).child('outside'))
-                .child(div().h(px(280.)).child(new DataTable(table)));
+                .child(div().h(px(280.)).child(DataTable.component(table)));
         }
-        return div().sizeFull().child(new DataTable(table).stripe(stripe));
+        return div().sizeFull().child(DataTable.component(table).stripe(stripe));
     }
 
 }
@@ -917,7 +917,7 @@ private class FocusRingHarness extends Model implements Render {
         return div()
             .w(px(240.))
             .h(px(160.))
-            .child(new DataTable(state).focusRing(focusRing));
+            .child(DataTable.component(state).focusRing(focusRing));
     }
 
 }
@@ -935,7 +935,7 @@ private class BounceTable extends Model implements Render {
         return div()
             .w(px(240.))
             .h(px(200.))
-            .child(new DataTable(state).scrollBounce(true));
+            .child(DataTable.component(state).scrollBounce(true));
     }
 
 }

@@ -647,7 +647,7 @@ class SankeyChart<T> extends Plot {
         final valueText = tooltipValueFn != null ? tooltipValueFn(datum, value) : (valueLabelFn != null ? valueLabelFn(datum, value) : ChartFormat.display64(value));
 
         // Follow the cursor; the node's links mark it.
-        var tooltip = new Tooltip(cursor, bounds.size).gap(8.);
+        var tooltip = Tooltip.component(cursor, bounds.size).gap(8.);
         if (nodeLabelFn != null) {
             tooltip = tooltip.title(nodeLabelFn(datum));
         }

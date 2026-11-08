@@ -360,7 +360,7 @@ private class MoveField extends Model implements Render {
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
         page.fieldRenders[index]++;
         final field = div().sizeFull();
-        return input != null ? field.child(new Input(input)) : field.child(new Editor(editor).hFull());
+        return input != null ? field.child(Input.component(input)) : field.child(Editor.component(editor).hFull());
     }
 
 }

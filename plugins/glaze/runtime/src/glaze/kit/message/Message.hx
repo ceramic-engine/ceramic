@@ -153,7 +153,7 @@ class Message implements RenderOnce implements Styled {
      * had been set (no avatar slot, no footer inset).
      */
     public function avatar(avatar:IntoElement):Message {
-        avatarValue = avatar != null ? new MessageAvatar().child(avatar) : null;
+        avatarValue = avatar != null ? MessageAvatar.component().child(avatar) : null;
         return this;
     }
 

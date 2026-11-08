@@ -319,14 +319,14 @@ class Gallery extends Model implements Render {
         // toggle in the status bar reopens it.
         final body = hFlex()
             .sizeFull()
-            .child(new Sidebar<SidebarMenu>('gallery-sidebar')
+            .child(Sidebar.component('gallery-sidebar')
                 .w(px(255.))
                 .collapsible(Offcanvas)
                 .collapsed(collapsed)
                 .header(vFlex()
                     .wFull()
                     .gap4()
-                    .child(new SidebarHeader()
+                    .child(SidebarHeader.component()
                         .wFull()
                         .child(div()
                             .flex()
@@ -337,7 +337,7 @@ class Gallery extends Model implements Render {
                             .textColor(theme.primaryForeground)
                             .size8()
                             .flexShrink0()
-                            .child(new Icon(IconName.GalleryVerticalEnd)))
+                            .child(glaze.kit.Icon.component(IconName.GalleryVerticalEnd)))
                         .child(vFlex()
                             .gap0()
                             .textSm()
@@ -356,14 +356,14 @@ class Gallery extends Model implements Render {
                         .px1()
                         .flex1()
                         .mx1()
-                        .child(new Input(searchInput)
+                        .child(Input.component(searchInput)
                             .appearance(false)
                             .cleanable(true))))
                 .children(menus))
             .child(content);
 
-        final statusBar = new StatusBar()
-            .child(new Button('toggle-sidebar')
+        final statusBar = StatusBar.component()
+            .child(Button.component('toggle-sidebar')
                 .ghost()
                 .xsmall()
                 .icon(collapsed ? IconName.PanelLeftOpen : IconName.PanelLeftClose)
@@ -372,7 +372,7 @@ class Gallery extends Model implements Render {
                     this_.collapsed = !this_.collapsed;
                     cx.notify();
                 })))
-            .child(new Icon(IconName.GalleryVerticalEnd).xsmall())
+            .child(glaze.kit.Icon.component(IconName.GalleryVerticalEnd).xsmall())
             .child('$totalComponents components')
             .child(glaze.kit.separator.Separator.vertical());
         if (currentStory != '') {
@@ -381,7 +381,7 @@ class Gallery extends Model implements Render {
         statusBar
             .right(theme.themeName())
             .right('v$VERSION')
-            .right(new Button('assistant')
+            .right(Button.component('assistant')
                 .ghost()
                 .xsmall()
                 .icon(IconName.Github)

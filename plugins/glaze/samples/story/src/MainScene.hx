@@ -6,6 +6,7 @@ package;
 import ceramic.Platform;
 import ceramic.Scene;
 import glaze.App;
+import glaze.Glaze;
 import glaze.Window;
 import glaze.kit.IconName;
 import story.Gallery;
@@ -24,7 +25,7 @@ class MainScene extends Scene {
 
     override function create() {
 
-        final cx = App.current;
+        final cx = Glaze.app;
         final name = Platform.getEnv('GLAZE_STORY');
 
         // On the web, the browser also draws the CJK text of the stories

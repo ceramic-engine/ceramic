@@ -11,7 +11,7 @@ import tracker.Autorun;
  * Contains the state of the full application, and passed as a reference to a
  * variety of callbacks. Other contexts such as `Context<T>` give access to it.
  *
- * There is one `App` per Ceramic app (`App.current`), but more can be created
+ * There is one `App` per Ceramic app (`Glaze.app`), but more can be created
  * (tests give each one its own `TestDispatcher`).
  *
  * Every callback run by the app (observers, event subscribers, release
@@ -19,23 +19,6 @@ import tracker.Autorun;
  * disabled, so a handler never subscribes the view being rendered.
  */
 class App {
-
-    static var _current:Null<App> = null;
-
-    /**
-     * The current app: the last one created, or a default one created on first
-     * access (with a `CeramicDispatcher`).
-     */
-    public static var current(get, set):App;
-    static function get_current():App {
-        if (_current == null) {
-            _current = new App();
-        }
-        return _current;
-    }
-    static function set_current(current:App):App {
-        return _current = current;
-    }
 
     static final typeIds:Map<String, Int> = new Map();
 
@@ -301,7 +284,7 @@ class App {
         _foregroundExecutor = new ForegroundExecutor(this.dispatcher);
         syncedAnimationEpoch = _backgroundExecutor.now();
         platformOperations = new glaze.platform.CeramicPlatformOperations();
-        _current = this;
+        Glaze.app = this;
     }
 
 /// Updates and effects

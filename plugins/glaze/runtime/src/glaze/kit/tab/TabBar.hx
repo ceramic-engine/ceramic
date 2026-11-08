@@ -115,7 +115,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
     public function new(id:ElementIdArg) {
         this.id = id;
         this.idString = Std.string((id : ElementId));
-        this.base = new glaze.kit.base.Tabs(id).px(glaze.Prelude.px(-1.));
+        this.base = glaze.kit.base.Tabs.component(id).px(glaze.Prelude.px(-1.));
         this.lastEmptySpaceValue = div().w3().intoAnyElement();
     }
 
@@ -631,7 +631,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
 
         if (menuValue) {
             final metas = itemMetas;
-            tabs.child(new Button('more')
+            tabs.child(Button.component('more')
                 .xsmall()
                 .ghost()
                 .dropdownCaret(true)

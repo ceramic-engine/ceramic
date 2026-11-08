@@ -54,8 +54,8 @@ class AlertDialog implements RenderOnce implements Styled implements ParentEleme
      * By default, the dialog is not overlay closable with a OK button.
      */
     public function new(cx:App) {
-        base = new Dialog(cx)
-            .withBaseAlertDialog(new glaze.kit.base.AlertDialog(cx))
+        base = Dialog.component(cx)
+            .withBaseAlertDialog(glaze.kit.base.AlertDialog.component(cx))
             .closeButton(false);
     }
 
@@ -286,14 +286,14 @@ class AlertDialog implements RenderOnce implements Styled implements ParentEleme
                 .flex1()
                 .minW0()
                 .gap1();
-            if (titleElement != null) column.child(new DialogTitle().child(titleElement));
-            if (descriptionElement != null) column.child(new DialogDescription().child(descriptionElement));
-            base.header(new DialogHeader().child(row.child(column)));
+            if (titleElement != null) column.child(DialogTitle.component().child(titleElement));
+            if (descriptionElement != null) column.child(DialogDescription.component().child(descriptionElement));
+            base.header(DialogHeader.component().child(row.child(column)));
         }
         base.extend(childElements);
         if (!hasFooter) {
             // Default footer for AlertDialog if user doesn't provide one, with OK and optional Cancel button
-            final footer = new DialogFooter();
+            final footer = DialogFooter.component();
             if (buttonProps.isCancelShown()) {
                 footer.child(buttonProps.renderCancel(window, cx));
             }
@@ -312,7 +312,7 @@ class AlertDialog implements RenderOnce implements Styled implements ParentEleme
             .onOpen((window, cx) -> {
                 window.openDialog(cx, (dialog, _, cx) -> {
                     final dialog = dialog
-                        .withBaseAlertDialog(new glaze.kit.base.AlertDialog(cx))
+                        .withBaseAlertDialog(glaze.kit.base.AlertDialog.component(cx))
                         .refineStyle(style)
                         .buttonProps(buttonProps.clone())
                         .withProps(props.clone());

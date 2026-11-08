@@ -88,7 +88,7 @@ class Alert implements RenderOnce implements Styled implements Sizable {
 
     var variant:AlertVariant = Default;
 
-    var iconValue:Icon = new Icon(IconName.Info);
+    var iconValue:Icon = Icon.component(IconName.Info);
 
     var titleValue:Null<String> = null;
 
@@ -111,19 +111,19 @@ class Alert implements RenderOnce implements Styled implements Sizable {
     }
 
     public static function info(id:ElementIdArg, message:IntoText):Alert {
-        return new Alert(id, message).withVariant(Info).icon(IconName.Info);
+        return glaze.kit.alert.Alert.component(id, message).withVariant(Info).icon(IconName.Info);
     }
 
     public static function success(id:ElementIdArg, message:IntoText):Alert {
-        return new Alert(id, message).withVariant(Success).icon(IconName.CircleCheck);
+        return glaze.kit.alert.Alert.component(id, message).withVariant(Success).icon(IconName.CircleCheck);
     }
 
     public static function warning(id:ElementIdArg, message:IntoText):Alert {
-        return new Alert(id, message).withVariant(Warning).icon(IconName.TriangleAlert);
+        return glaze.kit.alert.Alert.component(id, message).withVariant(Warning).icon(IconName.TriangleAlert);
     }
 
     public static function error(id:ElementIdArg, message:IntoText):Alert {
-        return new Alert(id, message).withVariant(Error).icon(IconName.CircleX);
+        return glaze.kit.alert.Alert.component(id, message).withVariant(Error).icon(IconName.CircleX);
     }
 
     public function withVariant(variant:AlertVariant):Alert {
@@ -230,7 +230,7 @@ class Alert implements RenderOnce implements Styled implements Sizable {
                     .hover(s -> s.bg(bg.opacity(0.8)))
                     .active(s -> s.bg(bg.opacity(0.9)))
                     .onClick((ev, window, cx) -> onClose(ev, window, cx))
-                    .child(new Icon(IconName.Close).withSize(size.max(Medium)).flexShrink0())
+                    .child(Icon.component(IconName.Close).withSize(size.max(Medium)).flexShrink0())
             );
         }
         return element;

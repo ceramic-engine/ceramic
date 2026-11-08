@@ -113,20 +113,20 @@ class SearchableListAdapter<I> extends ListDelegateBase {
 
         final el = delegate.renderItem(ix, item, isChecked, window, cx.app);
         if (el != null) {
-            return new SearchableListItemElement(ix.row)
+            return SearchableListItemElement.component(ix.row)
                 .disabled(disabled)
                 .withSize(size)
                 .child(el);
         }
 
-        final checkIcon = this.checkIcon != null ? this.checkIcon.clone() : new Icon(IconName.Check);
+        final checkIcon = this.checkIcon != null ? this.checkIcon.clone() : Icon.component(IconName.Check);
 
         final content = div()
             .minW0()
             .truncate()
             .child(SearchableListItems.render(item, window, cx.app));
 
-        return new SearchableListItemElement(ix.row)
+        return SearchableListItemElement.component(ix.row)
             .checked(isChecked)
             .checkIcon(checkIcon)
             .disabled(disabled)

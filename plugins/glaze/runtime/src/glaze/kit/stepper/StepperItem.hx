@@ -175,7 +175,7 @@ class StepperItem implements RenderOnce implements Styled implements ParentEleme
             onClick(e, window, cx);
         }));
         if (!isLastValue) {
-            root.child(new StepperSeparator()
+            root.child(StepperSeparator.component()
                 .withSize(size)
                 .layout(layoutValue)
                 .textCenter(textCenterValue)

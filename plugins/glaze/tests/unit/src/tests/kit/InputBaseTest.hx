@@ -21,7 +21,7 @@ class InputBaseTest extends TestCase {
     }
 
     function testFrameAcceptsApplicationOwnedContentAndStyle() {
-        final frame = new InputBase('input')
+        final frame = InputBase.component('input')
             .focused(true)
             .disabled(false)
             .styles(styles -> styles
@@ -33,13 +33,13 @@ class InputBaseTest extends TestCase {
     }
 
     function testSemanticStateStylesOverrideTheNormalStyle() {
-        final focused = new InputBase('focused')
+        final focused = InputBase.component('focused')
             .focused(true)
             .borderColor(red())
             .styles(styles -> styles.focused(style -> style.borderColor(blue())));
         assertTrue(blue().equals(focused.resolvedStyle().borderColor));
 
-        final disabled = new InputBase('disabled')
+        final disabled = InputBase.component('disabled')
             .focused(true)
             .disabled(true)
             .opacity(1.)

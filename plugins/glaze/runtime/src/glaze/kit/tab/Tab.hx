@@ -110,12 +110,12 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
 
     /** `Tab::from(label)`. */
     public static function fromLabel(label:String):Tab {
-        return new Tab().label(label);
+        return glaze.kit.tab.Tab.component().label(label);
     }
 
     /** `Tab::from(icon)`. */
     public static function fromIcon(icon:Icon):Tab {
-        return new Tab().icon(icon);
+        return glaze.kit.tab.Tab.component().icon(icon);
     }
 
     /** Set label for the tab. */

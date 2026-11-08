@@ -157,7 +157,7 @@ class TreeStory extends Model implements Story {
             .onAction(Rename, onActionRename)
             .onAction(OpenFile, onActionOpen)
             .onAction(Delete, onActionDelete)
-            .child(hFlex().gap3().child(new Button('select-item')
+            .child(hFlex().gap3().child(Button.component('select-item')
                 .outline()
                 .label('Select Item')
                 .onClick((_, _, cx) -> {
@@ -186,7 +186,7 @@ class TreeStory extends Model implements Story {
                             .rounded(Theme.global(cx).radius)
                             .px3()
                             .pl(px(16. * entry.depth() + 12.))
-                            .child(hFlex().gap2().child(new Icon(icon)).child(item.label))
+                            .child(hFlex().gap2().child(Icon.component(icon)).child(item.label))
                             .onClick((_, _, _) -> trace('Clicked on item: ${item.label} (${item.id})'));
                     })
                         .contextMenu((_, entry, menu, _, _) -> {
@@ -206,7 +206,7 @@ class TreeStory extends Model implements Story {
                         .justifyBetween()
                         .gap3()
                         .children(selectedIndex != null ? [('Selected Index: $selectedIndex' : IntoElement)] : [])
-                        .children(selectedItem != null ? [(new Label('Selected:').secondary(selectedItem.id) : IntoElement)] : []))));
+                        .children(selectedItem != null ? [(Label.component('Selected:').secondary(selectedItem.id) : IntoElement)] : []))));
     }
 
 }

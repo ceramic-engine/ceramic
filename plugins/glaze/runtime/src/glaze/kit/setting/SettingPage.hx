@@ -282,7 +282,7 @@ class SettingPage {
         if (isResettable(query, cx)) {
             final page = clone();
             headerRow.child(
-                new Button('reset')
+                Button.component('reset')
                     .icon(IconName.Undo2)
                     .ghost()
                     .small()
@@ -301,7 +301,7 @@ class SettingPage {
             .child(headerRow);
         if (descriptionValue != null) {
             header.child(
-                new Label(descriptionValue)
+                Label.component(descriptionValue)
                     .textSm()
                     .textColor(theme.mutedForeground)
             );

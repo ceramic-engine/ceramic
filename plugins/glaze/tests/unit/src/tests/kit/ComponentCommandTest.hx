@@ -405,7 +405,7 @@ class ComponentCommandTest extends TestCase {
                 // A changed label or icon style changes how the label wraps,
                 // and a changed disabled flag changes what can be highlighted.
                 final item = () -> new CommandItem().label("Renamed");
-                final icon = () -> new Icon(IconName.Check);
+                final icon = () -> Icon.component(IconName.Check);
                 for (entries in [
                     [CommandEntry.Item(item())],
                     [CommandEntry.Item(item().icon(icon()))],
@@ -494,7 +494,7 @@ class ComponentCommandTest extends TestCase {
 
     function testNonSearchableCommandUsesFrameFocus() {
         var confirmed:Null<IndexPath> = null;
-        final h = harness(state -> new Command(state)
+        final h = harness(state -> Command.component(state)
             .searchable(false)
             .item(new CommandItem().label("alpha"))
             .item(new CommandItem().label("beta"))
@@ -516,7 +516,7 @@ class ComponentCommandTest extends TestCase {
 
     function testFilteredUngroupedItemKeepsItsInputRow() {
         var confirmed:Null<IndexPath> = null;
-        final h = harness(state -> new Command(state)
+        final h = harness(state -> Command.component(state)
             .items([
                 new CommandItem().label("alpha"),
                 new CommandItem().label("beta"),
@@ -540,7 +540,7 @@ class ComponentCommandTest extends TestCase {
 
     function testInitiallyRenderedDisabledFirstItemSelectsAndConfirmsTheFirstEnabledItem() {
         var confirmed:Null<IndexPath> = null;
-        final h = harness(state -> new Command(state)
+        final h = harness(state -> Command.component(state)
             .item(new CommandItem().label("disabled").disabled(true))
             .item(new CommandItem().label("enabled"))
             .onConfirm((indexPath, _, _) -> confirmed = indexPath));
@@ -560,7 +560,7 @@ class ComponentCommandTest extends TestCase {
 
     function testInitiallyRenderedAllDisabledItemsHaveNoSelectedIndexAndIgnoreEnter() {
         var confirmed:Null<IndexPath> = null;
-        final h = harness(state -> new Command(state)
+        final h = harness(state -> Command.component(state)
             .item(new CommandItem().label("one").disabled(true))
             .item(new CommandItem().label("two").disabled(true))
             .onConfirm((indexPath, _, _) -> confirmed = indexPath));
@@ -581,7 +581,7 @@ class ComponentCommandTest extends TestCase {
     function testNonSearchableCommandCancelsWithoutClearingAHiddenQuery() {
         var cancelled = false;
         var queryCalls = 0;
-        final h = harness(state -> new Command(state)
+        final h = harness(state -> Command.component(state)
             .searchable(false)
             .item(new CommandItem().label("alpha"))
             .onQuery((_, _, _) -> queryCalls++)
@@ -711,7 +711,7 @@ class ComponentCommandTest extends TestCase {
     function testCustomEmptySlotRendersWithCurrentState() {
         var emptyCalls = 0;
         var emptyMatchedCount:Null<Int> = null;
-        final h = harness(state -> new Command(state).empty((state, _, _) -> {
+        final h = harness(state -> Command.component(state).empty((state, _, _) -> {
             emptyCalls++;
             emptyMatchedCount = state.matchedCount();
             return div().child("Custom empty");
@@ -738,7 +738,7 @@ class ComponentCommandTest extends TestCase {
     }
 
     static function commandWithEntries(state:Entity<CommandState>, entries:Array<CommandEntry>):Command {
-        var command = new Command(state);
+        var command = Command.component(state);
         for (entry in entries) {
             command = switch entry {
                 case CommandEntry.Item(item): command.item(item);
@@ -863,7 +863,7 @@ class ComponentCommandTest extends TestCase {
     }
 
     function testOuterCommandPaddingDoesNotInflateMeasuredRowHeights() {
-        final h = harness(state -> new Command(state)
+        final h = harness(state -> Command.component(state)
             .item(new CommandItem().label("fixed").child((_, _) -> div().h(px(32.))))
             .p4());
         final cx = h.cx;
@@ -878,7 +878,7 @@ class ComponentCommandTest extends TestCase {
     }
 
     function testCustomRowsKeepIndependentHeights() {
-        final h = harness(state -> new Command(state)
+        final h = harness(state -> Command.component(state)
             .group(new CommandGroup().label("Short").item(new CommandItem().label("short").child((_, _) -> div().h(px(32.)))))
             .separator()
             .group(new CommandGroup().label("Tall").item(new CommandItem().label("tall").child((_, _) -> div().h(px(72.))))));
@@ -902,7 +902,7 @@ class ComponentCommandTest extends TestCase {
         final h = harness(state -> {
             final alpha = new CommandItem().label("alpha").child((_, _) -> div().h(px(32.)));
             final beta = new CommandItem().label("beta").child((_, _) -> div().h(px(72.)));
-            return reversed ? new Command(state).item(beta).item(alpha) : new Command(state).item(alpha).item(beta);
+            return reversed ? Command.component(state).item(beta).item(alpha) : Command.component(state).item(alpha).item(beta);
         });
         final cx = h.cx;
         final state = h.view.read(app).state;
@@ -953,7 +953,7 @@ class ComponentCommandTest extends TestCase {
     }
 
     function testMovingPastTheVisibleRowsScrollsTheList() {
-        final h = harness(state -> new Command(state).items([for (ix in 0...50) new CommandItem().label('Item $ix')]));
+        final h = harness(state -> Command.component(state).items([for (ix in 0...50) new CommandItem().label('Item $ix')]));
         final cx = h.cx;
 
         cx.runUntilParked();
@@ -975,7 +975,7 @@ class ComponentCommandTest extends TestCase {
     }
 
     function testAReinstalledModelDoesNotScrollAPreservedSelection() {
-        final h = harness(state -> new Command(state).items([for (ix in 0...50) new CommandItem().label('Item $ix')]));
+        final h = harness(state -> Command.component(state).items([for (ix in 0...50) new CommandItem().label('Item $ix')]));
         final cx = h.cx;
 
         cx.runUntilParked();
@@ -1043,7 +1043,7 @@ private class CommandActionsHarness extends Model implements Render {
             .sizeFull()
             .onAction(OpenTestItem, (_, _, _) -> events.push("action"))
             .onAction(Cancel, (_, _, _) -> events.push("propagated_cancel"))
-            .child(new Command(state)
+            .child(Command.component(state)
                 .item(new CommandItem().label("Item").keywords(["needle"]).action(new OpenTestItem()))
                 .item(new CommandItem().label("Item"))
                 .item(new CommandItem().label("Item").action(new GlobalTestItem()))
@@ -1076,7 +1076,7 @@ private class ReentrantCallbackHarness extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final owner:glaze.WeakEntity<ReentrantCallbackHarness> = cast cx.weakEntity();
 
-        return new Command(state)
+        return Command.component(state)
             .item(new CommandItem().label("alpha"))
             .item(new CommandItem().label("beta"))
             .onSelect((index, _, cx) -> {
@@ -1111,7 +1111,7 @@ private class CommandOwnedEntriesHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new Command(state)
+        return Command.component(state)
             .searchable(false)
             .item(new CommandItem().label("alpha"))
             .group(new CommandGroup().label("Settings").item(new CommandItem().label("beta")))
@@ -1161,7 +1161,7 @@ private class HeaderFooterHarness extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final harness = this;
         return div().sizeFull().child(
-            new Command(state)
+            Command.component(state)
                 .items([
                     new CommandItem().label("Calendar"),
                     new CommandItem().label("Calculator"),
@@ -1197,7 +1197,7 @@ private class WrappingHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final command = new Command(state)
+        final command = Command.component(state)
             .item(new CommandItem().label("wrapped").child((_, _) -> div()
                 .wFull()
                 .child("A command row whose content wraps at narrow list widths")))

@@ -207,7 +207,7 @@ class ColorPickerTest extends TestCase {
         final cx = open_((window, cx) -> {
             if (focusHandle == null) focusHandle = cx.focusHandle();
             final view = cx.entityId();
-            return new glaze.kit.base.ColorPicker('picker')
+            return glaze.kit.base.ColorPicker.component('picker')
                 .open(open)
                 .trackFocus(focusHandle)
                 .size(px(20.))
@@ -241,7 +241,7 @@ class ColorPickerTest extends TestCase {
         final cx = open((window, cx) -> {
             if (state == null) state = cx.newEntity((c:Context<ColorPickerState>) -> new ColorPickerState(window, c));
             final color = @:privateAccess ColorPicker.colorPalettes()[0][0];
-            return @:privateAccess new ColorPicker(state).featuredColors([color, color]).renderPalettePanel(cx.app);
+            return @:privateAccess ColorPicker.component(state).featuredColors([color, color]).renderPalettePanel(cx.app);
         });
         var swatchCount = 2;
         for (palette in @:privateAccess ColorPicker.colorPalettes()) swatchCount += palette.length;
@@ -262,17 +262,17 @@ class ColorPickerTest extends TestCase {
 
     function testAnExplicitAccessibilityLabelReplacesTheVisibleOne() {
         final p = pickerState();
-        final plain = new ColorPicker(p.state).label('Color');
+        final plain = ColorPicker.component(p.state).label('Color');
         assertNull(plain.accessibilityLabelValue);
         assertEquals('Color', plain.labelValue);
-        final named = new ColorPicker(p.state).label('Color').accessibilityLabel('Text color');
+        final named = ColorPicker.component(p.state).label('Color').accessibilityLabel('Text color');
         assertEquals('Text color', named.accessibilityLabelValue, 'an explicit name must win over the visible label');
         assertEquals('Color', named.labelValue, 'and must not change what is drawn');
     }
 
     function testColorSelectBuilder() {
         final p = pickerState();
-        final select = new ColorSelect(p.state)
+        final select = ColorSelect.component(p.state)
             .large()
             .placeholder('Pick a color')
             .accessibilityLabel('Theme color')
@@ -288,7 +288,7 @@ class ColorPickerTest extends TestCase {
         var state:Entity<ColorPickerState> = null;
         final cx = open((window, cx) -> {
             if (state == null) state = cx.newEntity((c:Context<ColorPickerState>) -> new ColorPickerState(window, c));
-            return div().w(px(400.)).child(new ColorSelect(state));
+            return div().w(px(400.)).child(ColorSelect.component(state));
         });
         assertFalse(state.read(app).isOpen(), 'the picker starts closed');
         // Far from the swatch, where only the field frame can take the click.
@@ -345,7 +345,7 @@ class ColorPickerTest extends TestCase {
     }
 
     function testTabsExposesTabListRole() {
-        assertEquals(Role.TabList, new glaze.kit.base.Tabs('tabs').a11y.role);
+        assertEquals(Role.TabList, glaze.kit.base.Tabs.component('tabs').a11y.role);
     }
 
 }

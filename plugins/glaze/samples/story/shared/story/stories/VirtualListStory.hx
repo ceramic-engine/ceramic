@@ -127,30 +127,30 @@ class VirtualListStory extends Model implements Story {
         return vFlex()
             .gap2()
             .child(storyToolbarGroup()
-                .dropdownChild(new Button('virtual-list-dataset').label('Dataset: ${DATASETS[sizeMode]}'), (menu:PopupMenu, _, _) -> {
+                .dropdownChild(Button.component('virtual-list-dataset').label('Dataset: ${DATASETS[sizeMode]}'), (menu:PopupMenu, _, _) -> {
                     for (index => label in DATASETS) {
                         menu = menu.menuWithCheck(label, selected == index, new VirtualListDataset(index));
                     }
                     return menu;
                 })
-                .dropdownChild(new Button('virtual-list-axis').label('Axis: ${axis.isBoth() ? 'Both' : axis.isVertical() ? 'Vertical' : 'Horizontal'}'),
+                .dropdownChild(Button.component('virtual-list-axis').label('Axis: ${axis.isBoth() ? 'Both' : axis.isVertical() ? 'Vertical' : 'Horizontal'}'),
                     (menu, _, _) -> menu
                         .menuWithCheck('Both', axis.isBoth(), new VirtualListBoth())
                         .menuWithCheck('Vertical', axis.isVertical(), new VirtualListVertical())
                         .menuWithCheck('Horizontal', axis.isHorizontal(), new VirtualListHorizontal()))
-                .child(new Button('scroll-to0').label('Top').onClick((_, _, cx) -> {
+                .child(Button.component('scroll-to0').label('Top').onClick((_, _, cx) -> {
                     scrollHandle.scrollToItem(0, ScrollStrategy.Top);
                     entity.update(cx, (_, cx) -> cx.notify());
                 }))
-                .child(new Button('scroll-to1').label('Row 50').onClick((_, _, cx) -> {
+                .child(Button.component('scroll-to1').label('Row 50').onClick((_, _, cx) -> {
                     scrollHandle.scrollToItem(50, ScrollStrategy.Top);
                     entity.update(cx, (_, cx) -> cx.notify());
                 }))
-                .child(new Button('scroll-to2').label('Center 25').onClick((_, _, cx) -> {
+                .child(Button.component('scroll-to2').label('Center 25').onClick((_, _, cx) -> {
                     scrollHandle.scrollToItem(25, ScrollStrategy.Center);
                     entity.update(cx, (_, cx) -> cx.notify());
                 }))
-                .child(new Button('scroll-to-bottom').label('Bottom').onClick((_, _, cx) -> {
+                .child(Button.component('scroll-to-bottom').label('Bottom').onClick((_, _, cx) -> {
                     scrollHandle.scrollToBottom();
                     entity.update(cx, (_, cx) -> cx.notify());
                 })))

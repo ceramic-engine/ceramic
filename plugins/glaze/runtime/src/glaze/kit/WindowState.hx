@@ -192,7 +192,7 @@ class WindowState extends RootPlugin {
     static function sheetLayer(root:WindowState, window:Window, cx:App):Null<IntoElement> {
         final activeSheet = root.activeSheet;
         if (activeSheet != null) {
-            var sheet = new Sheet(window, cx);
+            var sheet = Sheet.component(window, cx);
             sheet = activeSheet.builder(sheet, window, cx);
             sheet.focusHandle = activeSheet.focusHandle;
             sheet.selectionScope = activeSheet.selectionScope;
@@ -227,7 +227,7 @@ class WindowState extends RootPlugin {
 
         for (index in 0...activeDialogs.length) {
             final activeDialog = activeDialogs[index];
-            var dialog = new Dialog(cx);
+            var dialog = Dialog.component(cx);
 
             dialog = activeDialog.builder(dialog, window, cx);
 
@@ -674,7 +674,7 @@ class WindowState extends RootPlugin {
         final layers = div()
             .absolute()
             .inset0()
-            .child(new WindowStateLayers(this));
+            .child(WindowStateLayers.component(this));
         layers.child(touchSelectionOverlay);
         layers.child(tooltipOverlayEntity);
         final pressListener = tooltipPressListener();

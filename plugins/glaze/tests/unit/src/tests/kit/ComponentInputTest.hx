@@ -162,9 +162,9 @@ class ComponentInputTest extends TestCase {
             final focus = other;
             return new ProbeView((_, _) -> div()
                 .child(div().trackFocus(focus))
-                .child(new Input(input))
-                .child(new Textarea(textarea))
-                .child(new OtpInput(otp)));
+                .child(Input.component(input))
+                .child(Textarea.component(textarea))
+                .child(OtpInput.component(otp)));
         });
 
         // Focusing each kind of input registers it, and blurring clears it.
@@ -194,7 +194,7 @@ class ComponentInputTest extends TestCase {
             final focus = other;
             return new ProbeView((_, _) -> {
                 final root = div().child(div().trackFocus(focus));
-                if (showInput) root.child(new Input(input));
+                if (showInput) root.child(Input.component(input));
                 return root;
             });
         });
@@ -248,23 +248,23 @@ class ComponentInputTest extends TestCase {
         openRoot((window, cx:Context<ProbeView>) -> {
             final input:Entity<InputState> = cx.newEntity((c:Context<InputState>) -> new InputState(window, c));
             final textarea:Entity<TextareaState> = cx.newEntity((c:Context<TextareaState>) -> new TextareaState(window, c));
-            final group = new InputGroup('group')
-                .input(new Input(input).ariaLabel('Replaced input'))
-                .input(new Textarea(textarea).ariaLabel('Message').readonly(true))
+            final group = InputGroup.component('group')
+                .input(Input.component(input).ariaLabel('Replaced input'))
+                .input(Textarea.component(textarea).ariaLabel('Message').readonly(true))
                 .disabled(true)
                 .invalid(true)
                 .small()
-                .addon(new InputGroupAddon('footer')
+                .addon(InputGroupAddon.component('footer')
                     .align(BlockEnd)
-                    .child(new InputGroupText().child('Help'))
-                    .child(new InputGroupButton('send').primary().label('Send')));
+                    .child(InputGroupText.component().child('Help'))
+                    .child(InputGroupButton.component('send').primary().label('Send')));
             assertEquals(textarea.entityId(), @:privateAccess group.control.getState().entityId());
             assertTrue(@:privateAccess group.disabledValue && @:privateAccess group.invalidValue);
             assertTrue((@:privateAccess group.size : Size).equals(Small));
             assertEquals(2, @:privateAccess group.addons[0].childElements.length);
             assertEquals(BlockEnd, @:privateAccess group.addons[0].alignment);
 
-            final button = new InputGroupButton('icon').icon(IconName.Copy).small();
+            final button = InputGroupButton.component('icon').icon(IconName.Copy).small();
             assertTrue((@:privateAccess button.size : Size).equals(Small));
             assertTrue(@:privateAccess button.button.isIconOnly());
             assertTrue(@:privateAccess button.button.variant().match(Ghost));
@@ -285,7 +285,7 @@ class ComponentInputTest extends TestCase {
             window = Window.open(cx, {width: 200, height: 100, scaleFactor: 2, autoDraw: false, bindInput: false}, (window, cx) -> {
                 state = cx.newEntity((c:Context<InputState>) -> new InputState(window, c).step(1.));
                 return cx.newEntity((_:Context<ProbeView>) -> new ProbeView((_, _) -> {
-                    final number = new glaze.kit.base.NumberInput(state)
+                    final number = glaze.kit.base.NumberInput.component(state)
                         .decrementButton(button -> button.w(px(20.)).hFull())
                         .input(div().sizeFull())
                         .incrementButton(button -> button.w(px(20.)).hFull());
@@ -456,8 +456,8 @@ class ComponentInputTest extends TestCase {
                 .flexCol()
                 .p4()
                 .gap4()
-                .child(new Input(previous).id('previous').w96())
-                .child(new Textarea(field).ariaLabel('Multiline field').w96().h(px(160.))));
+                .child(Input.component(previous).id('previous').w96())
+                .child(Textarea.component(field).ariaLabel('Multiline field').w96().h(px(160.))));
         });
         clickInput(base(previous));
         final state = AnyInputState.textarea(field);
@@ -536,10 +536,10 @@ private class InputsView extends Model implements Render {
             .flex()
             .flexCol()
             .gap4()
-            .child(new Input(first).id('first').w(px(240.)))
-            .child(new Input(second).id('second').w(px(240.)))
-            .child(new Input(guarded).id('guarded').w(px(240.)).disabled(disabled).readonly(readonly))
-            .child(new Input(secret).id('secret').maskToggle().w(px(240.)));
+            .child(Input.component(first).id('first').w(px(240.)))
+            .child(Input.component(second).id('second').w(px(240.)))
+            .child(Input.component(guarded).id('guarded').w(px(240.)).disabled(disabled).readonly(readonly))
+            .child(Input.component(secret).id('secret').maskToggle().w(px(240.)));
     }
 
 }
@@ -564,7 +564,7 @@ private class FocusInputsView extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         return div().sizeFull().flex().flexCol().p4().gap4().children([for (ix in 0...INPUT_IDS.length) {
             final id = INPUT_IDS[ix];
-            final input = new Input(inputs[ix])
+            final input = Input.component(inputs[ix])
                 .id(id)
                 .ariaLabel(INPUT_LABELS[ix])
                 .prefix(div().child('Prefix'))
@@ -572,8 +572,8 @@ private class FocusInputsView extends Model implements Render {
             input.w96();
             if (buttons && id == 'second') {
                 input
-                    .prefix(new Button('prefix-button').label('Prefix').onClick((_, _, _) -> prefixClicks++))
-                    .suffix(new Button('suffix-button').label('Suffix').onClick((_, _, _) -> suffixClicks++));
+                    .prefix(Button.component('prefix-button').label('Prefix').onClick((_, _, _) -> prefixClicks++))
+                    .suffix(Button.component('suffix-button').label('Suffix').onClick((_, _, _) -> suffixClicks++));
             }
             (input : IntoElement);
         }]);

@@ -251,7 +251,7 @@ private class TreeHarness extends Model implements Render {
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
         final draggable = this.draggable;
-        return div().sizeFull().child(new Tree(state)
+        return div().sizeFull().child(Tree.component(state)
             .sizeFull()
             .listStyle(StyleBuilder.build(s -> s.sizeFull()))
             .item((ix, _, _, _, _) -> {

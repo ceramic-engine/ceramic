@@ -479,7 +479,6 @@ class ComponentTest extends TestCase {
 
     function testGlazeAppIsTheCurrentApp() {
         assertTrue(Glaze.app == app);
-        assertTrue(Glaze.app == App.current);
     }
 
 }

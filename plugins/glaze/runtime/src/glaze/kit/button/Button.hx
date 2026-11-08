@@ -595,7 +595,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
 
     public function new(id:ElementIdArg) {
         this.id = id;
-        this.base = new glaze.kit.base.Button(id);
+        this.base = glaze.kit.base.Button.component(id);
     }
 
     /**
@@ -1166,7 +1166,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         for (child in children) content.child(child);
         if (dropdownCaretValue) {
             if (hasContent) content.justifyBetween();
-            content.child(new Caret(size).textColor(normalStyle.fg.opacity(0.75)));
+            content.child(Caret.component(size).textColor(normalStyle.fg.opacity(0.75)));
         }
 
         // `roleValue.resolve(() -> ...)` without a closure per render

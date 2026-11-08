@@ -98,7 +98,7 @@ class ColorPickerStory extends Model implements Story {
                         .textSm()
                         .textColor(theme.mutedForeground)
                         .child('Used for primary actions and highlights.')))
-                .child(new ColorPicker(color).withSize(size)));
+                .child(ColorPicker.component(color).withSize(size)));
         final selected = selectedColor;
         if (selected != null) {
             card.child(vFlex()
@@ -148,8 +148,8 @@ class ColorPickerStory extends Model implements Story {
                 .child(vFlex()
                     .wFull()
                     .gap3()
-                    .child(new ColorSelect(selectColor).withSize(size))
-                    .child(new ColorSelect(emptySelectColor)
+                    .child(ColorSelect.component(selectColor).withSize(size))
+                    .child(ColorSelect.component(emptySelectColor)
                         .withSize(size)
                         .placeholder('Pick a color'))));
     }

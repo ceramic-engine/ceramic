@@ -230,7 +230,7 @@ class CompanyListItem implements ListDelegateItem {
                     .maxW(px(500.))
                     .overflowXHidden()
                     .flexNowrap()
-                    .child(new Label(company.name).whitespaceNowrap())))
+                    .child(Label.component(company.name).whitespaceNowrap())))
                 .child(hFlex()
                     .gap2()
                     .itemsCenter()
@@ -384,7 +384,7 @@ class CompanyListDelegate extends ListDelegateBase {
             .gap2()
             .textSm()
             .textColor(Theme.global(cx.app).mutedForeground)
-            .child(new Icon(IconName.Folder))
+            .child(Icon.component(IconName.Folder))
             .child(industry)
             .child('(section: $section)');
     }
@@ -670,18 +670,18 @@ class ListStory extends Model implements Story {
             .sizeFull()
             .gap4()
             .child(storyToolbarGroup()
-                .dropdownChild(new Button('go-to').label('Go To'), (menu, _, _) -> menu
+                .dropdownChild(Button.component('go-to').label('Go To'), (menu, _, _) -> menu
                     .menu('Top', new GoToTop())
                     .menu('Selected', new GoToSelected())
                     .menu('Section 5, Row 1', new GoToRow())
                     .menu('Bottom', new GoToBottom()))
-                .dropdownChild(new Button('list-options').label('Options'), (menu, _, _) -> menu
+                .dropdownChild(Button.component('list-options').label('Options'), (menu, _, _) -> menu
                     .menuWithCheck('Selectable', selectable, new ToggleSelectable())
                     .menuWithCheck('Searchable', searchable, new ToggleSearchable())
                     .menuWithCheck('Loading', loading, new ToggleLoading())
                     .menuWithCheck('Lazy Load', lazyLoad, new ToggleLazyLoad())
                     .menuWithCheck('Draggable', draggable, new ToggleDraggable())))
-            .child(new List(companyList)
+            .child(List.component(companyList)
                 .p(px(8.))
                 .flex1()
                 .wFull()

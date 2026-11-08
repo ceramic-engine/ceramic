@@ -109,10 +109,10 @@ class ComponentControlsTest extends TestCase {
     /// Button
 
     function testAnExplicitAccessibilityLabelReplacesTheVisibleOne() {
-        final plain = new Button('save').label('Save');
+        final plain = glaze.kit.button.Button.component('save').label('Save');
         assertNull(plain.accessibilityLabelValue);
         assertEquals('Save', plain.labelValue);
-        final named = new Button('row').label('Save').accessibilityLabel('Save the current document');
+        final named = glaze.kit.button.Button.component('row').label('Save').accessibilityLabel('Save the current document');
         assertEquals('Save the current document', named.accessibilityLabelValue);
         assertEquals('Save', named.labelValue);
     }
@@ -129,7 +129,7 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testDisabledLegacyButtonKeepsExistingPointerBlocking() {
-        final h = pointerHarness(counts -> new Button('disabled-legacy').disabled(true).onClick((_, _, _) -> counts[0]++));
+        final h = pointerHarness(counts -> glaze.kit.button.Button.component('disabled-legacy').disabled(true).onClick((_, _, _) -> counts[0]++));
         click(h.cx);
         h.cx.update((window, app) -> window.focusNext(app));
         h.cx.simulateKeystrokes('enter space');
@@ -139,7 +139,7 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testEnabledButtonDelegatesPointerEnterAndSpaceOnce() {
-        final h = pointerHarness(counts -> new Button('enabled-legacy').onClick((event, _, _) -> {
+        final h = pointerHarness(counts -> glaze.kit.button.Button.component('enabled-legacy').onClick((event, _, _) -> {
             counts[0]++;
             if (event.isKeyboard()) counts[2]++;
         }));
@@ -157,7 +157,7 @@ class ComponentControlsTest extends TestCase {
     function testCallerOwnedFocusHandleDrivesFocusAndKeyboardActivation() {
         final focusHandle = app.focusHandle();
         final clicks = [0];
-        final cx = open((_, _) -> div().size(px(100.)).child(new Button('details').label('Details').trackFocus(focusHandle).onClick((_, _, _) -> clicks[0]++)));
+        final cx = open((_, _) -> div().size(px(100.)).child(glaze.kit.button.Button.component('details').label('Details').trackFocus(focusHandle).onClick((_, _, _) -> clicks[0]++)));
         cx.update((window, app) -> {
             focusHandle.focus(window, app);
             window.draw();
@@ -168,7 +168,7 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testLoadingButtonKeepsExistingPointerBlocking() {
-        final h = pointerHarness(counts -> new Button('loading-legacy').loading(true).onClick((_, _, _) -> counts[0]++));
+        final h = pointerHarness(counts -> glaze.kit.button.Button.component('loading-legacy').loading(true).onClick((_, _, _) -> counts[0]++));
         click(h.cx);
         h.cx.update((window, app) -> window.focusNext(app));
         h.cx.simulateKeystrokes('enter space');
@@ -178,7 +178,7 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testLoadingButtonWithoutCallbackStillBlocksParentActivation() {
-        final h = pointerHarness(_ -> new Button('loading-without-callback').loading(true));
+        final h = pointerHarness(_ -> glaze.kit.button.Button.component('loading-without-callback').loading(true));
         click(h.cx);
         h.cx.update((window, app) -> window.focusNext(app));
         h.cx.simulateKeystrokes('enter space');
@@ -189,8 +189,8 @@ class ComponentControlsTest extends TestCase {
     function testBaseActivationIsPreservedAndBlockedWhileLoading() {
         final clicks = [0];
         final loading = [false];
-        final cx = open((_, _) -> div().tabGroup().child(new Button('close')
-            .withBase(new glaze.kit.base.Button('close').onClick((_, _, _) -> clicks[0]++))
+        final cx = open((_, _) -> div().tabGroup().child(glaze.kit.button.Button.component('close')
+            .withBase(glaze.kit.base.Button.component('close').onClick((_, _, _) -> clicks[0]++))
             .loading(loading[0])
             .size(px(100.))));
         click(cx);
@@ -206,7 +206,7 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testButtonBuilder() {
-        final button = new Button('complex-button')
+        final button = glaze.kit.button.Button.component('complex-button')
             .label('Save Changes')
             .primary()
             .outline()
@@ -241,32 +241,32 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testAnOpenTriggerIsStoredApartFromASelectedOne() {
-        final open = new Button('trigger').open(true);
+        final open = glaze.kit.button.Button.component('trigger').open(true);
         assertTrue(open.isOpen());
         assertFalse(open.isSelected());
         assertTrue(open.showsSelectedStyle());
-        final selected = new Button('trigger').selected(true);
+        final selected = glaze.kit.button.Button.component('trigger').selected(true);
         assertTrue(selected.isSelected());
         assertFalse(selected.isOpen());
         assertTrue(selected.showsSelectedStyle());
-        assertFalse(new Button('trigger').showsSelectedStyle());
+        assertFalse(glaze.kit.button.Button.component('trigger').showsSelectedStyle());
     }
 
     function testSelectedTriggerPresentationDoesNotImplyToggledAccessibility() {
-        final selected = new Button('menu-trigger').selected(true);
+        final selected = glaze.kit.button.Button.component('menu-trigger').selected(true);
         assertTrue(selected.selectedValue);
         assertNull(selected.toggledValue);
-        final selectedToggle = new Button('explicit-toggle').selected(true).toggled(true);
+        final selectedToggle = glaze.kit.button.Button.component('explicit-toggle').selected(true).toggled(true);
         assertTrue(selectedToggle.selectedValue);
         assertEquals(true, selectedToggle.toggledValue);
     }
 
     function testButtonLoadingIsNotInteractive() {
-        assertTrue(new Button('test').interactive());
-        assertFalse(new Button('test').loading(true).interactive());
-        assertFalse(new Button('test').disabled(true).interactive());
-        assertFalse(new Button('test').loading(true).disabled(true).interactive());
-        assertFalse(new Button('test').loading(true).onHover((_, _, _) -> {}).hoverable());
+        assertTrue(glaze.kit.button.Button.component('test').interactive());
+        assertFalse(glaze.kit.button.Button.component('test').loading(true).interactive());
+        assertFalse(glaze.kit.button.Button.component('test').disabled(true).interactive());
+        assertFalse(glaze.kit.button.Button.component('test').loading(true).disabled(true).interactive());
+        assertFalse(glaze.kit.button.Button.component('test').loading(true).onHover((_, _, _) -> {}).hoverable());
     }
 
     function testButtonVariantMethods() {
@@ -280,7 +280,7 @@ class ComponentControlsTest extends TestCase {
 
     function testLinkButtonPrepaintsItsChild() {
         var bounds:Null<Bounds> = null;
-        open((_, _) -> new Button('link-button').link().child(div().onPrepaint((b, _, _) -> bounds = b).child('Visible link button')));
+        open((_, _) -> glaze.kit.button.Button.component('link-button').link().child(div().onPrepaint((b, _, _) -> bounds = b).child('Visible link button')));
         assertNotNull(bounds);
         assertTrue(bounds.size.width > 0);
         assertTrue(bounds.size.height > 0);
@@ -289,12 +289,12 @@ class ComponentControlsTest extends TestCase {
     function testBaseSlotPrepaintsCompleteButtonContent() {
         var bounds:Null<Bounds> = null;
         open((_, _) -> div()
-            .child(new Button('complete-button')
+            .child(glaze.kit.button.Button.component('complete-button')
                 .icon(IconName.Plus)
                 .label('Create')
                 .child(div().onPrepaint((b, _, _) -> bounds = b).child('Details'))
                 .dropdownCaret(true))
-            .child(new Button('loading-button')
+            .child(glaze.kit.button.Button.component('loading-button')
                 .icon(IconName.Plus)
                 .loadingIcon(IconName.Loader)
                 .loading(true)
@@ -392,15 +392,15 @@ class ComponentControlsTest extends TestCase {
 
     function testButtonIconBuilder() {
         final icon = (IconName.Plus:IntoButtonIcon);
-        final built = (icon:ButtonIcon).loading(true).loadingIcon(new glaze.kit.Icon(IconName.Loader)).large();
+        final built = (icon:ButtonIcon).loading(true).loadingIcon(glaze.kit.Icon.component(IconName.Loader)).large();
         assertTrue(built.loadingValue);
         assertNotNull(built.loadingIconValue);
         assertTrue(built.size.equals(Large));
     }
 
     function testButtonIconVariantTypes() {
-        assertFalse(ButtonIcon.isSpinner(ButtonIconVariant.Icon(new glaze.kit.Icon(IconName.Plus))));
-        assertTrue(ButtonIcon.isSpinner(ButtonIconVariant.Spinner(new glaze.kit.spinner.Spinner())));
+        assertFalse(ButtonIcon.isSpinner(ButtonIconVariant.Icon(glaze.kit.Icon.component(IconName.Plus))));
+        assertTrue(ButtonIcon.isSpinner(ButtonIconVariant.Spinner(glaze.kit.spinner.Spinner.component())));
     }
 
     /// ButtonGroup
@@ -409,11 +409,11 @@ class ComponentControlsTest extends TestCase {
         final childClicks = [0];
         final changes:Array<Array<Int>> = [];
         final cx = open((_, _) -> {
-            final group = new ButtonGroup('group')
+            final group = ButtonGroup.component('group')
                 .multiple(multiple)
                 .size(px(120.))
-                .child(new Button('one').label('One').onClick((_, _, _) -> childClicks[0]++))
-                .child(new Button('two').label('Two').selected(true));
+                .child(glaze.kit.button.Button.component('one').label('One').onClick((_, _, _) -> childClicks[0]++))
+                .child(glaze.kit.button.Button.component('two').label('Two').selected(true));
             if (installGroupCallback) group.onClick((next, _, _) -> changes.push(next.copy()));
             return group;
         });
@@ -453,13 +453,13 @@ class ComponentControlsTest extends TestCase {
     function testLegacyDisabledStateDependsOnBuilderOrder() {
         final clicks = [0];
         final cx = open((_, _) -> vFlex()
-            .child(new ButtonGroup('disabled-before-child')
+            .child(ButtonGroup.component('disabled-before-child')
                 .size(px(120.))
                 .disabled(true)
-                .child(new Button('first').label('First').onClick((_, _, _) -> clicks[0]++)))
-            .child(new ButtonGroup('disabled-after-child')
+                .child(glaze.kit.button.Button.component('first').label('First').onClick((_, _, _) -> clicks[0]++)))
+            .child(ButtonGroup.component('disabled-after-child')
                 .size(px(120.))
-                .child(new Button('second').label('Second').onClick((_, _, _) -> clicks[0]++))
+                .child(glaze.kit.button.Button.component('second').label('Second').onClick((_, _, _) -> clicks[0]++))
                 .disabled(true)));
         click(cx, 10, 60);
         assertEquals(0, clicks[0]);
@@ -468,10 +468,10 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testButtonGroupBuilder() {
-        final group = new ButtonGroup('complex-group')
-            .child(new Button('btn1').label('One'))
-            .child(new Button('btn2').label('Two'))
-            .child(new Button('btn3').label('Three'))
+        final group = ButtonGroup.component('complex-group')
+            .child(glaze.kit.button.Button.component('btn1').label('One'))
+            .child(glaze.kit.button.Button.component('btn2').label('Two'))
+            .child(glaze.kit.button.Button.component('btn3').label('Three'))
             .primary()
             .large()
             .outline()
@@ -501,7 +501,7 @@ class ComponentControlsTest extends TestCase {
             .tabGroup()
             .size(px(100.))
             .onClick((_, _, _) -> parent[0]++)
-            .child(new Toggle('toggle').label('Bold').disabled(disabled).sizeFull().onClick((next, _, _) -> changes.push(next))));
+            .child(Toggle.component('toggle').label('Bold').disabled(disabled).sizeFull().onClick((next, _, _) -> changes.push(next))));
         return {cx: cx, changes: changes, parent: parent};
     }
 
@@ -532,10 +532,10 @@ class ComponentControlsTest extends TestCase {
         final childClicks = [0];
         final changes:Array<Array<Bool>> = [];
         final cx = open((_, _) -> {
-            final group = new ToggleGroup('toggle-group')
+            final group = ToggleGroup.component('toggle-group')
                 .w(px(120.))
-                .child(new Toggle('one').label('One').checked(true).onClick((_, _, _) -> childClicks[0]++))
-                .child(new Toggle('two').label('Two'));
+                .child(Toggle.component('one').label('One').checked(true).onClick((_, _, _) -> childClicks[0]++))
+                .child(Toggle.component('two').label('Two'));
             if (installGroupCallback) group.onClick((next, _, _) -> changes.push(next.copy()));
             return group;
         });
@@ -565,12 +565,12 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testInstanceStyleRemainsTheFinalVisualOverride() {
-        final toggle = new Toggle('styled').checked(true).opacity(0.37);
+        final toggle = Toggle.component('styled').checked(true).opacity(0.37);
         assertEquals(0.37, toggle.toggleStyle.opacity);
     }
 
     function testToggleBuilder() {
-        final toggle = new Toggle('complex-toggle')
+        final toggle = Toggle.component('complex-toggle')
             .label('Enable Feature')
             .icon(IconName.Check)
             .checked(true)
@@ -587,10 +587,10 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testToggleGroupBuilder() {
-        final group = new ToggleGroup('complex-group')
-            .child(new Toggle('toggle1').label('Option 1'))
-            .child(new Toggle('toggle2').label('Option 2').checked(true))
-            .child(new Toggle('toggle3').label('Option 3'))
+        final group = ToggleGroup.component('complex-group')
+            .child(Toggle.component('toggle1').label('Option 1'))
+            .child(Toggle.component('toggle2').label('Option 2').checked(true))
+            .child(Toggle.component('toggle3').label('Option 3'))
             .outline()
             .large()
             .segmented()
@@ -607,9 +607,9 @@ class ComponentControlsTest extends TestCase {
     /// Checkbox
 
     function testCheckboxExplicitAccessibilityLabelReplacesTheVisibleOne() {
-        final plain = new Checkbox('remember').label('Remember me');
+        final plain = Checkbox.component('remember').label('Remember me');
         assertNull(plain.accessibilityLabelValue);
-        final named = new Checkbox('remember').label('Remember me').accessibilityLabel('Remember this account');
+        final named = Checkbox.component('remember').label('Remember me').accessibilityLabel('Remember this account');
         assertEquals('Remember this account', named.accessibilityLabelValue);
         assertEquals('Remember me', named.labelValue);
     }
@@ -622,7 +622,7 @@ class ComponentControlsTest extends TestCase {
             .tabGroup()
             .size(px(100.))
             .onClick((_, _, _) -> parent[0]++)
-            .child(new Checkbox('checkbox').disabled(disabled).sizeFull().onClick((checked, _, _) -> {
+            .child(Checkbox.component('checkbox').disabled(disabled).sizeFull().onClick((checked, _, _) -> {
                 assertTrue(checked);
                 clicks[0]++;
             })));
@@ -655,7 +655,7 @@ class ComponentControlsTest extends TestCase {
 
     function testFacadePrepaintsLabelAndCustomContentThroughTheBaseSlot() {
         var bounds:Null<Bounds> = null;
-        open((_, _) -> new Checkbox('content-checkbox').label('Remember me').child(div().onPrepaint((b, _, _) -> bounds = b).child('Additional detail')));
+        open((_, _) -> Checkbox.component('content-checkbox').label('Remember me').child(div().onPrepaint((b, _, _) -> bounds = b).child('Additional detail')));
         assertNotNull(bounds);
         assertTrue(bounds.size.width > 0);
         assertTrue(bounds.size.height > 0);
@@ -670,17 +670,17 @@ class ComponentControlsTest extends TestCase {
                 return null;
             });
         });
-        open((_, _) -> new Checkbox('checked').checked(true));
+        open((_, _) -> Checkbox.component('checked').checked(true));
         assertTrue(asked.indexOf(IconName.Check.path()) >= 0, 'the check mark must be drawn from the resolved path');
     }
 
     /// Radio
 
     function testRadioExplicitAccessibilityLabelReplacesTheVisibleOne() {
-        final plain = new Radio('automatic').label('Automatic');
+        final plain = Radio.component('automatic').label('Automatic');
         assertNull(plain.accessibilityLabelValue);
         assertEquals('Automatic', plain.labelValue);
-        final named = new Radio('automatic').label('Automatic').accessibilityLabel('Choose automatic mode');
+        final named = Radio.component('automatic').label('Automatic').accessibilityLabel('Choose automatic mode');
         assertEquals('Choose automatic mode', named.accessibilityLabelValue);
         assertEquals('Automatic', named.labelValue);
     }
@@ -688,10 +688,10 @@ class ComponentControlsTest extends TestCase {
     /// Switch
 
     function testSwitchExplicitAccessibilityLabelReplacesTheVisibleOne() {
-        final plain = new Switch('wifi').label('Wi-Fi');
+        final plain = glaze.kit.switch_.Switch.component('wifi').label('Wi-Fi');
         assertNull(plain.accessibilityLabelValue);
         assertEquals('Wi-Fi', plain.labelValue);
-        final named = new Switch('wifi').label('Wi-Fi').accessibilityLabel('Toggle Wi-Fi');
+        final named = glaze.kit.switch_.Switch.component('wifi').label('Wi-Fi').accessibilityLabel('Toggle Wi-Fi');
         assertEquals('Toggle Wi-Fi', named.accessibilityLabelValue);
         assertEquals('Wi-Fi', named.labelValue);
     }
@@ -704,7 +704,7 @@ class ComponentControlsTest extends TestCase {
             .tabGroup()
             .size(px(100.))
             .onClick((_, _, _) -> parent[0]++)
-            .child(new Switch('switch').disabled(disabled).onClick((checked, _, _) -> {
+            .child(glaze.kit.switch_.Switch.component('switch').disabled(disabled).onClick((checked, _, _) -> {
                 assertTrue(checked);
                 toggles[0]++;
             })));
@@ -736,7 +736,7 @@ class ComponentControlsTest extends TestCase {
     }
 
     function testDisabledSwitchTakesNoFocus() {
-        final cx = open((_, _) -> div().id('switch-parent').tabGroup().size(px(100.)).child(new Switch('switch').label('Airplane mode').disabled(true)));
+        final cx = open((_, _) -> div().id('switch-parent').tabGroup().size(px(100.)).child(glaze.kit.switch_.Switch.component('switch').label('Airplane mode').disabled(true)));
         cx.update((window, app) -> window.focusNext(app));
         cx.update((window, app) -> assertNull(window.focused(app)));
     }
@@ -745,7 +745,7 @@ class ComponentControlsTest extends TestCase {
 
     function sliderHarness(disabled:Bool):{cx:VisualTestContext, state:Entity<SliderState>} {
         final state = app.newEntity((_:Context<SliderState>) -> new SliderState());
-        final cx = open((_, _) -> div().w(px(100.)).h(px(24.)).child(new Slider(state).disabled(disabled)));
+        final cx = open((_, _) -> div().w(px(100.)).h(px(24.)).child(glaze.kit.slider.Slider.component(state).disabled(disabled)));
         return {cx: cx, state: state};
     }
 
@@ -764,38 +764,38 @@ class ComponentControlsTest extends TestCase {
     /// Toolbar
 
     function testToolbarBuilder() {
-        final toolbar = new Toolbar('toolbar').content('New').content('Open').content('Settings').small();
+        final toolbar = glaze.kit.toolbar.Toolbar.component('toolbar').content('New').content('Open').content('Settings').small();
         assertEquals(3, toolbar.items.length);
         assertTrue(toolbar.sizeValue.equals(Small));
     }
 
     function testToolbarDefault() {
-        final toolbar = new Toolbar('toolbar');
+        final toolbar = glaze.kit.toolbar.Toolbar.component('toolbar');
         assertTrue(toolbar.sizeValue.equals(Small));
         assertFalse(toolbar.disabledValue);
         assertEquals(0, toolbar.items.length);
     }
 
     function testLargeSizeFallsBackToMedium() {
-        assertTrue(new Toolbar('toolbar').large().sizeValue.equals(Medium));
+        assertTrue(glaze.kit.toolbar.Toolbar.component('toolbar').large().sizeValue.equals(Medium));
         assertTrue(new glaze.kit.toolbar.Toolbar.ToolbarGroup('group').large().sizeValue.equals(Medium));
     }
 
     function testToolbarPreparesButtonsAsCompactGhostCommands() {
-        final button = new Button('command').prepareForToolbar();
+        final button = glaze.kit.button.Button.component('command').prepareForToolbar();
         assertTrue(button.variant().equals(Ghost));
         assertTrue(button.isCompact());
     }
 
     function testToolbarSizePropagatesToItemsIndependentOfBuilderOrder() {
         final observed:Array<Null<Size>> = [null, null, null];
-        open((_, _) -> new Toolbar('toolbar').children([for (i in 0...3) new SizeProbe(observed, i)]).small());
+        open((_, _) -> glaze.kit.toolbar.Toolbar.component('toolbar').children([for (i in 0...3) SizeProbe.component(observed, i)]).small());
         for (size in observed) assertTrue(size != null && size.equals(Small));
     }
 
     function testToolbarGroupPropagatesItsSizeToItems() {
         final observed:Array<Null<Size>> = [null];
-        open((_, _) -> new glaze.kit.toolbar.Toolbar.ToolbarGroup('group').child(new SizeProbe(observed, 0)).small());
+        open((_, _) -> new glaze.kit.toolbar.Toolbar.ToolbarGroup('group').child(SizeProbe.component(observed, 0)).small());
         assertTrue(observed[0] != null && observed[0].equals(Small));
     }
 
@@ -895,7 +895,7 @@ class ComponentControlsTest extends TestCase {
     }
 
     function volume(state:Entity<SliderState>, disabled:Bool, track:Array<Bounds>):VisualTestContext {
-        return open((_, _) -> div().p8().w(px(264.)).child(div().onPrepaint((b, _, _) -> track[0] = b).child(new Slider(state).disabled(disabled))), 400, 240);
+        return open((_, _) -> div().p8().w(px(264.)).child(div().onPrepaint((b, _, _) -> track[0] = b).child(glaze.kit.slider.Slider.component(state).disabled(disabled))), 400, 240);
     }
 
     /**
@@ -984,7 +984,7 @@ class ComponentControlsTest extends TestCase {
         final state = app.newEntity((_:Context<SliderState>) -> new SliderState().defaultValue(20.));
         final track:Array<Bounds> = [null];
         final disabled = [false];
-        final cx = open((_, _) -> div().p8().w(px(264.)).child(div().onPrepaint((b, _, _) -> track[0] = b).child(new Slider(state).disabled(disabled[0]))), 400, 240);
+        final cx = open((_, _) -> div().p8().w(px(264.)).child(div().onPrepaint((b, _, _) -> track[0] = b).child(glaze.kit.slider.Slider.component(state).disabled(disabled[0]))), 400, 240);
         final thumb = new Point(track[0].left() + track[0].size.width * 0.2, track[0].center().y);
         function dispatch(phase:glaze.TouchPhase, from:Point, to:Point) {
             cx.update((window, app) -> {
@@ -1105,13 +1105,13 @@ private class Controls {
             .flex()
             .flexCol()
             .gap4()
-            .child(probe('save', new Button('save').label('Save').onClick((_, _, _) -> buttonClicks++)))
-            .child(probe('remember', new Checkbox('remember').label('Remember account').checked(checked).onChange((next, _, _) -> {
+            .child(probe('save', glaze.kit.button.Button.component('save').label('Save').onClick((_, _, _) -> buttonClicks++)))
+            .child(probe('remember', Checkbox.component('remember').label('Remember account').checked(checked).onChange((next, _, _) -> {
                 changes.push(next);
                 checked = next;
                 cx.notify();
             })))
-            .child(probe('notifications', new Switch('notifications').label('Notifications').checked(checked).disabled(disabled).onChange((next, _, _) -> {
+            .child(probe('notifications', glaze.kit.switch_.Switch.component('notifications').label('Notifications').checked(checked).disabled(disabled).onChange((next, _, _) -> {
                 changes.push(next);
                 checked = next;
                 cx.notify();
@@ -1143,9 +1143,9 @@ private class DeliveryPreferences {
             column.child(glaze.kit.radio.Radio.RadioGroup.vertical(id)
                 .selectedIndex(selected[group])
                 .disabled(group == 1 && billingDisabled)
-                .child(new Radio('standard').label('Standard').child(probe(0)))
-                .child(new Radio('express').label('Express').accessibilityLabel('Express delivery').child(probe(1)))
-                .child(new Radio('overnight').label('Overnight').disabled(true).child(probe(2)))
+                .child(Radio.component('standard').label('Standard').child(probe(0)))
+                .child(Radio.component('express').label('Express').accessibilityLabel('Express delivery').child(probe(1)))
+                .child(Radio.component('overnight').label('Overnight').disabled(true).child(probe(2)))
                 .onChange((index, _, _) -> {
                     selected[group] = index;
                     changes.push('$group-$index');

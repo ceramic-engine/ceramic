@@ -129,14 +129,14 @@ class NullSlotTest extends TestCase {
         final into:Null<IntoBreadcrumbItem> = none();
         final hidden = false;
 
-        final expectedCrumb = new Breadcrumb().children(['Home', 'Docs', new BreadcrumbItem('Page')]);
-        final actualCrumb = new Breadcrumb()
+        final expectedCrumb = Breadcrumb.component().children(['Home', 'Docs', BreadcrumbItem.component('Page')]);
+        final actualCrumb = Breadcrumb.component()
             .child(null)
             .child(label)
             .child('Home')
             .children([null, label, item, 'Docs', into])
             .child(hidden ? 'Hidden' : null)
-            .child(new BreadcrumbItem('Page'))
+            .child(BreadcrumbItem.component('Page'))
             .child(item)
             .children([label, null]);
         final labels = (crumb:Breadcrumb) -> [for (item in @:privateAccess crumb.items) @:privateAccess item.label].join(',');
@@ -281,17 +281,17 @@ class NullSlotTest extends TestCase {
     function testMessageNullAvatarIsNoAvatar() {
         final element:Null<Div> = none();
         final text:Null<String> = none();
-        assertNull(new Message().avatar(null).avatarValue);
-        assertNull(new Message().avatar(element).avatarValue);
-        assertNull(new Message().avatar(text).avatarValue);
-        assertNull(new Message().avatar('ME').avatar(null).avatarValue);
-        assertNotNull(new Message().avatar('ME').avatarValue);
+        assertNull(Message.component().avatar(null).avatarValue);
+        assertNull(Message.component().avatar(element).avatarValue);
+        assertNull(Message.component().avatar(text).avatarValue);
+        assertNull(Message.component().avatar('ME').avatar(null).avatarValue);
+        assertNotNull(Message.component().avatar('ME').avatarValue);
 
         final message = (log:Array<String>, avatar:Bool, withNull:Null<IntoElement>) -> {
-            final m = new Message()
-                .header(new MessageHeader().child(new SlotProbe(log, 'header', div().w(px(40.)).h(px(10.)))))
-                .content(new MessageContent().child(new SlotProbe(log, 'content', div().w(px(80.)).h(px(20.)))))
-                .footer(new MessageFooter().child(new SlotProbe(log, 'footer', div().w(px(60.)).h(px(10.)))));
+            final m = Message.component()
+                .header(MessageHeader.component().child(new SlotProbe(log, 'header', div().w(px(40.)).h(px(10.)))))
+                .content(MessageContent.component().child(new SlotProbe(log, 'content', div().w(px(80.)).h(px(20.)))))
+                .footer(MessageFooter.component().child(new SlotProbe(log, 'footer', div().w(px(60.)).h(px(10.)))));
             if (avatar) m.avatar(withNull);
             return m;
         };
@@ -323,7 +323,7 @@ class NullSlotTest extends TestCase {
         final text:Null<String> = none();
         final rich:Null<Text> = none();
         final into:Null<IntoElement> = none();
-        final list = (columns:Int) -> new DescriptionList().columns(columns);
+        final list = (columns:Int) -> DescriptionList.component().columns(columns);
 
         for (layout in [glaze.Axis.Horizontal, glaze.Axis.Vertical]) {
             for (bordered in [true, false]) {
@@ -350,8 +350,8 @@ class NullSlotTest extends TestCase {
         }
         // The cell stays: an item whose label and value are null still takes
         // its row (one empty text line), unlike no item at all.
-        final empty = rendered(_ -> div().id('root').w(px(500.)).child(new DescriptionList().item(null, null, 1)));
-        final noItem = rendered(_ -> div().id('root').w(px(500.)).child(new DescriptionList()));
+        final empty = rendered(_ -> div().id('root').w(px(500.)).child(DescriptionList.component().item(null, null, 1)));
+        final noItem = rendered(_ -> div().id('root').w(px(500.)).child(DescriptionList.component()));
         assertTrue(empty != noItem);
     }
 
@@ -422,7 +422,7 @@ class NullSlotTest extends TestCase {
         for (trigger in [null, (element : IntoElement), (text : IntoElement), into]) {
             var thrown:Null<String> = null;
             try {
-                new HoverCard('card').trigger(trigger);
+                HoverCard.component('card').trigger(trigger);
             }
             catch (e:Dynamic) {
                 thrown = Std.string(e);
@@ -430,7 +430,7 @@ class NullSlotTest extends TestCase {
             assertEquals(message, thrown);
             thrown = null;
             try {
-                new glaze.kit.base.HoverCard('card').trigger(trigger);
+                glaze.kit.base.HoverCard.component('card').trigger(trigger);
             }
             catch (e:Dynamic) {
                 thrown = Std.string(e);
@@ -438,8 +438,8 @@ class NullSlotTest extends TestCase {
             assertEquals(message, thrown);
         }
         // A real trigger is accepted.
-        new HoverCard('card').trigger('Hover me');
-        new glaze.kit.base.HoverCard('card').trigger(div());
+        HoverCard.component('card').trigger('Hover me');
+        glaze.kit.base.HoverCard.component('card').trigger(div());
     }
 
 }

@@ -122,7 +122,7 @@ class ComponentTabTest extends TestCase {
     /** One `TabBar`, optionally capped, holding the tab `build` returns. */
     function show(variant:TabVariant, maxWidth:Null<Pixels>, build:(Tab) -> Tab):VisualTestContext {
         return open((_, _) -> {
-            final bar = new TabBar('tabs').withVariant(variant).selectedIndex(0);
+            final bar = TabBar.component('tabs').withVariant(variant).selectedIndex(0);
             if (maxWidth != null) bar.maxWidth(maxWidth);
             return bar.child(build(new ProbedTab('tab')));
         });
@@ -139,12 +139,12 @@ class ComponentTabTest extends TestCase {
     }
 
     function testA11yLabelDefaultsToVisibleLabel() {
-        final tab = new Tab().label('Account');
+        final tab = glaze.kit.tab.Tab.component().label('Account');
         assertEquals('Account', @:privateAccess tab.a11yLabel());
     }
 
     function testExplicitA11yLabelOverridesVisibleLabel() {
-        final tab = new Tab().label('Acct').ariaLabel('Account settings');
+        final tab = glaze.kit.tab.Tab.component().label('Acct').ariaLabel('Account settings');
         assertEquals('Account settings', @:privateAccess tab.a11yLabel());
     }
 
@@ -169,7 +169,7 @@ class ComponentTabTest extends TestCase {
 
     function testMaxWidthKeepsPrefixAndSuffixIntact() {
         final cx = show(Segmented, 140., tab -> tab
-            .prefix(new Icon(IconName.BookOpen))
+            .prefix(Icon.component(IconName.BookOpen))
             .label(LONG_LABEL)
             .suffix(probe('suffix', div().size(px(16.)))));
 
@@ -192,7 +192,7 @@ class ComponentTabTest extends TestCase {
      * leave them alone however narrow it is.
      */
     function testMaxWidthExemptsIconOnlyTabs() {
-        final build = (tab:Tab) -> tab.icon(new Icon(IconName.BookOpen));
+        final build = (tab:Tab) -> tab.icon(Icon.component(IconName.BookOpen));
         final width = (maxWidth:Null<Pixels>) -> bounds(show(Tab, maxWidth, build), 'tab').size.width;
 
         final uncapped = width(null);
@@ -206,7 +206,7 @@ class ComponentTabTest extends TestCase {
         final childClicks = [0];
         final groupClicks = [0];
         final cx = open((_, _) -> {
-            final bar = new TabBar('tabs')
+            final bar = TabBar.component('tabs')
                 .w(px(240.))
                 .child(new ProbedTab('first-tab')
                     .disabled(disabled)
@@ -253,7 +253,7 @@ class ComponentTabTest extends TestCase {
                 events.push(event);
             });
         final cx = open((_, _) -> {
-            final bar = new TabBar('menu-tabs')
+            final bar = TabBar.component('menu-tabs')
                 .w(px(240.))
                 .menu(true)
                 .child(tab('First'))
@@ -298,7 +298,7 @@ class ComponentTabTest extends TestCase {
     }
 
     function testPrefixContentAndSuffixKeepTheirOrder() {
-        final cx = open((_, _) -> new TabBar('content-tabs').w(px(320.)).child(new Tab()
+        final cx = open((_, _) -> TabBar.component('content-tabs').w(px(320.)).child(glaze.kit.tab.Tab.component()
             .prefix(probe('tab-prefix', div().child('P')))
             .child(probe('tab-child', div().child('Content')))
             .suffix(probe('tab-suffix', div().child('S')))));
@@ -325,7 +325,7 @@ class ComponentTabTest extends TestCase {
     }
 
     static function dynamicScroll(h:Harness):IntoElement {
-        return probe('dynamic-bar', div().w(px(100.)).child(new TabBar('dynamic-scrolling-tabs')
+        return probe('dynamic-bar', div().w(px(100.)).child(TabBar.component('dynamic-scrolling-tabs')
             .withSize(h.size)
             .wFull()
             .segmented()
@@ -342,7 +342,7 @@ class ComponentTabTest extends TestCase {
     }
 
     static function manualScroll(h:Harness):IntoElement {
-        return div().w(px(160.)).h(px(40.)).child(div().relative().top(px(h.top)).wFull().child(new TabBar('manual-scrolling-tabs')
+        return div().w(px(160.)).h(px(40.)).child(div().relative().top(px(h.top)).wFull().child(TabBar.component('manual-scrolling-tabs')
             .wFull()
             .segmented()
             .menu(true)
@@ -353,7 +353,7 @@ class ComponentTabTest extends TestCase {
 
     function testScrollingToATabUsesLogicalTabIndices() {
         final scrollHandle = new ScrollHandle();
-        final cx = open((_, _) -> div().w(px(100.)).child(new TabBar('scrolling-tabs')
+        final cx = open((_, _) -> div().w(px(100.)).child(TabBar.component('scrolling-tabs')
             .wFull()
             .segmented()
             .menu(true)
@@ -499,7 +499,7 @@ class ComponentTabTest extends TestCase {
 
     function testFlexTabsShareTheAvailableWidth() {
         for (variant in [Tab, Outline, Segmented, Pill, Underline]) {
-            final cx = open((_, _) -> probe('flex-bar', div().w(px(200.)).child(new TabBar('flex-tabs')
+            final cx = open((_, _) -> probe('flex-bar', div().w(px(200.)).child(TabBar.component('flex-tabs')
                 .wFull()
                 .withVariant(variant)
                 .selectedIndex(0)
@@ -524,7 +524,7 @@ class ComponentTabTest extends TestCase {
         app.update(cx -> cx.setReduceMotion(reduceMotion));
         // Neither callback notifies.
         final cx = open((_, _) -> {
-            final bar = new TabBar('click-reveal-tabs').wFull();
+            final bar = TabBar.component('click-reveal-tabs').wFull();
             if (scrollHandle != null) bar.trackScroll(scrollHandle);
             bar.children([for (ix in 0...5) new ProbedTab('click-tab-$ix')
                 .w(px(60.))
@@ -596,7 +596,7 @@ class ComponentTabTest extends TestCase {
 /// tab_bar.rs: wheel
 
     static function wheelTabs(handle:Null<ScrollHandle>, variant:TabVariant, tabs:Int):TabBar {
-        final bar = new TabBar('wheel-tabs').wFull().withVariant(variant);
+        final bar = TabBar.component('wheel-tabs').wFull().withVariant(variant);
         if (handle != null) bar.trackScroll(handle);
         return bar.children([for (ix in 0...tabs) new ProbedTab('wheel-tab-$ix').w(px(60.)).label('Tab $ix')]);
     }
@@ -817,11 +817,11 @@ class ComponentTabTest extends TestCase {
         final h = new Harness(h -> {
             final root = div().w(px(h.width)).overflowHidden();
             if (h.shown) {
-                root.child(new TabBar('late-tabs')
+                root.child(TabBar.component('late-tabs')
                     .underline()
                     .selectedIndex(0)
-                    .child(new Tab().label('First'))
-                    .child(new Tab().label('Second')));
+                    .child(glaze.kit.tab.Tab.component().label('First'))
+                    .child(glaze.kit.tab.Tab.component().label('Second')));
             }
             return root;
         });
@@ -888,7 +888,7 @@ class ComponentTabTest extends TestCase {
             final advanced = new ProbedTab('settings-tab-1').label('Advanced');
             rendered.push(general);
             rendered.push(advanced);
-            return div().sizeFull().flex().flexCol().gap4().child(new TabBar('settings-tabs')
+            return div().sizeFull().flex().flexCol().gap4().child(TabBar.component('settings-tabs')
                 .selectedIndex(h.selectedIndex)
                 .children([general, advanced])
                 .onClick((index, _, cx) -> {

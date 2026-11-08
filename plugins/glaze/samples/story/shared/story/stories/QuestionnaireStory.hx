@@ -206,30 +206,30 @@ class QuestionnaireStory extends Model implements Story {
     }
 
     static function itemView(state:Entity<QuestionnaireState>, item:String, choices:Array<String>):QuestionnaireItem {
-        final result = new QuestionnaireItem(state, item)
-            .child(new QuestionnaireTitle(state, item))
-            .child(new QuestionnaireDescription(state, item));
-        final choiceParts = new QuestionnaireChoices(state, item);
+        final result = QuestionnaireItem.component(state, item)
+            .child(QuestionnaireTitle.component(state, item))
+            .child(QuestionnaireDescription.component(state, item));
+        final choiceParts = QuestionnaireChoices.component(state, item);
         for (value in choices) {
-            choiceParts.child(new QuestionnaireChoice(state, item, value));
+            choiceParts.child(QuestionnaireChoice.component(state, item, value));
         }
         // Keep the freeform answer in the same answer group as fixed choices,
         // matching the ReUI questionnaire composition and spacing.
-        choiceParts.child(new QuestionnaireInput(state, item));
-        return result.child(choiceParts).child(new QuestionnaireError(state, item));
+        choiceParts.child(QuestionnaireInput.component(state, item));
+        return result.child(choiceParts).child(QuestionnaireError.component(state, item));
     }
 
     static function questionnaireView(state:Entity<QuestionnaireState>, size:Size, items:Array<{name:String, choices:Array<String>}>):Questionnaire {
         // The root is the only place the scale is named; every part follows it.
-        final questionnaire = new Questionnaire(state).withSize(size).child(new QuestionnaireProgress(state));
+        final questionnaire = Questionnaire.component(state).withSize(size).child(QuestionnaireProgress.component(state));
         for (item in items) {
             questionnaire.child(itemView(state, item.name, item.choices));
         }
-        return questionnaire.child(new QuestionnaireActions(state)
-            .child(new QuestionnairePrevious(state))
-            .child(new QuestionnaireSkip(state))
-            .child(new QuestionnaireNext(state))
-            .child(new QuestionnaireSubmit(state)));
+        return questionnaire.child(QuestionnaireActions.component(state)
+            .child(QuestionnairePrevious.component(state))
+            .child(QuestionnaireSkip.component(state))
+            .child(QuestionnaireNext.component(state))
+            .child(QuestionnaireSubmit.component(state)));
     }
 
     /** Rust `{:?}` of a string. */
@@ -427,42 +427,42 @@ class QuestionnaireStory extends Model implements Story {
         final controlSubmitVisible = controlNavigation.isSubmitVisible();
         final environmentItem = controlState.read(app).itemState('environment');
         final environmentEnabled = environmentItem != null && !environmentItem.isDisabled();
-        final customActions = new QuestionnaireActions(controlState);
+        final customActions = QuestionnaireActions.component(controlState);
         if (controlPreviousVisible) {
-            customActions.child(new Button('questionnaire-custom-previous')
+            customActions.child(Button.component('questionnaire-custom-previous')
                 .outline()
                 .label('Back')
                 .onClick((_, window, cx) -> controlState.update(cx, (state, cx) -> state.goPrevious(window, cx))));
         }
         if (controlSkipVisible) {
-            customActions.child(new Button('questionnaire-custom-skip')
+            customActions.child(Button.component('questionnaire-custom-skip')
                 .outline()
                 .mlAuto()
                 .label('Not now')
                 .onClick((_, window, cx) -> controlState.update(cx, (state, cx) -> state.skipCurrent(window, cx))));
         }
         if (controlNextVisible) {
-            final next = new Button('questionnaire-custom-next').primary();
+            final next = Button.component('questionnaire-custom-next').primary();
             if (!controlSkipVisible) next.mlAuto();
             customActions.child(next
                 .label('Continue')
                 .onClick((_, window, cx) -> controlState.update(cx, (state, cx) -> state.goNext(window, cx))));
         }
         if (controlSubmitVisible) {
-            final submit = new Button('questionnaire-custom-submit').primary();
+            final submit = Button.component('questionnaire-custom-submit').primary();
             if (!controlSkipVisible) submit.mlAuto();
             customActions.child(submit
                 .label('Finish')
                 .onClick((_, window, cx) -> controlState.update(cx, (state, cx) -> state.submit(window, cx))));
         }
-        final customControl = new Questionnaire(controlState)
+        final customControl = Questionnaire.component(controlState)
             .withSize(size)
-            .child(new QuestionnaireProgress(controlState))
+            .child(QuestionnaireProgress.component(controlState))
             .child(itemView(controlState, 'runtime', ['local', 'cloud']))
             .child(itemView(controlState, 'delivery', ['guided', 'automatic']))
             .child(itemView(controlState, 'environment', ['staging', 'production']))
             .child(customActions);
-        final card = new GroupBox()
+        final card = GroupBox.component()
             .outline()
             .title('Workspace access')
             .child(questionnaireView(cardState, size, [
@@ -470,12 +470,12 @@ class QuestionnaireStory extends Model implements Story {
                 {name: 'card_updates', choices: ['yes', 'no']},
             ]));
         final customChoiceState = this.customChoiceState;
-        final customChoice = new Questionnaire(customChoiceState)
+        final customChoice = Questionnaire.component(customChoiceState)
             .withSize(size)
-            .child(new QuestionnaireItem(customChoiceState, 'custom')
-                .child(new QuestionnaireTitle(customChoiceState, 'custom'))
-                .child(new QuestionnaireChoices(customChoiceState, 'custom')
-                    .child(new QuestionnaireChoice(customChoiceState, 'custom', 'compact')
+            .child(QuestionnaireItem.component(customChoiceState, 'custom')
+                .child(QuestionnaireTitle.component(customChoiceState, 'custom'))
+                .child(QuestionnaireChoices.component(customChoiceState, 'custom')
+                    .child(QuestionnaireChoice.component(customChoiceState, 'custom', 'compact')
                         .contentStyle(style(s -> s.gap2()))
                         .renderIndicator((choice, _, cx) -> div()
                             .size4()
@@ -490,37 +490,37 @@ class QuestionnaireStory extends Model implements Story {
                             if (keystroke == null) {
                                 return div();
                             }
-                            return new Kbd(keystroke).outline();
+                            return Kbd.component(keystroke).outline();
                         })
                         .child(vFlex()
                             .gap1()
                             .child(div().fontMedium().child('Compact'))
-                            .child(new QuestionnaireChoiceDescription().child('A custom indicator and composed description.'))))
-                    .child(new QuestionnaireChoice(customChoiceState, 'custom', 'comfortable')
+                            .child(QuestionnaireChoiceDescription.component().child('A custom indicator and composed description.'))))
+                    .child(QuestionnaireChoice.component(customChoiceState, 'custom', 'comfortable')
                         .indicatorStyle(style(s -> s.opacity(0.65)))
                         .shortcutStyle(style(s -> s.opacity(0.65)))))
-                .child(new QuestionnaireError(customChoiceState, 'custom')))
-            .child(new QuestionnaireActions(customChoiceState).child(new QuestionnaireSubmit(customChoiceState)));
+                .child(QuestionnaireError.component(customChoiceState, 'custom')))
+            .child(QuestionnaireActions.component(customChoiceState).child(QuestionnaireSubmit.component(customChoiceState)));
         final dialogContentState = dialogState;
-        final dialog = new Dialog(app)
-            .trigger(new Button('questionnaire-dialog-trigger').outline().label('Open Questionnaire Dialog'))
+        final dialog = Dialog.component(app)
+            .trigger(Button.component('questionnaire-dialog-trigger').outline().label('Open Questionnaire Dialog'))
             .p0()
             .content((content, _, _) -> content
-                .child(new DialogHeader()
+                .child(DialogHeader.component()
                     .p4()
-                    .child(new DialogTitle().child('Workspace setup'))
-                    .child(new DialogDescription().child('Questionnaire validates the answer; the Dialog host owns close and cancel.')))
-                .child(new Questionnaire(dialogContentState)
+                    .child(DialogTitle.component().child('Workspace setup'))
+                    .child(DialogDescription.component().child('Questionnaire validates the answer; the Dialog host owns close and cancel.')))
+                .child(Questionnaire.component(dialogContentState)
                     .withSize(glaze.kit.Size.Small)
-                    .child(new QuestionnaireProgress(dialogContentState))
+                    .child(QuestionnaireProgress.component(dialogContentState))
                     .child(itemView(dialogContentState, 'dialog', ['first', 'second']))
                     .child(itemView(dialogContentState, 'dialog_verification', ['targeted', 'full']))
-                    .child(new DialogFooter()
-                        .child(new DialogClose().child(new Button('questionnaire-dialog-cancel').outline().label('Cancel')))
-                        .child(new QuestionnaireActions(dialogContentState)
-                            .child(new QuestionnairePrevious(dialogContentState))
-                            .child(new QuestionnaireNext(dialogContentState))
-                            .child(new QuestionnaireSubmit(dialogContentState))))
+                    .child(DialogFooter.component()
+                        .child(DialogClose.component().child(Button.component('questionnaire-dialog-cancel').outline().label('Cancel')))
+                        .child(QuestionnaireActions.component(dialogContentState)
+                            .child(QuestionnairePrevious.component(dialogContentState))
+                            .child(QuestionnaireNext.component(dialogContentState))
+                            .child(QuestionnaireSubmit.component(dialogContentState))))
                     .px4()
                     .pb4()));
         final externalStateForError = externalState;
@@ -545,15 +545,15 @@ class QuestionnaireStory extends Model implements Story {
                 .child(external)
                 .child(hFlex()
                     .gap2()
-                    .child(new Button('questionnaire-external-reapply')
+                    .child(Button.component('questionnaire-external-reapply')
                         .outline()
                         .label('Apply server error')
                         .onClick((_, _, cx) -> externalStateForError.update(cx, (state, cx) -> state.setExternalError('server', 'This workspace is not available.', cx))))
-                    .child(new Button('questionnaire-external-clear')
+                    .child(Button.component('questionnaire-external-clear')
                         .outline()
                         .label('Clear error')
                         .onClick((_, _, cx) -> externalStateForError.update(cx, (state, cx) -> state.clearExternalError('server', cx))))
-                    .child(new Button('questionnaire-external-fix-submit')
+                    .child(Button.component('questionnaire-external-fix-submit')
                         .primary()
                         .label('Fix and submit again')
                         .onClick((_, window, cx) -> externalStateForError.update(cx, (state, cx) -> {
@@ -565,7 +565,7 @@ class QuestionnaireStory extends Model implements Story {
             .child(section('Navigation state')
                 .description('The host can inspect current item, answers, status, available actions, and events.')
                 .w(px(600.))
-                .child(new Button('questionnaire-reset')
+                .child(Button.component('questionnaire-reset')
                     .outline()
                     .label('Reset complete flow')
                     .onClick((_, window, cx) -> state.update(cx, (state, cx) -> state.reset(window, cx))))
@@ -603,7 +603,7 @@ class QuestionnaireStory extends Model implements Story {
                 .w(px(600.))
                 .child(hFlex()
                     .gap2()
-                    .child(new Button('questionnaire-controlled-current')
+                    .child(Button.component('questionnaire-controlled-current')
                         .outline()
                         .label('Jump to runtime question')
                         .onClick((_, window, cx) -> controlState.update(cx, (state, cx) -> state.setCurrentItem('runtime', window, cx))))

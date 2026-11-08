@@ -125,7 +125,7 @@ class FormStory extends Model implements Story {
 
         final bioField = Form.field().label('Bio');
         if (layout == Vertical) bioField.itemsStart();
-        bioField.child(new Textarea(bioInput).withSize(size))
+        bioField.child(Textarea.component(bioInput).withSize(size))
             .descriptionFn((_, _) -> div().child('Use at most 100 words to describe yourself.'));
 
         final fullWidthField = Form.field().labelIndent(false);
@@ -135,7 +135,7 @@ class FormStory extends Model implements Story {
         final switchField = Form.field();
         if (isHorizontal && isMultiColumn) switchField.labelIndent(false);
         if (isMultiColumn) switchField.colStart(1);
-        switchField.child(new Switch('subscribe-newsletter')
+        switchField.child(Switch.component('subscribe-newsletter')
             .withSize(size)
             .label('Subscribe our newsletter')
             .checked(subscribeEmail)
@@ -146,7 +146,7 @@ class FormStory extends Model implements Story {
 
         final checkboxField = Form.field();
         if (isHorizontal && isMultiColumn) checkboxField.labelIndent(false);
-        checkboxField.child(new Checkbox('use-vertical-layout')
+        checkboxField.child(Checkbox.component('use-vertical-layout')
             .withSize(size)
             .label('Use this color for future events')
             .checked(subscribeEmail)
@@ -174,7 +174,7 @@ class FormStory extends Model implements Story {
                 }
                 cx.notify();
             }))
-            .child(storyToolbar(size).flexWrap().dropdownChild(new Button('form-options').label('Options'), (menu, _, _) -> menu
+            .child(storyToolbar(size).flexWrap().dropdownChild(Button.component('form-options').label('Options'), (menu, _, _) -> menu
                 .menuWithCheck('Horizontal', horizontal, new FormToggleOption(Horizontal))
                 .menuWithCheck('Multiple columns', multipleColumns, new FormToggleOption(MultipleColumns))))
             .child(Separator.horizontal())
@@ -183,27 +183,27 @@ class FormStory extends Model implements Story {
                 .withSize(size)
                 .columns(columns)
                 .labelWidth(px(isMultiColumn ? 100. : 140.))
-                .child(Form.field().labelFn((_, _) -> 'Name').child(new Input(nameInput)
+                .child(Form.field().labelFn((_, _) -> 'Name').child(Input.component(nameInput)
                     .withSize(size)
                     .pl0()
-                    .prefix(div().w(px(90.)).child(new Select(namePrefixState)
+                    .prefix(div().w(px(90.)).child(Select.component(namePrefixState)
                         .withSize(size)
                         .pr0()
                         .appearance(false)))))
                 .child(Form.field()
                     .label('Email')
-                    .child(new Input(emailInput).withSize(size))
+                    .child(Input.component(emailInput).withSize(size))
                     .required(true))
                 .child(bioField)
                 .child(fullWidthField)
                 .child(Form.field()
                     .label('Please select your birthday')
                     .description('Select your birthday, we will send you a gift.')
-                    .child(new DatePicker(date).withSize(size)))
+                    .child(DatePicker.component(date).withSize(size)))
                 .child(switchField)
                 .child(Form.field()
                     .label('Theme color')
-                    .child(new ColorSelect(colorState).withSize(size)))
+                    .child(ColorSelect.component(colorState).withSize(size)))
                 .child(checkboxField));
     }
 

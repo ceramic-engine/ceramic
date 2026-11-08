@@ -176,7 +176,7 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
             row.child(div().flex1().minW0().h(glaze.Prelude.px(1.)).mr1().bg(tokens.colors.border).refineStyle(separatorStyleValue));
         }
         if (loading && loadingStyle == Spinner && !hasIcon) {
-            row.child(new MarkerIcon().child(new glaze.kit.spinner.Spinner().xsmall()));
+            row.child(MarkerIcon.component().child(glaze.kit.spinner.Spinner.component().xsmall()));
         }
         for (child in markerChildren) {
             switch child {
@@ -303,7 +303,7 @@ class MarkerContent implements RenderOnce implements Styled implements ParentEle
         for (index in 0...contentChildren.length) {
             switch contentChildren[index] {
                 case Text(text) if (animate):
-                    content.child(new ShimmerText(text).id(ElementId.NamedInteger('marker-loading-text', index)).withShimmerStyle(shimmerStyle));
+                    content.child(ShimmerText.component(text).id(ElementId.NamedInteger('marker-loading-text', index)).withShimmerStyle(shimmerStyle));
                 case Text(text):
                     content.child(new StyledText(text));
                 case Element(element):

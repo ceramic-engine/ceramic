@@ -374,7 +374,7 @@ class WindowTest extends TestCase {
 
     function testComponentReadsSubscribeTheEnclosingView() {
         final counter:Entity<TestCounter> = app.newEntity(_ -> new TestCounter());
-        open((window, cx) -> div().child(new TestComponent(counter)));
+        open((window, cx) -> div().child(TestComponent.component(counter)));
         window.draw();
         assertEquals(1, window.renderedScene().quads.length);
         counter.read(app).count = 2;

@@ -145,7 +145,7 @@ class Rating implements RenderOnce implements Styled implements Sizable {
                 .flexNone()
                 .flexShrink0();
             if (filled || hovered) star.textColor(activeColor);
-            star.child(new Icon(filled ? IconName.StarFill : IconName.Star).withSize(size));
+            star.child(Icon.component(filled ? IconName.StarFill : IconName.Star).withSize(size));
             if (!disabled) {
                 star.onMouseMove((_, _, _) -> {
                     if (state.hoveredValue != ix) {

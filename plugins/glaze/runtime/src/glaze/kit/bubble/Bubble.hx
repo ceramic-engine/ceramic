@@ -78,7 +78,7 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
     var variant:BubbleVariant = Filled;
 
     @:allow(tests)
-    var contentValue:BubbleContent = new BubbleContent();
+    var contentValue:BubbleContent = BubbleContent.component();
 
     @:allow(tests)
     var reactionsValue:Null<BubbleReactions> = null;

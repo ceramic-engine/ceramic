@@ -225,7 +225,7 @@ class SelectState<I> extends Model implements Render {
 
     /** Rust `Icon::new(IconName::Inbox).size(px(28.))` (`Styled::size`). */
     static function inboxIcon():Icon {
-        final icon = new Icon(IconName.Inbox);
+        final icon = Icon.component(IconName.Inbox);
         new glaze.StyleBuilder(icon.style()).size(px(28.));
         return icon;
     }
@@ -530,7 +530,7 @@ class SelectState<I> extends Model implements Render {
         if (!showClean) {
             final iconElement:IntoElement = switch icon {
                 case null:
-                    (new Caret(state.size).textColor(theme.mutedForeground) : IntoElement);
+                    (Caret.component(state.size).textColor(theme.mutedForeground) : IntoElement);
                 case icon:
                     (icon.clone().xsmall().textColor(theme.mutedForeground) : IntoElement);
             }
@@ -557,7 +557,7 @@ class SelectState<I> extends Model implements Render {
                 case Auto: surface.w(px(bounds.size.width));
                 case Definite(w): surface.w(w);
             }
-            final list = new List(state.list);
+            final list = List.component(state.list);
             if (state.searchPlaceholder != null) list.searchPlaceholder(state.searchPlaceholder);
             list.withSize(state.size).maxH(state.menuMaxH);
             if (state.scrollBounce != null) list.scrollBounce(state.scrollBounce);

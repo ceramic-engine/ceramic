@@ -195,7 +195,7 @@ abstract class ListDelegateBase implements ListDelegate {
     }
 
     public function renderLoading(window:Window, cx:Context<ListState<Dynamic>>):IntoElement {
-        return new Loading();
+        return Loading.component();
     }
 
     public abstract function setSelectedIndex(ix:Null<IndexPath>, window:Window, cx:Context<ListState<Dynamic>>):Void;
@@ -231,7 +231,7 @@ class ListDelegateDefaults {
             .sizeFull()
             .justifyCenter()
             .textColor(theme.mutedForeground.opacity(0.6))
-            .child(new Icon(IconName.Inbox).size12());
+            .child(Icon.component(IconName.Inbox).size12());
     }
 
 }

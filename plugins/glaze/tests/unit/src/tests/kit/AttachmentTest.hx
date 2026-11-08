@@ -50,15 +50,15 @@ class AttachmentTest extends TestCase {
     }
 
     function testAttachmentBuilder() {
-        final attachment = new Attachment()
+        final attachment = Attachment.component()
             .status(Uploading)
             .axis(Vertical)
             .withSize(glaze.kit.Size.Small)
-            .media(new AttachmentMedia().src('preview.png'))
-            .content(new AttachmentContent()
-                .title(new AttachmentTitle('report.pdf'))
-                .description(new AttachmentDescription('Uploading')))
-            .actions(new AttachmentActions().child('Cancel'));
+            .media(AttachmentMedia.component().src('preview.png'))
+            .content(AttachmentContent.component()
+                .title(AttachmentTitle.component('report.pdf'))
+                .description(AttachmentDescription.component('Uploading')))
+            .actions(AttachmentActions.component().child('Cancel'));
 
         assertEquals(AttachmentStatus.Uploading, attachment.statusValue);
         assertEquals(glaze.Axis.Vertical, attachment.axisValue);
@@ -74,7 +74,7 @@ class AttachmentTest extends TestCase {
         assertTrue(attachment.actionsValue.verticalLayout);
 
         final handle = new ScrollHandle();
-        final group = new AttachmentGroup('group')
+        final group = AttachmentGroup.component('group')
             .trackScroll(handle)
             .withEdgeFade(black())
             .child('first')
@@ -82,15 +82,15 @@ class AttachmentTest extends TestCase {
         assertNotNull(group.scrollHandle);
         assertTrue(group.edgeFade.equals(black()));
         assertEquals(2, group.childElements.length);
-        assertNull(new AttachmentGroup('plain').scrollHandle);
-        assertNull(new AttachmentGroup('plain').edgeFade);
+        assertNull(AttachmentGroup.component('plain').scrollHandle);
+        assertNull(AttachmentGroup.component('plain').edgeFade);
     }
 
     function testAttachmentWholeCardClickBuilder() {
-        assertNull(new Attachment().idValue);
-        assertNull(new Attachment().onClickValue);
+        assertNull(Attachment.component().idValue);
+        assertNull(Attachment.component().onClickValue);
 
-        final clickable = new Attachment()
+        final clickable = Attachment.component()
             .id('report-attachment')
             .onClick((_, _, _) -> {});
         assertTrue(Type.enumEq(ElementId.Name('report-attachment'), clickable.idValue));
@@ -98,10 +98,10 @@ class AttachmentTest extends TestCase {
     }
 
     function testAttachmentCornerControlsBuilder() {
-        assertNull(new Attachment().onRemoveValue);
-        assertNull(new Attachment().onRetryValue);
+        assertNull(Attachment.component().onRemoveValue);
+        assertNull(Attachment.component().onRetryValue);
 
-        final attachment = new Attachment()
+        final attachment = Attachment.component()
             .id('upload')
             .onRemove((_, _, _) -> {})
             .onRetry((_, _, _) -> {});
@@ -110,76 +110,76 @@ class AttachmentTest extends TestCase {
     }
 
     function testAttachmentRetryControlReachesSlotsOnlyWhileFailed() {
-        final failed = new Attachment()
+        final failed = Attachment.component()
             .id('upload')
             .status(Failed)
             .onRetry((_, _, _) -> {})
-            .media(new AttachmentMedia().src('preview.png'))
-            .content(new AttachmentContent().description(new AttachmentDescription('Failed')));
+            .media(AttachmentMedia.component().src('preview.png'))
+            .content(AttachmentContent.component().description(AttachmentDescription.component('Failed')));
         failed.layoutSlots();
         assertNotNull(failed.mediaValue.retry);
         assertNotNull(failed.contentValue.retry);
 
         // A completed attachment offers no retry, and one without an identity
         // has nothing to key the control on.
-        final complete = new Attachment()
+        final complete = Attachment.component()
             .id('upload')
             .onRetry((_, _, _) -> {})
-            .media(new AttachmentMedia().src('preview.png'));
+            .media(AttachmentMedia.component().src('preview.png'));
         complete.layoutSlots();
         assertNull(complete.mediaValue.retry);
 
-        final anonymous = new Attachment()
+        final anonymous = Attachment.component()
             .status(Failed)
             .onRetry((_, _, _) -> {})
-            .media(new AttachmentMedia().src('preview.png'));
+            .media(AttachmentMedia.component().src('preview.png'));
         anonymous.layoutSlots();
         assertNull(anonymous.mediaValue.retry);
     }
 
     function testAttachmentProgressAndTooltipBuilder() {
-        assertNull(new Attachment().progressValue);
-        assertNull(new Attachment().tooltipValue);
-        assertEquals(100., new Attachment().progress(130.).progressValue);
-        assertEquals(0., new Attachment().progress(-5.).progressValue);
-        assertEquals('Network error', new Attachment().tooltip('Network error').tooltipValue);
+        assertNull(Attachment.component().progressValue);
+        assertNull(Attachment.component().tooltipValue);
+        assertEquals(100., Attachment.component().progress(130.).progressValue);
+        assertEquals(0., Attachment.component().progress(-5.).progressValue);
+        assertEquals('Network error', Attachment.component().tooltip('Network error').tooltipValue);
 
         // Progress reaches the slots only while uploading.
-        final uploading = new Attachment()
+        final uploading = Attachment.component()
             .id('upload')
             .status(Uploading)
             .progress(62.)
-            .media(new AttachmentMedia().src('preview.png'))
-            .content(new AttachmentContent().description(new AttachmentDescription('Uploading')));
+            .media(AttachmentMedia.component().src('preview.png'))
+            .content(AttachmentContent.component().description(AttachmentDescription.component('Uploading')));
         uploading.layoutSlots();
         assertEquals(62., uploading.mediaValue.progress);
         assertEquals(62., uploading.contentValue.progress);
 
-        final processing = new Attachment()
+        final processing = Attachment.component()
             .status(Processing)
             .progress(62.)
-            .media(new AttachmentMedia().src('preview.png'));
+            .media(AttachmentMedia.component().src('preview.png'));
         processing.layoutSlots();
         assertNull(processing.mediaValue.progress);
     }
 
     function testAttachmentImageTileMediaIsFlush() {
-        final tile = new Attachment()
+        final tile = Attachment.component()
             .axis(Vertical)
-            .media(new AttachmentMedia().src('preview.png'));
+            .media(AttachmentMedia.component().src('preview.png'));
         tile.layoutSlots();
         assertTrue(tile.mediaValue.flush);
 
-        final card = new Attachment()
+        final card = Attachment.component()
             .axis(Vertical)
-            .media(new AttachmentMedia().src('preview.png'))
-            .content(new AttachmentContent().title(new AttachmentTitle('preview.png')));
+            .media(AttachmentMedia.component().src('preview.png'))
+            .content(AttachmentContent.component().title(AttachmentTitle.component('preview.png')));
         card.layoutSlots();
         assertFalse(card.mediaValue.flush);
     }
 
     function testAttachmentDefaultsAndStatusHelpers() {
-        assertEquals(AttachmentStatus.Complete, new Attachment().statusValue);
+        assertEquals(AttachmentStatus.Complete, Attachment.component().statusValue);
         assertEquals(AttachmentStatus.Complete, AttachmentStatus.defaultValue());
         assertTrue(AttachmentStatus.Pending.isPending());
         assertTrue(AttachmentStatus.Uploading.isInProgress());
@@ -190,31 +190,31 @@ class AttachmentTest extends TestCase {
     }
 
     function testAttachmentSlotsAreComposable() {
-        final media = new AttachmentMedia().child('icon');
+        final media = AttachmentMedia.component().child('icon');
         assertEquals(1, media.childElements.length);
 
-        final content = new AttachmentContent()
-            .title(new AttachmentTitle('name'))
-            .description(new AttachmentDescription('Details'))
+        final content = AttachmentContent.component()
+            .title(AttachmentTitle.component('name'))
+            .description(AttachmentDescription.component('Details'))
             .child('Custom progress');
         assertEquals(3, content.childElements.length);
         assertTrue(content.childElements[0].match(Title(_)));
         assertTrue(content.childElements[1].match(Description(_)));
         assertTrue(content.childElements[2].match(Element(_)));
 
-        final legacy = new AttachmentContent().child(new AttachmentTitle('legacy'));
+        final legacy = AttachmentContent.component().child(AttachmentTitle.component('legacy'));
         assertTrue(legacy.childElements[0].match(Element(_)));
 
-        final actions = new AttachmentActions().child('remove');
+        final actions = AttachmentActions.component().child('remove');
         assertEquals(1, actions.childElements.length);
     }
 
     function testAttachmentTypedContentInheritsStatus() {
-        final attachment = new Attachment()
+        final attachment = Attachment.component()
             .status(Uploading)
-            .content(new AttachmentContent()
-                .title(new AttachmentTitle('report.pdf'))
-                .description(new AttachmentDescription('Uploading')));
+            .content(AttachmentContent.component()
+                .title(AttachmentTitle.component('report.pdf'))
+                .description(AttachmentDescription.component('Uploading')));
 
         attachment.layoutSlots();
 
@@ -230,9 +230,9 @@ class AttachmentTest extends TestCase {
     }
 
     function testAttachmentExplicitChildStatusOverridesParent() {
-        final attachment = new Attachment().status(Failed).content(new AttachmentContent()
-            .title(new AttachmentTitle('report.pdf').status(Processing))
-            .description(new AttachmentDescription('Previous upload completed').status(Complete)));
+        final attachment = Attachment.component().status(Failed).content(AttachmentContent.component()
+            .title(AttachmentTitle.component('report.pdf').status(Processing))
+            .description(AttachmentDescription.component('Previous upload completed').status(Complete)));
 
         attachment.layoutSlots();
 
@@ -248,9 +248,9 @@ class AttachmentTest extends TestCase {
     }
 
     function testAttachmentTitleKeepsCustomShimmerStyle() {
-        final attachment = new Attachment()
+        final attachment = Attachment.component()
             .status(Processing)
-            .content(new AttachmentContent().title(new AttachmentTitle('report.pdf')
+            .content(AttachmentContent.component().title(AttachmentTitle.component('report.pdf')
                 .withShimmerStyle(new ShimmerStyle().spread(glaze.kit.shimmer.ShimmerText.ShimmerSpread.Relative(0.45)).reverse(true))));
 
         attachment.layoutSlots();
@@ -265,7 +265,7 @@ class AttachmentTest extends TestCase {
     }
 
     function testAttachmentMediaPreviewKeepsChildrenAndOverlays() {
-        final media = new AttachmentMedia()
+        final media = AttachmentMedia.component()
             .src('preview.png')
             .child('Existing overlay')
             .overlay('Centered overlay');
@@ -279,18 +279,18 @@ class AttachmentTest extends TestCase {
         function slot(size:Size, status:AttachmentStatus, axis:glaze.Axis, flush:Bool):SlotLayout {
             return new SlotLayout(size, status, axis, flush, null, null, null);
         }
-        final inherited = new AttachmentMedia().layout(slot(Small, Complete, Vertical, true));
+        final inherited = AttachmentMedia.component().layout(slot(Small, Complete, Vertical, true));
         assertTrue(inherited.size.equals(Small));
         assertEquals(glaze.Axis.Vertical, inherited.axis);
         assertTrue(inherited.flush);
 
-        final explicit = new AttachmentMedia().withSize(XSmall).layout(slot(Large, Failed, Horizontal, false));
+        final explicit = AttachmentMedia.component().withSize(XSmall).layout(slot(Large, Failed, Horizontal, false));
         assertTrue(explicit.size.equals(XSmall));
         assertEquals(AttachmentStatus.Failed, explicit.status);
     }
 
     function testAttachmentGroupBuilder() {
-        final group = new AttachmentGroup('attachments')
+        final group = AttachmentGroup.component('attachments')
             .child('First')
             .child('Second');
 
@@ -308,13 +308,13 @@ class AttachmentTest extends TestCase {
     function testWholeCardClickStaysBelowTheActions() {
         var cardClicks = 0;
         var actionClicks = 0;
-        final cx = open((_, _) -> new Attachment()
+        final cx = open((_, _) -> Attachment.component()
             .id('attachment')
             .w(px(200.))
             .h(px(60.))
             .onClick((_, _, _) -> cardClicks++)
-            .actions(new AttachmentActions().child(
-                new Button('open')
+            .actions(AttachmentActions.component().child(
+                Button.component('open')
                     .w(px(40.))
                     .h(px(40.))
                     .onClick((_, _, _) -> actionClicks++)
@@ -336,10 +336,10 @@ class AttachmentTest extends TestCase {
 
     function failedMediaHarness(retry:Bool, retries:Array<Int>):VisualTestContext {
         final cx = open((_, _) -> {
-            final attachment = new Attachment()
+            final attachment = Attachment.component()
                 .id('failed-attachment')
                 .status(Failed)
-                .media(new AttachmentMedia());
+                .media(AttachmentMedia.component());
             if (retry) attachment.onRetry((_, _, _) -> retries[0]++);
             return attachment;
         });

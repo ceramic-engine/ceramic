@@ -79,7 +79,7 @@ class StoryToolbar implements RenderOnce implements Styled {
                 case Button(button):
                     children.push(joined(button));
                 case Dropdown(button, builder):
-                    children.push(new StoryToolbarMenu('story-toolbar-menu-$ix', joined(button), builder));
+                    children.push(StoryToolbarMenu.component('story-toolbar-menu-$ix', joined(button), builder));
             }
         }
         for (child in children) base.child(child);
@@ -122,7 +122,7 @@ class StoryToolbarMenu implements RenderOnce {
 
         final popoverId = 'story-toolbar-popover-$id';
 
-        return new Popover(popoverId)
+        return Popover.component(popoverId)
             .appearance(false)
             .overlayClosable(false)
             .anchor(Anchor.TopRight)

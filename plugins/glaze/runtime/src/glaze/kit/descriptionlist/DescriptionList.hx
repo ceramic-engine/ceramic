@@ -132,11 +132,11 @@ class DescriptionList implements RenderOnce implements Sizable {
     public function new() {}
 
     public static function vertical():DescriptionList {
-        return new DescriptionList().layout(Vertical);
+        return DescriptionList.component().layout(Vertical);
     }
 
     public static function horizontal():DescriptionList {
-        return new DescriptionList().layout(Horizontal);
+        return DescriptionList.component().layout(Horizontal);
     }
 
     /** Set the label width (horizontal layout only, default 120px). */

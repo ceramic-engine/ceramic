@@ -217,7 +217,7 @@ class BaseFoundationsTest extends TestCase {
     }
 
     function testClampsAndProjectsNumericAccessibility() {
-        final progress = new glaze.kit.base.Progress('progress').value(120.);
+        final progress = glaze.kit.base.Progress.component('progress').value(120.);
         renderOnce(progress);
         assertEquals(100., progress.a11y.numericValue);
         assertEquals(0., progress.a11y.minNumericValue);
@@ -225,13 +225,13 @@ class BaseFoundationsTest extends TestCase {
     }
 
     function testIndeterminateProgressOmitsNumericValue() {
-        final progress = new glaze.kit.base.Progress('loading').value(40.).indeterminate(true);
+        final progress = glaze.kit.base.Progress.component('loading').value(40.).indeterminate(true);
         renderOnce(progress);
         assertNull(progress.a11y.numericValue);
     }
 
     function testProgressProjectsItsAccessibleName() {
-        final progress = new glaze.kit.base.Progress('download').accessibilityLabel('Downloading release');
+        final progress = glaze.kit.base.Progress.component('download').accessibilityLabel('Downloading release');
         renderOnce(progress);
         assertEquals('Downloading release', progress.a11y.label);
     }
@@ -241,11 +241,11 @@ class BaseFoundationsTest extends TestCase {
     function avatarHarness(image:Bool):Map<String, Bounds> {
         final bounds = new Map<String, Bounds>();
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _:Context<Host>) -> new Host(() -> {
-            final avatar = new Avatar();
+            final avatar = Avatar.component();
             if (image) {
-                avatar.image(new AvatarImage('avatar.png').size(px(20.)));
+                avatar.image(AvatarImage.component('avatar.png').size(px(20.)));
             }
-            avatar.fallback(new AvatarFallback().child(div().size(px(20.)).onPrepaint((b, _, _) -> bounds.set('avatar-fallback', b))));
+            avatar.fallback(AvatarFallback.component().child(div().size(px(20.)).onPrepaint((b, _, _) -> bounds.set('avatar-fallback', b))));
             return avatar;
         }));
         cx = opened.cx;

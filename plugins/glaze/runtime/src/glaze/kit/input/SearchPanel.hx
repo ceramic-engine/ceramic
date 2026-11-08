@@ -311,7 +311,7 @@ class SearchPanel extends Model implements Render {
 
         final view:Entity<SearchPanel> = cx.entity();
 
-        final caseButton = new Button("case-insensitive")
+        final caseButton = Button.component("case-insensitive")
             .selected(!session.caseInsensitive)
             .toggled(!session.caseInsensitive)
             .xsmall()
@@ -327,7 +327,7 @@ class SearchPanel extends Model implements Render {
                 .flex()
                 .flex1()
                 .gap1()
-                .child(new Input(searchInput)
+                .child(Input.component(searchInput)
                     .focusBordered(false)
                     .suffix(caseButton)
                     .small()
@@ -337,7 +337,7 @@ class SearchPanel extends Model implements Render {
                     view.update(cx, (r, _) -> r.inputWidth = bounds.size.width);
                 }));
         if (allowReplace) {
-            searchRow.child(new Button("replace-mode")
+            searchRow.child(Button.component("replace-mode")
                 .xsmall()
                 .ghost()
                 .icon(IconName.Replace)
@@ -347,10 +347,10 @@ class SearchPanel extends Model implements Render {
                     this_.toggleReplaceMode(window, cx);
                 })));
         }
-        final matchLabel = new Label(session.matcher.label());
+        final matchLabel = Label.component(session.matcher.label());
         if (!hasMatches) matchLabel.textColor(theme.mutedForeground);
         searchRow
-            .child(new Button("prev")
+            .child(Button.component("prev")
                 .xsmall()
                 .ghost()
                 .icon(IconName.ChevronLeft)
@@ -358,7 +358,7 @@ class SearchPanel extends Model implements Render {
                 .onClick(cx.listener((this_:SearchPanel, _:ClickEvent, window:Window, cx:Context<SearchPanel>) -> {
                     this_.prev(window, cx);
                 })))
-            .child(new Button("next")
+            .child(Button.component("next")
                 .xsmall()
                 .ghost()
                 .icon(IconName.ChevronRight)
@@ -370,7 +370,7 @@ class SearchPanel extends Model implements Render {
                 .textLeft()
                 .minW16())
             .child(div().w7())
-            .child(new Button("close")
+            .child(Button.component("close")
                 .xsmall()
                 .ghost()
                 .icon(IconName.Close)
@@ -403,19 +403,19 @@ class SearchPanel extends Model implements Render {
             panel.child(hFlex()
                 .wFull()
                 .gap2()
-                .child(new Input(replaceInput)
+                .child(Input.component(replaceInput)
                     .focusBordered(false)
                     .small()
                     .w(px(inputWidth))
                     .shadowNone())
-                .child(new Button("replace-one")
+                .child(Button.component("replace-one")
                     .small()
                     .label(I18n.t("Input.Replace"))
                     .disabled(!hasMatches)
                     .onClick(cx.listener((this_:SearchPanel, _:ClickEvent, window:Window, cx:Context<SearchPanel>) -> {
                         this_.replaceNext(window, cx);
                     })))
-                .child(new Button("replace-all")
+                .child(Button.component("replace-all")
                     .small()
                     .label(I18n.t("Input.Replace All"))
                     .disabled(!hasMatches)

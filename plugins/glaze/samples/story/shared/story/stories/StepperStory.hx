@@ -78,53 +78,53 @@ class StepperStory extends Model implements Story {
             .gap3()
             .onAction(ChangeStorySize, (action, _, _) -> size = action.value)
             .onAction(ToggleDisabled, (_, _, _) -> this.disabled = !this.disabled)
-            .child(storyToolbar(size).dropdownChild(new Button('stepper-options').label('Options'),
+            .child(storyToolbar(size).dropdownChild(Button.component('stepper-options').label('Options'),
                 (menu, _, _) -> menu.menuWithCheck('Disabled', disabled, new ToggleDisabled())))
-            .child(section('Horizontal Stepper').w(px(480.)).vFlex().child(new Stepper('stepper0')
+            .child(section('Horizontal Stepper').w(px(480.)).vFlex().child(Stepper.component('stepper0')
                 .wFull()
                 .withSize(size)
                 .disabled(disabled)
                 .selectedIndex(stepper0Step)
                 .items([
-                    new StepperItem().child('Step 1'),
-                    new StepperItem().child('Step 2'),
-                    new StepperItem().child('Step 3'),
+                    StepperItem.component().child('Step 1'),
+                    StepperItem.component().child('Step 2'),
+                    StepperItem.component().child('Step 3'),
                 ])
                 .onClick((step, _, _) -> stepper0Step = step)))
-            .child(section('Icon Stepper').w(px(480.)).vFlex().child(new Stepper('stepper1')
+            .child(section('Icon Stepper').w(px(480.)).vFlex().child(Stepper.component('stepper1')
                 .wFull()
                 .withSize(size)
                 .disabled(disabled)
                 .selectedIndex(stepper1Step)
                 .items([
-                    new StepperItem().icon(IconName.Calendar).child('Order Details'),
-                    new StepperItem().icon(IconName.Inbox).child('Shipping'),
-                    new StepperItem().icon(IconName.Frame).child('Preview'),
-                    new StepperItem().icon(IconName.Info).child('Finish'),
+                    StepperItem.component().icon(IconName.Calendar).child('Order Details'),
+                    StepperItem.component().icon(IconName.Inbox).child('Shipping'),
+                    StepperItem.component().icon(IconName.Frame).child('Preview'),
+                    StepperItem.component().icon(IconName.Info).child('Finish'),
                 ])
                 .onClick((step, _, _) -> stepper1Step = step)))
-            .child(section('Vertical Stepper').w(px(480.)).vFlex().child(new Stepper('stepper3')
+            .child(section('Vertical Stepper').w(px(480.)).vFlex().child(Stepper.component('stepper3')
                 .vertical()
                 .withSize(size)
                 .disabled(disabled)
                 .selectedIndex(stepper2Step)
                 .itemsCenter()
                 .items([
-                    new StepperItem().pb8().icon(IconName.Building2).child(vFlex().child('Step 1').child('Description for step 1.')),
-                    new StepperItem().pb8().icon(IconName.Asterisk).child(vFlex().child('Step 2').child('Description for step 2.')),
-                    new StepperItem().pb8().icon(IconName.Folder).child(vFlex().child('Step 3').child('Description for step 3.')),
-                    new StepperItem().icon(IconName.CircleCheck).child(vFlex().child('Step 4').child('Description for step 4.')),
+                    StepperItem.component().pb8().icon(IconName.Building2).child(vFlex().child('Step 1').child('Description for step 1.')),
+                    StepperItem.component().pb8().icon(IconName.Asterisk).child(vFlex().child('Step 2').child('Description for step 2.')),
+                    StepperItem.component().pb8().icon(IconName.Folder).child(vFlex().child('Step 3').child('Description for step 3.')),
+                    StepperItem.component().icon(IconName.CircleCheck).child(vFlex().child('Step 4').child('Description for step 4.')),
                 ])
                 .onClick((step, _, _) -> stepper2Step = step)))
-            .child(section('Text Center').w(px(480.)).vFlex().child(new Stepper('stepper4')
+            .child(section('Text Center').w(px(480.)).vFlex().child(Stepper.component('stepper4')
                 .withSize(size)
                 .disabled(disabled)
                 .selectedIndex(stepper3Step)
                 .textCenter(true)
                 .items([
-                    new StepperItem().child(vFlex().itemsCenter().child('Step 1').child('Desc for step 1.')),
-                    new StepperItem().child(vFlex().itemsCenter().child('Step 2').child('Desc for step 2.')),
-                    new StepperItem().child(vFlex().itemsCenter().child('Step 3').child('Desc for step 3.')),
+                    StepperItem.component().child(vFlex().itemsCenter().child('Step 1').child('Desc for step 1.')),
+                    StepperItem.component().child(vFlex().itemsCenter().child('Step 2').child('Desc for step 2.')),
+                    StepperItem.component().child(vFlex().itemsCenter().child('Step 3').child('Desc for step 3.')),
                 ])
                 .onClick((step, _, _) -> stepper3Step = step)));
     }

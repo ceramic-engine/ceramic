@@ -78,7 +78,7 @@ class CheckboxStory extends Model implements Story {
             .child(storyToolbar(size))
             .child(section('Default')
                 .description('Checked and unchecked options can be mixed freely.')
-                .child(new Checkbox('updates')
+                .child(Checkbox.component('updates')
                     .withSize(size)
                     .checked(check1)
                     .label('Product updates')
@@ -86,7 +86,7 @@ class CheckboxStory extends Model implements Story {
                         this_.check1 = checked;
                         cx.notify();
                     })))
-                .child(new Checkbox('remember')
+                .child(Checkbox.component('remember')
                     .withSize(size)
                     .checked(check2)
                     .label('Remember this device')
@@ -96,7 +96,7 @@ class CheckboxStory extends Model implements Story {
                     }))))
             .child(section('Without label')
                 .description('The label can be supplied by surrounding content.')
-                .child(new Checkbox('unlabelled')
+                .child(Checkbox.component('unlabelled')
                     .withSize(size)
                     .checked(check3)
                     .onClick(self.listener((this_:CheckboxStory, checked:Bool, _, cx) -> {
@@ -109,12 +109,12 @@ class CheckboxStory extends Model implements Story {
                 .child(hFlex()
                     .itemsCenter()
                     .gap6()
-                    .child(new Checkbox('disabled-checked')
+                    .child(Checkbox.component('disabled-checked')
                         .withSize(size)
                         .label('Checked')
                         .checked(true)
                         .disabled(true))
-                    .child(new Checkbox('disabled-unchecked')
+                    .child(Checkbox.component('disabled-unchecked')
                         .withSize(size)
                         .label('Unchecked')
                         .checked(false)
@@ -125,7 +125,7 @@ class CheckboxStory extends Model implements Story {
                 .vFlex()
                 .itemsCenter()
                 .gap5()
-                .child(new Checkbox('description')
+                .child(Checkbox.component('description')
                     .withSize(size)
                     .w(px(320.))
                     .checked(check4)
@@ -138,7 +138,7 @@ class CheckboxStory extends Model implements Story {
                         this_.check4 = checked;
                         cx.notify();
                     })))
-                .child(new Checkbox('wrapping')
+                .child(Checkbox.component('wrapping')
                     .withSize(size)
                     .w(px(320.))
                     .checked(check6)
@@ -147,7 +147,7 @@ class CheckboxStory extends Model implements Story {
                         this_.check6 = checked;
                         cx.notify();
                     })))
-                .child(new Checkbox('markdown')
+                .child(Checkbox.component('markdown')
                     .withSize(size)
                     .w(px(320.))
                     .checked(check5)

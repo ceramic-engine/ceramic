@@ -173,10 +173,10 @@ class BaseSelectTest extends TestCase {
                 select.render(window, cx);
                 return select.a11y;
             };
-            final enabled = info(new Select('enabled').open(true).accessibilityLabel('Programming language').accessibilityValue('Rust'));
+            final enabled = info(Select.component('enabled').open(true).accessibilityLabel('Programming language').accessibilityValue('Rust'));
             // Open, so the expanded assertion below says something about
             // `disabled` rather than about the default open state.
-            final disabled = info(new Select('disabled').open(true).disabled(true));
+            final disabled = info(Select.component('disabled').open(true).disabled(true));
 
             assertEquals('Programming language', enabled.label);
             assertEquals('Rust', enabled.value);
@@ -243,7 +243,7 @@ private class SelectHarness extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final self = this;
         final state:Entity<SelectHarness> = cast cx.entity();
-        final select = new Select('select')
+        final select = Select.component('select')
             .open(open)
             .disabled(disabled)
             .focusHandle(focusHandle)
@@ -262,7 +262,7 @@ private class SelectHarness extends Model implements Render {
                 self.confirmations += 1;
             });
         if (searchInput != null) {
-            select.child(new glaze.kit.base.input.Input(searchInput));
+            select.child(glaze.kit.base.input.Input.component(searchInput));
         } else {
             select.child(div().trackFocus(contentFocusHandle).size(px(20.)));
         }

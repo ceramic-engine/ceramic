@@ -55,7 +55,7 @@ class MainScene extends Scene {
 
     override function create() {
 
-        final cx = App.current;
+        final cx = Glaze.app;
 
         cx.bindKeys([
             new KeyBinding('tab', new FocusNext(), null),

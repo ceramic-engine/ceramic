@@ -228,8 +228,8 @@ class ComponentEditorTest extends TestCase {
         init();
         addWindowView((window, cx) -> {
             final state = cx.newEntity((c:Context<EditorState>) -> new EditorState(window, c));
-            assertNull(new Editor(state).pasteHandler);
-            final editor = new Editor(state).onPaste((_, _, _) -> true);
+            assertNull(Editor.component(state).pasteHandler);
+            final editor = Editor.component(state).onPaste((_, _, _) -> true);
             assertNotNull(editor.pasteHandler);
             return new PasteProbe();
         });
@@ -638,7 +638,7 @@ private class Harness extends Model implements Render {
     }
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
-        final editor = new Editor(state);
+        final editor = Editor.component(state);
         if (textSize != null) editor.textSize(textSize);
         return div().sizeFull().child(editor);
     }
@@ -662,7 +662,7 @@ private class SizedHarness extends Model implements Render {
     }
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
-        final editor = new Editor(state);
+        final editor = Editor.component(state);
         if (size != null) editor.withSize(size);
         final cell = frame;
         return div().sizeFull().child(editor).onPrepaint((bounds, _, _) -> cell.bounds = bounds);

@@ -40,7 +40,7 @@ using glaze.kit.scroll.Scrollable;
  *
  * The state owns only GPUI's virtual-list bookkeeping. Message data remains
  * with the caller and is read by the row renderer passed to
- * `new MessageScroller(...)`.
+ * `MessageScroller.component(...)`.
  */
 class MessageScrollerState extends Model {
 
@@ -476,7 +476,7 @@ class MessageScroller implements RenderOnce implements Styled {
             // No explicit width or height: Button sizes an icon-only button
             // as a square on its own, and a renderer that adds a label or
             // another semantic size must be able to change the layout.
-            var button = new Button(ElementId.NamedChild(rootId, 'jump-to-latest'))
+            var button = Button.component(ElementId.NamedChild(rootId, 'jump-to-latest'))
                 .secondary()
                 .icon(IconName.ArrowDown)
                 .tooltip(jumpButtonLabel)

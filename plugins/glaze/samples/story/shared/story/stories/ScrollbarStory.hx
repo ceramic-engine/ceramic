@@ -111,7 +111,7 @@ class ScrollbarStory extends Model implements Story {
             .sizeFull()
             .gap4()
             .onAction(ChangeDataset, (action, _, _) -> changeTestCases(action.value))
-            .child(storyToolbarGroup().dropdownChild(new Button('scrollbar-dataset').label('Dataset: ${DATASETS[sizeMode]}'),
+            .child(storyToolbarGroup().dropdownChild(Button.component('scrollbar-dataset').label('Dataset: ${DATASETS[sizeMode]}'),
                 (menu:PopupMenu, _, _) -> {
                     for (index => label in DATASETS) {
                         menu = menu.menuWithCheck(label, selected == index, new ChangeDataset(index));

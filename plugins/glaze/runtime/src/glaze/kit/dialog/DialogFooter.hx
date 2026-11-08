@@ -81,7 +81,7 @@ class DialogClose implements RenderOnce implements ParentElement {
      * Styles a close button whose accessibility and activation are owned by Base.
      */
     public function trigger(build:(Button) -> IntoElement):DialogClose {
-        base = base.trigger(button -> build(new Button('close').withBase(button)));
+        base = base.trigger(button -> build(Button.component('close').withBase(button)));
         return this;
     }
 

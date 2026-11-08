@@ -164,14 +164,14 @@ class DialogButtonProps {
 
     function renderOk(_:Window, _:App):IntoElement {
         final okText = this.okTextValue != null ? this.okTextValue : I18n.t('Dialog.ok');
-        return new DialogButton('dialog-ok-anchor', new Button('ok')
+        return DialogButton.component('dialog-ok-anchor', Button.component('ok')
             .label(okText)
             .withVariant(okVariantValue != null ? okVariantValue : Primary), new Confirm(false));
     }
 
     function renderCancel(_:Window, _:App):IntoElement {
         final cancelText = this.cancelTextValue != null ? this.cancelTextValue : I18n.t('Dialog.cancel');
-        return new DialogButton('dialog-cancel-anchor', new Button('cancel')
+        return DialogButton.component('dialog-cancel-anchor', Button.component('cancel')
             .label(cancelText)
             .withVariant(cancelVariantValue != null ? cancelVariantValue : Default), new Cancel());
     }
@@ -385,7 +385,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
      * Create a new dialog.
      */
     public function new(cx:App) {
-        base = new BaseDialogRoot(new glaze.kit.base.Dialog(cx));
+        base = new BaseDialogRoot(glaze.kit.base.Dialog.component(cx));
         focusHandle = cx.focusHandle();
     }
 
@@ -774,13 +774,13 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
                 .child(headerElement));
         }
         if (titleElement != null) {
-            body.child(new DialogTitle()
+            body.child(DialogTitle.component()
                 .pl(glaze.Prelude.px(paddingLeft))
                 .pr(glaze.Prelude.px(paddingRight))
                 .child(titleElement));
         }
         if (contentBuilder != null) {
-            body.child(contentBuilder(new DialogContent()
+            body.child(contentBuilder(DialogContent.component()
                 .gap(glaze.Prelude.px(paddingBottom))
                 .pl(glaze.Prelude.px(paddingLeft))
                 .pr(glaze.Prelude.px(paddingRight)), window, cx));
@@ -809,7 +809,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
                 .absolute()
                 .top(glaze.Prelude.px(top))
                 .right(glaze.Prelude.px(right))
-                .trigger(button -> new Button('close')
+                .trigger(button -> Button.component('close')
                     .withBase(button)
                     .small()
                     .ghost()

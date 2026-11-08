@@ -24,7 +24,7 @@ using glaze.kit.base.StyledExt;
  */
 class Collapsible implements RenderOnce implements Styled implements ParentElement {
 
-    final base:glaze.kit.base.BaseCollapsible = new glaze.kit.base.BaseCollapsible();
+    final base:glaze.kit.base.BaseCollapsible = glaze.kit.base.BaseCollapsible.component();
 
     final collapsibleStyle:StyleRefinement = new StyleRefinement();
 

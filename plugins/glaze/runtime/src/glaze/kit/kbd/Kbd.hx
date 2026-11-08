@@ -110,7 +110,7 @@ class Kbd implements RenderOnce implements Styled {
     static function fromBinding(binding:KeyBinding):Null<Kbd> {
         if (binding.keystrokes.length == 0)
             return null;
-        return new Kbd(binding.keystrokes[0].inner());
+        return Kbd.component(binding.keystrokes[0].inner());
     }
 
     /**

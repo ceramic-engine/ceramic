@@ -127,7 +127,7 @@ class HoverCard implements RenderOnce implements Styled {
         if (!tapToOpen) {
             triggerDiv.onHover((hovered, window, cx) -> state.update(cx, (state, cx) -> state.onTriggerHover(hovered, window, cx)));
         }
-        final popup = new Popup(id, triggerDiv)
+        final popup = Popup.component(id, triggerDiv)
             .refineStyle(hoverCardStyle)
             .anchor(anchorValue);
 

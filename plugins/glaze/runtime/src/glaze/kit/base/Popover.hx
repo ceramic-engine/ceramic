@@ -358,7 +358,7 @@ class Popover implements RenderOnce implements Styled {
             return div().id('empty');
         }
         final parentViewId = window.currentView();
-        final popup = new Popup(id, trigger(open, window, cx))
+        final popup = Popup.component(id, trigger(open, window, cx))
             .refineStyle(popoverStyle)
             .anchor(anchorValue)
             .offset(offsetValue);

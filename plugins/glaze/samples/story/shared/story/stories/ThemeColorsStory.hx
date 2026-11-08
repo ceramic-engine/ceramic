@@ -121,7 +121,7 @@ private class ThemeItem extends SearchableListItemBase {
                 .size(rems(1.0))
                 .flexShrink0()
                 .when(isActive, this_ -> {
-                    final icon = new Icon(IconName.Check);
+                    final icon = glaze.kit.Icon.component(IconName.Check);
                     new glaze.StyleBuilder(icon.style()).size(rems(1.0));
                     this_.child(icon.textColor(Theme.global(cx).primary));
                 }))
@@ -308,7 +308,7 @@ class ThemeColorsStory extends Model implements Story {
                     .child(div()
                         .invisible()
                         .groupHover(swatchGroup, this_ -> this_.visible())
-                        .child(new Clipboard('copy-$name')
+                        .child(Clipboard.component('copy-$name')
                             .value(rgbStr)
                             .onCopied((value, window, cx) -> window.pushNotification('Copied $value to clipboard', cx))))));
     }
@@ -329,10 +329,10 @@ class ThemeColorsStory extends Model implements Story {
         });
         final forceOpenState = this.forceOpenState;
 
-        return new Sidebar<SidebarMenu>('color-theme-sidebar-$sidebarRenderKey')
+        return Sidebar.component('color-theme-sidebar-$sidebarRenderKey')
             .w(px(300.))
             .border0()
-            .header(new Input(filterInput).prefix(new Icon(IconName.Search)))
+            .header(Input.component(filterInput).prefix(glaze.kit.Icon.component(IconName.Search)))
             .child(new SidebarMenu().children([for (idx => category in categories) {
                 final isOpen = forceOpenState != null ? forceOpenState : idx == 0;
                 new SidebarMenuItem(category.name)
@@ -399,7 +399,7 @@ class ThemeColorsStory extends Model implements Story {
             .rounded(theme.radiusLg)
             .sizeFull()
             .overflowHidden()
-            .child(new Checkerboard(isDark).child(vFlex()
+            .child(Checkerboard.component(isDark).child(vFlex()
                 .sizeFull()
                 .overflowHidden()
                 .rounded(theme.radiusLg)
@@ -635,8 +635,8 @@ class ThemeColorsStory extends Model implements Story {
                 .flexWrap()
                 .child(hFlex()
                     .gap2()
-                    .child(div().w(px(300.)).child(new Select(selectState)))
-                    .child(new Button('set_theme')
+                    .child(div().w(px(300.)).child(Select.component(selectState)))
+                    .child(Button.component('set_theme')
                         .primary()
                         .label('Set Theme')
                         .onClick((_, window, cx) -> entity.update(cx, (this_, _) -> {
@@ -655,7 +655,7 @@ class ThemeColorsStory extends Model implements Story {
                                 this_.selectState.update(cx, (state, cx) -> state.setItems(new VecDelegate(items), window, cx));
                             }
                         }))))
-                .child(storyToolbarGroup().dropdownChild(new Button('theme-options').label('Options'), (menu, _, _) -> menu
+                .child(storyToolbarGroup().dropdownChild(Button.component('theme-options').label('Options'), (menu, _, _) -> menu
                     .menuWithCheck('Inherited Colors', showAllColors, new ThemeOptionShowInherited())
                     .menuWithCheck('Expand All', expandAll, new ThemeOptionExpandAll()))))
             .child(hFlex()

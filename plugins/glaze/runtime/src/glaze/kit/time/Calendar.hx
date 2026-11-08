@@ -101,7 +101,7 @@ class Calendar implements RenderOnce implements Styled implements Sizable {
         final size = this.size;
         final monthCount = numberOfMonthsValue < 1 ? 1 : numberOfMonthsValue;
         final theme = Theme.global(cx);
-        final calendar = new glaze.kit.base.Calendar(id, state)
+        final calendar = glaze.kit.base.Calendar.component(id, state)
             .numberOfMonths(numberOfMonthsValue)
             .firstDayOfWeek(firstDayOfWeekValue)
             .label((kind, value) -> switch kind {
@@ -124,9 +124,9 @@ class Calendar implements RenderOnce implements Styled implements Sizable {
                 final kind = state.kind();
                 switch kind {
                     case CalendarItemKind.Previous:
-                        item.clearChildren().child(new Icon(IconName.ChevronLeft).size4());
+                        item.clearChildren().child(Icon.component(IconName.ChevronLeft).size4());
                     case CalendarItemKind.Next:
-                        item.clearChildren().child(new Icon(IconName.ChevronRight).size4());
+                        item.clearChildren().child(Icon.component(IconName.ChevronRight).size4());
                     case _:
                 }
                 switch size {

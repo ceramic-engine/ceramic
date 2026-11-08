@@ -696,7 +696,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
             .borderT1()
             .borderColor(theme.border)
             .child(label.textColor(theme.mutedForeground).child(I18n.t('DatePicker.time')))
-            .child(new TimeField(state.timeField).withId('time').withSize(size));
+            .child(TimeField.component(state.timeField).withId('time').withSize(size));
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -717,7 +717,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
 
         final colors = @:privateAccess Input.inputStyleColors(disabledValue, cx);
 
-        final picker = new glaze.kit.base.DatePicker(id, state.focusHandle).open(state.isOpen());
+        final picker = glaze.kit.base.DatePicker.component(id, state.focusHandle).open(state.isOpen());
         if (state.date().isSome()) picker.ariaValue(displayTitle);
         picker.disabled(disabledValue)
             .onOpenChange((open, window, cx) -> {
@@ -779,7 +779,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
                 row.child(@:privateAccess ClearButton.clearButton(cx).onClick((e, window, cx) -> pickerState.update(cx, (s, cx) -> s.clean(e, window, cx))));
             }
             if (!showClean) {
-                row.child(new Icon(IconName.Calendar).xsmall().textColor(theme.mutedForeground));
+                row.child(Icon.component(IconName.Calendar).xsmall().textColor(theme.mutedForeground));
             }
         }
         input.child(row);
@@ -795,7 +795,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
                 content.child(vFlex().my1().gap2().justifyEnd().children([
                     for (i in 0...presets.length) {
                         final preset = presets[i];
-                        (new Button(ElementId.NamedInteger('preset', i))
+                        (Button.component(ElementId.NamedInteger('preset', i))
                             .small()
                             .ghost()
                             .tabStop(false)
@@ -806,7 +806,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
                     }
                 ]));
             }
-            final calendar = new Calendar(state.calendar)
+            final calendar = Calendar.component(state.calendar)
                 .numberOfMonths(numberOfMonthsValue)
                 .firstDayOfWeek(state.firstDayOfWeekValue)
                 .border0()

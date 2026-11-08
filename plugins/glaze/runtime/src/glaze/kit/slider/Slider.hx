@@ -109,7 +109,7 @@ class Slider implements RenderOnce implements Styled {
 
     /**
      * The `SliderState` rendered: the one given to `component(state)` or
-     * `new Slider(state)`, or the one created by `component()` once the
+     * `Slider.component(state)`, or the one created by `component()` once the
      * slider was rendered (`null` before).
      */
     public var state(default, null):Null<Entity<SliderState>>;
@@ -151,7 +151,7 @@ class Slider implements RenderOnce implements Styled {
     }
 
     /**
-     * Places a slider in a tree. With `state`, it is `new Slider(state)`.
+     * Places a slider in a tree. With `state`, it is `Slider.component(state)`.
      * Without, the slider creates its `SliderState` the first time it is
      * rendered and keeps it as long as it is rendered, under the identity
      * of this call (its position in the code, or `.at(key)` in a loop); the
@@ -338,7 +338,7 @@ class Slider implements RenderOnce implements Styled {
 
         final disabled = disabledValue;
         function thumb(position:DefiniteLength, start:Bool, ring:ThumbRing):SliderThumb {
-            final thumb = new SliderThumb(state).axis(axis).start(start).disabled(disabled);
+            final thumb = SliderThumb.component(state).axis(axis).start(start).disabled(disabled);
             if (!disabled) {
                 thumb.absolute();
                 if (axis == Axis.Horizontal) thumb.top(glaze.Prelude.px(-5.)).left(position).ml(glaze.Prelude.px(-8.));
@@ -377,19 +377,19 @@ class Slider implements RenderOnce implements Styled {
             return thumb;
         }
 
-        final root = new glaze.kit.base.Slider(state).axis(axis).disabled(disabled);
+        final root = glaze.kit.base.Slider.component(state).axis(axis).disabled(disabled);
         if (accessibilityLabelValue != null) root.accessibilityLabel(accessibilityLabelValue);
         root.flex().flex1().itemsCenter().justifyCenter();
         if (axis == Axis.Vertical) root.h(glaze.Prelude.px(120.));
         if (axis == Axis.Horizontal) root.wFull();
         root.refineStyle(sliderStyle).bg(theme.transparent).textColor(theme.foreground);
 
-        final track = new SliderTrack(state).axis(axis).disabled(disabled).flex();
+        final track = SliderTrack.component(state).axis(axis).disabled(disabled).flex();
         if (axis == Axis.Horizontal) track.itemsCenter().h6().wFull();
         if (axis == Axis.Vertical) track.justifyCenter().w6().hFull();
         track.flexShrink0();
 
-        final indicator = new SliderIndicator(state).relative();
+        final indicator = SliderIndicator.component(state).relative();
         if (axis == Axis.Horizontal) indicator.wFull().h1p5();
         if (axis == Axis.Vertical) indicator.hFull().w1p5();
         indicator.bg(barColor.opacity(0.2)).active(s -> s.bg(barColor.opacity(0.4))).cornerRadii(radius);

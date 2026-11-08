@@ -86,11 +86,11 @@ class ComponentSelectTest extends TestCase {
             final items = new SearchableVec(["Rust", "Go", "C++"]);
             final state = newState(cx, items, null, window);
 
-            final plain = new Select(state).placeholder("Choose a language");
+            final plain = Select.component(state).placeholder("Choose a language");
             assertEquals(null, plain.builderOptions.accessibilityLabel);
             assertEquals("Choose a language", plain.builderOptions.placeholder);
 
-            final named = new Select(state)
+            final named = Select.component(state)
                 .placeholder("Choose a language")
                 .accessibilityLabel("Programming language");
             assertEquals("Programming language", named.builderOptions.accessibilityLabel);
@@ -172,7 +172,7 @@ class ComponentSelectTest extends TestCase {
             final items = new SearchableVec(["Rust", "Go"]);
             final state = newState(cx, items, null, window, true);
 
-            new Select(state)
+            Select.component(state)
                 .placeholder("Choose a language")
                 .accessibilityLabel("Programming language")
                 .render(window, cx);
@@ -189,7 +189,7 @@ class ComponentSelectTest extends TestCase {
             // Filtering changes the available rows, not the committed value.
             assertEquals("Rust", state.read(cx).accessibilityValue());
 
-            new Select(state)
+            Select.component(state)
                 .placeholder("Choose a language")
                 .titlePrefix("Language: ")
                 .render(window, cx);
@@ -198,7 +198,7 @@ class ComponentSelectTest extends TestCase {
             state.update(cx, (state, cx) -> state.setSelectedIndex(null, window, cx));
             assertEquals("Choose a language", state.read(cx).accessibilityValue());
 
-            new Select(state).render(window, cx);
+            Select.component(state).render(window, cx);
             assertEquals(I18n.t("Select.placeholder"), state.read(cx).accessibilityValue());
         });
     }
@@ -467,14 +467,14 @@ private class Form extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final cx:Context<Form> = cast cx;
         final self = this;
-        final select = new Select(language).id("language");
+        final select = Select.component(language).id("language");
         if (titlePrefix != null) select.titlePrefix(titlePrefix);
         select.w(px(240.));
         if (titlePrefix == null) {
             return div().sizeFull().child(select);
         }
         final agree = div().child(
-            new glaze.kit.checkbox.Checkbox("agree")
+            glaze.kit.checkbox.Checkbox.component("agree")
                 .label("Agree")
                 .checked(agreed)
                 .onChange(cx.listener((this_:Form, checked:Bool, _, cx) -> {

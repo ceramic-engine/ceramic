@@ -205,7 +205,7 @@ class CommandStory extends Model implements Story {
         return hFlex()
             .gap1()
             .itemsCenter()
-            .children([for (key in keys) (new Kbd(Keystroke.parse(key)) : IntoElement)])
+            .children([for (key in keys) (Kbd.component(Keystroke.parse(key)) : IntoElement)])
             .child(label);
     }
 
@@ -290,7 +290,7 @@ class CommandStory extends Model implements Story {
                     final owner = story.upgrade();
                     final entries = owner != null ? stockEntriesForRender(owner.read(cx).stockEntries) : [];
                     final theme = Theme.global(cx);
-                    return content.child(Lib.withCommandEntries(new Command(search)
+                    return content.child(Lib.withCommandEntries(Command.component(search)
                         .bordered(false)
                         .rounded(theme.radiusLg)
                         .placeholder('Search stocks...')
@@ -301,7 +301,7 @@ class CommandStory extends Model implements Story {
                             .py6()
                             .textSm()
                             .textColor(Theme.global(cx).mutedForeground)
-                            .child(new Icon(IconName.Search).size8())
+                            .child(Icon.component(IconName.Search).size8())
                             .child('No stock found.'))
                         .minH(px(320.))
                         .maxH(px(320.))
@@ -451,12 +451,12 @@ class CommandStory extends Model implements Story {
             .gap6()
             .child(section('Inline')
                 .description('A palette rendered in place, with groups, icons and shortcuts.')
-                .child(Lib.withCommandEntries(new Command(inlineState)
+                .child(Lib.withCommandEntries(Command.component(inlineState)
                     .w(px(380.))
                     .onConfirm((indexPath, _, cx) -> confirm(indexPath, cx)), suggestions())))
             .child(section('Dialog')
                 .description('A dialog palette with its search field focused, a live match count and key hints.')
-                .child(new Button('open-command-dialog')
+                .child(Button.component('open-command-dialog')
                     .outline()
                     .label('Open Menu')
                     .onClick(self.listener((_, _, window, cx:Context<CommandStory>) -> {
@@ -472,7 +472,7 @@ class CommandStory extends Model implements Story {
                             }
                             // Cancel intentionally has no local close callback:
                             // the propagated action belongs to Dialog.
-                            return content.child(Lib.withCommandEntries(new Command(command)
+                            return content.child(Lib.withCommandEntries(Command.component(command)
                                 .bordered(false)
                                 .rounded(Theme.global(cx).radiusLg)
                                 .placeholder('Type a command or search...')
@@ -506,27 +506,27 @@ class CommandStory extends Model implements Story {
                     }))))
             .child(section('Quick actions')
                 .description('A no-search palette focused on arrow-key navigation.')
-                .child(new Command(quickActionsState)
+                .child(Command.component(quickActionsState)
                     .searchable(false)
                     .items(quickActions())
                     .w(px(380.))
                     .onConfirm((indexPath, _, cx) -> confirm(indexPath, cx))))
             .child(section('Scrollable')
                 .description('More commands than fit, capped at 220px.')
-                .child(Lib.withCommandEntries(new Command(scrollableState)
+                .child(Lib.withCommandEntries(Command.component(scrollableState)
                     .maxH(px(220.))
                     .w(px(380.))
                     .onConfirm((indexPath, _, cx) -> confirm(indexPath, cx)), scrollable())))
             .child(section('Variable-height rows')
                 .description('Each custom row keeps its own intrinsic height while the list remains virtualized.')
-                .child(new Command(variableRowsState)
+                .child(Command.component(variableRowsState)
                     .items(variableRows())
                     .w(px(380.))
                     .onConfirm((indexPath, _, cx) -> confirm(indexPath, cx))))
             .child(section('Search panel')
                 .description('A palette used as a search panel whose custom filter checks symbols '
                     + 'before company names \u2014 try "a", "hk" or "tesla".')
-                .child(new Button('open-stock-search')
+                .child(Button.component('open-stock-search')
                     .outline()
                     .label('Search Stocks')
                     .onClick(self.listener((story:CommandStory, _, window, cx) -> {

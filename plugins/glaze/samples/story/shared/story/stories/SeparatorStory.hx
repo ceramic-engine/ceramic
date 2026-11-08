@@ -86,7 +86,7 @@ class SeparatorStory extends Model implements Story {
                 .w(px(520.))
                 .child(vFlex()
                     .gapY4()
-                    .child(vFlex().gapY2().child('Hello GPUI Component').child(new Label(DESCRIPTION)
+                    .child(vFlex().gapY2().child('Hello GPUI Component').child(Label.component(DESCRIPTION)
                         .textColor(theme.mutedForeground)
                         .textSm()))
                     .child(Separator.horizontal())

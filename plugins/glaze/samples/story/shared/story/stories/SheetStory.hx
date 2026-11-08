@@ -97,7 +97,7 @@ class ListItemDeletegate extends ListDelegateBase {
                 .checkIcon(IconName.Check)
                 .confirmed(confirmed)
                 .child(hFlex().itemsCenter().justifyBetween().child(item))
-                .suffix((_, _) -> new Button('like')
+                .suffix((_, _) -> Button.component('like')
                     .tabStop(false)
                     .icon(IconName.Heart)
                     .withVariant(ButtonVariant.Ghost)
@@ -114,7 +114,7 @@ class ListItemDeletegate extends ListDelegateBase {
     override public function renderEmpty(_:Window, cx:Context<ListState<Dynamic>>):IntoElement {
         final theme = Theme.global(cx.app);
         // Rust `Icon::size(px(50.))` is the Styled `size` (the Icon field of the same name hides it here).
-        final icon = new Icon(IconName.Inbox);
+        final icon = Icon.component(IconName.Inbox);
         new glaze.StyleBuilder(icon.style()).size(px(50.));
         return vFlex()
             .sizeFull()
@@ -268,12 +268,12 @@ class SheetStory extends Model implements Story {
                 .child(vFlex()
                     .sizeFull()
                     .gap3()
-                    .child(new Input(input1))
-                    .child(new DatePicker(date).placeholder('Date of Birth'))
-                    .child(new Button('send-notification')
+                    .child(Input.component(input1))
+                    .child(DatePicker.component(date).placeholder('Date of Birth'))
+                    .child(Button.component('send-notification')
                         .child('Test Notification')
                         .onClick((_, window, cx) -> window.pushNotification('Hello this is message from Sheet.', cx)))
-                    .child(new Button('confirm-dialog-from-sheet')
+                    .child(Button.component('confirm-dialog-from-sheet')
                         .child('Open Confirm Dialog')
                         .onClick((_, window, cx) -> {
                             window.openAlertDialog(cx, (dialog, _, _) -> dialog
@@ -287,15 +287,15 @@ class SheetStory extends Model implements Story {
                                     return true;
                                 }));
                         }))
-                    .child(new List(list)
+                    .child(List.component(list)
                         .border1()
                         .borderColor(theme.border)
                         .rounded(theme.radius)))
                 .footer(hFlex()
                     .gap6()
                     .itemsCenter()
-                    .child(new Button('confirm').primary().label('Confirm').onClick((_, window, cx) -> window.closeSheet(cx)))
-                    .child(new Button('cancel').label('Cancel').onClick((_, window, cx) -> window.closeSheet(cx))));
+                    .child(Button.component('confirm').primary().label('Confirm').onClick((_, window, cx) -> window.closeSheet(cx)))
+                    .child(Button.component('cancel').label('Cancel').onClick((_, window, cx) -> window.closeSheet(cx))));
         });
     }
 
@@ -318,16 +318,16 @@ class SheetStory extends Model implements Story {
         final overlayClosable = this.overlayClosable;
         final content = vFlex()
             .gap6()
-            .child(storyToolbarGroup().dropdownChild(new Button('sheet-options').label('Options'), (menu, _, _) -> menu
+            .child(storyToolbarGroup().dropdownChild(Button.component('sheet-options').label('Options'), (menu, _, _) -> menu
                 .menuWithCheck('Overlay', overlay, new ToggleSheetOverlay())
                 .menuWithCheck('Close on overlay click', overlayClosable, new ToggleSheetOverlayClosable())))
             .child(section('Placement')
                 .description('Open a sheet from any edge of the window.')
-                .child(new Button('show-sheet-left').outline().label('Left Sheet...').onClick((_, window, cx) -> openSheetAt(Placement.Left, window, cx)))
-                .child(new Button('show-sheet-top').outline().label('Top Sheet...').onClick((_, window, cx) -> openSheetAt(Placement.Top, window, cx)))
-                .child(new Button('show-sheet-right').outline().label('Right Sheet...').onClick((_, window, cx) -> openSheetAt(Placement.Right, window, cx)))
-                .child(new Button('show-sheet-bottom').outline().label('Bottom Sheet...').onClick((_, window, cx) -> openSheetAt(Placement.Bottom, window, cx))))
-            .child(section('Scrollable Sheet').w(px(480.)).child(new Button('show-scrollable-sheet')
+                .child(Button.component('show-sheet-left').outline().label('Left Sheet...').onClick((_, window, cx) -> openSheetAt(Placement.Left, window, cx)))
+                .child(Button.component('show-sheet-top').outline().label('Top Sheet...').onClick((_, window, cx) -> openSheetAt(Placement.Top, window, cx)))
+                .child(Button.component('show-sheet-right').outline().label('Right Sheet...').onClick((_, window, cx) -> openSheetAt(Placement.Right, window, cx)))
+                .child(Button.component('show-sheet-bottom').outline().label('Bottom Sheet...').onClick((_, window, cx) -> openSheetAt(Placement.Bottom, window, cx))))
+            .child(section('Scrollable Sheet').w(px(480.)).child(Button.component('show-scrollable-sheet')
                 .outline()
                 .label('Scrollable Sheet...')
                 .onClick((_, window, cx) -> {
@@ -337,8 +337,8 @@ class SheetStory extends Model implements Story {
                 })))
             .child(section('Focus back test')
                 .w128()
-                .child(new Input(input2))
-                .child(new Button('test-action')
+                .child(Input.component(input2))
+                .child(Button.component('test-action')
                     .outline()
                     .label('Test Action')
                     .flexShrink0()

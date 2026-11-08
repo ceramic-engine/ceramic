@@ -427,13 +427,13 @@ class AreaChart<T> extends Plot {
         final color = (i:Int) -> i < strokes.length ? strokes[i] : defaultColor;
 
         // Follow the cursor; the crosshair and dots glide to the data point.
-        final tooltip = new Tooltip(cursor, bounds.size)
+        final tooltip = Tooltip.component(cursor, bounds.size)
             .gap(8.)
             // Confine the crosshair to the plot area so it doesn't cross the x-axis.
-            .crossLine(new CrossLine(state.crossLine).height(f(bounds.size.height - axisGap())))
+            .crossLine(CrossLine.component(state.crossLine).height(f(bounds.size.height - axisGap())))
             .dots([
                 for (i in 0...state.dots.length)
-                    new Dot(state.dots[i])
+                    Dot.component(state.dots[i])
                         .size(Chart.HOVER_DOT_SIZE)
                         .halo(Chart.HOVER_HALO_SIZE)
                         .stroke(dotStroke)

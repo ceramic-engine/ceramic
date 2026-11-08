@@ -35,7 +35,7 @@ class MainScene extends Scene {
 
     override function create() {
 
-        final cx = App.current;
+        final cx = Glaze.app;
         TextInput.bindKeys(cx);
 
         var example:Entity<InputExample> = null;

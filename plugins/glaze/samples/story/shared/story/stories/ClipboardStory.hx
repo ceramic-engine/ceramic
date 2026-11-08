@@ -67,14 +67,14 @@ class ClipboardStory extends Model implements Story {
                 .w(px(480.))
                 .child(hFlex()
                     .gap2()
-                    .child(new Label('A clipboard button'))
-                    .child(new Clipboard('clipboard1')
+                    .child(Label.component('A clipboard button'))
+                    .child(Clipboard.component('clipboard1')
                         .valueFn((_, cx) -> 'masked :' + view.read(cx).masked)
                         .onCopied((value, window, cx) -> window.pushNotification('Copied value: $value', cx)))))
             .child(section('With Input')
                 .description("Copies the field's current value.")
                 .w(px(480.))
-                .child(new Input(urlState).suffix(new Clipboard('clipboard2')
+                .child(Input.component(urlState).suffix(Clipboard.component('clipboard2')
                     .valueFn((_, cx) -> state.read(cx).value())
                     .onCopied((value, window, cx) -> window.pushNotification('Copied value: $value', cx)))));
     }

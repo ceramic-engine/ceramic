@@ -117,7 +117,7 @@ class ProgressStory extends Model implements Story {
         final theme = Theme.global(cx.app);
         final value = this.value;
         final loading = this.loading;
-        final circle = new ProgressCircle('analysis-progress')
+        final circle = ProgressCircle.component('analysis-progress')
             .withSize(size)
             .value(value)
             .loading(loading)
@@ -138,15 +138,15 @@ class ProgressStory extends Model implements Story {
             .onAction(ProgressSetValue, (action, _, _) -> setValue(action.value))
             .onAction(ProgressToggleLoading, (_, _, _) -> this.loading = !this.loading)
             .child(storyToolbar(size)
-                .dropdownChild(new Button('progress-value').label('Value: ${fmt(value)}%'), (menu:PopupMenu, _, _) -> {
+                .dropdownChild(Button.component('progress-value').label('Value: ${fmt(value)}%'), (menu:PopupMenu, _, _) -> {
                     for (preset in [0., 25., 75., 100.]) {
                         menu = menu.menuWithCheck('${fmt(preset)}%', value == preset, new ProgressSetValue(preset));
                     }
                     return menu;
                 })
-                .dropdownChild(new Button('progress-options').label('Options'),
+                .dropdownChild(Button.component('progress-options').label('Options'),
                     (menu, _, _) -> menu.menuWithCheck('Loading', loading, new ProgressToggleLoading()))
-                .child(new Button('progress-play')
+                .child(Button.component('progress-play')
                     .icon(IconName.Play)
                     .onClick((_, _, cx) -> startAnimation(cx))))
             .child(section('Upload')
@@ -168,7 +168,7 @@ class ProgressStory extends Model implements Story {
                             .textSm()
                             .textColor(theme.mutedForeground)
                             .child('${fmt(value)}%')))
-                    .child(new Progress('upload-progress').value(value).loading(loading))
+                    .child(Progress.component('upload-progress').value(value).loading(loading))
                     .child(hFlex()
                         .itemsCenter()
                         .justifyBetween()

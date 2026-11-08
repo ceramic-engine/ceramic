@@ -147,7 +147,7 @@ class TimeComponentsTest extends TestCase {
         final cx = open((window, cx) -> {
             if (calendar == null) calendar = cx.newEntity((c:Context<CalendarState>) -> new CalendarState(window, c));
             labels.resize(0);
-            return new Calendar('named-calendar', calendar).item((item, state, _, _) -> {
+            return Calendar.component('named-calendar', calendar).item((item, state, _, _) -> {
                 labels.push({kind: state.kind(), label: item.a11y.label});
                 return (item : IntoElement).intoAnyElement();
             });
@@ -505,7 +505,7 @@ class TimeComponentsTest extends TestCase {
             if (state == null) state = cx.newEntity((c:Context<TimeFieldState>) -> new TimeFieldState(window, c).precision(TimePrecision.Second).hourCycle(H12));
             return div();
         });
-        final field = @:privateAccess new TimeField(state).withId('start').large().disabled(true).invalid(true).w(px(120.));
+        final field = @:privateAccess TimeField.component(state).withId('start').large().disabled(true).invalid(true).w(px(120.));
         assertTrue(Type.enumEq((field.id : glaze.ElementId), glaze.ElementId.Name('start')));
         assertTrue(field.size.match(Large));
         assertTrue(field.disabledValue);
@@ -517,7 +517,7 @@ class TimeComponentsTest extends TestCase {
         final segments:Array<glaze.Bounds> = [];
         final cx = open((window, cx) -> {
             if (state == null) state = cx.newEntity((c:Context<TimeFieldState>) -> new TimeFieldState(window, c));
-            return div().child(new TimeField(state).withId('time').w(px(200.)));
+            return div().child(TimeField.component(state).withId('time').w(px(200.)));
         });
         // The hour segment starts after the frame's border (1) and the
         // field's padding (4); the minute one follows the hour (2 + 2
@@ -547,7 +547,7 @@ class TimeComponentsTest extends TestCase {
                     case Change(value): changes.push(value);
                 });
             }
-            return div().sizeFull().p4().child(new glaze.kit.time.DatePicker(state).numberOfMonths(2));
+            return div().sizeFull().p4().child(glaze.kit.time.DatePicker.component(state).numberOfMonths(2));
         }, 800, 600);
         return state;
     }
@@ -638,7 +638,7 @@ class TimeComponentsTest extends TestCase {
         var state:Entity<DatePickerState> = null;
         final cx = open((window, cx) -> {
             if (state == null) state = cx.newEntity((c:Context<DatePickerState>) -> new DatePickerState(window, c));
-            return div().sizeFull().p4().child(new glaze.kit.time.DatePicker(state)
+            return div().sizeFull().p4().child(glaze.kit.time.DatePicker.component(state)
                 .cleanable(true)
                 .disabled(true)
                 .presets([DateRangePreset.single('Release day', NaiveDate.parse('2026-09-15'))]));
@@ -654,7 +654,7 @@ class TimeComponentsTest extends TestCase {
         var state:Entity<DatePickerState> = null;
         final cx = open((window, cx) -> {
             if (state == null) state = cx.newEntity((c:Context<DatePickerState>) -> new DatePickerState(window, c));
-            return div().sizeFull().p4().child(new glaze.kit.time.DatePicker(state).cleanable(true));
+            return div().sizeFull().p4().child(glaze.kit.time.DatePicker.component(state).cleanable(true));
         }, 640, 600);
         cx.simulateClick(new Point(100., 32.));
         assertTrue(state.read(app).isOpen());

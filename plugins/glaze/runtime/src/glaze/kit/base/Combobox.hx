@@ -135,7 +135,7 @@ class Combobox implements RenderOnce implements Styled implements ParentElement 
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final select = new Select(id)
+        final select = Select.component(id)
             .open(openValue)
             .disabled(disabledValue)
             .keyContext(CONTEXT);

@@ -90,7 +90,7 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
      * Adds an AccordionItem to the Accordion.
      */
     public function item(child:(AccordionItem) -> AccordionItem):Accordion {
-        items.push(child(new AccordionItem()));
+        items.push(child(AccordionItem.component()));
         return this;
     }
 
@@ -128,7 +128,7 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
         // by a click anywhere on the accordion (the original's root `on_click`).
         final onToggle = disabledValue ? null : onToggleClickHandler;
 
-        final root = new glaze.kit.base.Accordion(id)
+        final root = glaze.kit.base.Accordion.component(id)
             .vFlex()
             .sizeFull();
         // The bordered accordion is a single rounded card, the items are
@@ -323,7 +323,7 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
             window,
             cx
         );
-        final trigger = new AccordionTrigger(ElementId.NamedInteger('trigger', indexValue))
+        final trigger = AccordionTrigger.component(ElementId.NamedInteger('trigger', indexValue))
             .open(openValue)
             .disabled(disabledValue)
             .hFlex()
@@ -354,7 +354,7 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
             if (hoverStyle != null) {
                 trigger.hover(s -> s.refineStyle(hoverStyle));
             }
-            trigger.child(new Icon(IconName.ChevronDown)
+            trigger.child(Icon.component(IconName.ChevronDown)
                 .xsmall()
                 .flexNone()
                 .textColor(theme.mutedForeground)
