@@ -6,12 +6,12 @@ package glaze.kit.badge;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.IntoHsla;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Window;
 import glaze.kit.Icon;
@@ -38,23 +38,31 @@ enum BadgeVariant {
 /**
  * A red (or colored) count, dot or icon on top of its children.
  */
-class Badge implements RenderOnce implements ParentElement implements Sizable {
+class Badge extends Component implements ParentElement implements Sizable {
 
     final badgeStyle:StyleRefinement = new StyleRefinement();
 
-    var countValue:Int = 0;
+    /**
+     * Set the count (hidden at 0).
+     */
+    @prop var count:Int = 0;
 
-    var maxValue:Int = 99;
+    /**
+     * Set the maximum number shown (default 99): above, `max+` is shown.
+     */
+    @prop var max:Int = 99;
 
     var variant:BadgeVariant = Number;
 
     final childElements:Array<AnyElement> = [];
 
-    var colorValue:Null<Hsla> = null;
+    @prop var color:Null<Hsla> = null;
 
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Rust keeps a style refinement on the badge (applied to its container)
@@ -73,14 +81,6 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
     }
 
     /**
-     * Set the count (hidden at 0).
-     */
-    public function count(count:Int):Badge {
-        countValue = count;
-        return this;
-    }
-
-    /**
      * Show an icon instead of a number.
      */
     public function icon(icon:IntoIcon):Badge {
@@ -89,18 +89,10 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
     }
 
     /**
-     * Set the maximum number shown (default 99): above, `max+` is shown.
-     */
-    public function max(max:Int):Badge {
-        maxValue = max;
-        return this;
-    }
-
-    /**
      * Set the badge color (default: the theme's `red`).
      */
     public function color(color:IntoHsla):Badge {
-        colorValue = color;
+        this.color = color;
         return this;
     }
 
@@ -126,7 +118,7 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final visible = switch variant {
-            case Number: countValue > 0;
+            case Number: this.count > 0;
             case Dot | Icon(_): true;
         };
 
@@ -146,14 +138,14 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
                 .justifyCenter()
                 .itemsCenter()
                 .roundedFullStyle(cx)
-                .bg(colorValue != null ? colorValue : theme.red)
+                .bg(color != null ? color : theme.red)
                 .textColor(Color.white())
                 .textSize(textSize);
             switch variant {
                 case Dot:
                     badge.top0().right0().size(px(6.));
                 case Number:
-                    final count = countValue > maxValue ? '$maxValue+' : '$countValue';
+                    final count = this.count > max ? '$max+' : '${this.count}';
                     final len = haxe.io.Bytes.ofString(count).length;
                     final position:Array<Pixels> = switch size {
                         case Large: [2., -len];
@@ -185,7 +177,7 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
                             .justifyCenter()
                             .itemsCenter()
                             .roundedFullStyle(cx)
-                            .bg(colorValue != null ? colorValue : theme.red)
+                            .bg(color != null ? color : theme.red)
                             .child(icon));
             }
             element.child(badge);

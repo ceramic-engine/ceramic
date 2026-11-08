@@ -689,11 +689,11 @@ class ComponentControlsTest extends TestCase {
 
     function testSwitchExplicitAccessibilityLabelReplacesTheVisibleOne() {
         final plain = glaze.kit.switch_.Switch.component('wifi').label('Wi-Fi');
-        assertNull(plain.accessibilityLabelValue);
-        assertEquals('Wi-Fi', plain.labelValue);
+        assertNull(plain.accessibilityLabelProp);
+        assertEquals('Wi-Fi', plain.labelProp);
         final named = glaze.kit.switch_.Switch.component('wifi').label('Wi-Fi').accessibilityLabel('Toggle Wi-Fi');
-        assertEquals('Toggle Wi-Fi', named.accessibilityLabelValue);
-        assertEquals('Wi-Fi', named.labelValue);
+        assertEquals('Toggle Wi-Fi', named.accessibilityLabelProp);
+        assertEquals('Wi-Fi', named.labelProp);
     }
 
     function switchHarness(disabled:Bool):{cx:VisualTestContext, toggles:Array<Int>, parent:Array<Int>} {

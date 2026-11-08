@@ -6,6 +6,7 @@ package glaze.kit.switch_;
 import glaze.App;
 import glaze.kit.CheckedListener;
 import glaze.Background;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.FocusHandle;
@@ -13,7 +14,6 @@ import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.IntoHsla;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -42,22 +42,32 @@ using glaze.kit.ThemeStyled;
  * a plain string (Rust `Text::String`). The tooltip is a managed tooltip on
  * the track (`glaze.kit.tooltip`).
  */
-class Switch implements RenderOnce implements Styled implements Sizable implements Disableable implements FocusableExt {
+class Switch extends Component implements Styled implements Sizable implements Disableable implements FocusableExt {
 
     final id:ElementId;
 
     final switchStyle:StyleRefinement = new StyleRefinement();
 
-    var checkedValue:Bool = false;
+    /**
+     * Set the checked state of the switch.
+     */
+    @prop var checked:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
+    /**
+     * Set the label of the switch.
+     */
     @:allow(tests)
-    var labelValue:Null<String> = null;
+    @prop var label:Null<String> = null;
 
-    /** The announced name, when the visible label is not it. */
+    /**
+     * Set the name a screen reader announces, when the visible label is not
+     * it. A switch without a label has no accessible name, so set this
+     * whenever the switch is drawn without visible text.
+     */
     @:allow(tests)
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     var labelSide:Side = Right;
 
@@ -65,53 +75,41 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
 
     var sizeValue:Size = Medium;
 
-    var colorValue:Null<Hsla> = null;
+    @prop var color:Null<Hsla> = null;
 
-    var tooltipText:Null<String> = null;
+    /**
+     * Set tooltip text for the switch.
+     */
+    @prop var tooltip:Null<String> = null;
 
-    var tooltipShowDelayValue:Null<Float> = null;
+    /**
+     * Overrides how long the pointer must rest before the tooltip shows, in seconds.
+     */
+    @prop var tooltipShowDelay:Null<Float> = null;
 
-    var tabStopValue:Bool = true;
+    /**
+     * Set whether the switch participates in keyboard focus traversal,
+     * default is true.
+     */
+    @prop var tabStop:Bool = true;
 
-    var tabIndexValue:Int = 0;
+    /**
+     * Set the focus traversal index within a GPUI tab group, default is 0.
+     */
+    @prop var tabIndex:Int = 0;
 
-    var focusRingEnabled:Bool = true;
+    @prop var focusRing:Bool = true;
 
     /**
      * Create a new Switch element.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
     public inline function style():StyleRefinement {
         return switchStyle;
-    }
-
-    /**
-     * Set the checked state of the switch.
-     */
-    public function checked(checked:Bool):Switch {
-        checkedValue = checked;
-        return this;
-    }
-
-    /**
-     * Set the label of the switch.
-     */
-    public function label(label:String):Switch {
-        labelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the name a screen reader announces, when the visible label is not
-     * it. A switch without a label has no accessible name, so set this
-     * whenever the switch is drawn without visible text.
-     */
-    public function accessibilityLabel(label:String):Switch {
-        accessibilityLabelValue = label;
-        return this;
     }
 
     /**
@@ -138,40 +136,7 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
      * Defaults to the theme's primary color.
      */
     public function color(color:IntoHsla):Switch {
-        colorValue = color;
-        return this;
-    }
-
-    /**
-     * Set tooltip text for the switch.
-     */
-    public function tooltip(tooltip:String):Switch {
-        tooltipText = tooltip;
-        return this;
-    }
-
-    /**
-     * Overrides how long the pointer must rest before the tooltip shows, in seconds.
-     */
-    public function tooltipShowDelay(delay:Float):Switch {
-        tooltipShowDelayValue = delay;
-        return this;
-    }
-
-    /**
-     * Set whether the switch participates in keyboard focus traversal,
-     * default is true.
-     */
-    public function tabStop(tabStop:Bool):Switch {
-        tabStopValue = tabStop;
-        return this;
-    }
-
-    /**
-     * Set the focus traversal index within a GPUI tab group, default is 0.
-     */
-    public function tabIndex(tabIndex:Int):Switch {
-        tabIndexValue = tabIndex;
+        this.color = color;
         return this;
     }
 
@@ -180,38 +145,28 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
         return this;
     }
 
-    public function disabled(disabled:Bool):Switch {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
-    }
-
-    public function focusRing(enabled:Bool):Switch {
-        focusRingEnabled = enabled;
-        return this;
+        this.disabled = disabled;
     }
 
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final size = sizeValue;
         final theme = Theme.global(cx);
-        final checked = checkedValue;
+        final checked = this.checked;
         final onClick = onClickHandler;
-        final accessibilityLabel = accessibilityLabelValue != null ? accessibilityLabelValue : labelValue;
+        final accessibilityLabel = this.accessibilityLabel != null ? this.accessibilityLabel : label;
         final focusHandle:FocusHandle = window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
         final isFocused = focusHandle.isFocused(window);
 
-        final checkedBg:Background = colorValue != null ? Background.fromHsla(colorValue) : theme.tokens.primary.background;
+        final checkedBg:Background = color != null ? Background.fromHsla(color) : theme.tokens.primary.background;
         final uncheckedBg:Background = theme.tokens.switch_.background;
         // GPUI's element opacity multiplies each primitive's alpha instead of
         // compositing the subtree as one group, so fading the whole control
@@ -248,18 +203,18 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
 
         final base = glaze.kit.base.Switch.component(id)
             .checked(checked)
-            .disabled(disabledValue)
+            .disabled(disabled)
             .styles(styles -> styles.disabled(s -> s.textColor(disabledLabelColor).cursorNotAllowed()));
         if (accessibilityLabel != null) base.accessibilityLabel(accessibilityLabel);
         if (onClick != null) base.onChange((next, _, window, cx) -> onClick(next, window, cx));
-        base.tabStop(tabStopValue).tabIndex(tabIndexValue).trackFocus(focusHandle);
+        base.tabStop(tabStop).tabIndex(tabIndex).trackFocus(focusHandle);
         base.hFlex().gap2().itemsStart();
         if (labelSide.isLeft()) base.flexRowReverse();
 
         // Switch Bar
         final track = SwitchTrack.component(ElementId.NamedChild(id, 'track'))
             .checked(checked)
-            .disabled(disabledValue)
+            .disabled(disabled)
             .w(bgWidth)
             .h(bgHeight)
             .flexShrink0()
@@ -277,14 +232,14 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
         if (!checked) track.bg(uncheckedBg);
         track.styles(styles -> styles.checked(s -> s.bg(checkedBg)).disabled(s -> s.bg(disabledBg)));
         // The ring hugs the track, not the row, so the label stays outside it.
-        if (isFocused && focusRingEnabled) track.focusRingStyle(window, cx);
-        ComponentTooltip.of(tooltipText, tooltipShowDelayValue).apply(track, @:privateAccess track.base);
+        if (isFocused && focusRing) track.focusRingStyle(window, cx);
+        ComponentTooltip.of(tooltip, tooltipShowDelay).apply(track, @:privateAccess track.base);
         // Switch Toggle
         track.child(SwitchThumb.component(checked).rounded(radius).size(barWidth).left(glaze.Prelude.px(thumbX)).bg(toggleBg));
         base.child(track);
 
-        if (labelValue != null) {
-            final labelDiv = div().minW0().lineHeight(bgHeight).child(labelValue);
+        if (label != null) {
+            final labelDiv = div().minW0().lineHeight(bgHeight).child(label);
             switch size {
                 case Size(_): labelDiv.inputTextSize(Medium);
                 case _: labelDiv.inputTextSize(size);

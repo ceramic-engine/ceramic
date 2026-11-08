@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -14,7 +15,6 @@ import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -62,7 +62,7 @@ enum abstract CheckboxState(Int) {
  *
  * Interactive styles and listeners go to `base` (see `glaze.kit.base.Button`).
  */
-class Checkbox implements RenderOnce implements Styled implements ParentElement {
+class Checkbox extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
@@ -73,23 +73,44 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
 
     var semanticStyles:CheckboxStyles = new CheckboxStyles();
 
-    var stateValue:CheckboxState = Unchecked;
+    /**
+     * Sets the controlled semantic state.
+     */
+    @prop var state:CheckboxState = Unchecked;
 
-    var disabledValue:Bool = false;
+    /**
+     * Sets whether pointer and keyboard activation are ignored.
+     */
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
     var onChangeHandler:Null<(CheckboxState, ClickEvent, Window, App) -> Void> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /**
+     * Sets the label exposed to accessibility clients.
+     *
+     * A checkbox without text children has no accessible name, so set this
+     * whenever it is drawn without visible text.
+     */
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var tabIndexValue:Int = 0;
+    /**
+     * Sets the focus traversal index. The default is `0`.
+     */
+    @prop var tabIndex:Int = 0;
 
-    var tabStopValue:Bool = true;
+    /**
+     * Sets whether this checkbox participates in keyboard focus traversal.
+     */
+    @prop var tabStop:Bool = true;
 
-    var providedFocusHandle:Null<FocusHandle> = null;
+    /**
+     * Uses a caller-owned focus handle instead of creating keyed state.
+     */
+    @prop var trackFocus:Null<FocusHandle> = null;
 
-    var roleValue:RoleOverride = Implicit;
+    @prop var role:RoleOverride = Implicit;
 
     /** The accessibility properties the checkbox exports (filled by `render`). */
     public final a11y:A11y = new A11y();
@@ -98,6 +119,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
      * Creates an unchecked checkbox with a stable element identifier.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = div().id(id);
     }
@@ -120,24 +142,12 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
         return this;
     }
 
-    public function role(role:RoleOverride):Checkbox {
-        roleValue = role;
-        return this;
-    }
-
-    /**
-     * Sets the controlled semantic state.
-     */
-    public function state(state:CheckboxState):Checkbox {
-        stateValue = state;
-        return this;
-    }
-
     /**
      * Sets the checked state, clearing any indeterminate state.
      */
     public function checked(checked:Bool):Checkbox {
-        return state(checked ? Checked : Unchecked);
+        this.state = checked ? Checked : Unchecked;
+        return this;
     }
 
     /**
@@ -148,20 +158,14 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
      */
     public function indeterminate(indeterminate:Bool):Checkbox {
         if (indeterminate) {
-            return state(Indeterminate);
-        } else if (stateValue == Indeterminate) {
-            return state(Unchecked);
+            this.state = Indeterminate;
+            return this;
+        } else if (this.state == Indeterminate) {
+            this.state = Unchecked;
+            return this;
         } else {
             return this;
         }
-    }
-
-    /**
-     * Sets whether pointer and keyboard activation are ignored.
-     */
-    public function disabled(disabled:Bool):Checkbox {
-        disabledValue = disabled;
-        return this;
     }
 
     /**
@@ -169,17 +173,6 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
      */
     public function styles(build:(CheckboxStyles) -> CheckboxStyles):Checkbox {
         semanticStyles = build(semanticStyles);
-        return this;
-    }
-
-    /**
-     * Sets the label exposed to accessibility clients.
-     *
-     * A checkbox without text children has no accessible name, so set this
-     * whenever it is drawn without visible text.
-     */
-    public function accessibilityLabel(label:String):Checkbox {
-        accessibilityLabelValue = label;
         return this;
     }
 
@@ -192,30 +185,6 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
      */
     public function onChange(handler:(CheckboxState, ClickEvent, Window, App) -> Void):Checkbox {
         onChangeHandler = handler;
-        return this;
-    }
-
-    /**
-     * Sets the focus traversal index. The default is `0`.
-     */
-    public function tabIndex(tabIndex:Int):Checkbox {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    /**
-     * Sets whether this checkbox participates in keyboard focus traversal.
-     */
-    public function tabStop(tabStop:Bool):Checkbox {
-        tabStopValue = tabStop;
-        return this;
-    }
-
-    /**
-     * Uses a caller-owned focus handle instead of creating keyed state.
-     */
-    public function trackFocus(focusHandle:FocusHandle):Checkbox {
-        providedFocusHandle = focusHandle;
         return this;
     }
 
@@ -244,36 +213,36 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
     }
 
     function focusHandle(window:Window, cx:App):FocusHandle {
-        if (providedFocusHandle != null) return providedFocusHandle;
+        if (trackFocus != null) return trackFocus;
         return window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
     }
 
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        switch stateValue {
+        switch state {
             case Unchecked:
             case Checked: states.push(semanticStyles.checkedStyle);
             case Indeterminate: states.push(semanticStyles.indeterminateStyle);
         }
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(checkboxStyle, states);
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final focusHandle = this.focusHandle(window, cx);
-        final disabled = disabledValue;
-        final nextState = stateValue.activated();
+        final disabled = this.disabled;
+        final nextState = state.activated();
         final style = resolvedStyle();
         final onChange = onChangeHandler;
 
         final element = base;
-        final role = roleValue.resolve(() -> Role.CheckBox);
+        final role = this.role.resolve(() -> Role.CheckBox);
         if (role != null) a11y.role = role;
-        a11y.toggled = stateValue.toggled();
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
+        a11y.toggled = state.toggled();
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
         if (!disabled) {
-            element.trackFocus(focusHandle.tabIndex(tabIndexValue).tabStop(tabStopValue));
+            element.trackFocus(focusHandle.tabIndex(tabIndex).tabStop(tabStop));
         }
         if (!disabled && onChange != null) {
             a11y.clickable = true;
@@ -334,19 +303,21 @@ class CheckboxStyles {
  * This renders its `Div` directly. Applications own its geometry, visual
  * presentation, and children.
  */
-class CheckboxIndicator implements RenderOnce implements Styled implements ParentElement {
+class CheckboxIndicator extends Component implements Styled implements ParentElement {
 
     final indicatorStyle:StyleRefinement = new StyleRefinement();
 
     var semanticStyles:CheckboxStyles = new CheckboxStyles();
 
-    var stateValue:CheckboxState = Unchecked;
+    @prop var state:CheckboxState = Unchecked;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return indicatorStyle;
@@ -361,17 +332,8 @@ class CheckboxIndicator implements RenderOnce implements Styled implements Paren
         return this;
     }
 
-    public function state(state:CheckboxState):CheckboxIndicator {
-        stateValue = state;
-        return this;
-    }
-
     public function checked(checked:Bool):CheckboxIndicator {
-        return state(checked ? Checked : Unchecked);
-    }
-
-    public function disabled(disabled:Bool):CheckboxIndicator {
-        disabledValue = disabled;
+        this.state = checked ? Checked : Unchecked;
         return this;
     }
 
@@ -387,12 +349,12 @@ class CheckboxIndicator implements RenderOnce implements Styled implements Paren
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        switch stateValue {
+        switch state {
             case Unchecked:
             case Checked: states.push(semanticStyles.checkedStyle);
             case Indeterminate: states.push(semanticStyles.indeterminateStyle);
         }
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(indicatorStyle, states);
     }
 

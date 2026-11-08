@@ -4,9 +4,9 @@
 package glaze.kit.label;
 
 import glaze.App;
+import glaze.Component;
 import glaze.HighlightStyle;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.StyledText;
@@ -44,7 +44,7 @@ abstract IntoHighlightsMatch(HighlightsMatch) from HighlightsMatch to Highlights
  *
  * Ranges are UTF-8 byte ranges (`[start, end]` pairs), like the Rust code.
  */
-class Label implements RenderOnce implements Styled {
+class Label extends Component implements Styled {
 
     static inline final MASKED = '•';
 
@@ -53,19 +53,27 @@ class Label implements RenderOnce implements Styled {
     @:allow(tests)
     final label:String;
 
+    /**
+     * Set the secondary text for the label, displayed after the label text
+     * with the `mutedForeground` color.
+     */
     @:allow(tests)
-    var secondaryText:Null<String> = null;
+    @prop var secondary:Null<String> = null;
+
+    /**
+     * Set whether to mask the label text.
+     */
+    @:allow(tests)
+    @prop var masked:Bool = false;
 
     @:allow(tests)
-    var maskedValue:Bool = false;
-
-    @:allow(tests)
-    var highlightsText:Null<HighlightsMatch> = null;
+    @prop var highlights:Null<HighlightsMatch> = null;
 
     /**
      * Create a new label with the main label.
      */
     public function new(label:String) {
+        super();
         this.label = label;
     }
 
@@ -74,32 +82,15 @@ class Label implements RenderOnce implements Styled {
     }
 
     /**
-     * Set the secondary text for the label, displayed after the label text
-     * with the `mutedForeground` color.
-     */
-    public function secondary(secondary:String):Label {
-        secondaryText = secondary;
-        return this;
-    }
-
-    /**
-     * Set whether to mask the label text.
-     */
-    public function masked(masked:Bool):Label {
-        maskedValue = masked;
-        return this;
-    }
-
-    /**
      * Set for matching text to highlight in the label.
      */
     public function highlights(text:IntoHighlightsMatch):Label {
-        highlightsText = text;
+        this.highlights = text;
         return this;
     }
 
     function fullText():String {
-        return secondaryText != null ? '$label $secondaryText' : label;
+        return secondary != null ? '$label $secondary' : label;
     }
 
     /**
@@ -111,16 +102,16 @@ class Label implements RenderOnce implements Styled {
         final fullText = this.fullText();
         final labelLength = byteLength(label);
 
-        if (secondaryText != null) {
+        if (secondary != null) {
             ranges.push([0, labelLength]);
             ranges.push([labelLength, totalLength]);
         }
 
-        if (highlightsText != null) {
-            final matchedStr = switch highlightsText {
+        if (highlights != null) {
+            final matchedStr = switch highlights {
                 case Prefix(text) | Full(text): text;
             };
-            final isPrefix = highlightsText.match(Prefix(_));
+            final isPrefix = highlights.match(Prefix(_));
             if (matchedStr.length > 0) {
                 final searchLower = Bytes.ofString(matchedStr.toLowerCase());
                 final fullTextLower = Bytes.ofString(fullText.toLowerCase());
@@ -189,7 +180,7 @@ class Label implements RenderOnce implements Styled {
 
     @:allow(tests)
     function measureHighlights(length:Int, cx:App):Null<Array<TextHighlight>> {
-        if (maskedValue) {
+        if (masked) {
             return null;
         }
 
@@ -202,7 +193,7 @@ class Label implements RenderOnce implements Styled {
         final highlights:Array<TextHighlight> = [];
         var highlightRangesAdded = 0;
 
-        if (secondaryText != null) {
+        if (secondary != null) {
             highlights.push(new TextHighlight(ranges[0][0], ranges[0][1], new HighlightStyle()));
             highlights.push(new TextHighlight(ranges[1][0], ranges[1][1], HighlightStyle.ofColor(theme.mutedForeground)));
             highlightRangesAdded = 2;
@@ -218,7 +209,7 @@ class Label implements RenderOnce implements Styled {
     public function render(window:Window, cx:App):IntoElement {
         var text = fullText();
 
-        if (maskedValue) {
+        if (masked) {
             var charsCount = 0;
             final bytes = Bytes.ofString(text);
             for (i in 0...bytes.length) {
