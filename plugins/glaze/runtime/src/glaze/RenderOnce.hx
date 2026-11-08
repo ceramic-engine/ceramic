@@ -11,7 +11,13 @@ package glaze;
  * the element APIs.
  *
  * Observable fields read by `render()` subscribe the view being drawn.
+ *
+ * Every implementation with a public constructor gets a static
+ * `component(...)` with the constructor's parameters (`RenderOnceMacro`):
+ * `Button.component('save')` is `new Button('save')`, the notation of
+ * `glaze.Component`.
  */
+@:autoBuild(glaze.RenderOnceMacro.build())
 interface RenderOnce {
 
     /**
