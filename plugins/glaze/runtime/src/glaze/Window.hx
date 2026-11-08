@@ -2101,16 +2101,33 @@ class Window implements WindowInvalidator {
         else {
             final viewId = host.entityId;
             final childrenChanged = proto.__apply(host.instance);
-            if (pendingDirtyViews.exists(viewId)) {
-                pendingDirtyViews.remove(viewId);
-                pendingDirtyViewIds.remove(viewId);
-                markViewDirty(viewId);
-            }
-            else if (childrenChanged) {
+            if (!promotePendingDirtyView(viewId) && childrenChanged) {
                 markViewDirty(viewId);
             }
         }
         return host;
+    }
+
+    /**
+     * A view notified earlier in this draw (`invalidateView` while drawing
+     * records it for the next frame, like GPUI) that is reached before it
+     * rendered renders in this frame: GPUI draws every uncached view on
+     * every frame, so a view notified while its parent renders shows the
+     * change in that frame, and no frame follows. The port's views render
+     * only when dirty, so the pending view is made dirty now. A kit control
+     * whose state is pushed by its parent's render
+     * (`Select.component().value(v)`) shows the new value right away.
+     * Returns `true` when the view was pending.
+     */
+    @:allow(glaze)
+    function promotePendingDirtyView(viewId:Int):Bool {
+        if (!pendingDirtyViews.exists(viewId)) {
+            return false;
+        }
+        pendingDirtyViews.remove(viewId);
+        pendingDirtyViewIds.remove(viewId);
+        markViewDirty(viewId);
+        return true;
     }
 
     static var componentStateType(get, null):Int = -1;

@@ -259,6 +259,12 @@ class SelectState<I> extends Model implements Render {
 
         state.selection = selectedIndex != null && item != null ? [new SelectedItem(selectedIndex, item)] : [];
         state.syncSnapshot(cx.app);
+        // The trigger shows the list's cursor (`displayTitle`), a plain field
+        // of the list state. In the original the list's notify
+        // (`scroll_to_selected_item`) dirties the window and every view
+        // renders again; the port's views render only when notified, so the
+        // select notifies itself.
+        cx.notify();
     }
 
     /**

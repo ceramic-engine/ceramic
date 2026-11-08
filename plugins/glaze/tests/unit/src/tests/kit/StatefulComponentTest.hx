@@ -10,6 +10,7 @@ import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.Component;
 import glaze.kit.WindowState;
+import glaze.kit.base.IndexPath;
 import glaze.kit.base.Root;
 import glaze.kit.button.Button;
 import glaze.kit.button.ButtonGroup;
@@ -243,6 +244,36 @@ class StatefulComponentTest extends TestCase {
         items = ['a', 'b', 'c'];
         redraw(h.cx, h.view);
         assertEquals('c', (state.read(app).selectedValue() : String));
+    }
+
+    function testSelectValueChangeShowsTheNewTitle() {
+        // The value pushed by a later render of the parent is shown by the
+        // trigger in that frame: "Rust" has two glyphs more than "Go"
+        var value = 'Go';
+        final h = open((window, cx) -> div().child(Select.component().options(['Rust', 'Go']).value(value)));
+        final goGlyphs = h.cx.window.renderedScene().monochromeSprites.length;
+        value = 'Rust';
+        redraw(h.cx, h.view);
+        assertEquals(goGlyphs + 2, h.cx.window.renderedScene().monochromeSprites.length, 'the trigger shows the new value');
+        assertFalse(h.cx.window.dirty, 'no extra frame is needed');
+    }
+
+    function testSetSelectedValueOutsideRenderUpdatesTheTitle() {
+        // `setSelectedValue` from a timer or an event (outside any render)
+        // renders the select again
+        var state:Entity<SelectState<String>> = null;
+        final h = open((window, cx) -> {
+            if (state == null) {
+                state = cx.newEntity((c:Context<SelectState<String>>) -> new SelectState<String>(new SearchableVec<String>(['Rust', 'Go']), new IndexPath(1), window, c));
+            }
+            return div().child(Select.component(state));
+        });
+        final goGlyphs = h.cx.window.renderedScene().monochromeSprites.length;
+        h.cx.update((window, cx) -> state.update(cx, (s, c) -> s.setSelectedValue('Rust', window, c)));
+        h.cx.runUntilParked();
+        h.cx.update((window, _) -> window.drawIfDirty());
+        assertEquals(goGlyphs + 2, h.cx.window.renderedScene().monochromeSprites.length, 'the trigger shows the new value');
+        assertFalse(h.cx.window.dirty);
     }
 
     function testSelectValueDoesNotFreezeTheViewRenderingIt() {

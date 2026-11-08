@@ -349,6 +349,8 @@ class ViewElement extends Element {
         }
 
         // Stateful path: create a reactive boundary.
+        // A view notified earlier in this frame renders in this frame
+        window.promotePendingDirtyView(entityId);
         #if glaze_inspector
         if (cachedStyle != null && !window.viewCachingDisabled && !window.isInspectorPicking(cx)) {
         #else
