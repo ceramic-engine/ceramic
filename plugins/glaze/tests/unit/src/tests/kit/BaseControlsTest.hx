@@ -157,7 +157,7 @@ class BaseControlsTest extends TestCase {
         for (spec in [{key: 'tab', expected: 2, back: 'shift-tab', opposite: 0}, {key: 'shift-tab', expected: 0, back: 'tab', opposite: 2}]) {
             final handles = [for (_ in 0...3) app.focusHandle()];
             final controls = app.newEntity((_:Context<DisableDuringFocus>) -> new DisableDuringFocus(handles));
-            final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> new Root(controls, window, rootCx));
+            final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> controls);
             final cx = opened.cx;
             contexts.push(cx);
             cx.update((window, app) -> {

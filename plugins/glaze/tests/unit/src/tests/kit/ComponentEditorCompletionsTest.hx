@@ -109,7 +109,7 @@ class ComponentEditorCompletionsTest extends TestCase {
         app.update(cx -> {
             window = Window.open(cx, {width: 800, height: 480, scaleFactor: 2, autoDraw: false, active: false, bindInput: false}, (window, cx) -> {
                 view = cx.newEntity((c:Context<CompletionEditor>) -> new CompletionEditor(window, c, p));
-                return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
+                return Root.component().child(view);
             });
         });
         dispatcher.runUntilParked();

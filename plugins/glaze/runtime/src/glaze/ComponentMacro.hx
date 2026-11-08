@@ -51,10 +51,11 @@ private class PropInfo {
  *   persistent (`@observe`, `@compute`, `@autorun`, an `init()` or
  *   `destroy()` override, the class metadata `@persist`, or a persistent
  *   parent class);
- * - renames each `@prop var x` to the storage field `xProp` (and the reads
- *   of `x` and `this.x` in the methods of the class, as well as those of
- *   `children`, stored as `childrenProp`), and generates the chained setter
- *   `x(value):X`, unless the class defines a method `x`;
+ * - renames each `@prop var x` to the storage field `xProp` (`@:noCompletion`;
+ *   the reads of `x` and `this.x` in the methods of the class are renamed
+ *   too, as well as those of `children`, stored as `childrenProp`), and
+ *   generates the chained setter `x(value):X`, unless the class defines a
+ *   method `x`;
  * - generates `.at(key)`, `.child(...)`, `.children(...)`, the static
  *   `component(...)` with the parameters of the constructor, and the
  *   internals used by `ComponentBuilder`;
@@ -221,6 +222,9 @@ class ComponentMacro {
             if (observable) {
                 meta.push({name: 'observe', params: [], pos: field.pos});
             }
+            // The storage field stays out of completion: the prop is read by
+            // its own name in the class and set by its chained setter outside
+            meta.push({name: ':noCompletion', params: [], pos: field.pos});
             field.meta = meta;
         }
 

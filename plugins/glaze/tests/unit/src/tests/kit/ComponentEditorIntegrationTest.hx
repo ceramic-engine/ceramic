@@ -88,7 +88,7 @@ class ComponentEditorIntegrationTest extends TestCase {
         app.update(cx -> {
             window = Window.open(cx, {width: 800, height: 480, scaleFactor: 2, autoDraw: false, active: true, bindInput: false}, (window, cx) -> {
                 view = cx.newEntity((c:Context<EditorFixture>) -> new EditorFixture(window, c, language, value, readonly, searchable));
-                return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
+                return Root.component().child(view);
             });
         });
         dispatcher.runUntilParked();

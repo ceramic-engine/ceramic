@@ -9,6 +9,8 @@ import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.Component;
+import glaze.Glaze;
+import glaze.kit.Kit;
 import glaze.kit.WindowState;
 import glaze.kit.base.IndexPath;
 import glaze.kit.base.Root;
@@ -61,14 +63,13 @@ class StatefulComponentTest extends TestCase {
     }
 
     function open(build:(Window, Context<Dynamic>) -> IntoElement):{view:Entity<Harness>, cx:VisualTestContext} {
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final content = rootCx.newEntity((c:Context<Harness>) -> new Harness(build));
-            return new Root(content, window, rootCx);
+            return content;
         }, 640, 480);
         contexts.push(opened.cx);
         opened.cx.runUntilParked();
-        final root:Root = opened.view;
-        return {view: cast root.contentView(), cx: opened.cx};
+        return {view: opened.view, cx: opened.cx};
     }
 
     function redraw(cx:VisualTestContext, view:Entity<Harness>) {
@@ -328,19 +329,51 @@ class StatefulComponentTest extends TestCase {
         assertEquals('Given', givenBase.read(app).placeholder);
     }
 
-    function testRootBuilderBuildsTheRootOfAWindow() {
-        final build = Root.builder(Content.component().title('hello'));
+    function testKitWindowHostsAComponentInTheRootOfAWindow() {
+        Counters.contentRenders = 0;
         var window:Window = null;
         app.update(cx -> {
-            window = Window.open(cx, {width: 320, height: 240, scaleFactor: 2, autoDraw: false, bindInput: false}, build);
+            window = Window.open(cx, {width: 320, height: 240, scaleFactor: 2, autoDraw: false, bindInput: false}, Kit.window(Content.component().title('hello')));
         });
+        // The root's plugins are built with the window, before the first draw
+        assertTrue(WindowState.tryRead(window) != null, 'the kit initialized with the root');
         app.update(_ -> window.draw());
         dispatcher.runUntilParked();
         final root = Root.tryRead(window);
         assertTrue(root != null, 'the window root is a Root');
-        assertTrue(root.contentView() != null);
-        assertTrue(WindowState.tryRead(window) != null, 'the kit initialized with the root');
+        assertTrue(root.contentView() == null, 'a component is not a view');
+        assertTrue(Counters.contentRenders >= 1, 'the component rendered');
+        // The root renders its content again at each of its renders
+        final before = Counters.contentRenders;
+        app.update(_ -> window.refresh());
+        app.update(_ -> window.draw());
+        assertTrue(Counters.contentRenders > before, 'a refreshed root renders its content again');
         window.destroy();
+    }
+
+    function testRootComponentHostsAViewAndGlazeAcceptsAComponent() {
+        final content = app.newEntity((_:Context<Harness>) -> new Harness((window, cx) -> div().id('held')));
+        var window:Window = null;
+        app.update(cx -> {
+            window = Window.open(cx, {width: 320, height: 240, scaleFactor: 2, autoDraw: false, bindInput: false}, Root.component().child(content));
+        });
+        app.update(_ -> window.draw());
+        dispatcher.runUntilParked();
+        final root = Root.read(window, app);
+        assertEquals(content.entityId(), root.contentView().entityId());
+        app.update(_ -> window.draw());
+        final settled = content.read(app).renders;
+        app.update(_ -> window.refresh());
+        app.update(_ -> window.draw());
+        assertEquals(settled + 1, content.read(app).renders, 'the root draws its view again at each render');
+        window.destroy();
+
+        // `new Glaze(Kit.window(component))`: the kit root is the root view of the visual's window
+        final glaze = new Glaze(Kit.window(Content.component().title('visual')), {width: 200, height: 100, autoDraw: false}, app);
+        assertTrue(Root.tryRead(glaze.window) != null, 'the kit root under the visual');
+        assertTrue(WindowState.tryRead(glaze.window) != null);
+        glaze.destroy();
+        ceramic.App.app.flushImmediate();
     }
 
     function testShortCallbacksOnKitControls() {
@@ -443,11 +476,19 @@ private class Probe extends Model {
 
 }
 
+/** The render counts of the components of this test. */
+private class Counters {
+
+    public static var contentRenders:Int = 0;
+
+}
+
 private class Content extends Component {
 
     @prop var title:String = 'content';
 
     function render(window:Window, cx:App):IntoElement {
+        Counters.contentRenders++;
         return div().id('content').child(title);
     }
 

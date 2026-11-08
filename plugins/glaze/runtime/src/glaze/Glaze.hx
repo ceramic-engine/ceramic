@@ -7,15 +7,18 @@ import glaze.Window.WindowOptions;
  * interface in a Ceramic scene.
  *
  * ```haxe
- * final ui = new Glaze((window, cx) -> cx.newEntity(cx -> new MyView()));
+ * final ui = new Glaze(AppView.component());
  * ui.size(width, height);
  * add(ui);
  * ```
  *
  * It opens a `Window` (GPUI's window, see `Window.open`) whose root view is
- * built by `build`, draws it, resizes it with the visual and closes it when
- * the visual is destroyed. The window stays available as `window` for the
- * rest of the GPUI API.
+ * `root` (a `Component`, a `Render` entity, an `AnyView`, or the builder
+ * `(window, cx) -> AnyView` of GPUI's `open_window`; see `GlazeRoot`), draws
+ * it, resizes it with the visual and closes it when the visual is destroyed.
+ * The window stays available as `window` for the rest of the GPUI API. With
+ * the kit, `new Glaze(Kit.window(AppView.component()))` puts the view under
+ * the kit's window root.
  *
  * Glaze is the Haxe port of GPUI (Zed's UI framework) and gpui-kit, built
  * into Ceramic as the `glaze` plugin. See NOTICE.md.
@@ -53,13 +56,12 @@ class Glaze extends ceramic.Visual {
     public var window(default, null):Window;
 
     /**
-     * Opens a window whose root view is built by `build` and shows it in this
-     * visual.
-     * @param build Builds the root view of the window (Rust `open_window`'s builder)
+     * Opens a window whose root view is `root` and shows it in this visual.
+     * @param root The root view of the window: a component placed with `X.component()...`, a `Render` entity, an `AnyView`, or the builder `(window, cx) -> AnyView` (Rust `open_window`'s builder)
      * @param options Window options; the size of the visual is taken from them (512 x 512 by default)
      * @param app The app owning the window, `Glaze.app` by default
      */
-    public function new(build:(Window, App) -> AnyView, ?options:WindowOptions, ?app:App) {
+    public function new(root:GlazeRoot, ?options:WindowOptions, ?app:App) {
 
         super();
 
@@ -69,7 +71,7 @@ class Glaze extends ceramic.Visual {
         _width = options.width;
         _height = options.height;
 
-        window = Window.open(app, options, build);
+        window = Window.open(app, options, root);
         add(window.renderable);
 
     }

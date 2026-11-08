@@ -61,9 +61,9 @@ class StoryInputCompletionTest extends TestCase {
 
     function mount():{story:Entity<CompletionExample>, cx:VisualTestContext} {
         var story:Null<Entity<CompletionExample>> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
-            story = CompletionExample.create(window, rootCx.app);
-            return new Root(story, window, rootCx);
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
+            story = CompletionExample.create(window, rootCx);
+            return story;
         });
         final cx = opened.cx;
         contexts.push(cx);

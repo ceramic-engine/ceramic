@@ -257,7 +257,7 @@ class ComponentSelectTest extends TestCase {
         app.update(cx -> {
             window = Window.open(cx, {width: width, height: height, scaleFactor: 2, autoDraw: false, bindInput: false}, (window, cx) -> {
                 view = cx.newEntity((viewCx:Context<Form>) -> build(window, viewCx));
-                return cx.newEntity((rootCx:Context<glaze.kit.base.Root>) -> new glaze.kit.base.Root(view, window, rootCx));
+                return glaze.kit.base.Root.component().child(view);
             });
         });
         dispatcher.runUntilParked();

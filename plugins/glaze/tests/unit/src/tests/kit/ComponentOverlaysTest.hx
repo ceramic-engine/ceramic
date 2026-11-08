@@ -73,6 +73,13 @@ class ComponentOverlaysTest extends TestCase {
         return opened;
     }
 
+    /** A window whose kit `Root` hosts the view `build` returns. */
+    function openInRoot<V:Model & Render>(build:(Window, App) -> Entity<V>, width:Float = 1920, height:Float = 1080):{view:Entity<V>, cx:VisualTestContext} {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, build, width, height);
+        contexts.push(opened.cx);
+        return opened;
+    }
+
     static function draw(cx:VisualTestContext):Void {
         cx.update((window, _) -> window.draw());
     }
@@ -377,7 +384,7 @@ class ComponentOverlaysTest extends TestCase {
             // These tests cover tooltip lifetime, not intermediate fade frames.
             cx.setReduceMotion(true);
         });
-        final cx = open((window, rootCx:Context<Root>) -> new Root(view, window, rootCx)).cx;
+        final cx = openInRoot((window, rootCx) -> view).cx;
         tooltipDraw(cx);
         return cx;
     }
@@ -531,9 +538,9 @@ class ComponentOverlaysTest extends TestCase {
             cx.setReduceMotion(true);
         });
         final buttons = app.newEntity((_:Context<TooltipButtons>) -> new TooltipButtons(shown, delay));
-        final cx = open((window, rootCx:Context<Root>) -> {
+        final cx = openInRoot((window, rootCx) -> {
             final content = rootCx.newEntity((_:Context<CachedButtons>) -> new CachedButtons(buttons));
-            return new Root(content, window, rootCx);
+            return content;
         }).cx;
         tooltipDraw(cx);
         final builds = [0];
@@ -702,7 +709,7 @@ class ComponentOverlaysTest extends TestCase {
                     .flexCol()
                     .gap2()
                     .child(Button.component('keyboard-apply').label('Apply').trackFocus(apply).onClick((_, _, _) -> applied[0]++))))));
-            final cx = open((window, rootCx:Context<Root>) -> new Root(view, window, rootCx), 600, 500).cx;
+            final cx = openInRoot((window, rootCx) -> view, 600, 500).cx;
             draw(cx);
             cx.update((window, cx) -> window.focusNext(cx));
             draw(cx);

@@ -65,9 +65,9 @@ class KitInitTest extends TestCase {
 
     function testARootInitializesTheKitBeforeBuildingItsPlugins() {
         assertFalse(app.hasGlobal(Theme));
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final content = rootCx.newEntity((c:Context<ButtonView>) -> new ButtonView());
-            return new Root(content, window, rootCx);
+            return content;
         }, 400, 300);
         contexts.push(opened.cx);
         opened.cx.runUntilParked();

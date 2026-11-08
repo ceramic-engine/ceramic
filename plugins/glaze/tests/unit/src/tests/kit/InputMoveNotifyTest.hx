@@ -104,7 +104,7 @@ class InputMoveNotifyTest extends TestCase {
         final window = Window.open(app, {width: 512, height: 512, scaleFactor: 2, autoDraw: false, active: false, bindInput: false, viewCaching: !explicit}, (window, cx) -> {
             final entity = cx.newEntity((c:Context<MovePage>) -> page = new MovePage(window, c, explicit));
             page.entity = entity;
-            return cx.newEntity((rootCx:Context<Root>) -> new Root(entity, window, rootCx));
+            return Root.component().child(entity);
         });
         windows.push(window);
         page.window = window;

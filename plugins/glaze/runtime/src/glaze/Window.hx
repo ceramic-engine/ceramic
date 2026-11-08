@@ -1023,12 +1023,16 @@ class Window implements WindowInvalidator {
     }
 
     /**
-     * Opens a window whose root view is built by `build` (Rust
-     * `cx.open_window(options, |window, cx| cx.new(...))`).
+     * Opens a window whose root view is `root` (Rust
+     * `cx.open_window(options, |window, cx| cx.new(...))`): the builder
+     * `(window, cx) -> AnyView`, or directly a component, a `Render` entity
+     * or an `AnyView` (see `GlazeRoot`).
      */
-    public static function open(app:App, options:Null<WindowOptions>, build:(Window, App) -> AnyView):Window {
+    public static function open(app:App, options:Null<WindowOptions>, root:GlazeRoot):Window {
         final window = new Window(app, options);
-        window.root = build(window, app);
+        final view = root.build(window, app);
+        window.initRootComponent(view, app);
+        window.root = view;
         // Rust `open_window` defers `appearance_changed` once the root view
         // is built: observers registered while building run once. Without
         // observers it would only read the appearance again, so the port
@@ -1042,8 +1046,43 @@ class Window implements WindowInvalidator {
      * Sets the root view of the window.
      */
     public function setRoot(view:AnyView):Void {
+        initRootComponent(view, app);
         root = view;
         refresh();
+    }
+
+    /**
+     * A `Component` as the root view (`new Glaze(Root.component()...)`) is
+     * initialized with the window, like a view built by the builder: its
+     * `init(window, cx)` runs now, not at the first draw (the kit's `Root`
+     * builds its plugins there, which `WindowState.read` needs before).
+     * Called before `view` becomes the root, inside one update: the
+     * entities `init` creates flush their effects once it returned, like the
+     * entities a builder creates under its `cx.newEntity`, and a draw that
+     * flush starts does not show a root with its initialization half done.
+     */
+    function initRootComponent(view:Null<AnyView>, cx:App):Void {
+        if (view == null)
+            return;
+        final model:Model = view;
+        if (!Std.isOfType(model, ComponentBuilder.ComponentHost))
+            return;
+        final host:ComponentBuilder.ComponentHost = cast model;
+        @:privateAccess cx.startUpdate();
+        try {
+            // A host made by `AnyView.fromGlazeComponent` (a builder returning
+            // `X.component()`) is an entity of this window's app, like the
+            // view a builder creates with `cx.newEntity`
+            if (host._slot == null) {
+                cx.attachEntity(host);
+            }
+            host.ensureInit(this, cx);
+        }
+        catch (e:haxe.Exception) {
+            @:privateAccess cx.pendingUpdates--;
+            throw glaze.util.Exceptions.rethrow(e);
+        }
+        @:privateAccess cx.finishUpdate();
     }
 
     /**

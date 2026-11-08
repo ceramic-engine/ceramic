@@ -60,9 +60,9 @@ class NullChildTest extends TestCase {
 
     function renderLog(build:(Array<String>) -> IntoElement):Array<String> {
         final log:Array<String> = [];
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final content = rootCx.newEntity((c:Context<NullChildView>) -> new NullChildView(log, build));
-            return new Root(content, window, rootCx);
+            return content;
         }, 400, 300);
         contexts.push(opened.cx);
         opened.cx.runUntilParked();

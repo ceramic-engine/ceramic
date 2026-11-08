@@ -829,9 +829,9 @@ class ComponentControlsTest extends TestCase {
     function testCheckboxSpaceRepeatChangesControlledValueOnceOnRelease() {
         app.update(cx -> glaze.kit.base.Base.init(cx));
         final controls = new Controls();
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<glaze.kit.base.Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final content = rootCx.newEntity((_:Context<ScriptView>) -> new ScriptView((_, cx) -> controls.render(cx)));
-            return new glaze.kit.base.Root(content, window, rootCx);
+            return content;
         });
         final cx = opened.cx;
         contexts.push(cx);

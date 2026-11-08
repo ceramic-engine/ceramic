@@ -81,9 +81,9 @@ class ComponentTableTest extends TestCase {
     /** Rust `common::open_window`: the content inside gpui-base's `Root`. */
     function openWindow<V:Model & Render>(width:Float, height:Float, build:(Window, Context<V>) -> V):{view:Entity<V>, cx:VisualTestContext} {
         var content:Null<Entity<V>> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             content = rootCx.newEntity((c:Context<V>) -> build(window, c));
-            return new Root(content, window, rootCx);
+            return content;
         }, width, height);
         contexts.push(opened.cx);
         renderFrame(opened.cx);

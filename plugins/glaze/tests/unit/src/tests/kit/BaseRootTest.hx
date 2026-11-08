@@ -70,14 +70,14 @@ class BaseRootTest extends TestCase {
         // former 100-attempt limit before reaching its other end.
         final background = [for (_ in 0...256) app.focusHandle().tabStop(true)];
         final harness = new TrapHarness(container, controls, background);
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final content:Entity<TrapContent> = rootCx.newEntity((contentCx:Context<TrapContent>) -> {
                 for (handle in background) {
                     contentCx.onFocus(handle, window, (_, _, _) -> harness.backgroundFocuses++).detach();
                 }
                 return new TrapContent(background, container, controls);
             });
-            return new Root(content, window, rootCx);
+            return content;
         });
         cx = opened.cx;
         cx.update((window, _) -> window.setActive(true));
@@ -192,12 +192,12 @@ class BaseRootTest extends TestCase {
         });
         final ids:Array<Int> = [];
         for (_ in 0...2) {
-            final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+            final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
                 final content:Entity<Content> = rootCx.newEntity((_:Context<Content>) -> new Content());
-                return new Root(content, window, rootCx);
+                return content;
             });
             extra.push(opened.cx);
-            final root:Root = opened.view;
+            final root = Root.read(opened.cx.window, app);
             // The kit, initialized by the root, adds its own plugin
             assertEquals(1, root.plugins.filter(p -> Std.isOfType(p, Layer)).length);
             ids.push(root.plugin(Layer).entityId);
@@ -210,9 +210,9 @@ class BaseRootTest extends TestCase {
         final containers = [for (_ in 0...6) app.focusHandle()];
         final controls = [for (_ in 0...6) [app.focusHandle().tabStop(true), app.focusHandle().tabStop(true)]];
         var nested:Null<Entity<NestedTraps>> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             nested = rootCx.newEntity((_:Context<NestedTraps>) -> new NestedTraps(containers, controls, 6));
-            return new Root(nested, window, rootCx);
+            return nested;
         });
         cx = opened.cx;
         // Retain every container handle while inner scopes disappear and
@@ -275,9 +275,9 @@ class BaseRootTest extends TestCase {
     function testBaseStartupKeepsTheContentViewOfItsRoot() {
         app.update(cx -> Base.init(cx));
         var content:Null<Entity<Content>> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             content = rootCx.newEntity((_:Context<Content>) -> new Content());
-            return new Root(content, window, rootCx);
+            return content;
         });
         cx = opened.cx;
         final root = Root.read(cx.window, app);

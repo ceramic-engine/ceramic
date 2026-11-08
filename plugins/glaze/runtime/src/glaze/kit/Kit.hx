@@ -10,6 +10,7 @@ import glaze.AppContext;
 import glaze.kit.base.Base;
 import glaze.kit.base.GlobalState;
 import glaze.kit.base.Root;
+import glaze.kit.base.RootContent;
 import glaze.kit.theme.Theme;
 
 /**
@@ -100,6 +101,24 @@ class Kit {
         // Rust order: ... popover, questionnaire, menu, table, tooltip
         glaze.kit.menu.Menus.init(cx);
         glaze.kit.table.DataTable.init(cx);
+    }
+
+    /**
+     * `Kit.window(view)` wraps the view in the kit's window root (`Root`):
+     * theme on the window body, dialogs, sheets, notifications, tooltips,
+     * text selection. It creates no window itself; `new Glaze(...)` carries
+     * the GPUI window.
+     *
+     * ```haxe
+     * ui = new Glaze(Kit.window(AppView.component()));
+     * ```
+     *
+     * `view` is a component placed with `X.component()...`, a `Render`
+     * entity or any `AnyView`. `Root.component().child(view)` is the
+     * explicit equivalent.
+     */
+    public static function window(view:RootContent):Root {
+        return Root.component().child(view);
     }
 
     /**

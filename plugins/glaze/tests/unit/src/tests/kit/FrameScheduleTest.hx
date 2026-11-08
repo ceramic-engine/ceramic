@@ -112,7 +112,7 @@ class FrameScheduleTest extends TestCase {
         app.update(cx -> {
             window = Window.open(cx, {width: 512, height: 512, scaleFactor: 2, autoDraw: false, active: false, bindInput: false, viewCaching: false}, (window, cx) -> {
                 final entity = cx.newEntity((c:Context<SchedulePage>) -> page = new SchedulePage(window, c, log));
-                return cx.newEntity((rootCx:Context<Root>) -> new Root(entity, window, rootCx));
+                return Root.component().child(entity);
             });
             window.draw();
         });

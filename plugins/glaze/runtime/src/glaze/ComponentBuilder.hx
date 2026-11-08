@@ -24,17 +24,24 @@ class ComponentBuilder {
     }
 
     /**
-     * A root view showing `proto` (`new Glaze((window, cx) -> AppView.component())`).
-     * The component lives as long as the host entity, which is destroyed
-     * with the window; a persistent component is created right away and
-     * initialized at its first render.
+     * A root view showing `proto` (`new Glaze(AppView.component())`, or
+     * `(window, cx) -> AppView.component()`). The component lives as long
+     * as the host entity, which is destroyed with the window; a persistent
+     * component is created right away and initialized with the window
+     * (`Window.open`), or at its first render. The host is an entity of
+     * `cx` when given (the app of the window being built), else of the app
+     * that first reaches it (`Glaze.app` by default).
      */
-    public static function rootView(proto:Component):AnyView {
+    public static function rootView(proto:Component, ?cx:App):AnyView {
         final live = proto.__create();
         if (live != proto) {
             proto.__apply(live);
         }
-        return new ComponentHost(live);
+        final host = new ComponentHost(live);
+        if (cx != null) {
+            cx.attachEntity(host);
+        }
+        return host;
     }
 
 }

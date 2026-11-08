@@ -72,7 +72,7 @@ class ComponentTreeTest extends TestCase {
 
     function testTreePointerAndKeyboardExpandCollapseAndSelectNodes() {
         var tree:Null<Entity<TreeState>> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final content = rootCx.newEntity((c:Context<Files>) -> {
                 tree = c.newEntity((tc:Context<TreeState>) -> new TreeState(tc).items([
                     new TreeItem('src', 'src').child(new TreeItem('main', 'main.rs')),
@@ -81,7 +81,7 @@ class ComponentTreeTest extends TestCase {
                 tree.update(c, (tree, cx) -> tree.focus(window, cx));
                 return new Files(tree);
             });
-            return new Root(content, window, rootCx);
+            return content;
         }, 480, 320);
         contexts.push(opened.cx);
         final cx = opened.cx;

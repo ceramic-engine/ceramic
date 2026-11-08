@@ -650,10 +650,10 @@ class WindowState extends RootPlugin {
         });
     }
 
-    override public function prepare(window:Window, cx:Context<Dynamic>):Void {
-        dismissRemovedTooltip(window, cx.app);
-        window.setRemSize(Theme.global(cx.app).fontSize);
-        TextSelection.activateScope(activeTextSelectionScope(), window, cx.app);
+    override public function prepare(window:Window, cx:App):Void {
+        dismissRemovedTooltip(window, cx);
+        window.setRemSize(Theme.global(cx).fontSize);
+        TextSelection.activateScope(activeTextSelectionScope(), window, cx);
     }
 
     override public function styleSurface(surface:Div, window:Window, cx:App):Void {

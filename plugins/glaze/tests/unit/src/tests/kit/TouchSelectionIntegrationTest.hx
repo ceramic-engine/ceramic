@@ -76,9 +76,9 @@ class TouchSelectionIntegrationTest extends TestCase {
     /** `common::open_window`: a `Root` around the content built by `build`. */
     function openRoot<V:Model & Render>(build:(Window, Context<V>) -> V):{content:Entity<V>, cx:VisualTestContext} {
         var content:Entity<V> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<glaze.kit.base.Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             content = rootCx.newEntity((cx:Context<V>) -> build(window, cx));
-            return new glaze.kit.base.Root(content, window, rootCx);
+            return content;
         });
         contexts.push(opened.cx);
         return {content: content, cx: opened.cx};

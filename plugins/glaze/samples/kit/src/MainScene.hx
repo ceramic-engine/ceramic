@@ -92,7 +92,7 @@ class MainScene extends Scene {
         App.defaultAssetSource().preload(paths.concat(['ceramic.png']), _ -> {
             ui = new Glaze((window, cx) -> {
                 final view = cx.newEntity((_:Context<Gallery>) -> new Gallery());
-                return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
+                return Root.component().child(view);
             });
             ui.size(width, height);
             add(ui);

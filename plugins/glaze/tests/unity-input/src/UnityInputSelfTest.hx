@@ -550,15 +550,13 @@ class UnityInputSelfTest {
             // A gpui-kit input in a second window
             final cx = glaze.Glaze.app;
             keyboardWindow = Window.open(cx, {width: 400, height: 60}, (window, cx) -> {
-                return cx.newEntity((rootCx:Context<Root>) -> {
-                    final content = rootCx.newEntity((viewCx:Context<KeyboardView>) -> {
-                        final view = new KeyboardView();
-                        keyboardInput = viewCx.newEntity((inputCx:Context<InputState>) -> new InputState(window, inputCx));
-                        view.input = keyboardInput;
-                        return view;
-                    });
-                    return new Root(content, window, rootCx);
+                final content = cx.newEntity((viewCx:Context<KeyboardView>) -> {
+                    final view = new KeyboardView();
+                    keyboardInput = viewCx.newEntity((inputCx:Context<InputState>) -> new InputState(window, inputCx));
+                    view.input = keyboardInput;
+                    return view;
                 });
+                return Root.component().child(content);
             });
             scene.add(keyboardWindow.renderable);
             keyboardWindow.renderable.depth = 10;

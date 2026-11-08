@@ -546,9 +546,9 @@ class ComponentMenuTest extends TestCase {
      */
     function openRoot<V:Model & Render>(build:(Window, Context<V>) -> V, width:Float, height:Float):{content:Entity<V>, cx:VisualTestContext} {
         var content:Entity<V> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<glaze.kit.base.Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             content = rootCx.newEntity((cx:Context<V>) -> build(window, cx));
-            return new glaze.kit.base.Root(content, window, rootCx);
+            return content;
         }, width, height);
         contexts.push(opened.cx);
         return {content: content, cx: opened.cx};

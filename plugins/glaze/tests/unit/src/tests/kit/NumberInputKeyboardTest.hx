@@ -72,7 +72,7 @@ class NumberInputKeyboardTest extends TestCase {
         app.update(cx -> {
             window = Window.open(cx, {width: 400, height: 600, scaleFactor: 1, autoDraw: false, bindInput: false}, (window, cx) -> {
                 view = cx.newEntity((c:Context<NumberFields>) -> new NumberFields(window, c));
-                return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
+                return Root.component().child(view);
             });
         });
         GlazeInput.bind(window);

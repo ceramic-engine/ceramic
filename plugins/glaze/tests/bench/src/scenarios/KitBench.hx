@@ -84,7 +84,7 @@ class KitBench {
             autoDraw: false, bindInput: false, active: false, viewCaching: caching
         }, (window, cx) -> {
             final view = build(window, cx);
-            return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
+            return Root.component().child(view);
         });
         window.viewCachingDisabled = !caching;
         window.draw();

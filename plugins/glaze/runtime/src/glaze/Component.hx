@@ -62,7 +62,7 @@ abstract class Component {
      * renames it, as it does for the props: the chained method `children()`
      * has the same name), placed with `div().children(children)`.
      */
-    public var childrenProp:Null<Array<IntoElement>> = null;
+    @:noCompletion public var childrenProp:Null<Array<IntoElement>> = null;
 
     /**
      * The identity of this component in its parent (`.at(key)`, or the

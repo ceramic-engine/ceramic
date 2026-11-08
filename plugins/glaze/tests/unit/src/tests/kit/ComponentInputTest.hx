@@ -90,7 +90,7 @@ class ComponentInputTest extends TestCase {
         app.update(cx -> {
             window = Window.open(cx, {width: width, height: height, scaleFactor: 2, autoDraw: false, bindInput: false}, (window, cx) -> {
                 view = cx.newEntity((viewCx:Context<V>) -> build(window, viewCx));
-                return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
+                return Root.component().child(view);
             });
         });
         runUntilParked();

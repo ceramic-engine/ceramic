@@ -27,7 +27,7 @@ class MainScene extends ceramic.Scene {
     var ui:Glaze;
 
     override function create() {
-        ui = new Glaze((window, cx) -> Counter.component());
+        ui = new Glaze(Counter.component());
         ui.size(width, height);
         add(ui);
     }
@@ -56,13 +56,15 @@ class Counter extends Component {
 
 `Glaze` is a regular Ceramic visual: it resizes its window with it and closes it when destroyed. `ui.window` gives the GPUI window behind it. `Glaze.app` is the GPUI app context (the `cx` of the signatures) for the calls made outside a render, such as `Glaze.app.bindKeys([...])`.
 
-For the components (`glaze.kit`), make a `Root` the root view, which applies the theme. The kit initializes itself the first time it is needed; a setting made before the first render (`Theme.change(ThemeMode.Dark, null, Glaze.app)`, `Kit.setLocale`...) initializes it too, then applies:
+`new Glaze(...)` takes the root view directly: a component placed with `X.component()...`, an entity view, any `AnyView`, or the `(window, cx) -> AnyView` builder of GPUI's `open_window`.
+
+For the components (`glaze.kit`), put the view under the kit's window root. The kit initializes itself the first time it is needed; a setting made before the first render (`Theme.change(ThemeMode.Dark, null, Glaze.app)`, `Kit.setLocale`...) initializes it too, then applies:
 
 ```haxe
-ui = new Glaze(Root.builder(AppView.component()));
+ui = new Glaze(Kit.window(AppView.component()));
 ```
 
-`Root.builder(view)` is the root view builder `new Glaze(...)` takes: it creates the `Root` of the window around `view`, a `Component`, an entity view or any `AnyView`. Then place the components like your own, with camelCase names: `Button.component('save').primary().label('Save').onClick(() -> save())`. gpui-kit's documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences.
+`Kit.window(view)` wraps the view in the kit's window root (`Root`): theme on the window body, dialogs, sheets, notifications, tooltips, text selection. It creates no window itself; `new Glaze(...)` carries the GPUI window. `Root.component().child(view)` is the explicit equivalent (`Root` is itself a `Component`). Then place the components like your own, with camelCase names: `Button.component('save').primary().label('Save').onClick(() -> save())`. gpui-kit's documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences.
 
 ## Components
 

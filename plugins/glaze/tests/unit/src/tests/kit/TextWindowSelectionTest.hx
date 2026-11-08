@@ -409,9 +409,9 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
             glaze.kit.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
         });
         var content:Entity<V> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             content = rootCx.newEntity(build);
-            return new Root(content, window, rootCx);
+            return content;
         });
         contexts.push(opened.cx);
         opened.cx.runUntilParked();

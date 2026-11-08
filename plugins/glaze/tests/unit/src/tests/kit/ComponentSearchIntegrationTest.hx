@@ -78,7 +78,7 @@ class ComponentSearchIntegrationTest extends TestCase {
         app.update(cx -> {
             window = Window.open(cx, {width: 640, height: 480, scaleFactor: 2, autoDraw: false, bindInput: false}, (window, cx) -> {
                 view = cx.newEntity((viewCx:Context<V>) -> build(window, viewCx));
-                return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
+                return Root.component().child(view);
             });
         });
         app.update(_ -> window.setActive(true));

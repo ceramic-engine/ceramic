@@ -19,6 +19,7 @@ import glaze.Point;
 import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
+import glaze.kit.base.Root;
 
 /**
  * A window driven like GPUI's `VisualTestContext`: the app draws every dirty
@@ -53,6 +54,28 @@ class VisualTestContext {
         final window = Window.open(app, {width: width, height: height, scaleFactor: scaleFactor, autoDraw: false, active: false, bindInput: false}, (window, cx) -> {
             view = cx.newEntity((viewCx:Context<V>) -> build(window, viewCx));
             return view;
+        });
+        // `open_window` draws once
+        app.update(_ -> window.draw());
+        final cx = new VisualTestContext(app, dispatcher, window);
+        cx.runUntilParked();
+        return {view: view, cx: cx};
+    }
+
+    /**
+     * Like `addWindowView`, with the view `build` returns hosted in a kit
+     * `Root` (Rust `common::open_window`): the window's root view is the
+     * root, `view` is the content. `build` gets the `App` of the window
+     * builder (Rust `&mut App`) and returns the content entity.
+     */
+    public static function addWindowRoot<V:Model & Render>(app:App, dispatcher:TestDispatcher, build:(Window, App) -> Entity<V>, width:Float = 1920, height:Float = 1080, scaleFactor:Float = 2):{view:Entity<V>, cx:VisualTestContext} {
+        if (app.onEffectsFlushed == null) {
+            app.onEffectsFlushed = drawDirtyWindows;
+        }
+        var view:Entity<V> = null;
+        final window = Window.open(app, {width: width, height: height, scaleFactor: scaleFactor, autoDraw: false, active: false, bindInput: false}, (window, cx) -> {
+            view = build(window, cx);
+            return Root.component().child(view);
         });
         // `open_window` draws once
         app.update(_ -> window.draw());

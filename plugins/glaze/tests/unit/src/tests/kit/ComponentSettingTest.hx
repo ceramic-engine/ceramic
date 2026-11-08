@@ -90,10 +90,10 @@ class ComponentSettingTest extends TestCase {
             new SettingPage('Editor').group(new SettingGroup().item(item('theme editor'))),
         ];
         var host:Null<Entity<SettingsHost>> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final view = rootCx.newEntity((_:Context<SettingsHost>) -> new SettingsHost(pages));
             host = view;
-            return new Root(view, window, rootCx);
+            return view;
         }, 1000, 700);
         contexts.push(opened.cx);
         draw(opened.cx);
@@ -296,9 +296,9 @@ class ComponentSettingTest extends TestCase {
 
     function testGroupVariantOverridesTheSettingsDefault() {
         function openWindow(pages:Array<SettingPage>, outline:Bool):{first:Bounds, second:Bounds} {
-            final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+            final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
                 final view = rootCx.newEntity((_:Context<VariantHost>) -> new VariantHost(pages, outline));
-                return new Root(view, window, rootCx);
+                return view;
             }, 1000, 700);
             contexts.push(opened.cx);
             draw(opened.cx);

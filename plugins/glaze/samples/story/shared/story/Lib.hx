@@ -82,7 +82,7 @@ class Lib {
                 }
             });
 
-            return cx.newEntity((rootCx:Context<Root>) -> new Root(storyRoot, window, rootCx));
+            return Root.component().child(storyRoot);
         });
         window.activateWindow();
         // TODO: `window.set_window_title(title)`: the app sets Ceramic's

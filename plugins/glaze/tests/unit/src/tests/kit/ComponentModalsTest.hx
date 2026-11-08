@@ -80,9 +80,9 @@ class ComponentModalsTest extends TestCase {
             cx.setReduceMotion(true);
         });
         final clicks = new Counter();
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final view = rootCx.newEntity((_:Context<DialogHost>) -> new DialogHost(clicks));
-            return new Root(view, window, rootCx);
+            return view;
         }, width, height);
         contexts.push(opened.cx);
         opened.cx.update((window, _) -> window.draw());
@@ -1162,18 +1162,15 @@ class ComponentModalsTest extends TestCase {
             // This test checks layer hosting, independently of animation time.
             cx.setReduceMotion(true);
         });
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
-            if (cached != null) {
+        final cx = cached != null
+            ? VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
                 final content = rootCx.newEntity((_:Context<CachedContent>) -> new CachedContent(cached));
-                final view = rootCx.newEntity((_:Context<CachedContentHost>) -> new CachedContentHost(content));
-                return new Root(view, window, rootCx);
-            }
-            final view = rootCx.newEntity((_:Context<PlainView>) -> new PlainView());
-            return new Root(view, window, rootCx);
-        }, 800, 600);
-        contexts.push(opened.cx);
-        opened.cx.update((window, _) -> window.draw());
-        return opened.cx;
+                return rootCx.newEntity((_:Context<CachedContentHost>) -> new CachedContentHost(content));
+            }, 800, 600).cx
+            : VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> rootCx.newEntity((_:Context<PlainView>) -> new PlainView()), 800, 600).cx;
+        contexts.push(cx);
+        cx.update((window, _) -> window.draw());
+        return cx;
     }
 
     static function openAndNotify(window:Window, cx:App):Void {
@@ -1237,9 +1234,9 @@ class ComponentModalsTest extends TestCase {
 
     function workspace():{cx:VisualTestContext, view:Entity<Workspace>} {
         var workspace:Null<Entity<Workspace>> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             workspace = rootCx.newEntity((viewCx:Context<Workspace>) -> new Workspace(viewCx.focusHandle().tabStop(true)));
-            return new Root(workspace, window, rootCx);
+            return workspace;
         }, 800, 700);
         contexts.push(opened.cx);
         opened.cx.update((window, _) -> window.setActive(true));

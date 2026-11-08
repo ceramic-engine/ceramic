@@ -83,9 +83,9 @@ class NullSlotTest extends TestCase {
 
     function open(build:(Array<String>) -> IntoElement):{cx:VisualTestContext, log:Array<String>} {
         final log:Array<String> = [];
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
+        final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             final content = rootCx.newEntity((c:Context<NullSlotView>) -> new NullSlotView(log, build));
-            return new Root(content, window, rootCx);
+            return content;
         }, 600, 400);
         contexts.push(opened.cx);
         opened.cx.runUntilParked();

@@ -40,7 +40,7 @@ class Base {
         glaze.kit.base.input.InputKeyBindings.init(cx);
         Tree.TreeState.init(cx);
         glaze.kit.base.text.Text.init(cx);
-        Root.init(cx);
+        Root.bindKeys(cx);
     }
 
 }
