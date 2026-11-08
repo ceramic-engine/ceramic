@@ -51,7 +51,7 @@ class Select implements RenderOnce implements Styled implements ParentElement {
     /**
      * Rust `select::init`: binds the select keys.
      */
-    public static function init(cx:AppContext):Void {
+    public static function bindKeys(cx:AppContext):Void {
         (cx : App).bindKeys([
             new KeyBinding("space", new Confirm(false), "Select && !Input"),
             new KeyBinding("up", new SelectUp(), CONTEXT),

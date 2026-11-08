@@ -19,6 +19,7 @@ class Tests {
         runner.add(new tests.ReactivityTest());
         runner.add(new tests.EffectsOrderTest());
         runner.add(new tests.RenderOnceComponentTest());
+        runner.add(new tests.ComponentAsRenderOnceTest());
         runner.add(new tests.WriteDuringRenderTest());
         runner.add(new tests.StyleTest());
         runner.add(new tests.LayoutTest());

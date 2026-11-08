@@ -453,7 +453,10 @@ class InputGroupAddon implements RenderOnce implements Styled implements ParentE
     static function componentOf(child:AnyElement):Null<RenderOnce> {
         final element = child.element;
         if (element is ViewElement) {
-            return @:privateAccess (cast element : ViewElement).component;
+            final view:ViewElement = cast element;
+            final component:Null<RenderOnce> = @:privateAccess view.component;
+            // A stateless `glaze.Component` is held apart (it is a `RenderOnce` too)
+            return component != null ? component : @:privateAccess view.glazeComponent;
         }
         return null;
     }

@@ -58,7 +58,7 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
     static inline final CONTEXT:String = 'Carousel';
 
     /** Rust `carousel::init`: the navigation keys of the `Carousel` context. */
-    public static function init(cx:AppContext):Void {
+    public static function bindKeys(cx:AppContext):Void {
         (cx : App).bindKeys([
             new KeyBinding('left', new SelectLeft(), CONTEXT),
             new KeyBinding('right', new SelectRight(), CONTEXT),

@@ -30,7 +30,7 @@ class Text implements RenderOnce {
     }
 
     /** Rust `text::init`. */
-    public static function init(cx:App):Void {
+    public static function bindKeys(cx:App):Void {
         Inline.init(cx);
         TextViewState.init(cx);
     }

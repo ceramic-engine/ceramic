@@ -37,7 +37,7 @@ class Combobox implements RenderOnce implements Styled implements ParentElement 
     /**
      * Rust `combobox::init`: binds the combobox keys.
      */
-    public static function init(cx:AppContext):Void {
+    public static function bindKeys(cx:AppContext):Void {
         (cx : App).bindKeys([
             new KeyBinding("up", new SelectUp(), CONTEXT),
             new KeyBinding("down", new SelectDown(), CONTEXT),

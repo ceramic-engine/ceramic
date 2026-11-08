@@ -52,7 +52,7 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
 
     static inline final CONTEXT:String = "NumberInput";
 
-    public static function init(cx:AppContext):Void {
+    public static function bindKeys(cx:AppContext):Void {
         (cx : App).bindKeys([
             new KeyBinding("up", new Increment(), CONTEXT),
             new KeyBinding("down", new Decrement(), CONTEXT),

@@ -15,7 +15,8 @@ package glaze;
  * Every implementation with a public constructor gets a static
  * `component(...)` with the constructor's parameters (`RenderOnceMacro`):
  * `Button.component('save')` is `new Button('save')`, the notation of
- * `glaze.Component`.
+ * `glaze.Component`. A `glaze.Component` is a `RenderOnce` too, rendered
+ * under the same element id path.
  */
 @:autoBuild(glaze.RenderOnceMacro.build())
 interface RenderOnce {

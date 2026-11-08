@@ -47,13 +47,30 @@ abstract IntoElement(AnyElement) to AnyElement {
         return new IntoElement(text != null ? new Text(null, text).intoAnyElement() : null);
     }
 
-    @:from static inline function fromComponent(component:RenderOnce):IntoElement {
-        return new IntoElement(component != null ? ViewElement.forComponent(component).intoAnyElement() : null);
-    }
-
-    /** A `glaze.Component` placed with `X.component()` (see `Component`) */
+    /**
+     * A `glaze.Component` placed with `X.component()` (see `Component`).
+     * Declared before `fromComponent`: a `Component` is a `RenderOnce` too,
+     * and the first matching conversion is the one used.
+     */
     @:from static inline function fromGlazeComponent(component:Component):IntoElement {
         return new IntoElement(component != null ? component.__intoAnyElement() : null);
+    }
+
+    @:from static inline function fromComponent(component:RenderOnce):IntoElement {
+        return new IntoElement(component != null ? renderOnceElement(component) : null);
+    }
+
+    /**
+     * The element of a `RenderOnce`. A `glaze.Component` reached through a
+     * value typed `RenderOnce` (a `ChildElement`, a `ListDelegateItem`...)
+     * is placed as a component: its `.at(key)` is kept, and a persistent one
+     * is found by its identity.
+     */
+    static function renderOnceElement(component:RenderOnce):AnyElement {
+        if (Std.isOfType(component, Component)) {
+            return (cast component : Component).__intoAnyElement();
+        }
+        return ViewElement.forComponent(component).intoAnyElement();
     }
 
     /**

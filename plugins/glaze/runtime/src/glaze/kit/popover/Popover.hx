@@ -50,7 +50,7 @@ using glaze.kit.ThemeStyled;
  */
 class Popover implements RenderOnce implements Styled implements ParentElement {
 
-    public static function init(_:AppContext):Void {}
+    public static function bindKeys(_:AppContext):Void {}
 
     /**
      * How long a dropdown takes to settle into place after it opens, in seconds.

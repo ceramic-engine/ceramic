@@ -91,7 +91,7 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
     var overlayClosableValue:Bool = true;
 
     /** Rust `init` registers nothing. */
-    public static function init(_:AppContext):Void {}
+    public static function bindKeys(_:AppContext):Void {}
 
     /**
      * Creates a new Sheet.

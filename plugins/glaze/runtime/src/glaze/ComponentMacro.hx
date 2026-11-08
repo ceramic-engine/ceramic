@@ -34,13 +34,17 @@ private class PropInfo {
     /** Index of the prop in the "set" masks */
     public final index:Int;
 
-    public function new(name:String, storage:String, type:ComplexType, pos:Position, observable:Bool, index:Int) {
+    /** The documentation of the field, given to the generated setter */
+    public final doc:Null<String>;
+
+    public function new(name:String, storage:String, type:ComplexType, pos:Position, observable:Bool, index:Int, doc:Null<String>) {
         this.name = name;
         this.storage = storage;
         this.type = type;
         this.pos = pos;
         this.observable = observable;
         this.index = index;
+        this.doc = doc;
     }
 
 }
@@ -57,9 +61,14 @@ private class PropInfo {
  *   too, as well as those of `children`, stored as `childrenProp`), and
  *   generates the chained setter `x(value):X`, unless the class defines a
  *   method `x`;
- * - generates `.at(key)`, `.child(...)`, `.children(...)`, the static
- *   `component(...)` with the parameters of the constructor, and the
- *   internals used by `ComponentBuilder`;
+ * - generates `.at(key)`, `.child(...)`, `.children(...)` (not on a
+ *   `ParentElement`, whose children go through `extend` and
+ *   `ParentElementTools`), the static `component(...)` with the parameters
+ *   (and type parameters, constraints included) of the constructor, and
+ *   the internals used by `ComponentBuilder`. A stateless class keeps a
+ *   `component` it writes itself (a stateful control taking its state
+ *   entity), and gets none when its own constructor is not public (as a
+ *   `RenderOnce`);
  * - in persistent mode, makes the data props and the `@observe` fields
  *   observable with tracker's macros (the class is not an entity: the same
  *   path as `tracker.Observable` on a plain class), turns `@compute`
@@ -212,7 +221,7 @@ class ComponentMacro {
             if (fieldsByName.exists(storage)) {
                 Context.error('The @prop "${field.name}" is stored as "$storage", which the class already defines', field.pos);
             }
-            props.push(new PropInfo(field.name, storage, type, field.pos, observable, props.length));
+            props.push(new PropInfo(field.name, storage, type, field.pos, observable, props.length, field.doc));
             renames.set(field.name, storage);
             field.name = storage;
             fieldsByName.set(storage, true);
@@ -229,9 +238,16 @@ class ComponentMacro {
             field.meta = meta;
         }
 
+        // A `ParentElement` takes its children through `extend` (its own
+        // `child` / `children`, or those of `ParentElementTools`): the
+        // children of `Component` are not generated nor renamed
+        final parentElement = implementsInterface(cls, 'glaze.ParentElement');
+
         // Reads of the props (and of `children`, stored as `childrenProp`
         // in the base class) in the class's own code go to the storage fields
-        renames.set('children', 'childrenProp');
+        if (!parentElement) {
+            renames.set('children', 'childrenProp');
+        }
         {
             for (field in fields) {
                 switch field.kind {
@@ -287,7 +303,7 @@ class ComponentMacro {
                     expr: macro $b{body}
                 }),
                 access: [APublic],
-                doc: 'Sets the `${prop.name}` prop.',
+                doc: prop.doc != null ? prop.doc : 'Sets the `${prop.name}` prop.',
                 meta: []
             });
         }
@@ -311,7 +327,7 @@ class ComponentMacro {
                 meta: []
             });
         }
-        if (!methodNames.exists('child')) {
+        if (!parentElement && !methodNames.exists('child')) {
             final overrideAccess = parentFields.exists('child') ? [APublic, AOverride] : [APublic];
             newFields.push({
                 pos: pos,
@@ -336,7 +352,7 @@ class ComponentMacro {
                 meta: []
             });
         }
-        if (!methodNames.exists('children')) {
+        if (!parentElement && !methodNames.exists('children')) {
             final overrideAccess = parentFields.exists('children') ? [APublic, AOverride] : [APublic];
             newFields.push({
                 pos: pos,
@@ -365,7 +381,9 @@ class ComponentMacro {
         }
 
         // The element id naming the class (a stateless component renders
-        // under it, a persistent one is checked against it)
+        // under it, a persistent one is checked against it): the name a
+        // `RenderOnce` of the same class renders under (`ViewElement.forComponent`),
+        // so a class keeps its element states when it becomes a component
         if (!cls.isAbstract) {
             newFields.push({
                 pos: pos,
@@ -383,7 +401,7 @@ class ComponentMacro {
                     expr: macro {
                         var id = __classElementId;
                         if (id == null) {
-                            id = glaze.ElementId.Name($v{classPath});
+                            id = glaze.ElementId.Name(Type.getClassName(Type.getClass(this)));
                             __classElementId = id;
                         }
                         return id;
@@ -432,15 +450,39 @@ class ComponentMacro {
             }
         }
         final ctorArgExprs:Array<Expr> = [for (arg in ctorArgs) macro $i{arg.name}];
-        final typeParams:Array<TypeParamDecl> = [for (p in cls.params) {name: p.name}];
+        // The type parameters of the class, with their constraints
+        final typeParams:Array<TypeParamDecl> = [];
+        for (param in cls.params) {
+            final constraints:Array<ComplexType> = switch param.t {
+                case TInst(ref, _):
+                    switch ref.get().kind {
+                        case KTypeParameter(list): [for (t in list) TypeTools.toComplexType(t)];
+                        case _: [];
+                    }
+                case _: [];
+            }
+            typeParams.push({name: param.name, constraints: constraints});
+        }
 
-        if (!cls.isAbstract) {
+        // A stateless class writing its own `component` keeps it; one whose
+        // own constructor is not public gets none (as a `RenderOnce`)
+        var generateComponent = !cls.isAbstract;
+        if (!persistent && methodNames.exists('component')) {
+            generateComponent = false;
+        }
+        if (!persistent && constructor != null && (constructor.access == null || constructor.access.indexOf(APublic) == -1)) {
+            generateComponent = false;
+        }
+
+        if (generateComponent) {
             final componentArgs:Array<FunctionArg> = [for (arg in ctorArgs) {name: arg.name, type: arg.type, opt: arg.opt, value: arg.value, meta: arg.meta}];
             var componentBody:Expr;
             if (persistent) {
                 componentArgs.push({name: 'pos', type: macro :haxe.PosInfos, opt: true});
                 final statements:Array<Expr> = [];
-                statements.push(macro final proto:$thisType = cast Type.createEmptyInstance(cast $p{cls.pack.concat([cls.name])}));
+                // The class by its name: the generated code is in the class, where
+                // a private class is not reachable by its full path
+                statements.push(macro final proto:$thisType = cast Type.createEmptyInstance(cast $i{cls.name}));
                 // The identity: the position of the call, scoped by the class (two
                 // classes on one line do not collide; the same class does, hence `.at`)
                 statements.push(macro proto.__key = glaze.ElementId.NamedChild(glaze.ElementId.CodeLocation(pos.fileName, pos.lineNumber), $v{classPath}));
@@ -455,7 +497,7 @@ class ComponentMacro {
                 componentBody = macro return new $thisPath($a{ctorArgExprs});
             }
             if (fieldsByName.exists('component')) {
-                Context.error('A component class cannot define "component": the static component() method is generated', pos);
+                Context.error('A persistent component class cannot define "component": the static component() method is generated', pos);
             }
             newFields.push({
                 pos: pos,
@@ -485,6 +527,24 @@ class ComponentMacro {
         }
 
         return fields.concat(newFields);
+    }
+
+    /**
+     * Whether `cls` implements the interface `path` (directly, through an
+     * interface extending it, or through a parent class).
+     */
+    static function implementsInterface(cls:ClassType, path:String):Bool {
+        for (item in cls.interfaces) {
+            final iface = item.t.get();
+            final ifacePath = iface.pack.length > 0 ? iface.pack.join('.') + '.' + iface.name : iface.name;
+            if (ifacePath == path || implementsInterface(iface, path)) {
+                return true;
+            }
+        }
+        if (cls.superClass != null) {
+            return implementsInterface(cls.superClass.t.get(), path);
+        }
+        return false;
     }
 
     /**

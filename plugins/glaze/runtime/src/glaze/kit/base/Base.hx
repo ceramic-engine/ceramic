@@ -29,17 +29,17 @@ class Base {
         GlobalState.init(cx);
         Dialog.DialogKeys.init(cx);
         FocusTrap.init(cx);
-        Popover.init(cx);
-        Sheet.init(cx);
+        Popover.bindKeys(cx);
+        Sheet.bindKeys(cx);
         // Rust order: sheet, combobox, color_picker, select, number_input
-        Combobox.init(cx);
+        Combobox.bindKeys(cx);
         ColorPicker.ColorPickerState.init(cx);
-        Select.init(cx);
-        NumberInput.init(cx);
+        Select.bindKeys(cx);
+        NumberInput.bindKeys(cx);
         TimeField.TimeFieldState.init(cx);
         glaze.kit.base.input.InputKeyBindings.init(cx);
         Tree.TreeState.init(cx);
-        glaze.kit.base.text.Text.init(cx);
+        glaze.kit.base.text.Text.bindKeys(cx);
         Root.bindKeys(cx);
     }
 

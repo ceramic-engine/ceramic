@@ -75,7 +75,7 @@ class DataTable<D:TableDelegate> implements RenderOnce implements Sizable implem
     static inline final CONTEXT:String = "DataTable";
 
     /** Rust `table::init` (`data_table::init`): binds the table keys. */
-    public static function init(cx:AppContext):Void {
+    public static function bindKeys(cx:AppContext):Void {
         (cx : App).bindKeys([
             new KeyBinding("escape", new Cancel(), CONTEXT),
             new KeyBinding("up", new SelectUp(), CONTEXT),

@@ -59,7 +59,7 @@ class Sheet implements RenderOnce implements Styled {
 
     var onCloseHandler:CloseHandler = (_, _, _) -> {};
 
-    public static function init(cx:AppContext):Void {
+    public static function bindKeys(cx:AppContext):Void {
         (cx:App).bindKeys([new KeyBinding('escape', new Cancel(), CONTEXT)]);
     }
 

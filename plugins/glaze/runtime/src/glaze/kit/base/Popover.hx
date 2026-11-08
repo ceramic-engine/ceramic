@@ -198,7 +198,7 @@ class Popover implements RenderOnce implements Styled {
 
     static inline final CONTENT_CONTEXT = 'PopoverContent';
 
-    public static function init(cx:AppContext):Void {
+    public static function bindKeys(cx:AppContext):Void {
         (cx:App).bindKeys([
             new KeyBinding('escape', new Cancel(), CONTEXT),
             new KeyBinding('enter', new Confirm(false), CONTEXT),

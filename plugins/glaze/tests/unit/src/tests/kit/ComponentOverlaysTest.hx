@@ -264,7 +264,7 @@ class ComponentOverlaysTest extends TestCase {
         app.update(cx -> {
             glaze.kit.base.GlobalState.init(cx);
             glaze.kit.theme.Theme.init(cx);
-            Popover.init(cx);
+            Popover.bindKeys(cx);
         });
         final changes:Array<Bool> = [];
         final cx = open((_, _) -> new ScriptView((_, _) -> Popover.component('runtime-popover')
@@ -289,7 +289,7 @@ class ComponentOverlaysTest extends TestCase {
         app.update(cx -> {
             glaze.kit.base.GlobalState.init(cx);
             glaze.kit.theme.Theme.init(cx);
-            Popover.init(cx);
+            Popover.bindKeys(cx);
         });
         final cx = open((_, _) -> new ScriptView((_, _) -> Popover.component('default-open-popover')
             .defaultOpen(true)

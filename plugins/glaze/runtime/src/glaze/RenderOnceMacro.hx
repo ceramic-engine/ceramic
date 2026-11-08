@@ -15,7 +15,11 @@ import haxe.macro.Type;
  * so a component is placed in a tree as `X.component(...)`, the notation of
  * `glaze.Component`. Nothing is generated for an abstract class, a class
  * without a public constructor of its own, or a class that already defines
- * `component` (a hand written one, like the stateful `Input.component()`).
+ * `component` (a hand written one, like the stateful `Input.component()`),
+ * or a `glaze.Component` (a `RenderOnce` too, built by `ComponentMacro`,
+ * which generates its `component(...)`: the two macros may run in any order
+ * on such a class, and this one more than once when the class also
+ * implements an interface extending `RenderOnce`).
  */
 class RenderOnceMacro {
 
@@ -27,6 +31,7 @@ class RenderOnceMacro {
         if (localClass == null) return null;
         final cls = localClass.get();
         if (cls.isInterface || cls.isAbstract) return null;
+        if (extendsComponent(cls)) return null;
 
         final fields = Context.getBuildFields();
 
@@ -93,6 +98,21 @@ class RenderOnceMacro {
 
         return fields;
 
+    }
+
+    /**
+     * Whether `cls` descends from `glaze.Component`.
+     */
+    static function extendsComponent(cls:ClassType):Bool {
+        var parent = cls.superClass;
+        while (parent != null) {
+            final parentClass = parent.t.get();
+            if (parentClass.name == 'Component' && parentClass.pack.join('.') == 'glaze') {
+                return true;
+            }
+            parent = parentClass.superClass;
+        }
+        return false;
     }
 
     #end

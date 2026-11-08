@@ -100,14 +100,14 @@ class Kit {
         glaze.kit.diff.DiffActions.init(cx);
         glaze.kit.time.DatePicker.DatePickerState.init(cx);
         glaze.kit.dock.DockSkin.init(cx);
-        glaze.kit.sheet.Sheet.init(cx);
+        glaze.kit.sheet.Sheet.bindKeys(cx);
         glaze.kit.list.ListState.init(cx);
         glaze.kit.command.CommandState.init(cx);
-        glaze.kit.carousel.Carousel.init(cx);
+        glaze.kit.carousel.Carousel.bindKeys(cx);
         glaze.kit.notification.Notification.NotificationList.init(cx);
         // Rust order: ... popover, questionnaire, menu, table, tooltip
         glaze.kit.menu.Menus.init(cx);
-        glaze.kit.table.DataTable.init(cx);
+        glaze.kit.table.DataTable.bindKeys(cx);
     }
 
     /**

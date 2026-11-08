@@ -22,10 +22,14 @@ package glaze;
  * ```
  *
  * Every `@prop` field gets a chained setter of the same name (unless the
- * class defines that method itself), and the class gets a static
- * `component(...)` with the parameters of its constructor, `.at(key)`,
- * `.child(...)` and `.children(...)`. Inside the class the prop is read by
- * its own name (`value`); the field itself is stored as `valueProp`.
+ * class defines that method itself), documented by the field's doc comment,
+ * and the class gets a static `component(...)` with the parameters of its
+ * constructor, `.at(key)`, `.child(...)` and `.children(...)` (a
+ * `ParentElement` keeps its own children, given through `extend`). Inside
+ * the class the prop is read by its own name (`value`); the field itself is
+ * stored as `valueProp`. A stateless component may write its own static
+ * `component` (a control taking its state entity), and gets none when its
+ * constructor is not public.
  *
  * **Stateless component**: a class with only `@prop` fields and methods. It
  * is built and rendered at each render of its parent, like a `RenderOnce`:
@@ -53,6 +57,13 @@ package glaze;
  * costs. A persistent instance is drawn through a small carrier entity
  * (`ComponentBuilder.ComponentHost`).
  *
+ * **A `RenderOnce`**: a component is accepted wherever a `RenderOnce` is
+ * (`ChildElement`, `ListDelegateItem`, code typed `RenderOnce`), and placed
+ * the same way from there: a stateless one renders under the element id
+ * `ElementId.Name(className)` of a `RenderOnce` of the same class (or its
+ * `.at(key)`), so its keyed element states are the ones a `RenderOnce`
+ * had; a persistent one is found by its identity.
+ *
  * **Owner**: a persistent component is a `tracker.Owner`, its lifecycle
  * being the one of its host. `this` is a valid owner for tracker events
  * (`model.onChange(this, ...)`), `Timer.interval(this, ...)`, tweens and
@@ -62,7 +73,7 @@ package glaze;
  * below throw if reached anyway).
  */
 @:autoBuild(glaze.ComponentMacro.build())
-abstract class Component implements tracker.Owner {
+abstract class Component implements RenderOnce implements tracker.Owner {
 
     /**
      * The children given by the parent with `.child(...)` / `.children(...)`,
