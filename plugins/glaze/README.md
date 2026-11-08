@@ -16,7 +16,7 @@ app:
         - glaze
 ```
 
-Add a `Glaze` visual to a scene, with the view it shows:
+Add a `Glaze` visual to a scene, with the component it shows:
 
 ```haxe
 import glaze.*;
@@ -27,7 +27,7 @@ class MainScene extends ceramic.Scene {
     var ui:Glaze;
 
     override function create() {
-        ui = new Glaze((window, cx) -> cx.newEntity((cx:Context<Counter>) -> new Counter()));
+        ui = new Glaze((window, cx) -> Counter.component());
         ui.size(width, height);
         add(ui);
     }
@@ -38,37 +38,31 @@ class MainScene extends ceramic.Scene {
 
 }
 
-class Counter extends Model implements Render {
+class Counter extends Component {
 
     @observe var count:Int = 0;
 
-    public function new() {
-        super();
-    }
-
-    public function render(window:Window, cx:Context<Dynamic>):IntoElement {
+    function render(window:Window, cx:App):IntoElement {
         return div().p4().textColor(hsla(0, 0, 0.9, 1)).fontFamily('Inter')
             .child(
                 div().id('button').px3().py1().roundedMd().bg(hsla(0.6, 0.6, 0.5, 1))
-                    .onClick((_, _, _) -> count++)
-                    .child('Clicked ' + count + ' times')
+                    .onClick(() -> count++)
+                    .child('Clicked $count times')
             );
     }
 
 }
 ```
 
-`Glaze` is a regular Ceramic visual: it resizes its window with it and closes it when destroyed. `ui.window` gives the GPUI window behind it.
+`Glaze` is a regular Ceramic visual: it resizes its window with it and closes it when destroyed. `ui.window` gives the GPUI window behind it. `Glaze.app` is the GPUI app context (the `cx` of the signatures) for the calls made outside a render, such as `Glaze.app.bindKeys([...])`.
 
-For the components, wrap your view in a `Root`, which applies the theme. The kit initializes itself the first time it is needed; a setting made before the first render (`Theme.change`, `Kit.setLocale`...) initializes it too, then applies:
+For the components (`glaze.kit`), make a `Root` the root view, which applies the theme. The kit initializes itself the first time it is needed; a setting made before the first render (`Theme.change(ThemeMode.Dark, null, Glaze.app)`, `Kit.setLocale`...) initializes it too, then applies:
 
 ```haxe
 ui = new Glaze(Root.builder(AppView.component()));
 ```
 
-`Root.builder(view)` is the root view builder `new Glaze(...)` takes: it creates the `Root` of the window around `view`, a `Component`, an entity view or any `AnyView`. The explicit form is `(window, cx) -> cx.newEntity((cx:Context<Root>) -> new Root(view, window, cx))`.
-
-Then use them like in Rust, with camelCase names: `new Button('save').primary().label('Save').onClick(...)`. gpui-kit's documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences.
+`Root.builder(view)` is the root view builder `new Glaze(...)` takes: it creates the `Root` of the window around `view`, a `Component`, an entity view or any `AnyView`. Then place the components like your own, with camelCase names: `Button.component('save').primary().label('Save').onClick(() -> save())`. gpui-kit's documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences.
 
 ## Components
 
@@ -96,7 +90,7 @@ Inside the class a prop is read by its name (`label`); outside, the field is `la
 
 ## Samples
 
-In `samples/`: `basic` (a small interactive view), `kit` (a tour of the components), `story` (gpui-kit's full gallery), `textfield` (text input with IME and clipboard) and `gpui-examples` (GPUI's own examples). Run one with `cd samples/basic && ceramic clay run web`.
+The `glaze-settings` sample of [ceramic-samples](https://github.com/ceramic-engine/ceramic-samples) is the reference for the component pattern. In `samples/`: `basic` (a small interactive view), `kit` (a tour of the components), `story` (gpui-kit's full gallery), `textfield` (text input with IME and clipboard) and `gpui-examples` (GPUI's own examples). Run one with `cd samples/basic && ceramic clay run web`.
 
 ## Tests
 
