@@ -239,11 +239,11 @@ class Gallery extends Model implements Render {
             .child(hFlex().gap2().flexWrap()
                 .child(Popover.component('popover').anchor(Anchor.TopLeft).arrow(true)
                     .trigger(Button.component('popover-trigger').outline().label('Popover'))
-                    .child(vFlex().gap1().w(px(200.)).child('A popover').child(Label.component('Escape or an outside click closes it').textXs())))
+                    .child(vFlex().gap1().w(px(200.)).child('A popover').child(glaze.kit.label.Label.component('Escape or an outside click closes it').textXs())))
                 .child(Button.component('tooltip').outline().label('Tooltip').tooltip('Shown after a delay'))
                 .child(HoverCard.component('hover-card')
                     .trigger(Button.component('hover-trigger').link().label('@gpui-kit'))
-                    .content((_, _, _) -> vFlex().w(px(200.)).gap1().child('GPUI Kit').child(Label.component('Components for GPUI').textXs())))
+                    .content((_, _, _) -> vFlex().w(px(200.)).gap1().child('GPUI Kit').child(glaze.kit.label.Label.component('Components for GPUI').textXs())))
                 .child(Button.component('menu').outline().label('Menu').dropdownCaret(true).dropdownMenu(galleryMenu))
                 .child(DropdownButton.component('split').button(Button.component('split-action').label('Save')).dropdownMenu(galleryMenu)))
             .child(hFlex().gap2().flexWrap()
@@ -276,7 +276,7 @@ class Gallery extends Model implements Render {
     }
 
     function section(title:String, content:IntoElement):IntoElement {
-        return vFlex().gap2().child(Label.component(title).textSm().fontSemibold()).child(content);
+        return vFlex().gap2().child(glaze.kit.label.Label.component(title).textSm().fontSemibold()).child(content);
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
@@ -290,21 +290,21 @@ class Gallery extends Model implements Render {
                     .gap5()
                     .child(
                         hFlex().gap3()
-                            .child(Label.component('gpui-kit gallery').textXl().fontBold())
-                            .child(Link.component('toggle').child('Toggle theme').onClick((_, _, cx) -> toggleTheme(cx)))
+                            .child(glaze.kit.label.Label.component('gpui-kit gallery').textXl().fontBold())
+                            .child(glaze.kit.link.Link.component('toggle').child('Toggle theme').onClick((_, _, cx) -> toggleTheme(cx)))
                             .child(Kbd.component(Keystroke.parse('t')))
                     )
                     .child(section('Buttons and controls', controls(cx)))
                     .child(section('Overlays and menus', overlays(cx)))
                     .child(section('Scrolling', scrolling(cx)))
                     .child(section('Label, Kbd, Link', hFlex().gap3()
-                        .child(Label.component('Name').secondary('(optional)'))
-                        .child(Label.component('Hello World').highlights('world'))
+                        .child(glaze.kit.label.Label.component('Name').secondary('(optional)'))
+                        .child(glaze.kit.label.Label.component('Hello World').highlights('world'))
                         .child(Kbd.component(Keystroke.parse('cmd-shift-p')))
-                        .child(Link.component('docs').href('https://gpui-kit.com').child('gpui-kit.com'))))
+                        .child(glaze.kit.link.Link.component('docs').href('https://gpui-kit.com').child('gpui-kit.com'))))
                     .child(section('Badge and Tag', hFlex().gap4()
-                        .child(Badge.component().count(3).child(Icon.component(IconName.Bell).large()))
-                        .child(Badge.component().dot().child(Icon.component(IconName.Inbox).large()))
+                        .child(Badge.component().count(3).child(glaze.kit.Icon.component(IconName.Bell).large()))
+                        .child(Badge.component().dot().child(glaze.kit.Icon.component(IconName.Inbox).large()))
                         .child(Tag.primary().child('Primary'))
                         .child(Tag.success().outline().child('Success'))
                         .child(Tag.color(ColorName.Purple).child('Purple'))))
@@ -317,7 +317,7 @@ class Gallery extends Model implements Render {
                     .child(section('Progress, Spinner, Skeleton, Rating', vFlex().gap3()
                         .child(Progress.component('progress').value(60.))
                         .child(hFlex().gap3()
-                            .child(Spinner.component())
+                            .child(glaze.kit.spinner.Spinner.component())
                             .child(Skeleton.component().w(px(160.)))
                             .child(Rating.component('rating').value(3))
                             .child(ShimmerText.component('Thinking...')))))
@@ -330,7 +330,7 @@ class Gallery extends Model implements Render {
                         .child(StatusBar.component().left(div().child('main')).child('Ready').right(div().child('UTF-8')))))
                     .child(section('Empty, DescriptionList, GroupBox, Marker', vFlex().gap3()
                         .child(Empty.component().border1().header(EmptyHeader.component()
-                            .media(EmptyMedia.component().withVariant(EmptyMediaVariant.Icon).child(Icon.component(IconName.Inbox)))
+                            .media(EmptyMedia.component().withVariant(EmptyMediaVariant.Icon).child(glaze.kit.Icon.component(IconName.Inbox)))
                             .title(EmptyTitle.component().child('No messages'))))
                         .child(DescriptionList.component().columns(2).item('Name', 'gpui-kit', 1).item('Version', '0.8.1', 1))
                         .child(GroupBox.component().outline().title('Group').child('Grouped content'))
