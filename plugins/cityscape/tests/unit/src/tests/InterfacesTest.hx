@@ -41,7 +41,7 @@ import cityscape.common.languages.Language;
 import cityscape.common.services.ModelService;
 import cityscape.common.tokens.LineTokens;
 import cityscape.platform.accessibility.common.Accessibility;
-import cityscape.platform.commands.common.Commands;
+import cityscape.platform.commands.common.Commands.ICommandMetadata;
 import cityscape.platform.undoRedo.common.UndoRedo;
 import cityscape.view.config.EditorConfiguration;
 import cityscape.view.config.MigrateOptions;

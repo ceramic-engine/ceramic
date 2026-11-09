@@ -249,8 +249,8 @@ class TwoEditors extends glaze.Component {
 
     public function render(window:Window, cx:App):glaze.IntoElement {
         return div().flex().sizeFull()
-            .child(CityscapeEditor.component().model(modelA).options({lineNumbers: 'on'}).onCreate(onA).flex1())
-            .child(CityscapeEditor.component().model(modelB).onCreate(onB).flex1());
+            .child(CityscapeEditor.component().model(modelA).options({lineNumbers: 'on'}).onCreate(e -> onA(e.getView())).flex1())
+            .child(CityscapeEditor.component().model(modelB).onCreate(e -> onB(e.getView())).flex1());
     }
 
 }

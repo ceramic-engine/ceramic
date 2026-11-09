@@ -542,8 +542,8 @@ class FoldingEditors extends glaze.Component {
 
     public function render(window:Window, cx:App):glaze.IntoElement {
         return div().flex().sizeFull()
-            .child(CityscapeEditor.component().model(modelA).options(optionsA != null ? optionsA : {lineNumbers: 'on'}).onCreate(onA).flex1())
-            .child(CityscapeEditor.component().model(modelB).options(optionsB != null ? optionsB : {lineNumbers: 'on'}).onCreate(onB).flex1());
+            .child(CityscapeEditor.component().model(modelA).options(optionsA != null ? optionsA : {lineNumbers: 'on'}).onCreate(e -> onA(e.getView())).flex1())
+            .child(CityscapeEditor.component().model(modelB).options(optionsB != null ? optionsB : {lineNumbers: 'on'}).onCreate(e -> onB(e.getView())).flex1());
     }
 
 }

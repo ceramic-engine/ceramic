@@ -9,6 +9,9 @@ import ceramic.InitSettings;
  * Visual check of the Cityscape view: a Haxe sample in two editors (word
  * wrap with an indent per level, typed decorations, a hidden range,
  * selections, cursors, rulers, whitespace, CJK and emoji), `vs-dark` theme.
+ * Other scenes with `CITYSCAPE_VISUAL_SCENE`: `folding` (FoldingVisualView)
+ * and `api` (ApiVisualView: models switched through the editor API, markers,
+ * an action).
  *
  * Capture: set `CITYSCAPE_VISUAL_OUT` to a PNG path. After a few frames the
  * pixels are written there with `screen.toPng()`, then the app quits (native)

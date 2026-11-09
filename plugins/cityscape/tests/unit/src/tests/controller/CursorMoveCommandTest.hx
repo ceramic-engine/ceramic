@@ -13,6 +13,8 @@ import cityscape.common.core.Selection;
 import cityscape.common.cursor.CursorMoveCommands;
 import cityscape.common.viewModel.ViewModelImpl;
 import cityscape.view.CoreCommands;
+import cityscape.view.EditorBrowser.ICodeEditor;
+import cityscape.view.EditorExtensions.EditorCommand;
 import testing.TestCase;
 import testing.TestCodeEditor;
 

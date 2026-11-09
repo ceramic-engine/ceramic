@@ -388,8 +388,10 @@ interface IEditor {
      * Cursors will be removed or added, as necessary.
      * @param selections The new selection
      * @param source Source of the call that caused the selection
+     * @param reason The reason of the change (Monaco's `CodeEditorWidget`
+     * takes it)
      */
-    function setSelections(selections:Array<ISelection>, ?source:String):Void;
+    function setSelections(selections:Array<ISelection>, ?source:String, ?reason:cityscape.common.CursorEvents.CursorChangeReason):Void;
 
     /**
      * Scroll vertically as necessary and reveal lines.

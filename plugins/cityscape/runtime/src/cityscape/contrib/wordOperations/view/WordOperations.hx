@@ -18,15 +18,22 @@ import cityscape.common.core.WordCharacterClassifier;
 import cityscape.common.cursor.CursorWordOperations;
 import cityscape.common.model.TextModel;
 import cityscape.view.CoreCommands;
+import cityscape.view.EditorBrowser.ICodeEditor;
+import cityscape.base.common.KeyCodes.KeyCode;
+import cityscape.base.common.KeyCodes.KeyMod;
+import cityscape.common.EditorContextKeys;
+import cityscape.platform.accessibility.common.Accessibility.AccessibilityContextKeys;
+import cityscape.platform.contextkey.common.ContextKey;
+import cityscape.platform.contextkey.common.ContextKeys;
+import cityscape.platform.keybinding.common.KeybindingsRegistry.KeybindingWeight;
+import cityscape.view.EditorExtensions;
 
 /*
  * The word commands of the editor: move by word, select by word, delete by
  * word (wordOperations.ts).
  *
- * Ported: the commands and what they do. Not ported yet (TODO(step 3,
- * keybindings)): their registration (`registerEditorCommand`,
- * `registerEditorAction`, `kbOpts`, `precondition`) and the localized label
- * of `DeleteInsideWord` (its English label is kept).
+ * The commands, their keybindings and their registration in a context
+ * (`WordOperationsRegistration.register`).
  */
 
 abstract class MoveWordCommand extends EditorCommand {
@@ -34,13 +41,13 @@ abstract class MoveWordCommand extends EditorCommand {
     final _inSelectionMode:Bool;
     final _wordNavigationType:WordNavigationType;
 
-    public function new(id:String, inSelectionMode:Bool, wordNavigationType:WordNavigationType) {
-        super(id);
+    public function new(opts:ICommandOptions, inSelectionMode:Bool, wordNavigationType:WordNavigationType) {
+        super(opts);
         this._inSelectionMode = inSelectionMode;
         this._wordNavigationType = wordNavigationType;
     }
 
-    public function runEditorCommand(accessor:Null<Cityscape>, editor:ICodeEditor, args:Null<CoreCommandArgs>):Void {
+    public function runEditorCommand(accessor:Null<Cityscape>, editor:ICodeEditor, args:Any):Void {
         final model = editor.getTextModel();
         if (model == null) {
             return;
@@ -105,44 +112,44 @@ class WordRightCommand extends MoveWordCommand {
 
 class CursorWordStartLeft extends WordLeftCommand {
     public function new() {
-        super('cursorWordStartLeft', false, WordNavigationType.WordStart);
+        super({id: 'cursorWordStartLeft', precondition: null}, false, WordNavigationType.WordStart);
     }
 }
 
 class CursorWordEndLeft extends WordLeftCommand {
     public function new() {
-        super('cursorWordEndLeft', false, WordNavigationType.WordEnd);
+        super({id: 'cursorWordEndLeft', precondition: null}, false, WordNavigationType.WordEnd);
     }
 }
 
 class CursorWordLeft extends WordLeftCommand {
     public function new() {
-        super('cursorWordLeft', false, WordNavigationType.WordStartFast);
+        super({id: 'cursorWordLeft', precondition: null, kbOpts: {kbExpr: ContextKeyExpr.and(EditorContextKeys.textInputFocus, WordOperationsUtils.notAccessibilityModeOnWindows()), primary: KeyMod.CtrlCmd | KeyCode.LeftArrow, mac: {primary: KeyMod.Alt | KeyCode.LeftArrow}, weight: KeybindingWeight.EditorContrib}}, false, WordNavigationType.WordStartFast);
     }
 }
 
 class CursorWordStartLeftSelect extends WordLeftCommand {
     public function new() {
-        super('cursorWordStartLeftSelect', true, WordNavigationType.WordStart);
+        super({id: 'cursorWordStartLeftSelect', precondition: null}, true, WordNavigationType.WordStart);
     }
 }
 
 class CursorWordEndLeftSelect extends WordLeftCommand {
     public function new() {
-        super('cursorWordEndLeftSelect', true, WordNavigationType.WordEnd);
+        super({id: 'cursorWordEndLeftSelect', precondition: null}, true, WordNavigationType.WordEnd);
     }
 }
 
 class CursorWordLeftSelect extends WordLeftCommand {
     public function new() {
-        super('cursorWordLeftSelect', true, WordNavigationType.WordStartFast);
+        super({id: 'cursorWordLeftSelect', precondition: null, kbOpts: {kbExpr: ContextKeyExpr.and(EditorContextKeys.textInputFocus, WordOperationsUtils.notAccessibilityModeOnWindows()), primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.LeftArrow, mac: {primary: KeyMod.Alt | KeyMod.Shift | KeyCode.LeftArrow}, weight: KeybindingWeight.EditorContrib}}, true, WordNavigationType.WordStartFast);
     }
 }
 
 // Accessibility navigation commands should only be enabled on windows since they are tuned to what NVDA expects
 class CursorWordAccessibilityLeft extends WordLeftCommand {
     public function new() {
-        super('cursorWordAccessibilityLeft', false, WordNavigationType.WordAccessibility);
+        super({id: 'cursorWordAccessibilityLeft', precondition: null}, false, WordNavigationType.WordAccessibility);
     }
 
     override function _move(wordCharacterClassifier:WordCharacterClassifier, model:ITextModel, position:Position, wordNavigationType:WordNavigationType, hasMulticursor:Bool):Position {
@@ -152,7 +159,7 @@ class CursorWordAccessibilityLeft extends WordLeftCommand {
 
 class CursorWordAccessibilityLeftSelect extends WordLeftCommand {
     public function new() {
-        super('cursorWordAccessibilityLeftSelect', true, WordNavigationType.WordAccessibility);
+        super({id: 'cursorWordAccessibilityLeftSelect', precondition: null}, true, WordNavigationType.WordAccessibility);
     }
 
     override function _move(wordCharacterClassifier:WordCharacterClassifier, model:ITextModel, position:Position, wordNavigationType:WordNavigationType, hasMulticursor:Bool):Position {
@@ -162,43 +169,43 @@ class CursorWordAccessibilityLeftSelect extends WordLeftCommand {
 
 class CursorWordStartRight extends WordRightCommand {
     public function new() {
-        super('cursorWordStartRight', false, WordNavigationType.WordStart);
+        super({id: 'cursorWordStartRight', precondition: null}, false, WordNavigationType.WordStart);
     }
 }
 
 class CursorWordEndRight extends WordRightCommand {
     public function new() {
-        super('cursorWordEndRight', false, WordNavigationType.WordEnd);
+        super({id: 'cursorWordEndRight', precondition: null, kbOpts: {kbExpr: ContextKeyExpr.and(EditorContextKeys.textInputFocus, WordOperationsUtils.notAccessibilityModeOnWindows()), primary: KeyMod.CtrlCmd | KeyCode.RightArrow, mac: {primary: KeyMod.Alt | KeyCode.RightArrow}, weight: KeybindingWeight.EditorContrib}}, false, WordNavigationType.WordEnd);
     }
 }
 
 class CursorWordRight extends WordRightCommand {
     public function new() {
-        super('cursorWordRight', false, WordNavigationType.WordEnd);
+        super({id: 'cursorWordRight', precondition: null}, false, WordNavigationType.WordEnd);
     }
 }
 
 class CursorWordStartRightSelect extends WordRightCommand {
     public function new() {
-        super('cursorWordStartRightSelect', true, WordNavigationType.WordStart);
+        super({id: 'cursorWordStartRightSelect', precondition: null}, true, WordNavigationType.WordStart);
     }
 }
 
 class CursorWordEndRightSelect extends WordRightCommand {
     public function new() {
-        super('cursorWordEndRightSelect', true, WordNavigationType.WordEnd);
+        super({id: 'cursorWordEndRightSelect', precondition: null, kbOpts: {kbExpr: ContextKeyExpr.and(EditorContextKeys.textInputFocus, WordOperationsUtils.notAccessibilityModeOnWindows()), primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.RightArrow, mac: {primary: KeyMod.Alt | KeyMod.Shift | KeyCode.RightArrow}, weight: KeybindingWeight.EditorContrib}}, true, WordNavigationType.WordEnd);
     }
 }
 
 class CursorWordRightSelect extends WordRightCommand {
     public function new() {
-        super('cursorWordRightSelect', true, WordNavigationType.WordEnd);
+        super({id: 'cursorWordRightSelect', precondition: null}, true, WordNavigationType.WordEnd);
     }
 }
 
 class CursorWordAccessibilityRight extends WordRightCommand {
     public function new() {
-        super('cursorWordAccessibilityRight', false, WordNavigationType.WordAccessibility);
+        super({id: 'cursorWordAccessibilityRight', precondition: null}, false, WordNavigationType.WordAccessibility);
     }
 
     override function _move(wordCharacterClassifier:WordCharacterClassifier, model:ITextModel, position:Position, wordNavigationType:WordNavigationType, hasMulticursor:Bool):Position {
@@ -208,7 +215,7 @@ class CursorWordAccessibilityRight extends WordRightCommand {
 
 class CursorWordAccessibilityRightSelect extends WordRightCommand {
     public function new() {
-        super('cursorWordAccessibilityRightSelect', true, WordNavigationType.WordAccessibility);
+        super({id: 'cursorWordAccessibilityRightSelect', precondition: null}, true, WordNavigationType.WordAccessibility);
     }
 
     override function _move(wordCharacterClassifier:WordCharacterClassifier, model:ITextModel, position:Position, wordNavigationType:WordNavigationType, hasMulticursor:Bool):Position {
@@ -221,13 +228,13 @@ abstract class DeleteWordCommand extends EditorCommand {
     final _whitespaceHeuristics:Bool;
     final _wordNavigationType:WordNavigationType;
 
-    public function new(id:String, whitespaceHeuristics:Bool, wordNavigationType:WordNavigationType) {
-        super(id);
+    public function new(opts:ICommandOptions, whitespaceHeuristics:Bool, wordNavigationType:WordNavigationType) {
+        super(opts);
         this._whitespaceHeuristics = whitespaceHeuristics;
         this._wordNavigationType = wordNavigationType;
     }
 
-    public function runEditorCommand(accessor:Null<Cityscape>, editor:ICodeEditor, args:Null<CoreCommandArgs>):Void {
+    public function runEditorCommand(accessor:Null<Cityscape>, editor:ICodeEditor, args:Any):Void {
         final model = editor.getTextModel();
         if (model == null) {
             return;
@@ -291,50 +298,53 @@ class DeleteWordRightCommand extends DeleteWordCommand {
 
 class DeleteWordStartLeft extends DeleteWordLeftCommand {
     public function new() {
-        super('deleteWordStartLeft', false, WordNavigationType.WordStart);
+        super({id: 'deleteWordStartLeft', precondition: EditorContextKeys.writable}, false, WordNavigationType.WordStart);
     }
 }
 
 class DeleteWordEndLeft extends DeleteWordLeftCommand {
     public function new() {
-        super('deleteWordEndLeft', false, WordNavigationType.WordEnd);
+        super({id: 'deleteWordEndLeft', precondition: EditorContextKeys.writable}, false, WordNavigationType.WordEnd);
     }
 }
 
 class DeleteWordLeft extends DeleteWordLeftCommand {
     public function new() {
-        super('deleteWordLeft', true, WordNavigationType.WordStart);
+        super({id: 'deleteWordLeft', precondition: EditorContextKeys.writable, kbOpts: {kbExpr: EditorContextKeys.textInputFocus, primary: KeyMod.CtrlCmd | KeyCode.Backspace, mac: {primary: KeyMod.Alt | KeyCode.Backspace}, weight: KeybindingWeight.EditorContrib}}, true, WordNavigationType.WordStart);
     }
 }
 
 class DeleteWordStartRight extends DeleteWordRightCommand {
     public function new() {
-        super('deleteWordStartRight', false, WordNavigationType.WordStart);
+        super({id: 'deleteWordStartRight', precondition: EditorContextKeys.writable}, false, WordNavigationType.WordStart);
     }
 }
 
 class DeleteWordEndRight extends DeleteWordRightCommand {
     public function new() {
-        super('deleteWordEndRight', false, WordNavigationType.WordEnd);
+        super({id: 'deleteWordEndRight', precondition: EditorContextKeys.writable}, false, WordNavigationType.WordEnd);
     }
 }
 
 class DeleteWordRight extends DeleteWordRightCommand {
     public function new() {
-        super('deleteWordRight', true, WordNavigationType.WordEnd);
+        super({id: 'deleteWordRight', precondition: EditorContextKeys.writable, kbOpts: {kbExpr: EditorContextKeys.textInputFocus, primary: KeyMod.CtrlCmd | KeyCode.Delete, mac: {primary: KeyMod.Alt | KeyCode.Delete}, weight: KeybindingWeight.EditorContrib}}, true, WordNavigationType.WordEnd);
     }
 }
 
-/**
- * Monaco's `DeleteInsideWord` editor action (`EditorAction.run`).
- */
-class DeleteInsideWord {
+class DeleteInsideWord extends EditorAction {
 
-    public final id = 'deleteInsideWord';
-    public final label = 'Delete Word';
-    public final alias = 'Delete Word';
-
-    public function new() {}
+    /**
+     * `r` localizes the label (English without it).
+     */
+    public function new(?r:EditorExtensionsRegistry) {
+        super({
+            id: 'deleteInsideWord',
+            precondition: EditorContextKeys.writable,
+            label: r != null ? r.localize('deleteInsideWord', "Delete Word") : "Delete Word",
+            alias: 'Delete Word'
+        });
+    }
 
     public function run(accessor:Null<Cityscape>, editor:ICodeEditor, args:Any):Void {
         final model = editor.getTextModel();
@@ -355,7 +365,48 @@ class DeleteInsideWord {
 
 }
 
+/**
+ * The module level registrations of wordOperations.ts, for one context.
+ */
+class WordOperationsRegistration {
+
+    public static function register(r:EditorExtensionsRegistry):Void {
+        r.registerEditorCommand(new CursorWordStartLeft());
+        r.registerEditorCommand(new CursorWordEndLeft());
+        r.registerEditorCommand(new CursorWordLeft());
+        r.registerEditorCommand(new CursorWordStartLeftSelect());
+        r.registerEditorCommand(new CursorWordEndLeftSelect());
+        r.registerEditorCommand(new CursorWordLeftSelect());
+        r.registerEditorCommand(new CursorWordStartRight());
+        r.registerEditorCommand(new CursorWordEndRight());
+        r.registerEditorCommand(new CursorWordRight());
+        r.registerEditorCommand(new CursorWordStartRightSelect());
+        r.registerEditorCommand(new CursorWordEndRightSelect());
+        r.registerEditorCommand(new CursorWordRightSelect());
+        r.registerEditorCommand(new CursorWordAccessibilityLeft());
+        r.registerEditorCommand(new CursorWordAccessibilityLeftSelect());
+        r.registerEditorCommand(new CursorWordAccessibilityRight());
+        r.registerEditorCommand(new CursorWordAccessibilityRightSelect());
+        r.registerEditorCommand(new DeleteWordStartLeft());
+        r.registerEditorCommand(new DeleteWordEndLeft());
+        r.registerEditorCommand(new DeleteWordLeft());
+        r.registerEditorCommand(new DeleteWordStartRight());
+        r.registerEditorCommand(new DeleteWordEndRight());
+        r.registerEditorCommand(new DeleteWordRight());
+        r.registerEditorAction(new DeleteInsideWord(r));
+    }
+
+}
+
 private class WordOperationsUtils {
+
+    /**
+     * `ContextKeyExpr.and(CONTEXT_ACCESSIBILITY_MODE_ENABLED, IsWindowsContext)?.negate()`
+     */
+    public static function notAccessibilityModeOnWindows():Null<ContextKeyExpression> {
+        final e = ContextKeyExpr.and(AccessibilityContextKeys.CONTEXT_ACCESSIBILITY_MODE_ENABLED, ContextKeys.IsWindowsContext);
+        return e != null ? e.negate() : null;
+    }
 
     /**
      * The services: Monaco's accessor, or else the context of the model.

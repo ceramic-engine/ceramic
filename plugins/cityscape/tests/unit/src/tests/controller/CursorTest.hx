@@ -28,6 +28,8 @@ import cityscape.common.languages.NullTokenize;
 import cityscape.common.model.TextModel;
 import cityscape.common.viewModel.ViewModelImpl;
 import cityscape.view.CoreCommands;
+import cityscape.view.EditorBrowser.ICodeEditor;
+import cityscape.view.EditorExtensions.EditorCommand;
 import haxe.extern.EitherType;
 import haxe.io.UInt32Array;
 import testing.TestCase;

@@ -27,6 +27,12 @@ import cityscape.contrib.folding.view.FoldingDecorations;
 import cityscape.contrib.folding.view.FoldingModel;
 import cityscape.contrib.folding.view.FoldingRanges;
 import cityscape.view.EditorBrowser;
+import cityscape.base.common.KeyCodes;
+import cityscape.common.EditorCommon.IEditorContribution;
+import cityscape.common.EditorContextKeys;
+import cityscape.platform.contextkey.common.ContextKey;
+import cityscape.platform.keybinding.common.KeybindingsRegistry.KeybindingWeight;
+import cityscape.view.EditorExtensions;
 import cityscape.view.StableEditorScroll;
 
 /**
@@ -36,6 +42,11 @@ import cityscape.view.StableEditorScroll;
  */
 interface IFoldingEditor extends IScrollStateEditor {
     function getFoldingContext():Cityscape;
+    /**
+     * The scoped context key service of the editor (null in the editors of
+     * the tests).
+     */
+    function getContextKeyService():Null<IContextKeyService>;
     function getContribution(id:String):Null<Any>;
     function getModel():Null<ITextModel>;
     function getOption<V>(id:EditorOption<V>):V;
@@ -113,12 +124,23 @@ private class SelectionsSelectedLines implements SelectedLines {
  * The editor contribution of folding (Monaco's `editor.contrib.folding`):
  * one per editor, so that two editors on one model fold independently.
  */
-class FoldingController extends Disposable {
+class FoldingController extends Disposable implements IEditorContribution {
 
     public static inline final ID = 'editor.contrib.folding';
 
-    public static function get(editor:IFoldingEditor):Null<FoldingController> {
-        final contribution = editor.getContribution(ID);
+    /**
+     * The folding of an editor: an `ICodeEditor` (Monaco's `get`) or an
+     * `IFoldingEditor`.
+     */
+    public static function get(editor:Any):Null<FoldingController> {
+        var contribution:Any = null;
+        if (Std.isOfType(editor, ICodeEditor)) {
+            final c:Null<IEditorContribution> = (cast editor : ICodeEditor).getContribution(ID);
+            contribution = c;
+        }
+        else if (Std.isOfType(editor, IFoldingEditor)) {
+            contribution = (cast editor : IFoldingEditor).getContribution(ID);
+        }
         return Std.isOfType(contribution, FoldingController) ? cast contribution : null;
     }
 
@@ -144,8 +166,16 @@ class FoldingController extends Disposable {
         });
     }
 
-    final editor:IFoldingEditor;
+    /**
+     * The editor, as the folding code reads it.
+     */
+    public final editor:IFoldingEditor;
     final context:Cityscape;
+    /**
+     * The context key `foldingEnabled` (Monaco's `CONTEXT_FOLDING_ENABLED`),
+     * when the editor has a context key service.
+     */
+    final foldingEnabled:Null<IContextKey<Bool>>;
     var _isEnabled:Bool;
     var _useFoldingProviders:Bool;
     var _unfoldOnClickAfterEndOfLine:Bool;
@@ -207,14 +237,20 @@ class FoldingController extends Disposable {
         foldingDecorationProvider = new FoldingDecorationProvider(editor);
         foldingDecorationProvider.showFoldingControls = editor.getOption(EditorOption.showFoldingControls);
         foldingDecorationProvider.showFoldingHighlights = editor.getOption(EditorOption.foldingHighlight);
-        // TODO(step 3, context keys): CONTEXT_FOLDING_ENABLED (`foldingEnabled`)
-        // is `isEnabled()` until the context key service lands
+        final contextKeyService = editor.getContextKeyService();
+        foldingEnabled = contextKeyService != null ? FoldingContextKeys.CONTEXT_FOLDING_ENABLED.bindTo(contextKeyService) : null;
+        if (foldingEnabled != null) {
+            foldingEnabled.set(_isEnabled);
+        }
 
         _register(editor.onDidChangeModel(() -> onModelChanged()));
 
         _register(editor.onDidChangeConfiguration((e:ConfigurationChangedEvent) -> {
             if (e.hasChanged(EditorOption.folding)) {
                 _isEnabled = editor.getOption(EditorOption.folding);
+                if (foldingEnabled != null) {
+                    foldingEnabled.set(_isEnabled);
+                }
                 onModelChanged();
             }
             if (e.hasChanged(EditorOption.foldingMaximumRegions)) {
@@ -254,7 +290,11 @@ class FoldingController extends Disposable {
     /**
      * Store view state.
      */
-    public function saveViewState():Null<FoldingStateMemento> {
+    public function saveViewState():Any {
+        return _saveViewState();
+    }
+
+    function _saveViewState():Null<FoldingStateMemento> {
         final model = editor.getModel();
         if (model == null || !_isEnabled || model.isTooLargeForTokenization()) {
             return {};
@@ -270,7 +310,8 @@ class FoldingController extends Disposable {
     /**
      * Restore view state.
      */
-    public function restoreViewState(state:Null<FoldingStateMemento>):Void {
+    public function restoreViewState(_state:Any):Void {
+        final state:Null<FoldingStateMemento> = _state;
         final model = editor.getModel();
         if (model == null || !_isEnabled || model.isTooLargeForTokenization() || hiddenRangeModel == null) {
             return;
@@ -910,10 +951,10 @@ abstract class FoldingAction {
     abstract public function invoke(foldingController:FoldingController, foldingModel:FoldingModel, editor:IFoldingEditor, args:Null<FoldingArguments>, context:Cityscape):Void;
 
     /**
-     * Monaco's `runEditorCommand`: runs once the folding model is up to
+     * Monaco's `runEditorCommand` (named `runFoldingAction` here): runs once the folding model is up to
      * date, then reveals the start of the selection.
      */
-    public function runEditorCommand(context:Cityscape, editor:IFoldingEditor, args:Null<FoldingArguments>):Void {
+    public function runFoldingAction(context:Cityscape, editor:IFoldingEditor, args:Null<FoldingArguments>):Void {
         final foldingController = FoldingController.get(editor);
         if (foldingController == null || !foldingController.isEnabled()) {
             return;
@@ -1352,9 +1393,9 @@ class RemoveFoldRangeFromSelectionAction extends FoldingAction {
 /**
  * The folding actions by Monaco command id, and their default keybindings.
  *
- * TODO(step 3, commands and keybindings): a local adapter until the
- * command and keybinding registry of the editor lands; then the actions
- * are registered there (`registerEditorAction`) with these ids and keys.
+ * The actions are registered in each context by `FoldingRegistration`
+ * (Monaco's `registerEditorAction`), which runs them through
+ * `runFoldingAction`.
  */
 class FoldingCommands {
 
@@ -1415,70 +1456,238 @@ class FoldingCommands {
         if ((id == 'editor.fold' || id == 'editor.unfold') && !FoldingAction.foldingArgumentsConstraint(args)) {
             return false;
         }
-        action.runEditorCommand(editor.getFoldingContext(), editor, args);
+        action.runFoldingAction(editor.getFoldingContext(), editor, args);
         return true;
     }
 
 }
 
 /**
- * The keys of the folding actions for one editor (the second key of a
- * chord is waited for here).
- *
- * TODO(step 3, commands and keybindings): replaced by the keybinding
- * service of the editor.
+ * The context keys of folding.ts.
  */
-class FoldingKeybindings {
+class FoldingContextKeys {
 
-    var pendingChord:Null<FoldingKeybindingPart> = null;
-
-    public function new() {}
+    static var _foldingEnabled:Null<RawContextKey<Bool>> = null;
 
     /**
-     * Handles a key down of the editor (with text focus). Returns true when
-     * the key was used: a folding action ran, or a chord started or ended.
+     * `CONTEXT_FOLDING_ENABLED`
      */
-    public function handleKeyDown(editor:IFoldingEditor, keystroke:glaze.Keystroke):Bool {
-        final isMac = cityscape.base.common.Platform.isMacintosh;
-        final controller = FoldingController.get(editor);
-        final enabled = controller != null && controller.isEnabled();
-        final chord = pendingChord;
-        if (chord != null) {
-            pendingChord = null;
-            if (enabled) {
-                for (action in FoldingCommands.all()) {
-                    final kb = action.keybinding(isMac);
-                    if (kb != null && kb.second != null && sameParts(kb.first, chord) && kb.second.matches(keystroke, isMac)) {
-                        action.runEditorCommand(editor.getFoldingContext(), editor, null);
-                        return true;
-                    }
-                }
-            }
-            // Monaco: the chord did not match a command, the key is used
-            return true;
+    public static var CONTEXT_FOLDING_ENABLED(get, never):RawContextKey<Bool>;
+    static function get_CONTEXT_FOLDING_ENABLED():RawContextKey<Bool> {
+        if (_foldingEnabled == null) {
+            _foldingEnabled = new RawContextKey<Bool>('foldingEnabled', false);
         }
-        if (!enabled) {
-            return false;
-        }
-        for (action in FoldingCommands.all()) {
-            final kb = action.keybinding(isMac);
-            if (kb != null && kb.second == null && kb.first.matches(keystroke, isMac)) {
-                action.runEditorCommand(editor.getFoldingContext(), editor, null);
-                return true;
-            }
-        }
-        for (action in FoldingCommands.all()) {
-            final kb = action.keybinding(isMac);
-            if (kb != null && kb.second != null && kb.first.matches(keystroke, isMac)) {
-                pendingChord = kb.first;
-                return true;
-            }
-        }
+        return _foldingEnabled;
+    }
+
+}
+
+/**
+ * A code editor as the folding code reads it (`IFoldingEditor`, Monaco's
+ * `ICodeEditor` with listener taking events).
+ */
+class CodeEditorFoldingAdapter implements IFoldingEditor {
+
+    public final codeEditor:ICodeEditor;
+
+    public function new(codeEditor:ICodeEditor) {
+        this.codeEditor = codeEditor;
+    }
+
+    public function getFoldingContext():Cityscape {
+        return codeEditor.context;
+    }
+
+    public function getContextKeyService():Null<IContextKeyService> {
+        return codeEditor.contextKeyService;
+    }
+
+    public function getContribution(id:String):Null<Any> {
+        final c:Null<IEditorContribution> = codeEditor.getContribution(id);
+        return c;
+    }
+
+    public function getModel():Null<ITextModel> {
+        return codeEditor.getModel();
+    }
+
+    public function getOption<V>(id:EditorOption<V>):V {
+        return codeEditor.getOption(id);
+    }
+
+    public function getSelections():Null<Array<Selection>> {
+        return codeEditor.getSelections();
+    }
+
+    public function getSelection():Null<Selection> {
+        return codeEditor.getSelection();
+    }
+
+    public function setSelections(selections:Array<Selection>):Void {
+        codeEditor.setSelections([for (s in selections) (s : cityscape.common.core.Selection.ISelection)]);
+    }
+
+    public function setSelection(selection:Selection):Void {
+        codeEditor.setSelection(selection);
+    }
+
+    public function changeDecorations<T>(callback:(changeAccessor:IModelDecorationsChangeAccessor) -> T):Null<T> {
+        return codeEditor.changeDecorations(callback);
+    }
+
+    public function removeDecorations(decorationIds:Array<String>):Void {
+        codeEditor.removeDecorations(decorationIds);
+    }
+
+    public function setHiddenAreas(ranges:Array<Range>, source:Any):Void {
+        codeEditor.setHiddenAreas([for (r in ranges) (r : cityscape.common.core.Range.IRange)], source);
+    }
+
+    public function revealPositionInCenterIfOutsideViewport(position:Position, ?scrollType:ScrollType):Void {
+        codeEditor.revealPositionInCenterIfOutsideViewport(position, scrollType);
+    }
+
+    public function onDidChangeModel(listener:() -> Void):IDisposable {
+        return codeEditor.onDidChangeModel(_ -> listener());
+    }
+
+    public function onDidChangeConfiguration(listener:(e:ConfigurationChangedEvent) -> Void):IDisposable {
+        return codeEditor.onDidChangeConfiguration(listener);
+    }
+
+    public function onDidChangeModelLanguageConfiguration(listener:() -> Void):IDisposable {
+        return codeEditor.onDidChangeModelLanguageConfiguration(_ -> listener());
+    }
+
+    public function onDidChangeModelContent(listener:(e:IModelContentChangedEvent) -> Void):IDisposable {
+        return codeEditor.onDidChangeModelContent(listener);
+    }
+
+    public function onDidChangeCursorPosition(listener:() -> Void):IDisposable {
+        return codeEditor.onDidChangeCursorPosition(_ -> listener());
+    }
+
+    public function onMouseDown(listener:(e:EditorMouseEvent) -> Void):IDisposable {
+        return codeEditor.onMouseDown(listener);
+    }
+
+    public function onMouseUp(listener:(e:EditorMouseEvent) -> Void):IDisposable {
+        return codeEditor.onMouseUp(listener);
+    }
+
+    public function getScrollTop():Float {
+        return codeEditor.getScrollTop();
+    }
+
+    public function setScrollTop(newScrollTop:Float, ?scrollType:ScrollType):Void {
+        codeEditor.setScrollTop(newScrollTop, scrollType);
+    }
+
+    public function hasPendingScrollAnimation():Bool {
+        // smooth scrolling is the kit's (no pending Monaco animation)
         return false;
     }
 
-    static function sameParts(a:FoldingKeybindingPart, b:FoldingKeybindingPart):Bool {
-        return a.key == b.key && a.ctrlCmd == b.ctrlCmd && a.shift == b.shift && a.alt == b.alt && a.winCtrl == b.winCtrl;
+    public function getContentHeight():Float {
+        return codeEditor.getContentHeight();
+    }
+
+    public function getVisibleRanges():Array<Range> {
+        return codeEditor.getVisibleRanges();
+    }
+
+    public function getTopForLineNumber(lineNumber:Int):Float {
+        return codeEditor.getTopForLineNumber(lineNumber);
+    }
+
+    public function getTopForPosition(lineNumber:Int, column:Int):Float {
+        return codeEditor.getTopForPosition(lineNumber, column);
+    }
+
+    public function getPosition():Null<Position> {
+        return codeEditor.getPosition();
+    }
+
+}
+
+/**
+ * A folding action as an editor action of the registry (Monaco's
+ * `FoldingAction extends EditorAction`): precondition `foldingEnabled`,
+ * keybindings for `editorTextFocus`.
+ */
+class FoldingEditorAction extends EditorAction {
+
+    public final action:FoldingAction;
+
+    public function new(action:FoldingAction, r:EditorExtensionsRegistry) {
+        final primary = keybindingOf(action.primary);
+        final mac = action.mac != null ? keybindingOf(action.mac) : null;
+        final kbOpts:Null<ICommandKeybindingsOptions> = (primary == 0 && mac == null) ? null : {
+            kbExpr: EditorContextKeys.editorTextFocus,
+            primary: primary,
+            mac: mac != null ? {primary: mac} : null,
+            weight: KeybindingWeight.EditorContrib
+        };
+        super({
+            id: action.id,
+            label: r.localize(action.id, action.label),
+            alias: action.alias,
+            precondition: FoldingContextKeys.CONTEXT_FOLDING_ENABLED,
+            kbOpts: kbOpts
+        });
+        this.action = action;
+    }
+
+    static function partOf(part:FoldingKeybindingPart):Int {
+        var result:Int = cityscape.view.KeyboardEvents.keyCodeOf(part.key);
+        if (part.ctrlCmd) {
+            result |= KeyMod.CtrlCmd;
+        }
+        if (part.shift) {
+            result |= KeyMod.Shift;
+        }
+        if (part.alt) {
+            result |= KeyMod.Alt;
+        }
+        if (part.winCtrl) {
+            result |= KeyMod.WinCtrl;
+        }
+        return result;
+    }
+
+    static function keybindingOf(kb:Null<FoldingKeybinding>):Int {
+        if (kb == null) {
+            return 0;
+        }
+        final first = partOf(kb.first);
+        return kb.second != null ? KeyCodes.KeyChord(first, partOf(kb.second)) : first;
+    }
+
+    public function run(accessor:Null<Cityscape>, editor:ICodeEditor, args:Any):Void {
+        final controller = FoldingController.get(editor);
+        if (controller == null) {
+            return;
+        }
+        final foldingArgs:Null<FoldingArguments> = (args != null && JsValues.isObject(args) && Reflect.fields(args).length > 0) ? args : null;
+        if ((action.id == 'editor.fold' || action.id == 'editor.unfold') && !FoldingAction.foldingArgumentsConstraint(foldingArgs)) {
+            return;
+        }
+        action.runFoldingAction(editor.context, controller.editor, foldingArgs);
+    }
+
+}
+
+/**
+ * The module level registrations of folding.ts, for one context: the
+ * contribution and the actions with their keybindings.
+ */
+class FoldingRegistration {
+
+    public static function register(r:EditorExtensionsRegistry):Void {
+        r.registerEditorContribution(FoldingController.ID, editor -> new FoldingController(new CodeEditorFoldingAdapter(editor)), EditorContributionInstantiation.Eager);
+        for (action in FoldingCommands.all()) {
+            r.registerEditorAction(new FoldingEditorAction(action, r));
+        }
     }
 
 }

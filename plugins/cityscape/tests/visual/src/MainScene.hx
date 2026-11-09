@@ -36,6 +36,8 @@ class MainScene extends Scene {
 
     var foldingView:Null<Entity<FoldingVisualView>> = null;
 
+    var apiView:Null<Entity<ApiVisualView>> = null;
+
     override function create() {
 
         out = Platform.getEnv('CITYSCAPE_VISUAL_OUT');
@@ -46,6 +48,11 @@ class MainScene extends Scene {
                 // Folded regions (FoldingVisualView.hx)
                 foldingView = cx.newEntity((viewCx:Context<FoldingVisualView>) -> new FoldingVisualView(viewCx));
                 return foldingView;
+            }
+            if (scene == 'api') {
+                // The editor API (ApiVisualView.hx)
+                apiView = cx.newEntity((viewCx:Context<ApiVisualView>) -> new ApiVisualView(viewCx));
+                return apiView;
             }
             view = cx.newEntity((viewCx:Context<VisualView>) -> new VisualView(viewCx));
             return view;
@@ -70,6 +77,10 @@ class MainScene extends Scene {
         }
         if (foldingView != null && ui.window != null) {
             final v:FoldingVisualView = foldingView;
+            v.focusLeft(ui.window, Glaze.app);
+        }
+        if (apiView != null && ui.window != null) {
+            final v:ApiVisualView = apiView;
             v.focusLeft(ui.window, Glaze.app);
         }
 
@@ -194,12 +205,12 @@ class VisualView extends Model implements Render {
         return div().flex().sizeFull().bg(rgb(0x1e1e1e))
             .child(
                 CityscapeEditor.component().model(model).context(context).options(editorOptions)
-                    .wrappingIndentColumns(2).onCreate(v -> onLeft(v)).flex1()
+                    .wrappingIndentColumns(2).onCreate(e -> onLeft(e.getView())).flex1()
             )
             .child(div().w(px(1)).hFull().bg(rgb(0x3a3a3a)))
             .child(
                 CityscapeEditor.component().model(model).context(context).options(rightOptions)
-                    .onCreate(v -> onRight(v)).w(px(300))
+                    .onCreate(e -> onRight(e.getView())).w(px(300))
             );
     }
 

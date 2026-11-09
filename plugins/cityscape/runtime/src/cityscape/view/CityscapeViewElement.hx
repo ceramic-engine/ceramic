@@ -61,7 +61,7 @@ class CityscapeViewElement extends Element {
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final v = view.read(cx);
-        v.layoutTo(bounds, window.scaleFactor());
+        v.layoutTo(bounds, window.scaleFactor(), window);
         final hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
         window.setCursorStyle(CursorStyle.IBeam, hitbox);
     }
@@ -96,6 +96,7 @@ class CityscapeViewElement extends Element {
             return;
         }
 
+        v.syncFocus(window, cx);
         final focused = v.focusHandle.isFocused(window);
         window.handleInput(v.focusHandle, new ElementInputHandler(bounds, view), cx);
 
@@ -176,7 +177,7 @@ class CityscapeViewElement extends Element {
                     }
                 }
             }
-            if (boxStyles != null && !d.range.isEmpty()) {
+            if (boxStyles != null && (!d.range.isEmpty() || opts.showIfCollapsed == true)) {
                 for (ln in Std.int(Math.max(startLine, d.range.startLineNumber))...Std.int(Math.min(endLine, d.range.endLineNumber)) + 1) {
                     final line = lines[ln - startLine];
                     final startColumn = (ln == d.range.startLineNumber ? d.range.startColumn : line.minColumn);
@@ -186,10 +187,26 @@ class CityscapeViewElement extends Element {
                     if (ln != d.range.endLineNumber) {
                         x2 += fontInfo.spaceWidth;
                     }
+                    if (x2 <= x1) {
+                        // an empty range shown when collapsed: one character wide (Monaco's 1ch)
+                        x2 = x1 + fontInfo.typicalHalfwidthCharacterWidth;
+                    }
                     for (st in boxStyles) {
                         final box = v.resolver.resolveBox(st);
-                        if (box != null) {
+                        if (box != null && !d.range.isEmpty()) {
                             paintBox(window, box, contentX + x1, lineTop(ln), x2 - x1, lineHeight, line, true, true);
+                        }
+                        // The squiggles of Monaco's `squiggly-*` decorations
+                        // (its CSS draws them at the bottom of the line box)
+                        final underline = st.underline;
+                        if (underline != null) {
+                            final color = underline.color != null ? v.resolver.resolveColor(underline.color) : null;
+                            if (color != null) {
+                                final thickness:Float = underline.thickness != null ? underline.thickness : 1;
+                                final wavy = underline.wavy == true;
+                                final y = lineTop(ln) + lineHeight - (wavy ? thickness * 3 : thickness);
+                                window.paintUnderline(new Point(contentX + x1, y), x2 - x1, new glaze.UnderlineStyle(thickness, color, wavy));
+                            }
                         }
                     }
                 }

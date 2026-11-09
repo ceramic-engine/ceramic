@@ -11,6 +11,8 @@ import cityscape.common.core.Selection;
 import cityscape.common.viewModel.ViewModelImpl;
 import cityscape.contrib.wordOperations.view.WordOperations;
 import cityscape.view.CoreCommands;
+import cityscape.view.EditorBrowser.ICodeEditor;
+import cityscape.view.EditorExtensions.EditorCommand;
 import testing.TestCase;
 import testing.TestCodeEditor;
 import tests.TestTextModel;

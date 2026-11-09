@@ -183,6 +183,11 @@ class RegExpTest extends TestCase {
         assertTrue(regex.unicode);
         assertFalse(regex.multiline);
         assertEquals(new RegExp('').source, '(?:)');
+        // EscapeRegExpPattern: `/` outside classes and line terminators
+        assertEquals('\\/foo\\/(bar)', new RegExp('/foo/(bar)').source);
+        assertEquals('\\/a', new RegExp('\\/a').source);
+        assertEquals('[/]x', new RegExp('[/]x').source);
+        assertEquals('a\\nb\\rc', new RegExp('a\nb\rc').source);
         assertRaises(() -> new RegExp('a', 'gg'));
         assertRaises(() -> new RegExp('a', 'x'));
         assertRaises(() -> new RegExp('(a', ''));

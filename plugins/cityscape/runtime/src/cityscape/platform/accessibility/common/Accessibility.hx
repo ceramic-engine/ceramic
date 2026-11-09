@@ -13,3 +13,24 @@ enum abstract AccessibilitySupport(Int) from Int to Int {
 
     var Enabled = 2;
 }
+
+/**
+ * The accessibility context keys (accessibility.ts).
+ */
+class AccessibilityContextKeys {
+
+    static var _accessibilityModeEnabled:Null<cityscape.platform.contextkey.common.ContextKey.RawContextKey<Bool>> = null;
+
+    /**
+     * `CONTEXT_ACCESSIBILITY_MODE_ENABLED`: Cityscape has no screen reader
+     * support yet, the key is never set.
+     */
+    public static var CONTEXT_ACCESSIBILITY_MODE_ENABLED(get, never):cityscape.platform.contextkey.common.ContextKey.RawContextKey<Bool>;
+    static function get_CONTEXT_ACCESSIBILITY_MODE_ENABLED() {
+        if (_accessibilityModeEnabled == null) {
+            _accessibilityModeEnabled = new cityscape.platform.contextkey.common.ContextKey.RawContextKey<Bool>('accessibilityModeEnabled', false);
+        }
+        return _accessibilityModeEnabled;
+    }
+
+}

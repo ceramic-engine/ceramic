@@ -59,6 +59,32 @@ model.deltaDecorations([], [
 cityscape.registerDecorationStyle('my-class', {color: '#e06c75', fontWeight: 'bold'});
 ```
 
+The `onCreate` callback gives the `CityscapeEditor`, with Monaco's editor methods and events (`getValue`, `setValue`, `getSelection`, `setSelections`, `revealLineInCenter`, `executeEdits`, `deltaDecorations`, `createDecorationsCollection`, `saveViewState`, `onDidChangeModelContent`, `onDidChangeCursorPosition`...). Commands, actions and keybindings use Monaco's API:
+
+```haxe
+CityscapeEditor.component().model(model).onCreate(editor -> {
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, (_, _) -> save());
+    editor.addAction({
+        id: 'my.uppercase',
+        label: 'Uppercase',
+        keybindings: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyU],
+        run: (ed, _) -> uppercase(ed)
+    });
+})
+
+// Remove a default keybinding, bind a command to another key
+Cityscape.addKeybindingRule({keybinding: KeyCode.End, command: '-cursorEnd'});
+Cityscape.addKeybindingRule({keybinding: KeyMod.CtrlCmd | KeyCode.KeyE, command: 'cursorEnd', when: 'editorTextFocus'});
+
+// Markers (diagnostics), drawn as squiggles and overview ruler marks
+Cityscape.setModelMarkers(model, 'my-linter', [{severity: MarkerSeverity.Error, message: 'Unknown name', startLineNumber: 3, startColumn: 5, endLineNumber: 3, endColumn: 9}]);
+
+// Translations of the editor's texts, keyed by English text or message key
+cityscape.nls.loadJson(Assets.text('editor-fr.json'));
+```
+
+Keys the focused editor does not handle go on to the key bindings of its ancestors, so app shortcuts keep working around an editor.
+
 Models are tokenized in the background with one time budget per frame for all the models of the context (`cityscape.backgroundScheduler.budgetMs`), the visible lines first.
 
 ## Layout

@@ -136,12 +136,12 @@ class FoldingVisualView extends Model implements Render {
         return div().flex().sizeFull().bg(rgb(0x1e1e1e))
             .child(
                 CityscapeEditor.component().model(python).context(context).options(leftOptions)
-                    .onCreate(v -> onLeft(v)).flex1()
+                    .onCreate(e -> onLeft(e.getView())).flex1()
             )
             .child(div().w(px(1)).hFull().bg(rgb(0x3a3a3a)))
             .child(
                 CityscapeEditor.component().model(javascript).context(context).options(rightOptions)
-                    .onCreate(v -> onRight(v)).flex1()
+                    .onCreate(e -> onRight(e.getView())).flex1()
             );
     }
 

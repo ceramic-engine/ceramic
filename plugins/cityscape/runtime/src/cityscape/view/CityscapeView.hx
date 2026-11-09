@@ -6,7 +6,6 @@ package cityscape.view;
 
 import cityscape.Cityscape;
 import cityscape.base.common.CharCode;
-import cityscape.base.common.Event;
 import cityscape.base.common.Lifecycle.IDisposable;
 import cityscape.base.common.Strings;
 import cityscape.common.CursorEvents.CursorChangeReason;
@@ -26,14 +25,16 @@ import cityscape.common.core.Selection;
 import cityscape.common.viewLayout.LineDecorations;
 import cityscape.common.viewLayout.ViewLineRenderer;
 import cityscape.common.viewModel.MonospaceLineBreaksComputer;
-import cityscape.common.TextModelEvents.IModelContentChangedEvent;
-import cityscape.common.ViewModelEventDispatcher;
-import cityscape.common.viewLayout.ViewLayout;
 import cityscape.common.viewModel.ViewModelImpl;
-import cityscape.contrib.folding.view.Folding;
-import cityscape.contrib.wordOperations.view.WordOperations;
+import cityscape.view.CoreCommands.CoreCommandArgs;
+import cityscape.view.CoreCommands.CoreNavigationCommands;
+import cityscape.view.CoreCommands.NavigationCommandRevealType;
+import cityscape.common.EditorCommon.Handler;
+import cityscape.common.ModelLineProjectionData.ILineBreaksComputerFactory;
+import glaze.MouseButton;
 import cityscape.view.EditorBrowser;
-import cityscape.view.CoreCommands;
+import cityscape.view.widget.codeEditor.CodeEditorWidget;
+import cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent;
 import cityscape.view.DecorationStyleResolver;
 import cityscape.view.MeasuredLineBreaksComputer;
 import cityscape.view.config.EditorConfiguration;
@@ -152,26 +153,59 @@ class RenderedViewLine {
 }
 
 /**
- * The Glaze view of a Cityscape editor: one per editor, holding its view
- * model (selections, scroll, wrapping) over a text model that other editors
- * may show too. Implements the text input of Glaze (IME) and the scrollbar
- * handle of the kit.
+ * The Glaze view of a Cityscape editor (Monaco's `View` and its view parts,
+ * the mouse handler and the text area input): it renders the view model of
+ * its `CodeEditorWidget`, which holds the model, the options and the
+ * editor's state, and feeds it the input. Implements the text input of
+ * Glaze (IME) and the scrollbar handle of the kit.
  *
- * The keys, the mouse and the text input run Monaco's commands (core
- * commands, word operations, typing through the cursor controller of the
- * view model), which is why the view is the `ICodeEditor` of the commands.
- * TODO(step 3, keybindings): the keys are mapped here until the keybinding
- * service of step 3 maps them (Monaco's default keybindings of macOS and
- * the other platforms).
+ * Keys reach the editor through its keybindings (`CityscapeEditor` binds
+ * one Glaze key binding per chord, handled by `onRunKeybinding`); a key
+ * without keybinding is typed when it is Enter (Monaco's textarea input).
  */
-class CityscapeView extends GlazeModel implements glaze.EntityInputHandler implements ICodeEditor implements IFoldingEditor {
+class CityscapeView extends GlazeModel implements glaze.EntityInputHandler implements ICodeEditorView {
 
+    public final widget:CodeEditorWidget;
     public final context:Cityscape;
-    public final editorId:Int;
 
-    public var model(default, null):Null<ITextModel> = null;
-    public var viewModel(default, null):Null<ViewModel> = null;
-    public final configuration:EditorConfiguration;
+    /**
+     * The numeric id of the editor (the owner id of its decorations).
+     */
+    public var editorId(get, never):Int;
+    inline function get_editorId():Int {
+        return widget.getNumericId();
+    }
+
+    /**
+     * Shows a model (`CodeEditorWidget.setModel`).
+     */
+    public function setModel(model:Null<ITextModel>):Void {
+        widget.setModel(model);
+    }
+
+    public var model(get, never):Null<ITextModel>;
+    inline function get_model():Null<ITextModel> {
+        return widget.getModel();
+    }
+
+    public var viewModel(get, never):Null<ViewModel>;
+    inline function get_viewModel():Null<ViewModel> {
+        return widget.getViewModel();
+    }
+
+    public var configuration(get, never):EditorConfiguration;
+    inline function get_configuration():EditorConfiguration {
+        return widget.getConfiguration();
+    }
+
+    /**
+     * The folding of this editor (its `editor.contrib.folding` contribution).
+     */
+    public var foldingController(get, never):Null<cityscape.contrib.folding.view.Folding.FoldingController>;
+    function get_foldingController() {
+        return cityscape.contrib.folding.view.Folding.FoldingController.get(widget);
+    }
+
     public final measurements:EditorFontMeasurements;
     public final resolver:DecorationStyleResolver;
     public final theme:ViewTheme;
@@ -180,13 +214,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     final app:App;
     var eventHandler:Null<CityscapeViewEventHandler> = null;
-    var outgoingListener:Null<IDisposable> = null;
-
-    /**
-     * `wrappingIndentColumns` (loreline-monaco's `[loreline]` patch): -1 for
-     * Monaco's tab stops.
-     */
-    public var wrappingIndentColumns(default, null):Int = -1;
+    var window:Null<Window> = null;
 
     /**
      * Rendered view lines, by view line number (checked with
@@ -225,65 +253,24 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     // IME composition (model offsets)
     var markedRange:Null<glaze.Range> = null;
 
-    /**
-     * Saved view states of the models this editor showed (the plan: the
-     * editor keeps a view state per displayed model).
-     */
-    final savedViewStates:Map<String, {selections:Array<Selection>, scrollTop:Float, scrollLeft:Float, folding:Null<FoldingStateMemento>}> = new Map();
+    // Keys: the chord of a keybinding that did not handle its key, whose key
+    // down event already reached the editor's listeners
+    var keyDownFiredFor:Null<String> = null;
 
-    // Editor events (Monaco's `ICodeEditor` events the contributions use)
-    final _onDidChangeModel = new VoidEmitter();
-    final _onDidChangeModelContent = new Emitter<IModelContentChangedEvent>();
-    final _onDidChangeCursorPosition = new VoidEmitter();
-    final _onDidChangeModelLanguageConfiguration = new VoidEmitter();
-    final _onMouseDown = new Emitter<EditorMouseEvent>();
-    final _onMouseUp = new Emitter<EditorMouseEvent>();
+    var lastTextFocus:Bool = false;
+    var lastWidgetFocus:Bool = false;
 
-    /**
-     * The editor contributions by id (Monaco's `getContribution`).
-     */
-    final contributions:Map<String, Any> = new Map();
-
-    /**
-     * The folding of this editor (`editor.contrib.folding`).
-     */
-    public final foldingController:FoldingController;
-
-    /**
-     * The keys of the folding actions (TODO(step 3, keybindings): the
-     * keybinding service of the editor replaces this adapter).
-     */
-    final foldingKeybindings:FoldingKeybindings = new FoldingKeybindings();
-
-    /**
-     * Whether the mouse is over the gutter (Monaco's
-     * `.margin-view-overlays:hover`: the folding controls of
-     * `showFoldingControls: 'mouseover'` show).
-     */
-    public var gutterHovered(default, null):Bool = false;
-
-    public function new(cx:Context<CityscapeView>, context:Cityscape, editorId:Int, options:IEditorOptions) {
+    public function new(cx:Context<CityscapeView>, widget:CodeEditorWidget, measurements:EditorFontMeasurements) {
         super();
         this.app = cx.app;
-        this.context = context;
-        this.editorId = editorId;
+        this.widget = widget;
+        this.context = widget.context;
         this.theme = new ViewTheme(context.themeService, context.tokenizationRegistry);
-        this.measurements = EditorFontMeasurements.forApp(cx.app);
+        this.measurements = measurements;
         this.resolver = new DecorationStyleResolver(theme, context.decorationStyles);
-        this.configuration = new EditorConfiguration(false, withDefaultLigatures(options), {width: 600, height: 400}, (bare) -> measurements.readFontInfo(bare));
         this.scrollHandle = new CityscapeScrollHandle(this);
         this.focusHandle = cx.app.focusHandle();
-        this.foldingController = new FoldingController(this);
-        contributions.set(FoldingController.ID, foldingController);
-    }
-
-    /**
-     * Monaco's default `fontLigatures: false` is `'"liga" off, "calt" off'`;
-     * Glaze turns ligatures on when nothing is said (AUDIT A.2.3): the
-     * option is resolved as is, the features are always explicit.
-     */
-    static function withDefaultLigatures(options:IEditorOptions):IEditorOptions {
-        return options;
+        widget.setView(this);
     }
 
     function notifyChanged():Void {
@@ -291,54 +278,288 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     }
 
     /**
-     * Releases the view model and the timers (the component calls it when
-     * it leaves the tree).
+     * Releases the timers and the theme listener (the component calls it
+     * when it leaves the tree, before disposing the widget).
      */
     public function disposeView():Void {
-        detachModel();
-        foldingController.dispose();
-        _onDidChangeModel.dispose();
-        _onDidChangeModelContent.dispose();
-        _onDidChangeCursorPosition.dispose();
-        _onDidChangeModelLanguageConfiguration.dispose();
-        _onMouseDown.dispose();
-        _onMouseUp.dispose();
-        configuration.dispose();
+        widget.setView(null);
+        final viewModel = this.viewModel;
+        if (viewModel != null && eventHandler != null) {
+            viewModel.removeViewEventHandler(eventHandler);
+        }
+        eventHandler = null;
         theme.dispose();
         stopBlink();
     }
 
-    //#region model
+    //#region ICodeEditorView
 
-    public function setModel(model:Null<ITextModel>):Void {
-        if (this.model == model) {
-            return;
-        }
-        detachModel();
-        this.model = model;
-        if (model == null) {
-            return;
-        }
-        final factory = createLineBreaksComputerFactory();
-        final viewModel = new ViewModel(editorId, configuration, model, new MeasuredLineBreaksComputerFactory(measurements), factory, wrappingIndentColumns, context);
-        this.viewModel = viewModel;
+    public function createDomLineBreaksComputerFactory():Null<ILineBreaksComputerFactory> {
+        return new MeasuredLineBreaksComputerFactory(measurements);
+    }
+
+    public function onDidAttachModel(viewModel:ViewModel):Void {
         final handler = new CityscapeViewEventHandler(this);
         this.eventHandler = handler;
         viewModel.addViewEventHandler(handler);
-        outgoingListener = viewModel.onEvent(e -> onOutgoingEvent(e));
-        configuration.setModelLineCount(model.getLineCount());
-        _onDidChangeModel.fire();
-        final saved = savedViewStates.get(model.id);
-        if (saved != null) {
-            viewModel.setSelections('restoreViewState', saved.selections);
-            foldingController.restoreViewState(saved.folding);
-            viewModel.viewLayout.setScrollPosition({scrollTop: saved.scrollTop, scrollLeft: saved.scrollLeft}, ScrollType.Immediate);
-        }
         renderCache = new Map();
         maxLineWidth = 0;
         lastVisibleStart = -1;
         lastVisibleEnd = -1;
+        viewModel.setHasFocus(lastTextFocus);
         notifyChanged();
+    }
+
+    public function onWillDetachModel(viewModel:ViewModel):Void {
+        if (eventHandler != null) {
+            viewModel.removeViewEventHandler(eventHandler);
+        }
+        eventHandler = null;
+        renderCache = new Map();
+        notifyChanged();
+    }
+
+    public function focus():Void {
+        final w = this.window;
+        if (w != null) {
+            focusHandle.focus(w, app);
+            syncFocus(w, app);
+        }
+    }
+
+    public function isFocused():Bool {
+        final w = this.window;
+        return w != null && focusHandle.isFocused(w);
+    }
+
+    public function hasWidgetFocus():Bool {
+        final w = this.window;
+        return w != null && focusHandle.containsFocused(w, app);
+    }
+
+    public function render(forceRedraw:Bool):Void {
+        if (forceRedraw) {
+            renderCache = new Map();
+        }
+        notifyChanged();
+    }
+
+    public function clipboardAction(action:String):Void {
+        switch (action) {
+            case 'copy':
+                copySelection(app);
+            case 'cut':
+                copySelection(app);
+                if (viewModel != null) {
+                    widget.trigger('keyboard', Handler.Cut, null);
+                }
+            case 'paste':
+                final item = app.readFromClipboard();
+                final text = item != null ? item.text() : null;
+                if (text != null) {
+                    pasteText(text);
+                }
+            case _:
+        }
+        restartBlink();
+        notifyChanged();
+    }
+
+    public function overlayWidgetsChanged():Void {
+        notifyChanged();
+    }
+
+    public function getOffsetForColumn(modelLineNumber:Int, modelColumn:Int):Float {
+        final viewModel = this.viewModel;
+        if (viewModel == null) {
+            return -1;
+        }
+        final viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(new Position(modelLineNumber, modelColumn));
+        return renderViewLine(viewPosition.lineNumber).columnToX(viewPosition.column);
+    }
+
+    public function getScrolledVisiblePosition(modelPosition:Position):Null<{top:Float, left:Float, height:Float}> {
+        final viewModel = this.viewModel;
+        if (viewModel == null) {
+            return null;
+        }
+        final viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(modelPosition);
+        final layout = viewModel.viewLayout;
+        final layoutInfo = configuration.options.get(EditorOption.layoutInfo);
+        final x = renderViewLine(viewPosition.lineNumber).columnToX(viewPosition.column);
+        return {
+            top: layout.getVerticalOffsetForLineNumber(viewPosition.lineNumber) - layout.getCurrentScrollTop(),
+            left: layoutInfo.contentLeft + x - layout.getCurrentScrollLeft(),
+            height: configuration.options.get(EditorOption.lineHeight)
+        };
+    }
+
+    /**
+     * The mouse target under a window point (`mouseTargetAt`).
+     */
+    public function getTargetAtClientPoint(clientX:Float, clientY:Float):Null<MouseTarget> {
+        if (viewModel == null) {
+            return null;
+        }
+        return mouseTargetAt(new Point(clientX, clientY));
+    }
+
+    /**
+     * Monaco's mouse target (`MouseTargetFactory`, in model coordinates like
+     * the targets of the editor's mouse events): the margin parts, the text,
+     * or the empty content after a line or after the lines.
+     */
+    public function mouseTargetAt(point:Point):MouseTarget {
+        final viewModel = this.viewModel;
+        if (viewModel == null) {
+            return new MouseTarget(MouseTargetType.UNKNOWN, null, 0, null);
+        }
+        final converter = viewModel.coordinatesConverter;
+        final layoutInfo = configuration.options.get(EditorOption.layoutInfo);
+        final layout = viewModel.viewLayout;
+        final relativeX = point.x - elementBounds.origin.x;
+        final relativeY = point.y - elementBounds.origin.y;
+        final verticalOffset = relativeY + layout.getCurrentScrollTop();
+        final mouseColumn = mouseColumnAt(point);
+        if (relativeX < 0 || relativeY < 0 || relativeX > elementBounds.size.width || relativeY > elementBounds.size.height) {
+            return new MouseTarget(MouseTargetType.OUTSIDE_EDITOR, null, mouseColumn, null);
+        }
+        if (relativeX < layoutInfo.contentLeft) {
+            // _hitTestMargin: the full line range at the mouse
+            var lineNumber:Int;
+            var range:Range;
+            var isAfterLines = false;
+            if (layout.isAfterLines(verticalOffset)) {
+                lineNumber = viewModel.getLineCount();
+                final maxColumn = viewModel.getLineMaxColumn(lineNumber);
+                range = new Range(lineNumber, maxColumn, lineNumber, maxColumn);
+                isAfterLines = true;
+            }
+            else {
+                lineNumber = layout.getLineNumberAtVerticalOffset(verticalOffset);
+                range = new Range(lineNumber, 1, lineNumber, viewModel.getLineMaxColumn(lineNumber));
+            }
+            final modelRange = converter.convertViewRangeToModelRange(range);
+            final position = modelRange.getStartPosition();
+            var offset = Math.abs(relativeX);
+            final offsetX = offset;
+            offset -= layoutInfo.glyphMarginLeft;
+            var type:MouseTargetType;
+            var elementLeft:Float;
+            if (offset <= layoutInfo.glyphMarginWidth) {
+                type = MouseTargetType.GUTTER_GLYPH_MARGIN;
+                elementLeft = layoutInfo.glyphMarginLeft;
+            }
+            else {
+                offset -= layoutInfo.glyphMarginWidth;
+                if (offset <= layoutInfo.lineNumbersWidth) {
+                    type = MouseTargetType.GUTTER_LINE_NUMBERS;
+                    elementLeft = layoutInfo.lineNumbersLeft;
+                }
+                else {
+                    type = MouseTargetType.GUTTER_LINE_DECORATIONS;
+                    elementLeft = layoutInfo.decorationsLeft;
+                }
+            }
+            return new MouseTarget(type, position, mouseColumn, modelRange, elementLeft, offsetX, isAfterLines);
+        }
+        // _hitTestViewLines
+        if (layout.isInTopPadding(verticalOffset)) {
+            return new MouseTarget(MouseTargetType.CONTENT_EMPTY, new Position(1, 1), mouseColumn, new Range(1, 1, 1, 1), 0, 0, true);
+        }
+        if (layout.isAfterLines(verticalOffset) || layout.isInBottomPadding(verticalOffset)) {
+            final lineCount = viewModel.getLineCount();
+            final position = converter.convertViewPositionToModelPosition(new Position(lineCount, viewModel.getLineMaxColumn(lineCount)));
+            return new MouseTarget(MouseTargetType.CONTENT_EMPTY, position, mouseColumn, Range.fromPositions(position, position), 0, 0, true);
+        }
+        final lineNumber = layout.getLineNumberAtVerticalOffset(verticalOffset);
+        final line = renderViewLine(lineNumber);
+        final contentX:Float = relativeX - layoutInfo.contentLeft + layout.getCurrentScrollLeft();
+        // The `⋯` after a folded line is part of the line (a CSS `::after`
+        // in Monaco)
+        final lineWidth:Float = line.layout.width + foldedEllipsisWidth(line);
+        if (viewModel.getLineLength(lineNumber) == 0 || contentX >= lineWidth) {
+            final viewColumn = viewModel.getLineLength(lineNumber) == 0 ? 1 : viewModel.getLineMaxColumn(lineNumber);
+            final position = converter.convertViewPositionToModelPosition(new Position(lineNumber, viewColumn));
+            return new MouseTarget(MouseTargetType.CONTENT_EMPTY, position, mouseColumn, Range.fromPositions(position, position), 0, 0, false, contentX - lineWidth);
+        }
+        final viewPosition = new Position(lineNumber, contentX >= line.layout.width ? viewModel.getLineMaxColumn(lineNumber) : line.xToColumn(contentX));
+        final position = converter.convertViewPositionToModelPosition(viewPosition);
+        return new MouseTarget(MouseTargetType.CONTENT_TEXT, position, mouseColumn, Range.fromPositions(position, position));
+    }
+
+    /**
+     * The width of the `⋯` drawn after a folded line (0 when the line has
+     * no `inline-folded` part).
+     */
+    public function foldedEllipsisWidth(line:RenderedViewLine):Float {
+        if (!lineHasFoldedEllipsis(line)) {
+            return 0;
+        }
+        // folding.css: `content: "\22EF"` with `margin: 0.1em 0.2em 0 0.2em`
+        return fontInfo().fontSize * 0.4 + foldedEllipsisLayout().width;
+    }
+
+    static inline final FOLDED_ELLIPSIS = '\u22EF';
+
+    var _ellipsisLayout:Null<LineLayout> = null;
+    var _ellipsisKey:String = '';
+
+    /**
+     * The shaped `⋯` of folding.css's `.inline-folded:after`, in the editor
+     * font (cached while the fonts stay the same).
+     */
+    public function foldedEllipsisLayout():LineLayout {
+        final info = fontInfo();
+        final textSystem = app.textSystem();
+        final fontId = textSystem.resolveFont(baseFont(null, false, null));
+        final key = textSystem.fontGeneration + '|' + info.fontSize + '|' + fontId;
+        if (_ellipsisLayout == null || _ellipsisKey != key) {
+            _ellipsisKey = key;
+            _ellipsisLayout = textSystem.platformTextSystem.layoutLine(FOLDED_ELLIPSIS, info.fontSize, [new FontRun(glaze.util.Utf8.byteLength(FOLDED_ELLIPSIS), fontId)]);
+        }
+        return _ellipsisLayout;
+    }
+
+    public static function lineHasFoldedEllipsis(line:RenderedViewLine):Bool {
+        final names = line.runs.partClassNames;
+        for (i in 0...names.length) {
+            if (names[i].indexOf('inline-folded') != -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //#endregion
+
+    /**
+     * Reads the focus of the editor (its text, its widgets) and tells the
+     * widget when it changed (Monaco's focus tracker and the textarea's
+     * focus events).
+     */
+    public function syncFocus(window:Window, cx:App):Void {
+        this.window = window;
+        final textFocus = focusHandle.isFocused(window);
+        final widgetFocus = textFocus || focusHandle.containsFocused(window, cx);
+        if (widgetFocus != lastWidgetFocus) {
+            lastWidgetFocus = widgetFocus;
+            widget._setWidgetFocus(widgetFocus);
+        }
+        if (textFocus != lastTextFocus) {
+            lastTextFocus = textFocus;
+            final viewModel = this.viewModel;
+            if (viewModel != null) {
+                viewModel.setHasFocus(textFocus);
+            }
+            if (textFocus) {
+                restartBlink();
+            }
+            else {
+                stopBlink();
+                cursorVisible = true;
+            }
+        }
     }
 
     var lastVisibleStart:Int = -1;
@@ -359,66 +580,17 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         viewModel.visibleLinesStabilized();
     }
 
-    function detachModel():Void {
-        final viewModel = this.viewModel;
-        final model = this.model;
-        if (viewModel != null && model != null) {
-            savedViewStates.set(model.id, {
-                selections: viewModel.getSelections(),
-                scrollTop: viewModel.viewLayout.getCurrentScrollTop(),
-                scrollLeft: viewModel.viewLayout.getCurrentScrollLeft(),
-                folding: foldingController.saveViewState()
-            });
-            if (outgoingListener != null) {
-                outgoingListener.dispose();
-                outgoingListener = null;
-            }
-            if (eventHandler != null) {
-                viewModel.removeViewEventHandler(eventHandler);
-            }
-            viewModel.dispose();
-            // Monaco's `_detachModel`: the decorations of this editor go
-            model.removeAllDecorationsWithOwnerId(editorId);
-        }
-        this.viewModel = null;
-        this.eventHandler = null;
-    }
-
-    function createLineBreaksComputerFactory():MonospaceLineBreaksComputerFactory {
-        final options = configuration.options;
-        return MonospaceLineBreaksComputerFactory.create(options.get(EditorOption.wordWrapBreakBeforeCharacters), options.get(EditorOption.wordWrapBreakAfterCharacters));
-    }
-
-    /**
-     * The events of the view model as editor events (Monaco's
-     * `CodeEditorWidget` turns them into its own events).
-     */
-    function onOutgoingEvent(e:OutgoingViewModelEvent):Void {
-        switch (e.kind) {
-            case OutgoingViewModelEventKind.ModelContentChanged:
-                _onDidChangeModelContent.fire((cast e : ModelContentChangedEvent).event);
-            case OutgoingViewModelEventKind.CursorStateChanged:
-                _onDidChangeCursorPosition.fire();
-            case OutgoingViewModelEventKind.ModelLanguageConfigurationChanged:
-                _onDidChangeModelLanguageConfiguration.fire();
-            case _:
-        }
-    }
-
     public function updateOptions(options:IEditorOptions):Void {
-        configuration.updateOptions(options);
+        widget.updateOptions(options);
         renderCache = new Map();
         notifyChanged();
     }
 
     public function setWrappingIndentColumns(value:Int):Void {
-        if (wrappingIndentColumns == value) {
+        if (widget.getWrappingIndentColumns() == value) {
             return;
         }
-        wrappingIndentColumns = value;
-        if (viewModel != null) {
-            viewModel.setWrappingIndentColumns(value);
-        }
+        widget.setWrappingIndentColumns(value);
         renderCache = new Map();
         notifyChanged();
     }
@@ -456,6 +628,11 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
                 scrollTop = Std.int(top);
             case VerticalRevealType.Bottom:
                 scrollTop = Std.int(bottom - viewport.height);
+            case VerticalRevealType.NearTop | VerticalRevealType.NearTopIfOutsideViewport:
+                if (e.verticalType == VerticalRevealType.NearTop || top < viewport.top || bottom > viewport.top + viewport.height) {
+                    // Monaco: 5 lines of context above
+                    scrollTop = Std.int(Math.max(0, top - 5 * lineHeight));
+                }
             case _:
                 if (top < viewport.top) {
                     scrollTop = Std.int(top);
@@ -478,15 +655,16 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         layout.setScrollPosition({scrollTop: scrollTop, scrollLeft: scrollLeft}, ScrollType.Immediate);
     }
 
-    //#endregion
-
     //#region layout and rendering
 
     /**
      * Called by the element at prepaint with its bounds (window coordinates).
      */
-    public function layoutTo(bounds:Bounds, scaleFactor:Float):Void {
+    public function layoutTo(bounds:Bounds, scaleFactor:Float, ?window:Window):Void {
         elementBounds = bounds;
+        if (window != null) {
+            this.window = window;
+        }
         if (configuration.pixelRatio != scaleFactor) {
             configuration.pixelRatio = scaleFactor;
             configuration.recomputeOptions();
@@ -677,6 +855,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     //#endregion
 
+
     //#region mouse
 
     /**
@@ -689,6 +868,22 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final fontInfo:FontInfo = configuration.options.get(EditorOption.fontInfo);
         final x = point.x - elementBounds.origin.x - layoutInfo.contentLeft + viewModel.viewLayout.getCurrentScrollLeft();
         return Std.int(Math.max(0, Math.round(x / fontInfo.typicalHalfwidthCharacterWidth))) + 1;
+    }
+
+    function editorMouseEvent(button:MouseButton, position:Point, modifiers:glaze.Modifiers, clickCount:Int):EditorMouseEvent {
+        final data = new EditorMouseEventData(
+            button == MouseButton.Left,
+            button == MouseButton.Middle,
+            button == MouseButton.Right,
+            modifiers.control,
+            modifiers.shift,
+            modifiers.alt,
+            modifiers.platform,
+            clickCount,
+            position.x,
+            position.y
+        );
+        return new EditorMouseEvent(data, mouseTargetAt(position));
     }
 
     /**
@@ -750,147 +945,6 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         }
     }
 
-    /**
-     * Monaco's mouse target (`MouseTargetFactory`, in model coordinates like
-     * the targets of the editor's mouse events): the margin parts, the text,
-     * or the empty content after a line or after the lines.
-     */
-    public function mouseTargetAt(point:Point):MouseTarget {
-        final viewModel = this.viewModel;
-        if (viewModel == null) {
-            return new MouseTarget(MouseTargetType.UNKNOWN, null, 0, null);
-        }
-        final converter = viewModel.coordinatesConverter;
-        final layoutInfo = configuration.options.get(EditorOption.layoutInfo);
-        final layout = viewModel.viewLayout;
-        final relativeX = point.x - elementBounds.origin.x;
-        final relativeY = point.y - elementBounds.origin.y;
-        final verticalOffset = relativeY + layout.getCurrentScrollTop();
-        final mouseColumn = mouseColumnAt(point);
-        if (relativeX < 0 || relativeY < 0 || relativeX > elementBounds.size.width || relativeY > elementBounds.size.height) {
-            return new MouseTarget(MouseTargetType.OUTSIDE_EDITOR, null, mouseColumn, null);
-        }
-        if (relativeX < layoutInfo.contentLeft) {
-            // _hitTestMargin: the full line range at the mouse
-            var lineNumber:Int;
-            var range:Range;
-            var isAfterLines = false;
-            if (layout.isAfterLines(verticalOffset)) {
-                lineNumber = viewModel.getLineCount();
-                final maxColumn = viewModel.getLineMaxColumn(lineNumber);
-                range = new Range(lineNumber, maxColumn, lineNumber, maxColumn);
-                isAfterLines = true;
-            }
-            else {
-                lineNumber = layout.getLineNumberAtVerticalOffset(verticalOffset);
-                range = new Range(lineNumber, 1, lineNumber, viewModel.getLineMaxColumn(lineNumber));
-            }
-            final modelRange = converter.convertViewRangeToModelRange(range);
-            final position = modelRange.getStartPosition();
-            var offset = Math.abs(relativeX);
-            final offsetX = offset;
-            offset -= layoutInfo.glyphMarginLeft;
-            var type:MouseTargetType;
-            var elementLeft:Float;
-            if (offset <= layoutInfo.glyphMarginWidth) {
-                type = MouseTargetType.GUTTER_GLYPH_MARGIN;
-                elementLeft = layoutInfo.glyphMarginLeft;
-            }
-            else {
-                offset -= layoutInfo.glyphMarginWidth;
-                if (offset <= layoutInfo.lineNumbersWidth) {
-                    type = MouseTargetType.GUTTER_LINE_NUMBERS;
-                    elementLeft = layoutInfo.lineNumbersLeft;
-                }
-                else {
-                    type = MouseTargetType.GUTTER_LINE_DECORATIONS;
-                    elementLeft = layoutInfo.decorationsLeft;
-                }
-            }
-            return new MouseTarget(type, position, mouseColumn, modelRange, elementLeft, offsetX, isAfterLines);
-        }
-        // _hitTestViewLines
-        if (layout.isInTopPadding(verticalOffset)) {
-            return new MouseTarget(MouseTargetType.CONTENT_EMPTY, new Position(1, 1), mouseColumn, new Range(1, 1, 1, 1), 0, 0, true);
-        }
-        if (layout.isAfterLines(verticalOffset) || layout.isInBottomPadding(verticalOffset)) {
-            final lineCount = viewModel.getLineCount();
-            final position = converter.convertViewPositionToModelPosition(new Position(lineCount, viewModel.getLineMaxColumn(lineCount)));
-            return new MouseTarget(MouseTargetType.CONTENT_EMPTY, position, mouseColumn, Range.fromPositions(position, position), 0, 0, true);
-        }
-        final lineNumber = layout.getLineNumberAtVerticalOffset(verticalOffset);
-        final line = renderViewLine(lineNumber);
-        final contentX:Float = relativeX - layoutInfo.contentLeft + layout.getCurrentScrollLeft();
-        // The `⋯` after a folded line is part of the line (a CSS `::after`
-        // in Monaco)
-        final lineWidth:Float = line.layout.width + foldedEllipsisWidth(line);
-        if (viewModel.getLineLength(lineNumber) == 0 || contentX >= lineWidth) {
-            final viewColumn = viewModel.getLineLength(lineNumber) == 0 ? 1 : viewModel.getLineMaxColumn(lineNumber);
-            final position = converter.convertViewPositionToModelPosition(new Position(lineNumber, viewColumn));
-            return new MouseTarget(MouseTargetType.CONTENT_EMPTY, position, mouseColumn, Range.fromPositions(position, position), 0, 0, false, contentX - lineWidth);
-        }
-        final viewPosition = new Position(lineNumber, contentX >= line.layout.width ? viewModel.getLineMaxColumn(lineNumber) : line.xToColumn(contentX));
-        final position = converter.convertViewPositionToModelPosition(viewPosition);
-        return new MouseTarget(MouseTargetType.CONTENT_TEXT, position, mouseColumn, Range.fromPositions(position, position));
-    }
-
-    /**
-     * The width of the `⋯` drawn after a folded line (0 when the line has
-     * no `inline-folded` part).
-     */
-    public function foldedEllipsisWidth(line:RenderedViewLine):Float {
-        if (!lineHasFoldedEllipsis(line)) {
-            return 0;
-        }
-        // folding.css: `content: "\22EF"` with `margin: 0.1em 0.2em 0 0.2em`
-        return fontInfo().fontSize * 0.4 + foldedEllipsisLayout().width;
-    }
-
-    static inline final FOLDED_ELLIPSIS = '\u22EF';
-
-    var _ellipsisLayout:Null<LineLayout> = null;
-    var _ellipsisKey:String = '';
-
-    /**
-     * The shaped `⋯` of folding.css's `.inline-folded:after`, in the editor
-     * font (cached while the fonts stay the same).
-     */
-    public function foldedEllipsisLayout():LineLayout {
-        final info = fontInfo();
-        final textSystem = app.textSystem();
-        final fontId = textSystem.resolveFont(baseFont(null, false, null));
-        final key = textSystem.fontGeneration + '|' + info.fontSize + '|' + fontId;
-        if (_ellipsisLayout == null || _ellipsisKey != key) {
-            _ellipsisKey = key;
-            _ellipsisLayout = textSystem.platformTextSystem.layoutLine(FOLDED_ELLIPSIS, info.fontSize, [new FontRun(glaze.util.Utf8.byteLength(FOLDED_ELLIPSIS), fontId)]);
-        }
-        return _ellipsisLayout;
-    }
-
-    public static function lineHasFoldedEllipsis(line:RenderedViewLine):Bool {
-        final names = line.runs.partClassNames;
-        for (i in 0...names.length) {
-            if (names[i].indexOf('inline-folded') != -1) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function editorMouseEvent(button:glaze.MouseButton, position:Point, modifiers:glaze.Modifiers, clickCount:Int):EditorMouseEvent {
-        final data = new EditorMouseEventData(
-            button == glaze.MouseButton.Left,
-            button == glaze.MouseButton.Middle,
-            button == glaze.MouseButton.Right,
-            modifiers.control,
-            modifiers.shift,
-            modifiers.alt,
-            modifiers.platform,
-            clickCount
-        );
-        return new EditorMouseEvent(data, mouseTargetAt(position));
-    }
-
     public function handleMouseDown(event:MouseDownEvent, window:Window, cx:App):Void {
         final viewModel = this.viewModel;
         if (viewModel == null) {
@@ -898,21 +952,76 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         }
         final e = editorMouseEvent(event.button, event.position, event.modifiers, event.clickCount);
         final type = e.target.type;
+        if (event.button == MouseButton.Right) {
+            // Monaco's context menu: the editor takes the focus, the cursor
+            // moves to the click unless it is inside a selection
+            focusHandle.focus(window, cx);
+            syncFocus(window, cx);
+            final position = e.target.position;
+            if (position != null && (type == MouseTargetType.CONTENT_TEXT || type == MouseTargetType.CONTENT_EMPTY)) {
+                var insideSelection = false;
+                for (s in viewModel.getSelections()) {
+                    if (!s.isEmpty() && s.containsPosition(position)) {
+                        insideSelection = true;
+                        break;
+                    }
+                }
+                if (!insideSelection) {
+                    dispatchMouse(event.position, false, 1, false, false);
+                }
+            }
+            widget._fireMouseDown(e);
+            widget._fireContextMenu(e);
+            restartBlink();
+            notifyChanged();
+            return;
+        }
         // Monaco's `MouseHandler._onMouseDown`: the content and the line
         // numbers start a mouse down operation; the rest of the gutter does
         // not steal the focus nor move the cursor
-        if (event.button == glaze.MouseButton.Left && (type == MouseTargetType.CONTENT_TEXT || type == MouseTargetType.CONTENT_EMPTY || type == MouseTargetType.GUTTER_LINE_NUMBERS)) {
+        if (event.button == MouseButton.Left && (type == MouseTargetType.CONTENT_TEXT || type == MouseTargetType.CONTENT_EMPTY || type == MouseTargetType.GUTTER_LINE_NUMBERS)) {
             focusHandle.focus(window, cx);
+            syncFocus(window, cx);
             mouseDown = true;
             mouseDownCount = event.clickCount;
             mouseDownAlt = event.modifiers.alt;
             mouseDownShift = event.modifiers.shift;
-            dispatchMouse(event.position, event.modifiers.shift, mouseDownCount, mouseDownAlt, mouseDownShift);
+            mouseDownOnLineNumbers = (type == MouseTargetType.GUTTER_LINE_NUMBERS);
+            dispatchMouseFor(event.position, event.modifiers.shift);
             restartBlink();
         }
-        _onMouseDown.fire(e);
+        widget._fireMouseDown(e);
         notifyChanged();
     }
+
+    /**
+     * Monaco's `ViewController.dispatchMouse` with `startedOnLineNumbers`:
+     * a drag started on the line numbers works on whole lines.
+     */
+    function dispatchMouseFor(point:Point, inSelectionMode:Bool):Void {
+        final viewModel = this.viewModel;
+        if (!mouseDownOnLineNumbers) {
+            dispatchMouse(point, inSelectionMode, mouseDownCount, mouseDownAlt, mouseDownShift);
+            return;
+        }
+        final viewPosition = viewPositionAt(point);
+        final position = viewModel.coordinatesConverter.convertViewPositionToModelPosition(viewPosition);
+        final args:CoreCommandArgs = {source: 'mouse', position: position, viewPosition: viewPosition, revealType: NavigationCommandRevealType.Minimal};
+        if (mouseDownAlt) {
+            if (inSelectionMode) {
+                CoreNavigationCommands.LastCursorLineSelect.runCoreEditorCommand(viewModel, args);
+            }
+            else {
+                args.wholeLine = true;
+                CoreNavigationCommands.CreateCursor.runCoreEditorCommand(viewModel, args);
+            }
+        }
+        else {
+            (inSelectionMode ? CoreNavigationCommands.LineSelectDrag : CoreNavigationCommands.LineSelect).runCoreEditorCommand(viewModel, args);
+        }
+    }
+
+    var mouseDownOnLineNumbers:Bool = false;
 
     public function handleMouseMove(event:MouseMoveEvent, window:Window, cx:App):Void {
         final viewModel = this.viewModel;
@@ -923,9 +1032,10 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final relativeX = event.position.x - elementBounds.origin.x;
         setGutterHovered(relativeX >= 0 && relativeX < layoutInfo.contentLeft);
         if (!mouseDown || event.pressedButton == null) {
+            widget._fireMouseMove(editorMouseEvent(MouseButton.Left, event.position, event.modifiers, 0));
             return;
         }
-        dispatchMouse(event.position, true, mouseDownCount, mouseDownAlt, mouseDownShift);
+        dispatchMouseFor(event.position, true);
         viewModel.revealPrimaryCursor('mouse', true, true);
         notifyChanged();
     }
@@ -939,6 +1049,13 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         }
     }
 
+    /**
+     * Whether the mouse is over the gutter (Monaco's
+     * `.margin-view-overlays:hover`: the folding controls of
+     * `showFoldingControls: 'mouseover'` show).
+     */
+    public var gutterHovered(default, null):Bool = false;
+
     function setGutterHovered(hovered:Bool):Void {
         if (gutterHovered != hovered) {
             gutterHovered = hovered;
@@ -947,11 +1064,11 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     }
 
     public function handleMouseUp(event:MouseUpEvent, window:Window, cx:App):Void {
-        if (event.button == glaze.MouseButton.Left) {
+        if (event.button == MouseButton.Left) {
             mouseDown = false;
         }
         if (viewModel != null) {
-            _onMouseUp.fire(editorMouseEvent(event.button, event.position, event.modifiers, event.clickCount));
+            widget._fireMouseUp(editorMouseEvent(event.button, event.position, event.modifiers, event.clickCount));
             notifyChanged();
         }
     }
@@ -972,6 +1089,91 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         viewModel.viewLayout.deltaScrollNow(dx, dy);
         cx.stopPropagation();
         notifyChanged();
+    }
+
+    //#endregion
+
+    /**
+     * Runs a folding command by its Monaco id (`editor.fold`,
+     * `editor.foldAll`, `editor.foldLevel2`...) through the editor's
+     * actions. Returns false when there is no such command or its arguments
+     * are invalid.
+     */
+    public function runFoldingCommand(id:String, ?args:cityscape.contrib.folding.view.Folding.FoldingArguments):Bool {
+        if (cityscape.contrib.folding.view.Folding.FoldingCommands.get(id) == null) {
+            return false;
+        }
+        if ((id == 'editor.fold' || id == 'editor.unfold') && !cityscape.contrib.folding.view.Folding.FoldingAction.foldingArgumentsConstraint(args)) {
+            return false;
+        }
+        widget.trigger('api', id, args);
+        notifyChanged();
+        return true;
+    }
+
+    //#region keys
+
+    /**
+     * A chord bound by the editor's keybindings was pressed while the editor
+     * (or one of its widgets) has the focus: Monaco's keybinding service
+     * resolves it against the editor's context keys and runs the command on
+     * this editor. Returns whether the key was handled (otherwise the caller
+     * lets the key go on to the next Glaze binding: an app shortcut).
+     */
+    public function onRunKeybinding(keypress:String, window:Window, cx:App):Bool {
+        syncFocus(window, cx);
+        widget._fireKeyDown(KeyboardEvents.fromDispatchString(keypress));
+        keyDownFiredFor = keypress;
+        final handled = context.codeEditorService.withInvokingEditor(widget, () -> {
+            return context.keybindingService.dispatchKeypress(keypress, KeyboardEvents.labelOf(keypress), widget.contextKeyService);
+        });
+        if (handled) {
+            keyDownFiredFor = null;
+            restartBlink();
+            notifyChanged();
+        }
+        return handled;
+    }
+
+    /**
+     * A key no keybinding handled: the editor's `onKeyDown` listeners get
+     * it, and Enter is typed (Monaco's textarea input).
+     */
+    public function onKeyDown(event:KeyDownEvent, window:Window, cx:App):Void {
+        final viewModel = this.viewModel;
+        if (viewModel == null) {
+            return;
+        }
+        final ks = event.keystroke;
+        final dispatch = KeyboardEvents.dispatchStringOf(ks);
+        if (dispatch == null || dispatch != keyDownFiredFor) {
+            final e = KeyboardEvents.fromKeystroke(ks);
+            if (e != null) {
+                widget._fireKeyDown(e);
+            }
+        }
+        final alreadyDispatched = dispatch != null && dispatch == keyDownFiredFor;
+        keyDownFiredFor = null;
+        final keybindingService = context.keybindingService;
+        if (dispatch != null && !alreadyDispatched && keybindingService.inChordMode) {
+            // Monaco dispatches every key: in chord mode, a key with no Glaze
+            // binding ends the chord ("is not a command") and is not typed
+            context.codeEditorService.withInvokingEditor(widget, () -> {
+                return keybindingService.dispatchKeypress(dispatch, KeyboardEvents.labelOf(dispatch), widget.contextKeyService);
+            });
+            cx.stopPropagation();
+            return;
+        }
+        final mods = ks.modifiers;
+        if (ks.key == 'enter' && !mods.control && !mods.platform && !mods.alt) {
+            if (configuration.options.get(EditorOption.readOnly)) {
+                return;
+            }
+            widget._typeFromKeyboard('\n');
+            restartBlink();
+            cx.stopPropagation();
+            notifyChanged();
+        }
     }
 
     //#endregion
@@ -1004,230 +1206,13 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     //#endregion
 
-    //#region editing: Monaco's commands (ICodeEditor)
-
-    public function _getViewModel():Null<IViewModel> {
-        return this.viewModel;
-    }
-
-    public function getTextModel():Null<ITextModel> {
-        return this.model;
-    }
-
-    public function getOption<V>(id:EditorOption<V>):V {
-        return configuration.options.get(id);
-    }
-
-    public function getSelections():Null<Array<Selection>> {
-        return viewModel != null ? viewModel.getSelections() : null;
-    }
-
-    public function revealPosition(position:IPosition, ?scrollType:ScrollType):Void {
-        final viewModel = this.viewModel;
-        if (viewModel == null) {
-            return;
-        }
-        final validated = model.validatePosition(position);
-        final viewRange = viewModel.coordinatesConverter.convertModelRangeToViewRange(new Range(validated.lineNumber, validated.column, validated.lineNumber, validated.column));
-        viewModel.revealRange('api', true, viewRange, VerticalRevealType.Simple, scrollType != null ? scrollType : ScrollType.Smooth);
-    }
-
-    //#endregion
-
-    //#region the editor of the contributions (IFoldingEditor)
-
-    public function getFoldingContext():Cityscape {
-        return context;
-    }
-
-    public function getContribution(id:String):Null<Any> {
-        return contributions.get(id);
-    }
-
-    public function getModel():Null<ITextModel> {
-        return this.model;
-    }
-
-    public function getSelection():Null<Selection> {
-        return viewModel != null ? viewModel.getSelection() : null;
-    }
-
-    public function getPosition():Null<Position> {
-        return viewModel != null ? viewModel.getPosition() : null;
-    }
-
-    public function setSelections(selections:Array<Selection>):Void {
-        if (viewModel != null) {
-            viewModel.setSelections('api', selections);
-            notifyChanged();
-        }
-    }
-
-    public function setSelection(selection:Selection):Void {
-        setSelections([selection]);
-    }
-
-    public function changeDecorations<T>(callback:(changeAccessor:IModelDecorationsChangeAccessor) -> T):Null<T> {
-        if (model == null) {
-            // callback will not be called
-            return null;
-        }
-        final result = model.changeDecorations(callback, editorId);
-        notifyChanged();
-        return result;
-    }
-
-    public function removeDecorations(decorationIds:Array<String>):Void {
-        if (model == null || decorationIds.length == 0) {
-            return;
-        }
-        model.changeDecorations(changeAccessor -> changeAccessor.deltaDecorations(decorationIds, []), editorId);
-        notifyChanged();
-    }
-
-    public function setHiddenAreas(ranges:Array<Range>, source:Any):Void {
-        if (viewModel != null) {
-            viewModel.setHiddenAreas(ranges, source);
-            notifyChanged();
-        }
-    }
-
-    public function revealPositionInCenterIfOutsideViewport(position:Position, ?scrollType:ScrollType):Void {
-        final viewModel = this.viewModel;
-        if (viewModel == null) {
-            return;
-        }
-        final validated = model.validatePosition(position);
-        final viewRange = viewModel.coordinatesConverter.convertModelRangeToViewRange(new Range(validated.lineNumber, validated.column, validated.lineNumber, validated.column));
-        viewModel.revealRange('api', true, viewRange, VerticalRevealType.CenterIfOutsideViewport, scrollType != null ? scrollType : ScrollType.Smooth);
-    }
-
-    public function getScrollTop():Float {
-        return viewModel != null ? viewModel.viewLayout.getCurrentScrollTop() : 0;
-    }
-
-    public function setScrollTop(newScrollTop:Float, ?scrollType:ScrollType):Void {
-        if (viewModel != null) {
-            viewModel.viewLayout.setScrollPosition({scrollTop: newScrollTop}, scrollType != null ? scrollType : ScrollType.Immediate);
-            notifyChanged();
-        }
-    }
-
-    public function hasPendingScrollAnimation():Bool {
-        // smooth scrolling is the kit's (no pending Monaco animation)
-        return false;
-    }
-
-    public function getContentHeight():Float {
-        if (viewModel == null) {
-            return -1;
-        }
-        final layout = Std.downcast(viewModel.viewLayout, ViewLayout);
-        return layout != null ? layout.getContentHeight() : viewModel.viewLayout.getScrollHeight();
-    }
-
-    public function getVisibleRanges():Array<Range> {
-        final viewModel = this.viewModel;
-        if (viewModel == null) {
-            return [];
-        }
-        final data = viewModel.viewLayout.getLinesViewportData();
-        final viewRange = new Range(data.startLineNumber, viewModel.getLineMinColumn(data.startLineNumber), data.endLineNumber, viewModel.getLineMaxColumn(data.endLineNumber));
-        return [viewModel.coordinatesConverter.convertViewRangeToModelRange(viewRange)];
-    }
-
-    public function getTopForLineNumber(lineNumber:Int):Float {
-        return getTopForPosition(lineNumber, 1);
-    }
-
-    public function getTopForPosition(lineNumber:Int, column:Int):Float {
-        final viewModel = this.viewModel;
-        if (viewModel == null) {
-            return -1;
-        }
-        final validated = model.validatePosition(new Position(lineNumber, column));
-        final viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(validated);
-        return viewModel.viewLayout.getVerticalOffsetForLineNumber(viewPosition.lineNumber);
-    }
-
-    public function onDidChangeModel(listener:() -> Void):IDisposable {
-        return _onDidChangeModel.event(listener);
-    }
-
-    public function onDidChangeConfiguration(listener:(e:ConfigurationChangedEvent) -> Void):IDisposable {
-        return configuration.onDidChange(listener);
-    }
-
-    public function onDidChangeModelLanguageConfiguration(listener:() -> Void):IDisposable {
-        return _onDidChangeModelLanguageConfiguration.event(listener);
-    }
-
-    public function onDidChangeModelContent(listener:(e:IModelContentChangedEvent) -> Void):IDisposable {
-        return _onDidChangeModelContent.event(listener);
-    }
-
-    public function onDidChangeCursorPosition(listener:() -> Void):IDisposable {
-        return _onDidChangeCursorPosition.event(listener);
-    }
-
-    public function onMouseDown(listener:(e:EditorMouseEvent) -> Void):IDisposable {
-        return _onMouseDown.event(listener);
-    }
-
-    public function onMouseUp(listener:(e:EditorMouseEvent) -> Void):IDisposable {
-        return _onMouseUp.event(listener);
-    }
-
-    /**
-     * Runs a folding command by its Monaco id (`editor.fold`,
-     * `editor.foldAll`, `editor.foldLevel2`...).
-     * TODO(step 3, commands): through the command registry of the editor.
-     */
-    public function runFoldingCommand(id:String, ?args:FoldingArguments):Bool {
-        final result = FoldingCommands.run(this, id, args);
-        notifyChanged();
-        return result;
-    }
-
-    //#endregion
-
-    //#region editing: Monaco's commands (ICodeEditor)
-
-    public function pushUndoStop():Bool {
-        if (model == null || configuration.options.get(EditorOption.readOnly)) {
-            // read only editor => sorry!
-            return false;
-        }
-        model.pushStackElement();
-        return true;
-    }
-
-    public function executeCommands(source:Null<String>, commands:Array<Null<ICommand>>):Void {
-        if (viewModel == null) {
-            return;
-        }
-        viewModel.executeCommands(commands, source);
-    }
-
-    /**
-     * Types text at the cursors (Monaco's `Handler.Type` from the keyboard:
-     * auto closing, auto indentation, electric characters...).
-     */
-    public function type(text:String):Void {
-        final viewModel = this.viewModel;
-        if (viewModel == null || text.length == 0) {
-            return;
-        }
-        viewModel.type(text, 'keyboard');
-        restartBlink();
-    }
-
-    function runCommand(command:EditorCommand):Void {
-        command.runEditorCommand(context, this, null);
-    }
+    //#region clipboard
 
     function copySelection(cx:App):Null<String> {
         final viewModel = this.viewModel;
+        if (viewModel == null) {
+            return null;
+        }
         final selections = viewModel.getSelections();
         final ranges:Array<Range> = [for (s in selections) s];
         final emptySelectionClipboard = configuration.options.get(EditorOption.emptySelectionClipboard);
@@ -1263,142 +1248,27 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     function pasteText(text:String):Void {
         final viewModel = this.viewModel;
+        if (viewModel == null) {
+            return;
+        }
         // The metadata of the last copy applies to its own text only
         final fromLastCopy = (lastCopiedText != null && lastCopiedText == text);
         final pasteOnNewLine = fromLastCopy && lastCopiedIsFromEmptySelection;
         final multicursorText = fromLastCopy ? lastCopiedMulticursorText : null;
-        viewModel.paste(text, pasteOnNewLine, multicursorText, 'keyboard');
+        widget._pasteFromKeyboard(text, pasteOnNewLine, multicursorText, null);
         viewModel.revealPrimaryCursor('keyboard', true);
     }
 
     /**
-     * The keys of Monaco's default keybindings that the editor handles
-     * (moves, selections, edits, clipboard, undo).
+     * Types text at the cursors (Monaco's `Handler.Type` from the keyboard:
+     * auto closing, auto indentation, electric characters...).
      */
-    public function onKeyDown(event:KeyDownEvent, window:Window, cx:App):Void {
-        final viewModel = this.viewModel;
-        if (viewModel == null) {
+    public function type(text:String):Void {
+        if (viewModel == null || text.length == 0) {
             return;
         }
-        final ks = event.keystroke;
-        // The folding actions (Monaco's keybindings of folding.ts)
-        if (foldingKeybindings.handleKeyDown(this, ks)) {
-            restartBlink();
-            cx.stopPropagation();
-            notifyChanged();
-            return;
-        }
-        final mods = ks.modifiers;
-        final shift = mods.shift;
-        final mac = Platform.isMac();
-        // Cmd on macOS, Ctrl elsewhere
-        final platform = mods.platform || (mods.control && !mac);
-        // The word modifier: Alt on macOS, Ctrl elsewhere
-        final word = mac ? mods.alt : mods.control;
-        var handled = true;
-        switch (ks.key) {
-            case 'backspace':
-                if (word) {
-                    runCommand(WordCommands.deleteWordLeft);
-                }
-                else {
-                    runCommand(CoreEditingCommands.DeleteLeft);
-                }
-            case 'delete':
-                if (word) {
-                    runCommand(WordCommands.deleteWordRight);
-                }
-                else {
-                    runCommand(CoreEditingCommands.DeleteRight);
-                }
-            case 'enter':
-                type('\n');
-            case 'tab':
-                runCommand(shift ? CoreEditingCommands.Outdent : CoreEditingCommands.Tab);
-            case 'escape':
-                if (viewModel.getSelections().length > 1) {
-                    CoreNavigationCommands.RemoveSecondaryCursors.runCoreEditorCommand(viewModel, {source: 'keyboard'});
-                }
-                else {
-                    CoreNavigationCommands.CancelSelection.runCoreEditorCommand(viewModel, {source: 'keyboard'});
-                }
-            case 'left':
-                if (mac && mods.platform) {
-                    runCommand(shift ? CoreNavigationCommands.CursorHomeSelect : CoreNavigationCommands.CursorHome);
-                }
-                else if (word) {
-                    runCommand(shift ? WordCommands.cursorWordLeftSelect : WordCommands.cursorWordLeft);
-                }
-                else {
-                    runCommand(shift ? CoreNavigationCommands.CursorLeftSelect : CoreNavigationCommands.CursorLeft);
-                }
-            case 'right':
-                if (mac && mods.platform) {
-                    runCommand(shift ? CoreNavigationCommands.CursorEndSelect : CoreNavigationCommands.CursorEnd);
-                }
-                else if (word) {
-                    runCommand(shift ? WordCommands.cursorWordEndRightSelect : WordCommands.cursorWordEndRight);
-                }
-                else {
-                    runCommand(shift ? CoreNavigationCommands.CursorRightSelect : CoreNavigationCommands.CursorRight);
-                }
-            case 'up':
-                if (mac && mods.platform) {
-                    runCommand(shift ? CoreNavigationCommands.CursorTopSelect : CoreNavigationCommands.CursorTop);
-                }
-                else {
-                    runCommand(shift ? CoreNavigationCommands.CursorUpSelect : CoreNavigationCommands.CursorUp);
-                }
-            case 'down':
-                if (mac && mods.platform) {
-                    runCommand(shift ? CoreNavigationCommands.CursorBottomSelect : CoreNavigationCommands.CursorBottom);
-                }
-                else {
-                    runCommand(shift ? CoreNavigationCommands.CursorDownSelect : CoreNavigationCommands.CursorDown);
-                }
-            case 'home':
-                if (mods.control && !mac) {
-                    runCommand(shift ? CoreNavigationCommands.CursorTopSelect : CoreNavigationCommands.CursorTop);
-                }
-                else {
-                    runCommand(shift ? CoreNavigationCommands.CursorHomeSelect : CoreNavigationCommands.CursorHome);
-                }
-            case 'end':
-                if (mods.control && !mac) {
-                    runCommand(shift ? CoreNavigationCommands.CursorBottomSelect : CoreNavigationCommands.CursorBottom);
-                }
-                else {
-                    runCommand(shift ? CoreNavigationCommands.CursorEndSelect : CoreNavigationCommands.CursorEnd);
-                }
-            case 'pageup':
-                runCommand(shift ? CoreNavigationCommands.CursorPageUpSelect : CoreNavigationCommands.CursorPageUp);
-            case 'pagedown':
-                runCommand(shift ? CoreNavigationCommands.CursorPageDownSelect : CoreNavigationCommands.CursorPageDown);
-            case 'a' if (platform):
-                CoreNavigationCommands.SelectAll.runCoreEditorCommand(viewModel, {});
-            case 'c' if (platform):
-                copySelection(cx);
-            case 'x' if (platform):
-                copySelection(cx);
-                viewModel.cut('keyboard');
-            case 'v' if (platform):
-                final item = cx.readFromClipboard();
-                final text = item != null ? item.text() : null;
-                if (text != null) {
-                    pasteText(text);
-                }
-            case 'z' if (platform):
-                runCommand(shift ? CoreEditingCommands.Redo : CoreEditingCommands.Undo);
-            case 'y' if (platform && !mac):
-                runCommand(CoreEditingCommands.Redo);
-            case _:
-                handled = false;
-        }
-        if (handled) {
-            restartBlink();
-            cx.stopPropagation();
-            notifyChanged();
-        }
+        widget._typeFromKeyboard(text);
+        restartBlink();
     }
 
     //#endregion
@@ -1458,7 +1328,12 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
             }
             return;
         }
-        viewModel.type(text, source);
+        if (source == 'keyboard') {
+            widget._typeFromKeyboard(text);
+        }
+        else {
+            viewModel.type(text, source);
+        }
         restartBlink();
     }
 
@@ -1539,12 +1414,6 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     //#endregion
 
-}
-
-private class Platform {
-    public static inline function isMac():Bool {
-        return cityscape.base.common.Platform.isMacintosh;
-    }
 }
 
 /**
@@ -1633,14 +1502,3 @@ class CityscapeScrollHandle implements ScrollbarHandleImpl {
 
 }
 
-/**
- * The word commands the keys of the view run (immutable, shared).
- */
-private class WordCommands {
-    public static final cursorWordLeft = new CursorWordLeft();
-    public static final cursorWordLeftSelect = new CursorWordLeftSelect();
-    public static final cursorWordEndRight = new CursorWordEndRight();
-    public static final cursorWordEndRightSelect = new CursorWordEndRightSelect();
-    public static final deleteWordLeft = new DeleteWordLeft();
-    public static final deleteWordRight = new DeleteWordRight();
-}

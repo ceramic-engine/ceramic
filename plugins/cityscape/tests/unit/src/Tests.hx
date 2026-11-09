@@ -126,6 +126,14 @@ class Tests {
         runner.add(new tests.contrib.folding.FoldingModelTest());
         runner.add(new tests.contrib.folding.FoldingControllerTest());
 
+        // Commands, keybindings, context keys, editor API (step 3, cs3-api)
+        runner.add(new tests.platform.contextkey.ContextKeyScannerTest());
+        runner.add(new tests.platform.contextkey.ContextKeyParserTest());
+        runner.add(new tests.platform.contextkey.ContextKeyExprTest());
+        runner.add(new tests.platform.keybinding.KeybindingResolverTest());
+        runner.add(new tests.platform.markers.MarkerServiceTest());
+        runner.add(new tests.view.CityscapeApiTest());
+
     }
 
 }

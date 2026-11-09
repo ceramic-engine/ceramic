@@ -127,13 +127,73 @@ class RegExp {
         this.native = new js.lib.RegExp(source, this.flags);
         this.source = this.native.source;
         #else
-        this.source = (source.length == 0 ? '(?:)' : source);
+        this.source = (source.length == 0 ? '(?:)' : escapeSource(source));
         final translation = new JsToPcre(source, multiline, dotAll, unicode);
         final pattern = translation.translate();
         this.groupCount = translation.groupCount + 1;
         this.ereg = new EReg(pattern, ignoreCase ? 'i' : '');
         #end
     }
+
+    #if !js
+    /**
+     * JavaScript's `EscapeRegExpPattern` (V8's): the `source` of a regular
+     * expression escapes the `/` outside character classes and the line
+     * terminators, so that `/` + source + `/` reads as a literal.
+     */
+    static function escapeSource(source:String):String {
+        var result:Null<StringBuf> = null;
+        var inClass = false;
+        var i = 0;
+        final len = source.length;
+        while (i < len) {
+            final c = StringTools.fastCodeAt(source, i);
+            var replacement:Null<String> = null;
+            if (c == '\\'.code) {
+                if (result != null) {
+                    result.add(source.substr(i, 2));
+                }
+                i += 2;
+                continue;
+            }
+            if (c == '['.code) {
+                inClass = true;
+            }
+            else if (c == ']'.code) {
+                inClass = false;
+            }
+            else if (c == '/'.code && !inClass) {
+                replacement = '\\/';
+            }
+            else if (c == '\n'.code) {
+                replacement = '\\n';
+            }
+            else if (c == '\r'.code) {
+                replacement = '\\r';
+            }
+            else if (c == 0x2028) {
+                replacement = '\\u2028';
+            }
+            else if (c == 0x2029) {
+                replacement = '\\u2029';
+            }
+            if (replacement != null && result == null) {
+                result = new StringBuf();
+                result.add(source.substr(0, i));
+            }
+            if (result != null) {
+                if (replacement != null) {
+                    result.add(replacement);
+                }
+                else {
+                    result.add(source.substr(i, 1));
+                }
+            }
+            i++;
+        }
+        return result != null ? result.toString() : source;
+    }
+    #end
 
     /**
      * Runs the regular expression on `str`, from `lastIndex` with the `g` or
