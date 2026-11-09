@@ -3,16 +3,24 @@
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.view.config;
 
+import cityscape.base.common.Event;
 import cityscape.base.common.JsValues;
 import cityscape.base.common.Objects;
+import cityscape.base.common.Platform;
+import cityscape.common.config.EditorConfiguration.IEditorConfiguration;
 import cityscape.common.config.EditorOptions;
+import cityscape.common.config.FontInfo;
+import cityscape.common.core.Dimension.IDimension;
+import cityscape.platform.accessibility.common.Accessibility.AccessibilitySupport;
 
 /**
  * The option validation and computation parts of editorConfiguration.ts.
  *
- * TODO(step 2): the `EditorConfiguration` class itself (environment: outer
- * size, font measurement by Glaze's text system, pixel ratio, accessibility;
- * `onDidChange`, `updateOptions`) comes with the view.
+ * The `EditorConfiguration` class is below: its environment (outer size,
+ * pixel ratio, font measurement) is given by the Glaze view
+ * (`cityscape.view.EditorFontMeasurements`) through
+ * `_readEnvConfiguration` / `_readFontInfo`, overridden like Monaco's
+ * `TestConfiguration` does.
  */
 class EditorConfigurationUtils {
 
@@ -203,6 +211,292 @@ class EditorOptionsUtil {
             }
         }
         return changed;
+    }
+
+}
+
+typedef IEnvConfiguration = {
+    var extraEditorClassName:String;
+    var outerWidth:Float;
+    var outerHeight:Float;
+    var emptySelectionClipboard:Bool;
+    var pixelRatio:Float;
+    var accessibilitySupport:AccessibilitySupport;
+}
+
+/**
+ * Monaco's `EditorConfiguration` (browser/config/editorConfiguration.ts).
+ *
+ * The container size is given with `observeContainer(dimension)` (the Glaze
+ * layout gives the editor its bounds; Monaco measures a DOM node), and the
+ * font is measured by `fontMeasurer` (Glaze's text system; Monaco measures
+ * with the DOM). Editor zoom and tab focus mode are not ported (no zoom,
+ * tab focus from the Glaze kit): their factors are 1 and false.
+ */
+class EditorConfiguration implements IEditorConfiguration {
+
+    /**
+     * Determined from empirical observations (read on use: the platform is
+     * not known when statics initialize on the web).
+     */
+    static function GOLDEN_LINE_HEIGHT_RATIO():Float {
+        return Platform.isMacintosh ? 1.5 : 1.35;
+    }
+
+    static inline final MINIMUM_LINE_HEIGHT = 8;
+
+    final _onDidChange = new Emitter<ConfigurationChangedEvent>();
+    public final onDidChange:Event<ConfigurationChangedEvent>;
+
+    final _onDidChangeFast = new Emitter<ConfigurationChangedEvent>();
+    public final onDidChangeFast:Event<ConfigurationChangedEvent>;
+
+    public final isSimpleWidget:Bool;
+
+    var _isDominatedByLongLines:Bool = false;
+    var _viewLineCount:Int = 1;
+    var _lineNumbersDigitCount:Int = 1;
+    var _reservedHeight:Float = 0;
+    var _glyphMarginDecorationLaneCount:Int = 1;
+    var _outerWidth:Float = 100;
+    var _outerHeight:Float = 100;
+
+    /**
+     * Measures a font for the editor (Glaze text system), or null for
+     * Monaco's test metrics.
+     */
+    public var fontMeasurer:Null<(bareFontInfo:BareFontInfo) -> FontInfo> = null;
+
+    /**
+     * The pixel ratio of the screen.
+     */
+    public var pixelRatio:Float = 1;
+
+    final _computeOptionsMemory:ComputeOptionsMemory = new ComputeOptionsMemory();
+
+    /**
+     * Raw options as they were passed in and merged with all calls to `updateOptions`.
+     */
+    final _rawOptions:IEditorOptions;
+
+    /**
+     * Validated version of `_rawOptions`.
+     */
+    var _validatedOptions:ValidatedEditorOptions;
+
+    /**
+     * Complete options which are a combination of passed in options and env values.
+     */
+    public var options(default, null):IComputedEditorOptions;
+
+    public function new(isSimpleWidget:Bool, options:IEditorOptions, ?dimension:IDimension, ?fontMeasurer:(bareFontInfo:BareFontInfo) -> FontInfo, ?pixelRatio:Float) {
+        this.onDidChange = _onDidChange.event;
+        this.onDidChangeFast = _onDidChangeFast.event;
+        this.isSimpleWidget = isSimpleWidget;
+        this.fontMeasurer = fontMeasurer;
+        if (pixelRatio != null) {
+            this.pixelRatio = pixelRatio;
+        }
+        if (dimension != null) {
+            this._outerWidth = dimension.width;
+            this._outerHeight = dimension.height;
+        }
+
+        this._rawOptions = EditorConfigurationUtils.deepCloneAndMigrateOptions(options);
+        this._validatedOptions = EditorOptionsUtil.validateOptions(this._rawOptions);
+        this.options = this._computeOptions();
+    }
+
+    public function dispose():Void {
+        _onDidChange.dispose();
+        _onDidChangeFast.dispose();
+    }
+
+    function _recomputeOptions():Void {
+        final newOptions = this._computeOptions();
+        final changeEvent = EditorOptionsUtil.checkEquals(cast this.options, newOptions);
+        if (changeEvent == null) {
+            // nothing changed!
+            return;
+        }
+
+        this.options = newOptions;
+        this._onDidChangeFast.fire(changeEvent);
+        this._onDidChange.fire(changeEvent);
+    }
+
+    /**
+     * Recomputes the options (after a change of `fontMeasurer`, of the
+     * fonts loaded or of `pixelRatio`).
+     */
+    public function recomputeOptions():Void {
+        _recomputeOptions();
+    }
+
+    function _computeOptions():ComputedEditorOptions {
+        final partialEnv = this._readEnvConfiguration();
+        final bareFontInfo = EditorConfiguration.createBareFontInfoFromValidatedSettings(this._validatedOptions, partialEnv.pixelRatio, this.isSimpleWidget);
+        final fontInfo = this._readFontInfo(bareFontInfo);
+        final env:IEnvironmentalOptions = {
+            memory: this._computeOptionsMemory,
+            outerWidth: partialEnv.outerWidth,
+            outerHeight: partialEnv.outerHeight - this._reservedHeight,
+            fontInfo: fontInfo,
+            extraEditorClassName: partialEnv.extraEditorClassName,
+            isDominatedByLongLines: this._isDominatedByLongLines,
+            viewLineCount: this._viewLineCount,
+            lineNumbersDigitCount: this._lineNumbersDigitCount,
+            emptySelectionClipboard: partialEnv.emptySelectionClipboard,
+            pixelRatio: partialEnv.pixelRatio,
+            tabFocusMode: false,
+            accessibilitySupport: partialEnv.accessibilitySupport,
+            glyphMarginDecorationLaneCount: this._glyphMarginDecorationLaneCount
+        };
+        return EditorOptionsUtil.computeOptions(this._validatedOptions, env);
+    }
+
+    /**
+     * `BareFontInfo.createFromValidatedSettings` (fontInfo.ts). The font
+     * variations option is not ported: `'normal'`.
+     */
+    public static function createBareFontInfoFromValidatedSettings(options:ValidatedEditorOptions, pixelRatio:Float, ignoreEditorZoom:Bool):BareFontInfo {
+        final fontFamily = options.get(EditorOption.fontFamily);
+        var fontWeight = options.get(EditorOption.fontWeight);
+        var fontSize = options.get(EditorOption.fontSize);
+        final fontFeatureSettings = options.get(EditorOption.fontLigatures);
+        final fontVariationSettings = 'normal';
+        var lineHeight = options.get(EditorOption.lineHeight);
+        final letterSpacing = options.get(EditorOption.letterSpacing);
+
+        if (lineHeight == 0) {
+            lineHeight = GOLDEN_LINE_HEIGHT_RATIO() * fontSize;
+        } else if (lineHeight < MINIMUM_LINE_HEIGHT) {
+            // Values too small to be line heights in pixels are in ems.
+            lineHeight = lineHeight * fontSize;
+        }
+
+        // Enforce integer, minimum constraints
+        lineHeight = Math.round(lineHeight);
+        if (lineHeight < MINIMUM_LINE_HEIGHT) {
+            lineHeight = MINIMUM_LINE_HEIGHT;
+        }
+
+        return @:privateAccess new BareFontInfo({
+            pixelRatio: pixelRatio,
+            fontFamily: fontFamily,
+            fontWeight: fontWeight,
+            fontSize: fontSize,
+            fontFeatureSettings: fontFeatureSettings,
+            fontVariationSettings: fontVariationSettings,
+            lineHeight: lineHeight,
+            letterSpacing: letterSpacing
+        });
+    }
+
+    function _readEnvConfiguration():IEnvConfiguration {
+        return {
+            extraEditorClassName: '',
+            outerWidth: this._outerWidth,
+            outerHeight: this._outerHeight,
+            emptySelectionClipboard: true,
+            pixelRatio: this.pixelRatio,
+            accessibilitySupport: AccessibilitySupport.Unknown
+        };
+    }
+
+    function _readFontInfo(bareFontInfo:BareFontInfo):FontInfo {
+        final measurer = this.fontMeasurer;
+        if (measurer != null) {
+            return measurer(bareFontInfo);
+        }
+        // Monaco's TestConfiguration metrics
+        return new FontInfo({
+            pixelRatio: 1,
+            fontFamily: 'mockFont',
+            fontWeight: 'normal',
+            fontSize: 14,
+            fontFeatureSettings: '"liga" off, "calt" off',
+            fontVariationSettings: 'normal',
+            lineHeight: 19,
+            letterSpacing: 1.5,
+            isMonospace: true,
+            typicalHalfwidthCharacterWidth: 10,
+            typicalFullwidthCharacterWidth: 20,
+            canUseHalfwidthRightwardsArrow: true,
+            spaceWidth: 10,
+            middotWidth: 10,
+            wsmiddotWidth: 10,
+            maxDigitWidth: 10,
+        }, true);
+    }
+
+    public function getRawOptions():IEditorOptions {
+        return this._rawOptions;
+    }
+
+    public function updateOptions(_newOptions:IEditorOptions):Void {
+        final newOptions = EditorConfigurationUtils.deepCloneAndMigrateOptions(_newOptions);
+
+        final didChange = EditorOptionsUtil.applyUpdate(this._rawOptions, newOptions);
+        if (!didChange) {
+            return;
+        }
+
+        this._validatedOptions = EditorOptionsUtil.validateOptions(this._rawOptions);
+        this._recomputeOptions();
+    }
+
+    public function observeContainer(?dimension:IDimension):Void {
+        if (dimension == null) {
+            return;
+        }
+        if (dimension.width == this._outerWidth && dimension.height == this._outerHeight) {
+            return;
+        }
+        this._outerWidth = dimension.width;
+        this._outerHeight = dimension.height;
+        this._recomputeOptions();
+    }
+
+    public function setIsDominatedByLongLines(isDominatedByLongLines:Bool):Void {
+        if (this._isDominatedByLongLines == isDominatedByLongLines) {
+            return;
+        }
+        this._isDominatedByLongLines = isDominatedByLongLines;
+        this._recomputeOptions();
+    }
+
+    public function setModelLineCount(modelLineCount:Int):Void {
+        final lineNumbersDigitCount = EditorConfigurationUtils.digitCount(modelLineCount);
+        if (this._lineNumbersDigitCount == lineNumbersDigitCount) {
+            return;
+        }
+        this._lineNumbersDigitCount = lineNumbersDigitCount;
+        this._recomputeOptions();
+    }
+
+    public function setViewLineCount(viewLineCount:Int):Void {
+        if (this._viewLineCount == viewLineCount) {
+            return;
+        }
+        this._viewLineCount = viewLineCount;
+        this._recomputeOptions();
+    }
+
+    public function setReservedHeight(reservedHeight:Float):Void {
+        if (this._reservedHeight == reservedHeight) {
+            return;
+        }
+        this._reservedHeight = reservedHeight;
+        this._recomputeOptions();
+    }
+
+    public function setGlyphMarginDecorationLaneCount(decorationLaneCount:Int):Void {
+        if (this._glyphMarginDecorationLaneCount == decorationLaneCount) {
+            return;
+        }
+        this._glyphMarginDecorationLaneCount = decorationLaneCount;
+        this._recomputeOptions();
     }
 
 }

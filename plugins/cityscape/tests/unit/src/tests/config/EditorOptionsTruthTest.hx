@@ -52,7 +52,8 @@ class EditorOptionsTruthTest extends TestCase {
             }
         }
         assertEquals(max + 1, EditorOption.COUNT);
-        assertEquals(60, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
+        // 60 options of step 0, 19 of the view (EditorViewOptions)
+        assertEquals(79, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
     }
 
     function testDefaults() {

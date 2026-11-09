@@ -125,6 +125,16 @@ class DeepEquals {
                         return d;
                 }
                 return null;
+            case [TClass(ca), TClass(cb)] if (ca == cb):
+                // Instances of one class (Cityscape view tests): field by field
+                final fields = Type.getInstanceFields(ca).filter(f -> !Reflect.isFunction(Reflect.field(a, f)));
+                fields.sort(Reflect.compare);
+                for (key in fields) {
+                    final d = compare(Reflect.field(a, key), Reflect.field(b, key), '$path.$key', json);
+                    if (d != null)
+                        return d;
+                }
+                return null;
             case [TObject, TObject]:
                 final fa = Reflect.fields(a);
                 var fb = Reflect.fields(b);

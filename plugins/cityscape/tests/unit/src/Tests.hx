@@ -91,6 +91,15 @@ class Tests {
         runner.add(new tests.model.bracketPairColorizer.CombineTextEditInfosTest());
         runner.add(new tests.model.bracketPairColorizer.TokenizerTest());
         runner.add(new tests.model.bracketPairColorizer.GetBracketPairsInRangeTest());
+        runner.add(new tests.viewModel.LineBreakDataTest());
+        runner.add(new tests.viewModel.MonospaceLineBreaksComputerTest());
+        runner.add(new tests.viewLayout.LinesLayoutTest());
+        runner.add(new tests.viewLayout.LineDecorationsTest());
+        runner.add(new tests.viewLayout.ViewLineRendererTest());
+        runner.add(new tests.viewModel.GlyphLanesModelTest());
+        runner.add(new tests.viewModel.ModelLineProjectionTest());
+        runner.add(new tests.viewModel.ViewModelHiddenRangesTest());
+        runner.add(new tests.view.CityscapeEditorTest());
 
     }
 

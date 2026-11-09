@@ -1,0 +1,23 @@
+app:
+    package: mycompany.cityscapevisual
+    name: visual
+    displayName: visual
+    author: My Company
+    version: '1.0'
+
+    # Cityscape needs Glaze: a project lists both plugins (see the plugin's
+    # ceramic.yml). Electron reads the capture environment variables and
+    # takes the window screenshot on the web.
+    plugins:
+        - glaze
+        - cityscape
+        - electron
+
+    # Cityscape's sources, added directly until the Ceramic tools are rebuilt
+    # with the cityscape plugin (see tests/unit/ceramic.yml).
+    paths:
+        - ../../runtime/src
+
+    defines:
+        # Native captures use a hidden SDL window (no window on screen)
+        - clay_sdl_headless

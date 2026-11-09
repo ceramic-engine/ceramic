@@ -84,6 +84,13 @@ Cityscape is a port of Monaco (vscode `src/vs/editor`, commit a7d9e2c32d573e29e6
 - `EditOperation.insert`/`delete`/`replace`/`replaceMove` return `IIdentifiedSingleEditOperation` (TypeScript accepts an `ISingleEditOperation` there, Haxe does not), which still passes as an `ISingleEditOperation`.
 - Undo/redo: `UndoRedoService` is a field of the `Cityscape` context (`context.undoRedoService`); `TextModel` takes the context as its last constructor argument (`Cityscape.defaultContext` when null). The tests create a context per model (`tests.TestTextModel.createTextModel`), like vscode's test services.
 
+## View specifics (step 2)
+
+- Two classes of a module may not share a name in Haxe: the outgoing `ViewZonesChangedEvent` of viewModelEventDispatcher.ts is `ViewZonesChangedOutgoingEvent` (the view event keeps its name), and the outgoing events extend `OutgoingViewModelEvent` (Monaco's union type).
+- `ViewLineRenderer` keeps Monaco's rendering to HTML (`renderViewLine`, used by vscode's tests) and renders through a sink (`IRenderLineSink`, `renderViewLineTo`): the Glaze view collects the text and the class names of each part (`ViewLineRuns`) instead of HTML. The character mapping is Monaco's.
+- `ViewModel` takes the `Cityscape` context as its last argument (the model's when null) for the theme service and the tokenization registry Monaco injects; `CityscapeView` reads the theme colors and the token color map through `ViewTheme`.
+- Monaco's view parts (DOM) are replaced by one Glaze element (`CityscapeViewElement`) that paints the same layers in Monaco's order: current line, decorations, selections, indent guides, rulers, text, cursors, then the margin and the overview ruler.
+
 ## Tests
 
 - Port vscode's tests of every ported module into `tests/unit/src/tests/<path>`, same names (`test('empty range')` becomes `testEmptyRange`), same expected values. A test that cannot be ported yet is listed in the class comment with the reason.

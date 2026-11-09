@@ -4,7 +4,7 @@ Cityscape is a code editor for Ceramic and Glaze: a Haxe port of [Monaco](https:
 
 Package `cityscape`. Monaco is by Microsoft, MIT licensed; see [NOTICE.md](NOTICE.md).
 
-**Status: in progress.** The foundations are in place (core types, frozen interfaces of the model, view model and editor, editor option validation); the model, the view, the cursor controller and the contributions come next. There is no usable editor yet.
+**Status: in progress.** The text model, tokenization (TextMate grammars, themes) and the view are in place: `CityscapeEditor` shows a model with wrapping, decorations (Monaco's and typed styles), hidden ranges, selections and cursors, with minimal typing, mouse selection, clipboard and IME. The cursor controller, commands and the contributions come next.
 
 ## Setup
 
@@ -40,6 +40,25 @@ cityscape.themeService.defineTheme('my-theme', VSCodeTheme.toStandaloneThemeData
 cityscape.themeService.setTheme('my-theme');
 ```
 
+## The editor
+
+`CityscapeEditor` is a Glaze component, sized by the flex layout of its parent. Several editors can show the same model, each with its own selections, scroll and wrapping:
+
+```haxe
+final model = new TextModel(text, 'haxe', TextModel.DEFAULT_CREATION_OPTIONS, null, cityscape);
+
+div().flex().sizeFull().child(
+    CityscapeEditor.component().model(model).context(cityscape).options({wordWrap: 'on', lineNumbers: 'on'}).flex1()
+);
+
+// Monaco's decorations, plus typed styles and hidden ranges
+model.deltaDecorations([], [
+    {range: new Range(3, 5, 3, 12), options: {description: 'pill', inlineStyle: {background: '#2c313c', borderRadius: 4}}},
+    {range: new Range(5, 10, 5, 20), options: {description: 'tag', hidden: true, revealOnCursorLine: true}},
+]);
+cityscape.registerDecorationStyle('my-class', {color: '#e06c75', fontWeight: 'bold'});
+```
+
 Models are tokenized in the background with one time budget per frame for all the models of the context (`cityscape.backgroundScheduler.budgetMs`), the visible lines first.
 
 ## Layout
@@ -47,4 +66,5 @@ Models are tokenized in the background with one time budget per frame for all th
 - `runtime/src/cityscape`: the port, organized like `src/vs/editor` (`common/core`, `common/config`, `common/...`; `browser` becomes `view`), with the parts of `src/vs/base` and `src/vs/platform` it needs under `base/` and `platform/`.
 - `tests/unit`: unit tests (vscode's own tests, ported, and comparisons with recordings of the real Monaco in `tests/unit/data/monaco`). Node: `ceramic headless run node --setup --assets --allow-multiple`; macOS: `ceramic clay build mac --setup --assets --allow-multiple`, then `project/mac/unit.app/Contents/MacOS/unit`.
 - `tests/bench`: benchmarks (see its README).
+- `tests/visual`: a visual check of the view (a Haxe sample in two editors), captured to PNG on macOS and the web (see `tests/visual/src/Project.hx`).
 - `docs/PORTING.md`: the porting rules. `docs/DEVIATIONS.md`: the intended differences with Monaco.

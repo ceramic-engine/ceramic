@@ -2375,19 +2375,46 @@ class DecorationOptions {
 
 }
 
-/**
- * TODO(step 2): `getColor(theme)` (resolving a `ThemeColor` with the theme
- * of the editor) comes with the view and the themes.
- */
 class ModelDecorationOverviewRulerOptions extends DecorationOptions {
 
     public final position:OverviewRulerLane;
 
+    var _resolvedColor:Null<String>;
+
     public function new(options:IModelDecorationOverviewRulerOptions) {
         super(options);
+        this._resolvedColor = null;
         // `typeof options.position === 'number' ? options.position : OverviewRulerLane.Center`
         final position:Null<Int> = cityscape.base.common.JsValues.isNumber(options.position) ? cast options.position : null;
         this.position = (position != null ? position : OverviewRulerLane.Center);
+    }
+
+    public function getColor(theme:cityscape.platform.theme.common.ThemeService.IColorTheme):String {
+        if (this._resolvedColor == null || this._resolvedColor.length == 0) {
+            if (cityscape.platform.theme.common.Theme.isDark(theme.type) && cityscape.base.common.JsValues.truthy(this.darkColor)) {
+                this._resolvedColor = this._resolveColor(this.darkColor, theme);
+            }
+            else {
+                this._resolvedColor = this._resolveColor(this.color, theme);
+            }
+        }
+        return this._resolvedColor;
+    }
+
+    public function invalidateCachedColor():Void {
+        this._resolvedColor = null;
+    }
+
+    function _resolveColor(color:DecorationColor, theme:cityscape.platform.theme.common.ThemeService.IColorTheme):String {
+        if (Std.isOfType(color, String)) {
+            return cast color;
+        }
+        final themeColor:Null<cityscape.base.common.Themables.ThemeColor> = cast color;
+        final c = themeColor != null ? theme.getColor(themeColor.id) : null;
+        if (c == null) {
+            return '';
+        }
+        return c.toString();
     }
 
 }
@@ -2447,12 +2474,20 @@ class ModelDecorationInjectedTextOptions {
 
     public final cursorStops:Null<InjectedTextCursorStops>;
 
+    // Cityscape additions: the typed style and the replaced length (hidden ranges)
+    public final inlineStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public final replacedLength:Int;
+
     function new(options:InjectedTextOptions) {
         this.content = (options.content != null ? options.content : '');
         this.inlineClassName = (options.inlineClassName != null && options.inlineClassName.length > 0) ? options.inlineClassName : null;
         this.inlineClassNameAffectsLetterSpacing = options.inlineClassNameAffectsLetterSpacing == true;
         this.attachedData = cityscape.base.common.JsValues.truthy(options.attachedData) ? options.attachedData : null;
         this.cursorStops = (options.cursorStops != null && options.cursorStops != 0) ? options.cursorStops : null;
+        this.inlineStyle = options.inlineStyle;
+        final replaced:Null<Int> = options.replacedLength;
+        this.replacedLength = replaced != null ? replaced : 0;
     }
 
 }
@@ -2580,6 +2615,28 @@ class ModelDecorationOptions {
 
     public final hideInStringTokens:Null<Bool>;
 
+    // Cityscape additions (typed decoration style, hidden ranges)
+
+    public final inlineStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public final style:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public final lineStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public final glyphMarginStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public final linesDecorationsStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public final lineNumberStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public final marginStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public final hidden:Null<Bool>;
+
+    public final replacement:Null<ModelDecorationInjectedTextOptions>;
+
+    public final revealOnCursorLine:Null<Bool>;
+
     function new(options:IModelDecorationOptions) {
         this.description = options.description;
         this.blockClassName = nonEmpty(options.blockClassName) ? cleanClassName(options.blockClassName) : null;
@@ -2613,6 +2670,16 @@ class ModelDecorationOptions {
         this.before = options.before != null ? ModelDecorationInjectedTextOptions.from(options.before) : null;
         this.hideInCommentTokens = options.hideInCommentTokens != null ? options.hideInCommentTokens : false;
         this.hideInStringTokens = options.hideInStringTokens != null ? options.hideInStringTokens : false;
+        this.inlineStyle = options.inlineStyle;
+        this.style = options.style;
+        this.lineStyle = options.lineStyle;
+        this.glyphMarginStyle = options.glyphMarginStyle;
+        this.linesDecorationsStyle = options.linesDecorationsStyle;
+        this.lineNumberStyle = options.lineNumberStyle;
+        this.marginStyle = options.marginStyle;
+        this.hidden = options.hidden == true ? true : null;
+        this.replacement = options.replacement != null ? ModelDecorationInjectedTextOptions.from(options.replacement) : null;
+        this.revealOnCursorLine = options.revealOnCursorLine == true ? true : null;
     }
 
 }

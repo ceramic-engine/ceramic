@@ -154,13 +154,17 @@ typedef HoverMessage = EitherType<IMarkdownString, Array<IMarkdownString>>;
 /**
  * Options for a model decoration.
  *
- * TODO(step 2, decorations): the typed decoration style of the plan
- * ("API de décorations": text color, font style and weight, opacity,
- * underline and strikethrough, letter spacing, font features, background,
- * border radius, padding, border, joined ranges, `hidden` with
- * `revealOnCursorLine`, replacement) is added here as optional fields, next
- * to Monaco's class names, which stay accepted as keys of registered
- * decoration styles (`registerDecorationStyle`).
+ * Cityscape adds a typed decoration style (`IDecorationStyle`, see
+ * `DecorationStyle.hx`) next to Monaco's class names: `inlineStyle` (text
+ * and inline boxes, like `inlineClassName`), `style` (boxes behind the
+ * text, like `className`), `lineStyle` (whole line background, like a
+ * `className` with `isWholeLine`), `glyphMarginStyle`,
+ * `linesDecorationsStyle`, `lineNumberStyle` and `marginStyle`, plus hidden
+ * ranges (`hidden`, `replacement`, `revealOnCursorLine`). The class names
+ * stay accepted: a class name registered with
+ * `DecorationStyles.registerDecorationStyle` gives its style. These fields
+ * are Cityscape additions (docs/DEVIATIONS.md, "Typed decoration style" and
+ * "Hidden text inside a line").
  */
 typedef IModelDecorationOptions = {
     /**
@@ -296,6 +300,59 @@ typedef IModelDecorationOptions = {
      * @internal
      */
     @:optional var hideInStringTokens:Null<Bool>;
+
+    // Cityscape additions (typed decoration style, hidden ranges)
+
+    /**
+     * Typed style of the text of the range (Cityscape): what Monaco does with
+     * an `inlineClassName`. Applied after the style registered for
+     * `inlineClassName`, if any.
+     */
+    @:optional var inlineStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+    /**
+     * Typed style of a box drawn behind the text of the range (Cityscape):
+     * what Monaco does with a `className` (background, border, radius).
+     * Applied after the style registered for `className`, if any.
+     */
+    @:optional var style:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+    /**
+     * Typed style of the whole lines of the range (Cityscape): background
+     * and border of the line, like a `className` with `isWholeLine`.
+     */
+    @:optional var lineStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+    /**
+     * Typed style of the glyph margin (Cityscape), like `glyphMarginClassName`.
+     */
+    @:optional var glyphMarginStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+    /**
+     * Typed style of the lines decorations (Cityscape), like `linesDecorationsClassName`.
+     */
+    @:optional var linesDecorationsStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+    /**
+     * Typed style of the line number (Cityscape), like `lineNumberClassName`.
+     */
+    @:optional var lineNumberStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+    /**
+     * Typed style of the whole margin (Cityscape), like `marginClassName`.
+     */
+    @:optional var marginStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+    /**
+     * Hide the text of the range (Cityscape): it is not laid out nor painted,
+     * the cursor skips it. Ranges are taken one line at a time (a range
+     * spanning lines hides the end of its first line, the full lines between
+     * and the start of its last line).
+     */
+    @:optional var hidden:Null<Bool>;
+    /**
+     * Hide the text of the range and show this injected text instead
+     * (Cityscape), for example a symbol standing for the hidden text.
+     */
+    @:optional var replacement:Null<InjectedTextOptions>;
+    /**
+     * With `hidden` or `replacement`: show the text again on the lines that
+     * hold a cursor or a selection of the editor (Cityscape).
+     */
+    @:optional var revealOnCursorLine:Null<Bool>;
 }
 
 /**
@@ -324,6 +381,17 @@ typedef InjectedTextOptions = {
      * Defaults to {@link InjectedTextCursorStops.Both}.
      */
     @:optional final cursorStops:Null<InjectedTextCursorStops>;
+    /**
+     * Typed style of the injected text (Cityscape), applied after the style
+     * registered for `inlineClassName`, if any.
+     */
+    @:optional final inlineStyle:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+    /**
+     * The number of UTF-16 code units of the model line this injected text
+     * replaces, starting at its column (Cityscape, 0 by default: Monaco only
+     * inserts). The view uses it for hidden ranges (`hidden`, `replacement`).
+     */
+    @:optional final replacedLength:Int;
 }
 
 enum abstract InjectedTextCursorStops(Int) from Int to Int {

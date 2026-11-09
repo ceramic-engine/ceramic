@@ -405,10 +405,17 @@ class InlineDecoration {
 
     public final type:InlineDecorationType;
 
-    public function new(range:Range, inlineClassName:String, type:InlineDecorationType) {
+    /**
+     * The typed style of the decoration (Cityscape): `inlineStyle` of the
+     * decoration options, or of the injected text. Null for class names only.
+     */
+    public final style:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public function new(range:Range, inlineClassName:String, type:InlineDecorationType, ?style:cityscape.common.DecorationStyle.IDecorationStyle) {
         this.range = range;
         this.inlineClassName = inlineClassName;
         this.type = type;
+        this.style = style;
     }
 
 }
@@ -423,18 +430,25 @@ class SingleLineInlineDecoration {
 
     public final inlineClassNameAffectsLetterSpacing:Bool;
 
-    public function new(startOffset:Int, endOffset:Int, inlineClassName:String, inlineClassNameAffectsLetterSpacing:Bool) {
+    /**
+     * The typed style of the injected text (Cityscape), or null.
+     */
+    public final style:Null<cityscape.common.DecorationStyle.IDecorationStyle>;
+
+    public function new(startOffset:Int, endOffset:Int, inlineClassName:String, inlineClassNameAffectsLetterSpacing:Bool, ?style:cityscape.common.DecorationStyle.IDecorationStyle) {
         this.startOffset = startOffset;
         this.endOffset = endOffset;
         this.inlineClassName = inlineClassName;
         this.inlineClassNameAffectsLetterSpacing = inlineClassNameAffectsLetterSpacing;
+        this.style = style;
     }
 
     public function toInlineDecoration(lineNumber:Int):InlineDecoration {
         return new InlineDecoration(
             new Range(lineNumber, this.startOffset + 1, lineNumber, this.endOffset + 1),
             this.inlineClassName,
-            this.inlineClassNameAffectsLetterSpacing ? InlineDecorationType.RegularAffectingLetterSpacing : InlineDecorationType.Regular
+            this.inlineClassNameAffectsLetterSpacing ? InlineDecorationType.RegularAffectingLetterSpacing : InlineDecorationType.Regular,
+            this.style
         );
     }
 

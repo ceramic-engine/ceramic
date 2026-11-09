@@ -445,6 +445,61 @@ class Strings {
         return String.fromCharCode('A'.code + n - LETTERS_CNT);
     }
 
+    // Added with the view (step 2, worker cs2-view)
+
+    /**
+     * A cheap trick to better support wrapping of wide characters: treat
+     * them as 2 columns (CJK blocks, Hangul syllables, fullwidth forms).
+     */
+    public static inline function isFullWidthCharacter(charCode:Int):Bool {
+        return (
+            (charCode >= 0x2E80 && charCode <= 0xD7AF)
+            || (charCode >= 0xF900 && charCode <= 0xFAFF)
+            || (charCode >= 0xFF01 && charCode <= 0xFF5E)
+        );
+    }
+
+    /**
+     * A fast function (therefore imprecise) to check if code points are emojis.
+     */
+    public static function isEmojiImprecise(x:Int):Bool {
+        return (
+            (x >= 0x1F1E6 && x <= 0x1F1FF) || (x == 8986) || (x == 8987) || (x == 9200)
+            || (x == 9203) || (x >= 9728 && x <= 10175) || (x == 11088) || (x == 11093)
+            || (x >= 127744 && x <= 128591) || (x >= 128640 && x <= 128764)
+            || (x >= 128992 && x <= 129008) || (x >= 129280 && x <= 129535)
+            || (x >= 129648 && x <= 129782)
+        );
+    }
+
+    /**
+     * @returns the length of the common prefix of the two strings.
+     */
+    public static function commonPrefixLength(a:String, b:String):Int {
+        final len = (a.length < b.length ? a.length : b.length);
+        for (i in 0...len) {
+            if (StringTools.fastCodeAt(a, i) != StringTools.fastCodeAt(b, i)) {
+                return i;
+            }
+        }
+        return len;
+    }
+
+    /**
+     * @returns the length of the common suffix of the two strings.
+     */
+    public static function commonSuffixLength(a:String, b:String):Int {
+        final len = (a.length < b.length ? a.length : b.length);
+        final aLastIndex = a.length - 1;
+        final bLastIndex = b.length - 1;
+        for (i in 0...len) {
+            if (StringTools.fastCodeAt(a, aLastIndex - i) != StringTools.fastCodeAt(b, bLastIndex - i)) {
+                return i;
+            }
+        }
+        return len;
+    }
+
 }
 
 /**

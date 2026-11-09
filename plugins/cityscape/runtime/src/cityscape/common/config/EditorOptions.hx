@@ -30,7 +30,9 @@ import haxe.extern.EitherType;
  * rulers, scrollbar, scrollBeyondLastColumn, scrollBeyondLastLine,
  * selectionHighlight, showFoldingControls, smoothScrolling, stickyScroll,
  * suggest, suggestOnTriggerCharacters, wordSeparators, wordWrap,
- * wordWrapColumn, wrappingIndent.
+ * wordWrapColumn, wrappingIndent; and the options of the view, see
+ * `EditorViewOptions` (including the computed `fontInfo`, `pixelRatio`,
+ * `layoutInfo` and `wrappingInfo`).
  *
  * Every id of Monaco's `EditorOption` is declared (same numbers); the
  * options not ported yet have the value type `Any` and no entry in the
@@ -371,6 +373,79 @@ typedef IEditorOptions = {
      * The letter spacing
      */
     @:optional var letterSpacing:Float;
+
+    // Read by the view (EditorViewOptions.hx)
+
+    /**
+     * Disable the optimizations for monospace fonts.
+     * Defaults to false.
+     */
+    @:optional var disableMonospaceOptimizations:Bool;
+    /**
+     * Copying without a selection copies the current line.
+     * Defaults to true.
+     */
+    @:optional var emptySelectionClipboard:Bool;
+    /**
+     * `'svg'`, `'font'` or `'off'`. Defaults to 'svg'.
+     */
+    @:optional var experimentalWhitespaceRendering:String;
+    /**
+     * Should the cursor be hidden in the overview ruler.
+     * Defaults to false.
+     */
+    @:optional var hideCursorInOverviewRuler:Bool;
+    /**
+     * Controls if a border should be drawn around the overview ruler.
+     * Defaults to `true`.
+     */
+    @:optional var overviewRulerBorder:Bool;
+    /**
+     * The number of vertical lanes the overview ruler should render.
+     * Defaults to 3.
+     */
+    @:optional var overviewRulerLanes:Int;
+    /**
+     * Should the editor render the current line highlight only when the editor is focused.
+     * Defaults to false.
+     */
+    @:optional var renderLineHighlightOnlyWhenFocus:Bool;
+    /**
+     * Performance guard: Stop rendering a line after x characters.
+     * Defaults to 10000. Use -1 to never stop rendering
+     */
+    @:optional var stopRenderingLineAfter:Int;
+    /**
+     * Sets whether line breaks appear wherever the text would otherwise overflow its content box:
+     * `'normal'` or `'keepAll'`. Defaults to 'normal'.
+     */
+    @:optional var wordBreak:String;
+    /**
+     * Configure word wrapping characters. A break will be introduced after these characters.
+     */
+    @:optional var wordWrapBreakAfterCharacters:String;
+    /**
+     * Configure word wrapping characters. A break will be introduced before these characters.
+     */
+    @:optional var wordWrapBreakBeforeCharacters:String;
+    /**
+     * Override the `wordWrap` setting: `'off'`, `'on'` or `'inherit'`.
+     */
+    @:optional var wordWrapOverride1:String;
+    /**
+     * Override the `wordWrapOverride1` setting: `'off'`, `'on'` or `'inherit'`.
+     */
+    @:optional var wordWrapOverride2:String;
+    /**
+     * Controls the wrapping strategy to use: `'simple'` or `'advanced'`.
+     * Defaults to 'simple'.
+     */
+    @:optional var wrappingStrategy:String;
+    /**
+     * Controls whether the validation decorations are rendered: `'editable'`,
+     * `'on'` or `'off'`. Defaults to 'editable'.
+     */
+    @:optional var renderValidationDecorations:String;
 }
 
 /**
@@ -1967,12 +2042,12 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final cursorSurroundingLinesStyle:EditorOption<Any> = new EditorOption<Any>(30);
     public static inline final cursorWidth:EditorOption<Int> = new EditorOption<Int>(31);
     public static inline final disableLayerHinting:EditorOption<Any> = new EditorOption<Any>(32);
-    public static inline final disableMonospaceOptimizations:EditorOption<Any> = new EditorOption<Any>(33);
+    public static inline final disableMonospaceOptimizations:EditorOption<Bool> = new EditorOption<Bool>(33);
     public static inline final domReadOnly:EditorOption<Any> = new EditorOption<Any>(34);
     public static inline final dragAndDrop:EditorOption<Any> = new EditorOption<Any>(35);
     public static inline final dropIntoEditor:EditorOption<Any> = new EditorOption<Any>(36);
-    public static inline final emptySelectionClipboard:EditorOption<Any> = new EditorOption<Any>(37);
-    public static inline final experimentalWhitespaceRendering:EditorOption<Any> = new EditorOption<Any>(38);
+    public static inline final emptySelectionClipboard:EditorOption<Bool> = new EditorOption<Bool>(37);
+    public static inline final experimentalWhitespaceRendering:EditorOption<String> = new EditorOption<String>(38);
     public static inline final extraEditorClassName:EditorOption<Any> = new EditorOption<Any>(39);
     public static inline final fastScrollSensitivity:EditorOption<Any> = new EditorOption<Any>(40);
     public static inline final find:EditorOption<Any> = new EditorOption<Any>(41);
@@ -1984,7 +2059,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final foldingMaximumRegions:EditorOption<Any> = new EditorOption<Any>(47);
     public static inline final unfoldOnClickAfterEndOfLine:EditorOption<Any> = new EditorOption<Any>(48);
     public static inline final fontFamily:EditorOption<String> = new EditorOption<String>(49);
-    public static inline final fontInfo:EditorOption<Any> = new EditorOption<Any>(50);
+    public static inline final fontInfo:EditorOption<FontInfo> = new EditorOption<FontInfo>(50);
     public static inline final fontLigatures:EditorOption<String> = new EditorOption<String>(51);
     public static inline final fontSize:EditorOption<Float> = new EditorOption<Float>(52);
     public static inline final fontWeight:EditorOption<String> = new EditorOption<String>(53);
@@ -1993,7 +2068,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final formatOnType:EditorOption<Any> = new EditorOption<Any>(56);
     public static inline final glyphMargin:EditorOption<Bool> = new EditorOption<Bool>(57);
     public static inline final gotoLocation:EditorOption<GoToLocationOptions> = new EditorOption<GoToLocationOptions>(58);
-    public static inline final hideCursorInOverviewRuler:EditorOption<Any> = new EditorOption<Any>(59);
+    public static inline final hideCursorInOverviewRuler:EditorOption<Bool> = new EditorOption<Bool>(59);
     public static inline final hover:EditorOption<EditorHoverOptions> = new EditorOption<EditorHoverOptions>(60);
     public static inline final inDiffEditor:EditorOption<Any> = new EditorOption<Any>(61);
     public static inline final inlineSuggest:EditorOption<Any> = new EditorOption<Any>(62);
@@ -2016,8 +2091,8 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final multiCursorPaste:EditorOption<Any> = new EditorOption<Any>(79);
     public static inline final multiCursorLimit:EditorOption<Any> = new EditorOption<Any>(80);
     public static inline final occurrencesHighlight:EditorOption<String> = new EditorOption<String>(81);
-    public static inline final overviewRulerBorder:EditorOption<Any> = new EditorOption<Any>(82);
-    public static inline final overviewRulerLanes:EditorOption<Any> = new EditorOption<Any>(83);
+    public static inline final overviewRulerBorder:EditorOption<Bool> = new EditorOption<Bool>(82);
+    public static inline final overviewRulerLanes:EditorOption<Int> = new EditorOption<Int>(83);
     public static inline final padding:EditorOption<InternalEditorPaddingOptions> = new EditorOption<InternalEditorPaddingOptions>(84);
     public static inline final pasteAs:EditorOption<Any> = new EditorOption<Any>(85);
     public static inline final parameterHints:EditorOption<Any> = new EditorOption<Any>(86);
@@ -2032,8 +2107,8 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final renderControlCharacters:EditorOption<Bool> = new EditorOption<Bool>(95);
     public static inline final renderFinalNewline:EditorOption<String> = new EditorOption<String>(96);
     public static inline final renderLineHighlight:EditorOption<String> = new EditorOption<String>(97);
-    public static inline final renderLineHighlightOnlyWhenFocus:EditorOption<Any> = new EditorOption<Any>(98);
-    public static inline final renderValidationDecorations:EditorOption<Any> = new EditorOption<Any>(99);
+    public static inline final renderLineHighlightOnlyWhenFocus:EditorOption<Bool> = new EditorOption<Bool>(98);
+    public static inline final renderValidationDecorations:EditorOption<String> = new EditorOption<String>(99);
     public static inline final renderWhitespace:EditorOption<String> = new EditorOption<String>(100);
     public static inline final revealHorizontalRightPadding:EditorOption<Any> = new EditorOption<Any>(101);
     public static inline final roundedSelection:EditorOption<Bool> = new EditorOption<Bool>(102);
@@ -2052,7 +2127,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final smoothScrolling:EditorOption<Bool> = new EditorOption<Bool>(115);
     public static inline final stickyScroll:EditorOption<EditorStickyScrollOptions> = new EditorOption<EditorStickyScrollOptions>(116);
     public static inline final stickyTabStops:EditorOption<Any> = new EditorOption<Any>(117);
-    public static inline final stopRenderingLineAfter:EditorOption<Any> = new EditorOption<Any>(118);
+    public static inline final stopRenderingLineAfter:EditorOption<Int> = new EditorOption<Int>(118);
     public static inline final suggest:EditorOption<InternalSuggestOptions> = new EditorOption<InternalSuggestOptions>(119);
     public static inline final suggestFontSize:EditorOption<Any> = new EditorOption<Any>(120);
     public static inline final suggestLineHeight:EditorOption<Any> = new EditorOption<Any>(121);
@@ -2064,24 +2139,24 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final unusualLineTerminators:EditorOption<Any> = new EditorOption<Any>(127);
     public static inline final useShadowDOM:EditorOption<Any> = new EditorOption<Any>(128);
     public static inline final useTabStops:EditorOption<Any> = new EditorOption<Any>(129);
-    public static inline final wordBreak:EditorOption<Any> = new EditorOption<Any>(130);
+    public static inline final wordBreak:EditorOption<String> = new EditorOption<String>(130);
     public static inline final wordSegmenterLocales:EditorOption<Any> = new EditorOption<Any>(131);
     public static inline final wordSeparators:EditorOption<String> = new EditorOption<String>(132);
     public static inline final wordWrap:EditorOption<String> = new EditorOption<String>(133);
-    public static inline final wordWrapBreakAfterCharacters:EditorOption<Any> = new EditorOption<Any>(134);
-    public static inline final wordWrapBreakBeforeCharacters:EditorOption<Any> = new EditorOption<Any>(135);
+    public static inline final wordWrapBreakAfterCharacters:EditorOption<String> = new EditorOption<String>(134);
+    public static inline final wordWrapBreakBeforeCharacters:EditorOption<String> = new EditorOption<String>(135);
     public static inline final wordWrapColumn:EditorOption<Int> = new EditorOption<Int>(136);
-    public static inline final wordWrapOverride1:EditorOption<Any> = new EditorOption<Any>(137);
-    public static inline final wordWrapOverride2:EditorOption<Any> = new EditorOption<Any>(138);
+    public static inline final wordWrapOverride1:EditorOption<String> = new EditorOption<String>(137);
+    public static inline final wordWrapOverride2:EditorOption<String> = new EditorOption<String>(138);
     public static inline final wrappingIndent:EditorOption<WrappingIndent> = new EditorOption<WrappingIndent>(139);
-    public static inline final wrappingStrategy:EditorOption<Any> = new EditorOption<Any>(140);
+    public static inline final wrappingStrategy:EditorOption<String> = new EditorOption<String>(140);
     public static inline final showDeprecated:EditorOption<Any> = new EditorOption<Any>(141);
     public static inline final inlayHints:EditorOption<Any> = new EditorOption<Any>(142);
     public static inline final editorClassName:EditorOption<Any> = new EditorOption<Any>(143);
-    public static inline final pixelRatio:EditorOption<Any> = new EditorOption<Any>(144);
+    public static inline final pixelRatio:EditorOption<Float> = new EditorOption<Float>(144);
     public static inline final tabFocusMode:EditorOption<Any> = new EditorOption<Any>(145);
-    public static inline final layoutInfo:EditorOption<Any> = new EditorOption<Any>(146);
-    public static inline final wrappingInfo:EditorOption<Any> = new EditorOption<Any>(147);
+    public static inline final layoutInfo:EditorOption<cityscape.common.config.EditorViewOptions.EditorLayoutInfo> = new EditorOption<cityscape.common.config.EditorViewOptions.EditorLayoutInfo>(146);
+    public static inline final wrappingInfo:EditorOption<cityscape.common.config.EditorViewOptions.EditorWrappingInfo> = new EditorOption<cityscape.common.config.EditorViewOptions.EditorWrappingInfo>(147);
     public static inline final defaultColorDecorators:EditorOption<Any> = new EditorOption<Any>(148);
     public static inline final colorDecoratorsActivatedOn:EditorOption<Any> = new EditorOption<Any>(149);
     public static inline final inlineCompletionsAccessibilityVerbose:EditorOption<Any> = new EditorOption<Any>(150);
@@ -2759,6 +2834,9 @@ class EditorOptions {
         _wordWrap = register(new EditorStringEnumOption(EditorOption.wordWrap, 'wordWrap', 'off', ['off', 'on', 'wordWrapColumn', 'bounded']));
         _wordWrapColumn = register(new EditorIntOption(EditorOption.wordWrapColumn, 'wordWrapColumn', 80, 1, EditorOptions.MAX_SAFE_SMALL_INTEGER));
         _wrappingIndent = register(new WrappingIndentOption());
+        // The view options (EditorViewOptions.hx), registered with the view
+        EditorViewOptions.registerSimple(o -> register(o));
+        EditorViewOptions.registerComputed(o -> register(o));
     }
 
     /**

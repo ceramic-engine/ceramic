@@ -97,6 +97,13 @@ class Cityscape {
      */
     public final themeService:StandaloneThemeService;
 
+    /**
+     * Decoration styles registered by class name
+     * (`registerDecorationStyle`): Monaco's class names keep working with
+     * Cityscape's typed decoration style.
+     */
+    public final decorationStyles:cityscape.common.DecorationStyle.DecorationStyles = new cityscape.common.DecorationStyle.DecorationStyles();
+
     public function new() {
         this.undoRedoService = new cityscape.platform.undoRedo.common.UndoRedoService();
         backgroundScheduler = new BackgroundScheduler();
@@ -105,6 +112,16 @@ class Cityscape {
         languageService = new LanguageService(modesRegistry, tokenizationRegistry);
         languageConfigurationService = new LanguageConfigurationService(languageService);
         themeService = new StandaloneThemeService(tokenizationRegistry);
+    }
+
+    /**
+     * Gives a typed style to a decoration class name (`className`,
+     * `inlineClassName`, `glyphMarginClassName`, `linesDecorationsClassName`,
+     * `lineNumberClassName`, `marginClassName`, the class names of injected
+     * text), for every editor of this context.
+     */
+    public function registerDecorationStyle(className:String, style:cityscape.common.DecorationStyle.IDecorationStyle):Void {
+        decorationStyles.registerDecorationStyle(className, style);
     }
 
 }

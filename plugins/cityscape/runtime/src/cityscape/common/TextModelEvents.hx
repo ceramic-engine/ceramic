@@ -170,6 +170,11 @@ class LineInjectedText {
         for (injectedText in injectedTexts) {
             result += lineText.substring(lastOriginalOffset, injectedText.column - 1);
             lastOriginalOffset = injectedText.column - 1;
+            // Cityscape: an injection can replace text (hidden ranges), 0 in Monaco
+            final replaced:Null<Int> = injectedText.options.replacedLength;
+            if (replaced != null && replaced > 0) {
+                lastOriginalOffset += replaced;
+            }
             result += injectedText.options.content;
         }
         result += lineText.substring(lastOriginalOffset);
