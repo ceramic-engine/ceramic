@@ -308,8 +308,11 @@ class ComponentMacro {
             });
         }
 
-        // `.at(key)`, `.child(...)`, `.children(...)`
-        if (!methodNames.exists('at')) {
+        // `.at(key)`, `.child(...)`, `.children(...)`. A generic class keeps
+        // the ones it inherits: hxcs cannot compile an override returning a
+        // generic type over a parent method returning a plain one.
+        final keepInherited = cls.params.length > 0;
+        if (!methodNames.exists('at') && !(keepInherited && parentFields.exists('at'))) {
             final overrideAccess = parentFields.exists('at') ? [APublic, AOverride] : [APublic];
             newFields.push({
                 pos: pos,
@@ -327,7 +330,7 @@ class ComponentMacro {
                 meta: []
             });
         }
-        if (!parentElement && !methodNames.exists('child')) {
+        if (!parentElement && !methodNames.exists('child') && !(keepInherited && parentFields.exists('child'))) {
             final overrideAccess = parentFields.exists('child') ? [APublic, AOverride] : [APublic];
             newFields.push({
                 pos: pos,
@@ -352,7 +355,7 @@ class ComponentMacro {
                 meta: []
             });
         }
-        if (!parentElement && !methodNames.exists('children')) {
+        if (!parentElement && !methodNames.exists('children') && !(keepInherited && parentFields.exists('children'))) {
             final overrideAccess = parentFields.exists('children') ? [APublic, AOverride] : [APublic];
             newFields.push({
                 pos: pos,

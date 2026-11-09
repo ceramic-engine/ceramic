@@ -80,7 +80,7 @@ class ComponentTableTest extends TestCase {
 
     /** Rust `common::open_window`: the content inside gpui-base's `Root`. */
     function openWindow<V:Model & Render>(width:Float, height:Float, build:(Window, Context<V>) -> V):{view:Entity<V>, cx:VisualTestContext} {
-        var content:Null<Entity<V>> = null;
+        var content:Entity<V> = null;
         final opened = VisualTestContext.addWindowRoot(app, dispatcher, (window, rootCx) -> {
             content = rootCx.newEntity((c:Context<V>) -> build(window, c));
             return content;
@@ -889,7 +889,7 @@ private class TableView<D:TableDelegate> extends Model implements Render {
         this.stripe = stripe;
     }
 
-    public function render(_:Window, _:Context<Dynamic>):IntoElement {
+    public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         if (belowLabel) {
             return div()
                 .sizeFull()
@@ -913,7 +913,7 @@ private class FocusRingHarness extends Model implements Render {
         this.focusRing = focusRing;
     }
 
-    public function render(_:Window, _:Context<Dynamic>):IntoElement {
+    public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         return div()
             .w(px(240.))
             .h(px(160.))
@@ -931,7 +931,7 @@ private class BounceTable extends Model implements Render {
         this.state = state;
     }
 
-    public function render(_:Window, _:Context<Dynamic>):IntoElement {
+    public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         return div()
             .w(px(240.))
             .h(px(200.))
