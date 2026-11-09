@@ -8,6 +8,8 @@ import cityscape.base.common.Lifecycle.IDisposable;
 import cityscape.base.common.Strings;
 import cityscape.common.CursorCommon;
 import cityscape.common.CursorEvents.CursorChangeReason;
+import cityscape.common.EditorCommon.ICommand;
+import cityscape.common.EditorCommon.ICursorState;
 import cityscape.common.EditorCommon.ScrollType;
 import cityscape.common.EditorTheme;
 import cityscape.common.model.TextModel.ModelDecorationOptions;
@@ -39,6 +41,8 @@ import cityscape.common.config.EditorViewOptions;
 import cityscape.common.core.Position;
 import cityscape.common.core.Range;
 import cityscape.common.core.Selection;
+import cityscape.common.cursor.Cursor.CursorsController;
+import cityscape.common.languages.LanguageConfigurationRegistry.ILanguageConfigurationService;
 import cityscape.common.viewLayout.ViewLayout;
 import cityscape.common.viewModel.GlyphLanesModel.GlyphMarginLanesModel;
 import cityscape.common.viewModel.ViewModelDecorations;
@@ -49,12 +53,8 @@ import haxe.extern.EitherType;
  * The view model of an editor: Monaco's `ViewModel` (viewModelImpl.ts).
  *
  * Differences, all temporary or documented:
- * - TODO(step 3): Monaco's `CursorsController` is not ported yet. The cursor
- *   methods of `IViewModel` that return cursor states throw; a minimal
- *   selection holder (`setSelections`, `getSelections`, the cursor state
- *   events) stands in for it, isolated in the "cursor (minimal)" region.
- *   Selections follow edits made elsewhere through the model's content
- *   changes (Monaco recovers them from tracked ranges).
+ * - The cursors are Monaco's `CursorsController` (common/cursor). Monaco's
+ *   `languageConfigurationService` is the one of the `Cityscape` context.
  * - Cityscape: hidden ranges inside lines (`hidden`, `replacement`,
  *   `revealOnCursorLine` decoration options) are injections of this view
  *   (`ViewInjectedTextProvider`), so two editors on one model hide
@@ -73,7 +73,9 @@ class ViewModel implements IViewModel {
     public final model:ITextModel;
     final _eventDispatcher:ViewModelEventDispatcher;
     public final onEvent:Event<OutgoingViewModelEvent>;
-    public final cursorConfig:CursorConfiguration;
+    public var cursorConfig(default, null):CursorConfiguration;
+    final _cursor:CursorsController;
+    final languageConfigurationService:ILanguageConfigurationService;
     var _hasFocus:Bool;
     final _viewportStart:ViewportStart;
     final _lines:IViewModelLines;
@@ -94,14 +96,17 @@ class ViewModel implements IViewModel {
         this.model = model;
         this._eventDispatcher = new ViewModelEventDispatcher();
         this.onEvent = this._eventDispatcher.onEvent;
-        this.cursorConfig = null; // TODO(step 3): new CursorConfiguration(...)
+        // Monaco's theme service, global `TokenizationRegistry` and language
+        // configuration service are the context's (the context of the model
+        // when none is given)
+        final ctx:Null<cityscape.Cityscape> = context != null ? context : (Std.isOfType(model, cityscape.common.model.TextModel) ? (cast model : cityscape.common.model.TextModel).context : null);
+        this.languageConfigurationService = (ctx != null ? ctx : cityscape.Cityscape.defaultContext).languageConfigurationService;
+        this.cursorConfig = new CursorConfiguration(this.model.getLanguageId(), this.model.getOptions(), this._configuration, this.languageConfigurationService);
         this._hasFocus = false;
         this._viewportStart = ViewportStart.create(this.model);
         this.glyphLanes = new GlyphMarginLanesModel(0);
         this._attachedView = model.onBeforeAttached();
 
-        this._modelSelections = [new Selection(1, 1, 1, 1)];
-        this._viewSelections = [new Selection(1, 1, 1, 1)];
 
         if (USE_IDENTITY_LINES_COLLECTION && this.model.isTooLargeForTokenization()) {
 
@@ -135,6 +140,9 @@ class ViewModel implements IViewModel {
 
         this.coordinatesConverter = this._lines.createCoordinatesConverter();
 
+        this._cursor = new CursorsController(model, this, this.coordinatesConverter, this.cursorConfig);
+        this._disposables.push(this._cursor);
+
         this.viewLayout = new ViewLayout(this._configuration, this.getLineCount());
 
         this._disposables.push(this.viewLayout.onDidScroll((e) -> {
@@ -159,9 +167,6 @@ class ViewModel implements IViewModel {
 
         this._registerModelEvents();
 
-        // Monaco's theme service and global `TokenizationRegistry` are the
-        // context's (the context of the model when none is given)
-        final ctx:Null<cityscape.Cityscape> = context != null ? context : (Std.isOfType(model, cityscape.common.model.TextModel) ? (cast model : cityscape.common.model.TextModel).context : null);
         if (ctx != null) {
             this._disposables.push(ctx.tokenizationRegistry.onDidChange((e) -> {
                 if (e.changedColorMap) {
@@ -243,6 +248,7 @@ class ViewModel implements IViewModel {
 
     public function setHasFocus(hasFocus:Bool):Void {
         this._hasFocus = hasFocus;
+        this._cursor.setHasFocus(hasFocus);
         this._eventDispatcher.emitSingleViewEvent(new ViewFocusChangedEvent(hasFocus));
         this._eventDispatcher.emitOutgoingEvent(new FocusChangedEvent(!hasFocus, hasFocus));
     }
@@ -298,6 +304,15 @@ class ViewModel implements IViewModel {
         this.viewLayout.onConfigurationChanged(e);
 
         stableViewport.recoverViewportStart(this.coordinatesConverter, this.viewLayout);
+
+        if (CursorConfiguration.shouldRecreate(e)) {
+            this._updateCursorConfig();
+        }
+    }
+
+    function _updateCursorConfig():Void {
+        this.cursorConfig = new CursorConfiguration(this.model.getLanguageId(), this.model.getOptions(), this._configuration, this.languageConfigurationService);
+        this._cursor.updateConfiguration(this.cursorConfig);
     }
 
     /**
@@ -319,7 +334,7 @@ class ViewModel implements IViewModel {
         eventsCollector.emitViewEvent(new ViewFlushedEvent());
         eventsCollector.emitViewEvent(new ViewLineMappingChangedEvent());
         eventsCollector.emitViewEvent(new ViewDecorationsChangedEvent(null));
-        this._cursorOnLineMappingChanged(eventsCollector);
+        this._cursor.onLineMappingChanged(eventsCollector);
         this._decorations.onLineMappingChanged();
         this.viewLayout.onFlushed(this.getLineCount());
         this._updateConfigurationViewLineCountNow();
@@ -425,7 +440,7 @@ class ViewModel implements IViewModel {
                 if (!hadOtherModelChange && hadModelLineChangeThatChangedLineMapping) {
                     eventsCollector.emitViewEvent(new ViewLineMappingChangedEvent());
                     eventsCollector.emitViewEvent(new ViewDecorationsChangedEvent(null));
-                    this._cursorOnLineMappingChanged(eventsCollector);
+                    this._cursor.onLineMappingChanged(eventsCollector);
                     this._decorations.onLineMappingChanged();
                 }
             } catch (err:haxe.Exception) {
@@ -454,7 +469,9 @@ class ViewModel implements IViewModel {
             if (contentEvent != null) {
                 eventsCollector.emitOutgoingEvent(new ModelContentChangedEvent(contentEvent.contentChangedEvent));
             }
-            this._cursorOnModelContentChanged(eventsCollector, contentEvent);
+            this._cursor.onModelContentChanged(eventsCollector, e);
+            // Cityscape: `revealOnCursorLine` hidden ranges follow the cursors
+            this._updateHiddenRangesForCursors(eventsCollector);
             this._eventDispatcher.endEmitViewEvents();
 
             this._handleVisibleLinesChanged();
@@ -477,10 +494,12 @@ class ViewModel implements IViewModel {
 
         this._disposables.push(this.model.onDidChangeLanguageConfiguration((e) -> {
             this._eventDispatcher.emitSingleViewEvent(new ViewLanguageConfigurationEvent());
+            this._updateCursorConfig();
             this._eventDispatcher.emitOutgoingEvent(new ModelLanguageConfigurationChangedEvent(e));
         }));
 
         this._disposables.push(this.model.onDidChangeLanguage((e) -> {
+            this._updateCursorConfig();
             this._eventDispatcher.emitOutgoingEvent(new ModelLanguageChangedEvent(e));
         }));
 
@@ -491,6 +510,8 @@ class ViewModel implements IViewModel {
                 this._emitLineMappingFlush(eventsCollector);
                 this._eventDispatcher.endEmitViewEvents();
             }
+
+            this._updateCursorConfig();
 
             this._eventDispatcher.emitOutgoingEvent(new ModelOptionsChangedEvent(e));
         }));
@@ -522,7 +543,7 @@ class ViewModel implements IViewModel {
             eventsCollector.emitViewEvent(new ViewFlushedEvent());
             eventsCollector.emitViewEvent(new ViewLineMappingChangedEvent());
             eventsCollector.emitViewEvent(new ViewDecorationsChangedEvent(null));
-            this._cursorOnLineMappingChanged(eventsCollector);
+            this._cursor.onLineMappingChanged(eventsCollector);
             this._decorations.onLineMappingChanged();
             this.viewLayout.onFlushed(this.getLineCount());
             this.viewLayout.onHeightMaybeChanged();
@@ -616,7 +637,18 @@ class ViewModel implements IViewModel {
         return result;
     }
 
+    /**
+     * Replaces `getCompletelyVisibleViewRange` when set: vscode's cursor
+     * tests replace the method (`cursorMoveCommand.test.ts`), which Haxe
+     * cannot do on an interface method.
+     * @internal
+     */
+    public var _getCompletelyVisibleViewRangeOverride:Null<() -> Range> = null;
+
     public function getCompletelyVisibleViewRange():Range {
+        if (this._getCompletelyVisibleViewRangeOverride != null) {
+            return this._getCompletelyVisibleViewRangeOverride();
+        }
         final partialData = this.viewLayout.getLinesViewportData();
         final startViewLineNumber = partialData.completelyVisibleStartLineNumber;
         final endViewLineNumber = partialData.completelyVisibleEndLineNumber;
@@ -903,205 +935,208 @@ class ViewModel implements IViewModel {
         return null;
     }
 
-    //#region cursor (TODO(step 3): CursorsController)
-
-    var _modelSelections:Array<Selection>;
-    var _viewSelections:Array<Selection>;
+    //#region cursor operations
 
     public function getPrimaryCursorState():CursorState {
-        throw 'TODO(step 3): CursorsController';
+        return this._cursor.getPrimaryCursorState();
     }
 
     public function getLastAddedCursorIndex():Int {
-        return 0;
+        return this._cursor.getLastAddedCursorIndex();
     }
 
     public function getCursorStates():Array<CursorState> {
-        throw 'TODO(step 3): CursorsController';
+        return this._cursor.getCursorStates();
     }
 
     public function setCursorStates(source:Null<String>, reason:CursorChangeReason, states:Null<Array<PartialCursorState>>):Bool {
-        throw 'TODO(step 3): CursorsController';
+        return this._withViewEventsCollector(eventsCollector -> this._cursor.setStates(eventsCollector, source, reason, states));
     }
 
     public function getCursorColumnSelectData():IColumnSelectData {
-        throw 'TODO(step 3): CursorsController';
+        return this._cursor.getCursorColumnSelectData();
     }
 
     public function getCursorAutoClosedCharacters():Array<Range> {
-        return [];
+        return this._cursor.getAutoClosedCharacters();
     }
 
-    public function setCursorColumnSelectData(columnSelectData:IColumnSelectData):Void {}
+    public function setCursorColumnSelectData(columnSelectData:IColumnSelectData):Void {
+        this._cursor.setCursorColumnSelectData(columnSelectData);
+    }
 
     public function getPrevEditOperationType():EditOperationType {
-        return EditOperationType.Other;
+        return this._cursor.getPrevEditOperationType();
     }
 
-    public function setPrevEditOperationType(type:EditOperationType):Void {}
+    public function setPrevEditOperationType(type:EditOperationType):Void {
+        this._cursor.setPrevEditOperationType(type);
+    }
 
     public function getSelection():Selection {
-        return this._modelSelections[0];
+        return this._cursor.getSelection();
     }
 
     public function getSelections():Array<Selection> {
-        return this._modelSelections.copy();
+        return this._cursor.getSelections();
     }
 
     /**
-     * The selections in view coordinates (the primary one first).
+     * Cityscape: the selections in view coordinates (the primary one first).
      */
     public function getViewSelections():Array<Selection> {
-        return this._viewSelections;
+        return [for (state in this._cursor.getCursorStates()) state.viewState.selection];
     }
 
     public function getPosition():Position {
-        return this._modelSelections[0].getPosition();
+        return this._cursor.getPrimaryCursorState().modelState.position;
     }
 
     /**
-     * Sets the selections (model coordinates), the primary one first.
+     * Sets the selections (model coordinates), the primary one first
+     * (Monaco takes `ISelection`s: `Selection` instances here).
      */
     public function setSelections(source:Null<String>, selections:Array<Selection>, reason:CursorChangeReason = CursorChangeReason.NotSet):Void {
-        if (selections.length == 0) {
-            return;
-        }
-        final eventsCollector = this._eventDispatcher.beginEmitViewEvents();
-        this._setModelSelections(eventsCollector, source, [for (s in selections) this._validateSelection(s)], reason);
-        this._eventDispatcher.endEmitViewEvents();
+        this._withViewEventsCollector(eventsCollector -> {
+            this._cursor.setStates(eventsCollector, source, reason, CursorState.fromSelections(selections));
+            return null;
+        });
     }
 
-    function _validateSelection(s:Selection):Selection {
-        final start = this.model.validatePosition(s.getSelectionStart());
-        final end = this.model.validatePosition(s.getPosition());
-        return new Selection(start.lineNumber, start.column, end.lineNumber, end.column);
+    public function saveCursorState():Array<ICursorState> {
+        return this._cursor.saveState();
     }
 
-    function _setModelSelections(eventsCollector:ViewModelEventsCollector, source:Null<String>, selections:Array<Selection>, reason:CursorChangeReason):Void {
-        final oldSelections = this._modelSelections;
-        final oldVersionId = this._selectionsVersionId;
-        this._modelSelections = selections;
-        this._selectionsVersionId = this.model.getVersionId();
-        this._computeViewSelections();
-
-        // Cityscape: `revealOnCursorLine` hidden ranges follow the cursors
-        this._updateHiddenRanges(eventsCollector);
-
-        eventsCollector.emitViewEvent(new ViewCursorStateChangedEvent(this._viewSelections, this._modelSelections, reason));
-        eventsCollector.emitOutgoingEvent(new CursorStateChangedEvent(oldSelections, this._modelSelections, oldVersionId, this._selectionsVersionId, source == null ? '' : source, reason, false));
+    public function restoreCursorState(states:Array<ICursorState>):Void {
+        this._withViewEventsCollector(eventsCollector -> {
+            this._cursor.restoreState(eventsCollector, states);
+            return null;
+        });
     }
 
-    var _selectionsVersionId:Int = 0;
-
-    function _computeViewSelections():Void {
-        this._viewSelections = [for (s in this._modelSelections) {
-            final start = this.coordinatesConverter.convertModelPositionToViewPosition(s.getSelectionStart());
-            final end = this.coordinatesConverter.convertModelPositionToViewPosition(s.getPosition());
-            new Selection(start.lineNumber, start.column, end.lineNumber, end.column);
-        }];
-    }
-
-    function _cursorOnLineMappingChanged(eventsCollector:ViewModelEventsCollector):Void {
-        this._computeViewSelections();
-        eventsCollector.emitViewEvent(new ViewCursorStateChangedEvent(this._viewSelections, this._modelSelections, CursorChangeReason.NotSet));
-    }
-
-    function _cursorOnModelContentChanged(eventsCollector:ViewModelEventsCollector, e:Null<InternalModelContentChangeEvent>):Void {
-        if (e == null) {
-            // injected text only: the view positions moved
-            this._cursorOnLineMappingChanged(eventsCollector);
-            return;
-        }
-        if (this._pendingSelections != null) {
-            final selections = this._pendingSelections;
-            this._pendingSelections = null;
-            this._setModelSelections(eventsCollector, 'model', [for (s in selections) this._validateSelection(s)], CursorChangeReason.NotSet);
-            return;
-        }
-        final changes = e.contentChangedEvent.changes;
-        if (e.contentChangedEvent.isFlush) {
-            this._setModelSelections(eventsCollector, 'model', [new Selection(1, 1, 1, 1)], CursorChangeReason.ContentFlush);
-            return;
-        }
-        // Moves the selections through the edits (Monaco recovers them from
-        // tracked ranges; this minimal holder shifts positions instead)
-        final result = [for (s in this._modelSelections) {
-            var start = s.getSelectionStart();
-            var end = s.getPosition();
-            for (change in changes) {
-                start = shiftPosition(start, change);
-                end = shiftPosition(end, change);
-            }
-            new Selection(start.lineNumber, start.column, end.lineNumber, end.column);
-        }];
-        this._setModelSelections(eventsCollector, 'model', [for (s in result) this._validateSelection(s)], CursorChangeReason.RecoverFromMarkers);
-    }
-
-    /**
-     * Selections to set after the next content change (used by the view's
-     * minimal typing, before the cursor controller of step 3).
-     */
-    var _pendingSelections:Null<Array<Selection>> = null;
-
-    /**
-     * Applies edits to the model and sets the selections after them, in one
-     * cursor change (TODO(step 3): `executeEdits` of the cursor controller).
-     */
-    public function executeEditsMinimal(source:Null<String>, edits:Array<IIdentifiedSingleEditOperation>, selectionsAfter:Array<Selection>):Void {
-        if (this._configuration.options.get(EditorOption.readOnly)) {
+    function _executeCursorEdit(callback:(eventsCollector:ViewModelEventsCollector) -> Void):Void {
+        if (this._cursor.context.cursorConfig.readOnly) {
+            // we cannot edit when read only...
             this._eventDispatcher.emitOutgoingEvent(new ReadOnlyEditAttemptEvent());
             return;
         }
-        this._pendingSelections = selectionsAfter;
-        this.model.pushEditOperations(this.getSelections(), edits, (_) -> null);
-        if (this._pendingSelections != null) {
-            // no content change happened
-            final selections = this._pendingSelections;
-            this._pendingSelections = null;
-            this.setSelections(source, selections);
-        }
+        this._withViewEventsCollector(eventsCollector -> {
+            callback(eventsCollector);
+            return null;
+        });
     }
 
-    static function shiftPosition(p:Position, change:IModelContentChange):Position {
-        final r = change.range;
-        if (Position.isBeforeStatic(p, {lineNumber: r.startLineNumber, column: r.startColumn})) {
-            return p;
-        }
-        // position after the replaced range or inside it
-        final textLines = change.text.split('\n');
-        final insertedLastLineLength = textLines[textLines.length - 1].length;
-        final newEndLine = r.startLineNumber + textLines.length - 1;
-        final newEndColumn = (textLines.length == 1 ? r.startColumn + insertedLastLineLength : insertedLastLineLength + 1);
-        if (Position.isBeforeStatic(p, {lineNumber: r.endLineNumber, column: r.endColumn})) {
-            // inside the replaced range: to the end of the new text
-            return new Position(newEndLine, newEndColumn);
-        }
-        if (p.lineNumber == r.endLineNumber) {
-            return new Position(newEndLine, newEndColumn + (p.column - r.endColumn));
-        }
-        return new Position(p.lineNumber + (newEndLine - r.endLineNumber), p.column);
+    public function executeEdits(source:Null<String>, edits:Array<IIdentifiedSingleEditOperation>, cursorStateComputer:ICursorStateComputer):Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.executeEdits(eventsCollector, source, edits, cursorStateComputer));
+    }
+
+    public function startComposition():Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.startComposition(eventsCollector));
+    }
+
+    public function endComposition(?source:String):Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.endComposition(eventsCollector, source));
+    }
+
+    public function type(text:String, ?source:String):Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.type(eventsCollector, text, source));
+    }
+
+    public function compositionType(text:String, replacePrevCharCnt:Int, replaceNextCharCnt:Int, positionDelta:Int, ?source:String):Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.compositionType(eventsCollector, text, replacePrevCharCnt, replaceNextCharCnt, positionDelta, source));
+    }
+
+    public function paste(text:String, pasteOnNewLine:Bool, ?multicursorText:Array<String>, ?source:String):Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.paste(eventsCollector, text, pasteOnNewLine, multicursorText, source));
+    }
+
+    public function cut(?source:String):Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.cut(eventsCollector, source));
+    }
+
+    public function executeCommand(command:ICommand, ?source:String):Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.executeCommand(eventsCollector, command, source));
+    }
+
+    public function executeCommands(commands:Array<Null<ICommand>>, ?source:String):Void {
+        this._executeCursorEdit(eventsCollector -> this._cursor.executeCommands(eventsCollector, commands, source));
+    }
+
+    /**
+     * Cityscape (the view's typing before the editor commands): applies edits
+     * and sets the selections after them, in one cursor edit.
+     */
+    public function executeEditsMinimal(source:Null<String>, edits:Array<IIdentifiedSingleEditOperation>, selectionsAfter:Array<Selection>):Void {
+        this.executeEdits(source, edits, (_) -> selectionsAfter);
     }
 
     public function revealAllCursors(source:Null<String>, revealHorizontal:Bool, ?minimalReveal:Bool):Void {
-        this.revealPrimaryCursor(source, revealHorizontal, minimalReveal);
+        this._withViewEventsCollector(eventsCollector -> {
+            this._cursor.revealAll(eventsCollector, source, minimalReveal == true, VerticalRevealType.Simple, revealHorizontal, ScrollType.Smooth);
+            return null;
+        });
     }
 
     public function revealPrimaryCursor(source:Null<String>, revealHorizontal:Bool, ?minimalReveal:Bool):Void {
-        final s = this._viewSelections[0];
-        final p = s.getPosition();
-        this._eventDispatcher.emitSingleViewEvent(new ViewRevealRangeRequestEvent(source, minimalReveal == true, new Range(p.lineNumber, p.column, p.lineNumber, p.column), null, VerticalRevealType.Simple, revealHorizontal, ScrollType.Smooth));
+        this._withViewEventsCollector(eventsCollector -> {
+            this._cursor.revealPrimary(eventsCollector, source, minimalReveal == true, VerticalRevealType.Simple, revealHorizontal, ScrollType.Smooth);
+            return null;
+        });
     }
 
     public function revealTopMostCursor(source:Null<String>):Void {
-        this.revealPrimaryCursor(source, true);
+        final viewPosition = this._cursor.getTopMostViewPosition();
+        final viewRange = new Range(viewPosition.lineNumber, viewPosition.column, viewPosition.lineNumber, viewPosition.column);
+        this._withViewEventsCollector(eventsCollector -> {
+            eventsCollector.emitViewEvent(new ViewRevealRangeRequestEvent(source, false, viewRange, null, VerticalRevealType.Simple, true, ScrollType.Smooth));
+            return null;
+        });
     }
 
     public function revealBottomMostCursor(source:Null<String>):Void {
-        this.revealPrimaryCursor(source, true);
+        final viewPosition = this._cursor.getBottomMostViewPosition();
+        final viewRange = new Range(viewPosition.lineNumber, viewPosition.column, viewPosition.lineNumber, viewPosition.column);
+        this._withViewEventsCollector(eventsCollector -> {
+            eventsCollector.emitViewEvent(new ViewRevealRangeRequestEvent(source, false, viewRange, null, VerticalRevealType.Simple, true, ScrollType.Smooth));
+            return null;
+        });
     }
 
     public function revealRange(source:Null<String>, revealHorizontal:Bool, viewRange:Range, verticalType:VerticalRevealType, scrollType:ScrollType):Void {
-        this._eventDispatcher.emitSingleViewEvent(new ViewRevealRangeRequestEvent(source, false, viewRange, null, verticalType, revealHorizontal, scrollType));
+        this._withViewEventsCollector(eventsCollector -> {
+            eventsCollector.emitViewEvent(new ViewRevealRangeRequestEvent(source, false, viewRange, null, verticalType, revealHorizontal, scrollType));
+            return null;
+        });
+    }
+
+    /**
+     * Monaco's `_withViewEventsCollector` (Monaco also batches the changes
+     * of its observables, `_transactionalTarget`, not ported). Cityscape:
+     * the `revealOnCursorLine` hidden ranges follow the cursors.
+     */
+    function _withViewEventsCollector<T>(callback:(eventsCollector:ViewModelEventsCollector) -> T):T {
+        final eventsCollector = this._eventDispatcher.beginEmitViewEvents();
+        var result:T;
+        try {
+            result = callback(eventsCollector);
+            this._updateHiddenRangesForCursors(eventsCollector);
+        }
+        catch (e:haxe.Exception) {
+            this._eventDispatcher.endEmitViewEvents();
+            throw e;
+        }
+        this._eventDispatcher.endEmitViewEvents();
+        return result;
+    }
+
+    /**
+     * Cityscape: updates the hidden ranges revealed on cursor lines after the
+     * cursors may have moved.
+     */
+    function _updateHiddenRangesForCursors(eventsCollector:ViewModelEventsCollector):Void {
+        if (this._hiddenDecorationsByLine.keys().hasNext()) {
+            this._updateHiddenRanges(eventsCollector);
+        }
     }
 
     //#endregion
@@ -1138,7 +1173,8 @@ class ViewModel implements IViewModel {
 
     function _cursorModelLines():Map<Int, Bool> {
         final result = new Map<Int, Bool>();
-        for (s in this._modelSelections) {
+        final selections = (this._cursor != null ? this._cursor.getSelections() : [new Selection(1, 1, 1, 1)]);
+        for (s in selections) {
             for (line in s.startLineNumber...s.endLineNumber + 1) {
                 result.set(line, true);
             }
@@ -1302,7 +1338,7 @@ class ViewModel implements IViewModel {
         collector.emitViewEvent(new ViewLineMappingChangedEvent());
         collector.emitViewEvent(new ViewDecorationsChangedEvent(null));
         this._decorations.onLineMappingChanged();
-        this._computeViewSelections();
+        this._cursor.onLineMappingChanged(collector);
         if (lineMappingChanged) {
             this._updateConfigurationViewLineCountNow();
         }

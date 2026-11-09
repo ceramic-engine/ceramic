@@ -410,6 +410,240 @@ class Strings {
         return charCode;
     }
 
+    // Added with the cursor (step 3, worker cs3-cursor): graphemes and
+    // character classes of strings.ts
+
+    /**
+     * get the code point that ends right before offset `offset`
+     * (`NaN` in JavaScript when out of range, -1 here).
+     */
+    public static function getPrevCodePoint(str:String, offset:Int):Int {
+        if (offset < 1 || offset > str.length) {
+            return -1;
+        }
+        final charCode = StringTools.fastCodeAt(str, offset - 1);
+        if (isLowSurrogate(charCode) && offset > 1) {
+            final prevCharCode = StringTools.fastCodeAt(str, offset - 2);
+            if (isHighSurrogate(prevCharCode)) {
+                return computeCodePoint(prevCharCode, charCode);
+            }
+        }
+        return charCode;
+    }
+
+    /**
+     * The length (in UTF-16 code units) of the grapheme cluster starting at
+     * `initialOffset`.
+     */
+    public static function nextCharLength(str:String, initialOffset:Int):Int {
+        final iterator = new GraphemeIterator(str, initialOffset);
+        return iterator.nextGraphemeLength();
+    }
+
+    /**
+     * The length (in UTF-16 code units) of the grapheme cluster ending at
+     * `initialOffset`.
+     */
+    public static function prevCharLength(str:String, initialOffset:Int):Int {
+        final iterator = new GraphemeIterator(str, initialOffset);
+        return iterator.prevGraphemeLength();
+    }
+
+    /**
+     * The `[start, end]` offsets of the grapheme cluster containing `offset`.
+     */
+    public static function getCharContainingOffset(str:String, offset:Int):Array<Int> {
+        if (offset > 0 && isLowSurrogate(StringTools.fastCodeAt(str, offset))) {
+            offset--;
+        }
+        final endOffset = offset + nextCharLength(str, offset);
+        final startOffset = endOffset - prevCharLength(str, endOffset);
+        return [startOffset, endOffset];
+    }
+
+    /**
+     * The number of grapheme clusters of `str`.
+     */
+    public static function charCount(str:String):Int {
+        final iterator = new GraphemeIterator(str);
+        var length = 0;
+        while (!iterator.eol()) {
+            length++;
+            iterator.nextGraphemeLength();
+        }
+        return length;
+    }
+
+    public static inline function isAsciiDigit(code:Int):Bool {
+        return code >= (CharCode.Digit0 : Int) && code <= (CharCode.Digit9 : Int);
+    }
+
+    public static inline function isLowerAsciiLetter(code:Int):Bool {
+        return code >= (CharCode.a : Int) && code <= (CharCode.z : Int);
+    }
+
+    public static inline function isUpperAsciiLetter(code:Int):Bool {
+        return code >= (CharCode.A : Int) && code <= (CharCode.Z : Int);
+    }
+
+    public static function getGraphemeBreakType(codePoint:Int):GraphemeBreakType {
+        final graphemeBreakTree = GraphemeBreakTree.getInstance();
+        return graphemeBreakTree.getGraphemeBreakType(codePoint);
+    }
+
+    @:allow(cityscape.base.common.GraphemeIterator)
+    static function breakBetweenGraphemeBreakType(breakTypeA:GraphemeBreakType, breakTypeB:GraphemeBreakType):Bool {
+        // http://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
+
+        // !!! Let's make the common case a bit faster
+        if (breakTypeA == GraphemeBreakType.Other) {
+            // see https://www.unicode.org/Public/13.0.0/ucd/auxiliary/GraphemeBreakTest-13.0.0d10.html#table
+            return (breakTypeB != GraphemeBreakType.Extend && breakTypeB != GraphemeBreakType.SpacingMark);
+        }
+
+        // Do not break between a CR and LF. Otherwise, break before and after controls.
+        // GB3                                        CR x LF
+        // GB4                       (Control | CR | LF) /
+        // GB5                                           / (Control | CR | LF)
+        if (breakTypeA == GraphemeBreakType.CR) {
+            if (breakTypeB == GraphemeBreakType.LF) {
+                return false; // GB3
+            }
+        }
+        if (breakTypeA == GraphemeBreakType.Control || breakTypeA == GraphemeBreakType.CR || breakTypeA == GraphemeBreakType.LF) {
+            return true; // GB4
+        }
+        if (breakTypeB == GraphemeBreakType.Control || breakTypeB == GraphemeBreakType.CR || breakTypeB == GraphemeBreakType.LF) {
+            return true; // GB5
+        }
+
+        // Do not break Hangul syllable sequences.
+        // GB6                                         L x (L | V | LV | LVT)
+        // GB7                                  (LV | V) x (V | T)
+        // GB8                                 (LVT | T) x T
+        if (breakTypeA == GraphemeBreakType.L) {
+            if (breakTypeB == GraphemeBreakType.L || breakTypeB == GraphemeBreakType.V || breakTypeB == GraphemeBreakType.LV || breakTypeB == GraphemeBreakType.LVT) {
+                return false; // GB6
+            }
+        }
+        if (breakTypeA == GraphemeBreakType.LV || breakTypeA == GraphemeBreakType.V) {
+            if (breakTypeB == GraphemeBreakType.V || breakTypeB == GraphemeBreakType.T) {
+                return false; // GB7
+            }
+        }
+        if (breakTypeA == GraphemeBreakType.LVT || breakTypeA == GraphemeBreakType.T) {
+            if (breakTypeB == GraphemeBreakType.T) {
+                return false; // GB8
+            }
+        }
+
+        // Do not break before extending characters or ZWJ.
+        // GB9                                           x (Extend | ZWJ)
+        if (breakTypeB == GraphemeBreakType.Extend || breakTypeB == GraphemeBreakType.ZWJ) {
+            return false; // GB9
+        }
+
+        // The GB9a and GB9b rules only apply to extended grapheme clusters:
+        // Do not break before SpacingMarks, or after Prepend characters.
+        // GB9a                                          x SpacingMark
+        // GB9b                                  Prepend x
+        if (breakTypeB == GraphemeBreakType.SpacingMark) {
+            return false; // GB9a
+        }
+        if (breakTypeA == GraphemeBreakType.Prepend) {
+            return false; // GB9b
+        }
+
+        // Do not break within emoji modifier sequences or emoji zwj sequences.
+        // GB11    \p{Extended_Pictographic} Extend* ZWJ x \p{Extended_Pictographic}
+        if (breakTypeA == GraphemeBreakType.ZWJ && breakTypeB == GraphemeBreakType.Extended_Pictographic) {
+            // Note: we are not implementing the rule entirely here to avoid introducing states
+            return false; // GB11
+        }
+
+        // GB12                          sot (RI RI)* RI x RI
+        // GB13                        [^RI] (RI RI)* RI x RI
+        if (breakTypeA == GraphemeBreakType.Regional_Indicator && breakTypeB == GraphemeBreakType.Regional_Indicator) {
+            // Note: we are not implementing the rule entirely here to avoid introducing states
+            return false; // GB12 & GB13
+        }
+
+        // GB999                                     Any / Any
+        return true;
+    }
+
+    /**
+     * Computes the offset after performing a left delete on the given string,
+     * while considering unicode grapheme/emoji rules.
+     */
+    public static function getLeftDeleteOffset(offset:Int, str:String):Int {
+        if (offset == 0) {
+            return 0;
+        }
+
+        // Try to delete emoji part.
+        final emojiOffset = getOffsetBeforeLastEmojiComponent(offset, str);
+        if (emojiOffset != null) {
+            return emojiOffset;
+        }
+
+        // Otherwise, just skip a single code point.
+        final iterator = new CodePointIterator(str, offset);
+        iterator.prevCodePoint();
+        return iterator.offset;
+    }
+
+    static function getOffsetBeforeLastEmojiComponent(initialOffset:Int, str:String):Null<Int> {
+        // See https://www.unicode.org/reports/tr51/tr51-14.html#EBNF_and_Regex for the
+        // structure of emojis.
+        final iterator = new CodePointIterator(str, initialOffset);
+        var codePoint = iterator.prevCodePoint();
+
+        // Skip modifiers
+        while ((isEmojiModifier(codePoint) || codePoint == EMOJI_VARIANT_SELECTOR || codePoint == ENCLOSING_KEY_CAP)) {
+            if (iterator.offset == 0) {
+                // Cannot skip modifier, no preceding emoji base.
+                return null;
+            }
+            codePoint = iterator.prevCodePoint();
+        }
+
+        // Expect base emoji
+        if (!isEmojiImprecise(codePoint)) {
+            // Unexpected code point, not a valid emoji.
+            return null;
+        }
+
+        var resultOffset = iterator.offset;
+
+        if (resultOffset > 0) {
+            // Skip optional ZWJ code points that combine multiple emojis.
+            // In theory, we should check if that ZWJ actually combines multiple emojis
+            // to prevent deleting ZWJs in situations we didn't account for.
+            final optionalZwjCodePoint = iterator.prevCodePoint();
+            if (optionalZwjCodePoint == ZWJ) {
+                resultOffset = iterator.offset;
+            }
+        }
+
+        return resultOffset;
+    }
+
+    static inline function isEmojiModifier(codePoint:Int):Bool {
+        return 0x1F3FB <= codePoint && codePoint <= 0x1F3FF;
+    }
+
+    // strings.ts `CodePoint`
+    static inline final ZWJ = 0x200D;
+    /**
+     * Variation Selector-16 (VS16)
+     */
+    static inline final EMOJI_VARIANT_SELECTOR = 0xFE0F;
+    /**
+     * Combining Enclosing Keycap
+     */
+    static inline final ENCLOSING_KEY_CAP = 0x20E3;
+
     /**
      * Escapes the characters of an HTML attribute value.
      */
@@ -511,4 +745,185 @@ typedef RegExpOptions = {
     @:optional var multiline:Bool;
     @:optional var global:Bool;
     @:optional var unicode:Bool;
+}
+
+/**
+ * Iterates over the code points of a string (UTF-16 offsets).
+ */
+class CodePointIterator {
+
+    final _str:String;
+    final _len:Int;
+    var _offset:Int;
+
+    public var offset(get, never):Int;
+    inline function get_offset():Int {
+        return this._offset;
+    }
+
+    public function new(str:String, offset:Int = 0) {
+        this._str = str;
+        this._len = str.length;
+        this._offset = offset;
+    }
+
+    public function setOffset(offset:Int):Void {
+        this._offset = offset;
+    }
+
+    public function prevCodePoint():Int {
+        final codePoint = Strings.getPrevCodePoint(this._str, this._offset);
+        this._offset -= (codePoint >= 0x10000 /* Constants.UNICODE_SUPPLEMENTARY_PLANE_BEGIN */ ? 2 : 1);
+        return codePoint;
+    }
+
+    public function nextCodePoint():Int {
+        final codePoint = Strings.getNextCodePoint(this._str, this._len, this._offset);
+        this._offset += (codePoint >= 0x10000 /* Constants.UNICODE_SUPPLEMENTARY_PLANE_BEGIN */ ? 2 : 1);
+        return codePoint;
+    }
+
+    public function eol():Bool {
+        return (this._offset >= this._len);
+    }
+
+}
+
+/**
+ * Iterates over the grapheme clusters of a string (UTF-16 offsets), with
+ * Monaco's pairwise rules (`breakBetweenGraphemeBreakType`).
+ */
+class GraphemeIterator {
+
+    final _iterator:CodePointIterator;
+
+    public var offset(get, never):Int;
+    inline function get_offset():Int {
+        return this._iterator.offset;
+    }
+
+    public function new(str:String, offset:Int = 0) {
+        this._iterator = new CodePointIterator(str, offset);
+    }
+
+    public function nextGraphemeLength():Int {
+        final graphemeBreakTree = GraphemeBreakTree.getInstance();
+        final iterator = this._iterator;
+        final initialOffset = iterator.offset;
+
+        var graphemeBreakType = graphemeBreakTree.getGraphemeBreakType(iterator.nextCodePoint());
+        while (!iterator.eol()) {
+            final offset = iterator.offset;
+            final nextGraphemeBreakType = graphemeBreakTree.getGraphemeBreakType(iterator.nextCodePoint());
+            if (Strings.breakBetweenGraphemeBreakType(graphemeBreakType, nextGraphemeBreakType)) {
+                // move iterator back
+                iterator.setOffset(offset);
+                break;
+            }
+            graphemeBreakType = nextGraphemeBreakType;
+        }
+        return (iterator.offset - initialOffset);
+    }
+
+    public function prevGraphemeLength():Int {
+        final graphemeBreakTree = GraphemeBreakTree.getInstance();
+        final iterator = this._iterator;
+        final initialOffset = iterator.offset;
+
+        var graphemeBreakType = graphemeBreakTree.getGraphemeBreakType(iterator.prevCodePoint());
+        while (iterator.offset > 0) {
+            final offset = iterator.offset;
+            final prevGraphemeBreakType = graphemeBreakTree.getGraphemeBreakType(iterator.prevCodePoint());
+            if (Strings.breakBetweenGraphemeBreakType(prevGraphemeBreakType, graphemeBreakType)) {
+                // move iterator back
+                iterator.setOffset(offset);
+                break;
+            }
+            graphemeBreakType = prevGraphemeBreakType;
+        }
+        return (initialOffset - iterator.offset);
+    }
+
+    public function eol():Bool {
+        return this._iterator.eol();
+    }
+
+}
+
+enum abstract GraphemeBreakType(Int) from Int to Int {
+    var Other = 0;
+    var Prepend = 1;
+    var CR = 2;
+    var LF = 3;
+    var Control = 4;
+    var Extend = 5;
+    var Regional_Indicator = 6;
+    var SpacingMark = 7;
+    var L = 8;
+    var V = 9;
+    var T = 10;
+    var LV = 11;
+    var LVT = 12;
+    var ZWJ = 13;
+    var Extended_Pictographic = 14;
+}
+
+/**
+ * The grapheme break property of a code point, from Monaco's table
+ * (`GraphemeBreakData`). The table is immutable: one instance is shared.
+ */
+class GraphemeBreakTree {
+
+    static var _INSTANCE:Null<GraphemeBreakTree> = null;
+
+    public static function getInstance():GraphemeBreakTree {
+        if (_INSTANCE == null) {
+            _INSTANCE = new GraphemeBreakTree();
+        }
+        return _INSTANCE;
+    }
+
+    final _data:Array<Int>;
+
+    function new() {
+        this._data = GraphemeBreakData.getGraphemeBreakRawData();
+    }
+
+    public function getGraphemeBreakType(codePoint:Int):GraphemeBreakType {
+        // !!! Let's make 7bit ASCII a bit faster: 0..31
+        if (codePoint < 32) {
+            if (codePoint == CharCode.LineFeed) {
+                return GraphemeBreakType.LF;
+            }
+            if (codePoint == CharCode.CarriageReturn) {
+                return GraphemeBreakType.CR;
+            }
+            return GraphemeBreakType.Control;
+        }
+        // !!! Let's make 7bit ASCII a bit faster: 32..126
+        if (codePoint < 127) {
+            return GraphemeBreakType.Other;
+        }
+
+        final data = this._data;
+        final nodeCount = Std.int(data.length / 3);
+        var nodeIndex = 1;
+        while (nodeIndex <= nodeCount) {
+            if (codePoint < data[3 * nodeIndex]) {
+                // go left
+                nodeIndex = 2 * nodeIndex;
+            }
+            else if (codePoint > data[3 * nodeIndex + 1]) {
+                // go right
+                nodeIndex = 2 * nodeIndex + 1;
+            }
+            else {
+                // hit
+                return data[3 * nodeIndex + 2];
+            }
+        }
+
+        return GraphemeBreakType.Other;
+    }
+
 }

@@ -38,7 +38,11 @@ interface IViewModel extends ICursorSimpleModel {
 
     final viewLayout:IViewLayout;
 
-    final cursorConfig:CursorConfiguration;
+    /**
+     * Replaced when the options, the language or its configuration change
+     * (Monaco's `readonly` field is reassigned by the view model).
+     */
+    var cursorConfig(default, null):CursorConfiguration;
 
     final glyphLanes:IGlyphMarginLanesModel;
 

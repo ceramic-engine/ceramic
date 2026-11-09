@@ -3,11 +3,11 @@
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.common;
 
+import cityscape.common.core.Position;
+import cityscape.common.core.Selection;
+
 /**
  * Describes the reason the cursor has changed its position.
- *
- * TODO(step 3): the cursor events (`ICursorPositionChangedEvent`,
- * `ICursorSelectionChangedEvent`) come with the cursor controller.
  */
 enum abstract CursorChangeReason(Int) from Int to Int {
     /**
@@ -38,4 +38,60 @@ enum abstract CursorChangeReason(Int) from Int to Int {
      * There was a Redo.
      */
     var Redo = 6;
+}
+
+/**
+ * An event describing that the cursor position has changed.
+ */
+typedef ICursorPositionChangedEvent = {
+    /**
+     * Primary cursor's position.
+     */
+    final position:Position;
+    /**
+     * Secondary cursors' position.
+     */
+    final secondaryPositions:Array<Position>;
+    /**
+     * Reason.
+     */
+    final reason:CursorChangeReason;
+    /**
+     * Source of the call that caused the event.
+     */
+    final source:String;
+}
+
+/**
+ * An event describing that the cursor selection has changed.
+ */
+typedef ICursorSelectionChangedEvent = {
+    /**
+     * The primary selection.
+     */
+    final selection:Selection;
+    /**
+     * The secondary selections.
+     */
+    final secondarySelections:Array<Selection>;
+    /**
+     * The model version id.
+     */
+    final modelVersionId:Int;
+    /**
+     * The old selections.
+     */
+    final oldSelections:Null<Array<Selection>>;
+    /**
+     * The model version id the that `oldSelections` refer to.
+     */
+    final oldModelVersionId:Int;
+    /**
+     * Source of the call that caused the event.
+     */
+    final source:String;
+    /**
+     * Reason.
+     */
+    final reason:CursorChangeReason;
 }

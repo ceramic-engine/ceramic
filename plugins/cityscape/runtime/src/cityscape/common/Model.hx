@@ -752,9 +752,10 @@ typedef ModelContentOrInjectedTextChangedEvent = EitherType<InternalModelContent
  * into one method with optional arguments or `EitherType` parameters
  * (`findMatches`, `setLanguage`, `applyEdits`, `_setTrackedRange`,
  * `pushEditOperations`); `undo()` and `redo()` return nothing (Monaco may
- * return a promise); `Event<void>` is `VoidEvent`.
+ * return a promise); `Event<void>` is `VoidEvent`. The model is an
+ * `ICursorSimpleModel` (Monaco passes it as one, structurally typed).
  */
-interface ITextModel {
+interface ITextModel extends cityscape.common.CursorCommon.ICursorSimpleModel {
 
     /**
      * Gets the resource associated with this editor model.

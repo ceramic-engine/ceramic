@@ -406,58 +406,11 @@ class GuidesTextModelPart extends TextModelPart implements IGuidesTextModelPart 
     }
 
     function getVisibleColumnFromPosition(position:Position):Int {
-        return visibleColumnFromColumn(
+        return CursorColumns.visibleColumnFromColumn(
             this.textModel.getLineContent(position.lineNumber),
             position.column,
             this.textModel.getOptions().tabSize
         ) + 1;
-    }
-
-    /**
-     * `CursorColumns.visibleColumnFromColumn`, which needs the grapheme
-     * iterator of strings.ts (not ported yet): here the visible columns are
-     * counted per code point (a grapheme of several code points, like a
-     * combining mark after a letter, counts once per code point), with
-     * Monaco's tab stops and wide characters (`isFullWidthCharacter`,
-     * `isEmojiImprecise`).
-     * TODO(step 2): use `CursorColumns.visibleColumnFromColumn` once it is ported.
-     */
-    static function visibleColumnFromColumn(lineContent:String, column:Int, tabSize:Int):Int {
-        final textLen = Std.int(Math.min(column - 1, lineContent.length));
-        var result = 0;
-        var offset = 0;
-        while (offset < textLen) {
-            final codePoint = Strings.getNextCodePoint(lineContent, textLen, offset);
-            offset += codePoint >= 0x10000 ? 2 : 1;
-            if (codePoint == CharCode.Tab) {
-                result = CursorColumns.nextRenderTabStop(result, tabSize);
-            }
-            else if (isFullWidthCharacter(codePoint) || isEmojiImprecise(codePoint)) {
-                result += 2;
-            }
-            else {
-                result += 1;
-            }
-        }
-        return result;
-    }
-
-    static function isFullWidthCharacter(charCode:Int):Bool {
-        return (
-            (charCode >= 0x2E80 && charCode <= 0xD7AF)
-            || (charCode >= 0xF900 && charCode <= 0xFAFF)
-            || (charCode >= 0xFF01 && charCode <= 0xFF5E)
-        );
-    }
-
-    static function isEmojiImprecise(x:Int):Bool {
-        return (
-            (x >= 0x1F1E6 && x <= 0x1F1FF) || (x == 8986) || (x == 8987) || (x == 9200)
-            || (x == 9203) || (x >= 9728 && x <= 10175) || (x == 11088) || (x == 11093)
-            || (x >= 127744 && x <= 128591) || (x >= 128640 && x <= 128764)
-            || (x >= 128992 && x <= 129008) || (x >= 129280 && x <= 129535)
-            || (x >= 129648 && x <= 129782)
-        );
     }
 
     public function getLinesIndentGuides(startLineNumber:Int, endLineNumber:Int):Array<Int> {

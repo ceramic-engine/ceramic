@@ -391,6 +391,59 @@ typedef IEditorOptions = {
      */
     @:optional var experimentalWhitespaceRendering:String;
     /**
+     * Options for auto closing comments: `'always'`, `'languageDefined'`,
+     * `'beforeWhitespace'` or `'never'`.
+     * Defaults to language defined behavior.
+     */
+    @:optional var autoClosingComments:EditorAutoClosingStrategy;
+    /**
+     * Enable that the selection with the mouse and keys is doing column selection.
+     * Defaults to false.
+     */
+    @:optional var columnSelection:Bool;
+    /**
+     * Syntax highlighting is copied.
+     */
+    @:optional var copyWithSyntaxHighlighting:Bool;
+    /**
+     * Controls when `cursorSurroundingLines` should be enforced:
+     * `'default'` or `'all'`. Defaults to `default`.
+     */
+    @:optional var cursorSurroundingLinesStyle:String;
+    /**
+     * Merge overlapping selections.
+     * Defaults to true
+     */
+    @:optional var multiCursorMergeOverlapping:Bool;
+    /**
+     * Configure the behaviour when pasting a text with the line count equal to the cursor count:
+     * `'spread'` or `'full'`. Defaults to 'spread'.
+     */
+    @:optional var multiCursorPaste:String;
+    /**
+     * Controls the max number of text cursors that can be in an active editor at once.
+     */
+    @:optional var multiCursorLimit:Int;
+    /**
+     * Emulate selection behaviour of tab characters when using spaces for indentation.
+     * This means selection will stick to tab stops.
+     */
+    @:optional var stickyTabStops:Bool;
+    /**
+     * Enable tab completion: `'on'`, `'off'` or `'onlySnippets'`.
+     */
+    @:optional var tabCompletion:String;
+    /**
+     * Inserting and deleting whitespace follows tab stops.
+     */
+    @:optional var useTabStops:Bool;
+    /**
+     * Locales to be used for word segmentation when doing word related navigations or operations.
+     * Specify the BCP 47 language tag of the word you wish to recognize (e.g., ja, zh-CN, zh-Hant-TW, etc.).
+     * A string or an array of strings. Defaults to empty array.
+     */
+    @:optional var wordSegmenterLocales:EitherType<String, Array<String>>;
+    /**
      * Should the cursor be hidden in the overview ruler.
      * Defaults to false.
      */
@@ -2016,7 +2069,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final ariaLabel:EditorOption<Any> = new EditorOption<Any>(4);
     public static inline final ariaRequired:EditorOption<Any> = new EditorOption<Any>(5);
     public static inline final autoClosingBrackets:EditorOption<String> = new EditorOption<String>(6);
-    public static inline final autoClosingComments:EditorOption<Any> = new EditorOption<Any>(7);
+    public static inline final autoClosingComments:EditorOption<String> = new EditorOption<String>(7);
     public static inline final screenReaderAnnounceInlineSuggestion:EditorOption<Any> = new EditorOption<Any>(8);
     public static inline final autoClosingDelete:EditorOption<String> = new EditorOption<String>(9);
     public static inline final autoClosingOvertype:EditorOption<String> = new EditorOption<String>(10);
@@ -2031,15 +2084,15 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final codeLensFontSize:EditorOption<Any> = new EditorOption<Any>(19);
     public static inline final colorDecorators:EditorOption<Bool> = new EditorOption<Bool>(20);
     public static inline final colorDecoratorsLimit:EditorOption<Any> = new EditorOption<Any>(21);
-    public static inline final columnSelection:EditorOption<Any> = new EditorOption<Any>(22);
+    public static inline final columnSelection:EditorOption<Bool> = new EditorOption<Bool>(22);
     public static inline final comments:EditorOption<Any> = new EditorOption<Any>(23);
     public static inline final contextmenu:EditorOption<Bool> = new EditorOption<Bool>(24);
-    public static inline final copyWithSyntaxHighlighting:EditorOption<Any> = new EditorOption<Any>(25);
+    public static inline final copyWithSyntaxHighlighting:EditorOption<Bool> = new EditorOption<Bool>(25);
     public static inline final cursorBlinking:EditorOption<TextEditorCursorBlinkingStyle> = new EditorOption<TextEditorCursorBlinkingStyle>(26);
     public static inline final cursorSmoothCaretAnimation:EditorOption<String> = new EditorOption<String>(27);
     public static inline final cursorStyle:EditorOption<TextEditorCursorStyle> = new EditorOption<TextEditorCursorStyle>(28);
     public static inline final cursorSurroundingLines:EditorOption<Int> = new EditorOption<Int>(29);
-    public static inline final cursorSurroundingLinesStyle:EditorOption<Any> = new EditorOption<Any>(30);
+    public static inline final cursorSurroundingLinesStyle:EditorOption<String> = new EditorOption<String>(30);
     public static inline final cursorWidth:EditorOption<Int> = new EditorOption<Int>(31);
     public static inline final disableLayerHinting:EditorOption<Any> = new EditorOption<Any>(32);
     public static inline final disableMonospaceOptimizations:EditorOption<Bool> = new EditorOption<Bool>(33);
@@ -2086,10 +2139,10 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final mouseStyle:EditorOption<Any> = new EditorOption<Any>(74);
     public static inline final mouseWheelScrollSensitivity:EditorOption<Any> = new EditorOption<Any>(75);
     public static inline final mouseWheelZoom:EditorOption<Bool> = new EditorOption<Bool>(76);
-    public static inline final multiCursorMergeOverlapping:EditorOption<Any> = new EditorOption<Any>(77);
+    public static inline final multiCursorMergeOverlapping:EditorOption<Bool> = new EditorOption<Bool>(77);
     public static inline final multiCursorModifier:EditorOption<String> = new EditorOption<String>(78);
-    public static inline final multiCursorPaste:EditorOption<Any> = new EditorOption<Any>(79);
-    public static inline final multiCursorLimit:EditorOption<Any> = new EditorOption<Any>(80);
+    public static inline final multiCursorPaste:EditorOption<String> = new EditorOption<String>(79);
+    public static inline final multiCursorLimit:EditorOption<Int> = new EditorOption<Int>(80);
     public static inline final occurrencesHighlight:EditorOption<String> = new EditorOption<String>(81);
     public static inline final overviewRulerBorder:EditorOption<Bool> = new EditorOption<Bool>(82);
     public static inline final overviewRulerLanes:EditorOption<Int> = new EditorOption<Int>(83);
@@ -2126,21 +2179,21 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final smartSelect:EditorOption<Any> = new EditorOption<Any>(114);
     public static inline final smoothScrolling:EditorOption<Bool> = new EditorOption<Bool>(115);
     public static inline final stickyScroll:EditorOption<EditorStickyScrollOptions> = new EditorOption<EditorStickyScrollOptions>(116);
-    public static inline final stickyTabStops:EditorOption<Any> = new EditorOption<Any>(117);
+    public static inline final stickyTabStops:EditorOption<Bool> = new EditorOption<Bool>(117);
     public static inline final stopRenderingLineAfter:EditorOption<Int> = new EditorOption<Int>(118);
     public static inline final suggest:EditorOption<InternalSuggestOptions> = new EditorOption<InternalSuggestOptions>(119);
     public static inline final suggestFontSize:EditorOption<Any> = new EditorOption<Any>(120);
     public static inline final suggestLineHeight:EditorOption<Any> = new EditorOption<Any>(121);
     public static inline final suggestOnTriggerCharacters:EditorOption<Bool> = new EditorOption<Bool>(122);
     public static inline final suggestSelection:EditorOption<Any> = new EditorOption<Any>(123);
-    public static inline final tabCompletion:EditorOption<Any> = new EditorOption<Any>(124);
+    public static inline final tabCompletion:EditorOption<String> = new EditorOption<String>(124);
     public static inline final tabIndex:EditorOption<Any> = new EditorOption<Any>(125);
     public static inline final unicodeHighlighting:EditorOption<Any> = new EditorOption<Any>(126);
     public static inline final unusualLineTerminators:EditorOption<Any> = new EditorOption<Any>(127);
     public static inline final useShadowDOM:EditorOption<Any> = new EditorOption<Any>(128);
-    public static inline final useTabStops:EditorOption<Any> = new EditorOption<Any>(129);
+    public static inline final useTabStops:EditorOption<Bool> = new EditorOption<Bool>(129);
     public static inline final wordBreak:EditorOption<String> = new EditorOption<String>(130);
-    public static inline final wordSegmenterLocales:EditorOption<Any> = new EditorOption<Any>(131);
+    public static inline final wordSegmenterLocales:EditorOption<Array<String>> = new EditorOption<Array<String>>(131);
     public static inline final wordSeparators:EditorOption<String> = new EditorOption<String>(132);
     public static inline final wordWrap:EditorOption<String> = new EditorOption<String>(133);
     public static inline final wordWrapBreakAfterCharacters:EditorOption<String> = new EditorOption<String>(134);
@@ -2836,6 +2889,8 @@ class EditorOptions {
         _wrappingIndent = register(new WrappingIndentOption());
         // The view options (EditorViewOptions.hx), registered with the view
         EditorViewOptions.registerSimple(o -> register(o));
+        // The cursor options (EditorCursorOptions.hx), registered with the cursor
+        EditorCursorOptions.registerSimple(o -> register(o));
         EditorViewOptions.registerComputed(o -> register(o));
     }
 

@@ -101,6 +101,21 @@ class Tests {
         runner.add(new tests.viewModel.ViewModelHiddenRangesTest());
         runner.add(new tests.view.CityscapeEditorTest());
 
+        // Cursor (step 3, cs3-cursor)
+        runner.add(new tests.base.StringsTest());
+        runner.add(new tests.controller.CursorMoveHelperTest());
+        runner.add(new tests.controller.CursorAtomicMoveOperationsTest());
+        runner.add(new tests.controller.CursorMoveCommandTest());
+        runner.add(new tests.controller.CursorMoveCommandTest.CursorMoveByBlanklineTest());
+        runner.add(new tests.controller.CursorTest.EditorControllerCursorTest());
+        runner.add(new tests.controller.CursorTest.EditorControllerTest());
+        runner.add(new tests.controller.CursorTest.UndoStopsTest());
+        runner.add(new tests.commands.SideEditingTest.EditorSideEditingCollapsedSelectionTest());
+        runner.add(new tests.commands.SideEditingTest());
+        runner.add(new tests.commands.TrimTrailingWhitespaceCommandTest());
+        runner.add(new tests.commands.ShiftCommandTest());
+        runner.add(new tests.contrib.wordOperations.WordOperationsTest());
+
     }
 
 }

@@ -57,6 +57,13 @@ class TestCase {
         }
     }
 
+    function assertNotEquals<T>(notExpected:T, actual:T, ?message:String, ?pos:PosInfos):Void {
+        assertions++;
+        if (notExpected == actual) {
+            fail((message != null ? message + ': ' : '') + 'expected a value other than $notExpected', pos);
+        }
+    }
+
     function assertNull(value:Dynamic, ?message:String, ?pos:PosInfos):Void {
         assertions++;
         if (value != null) {

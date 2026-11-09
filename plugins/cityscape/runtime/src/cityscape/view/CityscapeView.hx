@@ -10,6 +10,7 @@ import cityscape.base.common.Lifecycle.IDisposable;
 import cityscape.base.common.Strings;
 import cityscape.common.CursorEvents.CursorChangeReason;
 import cityscape.common.DecorationStyle;
+import cityscape.common.EditorCommon.ICommand;
 import cityscape.common.EditorCommon.ScrollType;
 import cityscape.common.Model;
 import cityscape.common.ViewEventHandler;
@@ -25,6 +26,8 @@ import cityscape.common.viewLayout.LineDecorations;
 import cityscape.common.viewLayout.ViewLineRenderer;
 import cityscape.common.viewModel.MonospaceLineBreaksComputer;
 import cityscape.common.viewModel.ViewModelImpl;
+import cityscape.contrib.wordOperations.view.WordOperations;
+import cityscape.view.CoreCommands;
 import cityscape.view.DecorationStyleResolver;
 import cityscape.view.MeasuredLineBreaksComputer;
 import cityscape.view.config.EditorConfiguration;
@@ -148,11 +151,14 @@ class RenderedViewLine {
  * may show too. Implements the text input of Glaze (IME) and the scrollbar
  * handle of the kit.
  *
- * TODO(step 3): the cursor controller (moves, word operations, commands,
- * auto closing) replaces the minimal editing of the "editing (minimal)"
- * region below.
+ * The keys, the mouse and the text input run Monaco's commands (core
+ * commands, word operations, typing through the cursor controller of the
+ * view model), which is why the view is the `ICodeEditor` of the commands.
+ * TODO(step 3, keybindings): the keys are mapped here until the keybinding
+ * service of step 3 maps them (Monaco's default keybindings of macOS and
+ * the other platforms).
  */
-class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
+class CityscapeView extends GlazeModel implements glaze.EntityInputHandler implements ICodeEditor {
 
     public final context:Cityscape;
     public final editorId:Int;
@@ -195,9 +201,16 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
 
     // Mouse
     var mouseDown:Bool = false;
-    var mouseDownAnchor:Null<Position> = null;
-    var mouseDownMode:Int = 0; // 1 characters, 2 words, 3 lines
-    var mouseDownWordRange:Null<Range> = null;
+    var mouseDownCount:Int = 0;
+    var mouseDownAlt:Bool = false;
+    var mouseDownShift:Bool = false;
+
+    // Clipboard: the text of the last copy and whether it came from empty
+    // selections (Monaco's clipboard metadata, for `pasteOnNewLine` and the
+    // multi cursor paste)
+    var lastCopiedText:Null<String> = null;
+    var lastCopiedIsFromEmptySelection:Bool = false;
+    var lastCopiedMulticursorText:Null<Array<String>> = null;
 
     // Cursor blink
     public var cursorVisible(default, null):Bool = true;
@@ -594,84 +607,104 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
 
     //#region mouse
 
+    /**
+     * The mouse column of Monaco's mouse target (a visible column from the
+     * x position, for the column selection).
+     */
+    function mouseColumnAt(point:Point):Int {
+        final viewModel = this.viewModel;
+        final layoutInfo = configuration.options.get(EditorOption.layoutInfo);
+        final fontInfo:FontInfo = configuration.options.get(EditorOption.fontInfo);
+        final x = point.x - elementBounds.origin.x - layoutInfo.contentLeft + viewModel.viewLayout.getCurrentScrollLeft();
+        return Std.int(Math.max(0, Math.round(x / fontInfo.typicalHalfwidthCharacterWidth))) + 1;
+    }
+
+    /**
+     * Monaco's `ViewController.dispatchMouse` for the content area
+     * (`multiCursorModifier` 'alt', the default).
+     */
+    function dispatchMouse(point:Point, inSelectionMode:Bool, mouseDownCount:Int, altKey:Bool, shiftKey:Bool):Void {
+        final viewModel = this.viewModel;
+        final viewPosition = viewPositionAt(point);
+        final position = viewModel.coordinatesConverter.convertViewPositionToModelPosition(viewPosition);
+        final args:CoreCommandArgs = {
+            source: 'mouse',
+            position: position,
+            viewPosition: viewPosition,
+            revealType: NavigationCommandRevealType.Minimal
+        };
+        final hasMulticursorModifier = altKey;
+        if (mouseDownCount >= 4) {
+            CoreNavigationCommands.SelectAll.runCoreEditorCommand(viewModel, args);
+        }
+        else if (mouseDownCount == 3) {
+            if (hasMulticursorModifier) {
+                (inSelectionMode ? CoreNavigationCommands.LastCursorLineSelectDrag : CoreNavigationCommands.LastCursorLineSelect).runCoreEditorCommand(viewModel, args);
+            }
+            else {
+                (inSelectionMode ? CoreNavigationCommands.LineSelectDrag : CoreNavigationCommands.LineSelect).runCoreEditorCommand(viewModel, args);
+            }
+        }
+        else if (mouseDownCount == 2) {
+            if (hasMulticursorModifier) {
+                CoreNavigationCommands.LastCursorWordSelect.runCoreEditorCommand(viewModel, args);
+            }
+            else {
+                (inSelectionMode ? CoreNavigationCommands.WordSelectDrag : CoreNavigationCommands.WordSelect).runCoreEditorCommand(viewModel, args);
+            }
+        }
+        else {
+            if (hasMulticursorModifier) {
+                if (shiftKey) {
+                    args.mouseColumn = mouseColumnAt(point);
+                    args.doColumnSelect = true;
+                    CoreNavigationCommands.ColumnSelect.runCoreEditorCommand(viewModel, args);
+                }
+                else if (inSelectionMode) {
+                    CoreNavigationCommands.LastCursorMoveToSelect.runCoreEditorCommand(viewModel, args);
+                }
+                else {
+                    CoreNavigationCommands.CreateCursor.runCoreEditorCommand(viewModel, args);
+                }
+            }
+            else {
+                if (inSelectionMode) {
+                    CoreNavigationCommands.MoveToSelect.runCoreEditorCommand(viewModel, args);
+                }
+                else {
+                    CoreNavigationCommands.MoveTo.runCoreEditorCommand(viewModel, args);
+                }
+            }
+        }
+    }
+
     public function onMouseDown(event:MouseDownEvent, window:Window, cx:App):Void {
         final viewModel = this.viewModel;
         if (viewModel == null) {
             return;
         }
         focusHandle.focus(window, cx);
-        final position = modelPositionAt(event.position);
-        final clickCount = event.clickCount;
-        final selections = viewModel.getSelections();
         mouseDown = true;
-        if (event.modifiers.alt && !event.modifiers.shift) {
-            // alt+click adds a cursor (multiCursorModifier 'alt')
-            selections.push(new Selection(position.lineNumber, position.column, position.lineNumber, position.column));
-            viewModel.setSelections('mouse', selections, CursorChangeReason.Explicit);
-            mouseDownAnchor = position;
-            mouseDownMode = 1;
-        } else if (event.modifiers.shift) {
-            final primary = selections[0];
-            viewModel.setSelections('mouse', [new Selection(primary.selectionStartLineNumber, primary.selectionStartColumn, position.lineNumber, position.column)], CursorChangeReason.Explicit);
-            mouseDownAnchor = primary.getSelectionStart();
-            mouseDownMode = 1;
-        } else if (clickCount >= 3) {
-            final range = lineRangeAt(position.lineNumber);
-            viewModel.setSelections('mouse', [new Selection(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn)], CursorChangeReason.Explicit);
-            mouseDownAnchor = position;
-            mouseDownMode = 3;
-            mouseDownWordRange = range;
-        } else if (clickCount == 2) {
-            final range = wordRangeAt(position);
-            viewModel.setSelections('mouse', [new Selection(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn)], CursorChangeReason.Explicit);
-            mouseDownAnchor = position;
-            mouseDownMode = 2;
-            mouseDownWordRange = range;
-        } else {
-            viewModel.setSelections('mouse', [new Selection(position.lineNumber, position.column, position.lineNumber, position.column)], CursorChangeReason.Explicit);
-            mouseDownAnchor = position;
-            mouseDownMode = 1;
-        }
+        mouseDownCount = event.clickCount;
+        mouseDownAlt = event.modifiers.alt;
+        mouseDownShift = event.modifiers.shift;
+        dispatchMouse(event.position, event.modifiers.shift, mouseDownCount, mouseDownAlt, mouseDownShift);
         restartBlink();
         notifyChanged();
     }
 
     public function onMouseMove(event:MouseMoveEvent, window:Window, cx:App):Void {
         final viewModel = this.viewModel;
-        if (viewModel == null || !mouseDown || mouseDownAnchor == null || event.pressedButton == null) {
+        if (viewModel == null || !mouseDown || event.pressedButton == null) {
             return;
         }
-        final position = modelPositionAt(event.position);
-        final anchor = mouseDownAnchor;
-        final selections = viewModel.getSelections();
-        final rest = selections.slice(1);
-        var selection:Selection;
-        if (mouseDownMode >= 2 && mouseDownWordRange != null) {
-            final range = mouseDownMode == 3 ? lineRangeAt(position.lineNumber) : wordRangeAt(position);
-            final base = mouseDownWordRange;
-            if (Position.isBeforeStatic(position, base.getStartPosition())) {
-                selection = new Selection(base.endLineNumber, base.endColumn, range.startLineNumber, range.startColumn);
-            } else {
-                selection = new Selection(base.startLineNumber, base.startColumn, range.endLineNumber, range.endColumn);
-            }
-        } else {
-            selection = new Selection(anchor.lineNumber, anchor.column, position.lineNumber, position.column);
-        }
-        if (event.modifiers.alt && rest.length > 0) {
-            // alt drag: the last added cursor follows
-            rest[rest.length - 1] = selection;
-            viewModel.setSelections('mouse', [selections[0]].concat(rest), CursorChangeReason.Explicit);
-        } else {
-            viewModel.setSelections('mouse', [selection].concat(event.modifiers.alt ? rest : []), CursorChangeReason.Explicit);
-        }
+        dispatchMouse(event.position, true, mouseDownCount, mouseDownAlt, mouseDownShift);
         viewModel.revealPrimaryCursor('mouse', true, true);
         notifyChanged();
     }
 
     public function onMouseUp(event:MouseUpEvent, window:Window, cx:App):Void {
         mouseDown = false;
-        mouseDownAnchor = null;
-        mouseDownWordRange = null;
     }
 
     public function onScroll(event:ScrollEvent, window:Window, cx:App):Void {
@@ -690,40 +723,6 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
         viewModel.viewLayout.deltaScrollNow(dx, dy);
         cx.stopPropagation();
         notifyChanged();
-    }
-
-    function wordRangeAt(position:Position):Range {
-        final model = this.model;
-        final text = model.getLineContent(position.lineNumber);
-        final separators = configuration.options.get(EditorOption.wordSeparators);
-        inline function isWordChar(c:Int):Bool {
-            return c != CharCode.Space && c != CharCode.Tab && separators.indexOf(String.fromCharCode(c)) == -1;
-        }
-        var start = position.column - 1;
-        var end = position.column - 1;
-        if (end < text.length && isWordChar(StringTools.fastCodeAt(text, end))) {
-            while (start > 0 && isWordChar(StringTools.fastCodeAt(text, start - 1))) {
-                start--;
-            }
-            while (end < text.length && isWordChar(StringTools.fastCodeAt(text, end))) {
-                end++;
-            }
-        } else if (start > 0 && isWordChar(StringTools.fastCodeAt(text, start - 1))) {
-            while (start > 0 && isWordChar(StringTools.fastCodeAt(text, start - 1))) {
-                start--;
-            }
-        } else if (end < text.length) {
-            end++;
-        }
-        return new Range(position.lineNumber, start + 1, position.lineNumber, end + 1);
-    }
-
-    function lineRangeAt(lineNumber:Int):Range {
-        final model = this.model;
-        if (lineNumber < model.getLineCount()) {
-            return new Range(lineNumber, 1, lineNumber + 1, 1);
-        }
-        return new Range(lineNumber, 1, lineNumber, model.getLineMaxColumn(lineNumber));
     }
 
     //#endregion
@@ -756,157 +755,115 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
 
     //#endregion
 
-    //#region editing (minimal, TODO(step 3): cursor controller and commands)
+    //#region editing: Monaco's commands (ICodeEditor)
 
-    public function type(text:String):Void {
+    public function _getViewModel():Null<IViewModel> {
+        return this.viewModel;
+    }
+
+    public function getTextModel():Null<ITextModel> {
+        return this.model;
+    }
+
+    public function getOption<V>(id:EditorOption<V>):V {
+        return configuration.options.get(id);
+    }
+
+    public function getSelections():Null<Array<Selection>> {
+        return viewModel != null ? viewModel.getSelections() : null;
+    }
+
+    public function revealPosition(position:IPosition, ?scrollType:ScrollType):Void {
         final viewModel = this.viewModel;
         if (viewModel == null) {
             return;
         }
-        final selections = viewModel.getSelections();
-        final edits:Array<IIdentifiedSingleEditOperation> = [for (s in selections) {range: s, text: text}];
-        // After the edit: each cursor at the end of its inserted text
-        final sorted = selections.copy();
-        final after = [for (s in selections) {
-            final lines = text.split('\n');
-            // positions shift with the edits before them on the same line
-            var shiftColumns = 0;
-            var shiftLines = 0;
-            for (o in sorted) {
-                if (o != s && Position.isBeforeStatic(o.getEndPosition(), s.getStartPosition())) {
-                    shiftLines += lines.length - 1 - (o.endLineNumber - o.startLineNumber);
-                    if (o.endLineNumber == s.startLineNumber && lines.length == 1) {
-                        shiftColumns += text.length - (o.endColumn - o.startColumn);
-                    }
-                }
-            }
-            final line = s.startLineNumber + shiftLines + lines.length - 1;
-            final column = (lines.length == 1 ? s.startColumn + shiftColumns + text.length : lines[lines.length - 1].length + 1);
-            new Selection(line, column, line, column);
-        }];
-        viewModel.executeEditsMinimal('keyboard', edits, after);
-        viewModel.revealPrimaryCursor('keyboard', true);
+        final validated = model.validatePosition(position);
+        final viewRange = viewModel.coordinatesConverter.convertModelRangeToViewRange(new Range(validated.lineNumber, validated.column, validated.lineNumber, validated.column));
+        viewModel.revealRange('api', true, viewRange, VerticalRevealType.Simple, scrollType != null ? scrollType : ScrollType.Smooth);
+    }
+
+    public function pushUndoStop():Bool {
+        if (model == null || configuration.options.get(EditorOption.readOnly)) {
+            // read only editor => sorry!
+            return false;
+        }
+        model.pushStackElement();
+        return true;
+    }
+
+    public function executeCommands(source:Null<String>, commands:Array<Null<ICommand>>):Void {
+        if (viewModel == null) {
+            return;
+        }
+        viewModel.executeCommands(commands, source);
+    }
+
+    /**
+     * Types text at the cursors (Monaco's `Handler.Type` from the keyboard:
+     * auto closing, auto indentation, electric characters...).
+     */
+    public function type(text:String):Void {
+        final viewModel = this.viewModel;
+        if (viewModel == null || text.length == 0) {
+            return;
+        }
+        viewModel.type(text, 'keyboard');
         restartBlink();
     }
 
-    function deleteLeft():Void {
-        final viewModel = this.viewModel;
-        final model = this.model;
-        final edits:Array<IIdentifiedSingleEditOperation> = [];
-        final after:Array<Selection> = [];
-        for (s in viewModel.getSelections()) {
-            if (!s.isEmpty()) {
-                edits.push({range: s, text: ''});
-                after.push(new Selection(s.startLineNumber, s.startColumn, s.startLineNumber, s.startColumn));
-            } else if (s.startColumn > 1) {
-                final text = model.getLineContent(s.startLineNumber);
-                var start = s.startColumn - 1;
-                if (start > 0 && Strings.isLowSurrogate(StringTools.fastCodeAt(text, start - 1)) && start > 1 && Strings.isHighSurrogate(StringTools.fastCodeAt(text, start - 2))) {
-                    start--;
-                }
-                edits.push({range: new Range(s.startLineNumber, start, s.startLineNumber, s.startColumn), text: ''});
-                after.push(new Selection(s.startLineNumber, start, s.startLineNumber, start));
-            } else if (s.startLineNumber > 1) {
-                final prevMax = model.getLineMaxColumn(s.startLineNumber - 1);
-                edits.push({range: new Range(s.startLineNumber - 1, prevMax, s.startLineNumber, 1), text: ''});
-                after.push(new Selection(s.startLineNumber - 1, prevMax, s.startLineNumber - 1, prevMax));
-            } else {
-                after.push(s);
-            }
-        }
-        viewModel.executeEditsMinimal('keyboard', edits, after);
-        viewModel.revealPrimaryCursor('keyboard', true);
-    }
-
-    function deleteRight():Void {
-        final viewModel = this.viewModel;
-        final model = this.model;
-        final edits:Array<IIdentifiedSingleEditOperation> = [];
-        final after:Array<Selection> = [];
-        for (s in viewModel.getSelections()) {
-            if (!s.isEmpty()) {
-                edits.push({range: s, text: ''});
-            } else {
-                final maxColumn = model.getLineMaxColumn(s.startLineNumber);
-                if (s.startColumn < maxColumn) {
-                    final text = model.getLineContent(s.startLineNumber);
-                    var end = s.startColumn + 1;
-                    if (Strings.isHighSurrogate(StringTools.fastCodeAt(text, s.startColumn - 1)) && end <= text.length) {
-                        end++;
-                    }
-                    edits.push({range: new Range(s.startLineNumber, s.startColumn, s.startLineNumber, end), text: ''});
-                } else if (s.startLineNumber < model.getLineCount()) {
-                    edits.push({range: new Range(s.startLineNumber, s.startColumn, s.startLineNumber + 1, 1), text: ''});
-                }
-            }
-            after.push(new Selection(s.startLineNumber, s.startColumn, s.startLineNumber, s.startColumn));
-        }
-        viewModel.executeEditsMinimal('keyboard', edits, after);
-    }
-
-    function moveCursors(dLine:Int, dColumn:Int, select:Bool, ?toLineEdge:Int):Void {
-        final viewModel = this.viewModel;
-        final converter = viewModel.coordinatesConverter;
-        final result = [for (s in viewModel.getSelections()) {
-            var viewPos = converter.convertModelPositionToViewPosition(s.getPosition());
-            if (!select && !s.isEmpty() && dLine == 0 && toLineEdge == null) {
-                // collapse to the side of the move
-                final p = dColumn < 0 ? s.getStartPosition() : s.getEndPosition();
-                new Selection(p.lineNumber, p.column, p.lineNumber, p.column);
-            } else {
-                var line = viewPos.lineNumber;
-                var column = viewPos.column;
-                if (toLineEdge != null) {
-                    column = toLineEdge < 0 ? viewModel.getLineMinColumn(line) : viewModel.getLineMaxColumn(line);
-                } else if (dLine != 0) {
-                    final x = renderViewLine(line).columnToX(column);
-                    line = Std.int(Math.max(1, Math.min(viewModel.getLineCount(), line + dLine)));
-                    column = renderViewLine(line).xToColumn(x);
-                } else {
-                    column += dColumn;
-                    if (column < viewModel.getLineMinColumn(line)) {
-                        if (line > 1) {
-                            line--;
-                            column = viewModel.getLineMaxColumn(line);
-                        } else {
-                            column = viewModel.getLineMinColumn(line);
-                        }
-                    } else if (column > viewModel.getLineMaxColumn(line)) {
-                        if (line < viewModel.getLineCount()) {
-                            line++;
-                            column = viewModel.getLineMinColumn(line);
-                        } else {
-                            column = viewModel.getLineMaxColumn(line);
-                        }
-                    }
-                }
-                final modelPos = converter.convertViewPositionToModelPosition(new Position(line, column));
-                if (select) {
-                    new Selection(s.selectionStartLineNumber, s.selectionStartColumn, modelPos.lineNumber, modelPos.column);
-                } else {
-                    new Selection(modelPos.lineNumber, modelPos.column, modelPos.lineNumber, modelPos.column);
-                }
-            }
-        }];
-        viewModel.setSelections('keyboard', result, CursorChangeReason.Explicit);
-        viewModel.revealPrimaryCursor('keyboard', true);
-        restartBlink();
+    function runCommand(command:EditorCommand):Void {
+        command.runEditorCommand(context, this, null);
     }
 
     function copySelection(cx:App):Null<String> {
         final viewModel = this.viewModel;
-        final ranges:Array<Range> = [for (s in viewModel.getSelections()) s];
-        final text = viewModel.getPlainTextToCopy(ranges, configuration.options.get(EditorOption.emptySelectionClipboard), false);
-        final str:String = Std.isOfType(text, String) ? cast text : (cast text : Array<String>).join(model.getEOL());
+        final selections = viewModel.getSelections();
+        final ranges:Array<Range> = [for (s in selections) s];
+        final emptySelectionClipboard = configuration.options.get(EditorOption.emptySelectionClipboard);
+        final text = viewModel.getPlainTextToCopy(ranges, emptySelectionClipboard, false);
+        final multicursorText:Null<Array<String>> = Std.isOfType(text, String) ? null : cast text;
+        final str:String = multicursorText == null ? cast text : multicursorText.join(model.getEOL());
         if (str.length > 0) {
             cx.writeToClipboard(ClipboardItem.newString(str));
         }
+        var isFromEmptySelection = emptySelectionClipboard;
+        for (s in selections) {
+            if (!s.isEmpty()) {
+                isFromEmptySelection = false;
+                break;
+            }
+        }
+        lastCopiedText = str;
+        lastCopiedIsFromEmptySelection = isFromEmptySelection;
+        lastCopiedMulticursorText = multicursorText;
         return str;
     }
 
     /**
-     * Keys handled before the shortcuts of step 3: editing keys, arrows,
-     * select all, clipboard.
+     * A paste from the platform (Glaze's input handler): Monaco's paste.
+     */
+    public function paste(item:ClipboardItem, window:Window, cx:Context<Dynamic>):Void {
+        final text = item != null ? item.text() : null;
+        if (viewModel != null && text != null) {
+            pasteText(text);
+            notifyChanged();
+        }
+    }
+
+    function pasteText(text:String):Void {
+        final viewModel = this.viewModel;
+        // The metadata of the last copy applies to its own text only
+        final fromLastCopy = (lastCopiedText != null && lastCopiedText == text);
+        final pasteOnNewLine = fromLastCopy && lastCopiedIsFromEmptySelection;
+        final multicursorText = fromLastCopy ? lastCopiedMulticursorText : null;
+        viewModel.paste(text, pasteOnNewLine, multicursorText, 'keyboard');
+        viewModel.revealPrimaryCursor('keyboard', true);
+    }
+
+    /**
+     * The keys of Monaco's default keybindings that the editor handles
+     * (moves, selections, edits, clipboard, undo).
      */
     public function onKeyDown(event:KeyDownEvent, window:Window, cx:App):Void {
         final viewModel = this.viewModel;
@@ -916,62 +873,112 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
         final ks = event.keystroke;
         final mods = ks.modifiers;
         final shift = mods.shift;
-        final platform = mods.platform || (mods.control && !Platform.isMac());
-        final readOnly = configuration.options.get(EditorOption.readOnly);
+        final mac = Platform.isMac();
+        // Cmd on macOS, Ctrl elsewhere
+        final platform = mods.platform || (mods.control && !mac);
+        // The word modifier: Alt on macOS, Ctrl elsewhere
+        final word = mac ? mods.alt : mods.control;
         var handled = true;
         switch (ks.key) {
             case 'backspace':
-                if (!readOnly) deleteLeft();
+                if (word) {
+                    runCommand(WordCommands.deleteWordLeft);
+                }
+                else {
+                    runCommand(CoreEditingCommands.DeleteLeft);
+                }
             case 'delete':
-                if (!readOnly) deleteRight();
+                if (word) {
+                    runCommand(WordCommands.deleteWordRight);
+                }
+                else {
+                    runCommand(CoreEditingCommands.DeleteRight);
+                }
             case 'enter':
-                if (!readOnly) type('\n');
+                type('\n');
             case 'tab':
-                if (!readOnly) type('\t');
+                runCommand(shift ? CoreEditingCommands.Outdent : CoreEditingCommands.Tab);
+            case 'escape':
+                if (viewModel.getSelections().length > 1) {
+                    CoreNavigationCommands.RemoveSecondaryCursors.runCoreEditorCommand(viewModel, {source: 'keyboard'});
+                }
+                else {
+                    CoreNavigationCommands.CancelSelection.runCoreEditorCommand(viewModel, {source: 'keyboard'});
+                }
             case 'left':
-                moveCursors(0, -1, shift);
+                if (mac && mods.platform) {
+                    runCommand(shift ? CoreNavigationCommands.CursorHomeSelect : CoreNavigationCommands.CursorHome);
+                }
+                else if (word) {
+                    runCommand(shift ? WordCommands.cursorWordLeftSelect : WordCommands.cursorWordLeft);
+                }
+                else {
+                    runCommand(shift ? CoreNavigationCommands.CursorLeftSelect : CoreNavigationCommands.CursorLeft);
+                }
             case 'right':
-                moveCursors(0, 1, shift);
+                if (mac && mods.platform) {
+                    runCommand(shift ? CoreNavigationCommands.CursorEndSelect : CoreNavigationCommands.CursorEnd);
+                }
+                else if (word) {
+                    runCommand(shift ? WordCommands.cursorWordEndRightSelect : WordCommands.cursorWordEndRight);
+                }
+                else {
+                    runCommand(shift ? CoreNavigationCommands.CursorRightSelect : CoreNavigationCommands.CursorRight);
+                }
             case 'up':
-                moveCursors(-1, 0, shift);
+                if (mac && mods.platform) {
+                    runCommand(shift ? CoreNavigationCommands.CursorTopSelect : CoreNavigationCommands.CursorTop);
+                }
+                else {
+                    runCommand(shift ? CoreNavigationCommands.CursorUpSelect : CoreNavigationCommands.CursorUp);
+                }
             case 'down':
-                moveCursors(1, 0, shift);
+                if (mac && mods.platform) {
+                    runCommand(shift ? CoreNavigationCommands.CursorBottomSelect : CoreNavigationCommands.CursorBottom);
+                }
+                else {
+                    runCommand(shift ? CoreNavigationCommands.CursorDownSelect : CoreNavigationCommands.CursorDown);
+                }
             case 'home':
-                moveCursors(0, 0, shift, -1);
+                if (mods.control && !mac) {
+                    runCommand(shift ? CoreNavigationCommands.CursorTopSelect : CoreNavigationCommands.CursorTop);
+                }
+                else {
+                    runCommand(shift ? CoreNavigationCommands.CursorHomeSelect : CoreNavigationCommands.CursorHome);
+                }
             case 'end':
-                moveCursors(0, 0, shift, 1);
-            case 'pageup' | 'pagedown':
-                final lines = Std.int(Math.max(1, viewModel.viewLayout.getCurrentViewport().height / configuration.options.get(EditorOption.lineHeight) - 1));
-                moveCursors(ks.key == 'pageup' ? -lines : lines, 0, shift);
+                if (mods.control && !mac) {
+                    runCommand(shift ? CoreNavigationCommands.CursorBottomSelect : CoreNavigationCommands.CursorBottom);
+                }
+                else {
+                    runCommand(shift ? CoreNavigationCommands.CursorEndSelect : CoreNavigationCommands.CursorEnd);
+                }
+            case 'pageup':
+                runCommand(shift ? CoreNavigationCommands.CursorPageUpSelect : CoreNavigationCommands.CursorPageUp);
+            case 'pagedown':
+                runCommand(shift ? CoreNavigationCommands.CursorPageDownSelect : CoreNavigationCommands.CursorPageDown);
             case 'a' if (platform):
-                final model = this.model;
-                final last = model.getLineCount();
-                viewModel.setSelections('keyboard', [new Selection(1, 1, last, model.getLineMaxColumn(last))], CursorChangeReason.Explicit);
+                CoreNavigationCommands.SelectAll.runCoreEditorCommand(viewModel, {});
             case 'c' if (platform):
                 copySelection(cx);
             case 'x' if (platform):
-                if (!readOnly) {
-                    copySelection(cx);
-                    final selections = viewModel.getSelections();
-                    if (selections.length == 1 && selections[0].isEmpty() && configuration.options.get(EditorOption.emptySelectionClipboard)) {
-                        final l = selections[0].startLineNumber;
-                        viewModel.executeEditsMinimal('cut', [{range: lineRangeAt(l), text: ''}], [new Selection(l, 1, l, 1)]);
-                    } else {
-                        type('');
-                    }
-                }
+                copySelection(cx);
+                viewModel.cut('keyboard');
             case 'v' if (platform):
-                if (!readOnly) {
-                    final item = cx.readFromClipboard();
-                    final text = item != null ? item.text() : null;
-                    if (text != null) {
-                        type(text.split('\r\n').join('\n'));
-                    }
+                final item = cx.readFromClipboard();
+                final text = item != null ? item.text() : null;
+                if (text != null) {
+                    pasteText(text);
                 }
+            case 'z' if (platform):
+                runCommand(shift ? CoreEditingCommands.Redo : CoreEditingCommands.Undo);
+            case 'y' if (platform && !mac):
+                runCommand(CoreEditingCommands.Redo);
             case _:
                 handled = false;
         }
         if (handled) {
+            restartBlink();
             cx.stopPropagation();
             notifyChanged();
         }
@@ -1010,20 +1017,32 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
 
     public function unmarkText(window:Window, cx:Context<Dynamic>):Void {
         if (markedRange != null && viewModel != null) {
+            viewModel.endComposition('keyboard');
             viewModel.onCompositionEnd();
         }
         markedRange = null;
     }
 
-    function replaceOffsets(range:Null<glaze.Range>, text:String):Void {
-        if (range == null) {
-            type(text);
+    /**
+     * Replaces a range of model offsets (the selection when null) with
+     * `text`: typed from the keyboard (`source` 'keyboard': auto closing and
+     * the other interceptors) or composed (no source: the text as is).
+     */
+    function replaceOffsets(range:Null<glaze.Range>, text:String, source:Null<String>):Void {
+        if (range != null) {
+            final start = model.getPositionAt(range.start);
+            final end = model.getPositionAt(range.end);
+            viewModel.setSelections(source, [new Selection(start.lineNumber, start.column, end.lineNumber, end.column)]);
+        }
+        if (text.length == 0) {
+            // removes the range (the composed text was deleted)
+            if (!viewModel.getSelection().isEmpty()) {
+                viewModel.executeEdits(source, [for (sel in viewModel.getSelections()) {range: sel, text: ''}], (_) -> null);
+            }
             return;
         }
-        final start = model.getPositionAt(range.start);
-        final end = model.getPositionAt(range.end);
-        viewModel.setSelections('keyboard', [new Selection(start.lineNumber, start.column, end.lineNumber, end.column)]);
-        type(text);
+        viewModel.type(text, source);
+        restartBlink();
     }
 
     public function replaceTextInRange(range:Null<glaze.Range>, text:String, window:Window, cx:Context<Dynamic>):Void {
@@ -1034,11 +1053,20 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
         if (text == '\n' || text == '\r' || text == '\r\n' || text == '\t') {
             return;
         }
+        final composing = (markedRange != null);
         if (range == null && markedRange != null) {
             range = markedRange;
         }
         markedRange = null;
-        replaceOffsets(range, text);
+        if (composing) {
+            // the composition ends with the committed text
+            replaceOffsets(range, text, null);
+            viewModel.endComposition('keyboard');
+            viewModel.onCompositionEnd();
+        }
+        else {
+            replaceOffsets(range, text, 'keyboard');
+        }
         notifyChanged();
     }
 
@@ -1048,12 +1076,13 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler {
         }
         if (markedRange == null) {
             viewModel.onCompositionStart();
+            viewModel.startComposition();
         }
         if (range == null && markedRange != null) {
             range = markedRange;
         }
         final startOffset = range != null ? range.start : offsetOf(viewModel.getSelections()[0].getStartPosition());
-        replaceOffsets(range, newText);
+        replaceOffsets(range, newText, null);
         markedRange = newText.length > 0 ? new glaze.Range(startOffset, startOffset + newText.length) : null;
         if (newSelectedRange != null) {
             final p = model.getPositionAt(startOffset + newSelectedRange.end);
@@ -1185,4 +1214,16 @@ class CityscapeScrollHandle implements ScrollbarHandleImpl {
         dragging = false;
     }
 
+}
+
+/**
+ * The word commands the keys of the view run (immutable, shared).
+ */
+private class WordCommands {
+    public static final cursorWordLeft = new CursorWordLeft();
+    public static final cursorWordLeftSelect = new CursorWordLeftSelect();
+    public static final cursorWordEndRight = new CursorWordEndRight();
+    public static final cursorWordEndRightSelect = new CursorWordEndRightSelect();
+    public static final deleteWordLeft = new DeleteWordLeft();
+    public static final deleteWordRight = new DeleteWordRight();
 }

@@ -3,6 +3,9 @@
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.common.core;
 
+import cityscape.base.common.CharCode;
+import cityscape.base.common.Strings;
+
 /**
  * A column in a position is the gap between two adjacent characters. The methods here
  * work with a concept called "visible column". A visible column is a very rough approximation
@@ -18,13 +21,101 @@ package cityscape.common.core;
  * **NOTE**: Visual columns do not work well for RTL text or variable-width fonts or characters.
  *
  * **NOTE**: These methods work and make sense both on the model and on the view model.
- *
- * TODO(steps 2 and 3): `visibleColumnFromColumn`, `toStatusbarColumn` and
- * `columnFromVisibleColumn` come with the grapheme iterator of strings.ts
- * (`GraphemeIterator`, `isFullWidthCharacter`, `isEmojiImprecise`). Only the
- * tab stop functions are ported so far.
  */
 class CursorColumns {
+
+    static function _nextVisibleColumn(codePoint:Int, visibleColumn:Int, tabSize:Int):Int {
+        if (codePoint == CharCode.Tab) {
+            return CursorColumns.nextRenderTabStop(visibleColumn, tabSize);
+        }
+        if (Strings.isFullWidthCharacter(codePoint) || Strings.isEmojiImprecise(codePoint)) {
+            return visibleColumn + 2;
+        }
+        return visibleColumn + 1;
+    }
+
+    /**
+     * Returns a visible column from a column.
+     * @see {@link CursorColumns}
+     */
+    public static function visibleColumnFromColumn(lineContent:String, column:Int, tabSize:Int):Int {
+        final textLen = Std.int(Math.min(column - 1, lineContent.length));
+        final text = lineContent.substring(0, textLen);
+        final iterator = new GraphemeIterator(text);
+
+        var result = 0;
+        while (!iterator.eol()) {
+            final codePoint = Strings.getNextCodePoint(text, textLen, iterator.offset);
+            iterator.nextGraphemeLength();
+
+            result = _nextVisibleColumn(codePoint, result, tabSize);
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the value to display as "Col" in the status bar.
+     * @see {@link CursorColumns}
+     */
+    public static function toStatusbarColumn(lineContent:String, column:Int, tabSize:Int):Int {
+        final text = lineContent.substring(0, Std.int(Math.min(column - 1, lineContent.length)));
+        final iterator = new CodePointIterator(text);
+
+        var result = 0;
+        while (!iterator.eol()) {
+            final codePoint = iterator.nextCodePoint();
+
+            if (codePoint == CharCode.Tab) {
+                result = CursorColumns.nextRenderTabStop(result, tabSize);
+            }
+            else {
+                result = result + 1;
+            }
+        }
+
+        return result + 1;
+    }
+
+    /**
+     * Returns a column from a visible column.
+     * @see {@link CursorColumns}
+     */
+    public static function columnFromVisibleColumn(lineContent:String, visibleColumn:Int, tabSize:Int):Int {
+        if (visibleColumn <= 0) {
+            return 1;
+        }
+
+        final lineContentLength = lineContent.length;
+        final iterator = new GraphemeIterator(lineContent);
+
+        var beforeVisibleColumn = 0;
+        var beforeColumn = 1;
+        while (!iterator.eol()) {
+            final codePoint = Strings.getNextCodePoint(lineContent, lineContentLength, iterator.offset);
+            iterator.nextGraphemeLength();
+
+            final afterVisibleColumn = _nextVisibleColumn(codePoint, beforeVisibleColumn, tabSize);
+            final afterColumn = iterator.offset + 1;
+
+            if (afterVisibleColumn >= visibleColumn) {
+                final beforeDelta = visibleColumn - beforeVisibleColumn;
+                final afterDelta = afterVisibleColumn - visibleColumn;
+                if (afterDelta < beforeDelta) {
+                    return afterColumn;
+                }
+                else {
+                    return beforeColumn;
+                }
+            }
+
+            beforeVisibleColumn = afterVisibleColumn;
+            beforeColumn = afterColumn;
+        }
+
+        // walked the entire string
+        return lineContentLength + 1;
+    }
 
     /**
      * ATTENTION: This works with 0-based columns (as opposed to the regular 1-based columns)

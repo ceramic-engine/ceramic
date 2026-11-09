@@ -76,6 +76,45 @@ class CityscapeEditorTest extends TestCase {
         draw();
     }
 
+    /**
+     * Cityscape (step 3, cs3-cursor): the keys of the view run Monaco's
+     * commands (vscode's results: core commands, word operations,
+     * delete left, undo).
+     */
+    function testKeysRunMonacoCommands() {
+        final model = createTextModel('    hello world\nsecond');
+        final views = openTwo(model);
+        final a:CityscapeView = views.a;
+        draw();
+        // focus the editor (the keys go to the focused element)
+        app.update(_ -> a.focusHandle.focus(window, app));
+        draw();
+        a.viewModel.setSelections('test', [new Selection(1, 1, 1, 1)]);
+        final key = (source:String) -> {
+            window.dispatchEvent(new glaze.KeyDownEvent(glaze.Keystroke.parse(source), false, false), app);
+        };
+        // Home goes to the first non whitespace character, then to column 1
+        key('end');
+        assertEquals('[1,16 -> 1,16]', a.viewModel.getSelection().toString());
+        key('home');
+        assertEquals('[1,5 -> 1,5]', a.viewModel.getSelection().toString());
+        key('home');
+        assertEquals('[1,1 -> 1,1]', a.viewModel.getSelection().toString());
+        // shift+down selects to the same visible column of the next line
+        key('shift-down');
+        assertEquals('[1,1 -> 2,1]', a.viewModel.getSelection().toString());
+        // backspace deletes the selection, then undo restores it
+        key('backspace');
+        assertEquals('second', model.getLineContent(1));
+        a.type('x');
+        assertEquals('xsecond', model.getLineContent(1));
+        key(cityscape.base.common.Platform.isMacintosh ? 'cmd-z' : 'ctrl-z');
+        assertEquals('second', model.getLineContent(1));
+        key(cityscape.base.common.Platform.isMacintosh ? 'cmd-z' : 'ctrl-z');
+        assertEquals('    hello world', model.getLineContent(1));
+        draw();
+    }
+
     function testMouseClickPlacesTheCursor() {
         final model = createTextModel('hello world\nsecond');
         final views = openTwo(model);
