@@ -38,6 +38,8 @@ class MainScene extends Scene {
 
     var apiView:Null<Entity<ApiVisualView>> = null;
 
+    var findView:Null<Entity<FindVisualView>> = null;
+
     override function create() {
 
         out = Platform.getEnv('CITYSCAPE_VISUAL_OUT');
@@ -53,6 +55,11 @@ class MainScene extends Scene {
                 // The editor API (ApiVisualView.hx)
                 apiView = cx.newEntity((viewCx:Context<ApiVisualView>) -> new ApiVisualView(viewCx));
                 return apiView;
+            }
+            if (scene == 'find') {
+                // The find widget open over one editor (FindVisualView.hx)
+                findView = cx.newEntity((viewCx:Context<FindVisualView>) -> new FindVisualView(viewCx));
+                return findView;
             }
             view = cx.newEntity((viewCx:Context<VisualView>) -> new VisualView(viewCx));
             return view;
@@ -82,6 +89,10 @@ class MainScene extends Scene {
         if (apiView != null && ui.window != null) {
             final v:ApiVisualView = apiView;
             v.focusLeft(ui.window, Glaze.app);
+        }
+        if (findView != null && ui.window != null) {
+            final v:FindVisualView = findView;
+            v.openFind(ui.window, Glaze.app);
         }
 
         if (out == null || out == '' || captured) {

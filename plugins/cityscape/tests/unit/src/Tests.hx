@@ -115,6 +115,11 @@ class Tests {
         runner.add(new tests.commands.TrimTrailingWhitespaceCommandTest());
         runner.add(new tests.commands.ShiftCommandTest());
         runner.add(new tests.contrib.wordOperations.WordOperationsTest());
+        runner.add(new tests.contrib.find.ReplacePatternTest());
+        runner.add(new tests.contrib.find.FindTest());
+        runner.add(new tests.contrib.find.FindModelTest());
+        runner.add(new tests.contrib.find.FindControllerTest());
+        runner.add(new tests.contrib.find.FindWidgetTest());
 
         // Folding (step 4, cs4-fold)
         runner.add(new tests.contrib.folding.FoldingRangesTest());

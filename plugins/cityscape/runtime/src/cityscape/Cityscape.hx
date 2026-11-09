@@ -208,6 +208,14 @@ class Cityscape {
         return _editorExtensions;
     }
 
+    /**
+     * The storage of the context (vscode's `IStorageService`): the options
+     * of the find widget (case, whole word, regex, preserve case) are kept
+     * there, so a new find widget starts with the last ones. In memory by
+     * default; a host can set its own to persist them.
+     */
+    public var storageService:cityscape.platform.storage.common.Storage.IStorageService = new cityscape.platform.storage.common.Storage.InMemoryStorageService();
+
     public function new() {
         this.undoRedoService = new cityscape.platform.undoRedo.common.UndoRedoService();
         commandsRegistry = new CommandsRegistry();

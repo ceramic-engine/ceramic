@@ -276,6 +276,10 @@ typedef IEditorOptions = {
      */
     @:optional var hover:IEditorHoverOptions;
     /**
+     * Control the behavior of the find widget.
+     */
+    @:optional var find:cityscape.common.config.EditorFindOptions.IEditorFindOptions;
+    /**
      * Controls whether the definition link opens element in the peek widget.
      * Defaults to false.
      */
@@ -2125,7 +2129,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final experimentalWhitespaceRendering:EditorOption<String> = new EditorOption<String>(38);
     public static inline final extraEditorClassName:EditorOption<Any> = new EditorOption<Any>(39);
     public static inline final fastScrollSensitivity:EditorOption<Any> = new EditorOption<Any>(40);
-    public static inline final find:EditorOption<Any> = new EditorOption<Any>(41);
+    public static inline final find:EditorOption<cityscape.common.config.EditorFindOptions.EditorFindOptions> = new EditorOption<cityscape.common.config.EditorFindOptions.EditorFindOptions>(41);
     public static inline final fixedOverflowWidgets:EditorOption<Bool> = new EditorOption<Bool>(42);
     public static inline final folding:EditorOption<Bool> = new EditorOption<Bool>(43);
     public static inline final foldingStrategy:EditorOption<String> = new EditorOption<String>(44);
@@ -2953,6 +2957,8 @@ class EditorOptions {
         EditorViewOptions.registerSimple(o -> register(o));
         // The cursor options (EditorCursorOptions.hx), registered with the cursor
         EditorCursorOptions.registerSimple(o -> register(o));
+        // The find option (EditorFindOptions.hx), registered with the find contribution
+        cityscape.common.config.EditorFindOptions.EditorFindOptionsRegistration.registerSimple(o -> register(o));
         EditorViewOptions.registerComputed(o -> register(o));
     }
 

@@ -16,6 +16,7 @@ class EditorAll {
     public static function registerAll(r:EditorExtensionsRegistry):Void {
         cityscape.view.CoreCommands.CoreCommandsRegistration.register(r);
         cityscape.contrib.clipboard.view.Clipboard.ClipboardRegistration.register(r);
+        cityscape.contrib.find.view.FindController.FindRegistration.register(r);
         cityscape.contrib.folding.view.Folding.FoldingRegistration.register(r);
         cityscape.contrib.linesOperations.view.LinesOperations.LinesOperationsRegistration.register(r);
         cityscape.contrib.wordOperations.view.WordOperations.WordOperationsRegistration.register(r);

@@ -107,3 +107,66 @@ class RunOnceScheduler implements IDisposable {
     }
 
 }
+
+/**
+ * A timeout that can be set, replaced and cancelled (Monaco's
+ * `TimeoutTimer`).
+ */
+class TimeoutTimer implements IDisposable {
+
+    var _cancel:Null<() -> Void> = null;
+    var _isDisposed = false;
+
+    public function new(?runner:() -> Void, ?timeout:Float) {
+        if (runner != null && timeout != null) {
+            this.setIfNotSet(runner, timeout);
+        }
+    }
+
+    public function dispose():Void {
+        this.cancel();
+        this._isDisposed = true;
+    }
+
+    public function cancel():Void {
+        if (this._cancel != null) {
+            final c = this._cancel;
+            this._cancel = null;
+            c();
+        }
+    }
+
+    /**
+     * @param timeout in milliseconds, like Monaco
+     */
+    public function cancelAndSet(runner:() -> Void, timeout:Float):Void {
+        if (this._isDisposed) {
+            throw 'Calling \'cancelAndSet\' on a disposed TimeoutTimer';
+        }
+
+        this.cancel();
+        this._cancel = Async.setTimeout(() -> {
+            this._cancel = null;
+            runner();
+        }, timeout);
+    }
+
+    /**
+     * @param timeout in milliseconds, like Monaco
+     */
+    public function setIfNotSet(runner:() -> Void, timeout:Float):Void {
+        if (this._isDisposed) {
+            throw 'Calling \'setIfNotSet\' on a disposed TimeoutTimer';
+        }
+
+        if (this._cancel != null) {
+            // timer is already set
+            return;
+        }
+        this._cancel = Async.setTimeout(() -> {
+            this._cancel = null;
+            runner();
+        }, timeout);
+    }
+
+}
