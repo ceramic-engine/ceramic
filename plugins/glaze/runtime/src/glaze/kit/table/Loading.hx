@@ -4,8 +4,8 @@
 package glaze.kit.table;
 
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 import glaze.kit.Size;
 import glaze.kit.skeleton.Skeleton;
@@ -17,11 +17,13 @@ import glaze.kit.base.Prelude.*;
 using glaze.kit.Size.SizeTools;
 
 /** The built-in skeleton loading view of a table. */
-class Loading implements RenderOnce {
+class Loading extends Component {
 
     var sizeValue:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function size(size:Size):Loading {
         sizeValue = size;
@@ -40,13 +42,14 @@ class Loading implements RenderOnce {
 
 }
 
-private class LoadingRow implements RenderOnce {
+private class LoadingRow extends Component {
 
     final isHeader:Bool;
 
     var sizeValue:Size = Medium;
 
     function new(header:Bool) {
+        super();
         this.isHeader = header;
     }
 

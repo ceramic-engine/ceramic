@@ -5,10 +5,10 @@ package glaze.kit.sidebar;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -25,30 +25,27 @@ import glaze.kit.base.Prelude.*;
  * forward to it). The `DropdownMenu` trait the original implements for it is
  * `SidebarDropdownMenu.SidebarFooterDropdownMenu`.
  */
-class SidebarFooter implements RenderOnce implements Styled implements ParentElement implements Selectable implements Collapsible {
+class SidebarFooter extends Component implements Styled implements ParentElement implements Selectable implements Collapsible {
 
     public final base:Div = hFlex().gap2().wFull();
 
-    var selectedValue:Bool = false;
+    @prop var selected:Bool = false;
 
-    var collapsedValue:Bool = false;
+    @prop var collapsed:Bool = false;
 
     /**
      * Create a new `SidebarFooter`.
      */
-    public function new() {}
-
-    public function selected(selected:Bool):SidebarFooter {
-        selectedValue = selected;
-        return this;
+    public function new() {
+        super();
     }
 
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
+        return selected;
     }
 
     /** Rust `Selectable::set_open` default. */
@@ -61,17 +58,12 @@ class SidebarFooter implements RenderOnce implements Styled implements ParentEle
         return isSelected();
     }
 
-    public function collapsed(collapsed:Bool):SidebarFooter {
-        collapsedValue = collapsed;
-        return this;
-    }
-
     public function setCollapsed(collapsed:Bool):Void {
-        collapsedValue = collapsed;
+        this.collapsed = collapsed;
     }
 
     public function isCollapsed():Bool {
-        return collapsedValue;
+        return collapsed;
     }
 
     public function extend(elements:Array<AnyElement>):Void {
@@ -97,7 +89,7 @@ class SidebarFooter implements RenderOnce implements Styled implements ParentEle
             .justifyBetween()
             .rounded(theme.radius)
             .hover(s -> s.bg(theme.tokens.sidebarAccent.background).textColor(theme.sidebarAccentForeground));
-        if (selectedValue) {
+        if (selected) {
             element.bg(theme.tokens.sidebarAccent.background).textColor(theme.sidebarAccentForeground);
         }
         return element.child(base);

@@ -5,10 +5,10 @@ package glaze.kit.clipboard;
 
 import glaze.App;
 import glaze.ClipboardItem;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 import glaze.kit.I18n;
 import glaze.kit.IconName;
@@ -19,21 +19,37 @@ import glaze.kit.button.Button;
 /**
  * An element that provides clipboard copy functionality.
  */
-class Clipboard implements RenderOnce implements Sizable {
+class Clipboard extends Component implements Sizable {
 
     final id:ElementId;
 
-    var valueValue:String = '';
+    /**
+     * Set the value for copying to the clipboard. Default is an empty string.
+     */
+    @prop var value:String = '';
 
     var valueFnValue:Null<(Window, App) -> String> = null;
 
-    var onCopiedFn:Null<(String, Window, App) -> Void> = null;
+    /**
+     * Set a callback to be invoked when the content is copied to the clipboard.
+     */
+    @prop var onCopied:Null<(String, Window, App) -> Void> = null;
 
-    var tooltipText:Null<String> = null;
+    /**
+     * Set tooltip text for the clipboard button.
+     */
+    @prop var tooltip:Null<String> = null;
 
-    var tooltipShowDelayValue:Null<Float> = null;
+    /**
+     * Overrides how long the pointer must rest before the tooltip shows
+     * (seconds).
+     */
+    @prop var tooltipShowDelay:Null<Float> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /**
+     * Set the name a screen reader announces. Defaults to the localized "Copy".
+     */
+    @prop var accessibilityLabel:Null<String> = null;
 
     var size:Size = XSmall;
 
@@ -41,6 +57,7 @@ class Clipboard implements RenderOnce implements Sizable {
      * Create a new Clipboard element with the given ID.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -54,39 +71,6 @@ class Clipboard implements RenderOnce implements Sizable {
     }
 
     /**
-     * Set tooltip text for the clipboard button.
-     */
-    public function tooltip(tooltip:String):Clipboard {
-        tooltipText = tooltip;
-        return this;
-    }
-
-    /**
-     * Overrides how long the pointer must rest before the tooltip shows
-     * (seconds).
-     */
-    public function tooltipShowDelay(delay:Float):Clipboard {
-        tooltipShowDelayValue = delay;
-        return this;
-    }
-
-    /**
-     * Set the name a screen reader announces. Defaults to the localized "Copy".
-     */
-    public function accessibilityLabel(label:String):Clipboard {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the value for copying to the clipboard. Default is an empty string.
-     */
-    public function value(value:String):Clipboard {
-        valueValue = value;
-        return this;
-    }
-
-    /**
      * Set the value of the clipboard to the result of the given function.
      * When set, the copy value is the result of the function.
      */
@@ -95,29 +79,21 @@ class Clipboard implements RenderOnce implements Sizable {
         return this;
     }
 
-    /**
-     * Set a callback to be invoked when the content is copied to the clipboard.
-     */
-    public function onCopied(handler:(String, Window, App) -> Void):Clipboard {
-        onCopiedFn = handler;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
         final state = window.useKeyedState(id, cx, _ -> new ClipboardState());
 
-        final value = valueValue;
+        final value = this.value;
         final copied = state.read(cx).value.copied;
         final valueFn = valueFnValue;
-        final onCopied = onCopiedFn;
+        final onCopied = this.onCopied;
 
         final button = Button.component(id)
             .icon(copied ? IconName.Check : IconName.Copy)
             .ghost()
             .withSize(size);
-        if (tooltipText != null) button.tooltip(tooltipText);
-        if (tooltipShowDelayValue != null) button.tooltipShowDelay(tooltipShowDelayValue);
-        button.accessibilityLabel(accessibilityLabelValue != null ? accessibilityLabelValue : I18n.t('Copy'));
+        if (tooltip != null) button.tooltip(tooltip);
+        if (tooltipShowDelay != null) button.tooltipShowDelay(tooltipShowDelay);
+        button.accessibilityLabel(accessibilityLabel != null ? accessibilityLabel : I18n.t('Copy'));
         if (!copied) {
             button.onClick((_, window, cx) -> {
                 cx.stopPropagation();

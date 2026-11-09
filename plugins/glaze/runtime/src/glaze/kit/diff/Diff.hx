@@ -9,6 +9,7 @@ import glaze.AppContext;
 import glaze.Axis;
 import glaze.ClickEvent;
 import glaze.ClipboardItem;
+import glaze.Component;
 import glaze.Context;
 import glaze.Div;
 import glaze.ElementId;
@@ -24,7 +25,6 @@ import glaze.OperatingSystem;
 import glaze.Pixels;
 import glaze.Point;
 import glaze.Range;
-import glaze.RenderOnce;
 import glaze.SpringMath;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -111,7 +111,7 @@ private class Annotations {
  * file headers and review annotations are explicit slots, and application
  * commands remain owned by the application.
  */
-class Diff implements RenderOnce implements Styled {
+class Diff extends Component implements Styled {
 
     public static inline final CONTEXT:String = DiffActions.CONTEXT;
 
@@ -119,81 +119,57 @@ class Diff implements RenderOnce implements Styled {
 
     final diffStyle:StyleRefinement = new StyleRefinement();
 
-    var _lineNumber:Bool = true;
-    var _syntaxHighlight:Bool = true;
-    var _headerVisible:Bool = true;
-    var _hoverHighlight:DiffHoverHighlight = DiffHoverHighlight.None;
-    var _hunkSeparator:DiffHunkSeparator = Metadata;
-    var _changeIndicator:DiffChangeIndicator = Signs;
-    var _changeBackground:Bool = true;
-    var _softWrap:Bool = false;
+    /** Shows the original and modified line-number lanes. Default is true. */
+    @prop var lineNumber:Bool = true;
+    /** Emphasizes syntax once the state has prepared it. Default is true. */
+    @prop var syntaxHighlight:Bool = true;
+    /** Shows a header above each file. Default is true. */
+    @prop var headerVisible:Bool = true;
+    /** Emphasizes the line, its number, or both under the pointer. Default is none. */
+    @prop var hoverHighlight:DiffHoverHighlight = DiffHoverHighlight.None;
+    /** Marks the start of each hunk. Default is `DiffHunkSeparator.Metadata`. */
+    @prop var hunkSeparator:DiffHunkSeparator = Metadata;
+    /** Marks changed lines beside the code. Default is `DiffChangeIndicator.Signs`. */
+    @prop var changeIndicator:DiffChangeIndicator = Signs;
+    /** Tints changed lines. Default is true. Inline changes stay emphasized. */
+    @prop var changeBackground:Bool = true;
+    /**
+     * Wraps long lines at the column width instead of scrolling
+     * horizontally. Default is false.
+     */
+    @prop var softWrap:Bool = false;
     final header:HeaderSlots = new HeaderSlots();
     var _annotations:Annotations = new Annotations();
-    var annotationContent:Null<AnnotationRenderer> = null;
+    /** Renders each supplied annotation. Application state and commands stay with the owner. */
+    @prop var renderAnnotation:Null<AnnotationRenderer> = null;
     var _decorations:Decorations = @:privateAccess new Decorations([]);
     var _gutterMarkers:GutterMarkers = @:privateAccess new GutterMarkers([]);
-    var gutterMarkerContent:Null<MarkerRenderer> = null;
-    var _onAddAnnotation:Null<RangeHandler> = null;
-    var _onLineClick:Null<ClickHandler> = null;
-    var _onLineHover:Null<HoverHandler> = null;
+    /**
+     * Renders each gutter marker within a lane one row high and wide.
+     *
+     * Return a focusable control such as a small ghost button labeled with
+     * `DiffGutterMarker.label`, so the marker works with the pointer and
+     * keyboard. Presses inside the lane do not start a selection.
+     */
+    @prop var renderGutterMarker:Null<MarkerRenderer> = null;
+    /**
+     * Shows an add button beside the hovered line and at the end of the
+     * selected lines. The handler receives the selected range when the line
+     * is part of it, or that line alone.
+     */
+    @prop var onAddAnnotation:Null<RangeHandler> = null;
+    /** Handles a click on a line's code, outside a text-selection drag. */
+    @prop var onLineClick:Null<ClickHandler> = null;
+    /** Reports the line under the pointer, or null when the pointer leaves it. */
+    @prop var onLineHover:Null<HoverHandler> = null;
 
     public function new(state:Entity<DiffState>) {
+        super();
         this.state = state;
     }
 
     public inline function style():StyleRefinement {
         return diffStyle;
-    }
-
-    /** Shows the original and modified line-number lanes. Default is true. */
-    public function lineNumber(value:Bool):Diff {
-        _lineNumber = value;
-        return this;
-    }
-
-    /** Emphasizes syntax once the state has prepared it. Default is true. */
-    public function syntaxHighlight(value:Bool):Diff {
-        _syntaxHighlight = value;
-        return this;
-    }
-
-    /** Shows a header above each file. Default is true. */
-    public function headerVisible(visible:Bool):Diff {
-        _headerVisible = visible;
-        return this;
-    }
-
-    /** Emphasizes the line, its number, or both under the pointer. Default is none. */
-    public function hoverHighlight(highlight:DiffHoverHighlight):Diff {
-        _hoverHighlight = highlight;
-        return this;
-    }
-
-    /** Marks the start of each hunk. Default is `DiffHunkSeparator.Metadata`. */
-    public function hunkSeparator(separator:DiffHunkSeparator):Diff {
-        _hunkSeparator = separator;
-        return this;
-    }
-
-    /** Marks changed lines beside the code. Default is `DiffChangeIndicator.Signs`. */
-    public function changeIndicator(indicator:DiffChangeIndicator):Diff {
-        _changeIndicator = indicator;
-        return this;
-    }
-
-    /** Tints changed lines. Default is true. Inline changes stay emphasized. */
-    public function changeBackground(value:Bool):Diff {
-        _changeBackground = value;
-        return this;
-    }
-
-    /**
-     * Wraps long lines at the column width instead of scrolling
-     * horizontally. Default is false.
-     */
-    public function softWrap(value:Bool):Diff {
-        _softWrap = value;
-        return this;
     }
 
     /**
@@ -221,12 +197,6 @@ class Diff implements RenderOnce implements Styled {
         return this;
     }
 
-    /** Renders each supplied annotation. Application state and commands stay with the owner. */
-    public function renderAnnotation(render:AnnotationRenderer):Diff {
-        annotationContent = render;
-        return this;
-    }
-
     /**
      * Supplies line backgrounds that mark source ranges, such as diagnostics
      * or references, without changing the selection.
@@ -243,18 +213,6 @@ class Diff implements RenderOnce implements Styled {
      */
     public function gutterMarkers(markers:Iterable<DiffGutterMarker>):Diff {
         _gutterMarkers = @:privateAccess new GutterMarkers(markers);
-        return this;
-    }
-
-    /**
-     * Renders each gutter marker within a lane one row high and wide.
-     *
-     * Return a focusable control such as a small ghost button labeled with
-     * `DiffGutterMarker.label`, so the marker works with the pointer and
-     * keyboard. Presses inside the lane do not start a selection.
-     */
-    public function renderGutterMarker(render:MarkerRenderer):Diff {
-        gutterMarkerContent = render;
         return this;
     }
 
@@ -287,7 +245,8 @@ class Diff implements RenderOnce implements Styled {
 
     /** Compatibility alias for `renderAnnotation`. */
     public function annotationContentWith(render:AnnotationRenderer):Diff {
-        return renderAnnotation(render);
+        this.renderAnnotation = render;
+        return this;
     }
 
     /** Compatibility alias for `renderHeader`. */
@@ -308,28 +267,6 @@ class Diff implements RenderOnce implements Styled {
     /** Compatibility alias for `renderHeaderSuffix`. */
     public function headerSuffix(render:FileRenderer):Diff {
         return renderHeaderSuffix(render);
-    }
-
-    /**
-     * Shows an add button beside the hovered line and at the end of the
-     * selected lines. The handler receives the selected range when the line
-     * is part of it, or that line alone.
-     */
-    public function onAddAnnotation(handler:RangeHandler):Diff {
-        _onAddAnnotation = handler;
-        return this;
-    }
-
-    /** Handles a click on a line's code, outside a text-selection drag. */
-    public function onLineClick(handler:ClickHandler):Diff {
-        _onLineClick = handler;
-        return this;
-    }
-
-    /** Reports the line under the pointer, or null when the pointer leaves it. */
-    public function onLineHover(handler:HoverHandler):Diff {
-        _onLineHover = handler;
-        return this;
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -356,12 +293,12 @@ class Diff implements RenderOnce implements Styled {
                 digits = file.lineNumberDigits();
             anyFile = true;
         }
-        final gutterWidth = props._lineNumber ? f32(f32(f32(fontSize * f32(0.7)) * digits) + rem) : 0.;
+        final gutterWidth = props.lineNumberProp ? f32(f32(f32(fontSize * f32(0.7)) * digits) + rem) : 0.;
         final mode = state.mode();
-        final softWrap = props._softWrap;
-        final markerLane = !props._gutterMarkers.isEmpty() && props.gutterMarkerContent != null;
+        final softWrap = props.softWrapProp;
+        final markerLane = !props._gutterMarkers.isEmpty() && props.renderGutterMarkerProp != null;
         final laneWidth = markerLane ? rowHeight : 0.;
-        final layout = @:privateAccess new LayoutKey(rem, fontSize, fontFamily, mode, props._lineNumber, markerLane, softWrap);
+        final layout = @:privateAccess new LayoutKey(rem, fontSize, fontFamily, mode, props.lineNumberProp, markerLane, softWrap);
         if (state.updateLayout(layout, rowHeight)) {
             // Wrapped rows take the viewport width instead of their longest line.
             final width = softWrap ? 0. : measureCodeWidth(state.files(), fontSize, fontFamily, gutterWidth, laneWidth, mode, window, cx.app);
@@ -381,24 +318,24 @@ class Diff implements RenderOnce implements Styled {
         code.gutterWidth = gutterWidth;
         code.rem = rem;
         code.expansionLines = state.expansionLines();
-        code.lineNumber = props._lineNumber;
-        code.syntaxHighlight = props._syntaxHighlight;
-        code.headerVisible = props._headerVisible;
-        code.hoverHighlight = props._hoverHighlight;
-        code.hunkSeparator = props._hunkSeparator;
-        code.changeIndicator = props._changeIndicator;
-        code.changeBackground = props._changeBackground;
+        code.lineNumber = props.lineNumberProp;
+        code.syntaxHighlight = props.syntaxHighlightProp;
+        code.headerVisible = props.headerVisibleProp;
+        code.hoverHighlight = props.hoverHighlightProp;
+        code.hunkSeparator = props.hunkSeparatorProp;
+        code.changeIndicator = props.changeIndicatorProp;
+        code.changeBackground = props.changeBackgroundProp;
         code.softWrap = softWrap;
         code.header = props.header;
         code.annotations = props._annotations;
-        code.annotationContent = props.annotationContent;
+        code.annotationContent = props.renderAnnotationProp;
         code.decorations = props._decorations;
         code.gutterMarkers = props._gutterMarkers;
-        code.gutterMarkerContent = markerLane ? props.gutterMarkerContent : null;
+        code.gutterMarkerContent = markerLane ? props.renderGutterMarkerProp : null;
         code.laneWidth = laneWidth;
-        code.onAddAnnotation = props._onAddAnnotation;
-        code.onLineClick = props._onLineClick;
-        code.onLineHover = props._onLineHover;
+        code.onAddAnnotation = props.onAddAnnotationProp;
+        code.onLineClick = props.onLineClickProp;
+        code.onLineHover = props.onLineHoverProp;
         code.selection = state.selection();
         code.selectedLines = state.selectedLines();
         code.selected = state.selectedSpan();

@@ -608,10 +608,10 @@ class ComponentControlsTest extends TestCase {
 
     function testCheckboxExplicitAccessibilityLabelReplacesTheVisibleOne() {
         final plain = Checkbox.component('remember').label('Remember me');
-        assertNull(plain.accessibilityLabelValue);
+        assertNull(plain.accessibilityLabelProp);
         final named = Checkbox.component('remember').label('Remember me').accessibilityLabel('Remember this account');
-        assertEquals('Remember this account', named.accessibilityLabelValue);
-        assertEquals('Remember me', named.labelValue);
+        assertEquals('Remember this account', named.accessibilityLabelProp);
+        assertEquals('Remember me', named.labelProp);
     }
 
     function checkboxHarness(disabled:Bool):{cx:VisualTestContext, clicks:Array<Int>, parent:Array<Int>} {
@@ -678,11 +678,11 @@ class ComponentControlsTest extends TestCase {
 
     function testRadioExplicitAccessibilityLabelReplacesTheVisibleOne() {
         final plain = Radio.component('automatic').label('Automatic');
-        assertNull(plain.accessibilityLabelValue);
-        assertEquals('Automatic', plain.labelValue);
+        assertNull(plain.accessibilityLabelProp);
+        assertEquals('Automatic', plain.labelProp);
         final named = Radio.component('automatic').label('Automatic').accessibilityLabel('Choose automatic mode');
-        assertEquals('Choose automatic mode', named.accessibilityLabelValue);
-        assertEquals('Automatic', named.labelValue);
+        assertEquals('Choose automatic mode', named.accessibilityLabelProp);
+        assertEquals('Automatic', named.labelProp);
     }
 
     /// Switch
@@ -772,7 +772,7 @@ class ComponentControlsTest extends TestCase {
     function testToolbarDefault() {
         final toolbar = glaze.kit.toolbar.Toolbar.component('toolbar');
         assertTrue(toolbar.sizeValue.equals(Small));
-        assertFalse(toolbar.disabledValue);
+        assertFalse(toolbar.disabledProp);
         assertEquals(0, toolbar.items.length);
     }
 

@@ -9,6 +9,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Edges;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -16,7 +17,6 @@ import glaze.Entity;
 import glaze.IntoBackground;
 import glaze.IntoElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.ScrollHandle;
 import glaze.Window.StateModel;
 import glaze.StyleRefinement;
@@ -79,7 +79,7 @@ private typedef AnimParams = {left:Float, width:Float, epoch:Int};
 /**
  * A TabBar element that contains multiple `Tab` items.
  */
-class TabBar implements RenderOnce implements Styled implements Sizable {
+class TabBar extends Component implements Styled implements Sizable {
 
     final id:ElementIdArg;
 
@@ -89,34 +89,49 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
 
     final tabBarStyle:StyleRefinement = new StyleRefinement();
 
-    var scrollHandle:Null<ScrollHandle> = null;
+    /**
+     * Track the scroll of the TabBar.
+     *
+     * Clicking a tab scrolls it into view along with part of the next tab,
+     * but changing the selection, the tabs or the layout does not. Use the
+     * tracked `ScrollHandle` to request an explicit reveal when needed.
+     */
+    @prop var trackScroll:Null<ScrollHandle> = null;
 
-    var prefixValue:Null<AnyElement> = null;
+    @prop var prefix:Null<AnyElement> = null;
 
-    var suffixValue:Null<AnyElement> = null;
+    @prop var suffix:Null<AnyElement> = null;
 
     final childTabs:Array<Tab> = [];
 
-    var lastEmptySpaceValue:AnyElement;
+    @prop var lastEmptySpace:AnyElement;
 
-    var selectedIndexValue:Null<Int> = null;
+    /** Set the selected index of the TabBar. */
+    @prop var selectedIndex:Null<Int> = null;
 
     var variant:TabVariant = TabVariant.defaultValue();
 
     var size:Size = Medium;
 
-    var menuValue:Bool = false;
+    /** Set whether to show the menu button when tabs overflow, default is false. */
+    @prop var menu:Bool = false;
 
-    var maxWidthValue:Null<Pixels> = null;
+    /**
+     * Set the maximum width of each tab. Labels longer than this width are
+     * truncated with an ellipsis. Does not apply to icon-only tabs. The
+     * overflow menu still shows the full label.
+     */
+    @prop var maxWidth:Null<Pixels> = null;
 
     var onClickHandler:Null<(Int, Window, App) -> Void> = null;
 
     /** Create a new TabBar. */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.idString = Std.string((id : ElementId));
         this.base = glaze.kit.base.Tabs.component(id).px(glaze.Prelude.px(-1.));
-        this.lastEmptySpaceValue = div().w3().intoAnyElement();
+        this.lastEmptySpace = div().w3().intoAnyElement();
     }
 
     /** Set the Tab variant, all children will inherit the variant. */
@@ -151,43 +166,15 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    /** Set whether to show the menu button when tabs overflow, default is false. */
-    public function menu(menu:Bool):TabBar {
-        menuValue = menu;
-        return this;
-    }
-
-    /**
-     * Set the maximum width of each tab. Labels longer than this width are
-     * truncated with an ellipsis. Does not apply to icon-only tabs. The
-     * overflow menu still shows the full label.
-     */
-    public function maxWidth(width:Pixels):TabBar {
-        maxWidthValue = width;
-        return this;
-    }
-
-    /**
-     * Track the scroll of the TabBar.
-     *
-     * Clicking a tab scrolls it into view along with part of the next tab,
-     * but changing the selection, the tabs or the layout does not. Use the
-     * tracked `ScrollHandle` to request an explicit reveal when needed.
-     */
-    public function trackScroll(scrollHandle:ScrollHandle):TabBar {
-        this.scrollHandle = scrollHandle;
-        return this;
-    }
-
     /** Set the prefix element of the TabBar */
     public function prefix(prefix:IntoElement):TabBar {
-        prefixValue = prefix;
+        this.prefix = prefix;
         return this;
     }
 
     /** Set the suffix element of the TabBar */
     public function suffix(suffix:IntoElement):TabBar {
-        suffixValue = suffix;
+        this.suffix = suffix;
         return this;
     }
 
@@ -203,15 +190,9 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    /** Set the selected index of the TabBar. */
-    public function selectedIndex(index:Int):TabBar {
-        selectedIndexValue = index;
-        return this;
-    }
-
     /** Set the last empty space element of the TabBar. */
     public function lastEmptySpace(lastEmptySpace:IntoElement):TabBar {
-        lastEmptySpaceValue = lastEmptySpace;
+        this.lastEmptySpace = lastEmptySpace;
         return this;
     }
 
@@ -249,7 +230,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
     function renderIndicator(boundsRc:Null<TabIndicatorBounds>, window:Window, cx:App):Null<{element:AnyElement, epoch:Int}> {
         final hasIndicator = variant == Segmented || variant == Pill || variant == Underline;
         final numTabs = childTabs.length;
-        final selectedIx = selectedIndexValue != null ? selectedIndexValue : 0x7FFFFFFF;
+        final selectedIx = selectedIndex != null ? selectedIndex : 0x7FFFFFFF;
 
         if (!(hasIndicator && numTabs > 0 && selectedIx < numTabs)) {
             return null;
@@ -440,7 +421,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
         }
 
         // Without a tracked handle the bar still needs one to reveal a clicked tab.
-        final scrollHandle = this.scrollHandle != null ? this.scrollHandle : window.useKeyedState('$idString-scroll', cx, _ -> new ScrollHandle()).read(cx).value;
+        final scrollHandle = this.trackScroll != null ? this.trackScroll : window.useKeyedState('$idString-scroll', cx, _ -> new ScrollHandle()).read(cx).value;
         final reveal = new TabReveal(
             '$idString-reveal',
             window.useKeyedState('$idString-reveal', cx, _ -> new KeyedCell((null : Null<RevealTarget>))).read(cx).value,
@@ -462,18 +443,18 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
         final indicatorReady = indicatorElement != null;
         // Deviation DEV-014: no sliding indicator under a disabled selected
         // tab, which paints its own dimmed selected style.
-        if (selectedIndexValue != null && selectedIndexValue >= 0 && selectedIndexValue < childTabs.length
-            && childTabs[selectedIndexValue].disabledValue) {
+        if (this.selectedIndex != null && this.selectedIndex >= 0 && this.selectedIndex < childTabs.length
+            && childTabs[this.selectedIndex].disabledProp) {
             indicatorElement = null;
         }
 
-        final hasSuffixOrMenu = suffixValue != null || menuValue;
+        final hasSuffixOrMenu = suffix != null || this.menu;
         final view = window.currentView();
         final itemMetas:Array<{label:Null<String>, icon:Null<Icon>, disabled:Bool, onClick:Null<(ClickEvent, Window, App) -> Void>}> = [];
-        final selectedIndex = selectedIndexValue;
+        final selectedIndex = this.selectedIndex;
         final tabs = base;
         final renderedTabs:Array<AnyElement> = [];
-        final maxWidth = maxWidthValue;
+        final maxWidth = this.maxWidth;
         // A hovered folder tab shows its fill and hides the separators beside
         // it, one of which belongs to its neighbor, so the bar tracks the hover.
         final hoveredTab:Null<Entity<StateModel<Null<Int>>>> = variant == Folder ? window.useKeyedState('$idString-tab-hovered', cx, _ -> (null : Null<Int>)) : null;
@@ -482,7 +463,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
 
         for (ix in 0...childTabs.length) {
             final child = childTabs[ix];
-            itemMetas.push({label: child.labelValue, icon: child.iconValue, disabled: child.disabledValue, onClick: null});
+            itemMetas.push({label: child.labelProp, icon: child.iconProp, disabled: child.disabledProp, onClick: null});
             final tabBarPrefix = child.tabBarPrefixValue != null ? child.tabBarPrefixValue : true;
             final tab = child
                 .withIx(ix)
@@ -495,7 +476,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
             tab.indicatorEpoch = indicatorEpoch;
             tab.hovered = hoveredIx == ix;
             tab.separator = variant == Folder && ix + 1 < numTabs && !hasShape(ix) && !hasShape(ix + 1);
-            final disabled = tab.disabledValue;
+            final disabled = tab.disabledProp;
             if (selectedIndex != null) {
                 tab.selected(selectedIndex == ix);
             }
@@ -589,7 +570,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
         tabs.rounded(variant.tabBarRadius(size, cx))
             .paddingsEdges(paddings)
             .refineStyle(tabBarStyle);
-        if (prefixValue != null) tabs.child(prefixValue);
+        if (prefix != null) tabs.child(prefix);
 
         final tabsInner = hFlex()
             .id('tabs-inner')
@@ -607,7 +588,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
             .lockScrollAxis()
             .trackScroll(scrollHandle)
             .children([for (tab in renderedTabs) (tab : IntoElement)]);
-        if (hasSuffixOrMenu) tabsInner.child(lastEmptySpaceValue);
+        if (hasSuffixOrMenu) tabsInner.child(lastEmptySpace);
 
         final tabsElement = hFlex()
             .id('tabs')
@@ -629,7 +610,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
             .child(ScrollableMask.verticalWheel(scrollHandle));
         tabs.child(tabsElement);
 
-        if (menuValue) {
+        if (this.menu) {
             final metas = itemMetas;
             tabs.child(Button.component('more')
                 .xsmall()
@@ -658,7 +639,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
                 })
                 .anchor(Anchor.TopRight));
         }
-        if (suffixValue != null) tabs.child(suffixValue);
+        if (suffix != null) tabs.child(suffix);
         return tabs;
     }
 

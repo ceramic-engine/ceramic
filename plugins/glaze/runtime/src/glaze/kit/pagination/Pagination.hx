@@ -5,11 +5,11 @@ package glaze.kit.pagination;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.Range;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -32,7 +32,7 @@ using glaze.kit.menu.DropdownMenu;
 /**
  * Pagination with page navigation, next and previous links.
  */
-class Pagination implements RenderOnce implements Styled implements Sizable {
+class Pagination extends Component implements Styled implements Sizable {
 
     /**
      * The most pages an ellipsis menu lists.
@@ -67,11 +67,14 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
 
     var totalPagesValue:Int = 1;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     var compactValue:Bool = false;
 
-    var visiblePagesValue:Int = 5;
+    /**
+     * Set viewable maximum number of page buttons, default
+     */
+    @prop var visiblePages:Int = 5;
 
     var onClickHandler:Null<(Int, Window, App) -> Void> = null;
 
@@ -79,6 +82,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
      * Create a new Pagination component with the given ID.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -120,19 +124,6 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
      */
     public function compact():Pagination {
         compactValue = true;
-        return this;
-    }
-
-    /**
-     * Set viewable maximum number of page buttons, default
-     */
-    public function visiblePages(max:Int):Pagination {
-        visiblePagesValue = max;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Pagination {
-        disabledValue = disabled;
         return this;
     }
 
@@ -185,8 +176,8 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
 
     public function render(window:Window, cx:App):IntoElement {
         var state = new PaginationState(currentPageValue, totalPagesValue)
-            .visiblePages(visiblePagesValue)
-            .disabled(disabledValue);
+            .visiblePages(visiblePages)
+            .disabled(disabled);
         final onClick = onClickHandler;
         if (onClick != null) {
             state = state.onChange((page, window, cx) -> onClick(page, window, cx));
@@ -194,7 +185,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
         final pageNumbers = !compactValue ? state.items() : [];
 
         final currentPage = state.currentPage();
-        final isDisabled = disabledValue;
+        final isDisabled = disabled;
         final itemState = state.clone();
 
         final root = glaze.kit.base.Pagination.component(id, state.clone())
@@ -228,7 +219,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
                         .ghost()
                         .withSize(size)
                         .compact()
-                        .disabled(disabledValue)
+                        .disabled(disabled)
                         .icon(IconName.Ellipsis)
                         .dropdownMenu((menu, _, _) -> {
                             final pages = ellipsisMenuPages(range, currentPage);

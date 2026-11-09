@@ -508,8 +508,8 @@ class TimeComponentsTest extends TestCase {
         final field = @:privateAccess TimeField.component(state).withId('start').large().disabled(true).invalid(true).w(px(120.));
         assertTrue(Type.enumEq((field.id : glaze.ElementId), glaze.ElementId.Name('start')));
         assertTrue(field.size.match(Large));
-        assertTrue(field.disabledValue);
-        assertTrue(field.invalidValue);
+        assertTrue(field.disabledProp);
+        assertTrue(field.invalidProp);
     }
 
     function testPressingOutsideTheSegmentsFocusesTheFirstSegment() {

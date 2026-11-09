@@ -6,12 +6,12 @@ package glaze.kit.setting;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.Window.StateModel;
 import glaze.StyleRefinement;
 import glaze.Window;
@@ -48,7 +48,7 @@ using glaze.kit.base.StyledExt;
  *         SettingField (e.g., Switch, Dropdown, Input)
  * ```
  */
-class Settings implements RenderOnce implements Sizable {
+class Settings extends Component implements Sizable {
 
     static inline final STACKED_LAYOUT_MAX_WIDTH:Pixels = 480.;
 
@@ -60,13 +60,22 @@ class Settings implements RenderOnce implements Sizable {
 
     var sizeValue:Size = Medium;
 
-    var sidebarWidthValue:Pixels = 250.0;
+    /**
+     * Set the width of the sidebar, default is `250px`.
+     */
+    @prop var sidebarWidth:Pixels = 250.0;
 
-    var sidebarSizeRangeValue:PixelsRange = new PixelsRange(160.0, 360.0);
+    /**
+     * Set the resize range of the sidebar, default is `160px..360px`.
+     */
+    @prop var sidebarSizeRange:PixelsRange = new PixelsRange(160.0, 360.0);
 
     var sidebarStyleValue:StyleRefinement = new StyleRefinement();
 
-    var defaultSelectedIndexValue:SelectIndex = new SelectIndex();
+    /**
+     * Set the default index of the page to be selected.
+     */
+    @prop var defaultSelectedIndex:SelectIndex = new SelectIndex();
 
     var headerStyleValue:StyleRefinement = new StyleRefinement();
 
@@ -74,6 +83,7 @@ class Settings implements RenderOnce implements Sizable {
      * Create a new settings with the given ID.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -85,22 +95,6 @@ class Settings implements RenderOnce implements Sizable {
     @:allow(glaze.kit.setting, tests)
     static function keyedState(window:Window, id:ElementIdArg, cx:App):Entity<StateModel<SettingsState>> {
         return window.useKeyedState(id, cx, _ -> throw 'unreachable');
-    }
-
-    /**
-     * Set the width of the sidebar, default is `250px`.
-     */
-    public function sidebarWidth(width:Pixels):Settings {
-        sidebarWidthValue = width;
-        return this;
-    }
-
-    /**
-     * Set the resize range of the sidebar, default is `160px..360px`.
-     */
-    public function sidebarSizeRange(range:PixelsRange):Settings {
-        sidebarSizeRangeValue = range;
-        return this;
     }
 
     /**
@@ -136,14 +130,6 @@ class Settings implements RenderOnce implements Sizable {
         final copy = new StyleRefinement();
         copy.refine(style);
         sidebarStyleValue = copy;
-        return this;
-    }
-
-    /**
-     * Set the default index of the page to be selected.
-     */
-    public function defaultSelectedIndex(index:SelectIndex):Settings {
-        defaultSelectedIndexValue = index;
         return this;
     }
 
@@ -260,7 +246,7 @@ class Settings implements RenderOnce implements Sizable {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final defaultSelectedIndex = defaultSelectedIndexValue;
+        final defaultSelectedIndex = this.defaultSelectedIndex;
         final state = window.useKeyedState(id, cx, window -> {
             final searchInput:Entity<InputState> = cx.newEntity(c -> new InputState(window, c)
                 .withPlaceholder(I18n.t('Settings.search_placeholder'))
@@ -282,13 +268,13 @@ class Settings implements RenderOnce implements Sizable {
         final options = new RenderOptions()
             .withSize(sizeValue)
             .withGroupVariant(groupVariant);
-        final sidebarSizeRange = sidebarSizeRangeValue;
+        final sidebarSizeRange = this.sidebarSizeRange;
         final sidebar = renderSidebar(state, filter, window, cx).intoAnyElement();
 
         return Resizable.hResizable(id)
             .child(
                 Resizable.resizablePanel()
-                    .size(sidebarWidthValue)
+                    .size(sidebarWidth)
                     .sizeRange(sidebarSizeRange)
                     .child(sidebar)
             )

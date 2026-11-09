@@ -5,6 +5,7 @@ package glaze.kit.toolbar;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
@@ -58,7 +59,7 @@ class ToolbarItemTools {
  * A semantic subgroup of toolbar controls that shares one accessible label
  * and propagates its size to every control added with `child` or `children`.
  */
-class ToolbarGroup implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class ToolbarGroup extends Component implements Styled implements ParentElement implements Sizable {
 
     final id:ElementId;
 
@@ -67,11 +68,15 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
     @:allow(tests)
     var sizeValue:Size = Small;
 
-    var labelValue:Null<String> = null;
+    /**
+     * Sets the accessible name announced for the group.
+     */
+    @prop var label:Null<String> = null;
 
     final items:Array<ToolbarItem> = [];
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -84,14 +89,6 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
      */
     public function extend(elements:Array<AnyElement>):Void {
         for (element in elements) items.push(Content(element));
-    }
-
-    /**
-     * Sets the accessible name announced for the group.
-     */
-    public function label(label:String):ToolbarGroup {
-        labelValue = label;
-        return this;
     }
 
     /**
@@ -129,7 +126,7 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
     public function render(window:Window, cx:App):IntoElement {
         final size = sizeValue;
         final group = new glaze.kit.base.Toolbar.ToolbarGroup(id);
-        if (labelValue != null) group.label(labelValue);
+        if (label != null) group.label(label);
         group.extend([for (item in items) ToolbarItemTools.intoElement(item, size)]);
         return group.refineStyle(groupStyle);
     }
@@ -157,7 +154,7 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
  * The id keeps the toolbar's keyboard-focus state stable across frames; give
  * each toolbar in a window a distinct id.
  */
-class Toolbar implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class Toolbar extends Component implements Styled implements ParentElement implements Sizable {
 
     final id:ElementId;
 
@@ -166,8 +163,12 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
     @:allow(tests)
     var sizeValue:Size = Small;
 
+    /**
+     * Disable the toolbar's roving keyboard navigation.
+     * Hosted controls must be disabled by their owner.
+     */
     @:allow(tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     @:allow(tests)
     final items:Array<ToolbarItem> = [];
@@ -176,6 +177,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
      * Create a new, empty `Toolbar` at `Size.Small`.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -190,15 +192,6 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
      */
     public function extend(elements:Array<AnyElement>):Void {
         for (element in elements) items.push(Content(element));
-    }
-
-    /**
-     * Disable the toolbar's roving keyboard navigation.
-     * Hosted controls must be disabled by their owner.
-     */
-    public function disabled(disabled:Bool):Toolbar {
-        disabledValue = disabled;
-        return this;
     }
 
     /**
@@ -244,7 +237,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
 
     public function render(window:Window, cx:App):IntoElement {
         final size = sizeValue;
-        final toolbar = glaze.kit.base.Toolbar.component(id).disabled(disabledValue);
+        final toolbar = glaze.kit.base.Toolbar.component(id).disabled(disabled);
         toolbar.flex().itemsCenter().flexShrink0();
         switch size {
             case XSmall: toolbar.minH7().p1().gap1().textXs();

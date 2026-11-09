@@ -281,11 +281,11 @@ class NullSlotTest extends TestCase {
     function testMessageNullAvatarIsNoAvatar() {
         final element:Null<Div> = none();
         final text:Null<String> = none();
-        assertNull(Message.component().avatar(null).avatarValue);
-        assertNull(Message.component().avatar(element).avatarValue);
-        assertNull(Message.component().avatar(text).avatarValue);
-        assertNull(Message.component().avatar('ME').avatar(null).avatarValue);
-        assertNotNull(Message.component().avatar('ME').avatarValue);
+        assertNull(Message.component().avatar(null).avatarSlotProp);
+        assertNull(Message.component().avatar(element).avatarSlotProp);
+        assertNull(Message.component().avatar(text).avatarSlotProp);
+        assertNull(Message.component().avatar('ME').avatar(null).avatarSlotProp);
+        assertNotNull(Message.component().avatar('ME').avatarSlotProp);
 
         final message = (log:Array<String>, avatar:Bool, withNull:Null<IntoElement>) -> {
             final m = Message.component()

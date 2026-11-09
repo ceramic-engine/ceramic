@@ -4,6 +4,7 @@
 package glaze.kit.messagescroller;
 
 import glaze.App;
+import glaze.Component;
 import glaze.Context;
 import glaze.DefiniteLength;
 import glaze.ElementId;
@@ -18,7 +19,6 @@ import glaze.ListOffset;
 import glaze.ListState;
 import glaze.Model;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -206,7 +206,7 @@ class MessageScrollerState extends Model {
 /**
  * A virtualized message list with optional scrollbar and jump-to-latest UI.
  */
-class MessageScroller implements RenderOnce implements Styled {
+class MessageScroller extends Component implements Styled {
 
     @:allow(glaze.kit.messagescroller)
     static inline final LIST_OVERDRAW:Pixels = 400.;
@@ -243,32 +243,23 @@ class MessageScroller implements RenderOnce implements Styled {
     @:allow(tests)
     var bottomFade:Null<Hsla> = null;
 
+    /** Enable or disable the virtual-list scrollbar. */
     @:allow(tests)
-    var scrollbarValue:Bool = true;
+    @prop var scrollbar:Bool = true;
 
+    /** Enable or disable the built-in jump-to-latest button. */
     @:allow(tests)
-    var jumpButtonValue:Bool = true;
+    @prop var jumpButton:Bool = true;
 
     @:allow(tests)
     var jumpButtonLabel:String = 'Jump to latest';
 
     /** Create a message scroller with a renderer for each row. */
     public function new(id:ElementIdArg, state:Entity<MessageScrollerState>, renderer:(Int, Window, App) -> IntoElement) {
+        super();
         this.id = id;
         this.state = state;
         this.renderer = renderer;
-    }
-
-    /** Enable or disable the virtual-list scrollbar. */
-    public function scrollbar(scrollbar:Bool):MessageScroller {
-        scrollbarValue = scrollbar;
-        return this;
-    }
-
-    /** Enable or disable the built-in jump-to-latest button. */
-    public function jumpButton(jumpButton:Bool):MessageScroller {
-        jumpButtonValue = jumpButton;
-        return this;
     }
 
     /** Set the label used by the built-in jump-to-latest button. */
@@ -347,8 +338,8 @@ class MessageScroller implements RenderOnce implements Styled {
         final scrollerState = state.read(cx);
         final listState = scrollerState.listState;
         final scrolledUp = scrollerState.isScrolledUp();
-        final showJumpButton = jumpButtonValue && scrolledUp;
-        final jumpButtonVisibility = if (jumpButtonValue) {
+        final showJumpButton = jumpButton && scrolledUp;
+        final jumpButtonVisibility = if (jumpButton) {
             Motion.transition(
                 TransitionId.named(rootId, 'jump-button-visibility'),
                 showJumpButton ? 1. : 0.,
@@ -462,7 +453,7 @@ class MessageScroller implements RenderOnce implements Styled {
                     ))
             );
         }
-        if (scrollbarValue) viewport.verticalScrollbar(listState);
+        if (scrollbar) viewport.verticalScrollbar(listState);
         viewport.refineStyle(contentStyle);
 
         final root = div()
@@ -472,7 +463,7 @@ class MessageScroller implements RenderOnce implements Styled {
             .minH0()
             .overflowHidden()
             .child(viewport);
-        if (jumpButtonValue && jumpButtonVisibility > 0.) {
+        if (jumpButton && jumpButtonVisibility > 0.) {
             // No explicit width or height: Button sizes an icon-only button
             // as a square on its own, and a renderer that adds a label or
             // another semantic size must be able to change the layout.

@@ -6,6 +6,7 @@ package glaze.kit.chart;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Corners;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -160,21 +161,22 @@ class SankeyChart<T> extends Plot {
 
     @:allow(tests) var nodePaddingValue:Float = DEFAULT_NODE_PADDING;
 
-    @:allow(tests) var align:SankeyAlign = Justify;
+    @:allow(tests) @prop var nodeAlign:SankeyAlign = Justify;
 
-    @:allow(tests) var iterationsValue:Int = 6;
+    @:allow(tests) @prop var iterations:Int = 6;
 
-    @:allow(tests) var valueScaleValue:SankeyValueScale = Linear;
+    @:allow(tests) @prop var valueScale:SankeyValueScale = Linear;
 
     @:allow(tests) var nodeCornerRadiusValue:Null<Float> = null;
 
     @:allow(tests) var nodeColorFn:Null<(T) -> Hsla> = null;
 
-    @:allow(tests) var nodeLabelFn:Null<(T) -> String> = null;
+    @:allow(tests) @prop var nodeLabel:Null<(T) -> String> = null;
 
-    @:allow(tests) var valueLabelFn:Null<(T, Float) -> String> = null;
+    @:allow(tests) @prop var valueLabel:Null<(T, Float) -> String> = null;
 
-    @:allow(tests) var labelsFn:Null<(T, Float) -> Array<SankeyLabel>> = null;
+    /** Set the label lines of each node from the datum and its raw throughput. */
+    @:allow(tests) @prop var labels:Null<(T, Float) -> Array<SankeyLabel>> = null;
 
     @:allow(tests) var linkOpacityValue:Float = DEFAULT_LINK_OPACITY;
 
@@ -182,13 +184,14 @@ class SankeyChart<T> extends Plot {
 
     @:allow(tests) var labelGapValue:Float = DEFAULT_LABEL_GAP;
 
-    @:allow(tests) var tooltipNameFn:Null<(T) -> String> = null;
+    @:allow(tests) @prop var tooltipName:Null<(T) -> String> = null;
 
-    @:allow(tests) var tooltipValueFn:Null<(T, Float) -> String> = null;
+    @:allow(tests) @prop var tooltipValue:Null<(T, Float) -> String> = null;
 
-    var idValue:ElementId;
+    @prop var id:ElementId;
 
-    var interactiveValue:Bool = true;
+    /** Turn this chart's interactive layer on or off. On by default. */
+    @prop var interactive:Bool = true;
 
     final appearValue:ChartAppear = new ChartAppear();
 
@@ -200,18 +203,12 @@ class SankeyChart<T> extends Plot {
         super();
         this.nodes = glaze.util.Iterables.toArray(nodes);
         this.links = glaze.util.Iterables.toArray(links);
-        idValue = Chart.callerId(pos);
+        id = Chart.callerId(pos);
     }
 
     /** Name this chart's `ElementId`, replacing the default taken from the construction site. */
     public function id(id:ElementIdArg):SankeyChart<T> {
-        idValue = id;
-        return this;
-    }
-
-    /** Turn this chart's interactive layer on or off. On by default. */
-    public function interactive(interactive:Bool):SankeyChart<T> {
-        interactiveValue = interactive;
+        this.id = id;
         return this;
     }
 
@@ -237,21 +234,6 @@ class SankeyChart<T> extends Plot {
         return this;
     }
 
-    public function nodeAlign(align:SankeyAlign):SankeyChart<T> {
-        this.align = align;
-        return this;
-    }
-
-    public function iterations(iterations:Int):SankeyChart<T> {
-        iterationsValue = iterations;
-        return this;
-    }
-
-    public function valueScale(valueScale:SankeyValueScale):SankeyChart<T> {
-        valueScaleValue = valueScale;
-        return this;
-    }
-
     public function nodeCornerRadius(radius:Pixels):SankeyChart<T> {
         nodeCornerRadiusValue = SpringMath.f32(radius);
         return this;
@@ -259,32 +241,6 @@ class SankeyChart<T> extends Plot {
 
     public function nodeColor(color:(T) -> IntoHsla):SankeyChart<T> {
         nodeColorFn = t -> (color(t) : Hsla);
-        return this;
-    }
-
-    public function nodeLabel(label:(T) -> String):SankeyChart<T> {
-        nodeLabelFn = label;
-        return this;
-    }
-
-    public function valueLabel(label:(T, Float) -> String):SankeyChart<T> {
-        valueLabelFn = label;
-        return this;
-    }
-
-    /** Set the label lines of each node from the datum and its raw throughput. */
-    public function labels(labels:(T, Float) -> Array<SankeyLabel>):SankeyChart<T> {
-        labelsFn = labels;
-        return this;
-    }
-
-    public function tooltipName(name:(T) -> String):SankeyChart<T> {
-        tooltipNameFn = name;
-        return this;
-    }
-
-    public function tooltipValue(value:(T, Float) -> String):SankeyChart<T> {
-        tooltipValueFn = value;
         return this;
     }
 
@@ -308,9 +264,9 @@ class SankeyChart<T> extends Plot {
         return new Sankey()
             .nodeWidth(nodeWidthValue)
             .nodePadding(nodePaddingValue)
-            .nodeAlign(align)
-            .iterations(iterationsValue)
-            .valueScale(valueScaleValue);
+            .nodeAlign(nodeAlign)
+            .iterations(iterations)
+            .valueScale(valueScale);
     }
 
     @:allow(tests)
@@ -333,16 +289,16 @@ class SankeyChart<T> extends Plot {
             for (i in 0...nodes.length) {
                 final datum = nodes[i];
                 final value = rawValue[i];
-                if (labelsFn != null) {
-                    labelsFn(datum, value);
+                if (labels != null) {
+                    labels(datum, value);
                 }
                 else {
                     final lines:Array<SankeyLabel> = [];
-                    if (valueLabelFn != null) {
-                        lines.push(new SankeyLabel(valueLabelFn(datum, value)));
+                    if (valueLabel != null) {
+                        lines.push(new SankeyLabel(valueLabel(datum, value)));
                     }
-                    if (nodeLabelFn != null) {
-                        lines.push(new SankeyLabel(nodeLabelFn(datum)).color(theme.mutedForeground));
+                    if (nodeLabel != null) {
+                        lines.push(new SankeyLabel(nodeLabel(datum)).color(theme.mutedForeground));
                     }
                     lines;
                 }
@@ -357,7 +313,7 @@ class SankeyChart<T> extends Plot {
         for (link in links) {
             buf.add(';' + link.source + ',' + link.target + ',' + Std.string(link.value));
         }
-        buf.add('|' + bits(nodeWidthValue) + ',' + bits(nodePaddingValue) + ',' + align.toInt() + ',' + iterationsValue + ',' + valueScaleValue.toInt() + ',' + bits(labelGapValue));
+        buf.add('|' + bits(nodeWidthValue) + ',' + bits(nodePaddingValue) + ',' + nodeAlign.toInt() + ',' + iterations + ',' + valueScale.toInt() + ',' + bits(labelGapValue));
         for (lines in nodeLabels) {
             buf.add('|' + lines.length);
             for (line in lines) {
@@ -597,11 +553,11 @@ class SankeyChart<T> extends Plot {
     }
 
     override public function plotId():Null<ElementId> {
-        return idValue;
+        return id;
     }
 
     override public function isInteractive():Bool {
-        return interactiveValue;
+        return interactive;
     }
 
     override public function updateAppear(appear:PlotAppear, window:Window, cx:App):Void {
@@ -644,14 +600,14 @@ class SankeyChart<T> extends Plot {
         final theme = Theme.global(cx);
         final palette = [theme.chart1, theme.chart2, theme.chart3, theme.chart4, theme.chart5];
         final color = nodeColorFn != null ? nodeColorFn(datum) : palette[state.index % palette.length];
-        final valueText = tooltipValueFn != null ? tooltipValueFn(datum, value) : (valueLabelFn != null ? valueLabelFn(datum, value) : ChartFormat.display64(value));
+        final valueText = tooltipValue != null ? tooltipValue(datum, value) : (valueLabel != null ? valueLabel(datum, value) : ChartFormat.display64(value));
 
         // Follow the cursor; the node's links mark it.
         var tooltip = Tooltip.component(cursor, bounds.size).gap(8.);
-        if (nodeLabelFn != null) {
-            tooltip = tooltip.title(nodeLabelFn(datum));
+        if (nodeLabel != null) {
+            tooltip = tooltip.title(nodeLabel(datum));
         }
-        tooltip = tooltip.row(color, tooltipNameFn != null ? tooltipNameFn(datum) : '', valueText);
+        tooltip = tooltip.row(color, tooltipName != null ? tooltipName(datum) : '', valueText);
         return (tooltip : IntoElement).intoAnyElement();
     }
 

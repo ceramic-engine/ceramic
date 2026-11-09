@@ -5,9 +5,9 @@ package glaze.kit.dialog;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -20,13 +20,15 @@ using glaze.kit.base.StyledExt;
 /**
  * Content container for a dialog.
  */
-class DialogContent implements RenderOnce implements Styled implements ParentElement {
+class DialogContent extends Component implements Styled implements ParentElement {
 
     final contentStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return contentStyle;

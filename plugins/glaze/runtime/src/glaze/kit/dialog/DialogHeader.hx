@@ -5,9 +5,9 @@ package glaze.kit.dialog;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -19,13 +19,15 @@ using glaze.kit.base.StyledExt;
 /**
  * Header section of a dialog, typically contains DialogTitle and DialogDescription.
  */
-class DialogHeader implements RenderOnce implements Styled implements ParentElement {
+class DialogHeader extends Component implements Styled implements ParentElement {
 
     final headerStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return headerStyle;

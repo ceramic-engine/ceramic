@@ -7,6 +7,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
 import glaze.AppContext;
+import glaze.Component;
 import glaze.Context;
 import glaze.DefiniteLength;
 import glaze.DispatchPhase;
@@ -18,7 +19,6 @@ import glaze.GlobalElementId;
 import glaze.MouseMoveEvent;
 import glaze.Div;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.Window;
 import glaze.kit.base.Geometry.Placement;
@@ -749,11 +749,12 @@ class ActiveDialog {
  * Window-level layers, always mounted once after the application content.
  * Child view caching does not affect their ownership or rendering.
  */
-private class WindowStateLayers implements RenderOnce {
+private class WindowStateLayers extends Component {
 
     final root:WindowState;
 
     public function new(root:WindowState) {
+        super();
         this.root = root;
     }
 

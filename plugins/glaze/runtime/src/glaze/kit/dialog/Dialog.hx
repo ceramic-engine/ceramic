@@ -9,6 +9,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.BoxShadow;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.DefiniteLengthTools;
 import glaze.FocusHandle;
 import glaze.Hsla;
@@ -16,7 +17,6 @@ import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.SpringMath.f32;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -182,7 +182,7 @@ class DialogButtonProps {
  * A default dialog button: activating it dispatches `action` on the dialog
  * it sits in, whatever holds focus at that moment.
  */
-private class DialogButton implements RenderOnce {
+private class DialogButton extends Component {
 
     /** Distinct per button: OK and Cancel render as siblings in one scope. */
     final anchorKey:String;
@@ -192,6 +192,7 @@ private class DialogButton implements RenderOnce {
     final action:Action;
 
     public function new(anchorKey:String, button:Button, action:Action) {
+        super();
         this.anchorKey = anchorKey;
         this.button = button;
         this.action = action;
@@ -345,7 +346,7 @@ class DialogMotion {
  * A modal to display content in a dialog box.
  */
 @:allow(glaze.kit, tests)
-class Dialog implements RenderOnce implements Styled implements ParentElement {
+class Dialog extends Component implements Styled implements ParentElement {
 
     /** The legacy entrance and exit duration, in seconds. */
     public static final ANIMATION_DURATION:Float = 0.25;
@@ -385,6 +386,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
      * Create a new dialog.
      */
     public function new(cx:App) {
+        super();
         base = new BaseDialogRoot(glaze.kit.base.Dialog.component(cx));
         focusHandle = cx.focusHandle();
     }

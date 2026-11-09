@@ -8,6 +8,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Element;
 import glaze.ElementId;
 import glaze.Entity;
@@ -16,7 +17,6 @@ import glaze.IntoElement;
 import glaze.LayoutId;
 import glaze.ParentElement;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -144,20 +144,11 @@ private class CarouselLoopItem extends Element {
 /**
  * The clipped viewport and snap track for Carousel items.
  */
-class CarouselContent implements RenderOnce implements Styled implements ParentElement {
+class CarouselContent extends Component implements Styled implements ParentElement {
 
     final state:Entity<CarouselState>;
 
     final contentStyle:StyleRefinement = new StyleRefinement();
-
-    var trackStyleValue:StyleRefinement = new StyleRefinement();
-
-    final childElements:Array<AnyElement> = [];
-
-    /** Creates content bound to `state`. */
-    public function new(state:Entity<CarouselState>) {
-        this.state = state;
-    }
 
     /**
      * Sets style overrides for the inner flex track.
@@ -165,9 +156,14 @@ class CarouselContent implements RenderOnce implements Styled implements ParentE
      * Use this for paired Carousel spacing such as a negative leading margin.
      * The `Styled` implementation applies to the clipped viewport itself.
      */
-    public function trackStyle(style:StyleRefinement):CarouselContent {
-        trackStyleValue = style;
-        return this;
+    @prop var trackStyle:StyleRefinement = new StyleRefinement();
+
+    final childElements:Array<AnyElement> = [];
+
+    /** Creates content bound to `state`. */
+    public function new(state:Entity<CarouselState>) {
+        super();
+        this.state = state;
     }
 
     public function extend(elements:Array<AnyElement>):Void {
@@ -266,7 +262,7 @@ class CarouselContent implements RenderOnce implements Styled implements ParentE
         if (loopRunway != null) track.child(runwaySpacer(loopRunway));
         track.children(children);
         if (loopRunway != null) track.child(runwaySpacer(loopRunway));
-        track.refineStyle(trackStyleValue);
+        track.refineStyle(trackStyle);
 
         final root = div()
             .relative()

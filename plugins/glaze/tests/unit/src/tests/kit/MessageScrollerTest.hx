@@ -200,8 +200,8 @@ class MessageScrollerTest extends TestCase {
             .withJumpButtonTransition(0.3)
             .withBottomFade(white());
 
-        assertFalse(scroller.scrollbarValue);
-        assertFalse(scroller.jumpButtonValue);
+        assertFalse(scroller.scrollbarProp);
+        assertFalse(scroller.jumpButtonProp);
         assertEquals('Latest', scroller.jumpButtonLabel);
         assertNotNull(scroller.jumpButtonRenderer);
         assertEquals(0.3, scroller.jumpButtonTransition);

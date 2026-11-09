@@ -5,12 +5,12 @@ package glaze.kit.carousel;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -27,7 +27,7 @@ using glaze.kit.base.StyledExt;
  * computed (`accessibilityLabel`) but not exported: Glaze has no
  * accessibility tree.
  */
-class CarouselItem implements RenderOnce implements Styled implements ParentElement {
+class CarouselItem extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
@@ -37,21 +37,17 @@ class CarouselItem implements RenderOnce implements Styled implements ParentElem
 
     final itemStyle:StyleRefinement = new StyleRefinement();
 
-    var accessibilityLabelValue:Null<String> = null;
+    /** Replaces the generated "Slide N of M" accessibility label. */
+    @prop var accessibilityLabel:Null<String> = null;
 
     final childElements:Array<AnyElement> = [];
 
     /** Creates the item at the zero-based `index` used by `state`. */
     public function new(id:ElementIdArg, index:Int, state:Entity<CarouselState>) {
+        super();
         this.id = id;
         this.index = index;
         this.state = state;
-    }
-
-    /** Replaces the generated "Slide N of M" accessibility label. */
-    public function accessibilityLabel(label:String):CarouselItem {
-        accessibilityLabelValue = label;
-        return this;
     }
 
     public function extend(elements:Array<AnyElement>):Void {
@@ -76,7 +72,7 @@ class CarouselItem implements RenderOnce implements Styled implements ParentElem
         final state = this.state.read(cx);
         final axis = state.axis();
         final count = state.itemCount();
-        final label = accessibilityLabelValue != null ? accessibilityLabelValue : I18n.t('Carousel.slide', {current: index + 1, total: count});
+        final label = accessibilityLabel != null ? accessibilityLabel : I18n.t('Carousel.slide', {current: index + 1, total: count});
 
         final element = div()
             .id(id)

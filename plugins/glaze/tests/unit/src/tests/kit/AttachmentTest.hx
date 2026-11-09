@@ -60,18 +60,18 @@ class AttachmentTest extends TestCase {
                 .description(AttachmentDescription.component('Uploading')))
             .actions(AttachmentActions.component().child('Cancel'));
 
-        assertEquals(AttachmentStatus.Uploading, attachment.statusValue);
-        assertEquals(glaze.Axis.Vertical, attachment.axisValue);
+        assertEquals(AttachmentStatus.Uploading, attachment.statusProp);
+        assertEquals(glaze.Axis.Vertical, attachment.axisProp);
         assertTrue(attachment.size.equals(Small));
-        assertNotNull(attachment.mediaValue);
-        assertNotNull(attachment.contentValue);
-        assertNotNull(attachment.actionsValue);
+        assertNotNull(attachment.mediaProp);
+        assertNotNull(attachment.contentProp);
+        assertNotNull(attachment.actionsProp);
 
         attachment.layoutSlots();
-        assertTrue(attachment.mediaValue.size.equals(Small));
-        assertEquals(AttachmentStatus.Uploading, attachment.mediaValue.status);
-        assertTrue(attachment.contentValue.verticalLayout);
-        assertTrue(attachment.actionsValue.verticalLayout);
+        assertTrue(attachment.mediaProp.size.equals(Small));
+        assertEquals(AttachmentStatus.Uploading, attachment.mediaProp.status);
+        assertTrue(attachment.contentProp.verticalLayout);
+        assertTrue(attachment.actionsProp.verticalLayout);
 
         final handle = new ScrollHandle();
         final group = AttachmentGroup.component('group')
@@ -79,21 +79,21 @@ class AttachmentTest extends TestCase {
             .withEdgeFade(black())
             .child('first')
             .child('second');
-        assertNotNull(group.scrollHandle);
+        assertNotNull(group.trackScrollProp);
         assertTrue(group.edgeFade.equals(black()));
         assertEquals(2, group.childElements.length);
-        assertNull(AttachmentGroup.component('plain').scrollHandle);
+        assertNull(AttachmentGroup.component('plain').trackScrollProp);
         assertNull(AttachmentGroup.component('plain').edgeFade);
     }
 
     function testAttachmentWholeCardClickBuilder() {
-        assertNull(Attachment.component().idValue);
+        assertNull(Attachment.component().idProp);
         assertNull(Attachment.component().onClickValue);
 
         final clickable = Attachment.component()
             .id('report-attachment')
             .onClick((_, _, _) -> {});
-        assertTrue(Type.enumEq(ElementId.Name('report-attachment'), clickable.idValue));
+        assertTrue(Type.enumEq(ElementId.Name('report-attachment'), clickable.idProp));
         assertNotNull(clickable.onClickValue);
     }
 
@@ -117,8 +117,8 @@ class AttachmentTest extends TestCase {
             .media(AttachmentMedia.component().src('preview.png'))
             .content(AttachmentContent.component().description(AttachmentDescription.component('Failed')));
         failed.layoutSlots();
-        assertNotNull(failed.mediaValue.retry);
-        assertNotNull(failed.contentValue.retry);
+        assertNotNull(failed.mediaProp.retry);
+        assertNotNull(failed.contentProp.retry);
 
         // A completed attachment offers no retry, and one without an identity
         // has nothing to key the control on.
@@ -127,22 +127,22 @@ class AttachmentTest extends TestCase {
             .onRetry((_, _, _) -> {})
             .media(AttachmentMedia.component().src('preview.png'));
         complete.layoutSlots();
-        assertNull(complete.mediaValue.retry);
+        assertNull(complete.mediaProp.retry);
 
         final anonymous = Attachment.component()
             .status(Failed)
             .onRetry((_, _, _) -> {})
             .media(AttachmentMedia.component().src('preview.png'));
         anonymous.layoutSlots();
-        assertNull(anonymous.mediaValue.retry);
+        assertNull(anonymous.mediaProp.retry);
     }
 
     function testAttachmentProgressAndTooltipBuilder() {
         assertNull(Attachment.component().progressValue);
-        assertNull(Attachment.component().tooltipValue);
+        assertNull(Attachment.component().tooltipProp);
         assertEquals(100., Attachment.component().progress(130.).progressValue);
         assertEquals(0., Attachment.component().progress(-5.).progressValue);
-        assertEquals('Network error', Attachment.component().tooltip('Network error').tooltipValue);
+        assertEquals('Network error', Attachment.component().tooltip('Network error').tooltipProp);
 
         // Progress reaches the slots only while uploading.
         final uploading = Attachment.component()
@@ -152,15 +152,15 @@ class AttachmentTest extends TestCase {
             .media(AttachmentMedia.component().src('preview.png'))
             .content(AttachmentContent.component().description(AttachmentDescription.component('Uploading')));
         uploading.layoutSlots();
-        assertEquals(62., uploading.mediaValue.progress);
-        assertEquals(62., uploading.contentValue.progress);
+        assertEquals(62., uploading.mediaProp.progress);
+        assertEquals(62., uploading.contentProp.progress);
 
         final processing = Attachment.component()
             .status(Processing)
             .progress(62.)
             .media(AttachmentMedia.component().src('preview.png'));
         processing.layoutSlots();
-        assertNull(processing.mediaValue.progress);
+        assertNull(processing.mediaProp.progress);
     }
 
     function testAttachmentImageTileMediaIsFlush() {
@@ -168,18 +168,18 @@ class AttachmentTest extends TestCase {
             .axis(Vertical)
             .media(AttachmentMedia.component().src('preview.png'));
         tile.layoutSlots();
-        assertTrue(tile.mediaValue.flush);
+        assertTrue(tile.mediaProp.flush);
 
         final card = Attachment.component()
             .axis(Vertical)
             .media(AttachmentMedia.component().src('preview.png'))
             .content(AttachmentContent.component().title(AttachmentTitle.component('preview.png')));
         card.layoutSlots();
-        assertFalse(card.mediaValue.flush);
+        assertFalse(card.mediaProp.flush);
     }
 
     function testAttachmentDefaultsAndStatusHelpers() {
-        assertEquals(AttachmentStatus.Complete, Attachment.component().statusValue);
+        assertEquals(AttachmentStatus.Complete, Attachment.component().statusProp);
         assertEquals(AttachmentStatus.Complete, AttachmentStatus.defaultValue());
         assertTrue(AttachmentStatus.Pending.isPending());
         assertTrue(AttachmentStatus.Uploading.isInProgress());
@@ -218,13 +218,13 @@ class AttachmentTest extends TestCase {
 
         attachment.layoutSlots();
 
-        final content = attachment.contentValue;
+        final content = attachment.contentProp;
         switch content.childElements[0] {
-            case Title(title): assertEquals(AttachmentStatus.Uploading, title.statusValue);
+            case Title(title): assertEquals(AttachmentStatus.Uploading, title.statusProp);
             case _: fail('expected the typed title slot');
         }
         switch content.childElements[1] {
-            case Description(description): assertEquals(AttachmentStatus.Uploading, description.statusValue);
+            case Description(description): assertEquals(AttachmentStatus.Uploading, description.statusProp);
             case _: fail('expected the typed description slot');
         }
     }
@@ -236,13 +236,13 @@ class AttachmentTest extends TestCase {
 
         attachment.layoutSlots();
 
-        final content = attachment.contentValue;
+        final content = attachment.contentProp;
         switch content.childElements[0] {
-            case Title(title): assertEquals(AttachmentStatus.Processing, title.statusValue);
+            case Title(title): assertEquals(AttachmentStatus.Processing, title.statusProp);
             case _: fail('expected the typed title slot');
         }
         switch content.childElements[1] {
-            case Description(description): assertEquals(AttachmentStatus.Complete, description.statusValue);
+            case Description(description): assertEquals(AttachmentStatus.Complete, description.statusProp);
             case _: fail('expected the typed description slot');
         }
     }
@@ -255,10 +255,10 @@ class AttachmentTest extends TestCase {
 
         attachment.layoutSlots();
 
-        final content = attachment.contentValue;
+        final content = attachment.contentProp;
         switch content.childElements[0] {
             case Title(title):
-                assertEquals(AttachmentStatus.Processing, title.statusValue);
+                assertEquals(AttachmentStatus.Processing, title.statusProp);
                 assertNotNull(title.shimmerStyle);
             case _: fail('expected the typed title slot');
         }

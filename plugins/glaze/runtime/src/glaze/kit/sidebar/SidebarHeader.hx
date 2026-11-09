@@ -5,10 +5,10 @@ package glaze.kit.sidebar;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -26,7 +26,7 @@ using glaze.kit.base.StyledExt;
  * Listeners go on `base` (Rust `InteractiveElement`). The `DropdownMenu` trait the original implements for it is
  * `SidebarDropdownMenu` (`using glaze.kit.sidebar.SidebarDropdownMenu;`).
  */
-class SidebarHeader implements RenderOnce implements Styled implements ParentElement implements Selectable implements Collapsible {
+class SidebarHeader extends Component implements Styled implements ParentElement implements Selectable implements Collapsible {
 
     public final base:Div = div();
 
@@ -34,26 +34,23 @@ class SidebarHeader implements RenderOnce implements Styled implements ParentEle
 
     final childElements:Array<AnyElement> = [];
 
-    var selectedValue:Bool = false;
+    @prop var selected:Bool = false;
 
-    var collapsedValue:Bool = false;
+    @prop var collapsed:Bool = false;
 
     /**
      * Create a new `SidebarHeader`.
      */
-    public function new() {}
-
-    public function selected(selected:Bool):SidebarHeader {
-        selectedValue = selected;
-        return this;
+    public function new() {
+        super();
     }
 
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
+        return selected;
     }
 
     /** Rust `Selectable::set_open` default. */
@@ -66,17 +63,12 @@ class SidebarHeader implements RenderOnce implements Styled implements ParentEle
         return isSelected();
     }
 
-    public function collapsed(collapsed:Bool):SidebarHeader {
-        collapsedValue = collapsed;
-        return this;
-    }
-
     public function setCollapsed(collapsed:Bool):Void {
-        collapsedValue = collapsed;
+        this.collapsed = collapsed;
     }
 
     public function isCollapsed():Bool {
-        return collapsedValue;
+        return collapsed;
     }
 
     public function extend(elements:Array<AnyElement>):Void {
@@ -104,7 +96,7 @@ class SidebarHeader implements RenderOnce implements Styled implements ParentEle
             .rounded(theme.radius)
             .refineStyle(headerStyle)
             .hover(s -> s.bg(theme.tokens.sidebarAccent.background).textColor(theme.sidebarAccentForeground));
-        if (selectedValue) {
+        if (selected) {
             element.bg(theme.tokens.sidebarAccent.background).textColor(theme.sidebarAccentForeground);
         }
         element.extend(childElements);

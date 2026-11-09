@@ -7,13 +7,13 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Background;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Decorations;
 import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.OperatingSystem;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.Rgba;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -53,7 +53,7 @@ using glaze.kit.base.StyledExt;
  * web. The window operations go through `Window` (see
  * `PlatformWindowOperations`: Ceramic does not expose them yet).
  */
-class TitleBar implements RenderOnce implements Styled implements ParentElement {
+class TitleBar extends Component implements Styled implements ParentElement {
 
     public static inline final TITLE_BAR_HEIGHT:Pixels = 34.;
 
@@ -119,7 +119,9 @@ class TitleBar implements RenderOnce implements Styled implements ParentElement 
     /**
      * Create a new TitleBar.
      */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     // Not ported: `title_bar_options()` and `window_options()`, the GPUI
     // `TitlebarOptions` / `WindowOptions` of a window with a transparent
@@ -314,11 +316,12 @@ private class ControlIconTools {
  * Renders one `ControlIcon` (Rust `impl RenderOnce for ControlIcon`).
  */
 @:allow(glaze.kit, tests)
-private class ControlIconElement implements RenderOnce {
+private class ControlIconElement extends Component {
 
     final icon:ControlIcon;
 
     public function new(icon:ControlIcon) {
+        super();
         this.icon = icon;
     }
 
@@ -384,11 +387,12 @@ private class ControlIconElement implements RenderOnce {
  * `WindowControls`, not GPUI's `glaze.WindowControls`).
  */
 @:allow(glaze.kit, tests)
-private class WindowControls implements RenderOnce {
+private class WindowControls extends Component {
 
     final onCloseWindow:Null<(ClickEvent, Window, App) -> Void>;
 
     public function new(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>) {
+        super();
         this.onCloseWindow = onCloseWindow;
     }
 

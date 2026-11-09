@@ -7,6 +7,7 @@ import glaze.App;
 import glaze.AppContext;
 import glaze.Bounds;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Context;
 import glaze.ElementId;
 import glaze.Empty;
@@ -16,7 +17,6 @@ import glaze.IntoElement;
 import glaze.KeyBinding;
 import glaze.Model;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Subscription;
@@ -577,7 +577,7 @@ class DatePickerState extends Model implements Render {
 /**
  * A DatePicker element.
  */
-class DatePicker implements RenderOnce implements Styled implements Sizable implements Disableable implements FocusableExt {
+class DatePicker extends Component implements Styled implements Sizable implements Disableable implements FocusableExt {
 
     final id:ElementId;
 
@@ -585,26 +585,32 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
 
     final state:Entity<DatePickerState>;
 
-    var cleanableValue:Bool = false;
+    /** Set whether to show the clear button when the input field is not empty, default is false. */
+    @prop var cleanable:Bool = false;
 
-    var placeholderValue:Null<String> = null;
+    /** Set the placeholder of the date picker, default: "". */
+    @prop var placeholder:Null<String> = null;
 
     var size:Size = Medium;
 
-    var numberOfMonthsValue:Int = 1;
+    /** Set number of months to display in the calendar, default is 1. */
+    @prop var numberOfMonths:Int = 1;
 
-    var presetsValue:Null<Array<DateRangePreset>> = null;
+    /** Set preset ranges for the date picker. */
+    @prop var presets:Null<Array<DateRangePreset>> = null;
 
-    var appearanceValue:Bool = true;
+    /** Set appearance of the date picker, if false, the date picker will be in a minimal style. */
+    @prop var appearance:Bool = true;
 
-    var focusRingEnabled:Bool = true;
+    @prop var focusRing:Bool = true;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     static inline final CONTEXT:String = "DatePicker";
 
     /** Create a new DatePicker with the given `DatePickerState`. */
     public function new(state:Entity<DatePickerState>) {
+        super();
         this.id = ElementId.NamedInteger('date-picker', state.entityId());
         this.state = state;
     }
@@ -612,36 +618,6 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
     /** The picker's focus handle (Rust `Focusable`). */
     public function focusHandle(cx:App):FocusHandle {
         return state.read(cx).focusHandle;
-    }
-
-    /** Set the placeholder of the date picker, default: "". */
-    public function placeholder(placeholder:String):DatePicker {
-        placeholderValue = placeholder;
-        return this;
-    }
-
-    /** Set whether to show the clear button when the input field is not empty, default is false. */
-    public function cleanable(cleanable:Bool):DatePicker {
-        cleanableValue = cleanable;
-        return this;
-    }
-
-    /** Set preset ranges for the date picker. */
-    public function presets(presets:Array<DateRangePreset>):DatePicker {
-        presetsValue = presets;
-        return this;
-    }
-
-    /** Set number of months to display in the calendar, default is 1. */
-    public function numberOfMonths(numberOfMonths:Int):DatePicker {
-        numberOfMonthsValue = numberOfMonths;
-        return this;
-    }
-
-    /** Set appearance of the date picker, if false, the date picker will be in a minimal style. */
-    public function appearance(appearance:Bool):DatePicker {
-        appearanceValue = appearance;
-        return this;
     }
 
     public function withSize(size:IntoSize):DatePicker {
@@ -653,26 +629,16 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
         this.size = size;
     }
 
-    public function disabled(disabled:Bool):DatePicker {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
-    }
-
-    public function focusRing(enabled:Bool):DatePicker {
-        focusRingEnabled = enabled;
-        return this;
+        this.disabled = disabled;
     }
 
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     public inline function style():StyleRefinement {
@@ -704,22 +670,22 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
         pickerState.update(cx, (state, cx) -> {
             state.syncChildren(window, cx);
         });
-        final monthCount = numberOfMonthsValue < 1 ? 1 : numberOfMonthsValue;
+        final monthCount = numberOfMonths < 1 ? 1 : numberOfMonths;
         final theme = Theme.global(cx);
 
         // This for keep focus border style, when click on the popup.
         final isFocused = focusHandle(cx).containsFocused(window, cx);
         final state = pickerState.read(cx);
-        final showClean = cleanableValue && state.date().isSome();
-        final placeholder = placeholderValue != null ? placeholderValue : I18n.t('DatePicker.placeholder');
+        final showClean = cleanable && state.date().isSome();
+        final placeholder = this.placeholder != null ? this.placeholder : I18n.t('DatePicker.placeholder');
         final formatted = state.dateTime().format(state.displayFormat());
         final displayTitle = formatted != null ? formatted : placeholder;
 
-        final colors = @:privateAccess Input.inputStyleColors(disabledValue, cx);
+        final colors = @:privateAccess Input.inputStyleColors(disabled, cx);
 
         final picker = glaze.kit.base.DatePicker.component(id, state.focusHandle).open(state.isOpen());
         if (state.date().isSome()) picker.ariaValue(displayTitle);
-        picker.disabled(disabledValue)
+        picker.disabled(disabled)
             .onOpenChange((open, window, cx) -> {
                 pickerState.update(cx, (state, cx) -> state.setOpen(open, window, cx));
             })
@@ -738,17 +704,17 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
             .flex()
             .itemsCenter()
             .justifyBetween();
-        if (appearanceValue) {
+        if (appearance) {
             input.bg(colors.background).textColor(colors.foreground);
-            if (disabledValue) input.opacity(0.5);
+            if (disabled) input.opacity(0.5);
             input.border1().borderColor(theme.input).rounded(theme.radius);
             if (isFocused) input.border1().borderColor(theme.ring);
         }
-        if (isFocused && appearanceValue && !disabledValue && focusRingEnabled) {
+        if (isFocused && appearance && !disabled && focusRing) {
             input.focusRingStyle(window, cx);
         }
         input.inputTextSize(size).inputSize(size);
-        if (!state.isOpen() && !disabledValue) {
+        if (!state.isOpen() && !disabled) {
             input.onClick((e, window, cx) -> pickerState.update(cx, (s, cx) -> s.toggleCalendar(e, window, cx)));
         }
         final title = div()
@@ -774,7 +740,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
             .justifyBetween()
             .gap1()
             .child(title);
-        if (!disabledValue) {
+        if (!disabled) {
             if (showClean) {
                 row.child(@:privateAccess ClearButton.clearButton(cx).onClick((e, window, cx) -> pickerState.update(cx, (s, cx) -> s.clean(e, window, cx))));
             }
@@ -790,8 +756,8 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
                 .gap3()
                 .hFull()
                 .itemsStart();
-            if (presetsValue != null) {
-                final presets = presetsValue;
+            if (this.presets != null) {
+                final presets = this.presets;
                 content.child(vFlex().my1().gap2().justifyEnd().children([
                     for (i in 0...presets.length) {
                         final preset = presets[i];
@@ -807,7 +773,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
                 ]));
             }
             final calendar = Calendar.component(state.calendar)
-                .numberOfMonths(numberOfMonthsValue)
+                .numberOfMonths(numberOfMonths)
                 .firstDayOfWeek(state.firstDayOfWeekValue)
                 .border0()
                 .roundedNone()

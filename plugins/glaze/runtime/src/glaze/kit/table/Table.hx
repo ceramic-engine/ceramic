@@ -5,11 +5,11 @@ package glaze.kit.table;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.TextAlign;
@@ -39,7 +39,7 @@ using glaze.kit.Size.SizeTools;
  *
  * Size set via `Sizable` is automatically propagated to all children.
  */
-class Table implements RenderOnce implements Styled implements ChildElement {
+class Table extends Component implements Styled implements ChildElement {
 
     static inline final MIN_CELL_WIDTH:Pixels = 100.;
 
@@ -51,24 +51,21 @@ class Table implements RenderOnce implements Styled implements ChildElement {
 
     var size:Size = Medium;
 
-    @:allow(tests)
-    var accessibilityLabelValue:Null<String> = null;
-
-    public function new() {}
-
-    public inline function style():StyleRefinement {
-        return tableStyle;
-    }
-
     /**
      * Set the name a screen reader announces for the table.
      *
      * A `TableCaption` is visible descriptive content and is not used
      * automatically as the table's accessible name.
      */
-    public function accessibilityLabel(label:String):Table {
-        accessibilityLabelValue = label;
-        return this;
+    @:allow(tests)
+    @prop var accessibilityLabel:Null<String> = null;
+
+    public function new() {
+        super();
+    }
+
+    public inline function style():StyleRefinement {
+        return tableStyle;
     }
 
     public function child(child:ChildElement):Table {
@@ -93,7 +90,7 @@ class Table implements RenderOnce implements Styled implements ChildElement {
     public function render(_:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final base = new BaseTable(NamedInteger("table", ix));
-        if (accessibilityLabelValue != null) base.accessibilityLabel(accessibilityLabelValue);
+        if (accessibilityLabel != null) base.accessibilityLabel(accessibilityLabel);
         final size = this.size;
         return base
             .wFull()
@@ -107,7 +104,7 @@ class Table implements RenderOnce implements Styled implements ChildElement {
 }
 
 /** The header section of a `Table`, wrapping header rows. */
-class TableHeader implements RenderOnce implements Styled implements ChildElement {
+class TableHeader extends Component implements Styled implements ChildElement {
 
     var ix:Int = 0;
 
@@ -117,7 +114,9 @@ class TableHeader implements RenderOnce implements Styled implements ChildElemen
 
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return headerStyle;
@@ -158,7 +157,7 @@ class TableHeader implements RenderOnce implements Styled implements ChildElemen
 }
 
 /** The body section of a `Table`, wrapping data rows. */
-class TableBody implements RenderOnce implements Styled implements ChildElement {
+class TableBody extends Component implements Styled implements ChildElement {
 
     var ix:Int = 0;
 
@@ -168,7 +167,9 @@ class TableBody implements RenderOnce implements Styled implements ChildElement 
 
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return bodyStyle;
@@ -204,7 +205,7 @@ class TableBody implements RenderOnce implements Styled implements ChildElement 
 }
 
 /** The footer section of a `Table`, wrapping footer rows. */
-class TableFooter implements RenderOnce implements Styled implements ChildElement {
+class TableFooter extends Component implements Styled implements ChildElement {
 
     var ix:Int = 0;
 
@@ -214,7 +215,9 @@ class TableFooter implements RenderOnce implements Styled implements ChildElemen
 
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return footerStyle;
@@ -256,7 +259,7 @@ class TableFooter implements RenderOnce implements Styled implements ChildElemen
 }
 
 /** A row in a `Table`. */
-class TableRow implements RenderOnce implements Styled implements ChildElement {
+class TableRow extends Component implements Styled implements ChildElement {
 
     var ix:Int = 0;
 
@@ -266,7 +269,9 @@ class TableRow implements RenderOnce implements Styled implements ChildElement {
 
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return rowStyle;
@@ -307,7 +312,7 @@ class TableRow implements RenderOnce implements Styled implements ChildElement {
 }
 
 /** A header cell in a `TableRow`. */
-class TableHead implements RenderOnce implements Styled implements ParentElement implements ChildElement {
+class TableHead extends Component implements Styled implements ParentElement implements ChildElement {
 
     var ix:Int = 0;
 
@@ -321,7 +326,9 @@ class TableHead implements RenderOnce implements Styled implements ParentElement
 
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return headStyle;
@@ -381,7 +388,7 @@ class TableHead implements RenderOnce implements Styled implements ParentElement
 }
 
 /** A data cell in a `TableRow`. */
-class TableCell implements RenderOnce implements Styled implements ParentElement implements ChildElement {
+class TableCell extends Component implements Styled implements ParentElement implements ChildElement {
 
     var ix:Int = 0;
 
@@ -395,7 +402,9 @@ class TableCell implements RenderOnce implements Styled implements ParentElement
 
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return cellStyle;
@@ -455,7 +464,7 @@ class TableCell implements RenderOnce implements Styled implements ParentElement
 }
 
 /** A caption displayed below the `Table`. */
-class TableCaption implements RenderOnce implements Styled implements ParentElement implements ChildElement {
+class TableCaption extends Component implements Styled implements ParentElement implements ChildElement {
 
     var ix:Int = 0;
 
@@ -465,7 +474,9 @@ class TableCaption implements RenderOnce implements Styled implements ParentElem
 
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return captionStyle;

@@ -8,6 +8,7 @@ import glaze.Background;
 import glaze.IntoBackground;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Hsla;
@@ -59,39 +60,36 @@ class AreaChart<T> extends Plot {
 
     final tooltipContentValue:TooltipContent<T> = new TooltipContent();
 
-    var tickMarginValue:Int = 1;
+    @prop var tickMargin:Int = 1;
 
-    var xAxisValue:Bool = true;
+    /** Show or hide the x-axis line and labels. Default is true. */
+    @prop var xAxis:Bool = true;
 
-    var gridValue:Bool = true;
+    @prop var grid:Bool = true;
 
     var yDomainValue:Null<Array<Float>> = null;
 
-    var pointCountValue:Null<Int> = null;
+    /** Lay the x axis out for `count` evenly spaced points instead of the data's own length. */
+    @prop var pointCount:Null<Int> = null;
 
     final axes:PointAxes = new PointAxes();
 
-    var idValue:ElementId;
+    @prop var id:ElementId;
 
-    var interactiveValue:Bool = true;
+    /** Turn this chart's interactive layer on or off. On by default. */
+    @prop var interactive:Bool = true;
 
     final appearValue:ChartAppear = new ChartAppear();
 
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
         this.data = glaze.util.Iterables.toArray(data);
-        idValue = Chart.callerId(pos);
+        id = Chart.callerId(pos);
     }
 
     /** Name this chart's `ElementId`, replacing the default taken from the construction site. */
     public function id(id:ElementIdArg):AreaChart<T> {
-        idValue = id;
-        return this;
-    }
-
-    /** Turn this chart's interactive layer on or off. On by default. */
-    public function interactive(interactive:Bool):AreaChart<T> {
-        interactiveValue = interactive;
+        this.id = id;
         return this;
     }
 
@@ -175,31 +173,9 @@ class AreaChart<T> extends Plot {
         return this;
     }
 
-    public function tickMargin(tickMargin:Int):AreaChart<T> {
-        tickMarginValue = tickMargin;
-        return this;
-    }
-
-    /** Show or hide the x-axis line and labels. Default is true. */
-    public function xAxis(xAxis:Bool):AreaChart<T> {
-        xAxisValue = xAxis;
-        return this;
-    }
-
-    public function grid(grid:Bool):AreaChart<T> {
-        gridValue = grid;
-        return this;
-    }
-
     /** Pin the y axis to `min..=max` instead of fitting every series from zero. */
     public function yDomain(min:Float, max:Float):AreaChart<T> {
         yDomainValue = [min, max];
-        return this;
-    }
-
-    /** Lay the x axis out for `count` evenly spaced points instead of the data's own length. */
-    public function pointCount(count:Int):AreaChart<T> {
-        pointCountValue = count;
         return this;
     }
 
@@ -258,7 +234,7 @@ class AreaChart<T> extends Plot {
     }
 
     function axisGap():Float {
-        return xAxisValue ? Chart.AXIS_GAP : 0.;
+        return xAxis ? Chart.AXIS_GAP : 0.;
     }
 
     /**
@@ -274,7 +250,7 @@ class AreaChart<T> extends Plot {
         final width = bounds.size.width;
         final height = f(bounds.size.height - axisGap());
         final len = data.length;
-        final x = new ScalePoint([for (v in data) xFn(v)], Chart.pointRange(axes.plotLeft(), f(width - axes.plotLeft()), len, Chart.axisPointCount(pointCountValue, len)));
+        final x = new ScalePoint([for (v in data) xFn(v)], Chart.pointRange(axes.plotLeft(), f(width - axes.plotLeft()), len, Chart.axisPointCount(pointCount, len)));
         final values = [for (v in data) for (yFn in yFns) yFn(v)];
         final y = Chart.pointValueScale(values, yDomainValue, height, axes.yPadding);
         return {x: x, y: y.scale, extent: y.extent};
@@ -303,9 +279,9 @@ class AreaChart<T> extends Plot {
         final left = axes.plotLeft();
         final axisBounds = new Bounds(new Point(f(bounds.origin.x + left), bounds.origin.y), new Size(f(bounds.size.width - left), bounds.size.height));
         var axis = new PlotAxis().stroke(theme.border);
-        if (xAxisValue) {
-            final pointCount = Chart.axisPointCount(pointCountValue, data.length);
-            final labeled = Chart.labeledItems(pointCount, axes.xTickCount, tickMarginValue);
+        if (xAxis) {
+            final pointCount = Chart.axisPointCount(this.pointCount, data.length);
+            final labeled = Chart.labeledItems(pointCount, axes.xTickCount, tickMargin);
             final labels = Chart.buildPointXLabels(data, xFn, scales.x, pointCount, labeled, theme.mutedForeground);
             for (label in labels) {
                 label.tick = f(label.tick - left);
@@ -314,7 +290,7 @@ class AreaChart<T> extends Plot {
         }
         axis.paint(axisBounds, window, cx);
 
-        if (gridValue) {
+        if (grid) {
             axes.paintGrid(bounds, height, window, cx);
         }
 
@@ -364,11 +340,11 @@ class AreaChart<T> extends Plot {
     }
 
     override public function plotId():Null<ElementId> {
-        return idValue;
+        return id;
     }
 
     override public function isInteractive():Bool {
-        return interactiveValue;
+        return interactive;
     }
 
     override public function updateAppear(appear:PlotAppear, window:Window, cx:App):Void {

@@ -4,10 +4,10 @@
 package glaze.kit.time;
 
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -31,7 +31,7 @@ using glaze.kit.base.StyledExt;
  * `CalendarEvent`, `CalendarState`, `CalendarDate` (Rust `Date`) and
  * `Matcher` are the Base ones (`glaze.kit.base.Calendar`).
  */
-class Calendar implements RenderOnce implements Styled implements Sizable {
+class Calendar extends Component implements Styled implements Sizable {
 
     final id:ElementId;
 
@@ -41,24 +41,15 @@ class Calendar implements RenderOnce implements Styled implements Sizable {
 
     final calendarStyle:StyleRefinement = new StyleRefinement();
 
-    var numberOfMonthsValue:Int = 1;
-
-    var firstDayOfWeekValue:Weekday = glaze.kit.base.chrono.Weekday.Sun;
-
-    public function new(state:Entity<CalendarState>) {
-        this.id = ElementId.NamedInteger('calendar', state.entityId());
-        this.state = state;
-    }
-
-    public function numberOfMonths(count:Int):Calendar {
-        numberOfMonthsValue = count;
-        return this;
-    }
+    @prop var numberOfMonths:Int = 1;
 
     /** Set the first day of the week for the calendar. */
-    public function firstDayOfWeek(day:Weekday):Calendar {
-        firstDayOfWeekValue = day;
-        return this;
+    @prop var firstDayOfWeek:Weekday = glaze.kit.base.chrono.Weekday.Sun;
+
+    public function new(state:Entity<CalendarState>) {
+        super();
+        this.id = ElementId.NamedInteger('calendar', state.entityId());
+        this.state = state;
     }
 
     public function withSize(size:IntoSize):Calendar {
@@ -99,11 +90,11 @@ class Calendar implements RenderOnce implements Styled implements Sizable {
 
     public function render(window:Window, cx:App):IntoElement {
         final size = this.size;
-        final monthCount = numberOfMonthsValue < 1 ? 1 : numberOfMonthsValue;
+        final monthCount = numberOfMonths < 1 ? 1 : numberOfMonths;
         final theme = Theme.global(cx);
         final calendar = glaze.kit.base.Calendar.component(id, state)
-            .numberOfMonths(numberOfMonthsValue)
-            .firstDayOfWeek(firstDayOfWeekValue)
+            .numberOfMonths(numberOfMonths)
+            .firstDayOfWeek(firstDayOfWeek)
             .label((kind, value) -> switch kind {
                 case CalendarItemKind.Previous: '‹';
                 case CalendarItemKind.Next: '›';

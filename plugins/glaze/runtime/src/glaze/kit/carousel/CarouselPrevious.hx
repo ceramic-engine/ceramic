@@ -5,10 +5,10 @@ package glaze.kit.carousel;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -19,7 +19,7 @@ import glaze.kit.Size.IntoSize;
 /**
  * A previous-slide control positioned around the Carousel viewport.
  */
-class CarouselPrevious implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class CarouselPrevious extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<CarouselState>;
 
@@ -28,21 +28,17 @@ class CarouselPrevious implements RenderOnce implements Styled implements Parent
 
     final controlStyle:StyleRefinement = new StyleRefinement();
 
+    /** Replaces the generated previous-slide accessibility label and tooltip. */
     @:allow(tests)
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
 
     /** Creates a previous-slide control bound to `state`. */
     public function new(state:Entity<CarouselState>) {
+        super();
         this.state = state;
-    }
-
-    /** Replaces the generated previous-slide accessibility label and tooltip. */
-    public function accessibilityLabel(label:String):CarouselPrevious {
-        accessibilityLabelValue = label;
-        return this;
     }
 
     public function withSize(size:IntoSize):CarouselPrevious {
@@ -73,7 +69,7 @@ class CarouselPrevious implements RenderOnce implements Styled implements Parent
     }
 
     public function render(_:Window, cx:App):IntoElement {
-        return Carousel.carouselControl(state, size, controlStyle, accessibilityLabelValue, childElements, false, cx);
+        return Carousel.carouselControl(state, size, controlStyle, accessibilityLabel, childElements, false, cx);
     }
 
 }

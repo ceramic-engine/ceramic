@@ -9,6 +9,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.DefiniteLength;
 import glaze.DefiniteLengthTools;
 import glaze.Edges;
@@ -17,7 +18,6 @@ import glaze.IntoDefiniteLength;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.SpringMath.f32;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -61,10 +61,10 @@ class SheetSettings {
  * Sheet component that slides in from the side of the window.
  *
  * Rust's `EventEmitter<DismissEvent>` declaration is kept as a comment: a
- * `Sheet` is a `RenderOnce`, not an entity, so it never emits.
+ * `Sheet` is a stateless component, not an entity, so it never emits.
  */
 @:allow(glaze.kit, tests)
-class Sheet implements RenderOnce implements Styled implements ParentElement {
+class Sheet extends Component implements Styled implements ParentElement {
 
     var focusHandle:FocusHandle;
 
@@ -74,7 +74,8 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
 
     var selectionScope:glaze.kit.base.TextSelectionScopeId = glaze.kit.base.TextSelectionScopeId.DEFAULT;
 
-    var resizableValue:Bool = true;
+    /** Sets whether the sheet is resizable, default is `true`. */
+    @prop var resizable:Bool = true;
 
     var onCloseHandler:(ClickEvent, Window, App) -> Void = (_, _, _) -> {};
 
@@ -86,9 +87,11 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
 
     final childElements:Array<AnyElement> = [];
 
-    var overlayValue:Bool = true;
+    /** Set whether the sheet should have an overlay, default is `true`. */
+    @prop var overlay:Bool = true;
 
-    var overlayClosableValue:Bool = true;
+    /** Set whether the sheet should be closable by clicking the overlay, default is `true`. */
+    @prop var overlayClosable:Bool = true;
 
     /** Rust `init` registers nothing. */
     public static function bindKeys(_:AppContext):Void {}
@@ -97,6 +100,7 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
      * Creates a new Sheet.
      */
     public function new(_:Window, cx:App) {
+        super();
         focusHandle = cx.focusHandle();
     }
 
@@ -139,24 +143,6 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    /** Sets whether the sheet is resizable, default is `true`. */
-    public function resizable(resizable:Bool):Sheet {
-        resizableValue = resizable;
-        return this;
-    }
-
-    /** Set whether the sheet should have an overlay, default is `true`. */
-    public function overlay(overlay:Bool):Sheet {
-        overlayValue = overlay;
-        return this;
-    }
-
-    /** Set whether the sheet should be closable by clicking the overlay, default is `true`. */
-    public function overlayClosable(overlayClosable:Bool):Sheet {
-        overlayClosableValue = overlayClosable;
-        return this;
-    }
-
     /** Listen to the close event of the sheet. */
     public function onClose(onClose:(ClickEvent, Window, App) -> Void):Sheet {
         onCloseHandler = onClose;
@@ -192,7 +178,7 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
             .occlude()
             .w(glaze.Prelude.px(sizeWidth))
             .h(glaze.Prelude.px(sizeHeight))
-            .bg(@:privateAccess Dialog.overlayColor(overlayValue, cx));
+            .bg(@:privateAccess Dialog.overlayColor(this.overlay, cx));
 
         final surface = vFlex()
             .id('sheet-content')
@@ -268,8 +254,8 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
             .w(glaze.Prelude.px(sizeWidth))
             .h(glaze.Prelude.px(sizeHeight))
             .focusHandle(focusHandle)
-            .overlayInteractive(overlayValue)
-            .overlayClosable(overlayValue && overlayClosableValue)
+            .overlayInteractive(this.overlay)
+            .overlayClosable(this.overlay && overlayClosable)
             .requestClose((window, cx) -> window.closeSheet(cx))
             .onClose((event, window, cx) -> onClose(event, window, cx))
             .overlay(overlay)

@@ -263,11 +263,11 @@ class ColorPickerTest extends TestCase {
     function testAnExplicitAccessibilityLabelReplacesTheVisibleOne() {
         final p = pickerState();
         final plain = ColorPicker.component(p.state).label('Color');
-        assertNull(plain.accessibilityLabelValue);
-        assertEquals('Color', plain.labelValue);
+        assertNull(plain.accessibilityLabelProp);
+        assertEquals('Color', plain.labelProp);
         final named = ColorPicker.component(p.state).label('Color').accessibilityLabel('Text color');
-        assertEquals('Text color', named.accessibilityLabelValue, 'an explicit name must win over the visible label');
-        assertEquals('Color', named.labelValue, 'and must not change what is drawn');
+        assertEquals('Text color', named.accessibilityLabelProp, 'an explicit name must win over the visible label');
+        assertEquals('Color', named.labelProp, 'and must not change what is drawn');
     }
 
     function testColorSelectBuilder() {
@@ -280,8 +280,8 @@ class ColorPickerTest extends TestCase {
         assertTrue(select.picker.field);
         assertTrue(select.picker.size.match(Large));
         assertEquals('Pick a color', select.picker.placeholderValue);
-        assertEquals('Theme color', select.picker.accessibilityLabelValue);
-        assertEquals(1, select.picker.featuredColorsValue.length);
+        assertEquals('Theme color', select.picker.accessibilityLabelProp);
+        assertEquals(1, select.picker.featuredColorsProp.length);
     }
 
     function testAClickAnywhereOnTheColorSelectOpensThePicker() {

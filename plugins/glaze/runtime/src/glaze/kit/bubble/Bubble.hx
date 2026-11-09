@@ -5,9 +5,9 @@ package glaze.kit.bubble;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -67,12 +67,13 @@ enum abstract BubbleReactionSide(Int) {
  * The visible surface is rendered by `BubbleContent`. Direct children are
  * added to that content slot as a convenience.
  */
-class Bubble implements RenderOnce implements Styled implements ParentElement {
+class Bubble extends Component implements Styled implements ParentElement {
 
     final bubbleStyle:StyleRefinement = new StyleRefinement();
 
+    /** Set the bubble alignment. */
     @:allow(tests)
-    var alignmentValue:Null<MessageAlignment> = null;
+    @prop var alignment:Null<MessageAlignment> = null;
 
     @:allow(tests)
     var variant:BubbleVariant = Filled;
@@ -80,16 +81,13 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
     @:allow(tests)
     var contentValue:BubbleContent = BubbleContent.component();
 
+    /** Set an optional reaction region anchored to the bubble edge. */
     @:allow(tests)
-    var reactionsValue:Null<BubbleReactions> = null;
+    @prop var reactions:Null<BubbleReactions> = null;
 
     /** Create a filled bubble that can inherit alignment from its parent. */
-    public function new() {}
-
-    /** Set the bubble alignment. */
-    public function alignment(alignment:MessageAlignment):Bubble {
-        alignmentValue = alignment;
-        return this;
+    public function new() {
+        super();
     }
 
     /** Set the visual treatment. */
@@ -119,12 +117,6 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    /** Set an optional reaction region anchored to the bubble edge. */
-    public function reactions(reactions:BubbleReactions):Bubble {
-        reactionsValue = reactions;
-        return this;
-    }
-
     public inline function style():StyleRefinement {
         return bubbleStyle;
     }
@@ -147,7 +139,7 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
         final variant = this.variant;
         final content = contentValue;
         content.variant = variant;
-        content.alignment = alignmentValue;
+        content.alignment = alignment;
 
         final element = div()
             .relative()
@@ -158,14 +150,14 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
             .gap1()
             .maxW(glaze.Prelude.relative(0.8));
         if (variant == Ghost) element.wFull().maxWFull();
-        if (alignmentValue != null) {
-            switch (alignmentValue : MessageAlignment) {
+        if (alignment != null) {
+            switch (alignment : MessageAlignment) {
                 case Start: element.selfStart().mrAuto();
                 case End: element.selfEnd().mlAuto();
             }
         }
         element.refineStyle(bubbleStyle).child(content);
-        if (reactionsValue != null) element.child(reactionsValue);
+        if (reactions != null) element.child(reactions);
         return element;
     }
 
@@ -177,7 +169,7 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
  * This part owns padding, radius, border, typography, and semantic colors so
  * callers can refine the surface without changing the bubble's row layout.
  */
-class BubbleContent implements RenderOnce implements Styled implements ParentElement {
+class BubbleContent extends Component implements Styled implements ParentElement {
 
     final contentStyle:StyleRefinement = new StyleRefinement();
 
@@ -191,7 +183,9 @@ class BubbleContent implements RenderOnce implements Styled implements ParentEle
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty bubble content surface. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return contentStyle;
@@ -283,7 +277,7 @@ class BubbleContent implements RenderOnce implements Styled implements ParentEle
 /**
  * A vertical stack of consecutive bubbles from one sender.
  */
-class BubbleGroup implements RenderOnce implements Styled implements ParentElement {
+class BubbleGroup extends Component implements Styled implements ParentElement {
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
@@ -291,7 +285,9 @@ class BubbleGroup implements RenderOnce implements Styled implements ParentEleme
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty bubble group. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return groupStyle;
@@ -336,32 +332,24 @@ enum BubbleReactionChild {
  * Compose existing `glaze.kit.button.Button` values inside this region
  * to preserve button semantics and keyboard behavior.
  */
-class BubbleReactions implements RenderOnce implements Styled implements ParentElement {
+class BubbleReactions extends Component implements Styled implements ParentElement {
 
     final reactionsStyle:StyleRefinement = new StyleRefinement();
 
+    /** Set the edge on which reactions are positioned. */
     @:allow(tests)
-    var sideValue:BubbleReactionSide = Bottom;
+    @prop var side:BubbleReactionSide = Bottom;
 
+    /** Set the reaction region alignment along the bubble edge. */
     @:allow(tests)
-    var alignmentValue:MessageAlignment = End;
+    @prop var alignment:MessageAlignment = End;
 
     @:allow(tests)
     final childElements:Array<BubbleReactionChild> = [];
 
     /** Create a trailing-aligned reaction region on the lower edge. */
-    public function new() {}
-
-    /** Set the edge on which reactions are positioned. */
-    public function side(side:BubbleReactionSide):BubbleReactions {
-        sideValue = side;
-        return this;
-    }
-
-    /** Set the reaction region alignment along the bubble edge. */
-    public function alignment(alignment:MessageAlignment):BubbleReactions {
-        alignmentValue = alignment;
-        return this;
+    public function new() {
+        super();
     }
 
     /**
@@ -429,10 +417,10 @@ class BubbleReactions implements RenderOnce implements Styled implements ParentE
         // Approximates shadcn's `translate-y-3/4`: GPUI cannot offset by a
         // fraction of the pill's own height, so this fixed value leaves
         // about three quarters of the default pill outside the bubble.
-        if (sideValue == Top) element.top(rems(-1.25));
-        if (sideValue == Bottom) element.bottom(rems(-1.25));
-        if (alignmentValue == Start) element.left3();
-        if (alignmentValue == End) element.right3();
+        if (side == Top) element.top(rems(-1.25));
+        if (side == Bottom) element.bottom(rems(-1.25));
+        if (alignment == Start) element.left3();
+        if (alignment == End) element.right3();
         element.refineStyle(reactionsStyle);
         element.extend(children);
         return element;

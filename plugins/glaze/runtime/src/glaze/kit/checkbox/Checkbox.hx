@@ -5,6 +5,7 @@ package glaze.kit.checkbox;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.kit.CheckedListener;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -12,7 +13,6 @@ import glaze.FocusHandle;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -43,7 +43,7 @@ using glaze.kit.ThemeStyled;
  * with the text module). The tooltip is a managed tooltip
  * (`glaze.kit.tooltip`).
  */
-class Checkbox implements RenderOnce implements Styled implements ParentElement implements Sizable implements Disableable implements Selectable implements FocusableExt {
+class Checkbox extends Component implements Styled implements ParentElement implements Sizable implements Disableable implements Selectable implements FocusableExt {
 
     final id:ElementId;
 
@@ -53,40 +53,66 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
     @:allow(tests)
     final checkboxStyle:StyleRefinement = new StyleRefinement();
 
+    /**
+     * Set the label for the checkbox.
+     */
     @:allow(tests)
-    var labelValue:Null<String> = null;
+    @prop var label:Null<String> = null;
 
+    /**
+     * Set the name a screen reader announces, overriding the visible label.
+     *
+     * This does not change the label drawn on screen. A checkbox without a
+     * `label` or text children has no accessible name, so set this whenever
+     * the checkbox is drawn without visible text.
+     */
     @:allow(tests)
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     final childElements:Array<AnyElement> = [];
 
+    /**
+     * Set the checked state for the checkbox.
+     */
     @:allow(tests)
-    var checkedValue:Bool = false;
+    @prop var checked:Bool = false;
 
     @:allow(tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     var sizeValue:Size = Medium;
 
-    var tabStopValue:Bool = true;
+    /**
+     * Set the tab stop for the checkbox, default is true.
+     */
+    @prop var tabStop:Bool = true;
 
-    var tabIndexValue:Int = 0;
+    /**
+     * Set the tab index for the checkbox, default is 0.
+     */
+    @prop var tabIndex:Int = 0;
 
     var onClickHandler:Null<(Bool, Window, App) -> Void> = null;
 
-    var tooltipText:Null<String> = null;
+    /**
+     * Set tooltip text for the checkbox.
+     */
+    @prop var tooltip:Null<String> = null;
 
-    var tooltipShowDelayValue:Null<Float> = null;
+    /**
+     * Overrides how long the pointer must rest before the tooltip shows, in seconds.
+     */
+    @prop var tooltipShowDelay:Null<Float> = null;
 
-    var roleValue:RoleOverride = Implicit;
+    @prop var role:RoleOverride = Implicit;
 
-    var focusRingEnabled:Bool = true;
+    @prop var focusRing:Bool = true;
 
     /**
      * Create a new Checkbox with the given id.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = glaze.kit.base.Checkbox.component(id);
     }
@@ -106,55 +132,6 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
 
     public function children(children:Array<IntoElement>):Checkbox {
         for (child in children) if (child != null) childElements.push(child);
-        return this;
-    }
-
-    public function role(role:RoleOverride):Checkbox {
-        roleValue = role;
-        return this;
-    }
-
-    /**
-     * Set tooltip text for the checkbox.
-     */
-    public function tooltip(tooltip:String):Checkbox {
-        tooltipText = tooltip;
-        return this;
-    }
-
-    /**
-     * Overrides how long the pointer must rest before the tooltip shows, in seconds.
-     */
-    public function tooltipShowDelay(delay:Float):Checkbox {
-        tooltipShowDelayValue = delay;
-        return this;
-    }
-
-    /**
-     * Set the label for the checkbox.
-     */
-    public function label(label:String):Checkbox {
-        labelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the name a screen reader announces, overriding the visible label.
-     *
-     * This does not change the label drawn on screen. A checkbox without a
-     * `label` or text children has no accessible name, so set this whenever
-     * the checkbox is drawn without visible text.
-     */
-    public function accessibilityLabel(label:String):Checkbox {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the checked state for the checkbox.
-     */
-    public function checked(checked:Bool):Checkbox {
-        checkedValue = checked;
         return this;
     }
 
@@ -179,54 +156,29 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
         return this;
     }
 
-    /**
-     * Set the tab stop for the checkbox, default is true.
-     */
-    public function tabStop(tabStop:Bool):Checkbox {
-        tabStopValue = tabStop;
-        return this;
-    }
-
-    /**
-     * Set the tab index for the checkbox, default is 0.
-     */
-    public function tabIndex(tabIndex:Int):Checkbox {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Checkbox {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
-    }
-
-    public function focusRing(enabled:Bool):Checkbox {
-        focusRingEnabled = enabled;
-        return this;
+        this.disabled = disabled;
     }
 
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     public function selected(selected:Bool):Checkbox {
-        return checked(selected);
+        this.checked = selected;
+        return this;
     }
 
     public function setSelected(selected:Bool):Void {
-        checkedValue = selected;
+        checked = selected;
     }
 
     public function isSelected():Bool {
-        return checkedValue;
+        return checked;
     }
 
     public function setOpen(open:Bool):Void {
@@ -273,8 +225,8 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
     public function render(window:Window, cx:App):IntoElement {
         final size = sizeValue;
         final theme = Theme.global(cx);
-        final checked = checkedValue;
-        final hasContent = labelValue != null || childElements.length > 0;
+        final checked = this.checked;
+        final hasContent = label != null || childElements.length > 0;
         final indicatorSize = switch size {
             case XSmall: 0.75;
             case Small: 0.875;
@@ -284,7 +236,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
 
         final base = this.base;
         final children = childElements;
-        final accessibilityLabel = accessibilityLabelValue != null ? accessibilityLabelValue : labelValue;
+        final accessibilityLabel = this.accessibilityLabel != null ? this.accessibilityLabel : label;
         final onClick = onClickHandler;
         final focusHandle:FocusHandle = window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
         final isFocused = focusHandle.isFocused(window);
@@ -295,12 +247,12 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
         final radius:Pixels = Math.min(theme.radius, 4.);
         final disabledTextColor = theme.mutedForeground;
         final instanceStyle = checkboxStyle.clone();
-        base.role(roleValue)
+        base.role(role)
             .checked(checked)
-            .disabled(disabledValue)
+            .disabled(disabled)
             .styles(styles -> styles.disabled(s -> s.textColor(disabledTextColor).refineStyle(instanceStyle)))
-            .tabStop(tabStopValue)
-            .tabIndex(tabIndexValue)
+            .tabStop(tabStop)
+            .tabIndex(tabIndex)
             .trackFocus(focusHandle);
         if (accessibilityLabel != null) base.accessibilityLabel(accessibilityLabel);
         if (onClick != null) {
@@ -315,14 +267,14 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
             case _: base.inputTextSize(size);
         }
         base.rounded(theme.radius * 0.5);
-        if (isFocused && focusRingEnabled) {
+        if (isFocused && focusRing) {
             base.focusRingStyle(window, cx);
         }
         base.refineStyle(checkboxStyle);
 
         final indicator = CheckboxIndicator.component()
             .checked(checked)
-            .disabled(disabledValue)
+            .disabled(disabled)
             .relative()
             .size(rems(indicatorSize));
         // Center on the first 1.25em line, including when the label wraps.
@@ -330,20 +282,20 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
         indicator.flexShrink0().border1().rounded(radius);
         if (!checked) {
             indicator.bg(theme.inputBackground());
-            if (!disabledValue) indicator.borderColor(uncheckedBorder);
+            if (!disabled) indicator.borderColor(uncheckedBorder);
         }
         indicator.styles(styles -> styles
             .checked(s -> s.borderColor(checkedColor).bg(theme.tokens.primary.background))
             .disabled(s -> s.borderColor(disabledIndicatorColor).when(checked, s -> s.bg(disabledIndicatorColor))))
-            .child(checkboxCheckIcon(id, size, checked, disabledValue, window, cx));
+            .child(checkboxCheckIcon(id, size, checked, disabled, window, cx));
         base.child(indicator);
 
-        if (labelValue != null || children.length > 0) {
+        if (label != null || children.length > 0) {
             final column = vFlex().flex1().overflowHidden().lineHeight(glaze.Prelude.relative(1.25)).gap1();
-            if (labelValue != null) {
+            if (label != null) {
                 final labelDiv = div().sizeFull().textColor(theme.foreground);
-                if (disabledValue) labelDiv.textColor(theme.mutedForeground);
-                column.child(labelDiv.child(labelValue));
+                if (disabled) labelDiv.textColor(theme.mutedForeground);
+                column.child(labelDiv.child(label));
             }
             for (child in children) column.child(child);
             base.child(column);
@@ -351,7 +303,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
         // Preserve the legacy Checkbox behavior: pointer presses do not move
         // focus, including while disabled.
         base.onMouseDown(Left, (_, window, _) -> window.preventDefault());
-        return ComponentTooltip.of(tooltipText, tooltipShowDelayValue).apply(base, base.base);
+        return ComponentTooltip.of(tooltip, tooltipShowDelay).apply(base, base.base);
     }
 
 }

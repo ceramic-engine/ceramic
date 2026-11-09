@@ -397,17 +397,17 @@ class ComponentLeavesTest extends TestCase {
             .separatorStyle(new StyleRefinement())
             .content(MarkerContent.component().child('Today'));
         assertTrue(marker.variant == Separator);
-        assertTrue(marker.loadingValue);
+        assertTrue(marker.loadingProp);
         assertTrue(marker.loadingStyle == Shimmer);
         assertEquals(1, marker.markerChildren.length);
         assertTrue(Marker.component().variant == Plain);
-        assertNull(Marker.component().alignmentValue);
-        assertFalse(Marker.component().loadingValue);
+        assertNull(Marker.component().alignmentProp);
+        assertFalse(Marker.component().loadingProp);
         assertTrue(Marker.component().loadingStyle == Spinner);
-        assertTrue(Marker.component().alignment(Center).alignmentValue == Center);
+        assertTrue(Marker.component().alignment(Center).alignmentProp == Center);
 
         final contentFirst = Marker.component().content(MarkerContent.component().text('Thinking')).withLoadingStyle(Shimmer).loading(true);
-        assertTrue(contentFirst.loadingValue);
+        assertTrue(contentFirst.loadingProp);
         assertTrue(contentFirst.markerChildren[0].match(MContent(_)));
 
         final customIcon = Marker.component().loading(true).icon(MarkerIcon.component().child('custom')).content(MarkerContent.component().text('Loading'));
@@ -415,9 +415,9 @@ class ComponentLeavesTest extends TestCase {
         assertTrue(customIcon.markerChildren[0].match(MIcon(_)));
 
         assertTrue(Marker.component().roleValue.match(Implicit));
-        assertNull(Marker.component().idValue);
+        assertNull(Marker.component().idProp);
         final status = Marker.component().id('sync-status').role(Explicit(glaze.kit.base.A11y.Role.Status));
-        assertTrue(Type.enumEq(glaze.ElementId.Name('sync-status'), status.idValue));
+        assertTrue(Type.enumEq(glaze.ElementId.Name('sync-status'), status.idProp));
         assertTrue(status.roleValue.match(Explicit(Status)));
 
         final styled = Marker.component().opacity(0.37).child('Status').child('Details');

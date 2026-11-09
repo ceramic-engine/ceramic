@@ -8,12 +8,12 @@ import glaze.App;
 import glaze.kit.CheckedListener;
 import glaze.kit.ValueListener;
 import glaze.Axis;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.FocusHandle;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -39,7 +39,7 @@ using glaze.kit.ThemeStyled;
  * or use `RadioGroup`. The label is a plain string (Rust `Text::String`).
  * The tooltip is a managed tooltip (`glaze.kit.tooltip`).
  */
-class Radio implements RenderOnce implements Styled implements ParentElement implements Sizable implements FocusableExt {
+class Radio extends Component implements Styled implements ParentElement implements Sizable implements FocusableExt {
 
     /** The Base radio the component renders (interactive listeners go to `base.base`). */
     public final base:glaze.kit.base.Radio;
@@ -49,31 +49,54 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
     @:allow(glaze.kit, tests)
     var id:ElementId;
 
+    /**
+     * Set the label of the Radio element.
+     */
     @:allow(glaze.kit, tests)
-    var labelValue:Null<String> = null;
+    @prop var label:Null<String> = null;
 
-    /** The announced name, when the visible label is not it. */
+    /**
+     * Set the name a screen reader announces, when the visible label is not it.
+     */
     @:allow(glaze.kit, tests)
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     final childElements:Array<AnyElement> = [];
 
-    var checkedValue:Bool = false;
+    /**
+     * Set the checked state of the Radio element, default is `false`.
+     */
+    @prop var checked:Bool = false;
 
+    /**
+     * Set the disabled state of the Radio element, default is `false`.
+     */
     @:allow(glaze.kit, tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    var tabStopValue:Bool = true;
+    /**
+     * Set the tab stop for the Radio element, default is `true`.
+     */
+    @prop var tabStop:Bool = true;
 
-    var tabIndexValue:Int = 0;
+    /**
+     * Set the tab index for the Radio element, default is `0`.
+     */
+    @prop var tabIndex:Int = 0;
 
     var sizeValue:Size = Medium;
 
     var onClickHandler:Null<(Bool, Window, App) -> Void> = null;
 
-    var tooltipText:Null<String> = null;
+    /**
+     * Set tooltip text for the radio.
+     */
+    @prop var tooltip:Null<String> = null;
 
-    var tooltipShowDelayValue:Null<Float> = null;
+    /**
+     * Overrides how long the pointer must rest before the tooltip shows, in seconds.
+     */
+    @prop var tooltipShowDelay:Null<Float> = null;
 
     @:allow(glaze.kit, tests)
     var positionInSet:Null<Int> = null;
@@ -81,12 +104,13 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
     @:allow(glaze.kit, tests)
     var sizeOfSet:Null<Int> = null;
 
-    var focusRingEnabled:Bool = true;
+    @prop var focusRing:Bool = true;
 
     /**
      * Create a new Radio element with the given id.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = glaze.kit.base.Radio.component(id);
     }
@@ -117,70 +141,6 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
     }
 
     /**
-     * Set tooltip text for the radio.
-     */
-    public function tooltip(tooltip:String):Radio {
-        tooltipText = tooltip;
-        return this;
-    }
-
-    /**
-     * Overrides how long the pointer must rest before the tooltip shows, in seconds.
-     */
-    public function tooltipShowDelay(delay:Float):Radio {
-        tooltipShowDelayValue = delay;
-        return this;
-    }
-
-    /**
-     * Set the label of the Radio element.
-     */
-    public function label(label:String):Radio {
-        labelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the name a screen reader announces, when the visible label is not it.
-     */
-    public function accessibilityLabel(label:String):Radio {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the checked state of the Radio element, default is `false`.
-     */
-    public function checked(checked:Bool):Radio {
-        checkedValue = checked;
-        return this;
-    }
-
-    /**
-     * Set the disabled state of the Radio element, default is `false`.
-     */
-    public function disabled(disabled:Bool):Radio {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Set the tab index for the Radio element, default is `0`.
-     */
-    public function tabIndex(tabIndex:Int):Radio {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    /**
-     * Set the tab stop for the Radio element, default is `true`.
-     */
-    public function tabStop(tabStop:Bool):Radio {
-        tabStopValue = tabStop;
-        return this;
-    }
-
-    /**
      * Alias for `onChange`. The last callback registered with either name wins.
      */
     public function onClick(handler:CheckedListener):Radio {
@@ -204,24 +164,19 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
         return this;
     }
 
-    public function focusRing(enabled:Bool):Radio {
-        focusRingEnabled = enabled;
-        return this;
-    }
-
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final size = sizeValue;
         final theme = Theme.global(cx);
-        final checked = checkedValue;
-        final hasContent = labelValue != null || childElements.length > 0;
+        final checked = this.checked;
+        final hasContent = label != null || childElements.length > 0;
         final indicatorSize = switch size {
             case XSmall: 0.75;
             case Small: 0.875;
@@ -230,8 +185,8 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
         }
         final focusHandle:FocusHandle = window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
         final isFocused = focusHandle.isFocused(window);
-        final disabled = disabledValue;
-        final accessibilityLabel = accessibilityLabelValue != null ? accessibilityLabelValue : labelValue;
+        final disabled = this.disabled;
+        final accessibilityLabel = this.accessibilityLabel != null ? this.accessibilityLabel : label;
 
         var borderColor = checked ? theme.primary : theme.input;
         var bg = checked ? theme.primary : theme.input.opacity(0.5);
@@ -240,11 +195,11 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
             bg = bg.opacity(0.5);
         }
 
-        final element = base.id(id).checked(checkedValue).disabled(disabledValue).trackFocus(focusHandle).tabStop(tabStopValue).tabIndex(tabIndexValue);
+        final element = base.id(id).checked(this.checked).disabled(this.disabled).trackFocus(focusHandle).tabStop(tabStop).tabIndex(tabIndex);
         if (accessibilityLabel != null) element.accessibilityLabel(accessibilityLabel);
         if (positionInSet != null && sizeOfSet != null) element.setPosition(positionInSet, sizeOfSet);
         element.hFlex().gapX2().textColor(theme.foreground).itemsStart().lineHeight(glaze.Prelude.relative(1.)).rounded(theme.radius * 0.5);
-        if (isFocused && focusRingEnabled) element.focusRingStyle(window, cx);
+        if (isFocused && focusRing) element.focusRingStyle(window, cx);
         switch size {
             case Size(_):
             case _: element.inputTextSize(size);
@@ -255,7 +210,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
         // Center on the first 1.25em line, including when the label wraps.
         if (hasContent) indicator.mt(rems(indicatorSize * 0.125));
         indicator.flexShrink0().roundedFullStyle(cx).border1().borderColor(borderColor);
-        if (!checkedValue) {
+        if (!this.checked) {
             indicator.bg(theme.inputBackground());
         } else if (disabled) {
             indicator.bg(bg);
@@ -265,12 +220,12 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
         indicator.child(@:privateAccess Checkbox.checkboxCheckIcon(id, size, checked, disabled, window, cx));
         element.child(indicator);
 
-        if (childElements.length > 0 || labelValue != null) {
+        if (childElements.length > 0 || label != null) {
             final column = vFlex().wFull().lineHeight(glaze.Prelude.relative(1.25)).gap1();
-            if (labelValue != null) {
+            if (label != null) {
                 final labelDiv = div().sizeFull();
-                if (disabledValue) labelDiv.textColor(theme.mutedForeground);
-                column.child(labelDiv.child(labelValue));
+                if (this.disabled) labelDiv.textColor(theme.mutedForeground);
+                column.child(labelDiv.child(label));
             }
             for (child in childElements) column.child(child);
             element.child(column);
@@ -283,7 +238,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
                 onClick(next, window, cx);
             });
         }
-        return ComponentTooltip.of(tooltipText, tooltipShowDelayValue).apply(element, element.base);
+        return ComponentTooltip.of(tooltip, tooltipShowDelay).apply(element, element.base);
     }
 
 }
@@ -291,7 +246,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
 /**
  * A Radio group element.
  */
-class RadioGroup implements RenderOnce implements Styled {
+class RadioGroup extends Component implements Styled {
 
     final id:ElementId;
 
@@ -300,11 +255,20 @@ class RadioGroup implements RenderOnce implements Styled {
     @:allow(glaze.kit, tests)
     final radios:Array<Radio> = [];
 
-    var layoutValue:Axis = Axis.Vertical;
+    /**
+     * Set the layout of the Radio group. Default is `Axis.Vertical`.
+     */
+    @prop var layout:Axis = Axis.Vertical;
 
-    var selectedIndexValue:Null<Int> = null;
+    /**
+     * Set the selected index.
+     */
+    @prop var selectedIndex:Null<Int> = null;
 
-    var disabledValue:Bool = false;
+    /**
+     * Set the disabled state.
+     */
+    @prop var disabled:Bool = false;
 
     var onClickHandler:Null<(Int, Window, App) -> Void> = null;
 
@@ -312,6 +276,7 @@ class RadioGroup implements RenderOnce implements Styled {
      * Creates a radio group with vertical layout and no selected item.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         new glaze.StyleBuilder(groupStyle).flex1();
     }
@@ -335,14 +300,6 @@ class RadioGroup implements RenderOnce implements Styled {
     }
 
     /**
-     * Set the layout of the Radio group. Default is `Axis.Vertical`.
-     */
-    public function layout(layout:Axis):RadioGroup {
-        layoutValue = layout;
-        return this;
-    }
-
-    /**
      * Alias for `onChange`. The last callback registered with either name wins.
      */
     public function onClick(handler:ValueListener<Int>):RadioGroup {
@@ -358,22 +315,6 @@ class RadioGroup implements RenderOnce implements Styled {
      */
     public function onChange(handler:ValueListener<Int>):RadioGroup {
         onClickHandler = handler;
-        return this;
-    }
-
-    /**
-     * Set the selected index.
-     */
-    public function selectedIndex(index:Null<Int>):RadioGroup {
-        selectedIndexValue = index;
-        return this;
-    }
-
-    /**
-     * Set the disabled state.
-     */
-    public function disabled(disabled:Bool):RadioGroup {
-        disabledValue = disabled;
         return this;
     }
 
@@ -395,10 +336,10 @@ class RadioGroup implements RenderOnce implements Styled {
 
     public function render(window:Window, cx:App):IntoElement {
         final onClick = onClickHandler;
-        final disabled = disabledValue;
-        final selectedIx = selectedIndexValue;
+        final disabled = this.disabled;
+        final selectedIx = selectedIndex;
 
-        final base = layoutValue == Axis.Vertical ? vFlex() : hFlex().wFull().flexWrap();
+        final base = layout == Axis.Vertical ? vFlex() : hFlex().wFull().flexWrap();
 
         final total = radios.length;
         base.gap3();
@@ -409,14 +350,14 @@ class RadioGroup implements RenderOnce implements Styled {
             radio.id = Integer(ix);
             radio.positionInSet = ix + 1;
             radio.sizeOfSet = total;
-            final itemDisabled = radio.disabledValue;
+            final itemDisabled = radio.disabledProp;
             radio.disabled(disabled || itemDisabled).checked(checked);
             if (onClick != null) {
                 radio.onClick((_, window, cx) -> onClick(ix, window, cx));
             }
             base.child(radio);
         }
-        return glaze.kit.base.RadioGroup.component(id).axis(layoutValue).refineStyle(groupStyle).child(base);
+        return glaze.kit.base.RadioGroup.component(id).axis(layout).refineStyle(groupStyle).child(base);
     }
 
 }

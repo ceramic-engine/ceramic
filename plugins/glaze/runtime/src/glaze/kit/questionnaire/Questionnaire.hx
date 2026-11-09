@@ -5,6 +5,7 @@ package glaze.kit.questionnaire;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.Empty;
 import glaze.Entity;
@@ -14,7 +15,6 @@ import glaze.Keystroke;
 import glaze.OperatingSystem;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -366,7 +366,7 @@ class QuestionnaireStyles {
  * The composable questionnaire root. It owns layout and keyboard routing while
  * `QuestionnaireState` remains the single source of behavioral state.
  */
-class Questionnaire implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class Questionnaire extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -380,6 +380,7 @@ class Questionnaire implements RenderOnce implements Styled implements ParentEle
     public final a11y:A11y = new A11y(Role.Form);
 
     public function new(state:Entity<QuestionnaireState>) {
+        super();
         this.state = state;
     }
 
@@ -436,7 +437,7 @@ class Questionnaire implements RenderOnce implements Styled implements ParentEle
 /**
  * Textual progress, following the ReUI `base-nova` questionnaire skin.
  */
-class QuestionnaireProgress implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireProgress extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -450,6 +451,7 @@ class QuestionnaireProgress implements RenderOnce implements Styled implements P
     public final a11y:A11y = new A11y(Role.ProgressIndicator);
 
     public function new(state:Entity<QuestionnaireState>) {
+        super();
         this.state = state;
     }
 
@@ -503,7 +505,7 @@ class QuestionnaireProgress implements RenderOnce implements Styled implements P
 /**
  * The question of an item (its accessibility label unless children replace it).
  */
-class QuestionnaireTitle implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireTitle extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -516,6 +518,7 @@ class QuestionnaireTitle implements RenderOnce implements Styled implements Pare
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<QuestionnaireState>, item:String) {
+        super();
         this.state = state;
         this.item = item;
     }
@@ -553,7 +556,7 @@ class QuestionnaireTitle implements RenderOnce implements Styled implements Pare
  * The description of an item (its definition's description unless children
  * replace it).
  */
-class QuestionnaireDescription implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireDescription extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -566,6 +569,7 @@ class QuestionnaireDescription implements RenderOnce implements Styled implement
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<QuestionnaireState>, item:String) {
+        super();
         this.state = state;
         this.item = item;
     }
@@ -638,7 +642,7 @@ class QuestionnaireItemPart {
  * The active question group. Inactive or disabled items do not enter layout,
  * focus traversal, or the accessibility tree.
  */
-class QuestionnaireItem implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireItem extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -654,6 +658,7 @@ class QuestionnaireItem implements RenderOnce implements Styled implements Paren
     public final a11y:A11y = new A11y(Role.Group);
 
     public function new(state:Entity<QuestionnaireState>, item:String) {
+        super();
         this.state = state;
         this.item = item;
     }
@@ -717,7 +722,7 @@ class QuestionnaireItem implements RenderOnce implements Styled implements Paren
 /**
  * Container for an item's answer controls.
  */
-class QuestionnaireChoices implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireChoices extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -733,6 +738,7 @@ class QuestionnaireChoices implements RenderOnce implements Styled implements Pa
     public final a11y:A11y = new A11y(Role.Group);
 
     public function new(state:Entity<QuestionnaireState>, item:String) {
+        super();
         this.state = state;
         this.item = item;
     }
@@ -799,7 +805,7 @@ class QuestionnaireChoices implements RenderOnce implements Styled implements Pa
 /**
  * A selectable choice card, following the ReUI `base-nova` questionnaire skin.
  */
-class QuestionnaireChoice implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireChoice extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -809,21 +815,22 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
 
     final partStyle:StyleRefinement = new StyleRefinement();
 
-    var indicatorStyleValue:StyleRefinement = new StyleRefinement();
+    @prop var indicatorStyle:StyleRefinement = new StyleRefinement();
 
-    var contentStyleValue:StyleRefinement = new StyleRefinement();
+    @prop var contentStyle:StyleRefinement = new StyleRefinement();
 
-    var shortcutStyleValue:StyleRefinement = new StyleRefinement();
+    @prop var shortcutStyle:StyleRefinement = new StyleRefinement();
 
     var sizeValue:Null<Size> = null;
 
     final childElements:Array<AnyElement> = [];
 
-    var indicatorRenderer:Null<ChoiceRenderer> = null;
+    @prop var renderIndicator:Null<ChoiceRenderer> = null;
 
-    var shortcutRenderer:Null<ChoiceRenderer> = null;
+    @prop var renderShortcut:Null<ChoiceRenderer> = null;
 
     public function new(state:Entity<QuestionnaireState>, item:String, value:String) {
+        super();
         this.state = state;
         this.item = item;
         this.value = value;
@@ -849,31 +856,6 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
 
     public function children(children:Array<IntoElement>):QuestionnaireChoice {
         for (child in children) if (child != null) childElements.push(child);
-        return this;
-    }
-
-    public function indicatorStyle(style:StyleRefinement):QuestionnaireChoice {
-        indicatorStyleValue = style;
-        return this;
-    }
-
-    public function contentStyle(style:StyleRefinement):QuestionnaireChoice {
-        contentStyleValue = style;
-        return this;
-    }
-
-    public function shortcutStyle(style:StyleRefinement):QuestionnaireChoice {
-        shortcutStyleValue = style;
-        return this;
-    }
-
-    public function renderIndicator(renderer:ChoiceRenderer):QuestionnaireChoice {
-        indicatorRenderer = renderer;
-        return this;
-    }
-
-    public function renderShortcut(renderer:ChoiceRenderer):QuestionnaireChoice {
-        shortcutRenderer = renderer;
         return this;
     }
 
@@ -983,7 +965,7 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
                 .bg(selected ? colors.primary : indicatorBackground);
             if (multiple) element.rounded(radius.sm);
             if (!multiple) element.rounded(radius.full);
-            element.refineStyle(indicatorStyleValue);
+            element.refineStyle(indicatorStyle);
             if (selected && multiple) {
                 element.child(svg()
                     .size(metrics.indicatorCheckSize)
@@ -1004,14 +986,14 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
         final indicator = any(div()
             .flexShrink0()
             .mt(indicatorOffset)
-            .child(indicatorRenderer != null ? any(indicatorRenderer(choiceState, window, cx)) : defaultIndicator()));
+            .child(renderIndicator != null ? any(renderIndicator(choiceState, window, cx)) : defaultIndicator()));
 
         final content = div()
             .flex()
             .flex1()
             .flexCol()
             .gap(metrics.contentGap)
-            .refineStyle(contentStyleValue);
+            .refineStyle(contentStyle);
         if (!hasChildren) {
             content.child(QuestionnaireStyles.textStyle(div().textColor(colors.foreground).child(label), size, cx));
             if (description != null) {
@@ -1048,12 +1030,12 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
                 .textSize(metrics.shortcutTextSize)
                 .fontWeight(FontWeight.MEDIUM)
                 .rounded(metrics.shortcutRadius)
-                .refineStyle(shortcutStyleValue));
+                .refineStyle(shortcutStyle));
         };
         final shortcutElement = any(div()
             .flexShrink0()
             .mt(shortcutOffset)
-            .child(shortcutRenderer != null ? any(shortcutRenderer(choiceState, window, cx)) : defaultShortcut()));
+            .child(renderShortcut != null ? any(renderShortcut(choiceState, window, cx)) : defaultShortcut()));
 
         final id = QuestionnaireStyles.elementId(this.state, 'choice-' + item + '-' + value);
         final instanceStyle = partStyle;
@@ -1077,7 +1059,7 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
 /**
  * Secondary text for custom choice compositions.
  */
-class QuestionnaireChoiceDescription implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireChoiceDescription extends Component implements Styled implements ParentElement implements Sizable {
 
     final partStyle:StyleRefinement = new StyleRefinement();
 
@@ -1085,7 +1067,9 @@ class QuestionnaireChoiceDescription implements RenderOnce implements Styled imp
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return partStyle;
@@ -1122,7 +1106,7 @@ class QuestionnaireChoiceDescription implements RenderOnce implements Styled imp
 /**
  * The optional freeform answer input for an item.
  */
-class QuestionnaireInput implements RenderOnce implements Styled implements Sizable {
+class QuestionnaireInput extends Component implements Styled implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -1133,6 +1117,7 @@ class QuestionnaireInput implements RenderOnce implements Styled implements Siza
     var sizeValue:Null<Size> = null;
 
     public function new(state:Entity<QuestionnaireState>, item:String) {
+        super();
         this.state = state;
         this.item = item;
     }
@@ -1188,7 +1173,7 @@ class QuestionnaireInput implements RenderOnce implements Styled implements Siza
 /**
  * Validation error for an item. It only enters the tree while invalid.
  */
-class QuestionnaireError implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireError extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -1204,6 +1189,7 @@ class QuestionnaireError implements RenderOnce implements Styled implements Pare
     public final a11y:A11y = new A11y(Role.Alert);
 
     public function new(state:Entity<QuestionnaireState>, item:String) {
+        super();
         this.state = state;
         this.item = item;
     }
@@ -1260,7 +1246,7 @@ class QuestionnaireError implements RenderOnce implements Styled implements Pare
 /**
  * Layout part for questionnaire navigation actions.
  */
-class QuestionnaireActions implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireActions extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -1271,6 +1257,7 @@ class QuestionnaireActions implements RenderOnce implements Styled implements Pa
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<QuestionnaireState>) {
+        super();
         this.state = state;
     }
 
@@ -1381,7 +1368,7 @@ class QuestionnaireActionPart {
 
 }
 
-class QuestionnairePrevious implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnairePrevious extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -1392,6 +1379,7 @@ class QuestionnairePrevious implements RenderOnce implements Styled implements P
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<QuestionnaireState>) {
+        super();
         this.state = state;
     }
 
@@ -1424,7 +1412,7 @@ class QuestionnairePrevious implements RenderOnce implements Styled implements P
 
 }
 
-class QuestionnaireSkip implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireSkip extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -1435,6 +1423,7 @@ class QuestionnaireSkip implements RenderOnce implements Styled implements Paren
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<QuestionnaireState>) {
+        super();
         this.state = state;
     }
 
@@ -1467,7 +1456,7 @@ class QuestionnaireSkip implements RenderOnce implements Styled implements Paren
 
 }
 
-class QuestionnaireNext implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireNext extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -1478,6 +1467,7 @@ class QuestionnaireNext implements RenderOnce implements Styled implements Paren
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<QuestionnaireState>) {
+        super();
         this.state = state;
     }
 
@@ -1510,7 +1500,7 @@ class QuestionnaireNext implements RenderOnce implements Styled implements Paren
 
 }
 
-class QuestionnaireSubmit implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class QuestionnaireSubmit extends Component implements Styled implements ParentElement implements Sizable {
 
     final state:Entity<QuestionnaireState>;
 
@@ -1521,6 +1511,7 @@ class QuestionnaireSubmit implements RenderOnce implements Styled implements Par
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<QuestionnaireState>) {
+        super();
         this.state = state;
     }
 

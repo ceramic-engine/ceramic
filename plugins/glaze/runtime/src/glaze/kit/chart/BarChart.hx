@@ -7,6 +7,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Background;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Corners;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -89,49 +90,51 @@ class BarChart<T> extends Plot {
 
     var fillGradientFn:Null<(T, Float, Float, (Float) -> Float) -> Array<LinearColorStop>> = null;
 
-    var tickMarginValue:Int = 1;
+    @prop var tickMargin:Int = 1;
 
     var labelFn:Null<(T) -> String> = null;
 
     var labelColorFn:Null<(T) -> Hsla> = null;
 
-    var labelAxisValue:Bool = true;
+    @prop var labelAxis:Bool = true;
 
-    var valueAxisValue:Bool = false;
+    @prop var valueAxis:Bool = false;
 
-    var valueAxisLabelPlacementValue:AxisLabelPlacement = Outside;
+    @prop var valueAxisLabelPlacement:AxisLabelPlacement = Outside;
 
     var valueTickCountValue:Int = 5;
 
-    var valueTickFormatFn:Null<(Float) -> String> = null;
+    @prop var valueTickFormat:Null<(Float) -> String> = null;
 
-    var bandCountValue:Null<Int> = null;
+    @prop var bandCount:Null<Int> = null;
 
-    var bandTickCountValue:Null<Int> = null;
+    @prop var bandTickCount:Null<Int> = null;
 
-    var gridValue:Bool = true;
+    @prop var grid:Bool = true;
 
-    var gridDashedValue:Bool = true;
+    @prop var gridDashed:Bool = true;
 
-    var alignmentValue:BarAlignment = Bottom;
+    @prop var alignment:BarAlignment = Bottom;
 
-    var cornerRadiiValue:Corners = Corners.all(0.);
+    @prop var cornerRadii:Corners = Corners.all(0.);
 
-    var paddingInnerValue:Float = 0.4;
+    @prop var paddingInner:Float = 0.4;
 
-    var paddingOuterValue:Float = 0.2;
+    @prop var paddingOuter:Float = 0.2;
 
-    var maxBandWidthValue:Float = Chart.MAX_BAND_WIDTH;
+    @prop var maxBandWidth:Float = Chart.MAX_BAND_WIDTH;
 
-    var minLengthValue:Float = 0.;
+    @prop var minLength:Float = 0.;
 
-    var idValue:ElementId;
+    @prop var id:ElementId;
 
-    var interactiveValue:Bool = true;
+    /** Turn this chart's interactive layer on or off. On by default. */
+    @prop var interactive:Bool = true;
 
     final appearValue:ChartAppear = new ChartAppear();
 
-    var nameValue:Null<String> = null;
+    /** Set the series name shown in the hover tooltip row. */
+    @prop var name:Null<String> = null;
 
     final tooltipContentValue:TooltipContent<T> = new TooltipContent();
 
@@ -149,18 +152,12 @@ class BarChart<T> extends Plot {
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
         this.data = glaze.util.Iterables.toArray(data);
-        idValue = Chart.callerId(pos);
+        id = Chart.callerId(pos);
     }
 
     /** Name this chart's `ElementId`, replacing the default taken from the construction site. */
     public function id(id:ElementIdArg):BarChart<T> {
-        idValue = id;
-        return this;
-    }
-
-    /** Turn this chart's interactive layer on or off. On by default. */
-    public function interactive(interactive:Bool):BarChart<T> {
-        interactiveValue = interactive;
+        this.id = id;
         return this;
     }
 
@@ -173,12 +170,6 @@ class BarChart<T> extends Plot {
     /** Draw the data in again whenever `key` changes. */
     public function appearKey(key:String):BarChart<T> {
         appearValue.setKey(key);
-        return this;
-    }
-
-    /** Set the series name shown in the hover tooltip row. */
-    public function name(name:String):BarChart<T> {
-        nameValue = name;
         return this;
     }
 
@@ -238,11 +229,6 @@ class BarChart<T> extends Plot {
         return this;
     }
 
-    public function tickMargin(tickMargin:Int):BarChart<T> {
-        tickMarginValue = tickMargin;
-        return this;
-    }
-
     public function label(label:(T) -> String):BarChart<T> {
         labelFn = label;
         return this;
@@ -253,78 +239,13 @@ class BarChart<T> extends Plot {
         return this;
     }
 
-    public function labelAxis(labelAxis:Bool):BarChart<T> {
-        labelAxisValue = labelAxis;
-        return this;
-    }
-
-    public function valueAxis(valueAxis:Bool):BarChart<T> {
-        valueAxisValue = valueAxis;
-        return this;
-    }
-
     public function valueTickCount(count:Int):BarChart<T> {
         valueTickCountValue = count > 2 ? count : 2;
         return this;
     }
 
-    public function valueAxisLabelPlacement(placement:AxisLabelPlacement):BarChart<T> {
-        valueAxisLabelPlacementValue = placement;
-        return this;
-    }
-
-    public function valueTickFormat(format:(Float) -> String):BarChart<T> {
-        valueTickFormatFn = format;
-        return this;
-    }
-
-    public function bandCount(count:Int):BarChart<T> {
-        bandCountValue = count;
-        return this;
-    }
-
-    public function bandTickCount(count:Int):BarChart<T> {
-        bandTickCountValue = count;
-        return this;
-    }
-
-    public function grid(grid:Bool):BarChart<T> {
-        gridValue = grid;
-        return this;
-    }
-
-    public function gridDashed(dashed:Bool):BarChart<T> {
-        gridDashedValue = dashed;
-        return this;
-    }
-
-    public function alignment(alignment:BarAlignment):BarChart<T> {
-        alignmentValue = alignment;
-        return this;
-    }
-
-    public function cornerRadii(cornerRadii:Corners):BarChart<T> {
-        cornerRadiiValue = cornerRadii;
-        return this;
-    }
-
-    public function paddingInner(padding:Float):BarChart<T> {
-        paddingInnerValue = padding;
-        return this;
-    }
-
-    public function paddingOuter(padding:Float):BarChart<T> {
-        paddingOuterValue = padding;
-        return this;
-    }
-
     public function maxBandWidth(width:Pixels):BarChart<T> {
-        maxBandWidthValue = width;
-        return this;
-    }
-
-    public function minLength(length:Float):BarChart<T> {
-        minLengthValue = length;
+        this.maxBandWidth = width;
         return this;
     }
 
@@ -334,20 +255,20 @@ class BarChart<T> extends Plot {
             return null;
         }
         final bandFn = this.bandFn;
-        final bandExtent = alignmentValue.isHorizontal() ? bounds.size.height : bounds.size.width;
+        final bandExtent = alignment.isHorizontal() ? bounds.size.height : bounds.size.width;
         // Value-axis labels eat into the band extent at one end;
         // `bandOffset` shifts the bands away from that end when it is the
         // leading one.
         final extent = Math.max(f(bandExtent - valueAxisGap()), 0.);
         return new ScaleBand([for (v in data) bandFn(v)], [0., extent])
-            .bandCount(bandCountValue != null ? bandCountValue : 0)
-            .maxBandWidth(maxBandWidthValue)
-            .paddingInner(paddingInnerValue)
-            .paddingOuter(paddingOuterValue);
+            .bandCount(bandCount != null ? bandCount : 0)
+            .maxBandWidth(maxBandWidth)
+            .paddingInner(paddingInner)
+            .paddingOuter(paddingOuter);
     }
 
     function bandOffset():Float {
-        return alignmentValue.isHorizontal() ? 0. : valueAxisGap();
+        return alignment.isHorizontal() ? 0. : valueAxisGap();
     }
 
     function valueScale(bounds:Bounds):Null<{scale:ScaleLinear, baseline:Float, far:Float}> {
@@ -355,18 +276,18 @@ class BarChart<T> extends Plot {
             return null;
         }
         final valueFn = this.valueFn;
-        final valueDim = alignmentValue.isHorizontal() ? bounds.size.width : bounds.size.height;
-        final axisGap = labelAxisValue ? Chart.AXIS_GAP : 0.;
+        final valueDim = alignment.isHorizontal() ? bounds.size.width : bounds.size.height;
+        final axisGap = labelAxis ? Chart.AXIS_GAP : 0.;
         // Vertical bars keep a line of text clear past the tallest bar when
         // they carry value labels, so the label above it stays inside the
         // chart.
         final farGap = labelFn != null ? PlotLabel.TEXT_HEIGHT : 10.;
-        final bandGap = alignmentValue.isHorizontal() ? horizontalGaps[0] : axisGap;
-        final valueEndGap = alignmentValue.isHorizontal() ? horizontalGaps[1] : farGap;
+        final bandGap = alignment.isHorizontal() ? horizontalGaps[0] : axisGap;
+        final valueEndGap = alignment.isHorizontal() ? horizontalGaps[1] : farGap;
         // The baseline, and the far edge opposite it.
         var baseline:Float;
         var far:Float;
-        switch alignmentValue {
+        switch alignment {
             case Bottom:
                 baseline = f(valueDim - axisGap);
                 far = farGap;
@@ -401,14 +322,14 @@ class BarChart<T> extends Plot {
             return null;
         }
         final cross = f(tick + bandOffset());
-        final end = barEnd(value.scale, valueFn(d), zero, alignmentValue, minLengthValue);
+        final end = barEnd(value.scale, valueFn(d), zero, alignment, minLength);
         if (end == null) {
             return null;
         }
         final lo = Math.min(end, zero);
         final length = Math.abs(f(end - zero));
         final bandWidth = bandScale.bandWidth();
-        return alignmentValue.isHorizontal()
+        return alignment.isHorizontal()
             ? new Bounds(new Point(lo, cross), new Size(length, bandWidth))
             : new Bounds(new Point(cross, lo), new Size(bandWidth, length));
     }
@@ -446,7 +367,7 @@ class BarChart<T> extends Plot {
             return fallback;
         }
         final chartBounds = new Bounds(new Point(0, 0), new Size(bounds.size.width, bounds.size.height));
-        final solid = fillFn(d, frame, chartBounds, alignmentValue).asSolid();
+        final solid = fillFn(d, frame, chartBounds, alignment).asSolid();
         return solid != null ? solid : fallback;
     }
 
@@ -456,17 +377,17 @@ class BarChart<T> extends Plot {
      */
     @:allow(tests)
     function valueAxisGap():Float {
-        if (!valueAxisValue || valueAxisLabelPlacementValue != Outside) {
+        if (!valueAxis || valueAxisLabelPlacement != Outside) {
             return 0.;
         }
         // Below the plot for horizontal bars, where the gap is a line of text tall.
-        return alignmentValue.isHorizontal() ? Chart.VALUE_AXIS_GAP : valueLabelGap;
+        return alignment.isHorizontal() ? Chart.VALUE_AXIS_GAP : valueLabelGap;
     }
 
     /** The bands the band axis is laid out for: the data's, or the band count when larger. */
     @:allow(tests)
     function bandSlots():Int {
-        final count:Int = bandCountValue != null ? bandCountValue : 0;
+        final count:Int = bandCount != null ? bandCount : 0;
         return count > data.length ? count : data.length;
     }
 
@@ -491,7 +412,7 @@ class BarChart<T> extends Plot {
         return [
             for (i in 0...valueTickCountValue) {
                 final value = f(hi - f(f(f(hi - lo) * i) / steps));
-                valueTickFormatFn != null ? valueTickFormatFn(value) : Chart.formatTick(value);
+                valueTickFormat != null ? valueTickFormat(value) : Chart.formatTick(value);
             }
         ];
     }
@@ -506,7 +427,7 @@ class BarChart<T> extends Plot {
         }
         final fontSize = PlotLabel.TEXT_SIZE;
         var bandGap = 0.;
-        if (labelAxisValue) {
+        if (labelAxis) {
             var widest = 0.;
             for (v in data) {
                 widest = Math.max(widest, PlotLabel.measureTextWidth(bandFn(v), fontSize, window));
@@ -529,16 +450,16 @@ class BarChart<T> extends Plot {
      * the hover is confined to so the axis labels never show a tooltip.
      */
     function valueExtent(bounds:Bounds):Array<Float> {
-        if (alignmentValue.isHorizontal()) {
+        if (alignment.isHorizontal()) {
             final bandGap = horizontalGaps[0];
             final valueEndGap = horizontalGaps[1];
             final length = Math.max(f(f(bounds.size.width - bandGap) - valueEndGap), 0.);
-            final start = alignmentValue == Left ? bandGap : valueEndGap;
+            final start = alignment == Left ? bandGap : valueEndGap;
             return [start, length];
         }
-        final axisGap = labelAxisValue ? Chart.AXIS_GAP : 0.;
+        final axisGap = labelAxis ? Chart.AXIS_GAP : 0.;
         final length = f(bounds.size.height - axisGap);
-        final start = alignmentValue == Top ? axisGap : 0.;
+        final start = alignment == Top ? axisGap : 0.;
         return [start, length];
     }
 
@@ -547,7 +468,7 @@ class BarChart<T> extends Plot {
         final extent = valueExtent(bounds);
         final start = extent[0];
         final end = f(start + extent[1]);
-        if (alignmentValue.isHorizontal()) {
+        if (alignment.isHorizontal()) {
             final valueLabelsTop = f(bounds.size.height - Chart.VALUE_AXIS_GAP);
             return position.x >= start && position.x <= end && !(valueAxisGap() > 0. && position.y > valueLabelsTop);
         }
@@ -555,8 +476,8 @@ class BarChart<T> extends Plot {
     }
 
     override public function prepaint(bounds:Bounds, window:Window, cx:App):Array<AnyElement> {
-        horizontalGaps = alignmentValue.isHorizontal() ? measureHorizontalGaps(window) : [0., 0.];
-        if (valueAxisValue && !alignmentValue.isHorizontal()) {
+        horizontalGaps = alignment.isHorizontal() ? measureHorizontalGaps(window) : [0., 0.];
+        if (valueAxis && !alignment.isHorizontal()) {
             valueLabelGap = Chart.valueAxisGap(valueTickLabels(), window);
         }
         return [];
@@ -572,7 +493,7 @@ class BarChart<T> extends Plot {
 
         final totalWidth = bounds.size.width;
         final totalHeight = bounds.size.height;
-        final alignment = alignmentValue;
+        final alignment = this.alignment;
         final isHorizontal = alignment.isHorizontal();
 
         // Band scale spans the full extent perpendicular to the value axis,
@@ -608,7 +529,7 @@ class BarChart<T> extends Plot {
 
         // Draw band axis (with categorical labels).
         var axis = new PlotAxis().stroke(theme.border);
-        if (labelAxisValue) {
+        if (labelAxis) {
             switch alignment {
                 case Bottom | Top:
                     axis = axis.x(zeroPixel);
@@ -616,7 +537,7 @@ class BarChart<T> extends Plot {
                     // Labels are placed one at a time rather than through
                     // `xLabel`, because a chart with negative values needs
                     // them on either side of the zero line.
-                    final labeled = Chart.labeledItems(bandSlots(), bandTickCountValue, tickMarginValue);
+                    final labeled = Chart.labeledItems(bandSlots(), bandTickCount, tickMargin);
                     final labels:Array<Text> = [];
                     for (i in 0...data.length) {
                         if (!labeled[i]) continue;
@@ -631,7 +552,7 @@ class BarChart<T> extends Plot {
                     }
                     new PlotLabel(labels).paint(bounds, window, cx);
                 case Left | Right:
-                    final labels = Chart.buildBandLabels(data, bandFn, bandScale, bandWidth, Chart.labeledItems(bandSlots(), bandTickCountValue, tickMarginValue), theme.mutedForeground);
+                    final labels = Chart.buildBandLabels(data, bandFn, bandScale, bandWidth, Chart.labeledItems(bandSlots(), bandTickCount, tickMargin), theme.mutedForeground);
                     final side:AxisLabelSide = alignment == Left ? Start : End;
                     final align:TextAlign = alignment == Left ? Right : Left;
                     axis = axis.y(zeroPixel).yLabelSide(side).yLabel([for (t in labels) t.withAlign(align)]);
@@ -643,9 +564,9 @@ class BarChart<T> extends Plot {
         final steps = valueTicks.length - 1;
 
         // Draw grid, excluding the line at the baseline.
-        if (gridValue) {
+        if (this.grid) {
             var grid = new Grid().stroke(theme.chartGrid);
-            if (gridDashedValue) {
+            if (gridDashed) {
                 grid = grid.dashArray([4., 2.]);
             }
             final lines = valueTicks.slice(0, steps);
@@ -655,12 +576,12 @@ class BarChart<T> extends Plot {
 
         // Labels inside the plot are painted after the bars, so no bar covers them.
         var insideLabels:Null<PlotLabel> = null;
-        if (valueAxisValue) {
+        if (this.valueAxis) {
             // Ticks run from `far` (the domain maximum) to `baseline` (the
             // minimum), so the labels walk the domain in the same direction.
             final color = theme.mutedForeground;
             final texts = valueTickLabels();
-            switch valueAxisLabelPlacementValue {
+            switch valueAxisLabelPlacement {
                 // The labels go in the gap `bandScale` kept clear for them.
                 case Outside:
                     final labels = [for (i in 0...texts.length) new AxisText(texts[i], valueTicks[i], color)];
@@ -692,7 +613,7 @@ class BarChart<T> extends Plot {
         final fillGradient = fillGradientFn;
         final labelColor = theme.foreground;
         final labelColorFn = this.labelColorFn;
-        final minLength = minLengthValue;
+        final minLength = this.minLength;
 
         // Chart bounds in pixel space, with origin (0, 0) and the full chart
         // extent, passed to `fill` functions.
@@ -729,7 +650,7 @@ class BarChart<T> extends Plot {
                 final end = barEnd(valueScale, valueFn(d), zeroPixel, alignment, minLength);
                 end != null ? f(zeroPixel + f(f(end - zeroPixel) * appear)) : null;
             })
-            .cornerRadii(cornerRadiiValue);
+            .cornerRadii(cornerRadii);
 
         if (fillGradient != null) {
             bar = bar.fill((d, frame, alignment) -> {
@@ -767,11 +688,11 @@ class BarChart<T> extends Plot {
     }
 
     override public function plotId():Null<ElementId> {
-        return idValue;
+        return id;
     }
 
     override public function isInteractive():Bool {
-        return interactiveValue;
+        return interactive;
     }
 
     override public function updateAppear(appear:PlotAppear, window:Window, cx:App):Void {
@@ -793,7 +714,7 @@ class BarChart<T> extends Plot {
             return null;
         }
 
-        final isHorizontal = alignmentValue.isHorizontal();
+        final isHorizontal = alignment.isHorizontal();
         final bandScale = bandScale(bounds);
         if (bandScale == null) {
             return null;
@@ -828,7 +749,7 @@ class BarChart<T> extends Plot {
         // The band slides to the hovered bar; on the first hovered frame it
         // adopts the bar instead of travelling from where the last hover
         // ended.
-        final target = alignmentValue.isHorizontal() ? hover.state().crossLine.y : hover.state().crossLine.x;
+        final target = alignment.isHorizontal() ? hover.state().crossLine.y : hover.state().crossLine.x;
         final center = hover.glide(TransitionId.named('bar-chart', 'band'), target, window, cx);
         this.hover = new BarHover(center, hover.progress());
     }
@@ -843,7 +764,7 @@ class BarChart<T> extends Plot {
             return null;
         }
         final d = data[state.index];
-        final name = nameValue != null ? nameValue : '';
+        final name = this.name != null ? this.name : '';
 
         // Highlight the hovered bar with a translucent band the width of the
         // bar, confined to the plot area and centered where the band has
@@ -855,9 +776,9 @@ class BarChart<T> extends Plot {
         final bandWidth = bandScale.bandWidth();
         final center = hover == null
             ? state.crossLine
-            : (alignmentValue.isHorizontal() ? new Point(state.crossLine.x, hover.center) : new Point(hover.center, state.crossLine.y));
+            : (alignment.isHorizontal() ? new Point(state.crossLine.x, hover.center) : new Point(hover.center, state.crossLine.y));
         final extent = valueExtent(bounds);
-        final crossLine = alignmentValue.isHorizontal()
+        final crossLine = alignment.isHorizontal()
             ? CrossLine.component(center).horizontal().hSpan(extent[0], extent[1]).band(bandWidth)
             : CrossLine.component(center).span(extent[0], extent[1]).band(bandWidth);
 

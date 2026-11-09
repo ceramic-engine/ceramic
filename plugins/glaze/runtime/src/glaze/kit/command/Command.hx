@@ -5,11 +5,11 @@ package glaze.kit.command;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.DefiniteLength;
 import glaze.Entity;
 import glaze.IntoDefiniteLength;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -63,23 +63,34 @@ class CommandOptions {
  *     .placeholder('Type a command or search...');
  * ```
  */
-class Command implements RenderOnce implements Styled {
+class Command extends Component implements Styled {
 
     final state:Entity<CommandState>;
 
     final entries:Array<CommandEntry> = [];
 
-    var searchableValue:Bool = true;
+    /**
+     * Show or hide the query field and local filtering.
+     */
+    @prop var searchable:Bool = true;
 
-    var filterableValue:Bool = true;
+    /**
+     * Keep the query field but toggle the local filtering, default: `true`.
+     *
+     * Turn it off when an external source already answers the query, such as
+     * an async search: every supplied item stays visible, the query still
+     * reports through `onQuery`, and a query change hands the highlight back
+     * to the first item instead of a local textual match.
+     */
+    @prop var filterable:Bool = true;
 
-    var onQueryHandler:Null<OnQuery> = null;
+    @prop var onQuery:Null<OnQuery> = null;
 
-    var onSelectHandler:Null<OnIndex> = null;
+    @prop var onSelect:Null<OnIndex> = null;
 
-    var onConfirmHandler:Null<OnIndex> = null;
+    @prop var onConfirm:Null<OnIndex> = null;
 
-    var onCancelHandler:Null<OnCancel> = null;
+    @prop var onCancel:Null<OnCancel> = null;
 
     final options:CommandOptions = new CommandOptions();
 
@@ -87,6 +98,7 @@ class Command implements RenderOnce implements Styled {
      * Render the palette held by `state`.
      */
     public function new(state:Entity<CommandState>) {
+        super();
         this.state = state;
     }
 
@@ -123,32 +135,11 @@ class Command implements RenderOnce implements Styled {
     }
 
     /**
-     * Show or hide the query field and local filtering.
-     */
-    public function searchable(searchable:Bool):Command {
-        searchableValue = searchable;
-        return this;
-    }
-
-    /**
-     * Keep the query field but toggle the local filtering, default: `true`.
-     *
-     * Turn it off when an external source already answers the query, such as
-     * an async search: every supplied item stays visible, the query still
-     * reports through `onQuery`, and a query change hands the highlight back
-     * to the first item instead of a local textual match.
-     */
-    public function filterable(filterable:Bool):Command {
-        filterableValue = filterable;
-        return this;
-    }
-
-    /**
      * Run a callback after a searchable query actually changes and the
      * current `CommandState` update releases its lease.
      */
     public function onQuery(callback:(String, Window, App) -> Void):Command {
-        onQueryHandler = callback;
+        this.onQuery = callback;
         return this;
     }
 
@@ -162,7 +153,7 @@ class Command implements RenderOnce implements Styled {
      * filtering never changes these coordinates.
      */
     public function onSelect(callback:(IndexPath, Window, App) -> Void):Command {
-        onSelectHandler = callback;
+        this.onSelect = callback;
         return this;
     }
 
@@ -173,7 +164,7 @@ class Command implements RenderOnce implements Styled {
      * The path follows the same input-model coordinates as `onSelect`.
      */
     public function onConfirm(callback:(IndexPath, Window, App) -> Void):Command {
-        onConfirmHandler = callback;
+        this.onConfirm = callback;
         return this;
     }
 
@@ -183,7 +174,7 @@ class Command implements RenderOnce implements Styled {
      * callback instead of being closed by the callback itself.
      */
     public function onCancel(callback:(Window, App) -> Void):Command {
-        onCancelHandler = callback;
+        this.onCancel = callback;
         return this;
     }
 
@@ -255,12 +246,12 @@ class Command implements RenderOnce implements Styled {
         final options = this.options;
         final model = new CommandModel();
         model.entries = entries;
-        model.searchable = searchableValue;
-        model.filterable = filterableValue;
-        model.onQuery = onQueryHandler;
-        model.onSelect = onSelectHandler;
-        model.onConfirm = onConfirmHandler;
-        model.onCancel = onCancelHandler;
+        model.searchable = searchable;
+        model.filterable = filterable;
+        model.onQuery = onQuery;
+        model.onSelect = onSelect;
+        model.onConfirm = onConfirm;
+        model.onCancel = onCancel;
         // Installing the model reads and writes the state's observable
         // fields; the view rendering this element must not track them, or
         // every install would schedule it again (the state renders itself).

@@ -9,6 +9,7 @@ import glaze.App;
 import glaze.Axis;
 import glaze.Bounds;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Hsla;
@@ -23,7 +24,6 @@ import glaze.Path;
 import glaze.PathBuilder;
 import glaze.Pixels;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.ScrollHandle;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
@@ -221,7 +221,7 @@ private class CardMetrics {
 /**
  * A file or image attachment composed from media, content, and actions slots.
  */
-class Attachment implements RenderOnce implements Styled implements Sizable {
+class Attachment extends Component implements Styled implements Sizable {
 
     /** How far the remove control rides outside the card's upper trailing corner. */
     static inline final REMOVE_OVERHANG:Pixels = 6.;
@@ -254,27 +254,32 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
     static inline final CARD_BORDER:Float = 1.;
 
     @:allow(tests)
-    var idValue:Null<ElementId> = null;
+    @prop var id:Null<ElementId> = null;
 
     final attachmentStyle:StyleRefinement = new StyleRefinement();
 
+    /** Set the attachment lifecycle status. */
     @:allow(tests)
-    var statusValue:AttachmentStatus = Complete;
+    @prop var status:AttachmentStatus = Complete;
 
     @:allow(tests)
     var size:Size = Medium;
 
+    /** Set the attachment layout axis. */
     @:allow(tests)
-    var axisValue:Axis = Horizontal;
+    @prop var axis:Axis = Horizontal;
 
+    /** Set the media slot. */
     @:allow(tests)
-    var mediaValue:Null<AttachmentMedia> = null;
+    @prop var media:Null<AttachmentMedia> = null;
 
+    /** Set the metadata content slot. */
     @:allow(tests)
-    var contentValue:Null<AttachmentContent> = null;
+    @prop var content:Null<AttachmentContent> = null;
 
+    /** Set the actions slot. */
     @:allow(tests)
-    var actionsValue:Null<AttachmentActions> = null;
+    @prop var actions:Null<AttachmentActions> = null;
 
     @:allow(tests)
     var onClickValue:Null<ControlHandler> = null;
@@ -288,18 +293,24 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
     @:allow(tests)
     var progressValue:Null<Float> = null;
 
+    /**
+     * Show a tooltip while the card is hovered, e.g. the reason an upload
+     * failed. It takes effect only together with `id`.
+     */
     @:allow(tests)
-    var tooltipValue:Null<String> = null;
+    @prop var tooltip:Null<String> = null;
 
     /** Create an attachment in the `AttachmentStatus.Complete` state. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Set a stable identity for the built-in controls: the whole-card click
      * layer, the remove control, and the retry control.
      */
     public function id(id:ElementIdArg):Attachment {
-        idValue = id;
+        this.id = id;
         return this;
     }
 
@@ -346,45 +357,6 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
      */
     public function progress(percent:Float):Attachment {
         progressValue = percent < 0. ? 0. : (percent > 100. ? 100. : percent);
-        return this;
-    }
-
-    /**
-     * Show a tooltip while the card is hovered, e.g. the reason an upload
-     * failed. It takes effect only together with `id`.
-     */
-    public function tooltip(text:String):Attachment {
-        tooltipValue = text;
-        return this;
-    }
-
-    /** Set the attachment lifecycle status. */
-    public function status(status:AttachmentStatus):Attachment {
-        statusValue = status;
-        return this;
-    }
-
-    /** Set the attachment layout axis. */
-    public function axis(axis:Axis):Attachment {
-        axisValue = axis;
-        return this;
-    }
-
-    /** Set the media slot. */
-    public function media(media:AttachmentMedia):Attachment {
-        mediaValue = media;
-        return this;
-    }
-
-    /** Set the metadata content slot. */
-    public function content(content:AttachmentContent):Attachment {
-        contentValue = content;
-        return this;
-    }
-
-    /** Set the actions slot. */
-    public function actions(actions:AttachmentActions):Attachment {
-        actionsValue = actions;
         return this;
     }
 
@@ -437,49 +409,49 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
      * with an identity to key its state on.
      */
     function retryControl():Null<AttachmentControl> {
-        if (!statusValue.isFailed()) {
+        if (!status.isFailed()) {
             return null;
         }
-        if (idValue == null || onRetryValue == null) {
+        if (id == null || onRetryValue == null) {
             return null;
         }
-        return new AttachmentControl(idValue, onRetryValue);
+        return new AttachmentControl(id, onRetryValue);
     }
 
     @:allow(tests)
     function layoutSlots():Void {
         final layout = new SlotLayout(
             size,
-            statusValue,
-            axisValue,
+            status,
+            axis,
             // A vertical card without content is an image tile: the media
             // fills the card flush with its border.
-            axisValue == Vertical && contentValue == null,
+            axis == Vertical && content == null,
             retryControl(),
             // Progress is only meaningful while uploading; processing is
             // indeterminate.
-            statusValue.isUploading() ? progressValue : null,
-            idValue
+            status.isUploading() ? progressValue : null,
+            id
         );
 
-        if (mediaValue != null) mediaValue = mediaValue.layout(layout);
-        if (contentValue != null) contentValue = contentValue.layout(layout);
-        if (actionsValue != null) actionsValue = actionsValue.layoutForAxis(layout.axis);
+        if (media != null) media = media.layout(layout);
+        if (content != null) content = content.layout(layout);
+        if (actions != null) actions = actions.layoutForAxis(layout.axis);
     }
 
     public function render(_:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final tokens = theme.semanticTokens();
         final size = this.size;
-        final axis = axisValue;
-        final status = statusValue;
-        final hasMedia = mediaValue != null;
-        final hasContent = contentValue != null;
-        final clickable = idValue != null && onClickValue != null;
-        final remove:Null<AttachmentControl> = idValue != null && onRemoveValue != null ? new AttachmentControl(idValue, onRemoveValue) : null;
+        final axis = this.axis;
+        final status = this.status;
+        final hasMedia = media != null;
+        final hasContent = content != null;
+        final clickable = id != null && onClickValue != null;
+        final remove:Null<AttachmentControl> = id != null && onRemoveValue != null ? new AttachmentControl(id, onRemoveValue) : null;
         onRemoveValue = null;
-        final tooltipText:Null<String> = idValue != null ? tooltipValue : null;
-        tooltipValue = null;
+        final tooltipText:Null<String> = id != null ? tooltip : null;
+        tooltip = null;
         final progressBar:Null<Float> = status.isUploading() && axis == Horizontal ? progressValue : null;
         final metrics = cardMetrics(size);
         final radius = cardRadius(size, cx);
@@ -529,29 +501,29 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
                     .gap(metrics.gap)
                     .p(metrics.cardPadding);
         }
-        if (mediaValue != null) card.child(mediaValue);
-        if (contentValue != null) card.child(contentValue);
+        if (media != null) card.child(media);
+        if (content != null) card.child(content);
         // A thin bar along the bottom edge tracks the upload, hugging the
         // card's rounded corners.
         if (progressBar != null) card.child(uploadBar(progressBar, radius, tokens.colors.primary));
-        if (idValue != null && onClickValue != null) {
+        if (id != null && onClickValue != null) {
             final onClick = onClickValue;
             // The click layer is painted before the actions slot, so the
             // actions' hitboxes stay on top and their buttons keep working.
             card.child(
                 div()
-                    .id(idValue)
+                    .id(id)
                     .absolute()
                     .inset0()
                     .onClick((event, window, cx) -> onClick(event, window, cx))
             );
         }
-        if (actionsValue != null) card.child(actionsValue);
+        if (actions != null) card.child(actions);
         card.refineStyle(attachmentStyle);
         if (tooltipText != null) {
             final text = tooltipText;
             card
-                .id(ElementId.NamedChild(idValue, 'card'))
+                .id(ElementId.NamedChild(id, 'card'))
                 .tooltip((window, cx) -> new Tooltip(text).build(window, cx));
         }
 
@@ -729,7 +701,7 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
  * Add an icon or another element as a child for an icon-style preview. Use
  * `src` when the attachment has an image preview.
  */
-class AttachmentMedia implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class AttachmentMedia extends Component implements Styled implements ParentElement implements Sizable {
 
     final mediaStyle:StyleRefinement = new StyleRefinement();
 
@@ -767,7 +739,9 @@ class AttachmentMedia implements RenderOnce implements Styled implements ParentE
     final overlays:Array<AnyElement> = [];
 
     /** Create an empty media slot. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /** Set an image preview source. */
     public function src(source:IntoImageSource):AttachmentMedia {
@@ -979,7 +953,7 @@ enum AttachmentContentChild {
 /**
  * The metadata slot for an attachment.
  */
-class AttachmentContent implements RenderOnce implements Styled implements ParentElement {
+class AttachmentContent extends Component implements Styled implements ParentElement {
 
     final contentStyle:StyleRefinement = new StyleRefinement();
 
@@ -999,7 +973,9 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
     final childElements:Array<AttachmentContentChild> = [];
 
     /** Create an empty metadata slot. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /** Add a status-aware single-line title. */
     public function title(title:AttachmentTitle):AttachmentContent {
@@ -1023,12 +999,12 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
         for (child in childElements) {
             switch child {
                 case Title(title):
-                    if (title.statusValue == null) {
-                        title.statusValue = layout.status;
+                    if (title.statusProp == null) {
+                        title.statusProp = layout.status;
                     }
                 case Description(description):
-                    if (description.statusValue == null) {
-                        description.statusValue = layout.status;
+                    if (description.statusProp == null) {
+                        description.statusProp = layout.status;
                     }
                     if (description.size == null) {
                         description.size = layout.size;
@@ -1118,28 +1094,24 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
 /**
  * A single-line attachment title.
  */
-class AttachmentTitle implements RenderOnce implements Styled {
+class AttachmentTitle extends Component implements Styled {
 
     final titleStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(tests)
     final text:String;
 
+    /** Override the attachment lifecycle status used for the loading shimmer. */
     @:allow(glaze.kit.attachment, tests)
-    var statusValue:Null<AttachmentStatus> = null;
+    @prop var status:Null<AttachmentStatus> = null;
 
     @:allow(tests)
     var shimmerStyle:Null<ShimmerStyle> = null;
 
     /** Create an attachment title. */
     public function new(text:String) {
+        super();
         this.text = text;
-    }
-
-    /** Override the attachment lifecycle status used for the loading shimmer. */
-    public function status(status:AttachmentStatus):AttachmentTitle {
-        statusValue = status;
-        return this;
     }
 
     /** Customize the shimmer used while this attachment is uploading or processing. */
@@ -1153,7 +1125,7 @@ class AttachmentTitle implements RenderOnce implements Styled {
     }
 
     public function render(_:Window, _:App):IntoElement {
-        final loading = statusValue != null && (statusValue : AttachmentStatus).isInProgress();
+        final loading = status != null && (status : AttachmentStatus).isInProgress();
 
         final element = div()
             .maxWFull()
@@ -1176,15 +1148,16 @@ class AttachmentTitle implements RenderOnce implements Styled {
 /**
  * A single-line attachment description or status message.
  */
-class AttachmentDescription implements RenderOnce implements Styled {
+class AttachmentDescription extends Component implements Styled {
 
     final descriptionStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(glaze.kit.attachment, tests)
     var text:String;
 
+    /** Set the status used for the semantic description color. */
     @:allow(glaze.kit.attachment, tests)
-    var statusValue:Null<AttachmentStatus> = null;
+    @prop var status:Null<AttachmentStatus> = null;
 
     /** The card size whose type scale the description follows. */
     @:allow(glaze.kit.attachment, tests)
@@ -1192,13 +1165,8 @@ class AttachmentDescription implements RenderOnce implements Styled {
 
     /** Create an attachment description. */
     public function new(text:String) {
+        super();
         this.text = text;
-    }
-
-    /** Set the status used for the semantic description color. */
-    public function status(status:AttachmentStatus):AttachmentDescription {
-        statusValue = status;
-        return this;
     }
 
     public inline function style():StyleRefinement {
@@ -1207,7 +1175,7 @@ class AttachmentDescription implements RenderOnce implements Styled {
 
     public function render(_:Window, cx:App):IntoElement {
         final tokens = Theme.global(cx).semanticTokens();
-        final color = statusValue != null && (statusValue : AttachmentStatus).isFailed() ? tokens.colors.destructive : tokens.colors.mutedForeground;
+        final color = status != null && (status : AttachmentStatus).isFailed() ? tokens.colors.destructive : tokens.colors.mutedForeground;
 
         return div()
             .maxWFull()
@@ -1229,7 +1197,7 @@ class AttachmentDescription implements RenderOnce implements Styled {
  * children. A separate attachment-specific action wrapper is intentionally
  * unnecessary.
  */
-class AttachmentActions implements RenderOnce implements Styled implements ParentElement {
+class AttachmentActions extends Component implements Styled implements ParentElement {
 
     final actionsStyle:StyleRefinement = new StyleRefinement();
 
@@ -1240,7 +1208,9 @@ class AttachmentActions implements RenderOnce implements Styled implements Paren
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty actions slot. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     @:allow(glaze.kit.attachment, tests)
     function layoutForAxis(axis:Axis):AttachmentActions {
@@ -1309,7 +1279,7 @@ private class AttachmentGroupScroll {
 /**
  * A horizontally scrollable row of attachments.
  */
-class AttachmentGroup implements RenderOnce implements Styled implements ParentElement {
+class AttachmentGroup extends Component implements Styled implements ParentElement {
 
     /** How long an edge fade takes to appear or disappear, in seconds. */
     static inline final EDGE_FADE_TRANSITION:Float = 0.2;
@@ -1318,8 +1288,14 @@ class AttachmentGroup implements RenderOnce implements Styled implements ParentE
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
+    /**
+     * Scroll the row through the caller's handle.
+     *
+     * The group keeps its own scroll state otherwise. Pass a handle when the
+     * application moves the row itself, for example from paging buttons.
+     */
     @:allow(tests)
-    var scrollHandle:Null<ScrollHandle> = null;
+    @prop var trackScroll:Null<ScrollHandle> = null;
 
     @:allow(tests)
     var edgeFade:Null<Hsla> = null;
@@ -1329,18 +1305,8 @@ class AttachmentGroup implements RenderOnce implements Styled implements ParentE
 
     /** Create an empty attachment group with a stable scroll identifier. */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
-    }
-
-    /**
-     * Scroll the row through the caller's handle.
-     *
-     * The group keeps its own scroll state otherwise. Pass a handle when the
-     * application moves the row itself, for example from paging buttons.
-     */
-    public function trackScroll(handle:ScrollHandle):AttachmentGroup {
-        scrollHandle = handle;
-        return this;
     }
 
     /**
@@ -1379,7 +1345,7 @@ class AttachmentGroup implements RenderOnce implements Styled implements ParentE
         // across frames, and the first layout must be followed by one more
         // render before the scroll extent is known.
         final scroll = window.useKeyedState(ElementId.NamedChild(id, 'scroll'), cx, _ -> new AttachmentGroupScroll(new ScrollHandle(), false));
-        final handle = scrollHandle != null ? scrollHandle : scroll.read(cx).value.handle;
+        final handle = trackScroll != null ? trackScroll : scroll.read(cx).value.handle;
         final viewId = window.currentView();
 
         var fadeColor:Null<Hsla> = null;

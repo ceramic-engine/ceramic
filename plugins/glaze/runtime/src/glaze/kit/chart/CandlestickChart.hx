@@ -6,6 +6,7 @@ package glaze.kit.chart;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Hsla;
@@ -50,23 +51,24 @@ class CandlestickChart<T> extends Plot {
 
     var closeFn:Null<(T) -> Float> = null;
 
-    var tickMarginValue:Int = 1;
+    @prop var tickMargin:Int = 1;
 
     var bodyWidthRatioValue:Float = SpringMath.f32(0.8);
 
-    var maxBandWidthValue:Float = Chart.MAX_BAND_WIDTH;
+    @prop var maxBandWidth:Float = Chart.MAX_BAND_WIDTH;
 
-    var xAxisValue:Bool = true;
+    @prop var xAxis:Bool = true;
 
-    var gridValue:Bool = true;
+    @prop var grid:Bool = true;
 
-    var bullishValue:Null<Hsla> = null;
+    @prop var bullish:Null<Hsla> = null;
 
-    var bearishValue:Null<Hsla> = null;
+    @prop var bearish:Null<Hsla> = null;
 
-    var idValue:ElementId;
+    @prop var id:ElementId;
 
-    var interactiveValue:Bool = true;
+    /** Turn this chart's interactive layer on or off. On by default. */
+    @prop var interactive:Bool = true;
 
     final appearValue:ChartAppear = new ChartAppear();
 
@@ -75,18 +77,12 @@ class CandlestickChart<T> extends Plot {
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
         this.data = glaze.util.Iterables.toArray(data);
-        idValue = Chart.callerId(pos);
+        id = Chart.callerId(pos);
     }
 
     /** Name this chart's `ElementId`, replacing the default taken from the construction site. */
     public function id(id:ElementIdArg):CandlestickChart<T> {
-        idValue = id;
-        return this;
-    }
-
-    /** Turn this chart's interactive layer on or off. On by default. */
-    public function interactive(interactive:Bool):CandlestickChart<T> {
-        interactiveValue = interactive;
+        this.id = id;
         return this;
     }
 
@@ -151,44 +147,29 @@ class CandlestickChart<T> extends Plot {
         return this;
     }
 
-    public function tickMargin(tickMargin:Int):CandlestickChart<T> {
-        tickMarginValue = tickMargin;
-        return this;
-    }
-
     public function bodyWidthRatio(ratio:Float):CandlestickChart<T> {
         bodyWidthRatioValue = f(ratio);
         return this;
     }
 
     public function maxBandWidth(width:Pixels):CandlestickChart<T> {
-        maxBandWidthValue = width;
-        return this;
-    }
-
-    public function xAxis(xAxis:Bool):CandlestickChart<T> {
-        xAxisValue = xAxis;
-        return this;
-    }
-
-    public function grid(grid:Bool):CandlestickChart<T> {
-        gridValue = grid;
+        this.maxBandWidth = width;
         return this;
     }
 
     public function bullish(color:IntoHsla):CandlestickChart<T> {
-        bullishValue = color;
+        this.bullish = color;
         return this;
     }
 
     public function bearish(color:IntoHsla):CandlestickChart<T> {
-        bearishValue = color;
+        this.bearish = color;
         return this;
     }
 
     function candleColors(cx:App):Array<Hsla> {
         final theme = Theme.global(cx);
-        return [bullishValue != null ? bullishValue : theme.chartBullish, bearishValue != null ? bearishValue : theme.chartBearish];
+        return [bullish != null ? bullish : theme.chartBullish, bearish != null ? bearish : theme.chartBearish];
     }
 
     function xScale(bounds:Bounds):Null<ScaleBand<String>> {
@@ -197,13 +178,13 @@ class CandlestickChart<T> extends Plot {
         }
         final xFn = this.xFn;
         return new ScaleBand([for (v in data) xFn(v)], [0., bounds.size.width])
-            .maxBandWidth(maxBandWidthValue)
+            .maxBandWidth(maxBandWidth)
             .paddingInner(0.4)
             .paddingOuter(0.2);
     }
 
     function plotHeight(bounds:Bounds):Float {
-        return f(bounds.size.height - (xAxisValue ? Chart.AXIS_GAP : 0.));
+        return f(bounds.size.height - (xAxis ? Chart.AXIS_GAP : 0.));
     }
 
     public function paint(bounds:Bounds, window:Window, cx:App):Void {
@@ -232,14 +213,14 @@ class CandlestickChart<T> extends Plot {
 
         // Draw X axis
         var axis = new PlotAxis().stroke(theme.border);
-        if (xAxisValue) {
-            final labels = Chart.buildBandLabels(data, xFn, x, bandWidth, Chart.labeledItems(data.length, null, tickMarginValue), theme.mutedForeground);
+        if (xAxis) {
+            final labels = Chart.buildBandLabels(data, xFn, x, bandWidth, Chart.labeledItems(data.length, null, tickMargin), theme.mutedForeground);
             axis = axis.x(height).xLabel(labels);
         }
         axis.paint(bounds, window, cx);
 
         // Draw grid
-        if (gridValue) {
+        if (grid) {
             new Grid()
                 .y([for (i in 0...4) f(f(height * i) / 4.0)])
                 .stroke(theme.border)
@@ -302,11 +283,11 @@ class CandlestickChart<T> extends Plot {
     }
 
     override public function plotId():Null<ElementId> {
-        return idValue;
+        return id;
     }
 
     override public function isInteractive():Bool {
-        return interactiveValue;
+        return interactive;
     }
 
     override public function updateAppear(appear:PlotAppear, window:Window, cx:App):Void {

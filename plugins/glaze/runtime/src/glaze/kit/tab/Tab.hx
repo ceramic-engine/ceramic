@@ -7,6 +7,7 @@ package glaze.kit.tab;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoBackground;
 import glaze.IntoElement;
@@ -16,7 +17,6 @@ import glaze.PathBuilder;
 import glaze.PathBuilder.PathStyle;
 import glaze.Point;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -40,27 +40,30 @@ using glaze.kit.base.StyledExt;
 /**
  * A Tab element for the `TabBar`.
  */
-class Tab implements RenderOnce implements Styled implements ParentElement implements Sizable implements Selectable {
+class Tab extends Component implements Styled implements ParentElement implements Sizable implements Selectable {
 
     @:allow(glaze.kit.tab)
     var ix:Int = 0;
 
     final base:glaze.kit.base.Tabs.BaseTab = new glaze.kit.base.Tabs.BaseTab(0);
 
+    /** Set label for the tab. */
     @:allow(glaze.kit.tab)
-    var labelValue:Null<String> = null;
+    @prop var label:Null<String> = null;
 
-    var ariaLabelValue:Null<String> = null;
+    /** Set the accessible label for the tab. */
+    @prop var ariaLabel:Null<String> = null;
 
+    /** Set icon for the tab. */
     @:allow(glaze.kit.tab)
-    var iconValue:Null<Icon> = null;
+    @prop var icon:Null<Icon> = null;
 
-    var prefixValue:Null<AnyElement> = null;
+    @prop var prefix:Null<AnyElement> = null;
 
     @:allow(glaze.kit.tab)
     var tabBarPrefixValue:Null<Bool> = null;
 
-    var suffixValue:Null<AnyElement> = null;
+    @prop var suffix:Null<AnyElement> = null;
 
     final childElements:Array<AnyElement> = [];
 
@@ -68,11 +71,12 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
 
     var size:Size = Medium;
 
+    /** Set disabled state to the tab, default false. */
     @:allow(glaze.kit.tab)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     @:allow(glaze.kit.tab)
-    var selectedValue:Bool = false;
+    @prop var selected:Bool = false;
 
     @:allow(glaze.kit.tab)
     var indicatorActive:Bool = false;
@@ -106,7 +110,9 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
     var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
 
     /** Create a new tab. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /** `Tab::from(label)`. */
     public static function fromLabel(label:String):Tab {
@@ -118,26 +124,8 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         return glaze.kit.tab.Tab.component().icon(icon);
     }
 
-    /** Set label for the tab. */
-    public function label(label:String):Tab {
-        labelValue = label;
-        return this;
-    }
-
-    /** Set the accessible label for the tab. */
-    public function ariaLabel(label:String):Tab {
-        ariaLabelValue = label;
-        return this;
-    }
-
     function a11yLabel():Null<String> {
-        return ariaLabelValue != null ? ariaLabelValue : labelValue;
-    }
-
-    /** Set icon for the tab. */
-    public function icon(icon:Icon):Tab {
-        iconValue = icon;
-        return this;
+        return ariaLabel != null ? ariaLabel : label;
     }
 
     /** Set Tab Variant. */
@@ -173,19 +161,13 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
 
     /** Set the left side of the tab */
     public function prefix(prefix:IntoElement):Tab {
-        prefixValue = prefix;
+        this.prefix = prefix;
         return this;
     }
 
     /** Set the right side of the tab */
     public function suffix(suffix:IntoElement):Tab {
-        suffixValue = suffix;
-        return this;
-    }
-
-    /** Set disabled state to the tab, default false. */
-    public function disabled(disabled:Bool):Tab {
-        disabledValue = disabled;
+        this.suffix = suffix;
         return this;
     }
 
@@ -272,17 +254,12 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         for (element in elements) childElements.push(element);
     }
 
-    public function selected(selected:Bool):Tab {
-        selectedValue = selected;
-        return this;
-    }
-
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
+        return selected;
     }
 
     public function setOpen(open:Bool):Void {
@@ -310,10 +287,10 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         final theme = Theme.global(cx);
         final normalStyle = variant.normal(cx);
         final selectedStyle = variant.selected(cx);
-        final disabledStyle = variant.disabled(selectedValue, cx);
-        var hoverStyle = variant.hovered(selectedValue, cx);
-        if (disabledValue) {
-            hoverStyle = variant.disabled(selectedValue, cx);
+        final disabledStyle = variant.disabled(this.selected, cx);
+        var hoverStyle = variant.hovered(this.selected, cx);
+        if (this.disabled) {
+            hoverStyle = variant.disabled(this.selected, cx);
         }
         final tabBarPrefix = tabBarPrefixValue != null ? tabBarPrefixValue : false;
         if (!tabBarPrefix) {
@@ -323,7 +300,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
                 }
             }
         }
-        final tabStyle = disabledValue ? disabledStyle : (selectedValue ? selectedStyle : normalStyle);
+        final tabStyle = this.disabled ? disabledStyle : (this.selected ? selectedStyle : normalStyle);
         final radius = variant.radius(size, cx);
         final innerRadius = variant.innerRadius(size, cx);
         final innerPaddings = variant.innerPaddings(size);
@@ -333,16 +310,16 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         final ariaLabel = a11yLabel();
         final folder = variant == Folder;
         final metrics = new FolderTabMetrics(size, cx);
-        final hasPrefix = prefixValue != null;
+        final hasPrefix = prefix != null;
 
         final segmentedIndicatorActive = variant == Segmented && indicatorActive;
-        final hasInlineInnerBg = selectedValue && segmentedIndicatorActive && !indicatorReady;
+        final hasInlineInnerBg = this.selected && segmentedIndicatorActive && !indicatorReady;
         final inlineInnerBg = tabStyle.innerBg;
         var innerBg:IntoBackground;
         var hoverInnerBg:IntoBackground;
         // Deviation DEV-014: a disabled selected tab has no indicator under it
         // (see TabBar) and keeps its own inner background.
-        if (segmentedIndicatorActive && indicatorReady && !(selectedValue && disabledValue)) {
+        if (segmentedIndicatorActive && indicatorReady && !(this.selected && this.disabled)) {
             innerBg = theme.transparent;
             hoverInnerBg = theme.transparent;
         } else if (hasInlineInnerBg) {
@@ -360,7 +337,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         // does this for its `inner_bg` above). Skip disabled tabs so a
         // disabled-selected tab keeps its dimmed styling instead of the
         // full-strength indicator color.
-        final suppressActiveVisual = selectedValue && !disabledValue && indicatorActive && indicatorReady;
+        final suppressActiveVisual = this.selected && !this.disabled && indicatorActive && indicatorReady;
         // Pill paints its active state via the outer `bg`.
         final selectedOuterBg:IntoBackground = suppressActiveVisual && variant == Pill ? (theme.transparent : IntoBackground) : selectedStyle.bg;
         // Underline paints its active state via the bottom `border_color`.
@@ -371,11 +348,11 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         // sliding into place. Fade it from the normal color in sync with the
         // indicator slide (keyed on the indicator epoch so it restarts on each
         // switch). `epoch == 0` is the initial layout (no slide), so we skip it.
-        final animateFg = selectedValue && !disabledValue && variant == Pill && indicatorActive && indicatorReady && indicatorEpoch > 0;
+        final animateFg = this.selected && !this.disabled && variant == Pill && indicatorActive && indicatorReady && indicatorEpoch > 0;
         final fgFrom = variant.normal(cx).fg;
         final fgTo = tabStyle.fg;
         // Icon-only tabs are fixed-size and exempt from `max_width`.
-        final maxWidth = iconValue == null ? maxWidthValue : null;
+        final maxWidth = this.icon == null ? maxWidthValue : null;
 
         final innerContent = hFlex()
             .flex1()
@@ -389,8 +366,8 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         // Normally the label decides the tab width, so it never shrinks. With
         // `max_width` it is the one part that gives way.
         if (maxWidth != null) innerContent.flexAuto() else innerContent.flexShrink0();
-        if (iconValue != null) {
-            final icon = iconValue;
+        if (this.icon != null) {
+            final icon = this.icon;
             switch size {
                 case XSmall: icon.size2p5();
                 case Small: icon.size3p5();
@@ -403,13 +380,13 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
             innerContent.flexNone().w(innerHeight * 1.25).child(icon);
         } else {
             innerContent.paddingsEdges(innerPaddings);
-            if (labelValue != null) {
+            if (label != null) {
                 // Text always takes its natural width, so it needs a box
                 // that is allowed to shrink to ellipsize inside of.
                 if (maxWidth != null) {
-                    innerContent.child(div().minW0().whitespaceNowrap().textEllipsis().child(labelValue));
+                    innerContent.child(div().minW0().whitespaceNowrap().textEllipsis().child(label));
                 } else {
-                    innerContent.child(labelValue);
+                    innerContent.child(label);
                 }
             }
             innerContent.extend(childElements);
@@ -432,8 +409,8 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
 
         final selectedStyleValue = selectedStyle;
         base.id(ix)
-            .selected(selectedValue)
-            .disabled(disabledValue);
+            .selected(this.selected)
+            .disabled(this.disabled);
         if (ariaLabel != null) base.accessibilityLabel(ariaLabel);
         base.styles(styles -> styles
             .selected(style -> style
@@ -466,7 +443,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         }
         base.rounded(radius);
         if (folder) base.px(metrics.paddingX).pb(metrics.topPadding);
-        if (!selectedValue && !disabledValue) {
+        if (!this.selected && !this.disabled) {
             base.textColor(normalStyle.fg)
                 .bg(normalStyle.bg)
                 .borderL(glaze.Prelude.px(normalStyle.borders.left))
@@ -475,8 +452,8 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
                 .borderB(glaze.Prelude.px(normalStyle.borders.bottom))
                 .borderColor(normalStyle.borderColor);
         }
-        final selected = selectedValue;
-        final disabled = disabledValue;
+        final selected = this.selected;
+        final disabled = this.disabled;
         base.hover(s -> {
             // Always register the hover style: GPUI only refreshes the cached
             // hover state while one is present. If the selected tab skipped it,
@@ -493,10 +470,10 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
                 .borderColor(hoverStyle.borderColor)
                 .rounded(radius);
         });
-        if (folder && selectedValue) {
+        if (folder && this.selected) {
             base.child(folderTabShape(metrics, theme.tokens.tabActive.background));
         }
-        if (folder && hovered && !selectedValue && !disabledValue) {
+        if (folder && hovered && !this.selected && !this.disabled) {
             base.child(div()
                 .absolute()
                 .top0()
@@ -535,16 +512,16 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         }
         // Under `max_width` the label is the only part that gives way, so
         // hold the prefix and suffix (e.g. a close button) at their full size.
-        if (prefixValue != null) {
+        if (prefix != null) {
             final wrapper = div();
             if (maxWidth != null) wrapper.flexShrink0();
-            base.child(wrapper.child(prefixValue));
+            base.child(wrapper.child(prefix));
         }
         base.child(innerElement);
-        if (suffixValue != null) {
+        if (suffix != null) {
             final wrapper = div();
             if (maxWidth != null) wrapper.flexShrink0();
-            base.child(wrapper.child(suffixValue));
+            base.child(wrapper.child(suffix));
         }
         final onClick = onClickHandler;
         if (onClick != null) {

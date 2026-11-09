@@ -28,20 +28,20 @@ class MessageTest extends TestCase {
             .content(MessageContent.component().child('Hello'))
             .footer(MessageFooter.component().contentInset(false).child('Delivered'));
 
-        assertEquals(End, message.alignmentValue);
+        assertEquals(End, message.alignmentProp);
         assertTrue(message.stackStyle.equals(stackStyle));
-        assertNotNull(message.avatarValue);
-        assertNotNull(message.headerValue);
-        assertNotNull(message.contentValue);
-        assertNotNull(message.footerValue);
-        assertEquals(false, message.headerValue.contentInsetValue);
-        assertEquals(false, message.footerValue.contentInsetValue);
-        assertNull(message.idValue);
-        assertTrue(Type.enumEq(RoleOverride.Implicit, message.roleValue));
+        assertNotNull(message.avatarSlotProp);
+        assertNotNull(message.headerProp);
+        assertNotNull(message.contentProp);
+        assertNotNull(message.footerProp);
+        assertEquals(false, message.headerProp.contentInsetProp);
+        assertEquals(false, message.footerProp.contentInsetProp);
+        assertNull(message.idProp);
+        assertTrue(Type.enumEq(RoleOverride.Implicit, message.roleProp));
 
         final row = Message.component().id('message-1').role(Explicit(Role.ListItem));
-        assertTrue(Type.enumEq(ElementId.Name('message-1'), row.idValue));
-        assertTrue(Type.enumEq(RoleOverride.Explicit(Role.ListItem), row.roleValue));
+        assertTrue(Type.enumEq(ElementId.Name('message-1'), row.idProp));
+        assertTrue(Type.enumEq(RoleOverride.Explicit(Role.ListItem), row.roleProp));
 
         final group = MessageGroup.component().child('First').child('Second');
         assertEquals(2, group.childElements.length);
@@ -60,10 +60,10 @@ class MessageTest extends TestCase {
 
         assertTrue(content.hasGhostBubble);
         assertEquals(2, content.childElements.length);
-        assertEquals(false, MessageHeader.component().withInheritedContentInset(false).contentInsetValue);
-        assertEquals(false, MessageFooter.component().withInheritedContentInset(false).contentInsetValue);
-        assertEquals(true, MessageHeader.component().contentInset(true).withInheritedContentInset(false).contentInsetValue);
-        assertEquals(true, MessageFooter.component().contentInset(true).withInheritedContentInset(false).contentInsetValue);
+        assertEquals(false, MessageHeader.component().withInheritedContentInset(false).contentInsetProp);
+        assertEquals(false, MessageFooter.component().withInheritedContentInset(false).contentInsetProp);
+        assertEquals(true, MessageHeader.component().contentInset(true).withInheritedContentInset(false).contentInsetProp);
+        assertEquals(true, MessageFooter.component().contentInset(true).withInheritedContentInset(false).contentInsetProp);
     }
 
 }

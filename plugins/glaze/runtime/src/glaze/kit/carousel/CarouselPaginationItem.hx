@@ -5,12 +5,12 @@ package glaze.kit.carousel;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -25,7 +25,7 @@ using glaze.kit.base.StyledExt;
 /**
  * One application-styled pagination control for a Carousel item.
  */
-class CarouselPaginationItem implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class CarouselPaginationItem extends Component implements Styled implements ParentElement implements Sizable {
 
     final id:ElementId;
 
@@ -38,21 +38,17 @@ class CarouselPaginationItem implements RenderOnce implements Styled implements 
 
     final itemStyle:StyleRefinement = new StyleRefinement();
 
-    var accessibilityLabelValue:Null<String> = null;
+    /** Replaces the generated "Go to slide N" accessibility label. */
+    @prop var accessibilityLabel:Null<String> = null;
 
     final childElements:Array<AnyElement> = [];
 
     /** Creates a pagination item for the zero-based `index`. */
     public function new(id:ElementIdArg, index:Int, state:Entity<CarouselState>) {
+        super();
         this.id = id;
         this.index = index;
         this.state = state;
-    }
-
-    /** Replaces the generated "Go to slide N" accessibility label. */
-    public function accessibilityLabel(label:String):CarouselPaginationItem {
-        accessibilityLabelValue = label;
-        return this;
     }
 
     public function withSize(size:IntoSize):CarouselPaginationItem {
@@ -87,7 +83,7 @@ class CarouselPaginationItem implements RenderOnce implements Styled implements 
         final selected = snapshot.selectedIndex() == index;
         final disabled = index >= snapshot.itemCount();
         final focusHandle = snapshot.focusHandle(cx);
-        final label = accessibilityLabelValue != null ? accessibilityLabelValue : I18n.t('Carousel.go_to_slide', {current: index + 1});
+        final label = accessibilityLabel != null ? accessibilityLabel : I18n.t('Carousel.go_to_slide', {current: index + 1});
         final state = this.state;
         final index = this.index;
 

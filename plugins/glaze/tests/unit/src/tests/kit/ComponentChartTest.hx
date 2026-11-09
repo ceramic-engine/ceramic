@@ -384,12 +384,12 @@ class ComponentChartTest extends KitTestCase {
 
     function testTooltipNameDoesNotTurnOnLeaderLines() {
         final titled = new PieChart<Float>([1.]).tooltipName(_ -> 'Tech');
-        assertTrue(@:privateAccess titled.tooltipNameFn != null);
+        assertTrue(@:privateAccess titled.tooltipNameProp != null);
         assertEquals(null, @:privateAccess titled.labelFn);
 
         // `label` still titles the tooltip when no title is set.
         final labelled = new PieChart<Float>([1.]).label(_ -> 'Tech');
-        assertEquals(null, @:privateAccess labelled.tooltipNameFn);
+        assertEquals(null, @:privateAccess labelled.tooltipNameProp);
         assertTrue(@:privateAccess labelled.labelFn != null);
     }
 
@@ -419,13 +419,13 @@ class ComponentChartTest extends KitTestCase {
         assertEquals(1, @:privateAccess chart.fills.length);
         assertEquals(1, @:privateAccess chart.names.length);
         assertTrue(@:privateAccess chart.labelFn != null);
-        assertEquals(100., @:privateAccess chart.maxValueValue);
+        assertEquals(100., @:privateAccess chart.maxValueProp);
         assertEquals(120., @:privateAccess chart.outerRadiusValue);
         assertEquals(8., @:privateAccess chart.labelGapValue);
-        assertFalse(@:privateAccess chart.gridValue);
+        assertFalse(@:privateAccess chart.gridProp);
         assertEquals(5, @:privateAccess chart.gridLevelsValue);
         assertTrue(@:privateAccess chart.dotValue);
-        assertTrue(Type.enumEq(ElementId.Name('radar'), @:privateAccess chart.idValue));
+        assertTrue(Type.enumEq(ElementId.Name('radar'), @:privateAccess chart.idProp));
 
         final values = @:privateAccess chart.values;
         assertEquals('80,60', [values[0](data[0]), values[1](data[0])].join(','));
@@ -474,16 +474,16 @@ class ComponentChartTest extends KitTestCase {
         assertEquals(1, @:privateAccess chart.links.length);
         assertEquals(10., @:privateAccess chart.nodeWidthValue);
         assertEquals(16., @:privateAccess chart.nodePaddingValue);
-        assertEquals(Justify, @:privateAccess chart.align);
-        assertEquals(6, @:privateAccess chart.iterationsValue);
+        assertEquals(Justify, @:privateAccess chart.nodeAlignProp);
+        assertEquals(6, @:privateAccess chart.iterationsProp);
         assertEquals(null, @:privateAccess chart.nodeCornerRadiusValue);
         assertEquals(SpringMath.f32(0.3), @:privateAccess chart.linkOpacityValue);
         assertEquals(1., @:privateAccess chart.minLinkWidthValue);
         assertEquals(6., @:privateAccess chart.labelGapValue);
         assertEquals(null, @:privateAccess chart.nodeColorFn);
-        assertEquals(null, @:privateAccess chart.nodeLabelFn);
-        assertEquals(null, @:privateAccess chart.valueLabelFn);
-        assertEquals(null, @:privateAccess chart.labelsFn);
+        assertEquals(null, @:privateAccess chart.nodeLabelProp);
+        assertEquals(null, @:privateAccess chart.valueLabelProp);
+        assertEquals(null, @:privateAccess chart.labelsProp);
 
         chart = chart
             .nodeWidth(8.)
@@ -500,16 +500,16 @@ class ComponentChartTest extends KitTestCase {
             .labelGap(10.);
         assertEquals(8., @:privateAccess chart.nodeWidthValue);
         assertEquals(20., @:privateAccess chart.nodePaddingValue);
-        assertEquals(Left, @:privateAccess chart.align);
-        assertEquals(10, @:privateAccess chart.iterationsValue);
+        assertEquals(Left, @:privateAccess chart.nodeAlignProp);
+        assertEquals(10, @:privateAccess chart.iterationsProp);
         assertEquals(2., @:privateAccess chart.nodeCornerRadiusValue);
         assertEquals(0.5, @:privateAccess chart.linkOpacityValue);
         assertEquals(2., @:privateAccess chart.minLinkWidthValue);
         assertEquals(10., @:privateAccess chart.labelGapValue);
         assertTrue(@:privateAccess chart.nodeColorFn != null);
-        assertTrue(@:privateAccess chart.nodeLabelFn != null);
-        assertTrue(@:privateAccess chart.valueLabelFn != null);
-        assertTrue(@:privateAccess chart.labelsFn != null);
+        assertTrue(@:privateAccess chart.nodeLabelProp != null);
+        assertTrue(@:privateAccess chart.valueLabelProp != null);
+        assertTrue(@:privateAccess chart.labelsProp != null);
     }
 
     function testSankeyLabelBuilder() {
@@ -550,10 +550,10 @@ class ComponentChartTest extends KitTestCase {
         final chart = new SankeyChart(['Revenue'], [])
             .tooltipName(_ -> 'Revenue')
             .tooltipValue((_, value) -> ChartFormat.fixed(value, 0) + 'M');
-        assertTrue(@:privateAccess chart.tooltipNameFn != null);
-        assertTrue(@:privateAccess chart.tooltipValueFn != null);
-        assertEquals(null, @:privateAccess chart.nodeLabelFn);
-        assertEquals(null, @:privateAccess chart.valueLabelFn);
+        assertTrue(@:privateAccess chart.tooltipNameProp != null);
+        assertTrue(@:privateAccess chart.tooltipValueProp != null);
+        assertEquals(null, @:privateAccess chart.nodeLabelProp);
+        assertEquals(null, @:privateAccess chart.valueLabelProp);
     }
 
 /// plot/tooltip.rs

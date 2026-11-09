@@ -8,6 +8,7 @@ import glaze.App;
 import glaze.AvailableSpace;
 import glaze.Background;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Hsla;
@@ -94,41 +95,36 @@ class RadarChart<T> extends Plot {
 
     var labelTexts:Array<Null<String>> = [];
 
-    var labelColorValue:Null<Hsla> = null;
+    @prop var labelColor:Null<Hsla> = null;
 
     @:allow(tests) var labelGapValue:Float = DEFAULT_LABEL_GAP;
 
-    @:allow(tests) var maxValueValue:Null<Float> = null;
+    @:allow(tests) @prop var maxValue:Null<Float> = null;
 
     @:allow(tests) var outerRadiusValue:Float = 0.;
 
-    @:allow(tests) var gridValue:Bool = true;
+    @:allow(tests) @prop var grid:Bool = true;
 
     @:allow(tests) var gridLevelsValue:Int = DEFAULT_GRID_LEVELS;
 
     @:allow(tests) var dotValue:Bool = false;
 
-    @:allow(tests) var idValue:ElementId;
+    @:allow(tests) @prop var id:ElementId;
 
-    var interactiveValue:Bool = true;
+    /** Turn this chart's interactive layer on or off. On by default. */
+    @prop var interactive:Bool = true;
 
     final appearValue:ChartAppear = new ChartAppear();
 
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
         this.data = glaze.util.Iterables.toArray(data);
-        idValue = Chart.callerId(pos);
+        id = Chart.callerId(pos);
     }
 
     /** Name this chart's `ElementId`, replacing the default taken from the construction site. */
     public function id(id:ElementIdArg):RadarChart<T> {
-        idValue = id;
-        return this;
-    }
-
-    /** Turn this chart's interactive layer on or off. On by default. */
-    public function interactive(interactive:Bool):RadarChart<T> {
-        interactiveValue = interactive;
+        this.id = id;
         return this;
     }
 
@@ -197,7 +193,7 @@ class RadarChart<T> extends Plot {
     }
 
     public function labelColor(color:IntoHsla):RadarChart<T> {
-        labelColorValue = color;
+        this.labelColor = color;
         return this;
     }
 
@@ -206,18 +202,8 @@ class RadarChart<T> extends Plot {
         return this;
     }
 
-    public function maxValue(maxValue:Float):RadarChart<T> {
-        maxValueValue = maxValue;
-        return this;
-    }
-
     public function outerRadius(outerRadius:Float):RadarChart<T> {
         outerRadiusValue = f(outerRadius);
-        return this;
-    }
-
-    public function grid(grid:Bool):RadarChart<T> {
-        gridValue = grid;
         return this;
     }
 
@@ -262,7 +248,7 @@ class RadarChart<T> extends Plot {
     }
 
     function scale(outerRadius:Float):ScaleLinear {
-        final domain:Array<Float> = maxValueValue != null ? [0., maxValueValue] : {
+        final domain:Array<Float> = maxValue != null ? [0., maxValue] : {
             final list = [for (d in data) for (valueFn in values) valueFn(d)];
             list.push(0.);
             list;
@@ -360,7 +346,7 @@ class RadarChart<T> extends Plot {
         final scale = scale(outerRadius);
 
         // Draw grid rings and spokes
-        if (gridValue) {
+        if (grid) {
             final stroke = theme.chartGrid;
 
             for (level in 1...gridLevelsValue + 1) {
@@ -413,7 +399,7 @@ class RadarChart<T> extends Plot {
 
         // Draw the text labels outside the outer ring; `prepaint` resolved
         // them and already placed the element ones.
-        final labelColor = labelColorValue != null ? labelColorValue : theme.mutedForeground;
+        final labelColor = this.labelColor != null ? this.labelColor : theme.mutedForeground;
         final labels:Array<Text> = [];
         for (ix in 0...labelTexts.length) {
             final text = labelTexts[ix];
@@ -433,11 +419,11 @@ class RadarChart<T> extends Plot {
     }
 
     override public function plotId():Null<ElementId> {
-        return idValue;
+        return id;
     }
 
     override public function isInteractive():Bool {
-        return interactiveValue;
+        return interactive;
     }
 
     override public function updateAppear(appear:PlotAppear, window:Window, cx:App):Void {

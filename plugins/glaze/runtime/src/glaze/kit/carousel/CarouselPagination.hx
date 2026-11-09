@@ -5,10 +5,10 @@ package glaze.kit.carousel;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -24,26 +24,22 @@ using glaze.kit.base.StyledExt;
  * The group role and its label are kept but not exported (no
  * accessibility tree in Glaze).
  */
-class CarouselPagination implements RenderOnce implements Styled implements ParentElement {
+class CarouselPagination extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
     final paginationStyle:StyleRefinement = new StyleRefinement();
 
-    var accessibilityLabelValue:String;
+    /** Sets the name announced for the pagination group. */
+    @prop var accessibilityLabel:String;
 
     final childElements:Array<AnyElement> = [];
 
     /** Creates an empty pagination container, identified by its call site. */
     public function new(?pos:haxe.PosInfos) {
+        super();
         id = ElementId.CodeLocation(pos.fileName, pos.lineNumber);
-        accessibilityLabelValue = I18n.t('Carousel.pagination');
-    }
-
-    /** Sets the name announced for the pagination group. */
-    public function accessibilityLabel(label:String):CarouselPagination {
-        accessibilityLabelValue = label;
-        return this;
+        accessibilityLabel = I18n.t('Carousel.pagination');
     }
 
     public function extend(elements:Array<AnyElement>):Void {

@@ -81,11 +81,11 @@ class ComponentDiffRenderTest extends TestCase {
         final state = newState([document]);
         final defaults = Diff.component(state);
         assertEquals(state.entityId(), @:privateAccess defaults.state.entityId());
-        assertTrue(@:privateAccess defaults._headerVisible && @:privateAccess defaults._lineNumber);
-        assertTrue(@:privateAccess defaults._syntaxHighlight);
+        assertTrue(@:privateAccess defaults.headerVisibleProp && @:privateAccess defaults.lineNumberProp);
+        assertTrue(@:privateAccess defaults.syntaxHighlightProp);
         assertEquals(0, @:privateAccess defaults._annotations.items.length);
         assertNull(@:privateAccess defaults.header.content);
-        assertNull(@:privateAccess defaults.annotationContent);
+        assertNull(@:privateAccess defaults.renderAnnotationProp);
 
         final headerCalls:Array<String> = [];
         final position = new DiffLinePosition('after.rs', Modified, 1);
@@ -107,8 +107,8 @@ class ComponentDiffRenderTest extends TestCase {
             });
 
         assertEquals(state.entityId(), @:privateAccess diff.state.entityId());
-        assertTrue(!@:privateAccess diff._headerVisible && !@:privateAccess diff._lineNumber);
-        assertFalse(@:privateAccess diff._syntaxHighlight);
+        assertTrue(!@:privateAccess diff.headerVisibleProp && !@:privateAccess diff.lineNumberProp);
+        assertFalse(@:privateAccess diff.syntaxHighlightProp);
         final items = @:privateAccess diff._annotations.items;
         assertEquals(1, items.length);
         assertTrue(Type.enumEq(annotation.id(), items[0].id()));
@@ -126,13 +126,13 @@ class ComponentDiffRenderTest extends TestCase {
         assertNotNull(@:privateAccess compatibility.header.prefix);
         assertNotNull(@:privateAccess compatibility.header.titleSuffix);
         assertNotNull(@:privateAccess compatibility.header.suffix);
-        assertNotNull(@:privateAccess compatibility.annotationContent);
+        assertNotNull(@:privateAccess compatibility.renderAnnotationProp);
 
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new Blank(), 640, 480);
         contexts.push(opened.cx);
         opened.cx.update((window, cx) -> {
             @:privateAccess diff.header.content(document, window, cx);
-            @:privateAccess diff.annotationContent(items[0], window, cx);
+            @:privateAccess diff.renderAnnotationProp(items[0], window, cx);
             return null;
         });
         assertEquals('before.rs after.rs', headerCalls.join('|'));

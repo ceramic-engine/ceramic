@@ -6,10 +6,10 @@ package glaze.kit.dialog;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -34,7 +34,7 @@ using glaze.kit.WindowExt;
  *   (`trigger` and `content`) API styles
  */
 @:allow(glaze.kit, tests)
-class AlertDialog implements RenderOnce implements Styled implements ParentElement {
+class AlertDialog extends Component implements Styled implements ParentElement {
 
     var base:Dialog;
 
@@ -54,6 +54,7 @@ class AlertDialog implements RenderOnce implements Styled implements ParentEleme
      * By default, the dialog is not overlay closable with a OK button.
      */
     public function new(cx:App) {
+        super();
         base = Dialog.component(cx)
             .withBaseAlertDialog(glaze.kit.base.AlertDialog.component(cx))
             .closeButton(false);

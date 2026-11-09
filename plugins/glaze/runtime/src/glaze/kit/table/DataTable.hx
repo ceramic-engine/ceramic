@@ -5,12 +5,12 @@ package glaze.kit.table;
 
 import glaze.App;
 import glaze.AppContext;
+import glaze.Component;
 import glaze.EdgesOf;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.KeyBinding;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.Window;
 import glaze.kit.base.Actions.Cancel;
 import glaze.kit.base.Actions.SelectDown;
@@ -70,7 +70,7 @@ class TableOptions {
  * - **Sortable Columns**: Click column headers to sort
  * - **Context Menus**: Right-click support for rows and cells
  */
-class DataTable<D:TableDelegate> implements RenderOnce implements Sizable implements FocusableExt {
+class DataTable<D:TableDelegate> extends Component implements Sizable implements FocusableExt {
 
     static inline final CONTEXT:String = "DataTable";
 
@@ -96,10 +96,12 @@ class DataTable<D:TableDelegate> implements RenderOnce implements Sizable implem
     @:allow(tests)
     final options:TableOptions = new TableOptions();
 
-    var focusRingEnabled:Bool = true;
+    /** Rust `FocusableExt::focus_ring`. */
+    @prop var focusRing:Bool = true;
 
     /** Create a new DataTable element with the given `TableState`. */
     public function new(state:Entity<TableState<D>>) {
+        super();
         this.state = state;
     }
 
@@ -161,23 +163,17 @@ class DataTable<D:TableDelegate> implements RenderOnce implements Sizable implem
         return this;
     }
 
-    /** Rust `FocusableExt::focus_ring`. */
-    public function focusRing(enabled:Bool):DataTable<D> {
-        focusRingEnabled = enabled;
-        return this;
-    }
-
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final bordered = options.bordered;
-        final focusRingEnabled = this.focusRingEnabled;
+        final focusRingEnabled = this.focusRing;
         final focusHandle = state.read(cx).focusHandle(cx);
         final options = this.options;
         state.update(cx, (state, _) -> {

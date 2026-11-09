@@ -5,9 +5,9 @@ package glaze.kit.dialog;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -23,13 +23,15 @@ using glaze.kit.base.StyledExt;
 /**
  * Footer section of a dialog, typically contains action buttons.
  */
-class DialogFooter implements RenderOnce implements Styled implements ParentElement {
+class DialogFooter extends Component implements Styled implements ParentElement {
 
     final footerStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return footerStyle;
@@ -71,11 +73,13 @@ interface DialogFooterButton {
 /**
  * A close control: Base owns its accessibility and activation.
  */
-class DialogClose implements RenderOnce implements ParentElement {
+class DialogClose extends Component implements ParentElement {
 
     var base:glaze.kit.base.Dialog.DialogClose = new glaze.kit.base.Dialog.DialogClose();
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Styles a close button whose accessibility and activation are owned by Base.
@@ -98,11 +102,13 @@ class DialogClose implements RenderOnce implements ParentElement {
 /**
  * A wrapper that dispatches the dialog's `Confirm` action on click.
  */
-class DialogAction implements RenderOnce implements ParentElement {
+class DialogAction extends Component implements ParentElement {
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function extend(elements:Array<AnyElement>):Void {
         for (element in elements) childElements.push(element);

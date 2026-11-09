@@ -4,12 +4,12 @@
 package glaze.kit.time;
 
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Entity;
 import glaze.FontFeatures;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -34,7 +34,7 @@ using glaze.kit.ThemeStyled;
  * `HourCycle`, `TimeFieldEvent`, `TimePrecision` and `TimeSegment`); see it
  * for the keyboard model.
  */
-class TimeField implements RenderOnce implements Styled implements Sizable implements Disableable {
+class TimeField extends Component implements Styled implements Sizable implements Disableable {
 
     @:allow(glaze.kit)
     @:allow(tests)
@@ -48,12 +48,14 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
     final fieldStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
+    /** Display the caller's validation result. This does not reject edits. */
     @:allow(tests)
-    var invalidValue:Bool = false;
+    @prop var invalid:Bool = false;
 
     public function new(state:Entity<TimeFieldState>) {
+        super();
         this.id = ElementId.NamedInteger('time-field', state.entityId());
         this.state = state;
     }
@@ -94,12 +96,6 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
         return this;
     }
 
-    /** Display the caller's validation result. This does not reject edits. */
-    public function invalid(invalid:Bool):TimeField {
-        invalidValue = invalid;
-        return this;
-    }
-
     public function withSize(size:IntoSize):TimeField {
         this.size = size;
         return this;
@@ -109,13 +105,8 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
         this.size = size;
     }
 
-    public function disabled(disabled:Bool):TimeField {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
+        this.disabled = disabled;
     }
 
     public inline function style():StyleRefinement {
@@ -125,7 +116,7 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final focused = state.read(cx).focusHandle.isFocused(window);
-        final colors = @:privateAccess Input.inputStyleColors(disabledValue, cx);
+        final colors = @:privateAccess Input.inputStyleColors(disabled, cx);
         final segmentRadius = theme.radius / 2.;
 
         final frame = fontFeatures(div()
@@ -139,11 +130,11 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
             .rounded(theme.radius)
             .inputTextSize(size)
             .inputH(size);
-        if (disabledValue) frame.opacity(0.5);
-        if (focused && !disabledValue) frame.focusRingStyle(window, cx);
-        if (invalidValue) frame.borderColor(theme.danger);
+        if (disabled) frame.opacity(0.5);
+        if (focused && !disabled) frame.focusRingStyle(window, cx);
+        if (invalid) frame.borderColor(theme.danger);
         frame.child(glaze.kit.base.TimeField.component(id, state)
-            .disabled(disabledValue)
+            .disabled(disabled)
             // The base field fills the frame, so a press anywhere inside it lands on the
             // field rather than on the frame around it.
             .flex()

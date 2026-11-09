@@ -6,13 +6,13 @@ package glaze.kit.sidebar;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ListAlignment;
 import glaze.ListState;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -213,7 +213,7 @@ interface SidebarItem extends Collapsible {
 /**
  * A Sidebar element that can contain collapsible child elements.
  */
-class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
+class Sidebar<E:SidebarItem> extends Component implements Styled {
 
     @:allow(glaze.kit.sidebar, tests)
     static inline final DEFAULT_WIDTH:Pixels = 255.;
@@ -236,29 +236,12 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
     /** footer view */
     var footerValue:Null<AnyElement> = null;
 
-    /** The side of the sidebar */
-    var sideValue:Side = Left;
-
-    var collapsibleValue:SidebarCollapsible = SidebarCollapsible.Icon;
-
-    var collapsedValue:Bool = false;
-
-    /**
-     * Create a new Sidebar with the given ID.
-     */
-    public function new(id:ElementIdArg) {
-        this.id = id;
-    }
-
     /**
      * Set the side of the sidebar.
      *
      * Default is `Side.Left`.
      */
-    public function side(side:Side):Sidebar<E> {
-        sideValue = side;
-        return this;
-    }
+    @prop var side:Side = Left;
 
     /**
      * Set how the sidebar collapses.
@@ -267,17 +250,19 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
      * `SidebarCollapsible.Icon`. Passing `false` maps to
      * `SidebarCollapsible.None`.
      */
-    public function collapsible(collapsible:SidebarCollapsible):Sidebar<E> {
-        collapsibleValue = collapsible;
-        return this;
-    }
+    @prop var collapsible:SidebarCollapsible = SidebarCollapsible.Icon;
 
     /**
      * Set the sidebar to be collapsed
      */
-    public function collapsed(collapsed:Bool):Sidebar<E> {
-        collapsedValue = collapsed;
-        return this;
+    @prop var collapsed:Bool = false;
+
+    /**
+     * Create a new Sidebar with the given ID.
+     */
+    public function new(id:ElementIdArg) {
+        super();
+        this.id = id;
     }
 
     /**
@@ -379,7 +364,7 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
         // Determine effective expanded width from user's custom style or default.
         // Non-pixel widths still render correctly, but cannot use pixel width transitions.
         final expandedWidth = sidebarExpandedWidth(sidebarStyle);
-        final layout = new SidebarLayout(collapsibleValue, collapsedValue, expandedWidth, sideValue);
+        final layout = new SidebarLayout(collapsible, collapsed, expandedWidth, side);
 
         // Sidebar content renders at its target width immediately. A wrapper
         // div animates clip-width for smooth transitions without re-laying out
@@ -393,7 +378,7 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
             .bg(theme.tokens.sidebar.background)
             .textColor(theme.sidebarForeground)
             .borderColor(theme.sidebarBorder);
-        switch sideValue {
+        switch side {
             case Left: sidebar.borderR1();
             case Right: sidebar.borderL1();
         }
@@ -497,13 +482,21 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
 /**
  * Toggle button to collapse/expand the `Sidebar`.
  */
-class SidebarToggleButton implements RenderOnce {
+class SidebarToggleButton extends Component {
 
     var btn:Button;
 
-    var collapsedValue:Bool = false;
+    /**
+     * Set the collapsed state of the toggle button.
+     */
+    @prop var collapsed:Bool = false;
 
-    var sideValue:Side = Left;
+    /**
+     * Set the side of the toggle button.
+     *
+     * Default is `Side.Left`.
+     */
+    @prop var side:Side = Left;
 
     var onClickValue:Null<(ClickEvent, Window, App) -> Void> = null;
 
@@ -511,25 +504,8 @@ class SidebarToggleButton implements RenderOnce {
      * Create a new SidebarToggleButton.
      */
     public function new() {
+        super();
         btn = Button.component('collapse').ghost().small();
-    }
-
-    /**
-     * Set the side of the toggle button.
-     *
-     * Default is `Side.Left`.
-     */
-    public function side(side:Side):SidebarToggleButton {
-        sideValue = side;
-        return this;
-    }
-
-    /**
-     * Set the collapsed state of the toggle button.
-     */
-    public function collapsed(collapsed:Bool):SidebarToggleButton {
-        collapsedValue = collapsed;
-        return this;
     }
 
     /**
@@ -552,13 +528,13 @@ class SidebarToggleButton implements RenderOnce {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final collapsed = collapsedValue;
+        final collapsed = this.collapsed;
         final onClick = onClickValue;
 
         final icon = if (collapsed) {
-            sideValue.isLeft() ? IconName.PanelLeftOpen : IconName.PanelRightOpen;
+            side.isLeft() ? IconName.PanelLeftOpen : IconName.PanelRightOpen;
         } else {
-            sideValue.isLeft() ? IconName.PanelLeftClose : IconName.PanelRightClose;
+            side.isLeft() ? IconName.PanelLeftClose : IconName.PanelRightClose;
         };
 
         if (onClick != null) {

@@ -5,9 +5,9 @@ package glaze.kit.dialog;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -20,7 +20,7 @@ using glaze.kit.base.StyledExt;
  *
  * Typically used inside a DialogHeader component to provide additional context.
  */
-class DialogDescription implements RenderOnce implements Styled implements ParentElement {
+class DialogDescription extends Component implements Styled implements ParentElement {
 
     final base:glaze.kit.base.Dialog.DialogDescription = new glaze.kit.base.Dialog.DialogDescription();
 
@@ -28,7 +28,9 @@ class DialogDescription implements RenderOnce implements Styled implements Paren
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return descriptionStyle;

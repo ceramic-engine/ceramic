@@ -4,11 +4,11 @@
 package glaze.kit.tree;
 
 import glaze.App;
+import glaze.Component;
 import glaze.Context;
 import glaze.ElementId;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -44,7 +44,7 @@ typedef TreeContextMenuBuilder = (Int, TreeEntry, PopupMenu, Window, Context<Tre
  * A styled tree view that preserves the legacy `gpui-component` API while
  * delegating tree behavior and interaction state to `gpui-base`.
  */
-class Tree implements RenderOnce implements Styled {
+class Tree extends Component implements Styled {
 
     final id:ElementId;
 
@@ -54,11 +54,17 @@ class Tree implements RenderOnce implements Styled {
 
     final renderItem:TreeComponentRenderItem;
 
-    var contextMenuBuilder:Null<TreeContextMenuBuilder> = null;
+    /** Add a context menu to the tree. */
+    @prop var contextMenu:Null<TreeContextMenuBuilder> = null;
 
-    var scrollBounceValue:Null<Bool> = null;
+    /**
+     * Bounce at the vertical boundaries. On by default on iOS, Android and
+     * macOS, off elsewhere; reduced motion disables displacement.
+     */
+    @prop var scrollBounce:Null<Bool> = null;
 
     public function new(state:Entity<TreeState>, renderItem:TreeComponentRenderItem) {
+        super();
         id = ElementId.Name('tree-' + state.entityId());
         this.state = state;
         this.renderItem = renderItem;
@@ -73,25 +79,10 @@ class Tree implements RenderOnce implements Styled {
         return treeStyle;
     }
 
-    /** Add a context menu to the tree. */
-    public function contextMenu(f:TreeContextMenuBuilder):Tree {
-        contextMenuBuilder = f;
-        return this;
-    }
-
-    /**
-     * Bounce at the vertical boundaries. On by default on iOS, Android and
-     * macOS, off elsewhere; reduced motion disables displacement.
-     */
-    public function scrollBounce(enabled:Bool):Tree {
-        scrollBounceValue = enabled;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
         final state = this.state;
         final renderItem = this.renderItem;
-        final contextMenuBuilder = this.contextMenuBuilder;
+        final contextMenuBuilder = this.contextMenu;
         final scrollHandle = state.read(cx).scrollHandle();
 
         final tree = new BaseTree(state)
@@ -125,7 +116,7 @@ class Tree implements RenderOnce implements Styled {
             .relative()
             .sizeFull();
         final bounce = new ScrollBounce("tree-scroll-bounce", scrollHandle, tree);
-        if (scrollBounceValue != null) bounce.enabled(scrollBounceValue);
+        if (scrollBounce != null) bounce.enabled(scrollBounce);
 
         return div()
             .id(id)

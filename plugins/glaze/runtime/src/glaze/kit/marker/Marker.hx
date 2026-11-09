@@ -5,11 +5,11 @@ package glaze.kit.marker;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.StyledText;
@@ -53,19 +53,19 @@ enum MarkerChild {
  * A status line: an optional icon, content, in a plain, separator or
  * bordered variant, optionally loading (a spinner, or shimmering text).
  */
-class Marker implements RenderOnce implements Styled implements ParentElement {
+class Marker extends Component implements Styled implements ParentElement {
 
-    @:allow(tests) var idValue:Null<ElementId> = null;
+    @:allow(tests) @prop var id:Null<ElementId> = null;
 
     @:allow(tests) final markerStyle:StyleRefinement = new StyleRefinement();
 
-    var separatorStyleValue:StyleRefinement = new StyleRefinement();
+    @prop var separatorStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(tests) var variant:MarkerVariant = Plain;
 
-    @:allow(tests) var alignmentValue:Null<MarkerAlignment> = null;
+    @:allow(tests) @prop var alignment:Null<MarkerAlignment> = null;
 
-    @:allow(tests) var loadingValue:Bool = false;
+    @:allow(tests) @prop var loading:Bool = false;
 
     @:allow(tests) var loadingStyle:MarkerLoadingStyle = Spinner;
 
@@ -78,10 +78,12 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
     /** The accessibility properties the marker exports (filled by `render`). */
     public final a11y:A11y = new A11y();
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function id(id:ElementIdArg):Marker {
-        idValue = id;
+        this.id = id;
         return this;
     }
 
@@ -95,21 +97,11 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function alignment(alignment:MarkerAlignment):Marker {
-        alignmentValue = alignment;
-        return this;
-    }
-
     @:allow(tests)
     function resolvedAlignment():MarkerAlignment {
-        if (alignmentValue != null)
-            return alignmentValue;
+        if (alignment != null)
+            return alignment;
         return variant == Separator ? Center : Start;
-    }
-
-    public function loading(loading:Bool):Marker {
-        loadingValue = loading;
-        return this;
     }
 
     public function withLoadingStyle(loadingStyle:MarkerLoadingStyle):Marker {
@@ -119,11 +111,6 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
 
     public function withShimmerStyle(shimmerStyle:glaze.kit.shimmer.ShimmerText.ShimmerStyle):Marker {
         this.shimmerStyle = shimmerStyle;
-        return this;
-    }
-
-    public function separatorStyle(style:StyleRefinement):Marker {
-        separatorStyleValue = style;
         return this;
     }
 
@@ -153,7 +140,7 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
     public function render(window:Window, cx:App):IntoElement {
         final tokens = Theme.global(cx).semanticTokens();
         final alignment = resolvedAlignment();
-        final loading = loadingValue;
+        final loading = this.loading;
         var hasIcon = false;
         for (child in markerChildren) if (child.match(MIcon(_))) hasIcon = true;
 
@@ -173,7 +160,7 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
             row.borderB1().borderColor(tokens.colors.border).pb2();
         }
         if (variant == Separator && alignment != Start) {
-            row.child(div().flex1().minW0().h(glaze.Prelude.px(1.)).mr1().bg(tokens.colors.border).refineStyle(separatorStyleValue));
+            row.child(div().flex1().minW0().h(glaze.Prelude.px(1.)).mr1().bg(tokens.colors.border).refineStyle(separatorStyle));
         }
         if (loading && loadingStyle == Spinner && !hasIcon) {
             row.child(MarkerIcon.component().child(glaze.kit.spinner.Spinner.component().xsmall()));
@@ -191,14 +178,14 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
             }
         }
         if (variant == Separator && alignment != End) {
-            row.child(div().flex1().minW0().h(glaze.Prelude.px(1.)).ml1().bg(tokens.colors.border).refineStyle(separatorStyleValue));
+            row.child(div().flex1().minW0().h(glaze.Prelude.px(1.)).ml1().bg(tokens.colors.border).refineStyle(separatorStyle));
         }
         row.refineStyle(markerStyle);
 
         // `role` lives on the stateful element: accessibility nodes need the
         // stable identity that only an element id provides.
-        if (idValue != null) {
-            row.id(idValue);
+        if (id != null) {
+            row.id(id);
             switch roleValue {
                 case Explicit(role): a11y.role = role;
                 case _:
@@ -212,13 +199,15 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
 /**
  * The icon slot of a `Marker` (a 1rem square).
  */
-class MarkerIcon implements RenderOnce implements Styled implements ParentElement {
+class MarkerIcon extends Component implements Styled implements ParentElement {
 
     final iconStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(tests) final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return iconStyle;
@@ -250,7 +239,7 @@ enum MarkerContentChild {
  * The content of a `Marker`: text (shimmering while the marker loads with
  * the shimmer style) and elements.
  */
-class MarkerContent implements RenderOnce implements Styled implements ParentElement {
+class MarkerContent extends Component implements Styled implements ParentElement {
 
     final contentStyle:StyleRefinement = new StyleRefinement();
 
@@ -264,7 +253,9 @@ class MarkerContent implements RenderOnce implements Styled implements ParentEle
 
     @:allow(tests) final contentChildren:Array<MarkerContentChild> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function text(text:String):MarkerContent {
         contentChildren.push(Text(text));

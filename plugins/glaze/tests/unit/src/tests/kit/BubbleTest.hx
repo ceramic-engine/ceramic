@@ -20,10 +20,10 @@ class BubbleTest extends TestCase {
             .content(BubbleContent.component().child('Hello'))
             .reactions(BubbleReactions.component().child('👍'));
 
-        assertEquals(MessageAlignment.End, bubble.alignmentValue);
+        assertEquals(MessageAlignment.End, bubble.alignmentProp);
         assertEquals(BubbleVariant.Outline, bubble.variant);
         assertEquals(1, bubble.contentValue.childElements.length);
-        assertNotNull(bubble.reactionsValue);
+        assertNotNull(bubble.reactionsProp);
 
         // Direct children survive a later `content(...)` call and stay in
         // front of the new surface's own children.
@@ -40,8 +40,8 @@ class BubbleTest extends TestCase {
             .alignment(Start)
             .child('👍 2');
 
-        assertEquals(BubbleReactionSide.Top, reactions.sideValue);
-        assertEquals(MessageAlignment.Start, reactions.alignmentValue);
+        assertEquals(BubbleReactionSide.Top, reactions.sideProp);
+        assertEquals(MessageAlignment.Start, reactions.alignmentProp);
         assertEquals(1, reactions.childElements.length);
 
         final reactions = BubbleReactions.component()

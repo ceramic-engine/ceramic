@@ -6,11 +6,11 @@ package glaze.kit.descriptionlist;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
+import glaze.Component;
 import glaze.DefiniteLength;
 import glaze.IntoDefiniteLength;
 import glaze.IntoElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.Window;
 import glaze.kit.Sizable;
 import glaze.kit.Size;
@@ -115,21 +115,23 @@ class DescriptionItem {
  * (3 by default), horizontally (label beside value) or vertically,
  * bordered by default.
  */
-class DescriptionList implements RenderOnce implements Sizable {
+class DescriptionList extends Component implements Sizable {
 
     final items:Array<DescriptionItem> = [];
 
     var size:Size = Medium;
 
-    var layoutValue:Axis = Horizontal;
+    @prop var layout:Axis = Horizontal;
 
-    var labelWidthValue:DefiniteLength = DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(120.));
+    @prop var labelWidth:DefiniteLength = DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(120.));
 
-    var borderedValue:Bool = true;
+    @prop var bordered:Bool = true;
 
     var columnsValue:Int = 3;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public static function vertical():DescriptionList {
         return DescriptionList.component().layout(Vertical);
@@ -141,17 +143,7 @@ class DescriptionList implements RenderOnce implements Sizable {
 
     /** Set the label width (horizontal layout only, default 120px). */
     public function labelWidth(labelWidth:IntoDefiniteLength):DescriptionList {
-        labelWidthValue = labelWidth;
-        return this;
-    }
-
-    public function layout(layout:Axis):DescriptionList {
-        layoutValue = layout;
-        return this;
-    }
-
-    public function bordered(bordered:Bool):DescriptionList {
-        borderedValue = bordered;
+        this.labelWidth = labelWidth;
         return this;
     }
 
@@ -226,15 +218,15 @@ class DescriptionList implements RenderOnce implements Sizable {
             case Large: [12., 6.];
             case _: [8., 4.];
         };
-        final horizontal = layoutValue == Horizontal;
-        final labelWidth = horizontal ? labelWidthValue : null;
-        if (!borderedValue) {
+        final horizontal = layout == Horizontal;
+        final labelWidth = horizontal ? this.labelWidth : null;
+        if (!this.bordered) {
             paddings = [0., 0.];
         }
         final paddingX = px(paddings[0]);
         final paddingY = px(paddings[1]);
-        final gap:Pixels = borderedValue ? 0. : baseGap;
-        final bordered = borderedValue;
+        final gap:Pixels = this.bordered ? 0. : baseGap;
+        final bordered = this.bordered;
         final columns = columnsValue;
 
         final rows = groupItemRows(items, columns);

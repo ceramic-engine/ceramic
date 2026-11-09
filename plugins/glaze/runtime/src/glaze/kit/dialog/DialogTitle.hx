@@ -5,9 +5,9 @@ package glaze.kit.dialog;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -17,7 +17,7 @@ using glaze.kit.base.StyledExt;
 /**
  * Title element for a dialog header.
  */
-class DialogTitle implements RenderOnce implements Styled implements ParentElement {
+class DialogTitle extends Component implements Styled implements ParentElement {
 
     final base:glaze.kit.base.Dialog.DialogTitle = new glaze.kit.base.Dialog.DialogTitle();
 
@@ -25,7 +25,9 @@ class DialogTitle implements RenderOnce implements Styled implements ParentEleme
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return titleStyle;

@@ -7,12 +7,12 @@ package glaze.kit.colorpicker;
 import glaze.Anchor;
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.Entity;
 import glaze.FocusHandle;
 import glaze.Hsla;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -51,7 +51,7 @@ using glaze.kit.tooltip.Tooltip.ManagedTooltip;
  * `ColorPickerState` and `ColorPickerEvent` are the Base ones
  * (`glaze.kit.base.ColorPicker`).
  */
-class ColorPicker implements RenderOnce implements Styled implements Sizable {
+class ColorPicker extends Component implements Styled implements Sizable {
 
     @:allow(glaze.kit.colorpicker)
     var id:ElementId;
@@ -60,24 +60,44 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
 
     final state:Entity<ColorPickerState>;
 
+    /**
+     * Set the featured colors to be displayed in the color picker.
+     *
+     * This is used to display a set of colors that the user can quickly select from,
+     * for example provided user's last used colors.
+     */
     @:allow(glaze.kit.colorpicker)
     @:allow(tests)
-    var featuredColorsValue:Null<Array<Hsla>> = null;
+    @prop var featuredColors:Null<Array<Hsla>> = null;
 
+    /** Set the label to be displayed above the color picker. Default is `null`. */
     @:allow(tests)
-    var labelValue:Null<String> = null;
+    @prop var label:Null<String> = null;
 
-    /** The announced name, when the visible label is not it. */
+    /**
+     * Set the name a screen reader announces, when the visible label is not
+     * it.
+     *
+     * A color picker's name comes from its `label` by default. Setting this
+     * replaces the announced name without changing the visible label.
+     */
     @:allow(tests)
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var iconValue:Null<Icon> = null;
+    /**
+     * Set the icon to the color picker button.
+     *
+     * If this is set the color picker button will display the icon.
+     * Else it will display the square color of the current value.
+     */
+    @prop var icon:Null<Icon> = null;
 
     @:allow(glaze.kit.colorpicker)
     @:allow(tests)
     var size:Size = Medium;
 
-    var anchorValue:Anchor = Anchor.TopLeft;
+    /** Set the anchor corner of the color picker. Default is `Anchor.TopLeft`. */
+    @prop var anchor:Anchor = Anchor.TopLeft;
 
     /** Draws the trigger as a framed field, see `ColorSelect`. */
     @:allow(glaze.kit.colorpicker)
@@ -90,6 +110,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
 
     /** Create a new color picker element with the given `ColorPickerState`. */
     public function new(state:Entity<ColorPickerState>) {
+        super();
         this.id = ElementId.NamedInteger('color-picker', state.entityId());
         this.state = state;
     }
@@ -115,52 +136,6 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
             return [for (k in keys) scale.get(k)];
         }
         return [c('stone'), c('red'), c('orange'), c('yellow'), c('green'), c('cyan'), c('blue'), c('purple'), c('pink')];
-    }
-
-    /**
-     * Set the featured colors to be displayed in the color picker.
-     *
-     * This is used to display a set of colors that the user can quickly select from,
-     * for example provided user's last used colors.
-     */
-    public function featuredColors(colors:Array<Hsla>):ColorPicker {
-        featuredColorsValue = colors;
-        return this;
-    }
-
-    /**
-     * Set the icon to the color picker button.
-     *
-     * If this is set the color picker button will display the icon.
-     * Else it will display the square color of the current value.
-     */
-    public function icon(icon:Icon):ColorPicker {
-        iconValue = icon;
-        return this;
-    }
-
-    /** Set the label to be displayed above the color picker. Default is `null`. */
-    public function label(label:String):ColorPicker {
-        labelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the name a screen reader announces, when the visible label is not
-     * it.
-     *
-     * A color picker's name comes from its `label` by default. Setting this
-     * replaces the announced name without changing the visible label.
-     */
-    public function accessibilityLabel(label:String):ColorPicker {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /** Set the anchor corner of the color picker. Default is `Anchor.TopLeft`. */
-    public function anchor(anchor:Anchor):ColorPicker {
-        anchorValue = anchor;
-        return this;
     }
 
     public function withSize(size:IntoSize):ColorPicker {
@@ -248,7 +223,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
     @:allow(tests)
     function renderPalettePanel(cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final featuredColors = featuredColorsValue != null ? featuredColorsValue : [
+        final featuredColors = this.featuredColors != null ? this.featuredColors : [
             theme.red,
             theme.redLight,
             theme.blue,
@@ -384,7 +359,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
         picker.refineStyle(pickerStyle)
             .open(open)
             .trackFocus(focusHandle);
-        final a11yLabel = accessibilityLabelValue != null ? accessibilityLabelValue : labelValue;
+        final a11yLabel = accessibilityLabel != null ? accessibilityLabel : label;
         if (a11yLabel != null) picker.accessibilityLabel(a11yLabel);
         picker.onOpenChange((open, _, cx) -> {
             openState.update(cx, (state, cx) -> state.setOpen(open, cx));
@@ -402,10 +377,10 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
         popover.trigger(ColorPickerButton.component(
             'trigger',
             size,
-            labelValue,
+            label,
             value,
             displayTitle.length == 0 || field ? null : displayTitle,
-            iconValue,
+            icon,
             false,
             field,
             focused,
@@ -428,13 +403,14 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
  * where a control is expected to share the height and frame of the inputs
  * around it; use `ColorPicker` for a compact swatch in a toolbar.
  */
-class ColorSelect implements RenderOnce implements Styled implements Sizable {
+class ColorSelect extends Component implements Styled implements Sizable {
 
     @:allow(tests)
     final picker:ColorPicker;
 
     /** Create a new color select with the given `ColorPickerState`. */
     public function new(state:Entity<ColorPickerState>) {
+        super();
         picker = ColorPicker.component(state);
         picker.id = ElementId.NamedInteger('color-select', state.entityId());
         picker.field = true;
@@ -489,7 +465,7 @@ class ColorSelect implements RenderOnce implements Styled implements Sizable {
  * The trigger of a `ColorPicker` (crate private in Rust).
  */
 @:noCompletion
-class ColorPickerButton implements RenderOnce implements Selectable implements Sizable {
+class ColorPickerButton extends Component implements Selectable implements Sizable {
 
     final id:ElementId;
     var selectedValue:Bool;
@@ -503,6 +479,7 @@ class ColorPickerButton implements RenderOnce implements Selectable implements S
     final placeholder:Null<String>;
 
     public function new(id:String, size:Size, label:Null<String>, value:Null<Hsla>, tooltip:Null<String>, icon:Null<Icon>, selected:Bool, field:Bool, focused:Bool, placeholder:Null<String>) {
+        super();
         this.id = ElementId.Name(id);
         this.size = size;
         this.label = label;

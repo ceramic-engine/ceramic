@@ -628,8 +628,8 @@ class ComponentCarouselTest extends TestCase {
         final previous = CarouselPrevious.component(state).accessibilityLabel('Previous project').child('Back');
         final next = CarouselNext.component(state).accessibilityLabel('Next project').child('Forward');
 
-        assertEquals('Previous project', previous.accessibilityLabelValue);
-        assertEquals('Next project', next.accessibilityLabelValue);
+        assertEquals('Previous project', previous.accessibilityLabelProp);
+        assertEquals('Next project', next.accessibilityLabelProp);
         assertEquals(1, previous.childElements.length);
         assertEquals(1, next.childElements.length);
     }

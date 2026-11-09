@@ -5,12 +5,12 @@ package glaze.kit.alert;
 
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -80,7 +80,7 @@ enum abstract AlertVariant(Int) {
  * An alert: an icon, an optional title and a message, in a color variant,
  * optionally closable.
  */
-class Alert implements RenderOnce implements Styled implements Sizable {
+class Alert extends Component implements Styled implements Sizable {
 
     final id:ElementId;
 
@@ -88,9 +88,9 @@ class Alert implements RenderOnce implements Styled implements Sizable {
 
     var variant:AlertVariant = Default;
 
-    var iconValue:Icon = Icon.component(IconName.Info);
+    @prop var icon:Icon = Icon.component(IconName.Info);
 
-    var titleValue:Null<String> = null;
+    @prop var title:Null<String> = null;
 
     final message:Text;
 
@@ -100,12 +100,13 @@ class Alert implements RenderOnce implements Styled implements Sizable {
 
     var onCloseHandler:Null<(ClickEvent, Window, App) -> Void> = null;
 
-    var visibleValue:Bool = true;
+    @prop var visible:Bool = true;
 
     /** The accessibility properties the alert exports. */
     public final a11y:A11y = new A11y(Role.Alert);
 
     public function new(id:ElementIdArg, message:IntoText) {
+        super();
         this.id = id;
         this.message = message;
     }
@@ -132,23 +133,13 @@ class Alert implements RenderOnce implements Styled implements Sizable {
     }
 
     public function icon(icon:IntoIcon):Alert {
-        iconValue = icon;
-        return this;
-    }
-
-    public function title(title:String):Alert {
-        titleValue = title;
+        this.icon = icon;
         return this;
     }
 
     /** Use the banner style: full width, no rounded corners, centered row. */
     public function banner():Alert {
         bannerValue = true;
-        return this;
-    }
-
-    public function visible(visible:Bool):Alert {
-        visibleValue = visible;
         return this;
     }
 
@@ -168,7 +159,7 @@ class Alert implements RenderOnce implements Styled implements Sizable {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        if (!visibleValue) {
+        if (!visible) {
             return new glaze.Empty();
         }
 
@@ -191,11 +182,11 @@ class Alert implements RenderOnce implements Styled implements Sizable {
 
         final iconSlot = div();
         if (!banner) iconSlot.mt(glaze.Prelude.px(5.));
-        iconSlot.child(iconValue);
+        iconSlot.child(icon);
 
         final body = div().flex1().overflowHidden().gap3();
-        if (!banner && titleValue != null) {
-            body.child(div().wFull().truncate().fontSemibold().child(titleValue));
+        if (!banner && title != null) {
+            body.child(div().wFull().truncate().fontSemibold().child(title));
         }
         body.child(message.style(TextViewStyle.defaultValue().withParagraphGap(0.2)).intoAnyElement());
 

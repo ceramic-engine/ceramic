@@ -5,11 +5,11 @@ package glaze.kit.message;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -37,7 +37,7 @@ enum abstract MessageAlignment(Int) {
 /**
  * A vertical stack of consecutive messages from the same sender.
  */
-class MessageGroup implements RenderOnce implements Styled implements ParentElement {
+class MessageGroup extends Component implements Styled implements ParentElement {
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
@@ -45,7 +45,9 @@ class MessageGroup implements RenderOnce implements Styled implements ParentElem
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty message group. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return groupStyle;
@@ -82,51 +84,10 @@ class MessageGroup implements RenderOnce implements Styled implements ParentElem
  * Named slots let the message apply its alignment consistently while every
  * part remains independently styleable.
  */
-class Message implements RenderOnce implements Styled {
+class Message extends Component implements Styled {
 
     @:allow(tests)
-    var idValue:Null<ElementId> = null;
-
-    @:allow(tests)
-    var roleValue:RoleOverride = Implicit;
-
-    final messageStyle:StyleRefinement = new StyleRefinement();
-
-    @:allow(tests)
-    var stackStyle:StyleRefinement = new StyleRefinement();
-
-    @:allow(tests)
-    var alignmentValue:MessageAlignment = Start;
-
-    @:allow(tests)
-    var avatarValue:Null<MessageAvatar> = null;
-
-    @:allow(tests)
-    var headerValue:Null<MessageHeader> = null;
-
-    @:allow(tests)
-    var contentValue:Null<MessageContent> = null;
-
-    @:allow(tests)
-    var footerValue:Null<MessageFooter> = null;
-
-    /** Create a leading-aligned message. */
-    public function new() {}
-
-    /** Set whether the message is aligned to the leading or trailing edge. */
-    public function alignment(alignment:MessageAlignment):Message {
-        alignmentValue = alignment;
-        return this;
-    }
-
-    /**
-     * Set a stable identity so the message can appear in the accessibility
-     * tree and keep element state across frames.
-     */
-    public function id(id:ElementIdArg):Message {
-        idValue = id;
-        return this;
-    }
+    @prop var id:Null<ElementId> = null;
 
     /**
      * Set the accessibility role announced for this message.
@@ -135,8 +96,45 @@ class Message implements RenderOnce implements Styled {
      * a role such as `Role.ListItem` so assistive technology can move
      * between them. The role takes effect only together with `id`.
      */
-    public function role(role:RoleOverride):Message {
-        roleValue = role;
+    @:allow(tests)
+    @prop var role:RoleOverride = Implicit;
+
+    final messageStyle:StyleRefinement = new StyleRefinement();
+
+    @:allow(tests)
+    var stackStyle:StyleRefinement = new StyleRefinement();
+
+    /** Set whether the message is aligned to the leading or trailing edge. */
+    @:allow(tests)
+    @prop var alignment:MessageAlignment = Start;
+
+    /** Set a fully configured avatar slot (null for none). */
+    @:allow(tests)
+    @prop var avatarSlot:Null<MessageAvatar> = null;
+
+    /** Set the message header. */
+    @:allow(tests)
+    @prop var header:Null<MessageHeader> = null;
+
+    /** Set the message body. */
+    @:allow(tests)
+    @prop var content:Null<MessageContent> = null;
+
+    /** Set the message footer. */
+    @:allow(tests)
+    @prop var footer:Null<MessageFooter> = null;
+
+    /** Create a leading-aligned message. */
+    public function new() {
+        super();
+    }
+
+    /**
+     * Set a stable identity so the message can appear in the accessibility
+     * tree and keep element state across frames.
+     */
+    public function id(id:ElementIdArg):Message {
+        this.id = id;
         return this;
     }
 
@@ -153,31 +151,7 @@ class Message implements RenderOnce implements Styled {
      * had been set (no avatar slot, no footer inset).
      */
     public function avatar(avatar:IntoElement):Message {
-        avatarValue = avatar != null ? MessageAvatar.component().child(avatar) : null;
-        return this;
-    }
-
-    /** Set a fully configured avatar slot (null for none). */
-    public function avatarSlot(avatar:MessageAvatar):Message {
-        avatarValue = avatar;
-        return this;
-    }
-
-    /** Set the message header. */
-    public function header(header:MessageHeader):Message {
-        headerValue = header;
-        return this;
-    }
-
-    /** Set the message body. */
-    public function content(content:MessageContent):Message {
-        contentValue = content;
-        return this;
-    }
-
-    /** Set the message footer. */
-    public function footer(footer:MessageFooter):Message {
-        footerValue = footer;
+        avatarSlot = avatar != null ? MessageAvatar.component().child(avatar) : null;
         return this;
     }
 
@@ -186,9 +160,9 @@ class Message implements RenderOnce implements Styled {
     }
 
     public function render(_:Window, _:App):IntoElement {
-        final alignment = alignmentValue;
-        final hasAvatar = avatarValue != null;
-        final hasGhostBubble = contentValue != null && contentValue.hasGhostBubble;
+        final alignment = this.alignment;
+        final hasAvatar = avatarSlot != null;
+        final hasGhostBubble = content != null && content.hasGhostBubble;
 
         // No text size or line height here: the header and footer set their
         // own, and content typography belongs to the bubble or the caller.
@@ -212,7 +186,7 @@ class Message implements RenderOnce implements Styled {
             .itemsEnd()
             .gap2();
         if (alignment == End) line.flexRowReverse();
-        if (avatarValue != null) line.child(avatarValue);
+        if (avatarSlot != null) line.child(avatarSlot);
         final stack = glaze.kit.base.Prelude.vFlex()
             .wFull()
             .minW0()
@@ -222,13 +196,13 @@ class Message implements RenderOnce implements Styled {
             case End: stack.itemsEnd();
         }
         stack.refineStyle(stackStyle);
-        if (headerValue != null) stack.child(headerValue.withInheritedContentInset(!hasGhostBubble));
-        if (contentValue != null) stack.child(contentValue.aligned(alignment));
+        if (header != null) stack.child(header.withInheritedContentInset(!hasGhostBubble));
+        if (content != null) stack.child(content.aligned(alignment));
         line.child(stack);
         row.child(line);
 
-        if (footerValue != null) {
-            final footer = footerValue.withInheritedContentInset(!hasGhostBubble);
+        if (this.footer != null) {
+            final footer = this.footer.withInheritedContentInset(!hasGhostBubble);
             // Align the footer with the content column: the avatar's shared
             // `size-8` baseline plus the row gap.
             if (hasAvatar && alignment == Start) footer.ml(rems(2.5));
@@ -239,7 +213,7 @@ class Message implements RenderOnce implements Styled {
         // Rust puts `role` on the stateful element (accessibility nodes need
         // the stable identity of an element id); the port has no
         // accessibility tree, so only the id is applied.
-        if (idValue != null) row.id(idValue);
+        if (id != null) row.id(id);
         return row;
     }
 
@@ -251,7 +225,7 @@ class Message implements RenderOnce implements Styled {
  * The slot reserves the shared `size-8` baseline; the message row keeps it
  * flush with the bottom edge of the visible message surface.
  */
-class MessageAvatar implements RenderOnce implements Styled implements ParentElement {
+class MessageAvatar extends Component implements Styled implements ParentElement {
 
     final avatarStyle:StyleRefinement = new StyleRefinement();
 
@@ -259,7 +233,9 @@ class MessageAvatar implements RenderOnce implements Styled implements ParentEle
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty avatar slot. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return avatarStyle;
@@ -303,28 +279,25 @@ class MessageAvatar implements RenderOnce implements Styled implements ParentEle
 /**
  * Header content such as a sender name and timestamp.
  */
-class MessageHeader implements RenderOnce implements Styled implements ParentElement {
+class MessageHeader extends Component implements Styled implements ParentElement {
 
     final headerStyle:StyleRefinement = new StyleRefinement();
 
+    /** Set whether the header keeps its default horizontal content inset. */
     @:allow(tests)
-    var contentInsetValue:Null<Bool> = null;
+    @prop var contentInset:Null<Bool> = null;
 
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty message header. */
-    public function new() {}
-
-    /** Set whether the header keeps its default horizontal content inset. */
-    public function contentInset(contentInset:Bool):MessageHeader {
-        contentInsetValue = contentInset;
-        return this;
+    public function new() {
+        super();
     }
 
     @:allow(glaze.kit.message, tests)
     function withInheritedContentInset(contentInset:Bool):MessageHeader {
-        if (contentInsetValue == null) contentInsetValue = contentInset;
+        if (this.contentInset == null) this.contentInset = contentInset;
         return this;
     }
 
@@ -357,7 +330,7 @@ class MessageHeader implements RenderOnce implements Styled implements ParentEle
             .lineHeight(glaze.Prelude.relative(1.25))
             .fontMedium()
             .textColor(tokens.colors.mutedForeground);
-        if (contentInsetValue == null || contentInsetValue) element.px3();
+        if (contentInset == null || contentInset) element.px3();
         element.refineStyle(headerStyle);
         element.extend(childElements);
         return element;
@@ -368,7 +341,7 @@ class MessageHeader implements RenderOnce implements Styled implements ParentEle
 /**
  * The message body slot. It can contain bubbles, images, code, or files.
  */
-class MessageContent implements RenderOnce implements Styled implements ParentElement {
+class MessageContent extends Component implements Styled implements ParentElement {
 
     final contentStyle:StyleRefinement = new StyleRefinement();
 
@@ -382,7 +355,9 @@ class MessageContent implements RenderOnce implements Styled implements ParentEl
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty message body. */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Add a typed bubble and inherit ghost-surface metadata layout.
@@ -441,28 +416,25 @@ class MessageContent implements RenderOnce implements Styled implements ParentEl
 /**
  * Footer content such as delivery state, reactions, or action buttons.
  */
-class MessageFooter implements RenderOnce implements Styled implements ParentElement {
+class MessageFooter extends Component implements Styled implements ParentElement {
 
     final footerStyle:StyleRefinement = new StyleRefinement();
 
+    /** Set whether the footer keeps its default horizontal content inset. */
     @:allow(tests)
-    var contentInsetValue:Null<Bool> = null;
+    @prop var contentInset:Null<Bool> = null;
 
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty message footer. */
-    public function new() {}
-
-    /** Set whether the footer keeps its default horizontal content inset. */
-    public function contentInset(contentInset:Bool):MessageFooter {
-        contentInsetValue = contentInset;
-        return this;
+    public function new() {
+        super();
     }
 
     @:allow(glaze.kit.message, tests)
     function withInheritedContentInset(contentInset:Bool):MessageFooter {
-        if (contentInsetValue == null) contentInsetValue = contentInset;
+        if (this.contentInset == null) this.contentInset = contentInset;
         return this;
     }
 
@@ -495,7 +467,7 @@ class MessageFooter implements RenderOnce implements Styled implements ParentEle
             .lineHeight(glaze.Prelude.relative(1.25))
             .fontMedium()
             .textColor(tokens.colors.mutedForeground);
-        if (contentInsetValue == null || contentInsetValue) element.px3();
+        if (contentInset == null || contentInset) element.px3();
         element.refineStyle(footerStyle);
         element.extend(childElements);
         return element;

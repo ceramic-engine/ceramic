@@ -133,10 +133,10 @@ class ComponentTableTest extends TestCase {
 
     function testStoresAnExplicitAccessibilityLabel() {
         final plain = Table.component();
-        assertEquals(null, plain.accessibilityLabelValue);
+        assertEquals(null, plain.accessibilityLabelProp);
 
         final named = Table.component().accessibilityLabel('Recent invoices');
-        assertEquals('Recent invoices', named.accessibilityLabelValue);
+        assertEquals('Recent invoices', named.accessibilityLabelProp);
     }
 
 /// data_table.rs

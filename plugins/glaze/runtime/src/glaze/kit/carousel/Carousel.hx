@@ -9,6 +9,7 @@ import glaze.App;
 import glaze.AppContext;
 import glaze.Axis;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Droppable;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -18,7 +19,6 @@ import glaze.IntoElement;
 import glaze.KeyBinding;
 import glaze.ParentElement;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.ScrollHandle;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -52,7 +52,7 @@ using glaze.kit.ThemeStyled;
  * Glaze has no accessibility tree: the region role and its label
  * (`accessibilityLabel`) are kept but not exported.
  */
-class Carousel implements RenderOnce implements Styled implements ParentElement implements FocusableExt {
+class Carousel extends Component implements Styled implements ParentElement implements FocusableExt {
 
     @:allow(glaze.kit.carousel)
     static inline final CONTEXT:String = 'Carousel';
@@ -75,24 +75,20 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
 
     final carouselStyle:StyleRefinement = new StyleRefinement();
 
+    /** Sets the name announced for the carousel region. */
     @:allow(tests)
-    var accessibilityLabelValue:String;
+    @prop var accessibilityLabel:String;
 
-    var focusRingEnabled:Bool = true;
+    @prop var focusRing:Bool = true;
 
     final childElements:Array<AnyElement> = [];
 
     /** Creates a Carousel bound to `state`. */
     public function new(id:ElementIdArg, state:Entity<CarouselState>) {
+        super();
         this.id = id;
         this.state = state;
-        accessibilityLabelValue = I18n.t('Carousel.label');
-    }
-
-    /** Sets the name announced for the carousel region. */
-    public function accessibilityLabel(label:String):Carousel {
-        accessibilityLabelValue = label;
-        return this;
+        accessibilityLabel = I18n.t('Carousel.label');
     }
 
     public function extend(elements:Array<AnyElement>):Void {
@@ -113,17 +109,12 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
         return carouselStyle;
     }
 
-    public function focusRing(enabled:Bool):Carousel {
-        focusRingEnabled = enabled;
-        return this;
-    }
-
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -142,7 +133,7 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
                 focusOutState.update(cx, (state, _) -> state.suppressFocusRing(false));
             })));
         final isFocused = focusHandle.isFocused(window);
-        final focusVisible = isFocused && !ringSuppressed && focusRingEnabled;
+        final focusVisible = isFocused && !ringSuppressed && focusRing;
         final state = this.state;
 
         inline function listenerFor<A>(f:(CarouselState, A, Window, glaze.Context<CarouselState>) -> Void):(A, Window, App) -> Void {
