@@ -170,3 +170,70 @@ class TimeoutTimer implements IDisposable {
     }
 
 }
+
+/**
+ * Delays the execution of a task until a delay passed without a new
+ * trigger, the last triggered task winning (Monaco's `Delayer`, without its
+ * promise: the task runs from a Ceramic timer).
+ */
+class Delayer implements IDisposable {
+
+    final defaultDelay:Float;
+    var cancelTimeout:Null<() -> Void> = null;
+    var task:Null<() -> Void> = null;
+
+    /**
+     * @param defaultDelay in milliseconds, like Monaco
+     */
+    public function new(defaultDelay:Float) {
+        this.defaultDelay = defaultDelay;
+    }
+
+    public function trigger(task:() -> Void, ?delay:Float):Void {
+        this.task = task;
+        cancelTimer();
+        this.cancelTimeout = Async.setTimeout(() -> {
+            this.cancelTimeout = null;
+            final t = this.task;
+            this.task = null;
+            if (t != null) {
+                t();
+            }
+        }, delay != null ? delay : defaultDelay);
+    }
+
+    public function isTriggered():Bool {
+        return cancelTimeout != null;
+    }
+
+    /**
+     * Runs the pending task now (tests).
+     */
+    public function flush():Void {
+        if (isTriggered()) {
+            final t = this.task;
+            cancel();
+            if (t != null) {
+                t();
+            }
+        }
+    }
+
+    function cancelTimer():Void {
+        if (cancelTimeout != null) {
+            final c = cancelTimeout;
+            cancelTimeout = null;
+            c();
+        }
+    }
+
+    public function cancel():Void {
+        cancelTimer();
+        task = null;
+    }
+
+    public function dispose():Void {
+        cancel();
+    }
+
+}

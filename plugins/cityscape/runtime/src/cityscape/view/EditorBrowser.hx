@@ -372,6 +372,11 @@ interface ICodeEditor extends IEditor {
      * @event
      */
     var onDidChangeModelDecorations(get, never):Event<IModelDecorationsChangedEvent>;
+
+    /**
+     * An event emitted when the tokens of the current model have changed.
+     */
+    var onDidChangeModelTokens(get, never):Event<cityscape.common.TextModelEvents.IModelTokensChangedEvent>;
     /**
      * An event emitted when the text inside this editor gained focus (i.e. cursor starts blinking).
      * @event

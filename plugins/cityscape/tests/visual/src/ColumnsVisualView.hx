@@ -44,7 +44,7 @@ class ColumnsVisualView extends Model implements Render {
         super();
         truth = WideColumns.parse(Embed.file('../../unit/data/monaco/wide-columns.json'));
         context = new Cityscape();
-        context.themeService.setTheme('vs-dark');
+        DemoThemes.apply(context, true);
         model = new TextModel(truth.text, 'plaintext', TextModel.DEFAULT_CREATION_OPTIONS, null, context);
     }
 

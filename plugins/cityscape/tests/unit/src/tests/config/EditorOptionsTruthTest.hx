@@ -54,8 +54,10 @@ class EditorOptionsTruthTest extends TestCase {
         assertEquals(max + 1, EditorOption.COUNT);
         // 60 options of step 0, 19 of the view (EditorViewOptions), 11 of the cursor (EditorCursorOptions),
         // 4 of the folding contribution (foldingHighlight, foldingImportsByDefault, foldingMaximumRegions,
-        // unfoldOnClickAfterEndOfLine), 1 of the find contribution (find, EditorFindOptions)
-        assertEquals(95, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
+        // unfoldOnClickAfterEndOfLine), 1 of the find contribution (find, EditorFindOptions), 2 of the
+        // bracket pair colorization and guides (bracketPairColorization, guides), 1 of the comment
+        // contribution (comments, EditorCommentsOptions)
+        assertEquals(98, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
     }
 
     function testDefaults() {

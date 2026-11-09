@@ -158,6 +158,10 @@ class DecorationStyleResolver {
                     applyStyle(result, _typedStyles[index]);
                 }
             } else {
+                final participantColor = themeParticipantColor(name);
+                if (participantColor != null) {
+                    result.color = participantColor;
+                }
                 final style = registry.get(name);
                 if (style != null) {
                     applyStyle(result, style);
@@ -168,6 +172,45 @@ class DecorationStyleResolver {
         result.fontKey = key;
         _cache.set(classNames, result);
         return result;
+    }
+
+    var _bracketColorsVersion:Int = -1;
+    var _bracketColors:Array<Hsla> = [];
+
+    /**
+     * The color the theming participant of the bracket pair colorization
+     * (bracketPairColorization in Monaco's editor CSS) gives a class:
+     * `unexpected-closing-bracket` takes
+     * `editorBracketHighlight.unexpectedBracket.foreground`, and
+     * `bracket-highlighting-N` the N-th of the non transparent colors among
+     * `editorBracketHighlight.foreground1..6`, cycling. Null for other
+     * classes.
+     */
+    function themeParticipantColor(name:String):Null<Hsla> {
+        if (name == 'unexpected-closing-bracket') {
+            return theme.getColor('editorBracketHighlight.unexpectedBracket.foreground');
+        }
+        if (!StringTools.startsWith(name, 'bracket-highlighting-')) {
+            return null;
+        }
+        if (_bracketColorsVersion != theme.version) {
+            _bracketColorsVersion = theme.version;
+            _bracketColors = [];
+            for (i in 1...7) {
+                final c = theme.getColor('editorBracketHighlight.foreground' + i);
+                if (c != null && c.a > 0) {
+                    _bracketColors.push(c);
+                }
+            }
+        }
+        if (_bracketColors.length == 0) {
+            return null;
+        }
+        final level = Std.parseInt(name.substr('bracket-highlighting-'.length));
+        if (level == null || level < 0) {
+            return null;
+        }
+        return _bracketColors[level % _bracketColors.length];
     }
 
     function applyTokenClass(result:ResolvedPartStyle, name:String):Void {

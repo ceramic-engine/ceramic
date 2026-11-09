@@ -41,7 +41,9 @@ class ApiVisualView extends Model implements Render {
     public function new(cx:Context<ApiVisualView>) {
         super();
         context = new Cityscape();
-        Cityscape.setTheme('vs', context);
+        // VS Code's Light+ (DemoThemes.hx), set through the public API
+        DemoThemes.apply(context, false);
+        Cityscape.setTheme('light-plus', context);
         notes = Cityscape.createModel([
             'Release notes',
             '=============',

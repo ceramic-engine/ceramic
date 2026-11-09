@@ -22,9 +22,9 @@ import glaze.Prelude.*;
  * indentation (an off side language) with its folding controls always shown,
  * and a JavaScript file with `//#region` markers, folded, its controls shown
  * on hover only (the collapsed ones stay). The collapsed lines show the `⋯`
- * and the folded background; the chevrons are the kit's icons in
- * `editorGutter.foldingControlForeground`. Generic grammars bundled with
- * Glaze, Monaco's `vs-dark` theme.
+ * and the folded background; the chevrons are Monaco's codicons
+ * (`cityscape.view.Codicons`) in `editorGutter.foldingControlForeground`. Generic grammars bundled with
+ * Glaze, VS Code's Dark+ theme.
  */
 class FoldingVisualView extends Model implements Render {
 
@@ -111,7 +111,7 @@ class FoldingVisualView extends Model implements Render {
         context.languageConfigurationService.register('javascript', {
             folding: {markers: {start: new RegExp('^\\s*//\\s*#?region\\b'), end: new RegExp('^\\s*//\\s*#?endregion\\b')}}
         });
-        context.themeService.setTheme('vs-dark');
+        DemoThemes.apply(context, true);
 
         python = new TextModel(PYTHON, 'python', TextModel.DEFAULT_CREATION_OPTIONS, null, context);
         javascript = new TextModel(JAVASCRIPT, 'javascript', TextModel.DEFAULT_CREATION_OPTIONS, null, context);

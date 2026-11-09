@@ -5,6 +5,7 @@ package cityscape.common.services;
 
 import cityscape.common.LanguageFeatureRegistry;
 import cityscape.common.Languages.FoldingRangeProvider;
+import cityscape.common.Languages.SelectionRangeProvider;
 import cityscape.common.Model.ITextModel;
 
 /**
@@ -25,6 +26,28 @@ class LanguageFeaturesService {
      */
     public var foldingRangeSelector:Null<(providers:Array<FoldingRangeProvider>, document:ITextModel) -> Null<Array<FoldingRangeProvider>>> = null;
 
+    /**
+     * The document highlight providers (contrib/wordHighlighter, Monaco's
+     * `documentHighlightProvider`).
+     */
+    public final documentHighlightProvider:LanguageFeatureRegistry<cityscape.common.Languages.DocumentHighlightProvider> = new LanguageFeatureRegistry<cityscape.common.Languages.DocumentHighlightProvider>();
+
+    /**
+     * The multi document highlight providers (Monaco's
+     * `multiDocumentHighlightProvider`).
+     */
+    public final multiDocumentHighlightProvider:LanguageFeatureRegistry<cityscape.common.Languages.MultiDocumentHighlightProvider> = new LanguageFeatureRegistry<cityscape.common.Languages.MultiDocumentHighlightProvider>();
+
+    /**
+     * The document symbol providers (Monaco's `documentSymbolProvider`:
+     * the outline model of the sticky scroll).
+     */
+    public final documentSymbolProvider:LanguageFeatureRegistry<cityscape.common.Languages.DocumentSymbolProvider> = new LanguageFeatureRegistry<cityscape.common.Languages.DocumentSymbolProvider>();
+
     public function new() {}
+
+    // Smart select (cs4-edit): Monaco's `selectionRangeProvider` registry.
+
+    public final selectionRangeProvider:LanguageFeatureRegistry<SelectionRangeProvider> = new LanguageFeatureRegistry<SelectionRangeProvider>();
 
 }

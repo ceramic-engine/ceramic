@@ -368,3 +368,138 @@ class FoldingRangeKind {
         this.value = value;
     }
 }
+
+//#region document highlights (contrib/wordHighlighter)
+
+/**
+ * A document highlight kind.
+ */
+enum abstract DocumentHighlightKind(Int) from Int to Int {
+    /**
+     * A textual occurrence.
+     */
+    var Text = 0;
+    /**
+     * Read-access of a symbol, like reading a variable.
+     */
+    var Read = 1;
+    /**
+     * Write-access of a symbol, like writing to a variable.
+     */
+    var Write = 2;
+}
+
+/**
+ * A document highlight is a range inside a text document which deserves
+ * special attention. Usually a document highlight is visualized by changing
+ * the background color of its range.
+ */
+typedef DocumentHighlight = {
+    /**
+     * The range this highlight applies to.
+     */
+    var range:cityscape.common.core.Range.IRange;
+    /**
+     * The highlight kind, default is {@link DocumentHighlightKind.Text text}.
+     */
+    @:optional var kind:Null<DocumentHighlightKind>;
+}
+
+/**
+ * The document highlight provider interface defines the contract between extensions and
+ * the word-highlight-feature.
+ *
+ * Monaco returns a `ProviderResult` (a value or a promise): the result is
+ * given to `resolve`, at once or later; null (or nothing) means no answer
+ * (the next provider is asked).
+ */
+interface DocumentHighlightProvider {
+    /**
+     * Provide a set of document highlights, like all occurrences of a variable or
+     * all exit-points of a function.
+     */
+    function provideDocumentHighlights(model:ITextModel, position:cityscape.common.core.Position, token:CancellationToken, resolve:(highlights:Null<Array<DocumentHighlight>>) -> Void):Void;
+}
+
+/**
+ * A provider that can provide document highlights across multiple documents.
+ * The result maps the uri of each model (`uri.toString()`) to its highlights
+ * (Monaco's `ResourceMap<DocumentHighlight[]>`).
+ */
+interface MultiDocumentHighlightProvider {
+    var selector(default, null):cityscape.common.LanguageSelector.LanguageSelector;
+
+    /**
+     * Provide a Map of Uri --> document highlights, like all occurrences of a variable or
+     * all exit-points of a function.
+     *
+     * Used in cases such as split view, notebooks, etc. where there can be multiple documents
+     * with shared symbols.
+     */
+    function provideMultiDocumentHighlights(primaryModel:ITextModel, position:cityscape.common.core.Position, otherModels:Array<ITextModel>, token:CancellationToken, resolve:(highlights:Null<Map<String, Array<DocumentHighlight>>>) -> Void):Void;
+}
+
+//#endregion
+
+// Smart select (cs4-edit): the selection range providers of smartSelect.ts.
+
+typedef SelectionRange = {
+    var range:cityscape.common.core.Range.IRange;
+}
+
+/**
+ * A provider of the ranges the selection expands to (Monaco's
+ * `SelectionRangeProvider`).
+ *
+ * Monaco's `provideSelectionRanges` returns a `ProviderResult` (the ranges,
+ * null, or a promise of them). Here the provider gives its result to
+ * `resolve`, once, at once or later: for each position, the ranges that
+ * contain it.
+ */
+interface SelectionRangeProvider {
+
+    /**
+     * Provide ranges that should be selected from the given position.
+     */
+    function provideSelectionRanges(model:ITextModel, positions:Array<cityscape.common.core.Position>, token:CancellationToken, resolve:(ranges:Null<Array<Array<SelectionRange>>>) -> Void):Void;
+}
+
+//#region document symbols (contrib/documentSymbols, stickyScroll)
+
+// `SymbolKind` is in its own module (common/SymbolKind.hx): its values
+// (`String`, `Array`, `Boolean`...) would shadow the types of the modules
+// that import this one.
+
+enum abstract SymbolTag(Int) from Int to Int {
+    var Deprecated = 1;
+}
+
+typedef DocumentSymbol = {
+    var name:std.String;
+    var detail:std.String;
+    var kind:cityscape.common.SymbolKind;
+    var tags:std.Array<SymbolTag>;
+    @:optional var containerName:std.String;
+    var range:cityscape.common.core.Range.IRange;
+    var selectionRange:cityscape.common.core.Range.IRange;
+    @:optional var children:std.Array<DocumentSymbol>;
+}
+
+/**
+ * The document symbol provider interface defines the contract between extensions and
+ * the [go to symbol](https://code.visualstudio.com/docs/editor/editingevolved#_go-to-symbol)-feature.
+ *
+ * Like the other providers here, the result (Monaco's `ProviderResult`) is
+ * given to `resolve`, at once or later.
+ */
+interface DocumentSymbolProvider {
+
+    var displayName(default, null):Null<std.String>;
+
+    /**
+     * Provide symbol information for the given document.
+     */
+    function provideDocumentSymbols(model:ITextModel, token:CancellationToken, resolve:(symbols:Null<std.Array<DocumentSymbol>>) -> Void):Void;
+}
+
+//#endregion

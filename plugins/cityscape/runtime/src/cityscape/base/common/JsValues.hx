@@ -90,6 +90,29 @@ class JsValues {
     }
 
     /**
+     * `a === b` for primitives (strings, numbers, booleans) and identity
+     * for objects.
+     */
+    public static function strictEquals(a:Any, b:Any):Bool {
+        if (a == null || b == null) {
+            return a == null && b == null;
+        }
+        if (isNumber(a) && isNumber(b)) {
+            return (a : Float) == (b : Float);
+        }
+        if (isString(a) && isString(b)) {
+            return (a : String) == (b : String);
+        }
+        if (isBoolean(a) && isBoolean(b)) {
+            return (a : Bool) == (b : Bool);
+        }
+        if (isNumber(a) || isNumber(b) || isString(a) || isString(b) || isBoolean(a) || isBoolean(b)) {
+            return false;
+        }
+        return a == b;
+    }
+
+    /**
      * `Boolean(value)`: false for `null`, `false`, `0`, `NaN` and `''`.
      */
     public static function truthy(value:Any):Bool {

@@ -37,8 +37,15 @@ import tests.TestTextModel;
  */
 class TestCodeEditor extends CodeEditorWidget {
 
-    public function new(context:Cityscape, model:Null<TextModel>, options:IEditorOptions, ?contributions:Array<IEditorContributionDescription>) {
-        super(context, new EditorConfiguration(false, options, {width: 100, height: 100}), {
+    /**
+     * `envConfig` is vscode's `TestCodeEditorCreationOptions.envConfig`
+     * (`outerWidth`, `outerHeight`; 100x100 by default).
+     */
+    public function new(context:Cityscape, model:Null<TextModel>, options:IEditorOptions, ?contributions:Array<IEditorContributionDescription>, ?envConfig:{?outerWidth:Float, ?outerHeight:Float}) {
+        super(context, new EditorConfiguration(false, options, {
+            width: envConfig != null && envConfig.outerWidth != null ? envConfig.outerWidth : 100,
+            height: envConfig != null && envConfig.outerHeight != null ? envConfig.outerHeight : 100
+        }), {
             contributions: contributions != null ? contributions : [],
             keepViewStatePerModel: false
         });
@@ -49,6 +56,31 @@ class TestCodeEditor extends CodeEditorWidget {
 
     public function registerDisposable(disposable:IDisposable):Void {
         _register(disposable);
+    }
+
+    /**
+     * The contributions created by `registerAndInstantiateContribution`.
+     */
+    final _testContributions = new Map<String, IEditorContribution>();
+
+    /**
+     * vscode's `registerAndInstantiateContribution`: creates a contribution
+     * of this editor, returned by `getContribution(id)` and disposed with
+     * the editor.
+     */
+    public function registerAndInstantiateContribution<T:IEditorContribution>(id:String, ctor:(editor:TestCodeEditor) -> T):T {
+        final r = ctor(this);
+        _testContributions.set(id, r);
+        _register(Lifecycle.toDisposable(() -> r.dispose()));
+        return r;
+    }
+
+    override public function getContribution<T:IEditorContribution>(id:String):Null<T> {
+        final r = _testContributions.get(id);
+        if (r != null) {
+            return cast r;
+        }
+        return super.getContribution(id);
     }
 
     // ---- withTestCodeEditor

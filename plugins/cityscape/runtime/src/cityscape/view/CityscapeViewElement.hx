@@ -13,6 +13,7 @@ import cityscape.common.core.Range;
 import cityscape.common.core.Selection;
 import cityscape.view.CityscapeView.RenderedViewLine;
 import cityscape.view.DecorationStyleResolver;
+import cityscape.view.viewParts.indentGuides.IndentGuides;
 import glaze.App;
 import glaze.Bounds;
 import glaze.ContentMask;
@@ -277,16 +278,45 @@ class CityscapeViewElement extends Element {
             }
         }
 
-        // Indent guides (hook: active guides and bracket pair guides come with step 4)
-        final guideColor = theme.getColor('editorIndentGuide.background1');
-        if (guideColor != null) {
-            final guides = viewModel.getLinesIndentGuides(startLine, endLine);
-            final tabSize = viewModel.model.getOptions().tabSize;
-            final indentWidth = tabSize * fontInfo.spaceWidth;
-            for (i in 0...guides.length) {
+        // Indent guides and bracket pair guides (Monaco's IndentGuidesOverlay)
+        final guidesOptions = options.get(EditorOption.guides);
+        if (guidesOptions.indentation || !cityscape.base.common.JsValues.strictEquals(guidesOptions.bracketPairs, false)) {
+            final wrappingInfo = options.get(EditorOption.wrappingInfo);
+            final maxIndentLeft = wrappingInfo.wrappingColumn == -1 ? -1 : (wrappingInfo.wrappingColumn * fontInfo.typicalHalfwidthCharacterWidth);
+            final scrollWidth = viewLayout.getScrollWidth();
+            final guides = IndentGuides.getGuidesByLine(viewModel, guidesOptions, startLine, Std.int(Math.min(endLine + 1, viewModel.getLineCount())), selections.length > 0 ? selections[0].getPosition() : null);
+            final guideColors = v.guideColors;
+            final spaceWidth = fontInfo.spaceWidth;
+            for (i in 0...lines.length) {
+                final lineGuides = guides[i];
+                if (lineGuides == null || lineGuides.length == 0) {
+                    continue;
+                }
+                final line = lines[i];
                 final y = lineTop(startLine + i);
-                for (level in 1...guides[i]) {
-                    fillRect(window, Math.round(contentX + level * indentWidth), y, 1, lineHeight, guideColor);
+                final leftOffset = line.columnToX(1);
+                for (guide in lineGuides) {
+                    final left = guide.column == -1
+                        ? leftOffset + (guide.visibleColumn - 1) * spaceWidth
+                        : line.columnToX(guide.column);
+                    if (left > scrollWidth || (maxIndentLeft > 0 && left > maxIndentLeft)) {
+                        break;
+                    }
+                    final color = guideColors.colorOf(guideColors.styleOf(guide.className));
+                    if (color == null) {
+                        continue;
+                    }
+                    final x = Math.round(contentX + left);
+                    if (guide.horizontalLine != null) {
+                        final right = guide.horizontalLine.endColumn <= line.maxColumn ? line.columnToX(guide.horizontalLine.endColumn) : left + spaceWidth;
+                        final width = right - left;
+                        // `horizontal-top` (border-top) or `horizontal-bottom` (border-bottom)
+                        fillRect(window, x, guide.horizontalLine.top ? y : y + lineHeight - 1, width, 1, color);
+                    }
+                    else {
+                        // `vertical`: `box-shadow: 1px 0 0 0 color inset`
+                        fillRect(window, x, y, 1, lineHeight, color);
+                    }
                 }
             }
         }
@@ -513,8 +543,8 @@ class CityscapeViewElement extends Element {
      * chevron right for a collapsed range (always shown), a chevron down for
      * an expanded one, shown when the mouse is over the gutter
      * (`showFoldingControls: 'mouseover'`) or always (`alwaysShowFoldIcons`,
-     * `'always'`). Drawn with the chevrons of the kit's icons, colored by
-     * `editorGutter.foldingControlForeground`.
+     * `'always'`). Drawn from the outlines of the codicons (`Codicons`),
+     * colored by `editorGutter.foldingControlForeground`.
      */
     static function paintFoldingControls(window:Window, cx:App, v:CityscapeView, decorations:Array<cityscape.common.ViewModel.ViewModelDecoration>, startLine:Int, endLine:Int, originX:Float, linesOriginY:Float, decorationsLeft:Float, decorationsWidth:Float, lineHeight:Float, fontSize:Float):Void {
         var color:Null<Hsla> = null;
@@ -537,47 +567,11 @@ class CityscapeViewElement extends Element {
                     color = new Hsla(0, 0, 0.77, 1);
                 }
             }
-            // `font-size: 140%; margin-left: 2px`, centered in the line
-            // decorations (the kit's chevrons are drawn smaller in their
-            // box than the codicons: the box is grown to match)
-            final size = Math.min(lineHeight, Math.round(fontSize * 1.4 * 1.2));
-            final centerX = originX + decorationsLeft + 2 + decorationsWidth / 2;
-            final centerY = linesOriginY + v.viewModel.viewLayout.getVerticalOffsetForLineNumber(ln) + lineHeight / 2;
-            final icon = collapsed ? glaze.kit.IconName.ChevronRight : glaze.kit.IconName.ChevronDown;
-            final path = glaze.kit.Icon.resolveIconPath(icon.path(), cx);
-            // The kit's icon (or the one the kit theme maps it to); its
-            // embedded SVG when the app did not add the kit's icons to its
-            // asset source (an app without the kit's `init`)
-            final data = path == icon.path() ? embeddedIcon(icon) : null;
-            try {
-                window.paintSvg(new Bounds(new Point(centerX - size / 2, centerY - size / 2), new Size(size, size)), path, data, null, color, cx);
-            }
-            catch (e:Dynamic) {
-                // no icon assets: nothing drawn
-            }
+            // The codicon at `font-size: 140%; margin-left: 2px`, centered in
+            // the line decorations (folding.css), drawn from its outline
+            final lineTop = linesOriginY + v.viewModel.viewLayout.getVerticalOffsetForLineNumber(ln);
+            Codicons.paintGutterFoldingIcon(window, cx, originX + decorationsLeft, decorationsWidth, lineTop, lineHeight, fontSize, collapsed, color);
         }
-    }
-
-    static var _embeddedIcons:Null<Map<String, haxe.io.Bytes>> = null;
-
-    /**
-     * The SVG of a kit icon, embedded in the code (immutable, shared).
-     */
-    static function embeddedIcon(icon:glaze.kit.IconName):Null<haxe.io.Bytes> {
-        if (_embeddedIcons == null) {
-            _embeddedIcons = new Map();
-        }
-        final key = icon.path();
-        var data = _embeddedIcons.get(key);
-        if (data == null) {
-            final index = glaze.kit.IconName.ALL.indexOf(icon);
-            if (index == -1) {
-                return null;
-            }
-            data = haxe.io.Bytes.ofString(@:privateAccess glaze.kit.IconName.embeddedSvgs()[index]);
-            _embeddedIcons.set(key, data);
-        }
-        return data;
     }
 
     /**

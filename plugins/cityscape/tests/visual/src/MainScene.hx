@@ -44,6 +44,10 @@ class MainScene extends Scene {
 
     var findView:Null<Entity<FindVisualView>> = null;
 
+    var editingView:Null<Entity<EditingVisualView>> = null;
+
+    var editingReady:Bool = false;
+
     override function create() {
 
         out = Platform.getEnv('CITYSCAPE_VISUAL_OUT');
@@ -64,6 +68,11 @@ class MainScene extends Scene {
                 // The editor API (ApiVisualView.hx)
                 apiView = cx.newEntity((viewCx:Context<ApiVisualView>) -> new ApiVisualView(viewCx));
                 return apiView;
+            }
+            if (scene == 'editing') {
+                // Bracket pairs, guides, word highlight, multicursor, sticky scroll (EditingVisualView.hx)
+                editingView = cx.newEntity((viewCx:Context<EditingVisualView>) -> new EditingVisualView(viewCx));
+                return editingView;
             }
             if (scene == 'find') {
                 // The find widget open over one editor (FindVisualView.hx)
@@ -99,6 +108,10 @@ class MainScene extends Scene {
             final v:ApiVisualView = apiView;
             v.focusLeft(ui.window, Glaze.app);
         }
+        if (editingView != null && ui.window != null && !editingReady) {
+            final v:EditingVisualView = editingView;
+            editingReady = v.update(ui.window, Glaze.app);
+        }
         if (findView != null && ui.window != null) {
             final v:FindVisualView = findView;
             v.openFind(ui.window, Glaze.app);
@@ -114,7 +127,7 @@ class MainScene extends Scene {
             return;
         }
         frames++;
-        if (frames < SETTLE_FRAMES || (columnsView != null && !columnsChecked)) {
+        if (frames < SETTLE_FRAMES || (columnsView != null && !columnsChecked) || (editingView != null && !editingReady)) {
             return;
         }
         captured = true;
@@ -137,7 +150,7 @@ class MainScene extends Scene {
 
 /**
  * Two editors on one Haxe model (the Haxe grammar bundled with Glaze, Monaco's
- * `vs-dark` theme), with typed decorations, a hidden range shown again on the
+ * VS Code's Dark+ theme), with typed decorations, a hidden range shown again on the
  * cursor line, injected text, wrapping with an indent per level, CJK and
  * emoji.
  */
@@ -186,7 +199,7 @@ class VisualView extends Model implements Render {
         context = new Cityscape();
         context.languageService.registerLanguage({id: 'haxe', extensions: ['.hx'], aliases: ['Haxe']});
         context.textMate.registerGrammar({languageId: 'haxe', grammar: Embed.file('../../../../glaze/assets/glaze/grammars/haxe.json'), path: 'haxe.json'});
-        context.themeService.setTheme('vs-dark');
+        DemoThemes.apply(context, true);
 
         context.registerDecorationStyle('demo-type', {background: '#2c313c', borderRadius: 4, paddingTop: 1, paddingBottom: 1});
 

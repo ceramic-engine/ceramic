@@ -21,7 +21,7 @@ import glaze.Prelude.*;
 /**
  * The find widget (with the replace row) open over an editor showing the
  * Haxe sample: a search with matches, the current one, and a replace
- * string, in Monaco's `vs-dark` theme.
+ * string, in VS Code's Dark+ theme.
  */
 class FindVisualView extends Model implements Render {
 
@@ -38,7 +38,7 @@ class FindVisualView extends Model implements Render {
         context = new Cityscape();
         context.languageService.registerLanguage({id: 'haxe', extensions: ['.hx'], aliases: ['Haxe']});
         context.textMate.registerGrammar({languageId: 'haxe', grammar: Embed.file('../../../../glaze/assets/glaze/grammars/haxe.json'), path: 'haxe.json'});
-        context.themeService.setTheme('vs-dark');
+        DemoThemes.apply(context, true);
         model = new TextModel(@:privateAccess MainScene.VisualView.SAMPLE, 'haxe', TextModel.DEFAULT_CREATION_OPTIONS, null, context);
     }
 

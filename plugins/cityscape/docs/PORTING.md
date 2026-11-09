@@ -133,6 +133,14 @@ Cityscape is a port of Monaco (vscode `src/vs/editor`, commit a7d9e2c32d573e29e6
 - `ReplacePiece`'s static constructors take the `Static` suffix (`ReplacePiece.staticValueStatic`). The module functions of replacePattern.ts are in `ReplacePatternParser`, of search.ts in `Search`.
 - The query options (case, whole word, regex, preserve case) are stored in `Cityscape.storageService` (vscode's `IStorageService`, `platform/storage/common/Storage.hx`); the tests give their controller a storage of their own.
 
+## Editing contributions specifics (step 4)
+
+- bracketMatching, wordHighlighter, multicursor, comment, linesOperations, indentation, smartSelect, caretOperations, cursorUndo, inPlaceReplace and stickyScroll are under `cityscape/contrib/<name>/view` (indentation also has `common`), each registered by its `XxxRegistration.register(r)` line in `EditorAll`. The look of their class names (`bracket-match`, `wordHighlight*`, `selectionHighlight`, `valueSetReplacement`) is registered as decoration styles of the context unless the host registered its own, like the find decorations.
+- Promises are callbacks: document highlight, document symbol and selection range providers give their result to a `resolve` callback; `OutlineModel.create`, the sticky model providers and `StickyLineCandidateProvider.update` call back when done. Their timers (`RunOnceScheduler`, `Delayer`) are Monaco's; tests call `_flushPendingUpdate` instead of waiting.
+- Monaco's module statics that hold state (the query of the word highlighter) belong to the context: the registration creates them and gives them to the contributions.
+- `SymbolKind` is a module of its own (`cityscape.common.SymbolKind`): its values (`String`, `Array`, `Boolean`...) would shadow the standard types of every module importing `Languages`.
+- The view parts these contributions need: `view/viewParts/indentGuides/IndentGuides.hx` (Monaco's `IndentGuidesOverlay`, painted by `CityscapeViewElement`), `view/Codicons.hx` (the codicon outlines of the folding controls), the sticky scroll widget (an overlay widget whose Glaze view is an entity of its own, rendered again when the widget changes).
+
 ## Tests
 
 - Port vscode's tests of every ported module into `tests/unit/src/tests/<path>`, same names (`test('empty range')` becomes `testEmptyRange`), same expected values. A test that cannot be ported yet is listed in the class comment with the reason.

@@ -15,10 +15,10 @@ import cityscape.common.model.DecorationProvider;
  * The decorations that colorize the bracket pairs (inline class names
  * `bracket-highlighting-N` and `unexpected-closing-bracket`).
  *
- * TODO(step 2): the colors of these class names (Monaco's theming
- * participant, `editorBracketHighlighting.foreground1..6` and
- * `editorBracketHighlighting.unexpectedBracket.foreground`) come with the
- * theme service.
+ * The colors of these class names (Monaco's theming participant,
+ * `editorBracketHighlight.foreground1..6` and
+ * `editorBracketHighlight.unexpectedBracket.foreground`) are resolved by
+ * the view (`DecorationStyleResolver`).
  */
 class ColorizedBracketPairsDecorationProvider extends Disposable implements DecorationProvider {
 

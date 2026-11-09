@@ -8,8 +8,10 @@ import ceramic.InitSettings;
 /**
  * Visual check of the Cityscape view: a Haxe sample in two editors (word
  * wrap with an indent per level, typed decorations, a hidden range,
- * selections, cursors, rulers, whitespace, CJK and emoji), `vs-dark` theme.
+ * selections, cursors, rulers, whitespace, CJK and emoji), VS Code's Dark+ theme.
  * Other scenes with `CITYSCAPE_VISUAL_SCENE`: `folding` (FoldingVisualView),
+ * `editing` (EditingVisualView: bracket pairs, guides, word highlight,
+ * multicursor, sticky scroll), `find` (FindVisualView),
  * `api` (ApiVisualView: models switched through the editor API, markers,
  * an action) and `columns` (ColumnsVisualView: the column positions of wide
  * text compared with the real Monaco, written as JSON to

@@ -120,6 +120,11 @@ class Tests {
         runner.add(new tests.contrib.find.FindTest());
         runner.add(new tests.contrib.find.FindModelTest());
         runner.add(new tests.contrib.find.FindControllerTest());
+        runner.add(new tests.contrib.bracketMatching.BracketMatchingTest());
+        runner.add(new tests.contrib.wordHighlighter.WordHighlighterTest());
+        runner.add(new tests.contrib.multicursor.MulticursorTest());
+        runner.add(new tests.contrib.stickyScroll.StickyScrollTest());
+        runner.add(new tests.view.BracketPairColorsTest());
         runner.add(new tests.contrib.find.FindWidgetTest());
 
         // Folding (step 4, cs4-fold)
@@ -131,6 +136,25 @@ class Tests {
         runner.add(new tests.contrib.folding.HiddenRangeModelTest());
         runner.add(new tests.contrib.folding.FoldingModelTest());
         runner.add(new tests.contrib.folding.FoldingControllerTest());
+        runner.add(new tests.contrib.comment.BlockCommentCommandTest());
+        runner.add(new tests.contrib.comment.LineCommentCommandTest());
+        runner.add(new tests.contrib.comment.LineCommentCommandTest.IgnoreEmptyLinesFalseTest());
+        runner.add(new tests.contrib.comment.LineCommentCommandTest.EditorContribLineCommentAsBlockCommentTest());
+        runner.add(new tests.contrib.comment.LineCommentCommandTest.EditorContribLineCommentAsBlockComment2Test());
+        runner.add(new tests.contrib.comment.LineCommentCommandTest.EditorContribLineCommentInMixedModesTest());
+        runner.add(new tests.contrib.linesOperations.CopyLinesCommandTest());
+        runner.add(new tests.contrib.linesOperations.CopyLinesCommandTest.EditorContribDuplicateSelectionTest());
+        runner.add(new tests.contrib.linesOperations.MoveLinesCommandTest());
+        runner.add(new tests.contrib.linesOperations.MoveLinesCommandTest.EditorContribMoveLinesCommandHonorsIndentationRulesTest());
+        runner.add(new tests.contrib.linesOperations.MoveLinesCommandTest.EditorContribMoveLinesCommandHonorsOnEnterRulesTest());
+        runner.add(new tests.contrib.linesOperations.SortLinesCommandTest());
+        runner.add(new tests.contrib.linesOperations.LinesOperationsTest());
+        runner.add(new tests.contrib.linesOperations.LinesOperationsTest.SortLinesAscendingActionTest());
+        runner.add(new tests.contrib.linesOperations.LinesOperationsTest.SortLinesDescendingActionTest());
+        runner.add(new tests.contrib.linesOperations.LinesOperationsTest.DeleteDuplicateLinesActionTest());
+        runner.add(new tests.contrib.linesOperations.LinesOperationsTest.DeleteAllLeftActionTest());
+        runner.add(new tests.contrib.linesOperations.LinesOperationsTest.JoinLinesActionTest());
+        runner.add(new tests.contrib.linesOperations.LinesOperationsTest.DeleteAllRightActionTest());
 
         // Commands, keybindings, context keys, editor API (step 3, cs3-api)
         runner.add(new tests.platform.contextkey.ContextKeyScannerTest());
@@ -139,6 +163,26 @@ class Tests {
         runner.add(new tests.platform.keybinding.KeybindingResolverTest());
         runner.add(new tests.platform.markers.MarkerServiceTest());
         runner.add(new tests.view.CityscapeApiTest());
+
+        // Indentation, smart select, caret operations, cursor undo, in place replace (step 4, cs4-edit)
+        runner.add(new tests.contrib.indentation.IndentationTest.ChangeIndentationToSpacesTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.ChangeIndentationToTabsTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.IndentWithTabTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnPasteTypeScriptTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnTypeTypeScriptTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnTypeRubyTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnTypePHPTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnPasteGoTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnTypeCPPTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnTypeHTMLTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnTypeVisualBasicTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnTypeLatexTest());
+        runner.add(new tests.contrib.indentation.IndentationTest.AutoIndentOnTypeLuaTest());
+        runner.add(new tests.contrib.indentation.IndentationLineProcessorTest.IndentationContextProcessorTest());
+        runner.add(new tests.contrib.indentation.IndentationLineProcessorTest.ProcessedIndentRulesSupportTest());
+        runner.add(new tests.contrib.smartSelect.SmartSelectTest());
+        runner.add(new tests.contrib.caretOperations.MoveCaretCommandTest());
+        runner.add(new tests.contrib.cursorUndo.CursorUndoTest());
 
     }
 

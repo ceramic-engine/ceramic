@@ -270,6 +270,11 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     public final measurements:EditorFontMeasurements;
     public final resolver:DecorationStyleResolver;
+
+    /**
+     * The colors of the indentation and bracket pair guides.
+     */
+    public final guideColors:cityscape.view.viewParts.indentGuides.IndentGuides.IndentGuideColors;
     public final theme:ViewTheme;
     public final scrollHandle:CityscapeScrollHandle;
     public final focusHandle:glaze.FocusHandle;
@@ -330,6 +335,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         this.theme = new ViewTheme(context.themeService, context.tokenizationRegistry);
         this.measurements = measurements;
         this.resolver = new DecorationStyleResolver(theme, context.decorationStyles);
+        this.guideColors = new cityscape.view.viewParts.indentGuides.IndentGuides.IndentGuideColors(theme);
         this.scrollHandle = new CityscapeScrollHandle(this);
         this.focusHandle = cx.app.focusHandle();
         widget.setView(this);
@@ -811,9 +817,11 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     /**
      * The rendered view line `viewLineNumber` (cached while its rendering
-     * input, the fonts and the theme stay the same).
+     * input, the fonts and the theme stay the same). `cache` replaces the
+     * cache of the visible lines (the sticky scroll keeps its own lines).
      */
-    public function renderViewLine(viewLineNumber:Int, ?visibleRange:Range):RenderedViewLine {
+    public function renderViewLine(viewLineNumber:Int, ?visibleRange:Range, ?cache:Map<Int, RenderedViewLine>):RenderedViewLine {
+        final renderCache = cache != null ? cache : this.renderCache;
         final created = createRenderLineInput(viewLineNumber, visibleRange);
         final input = created.input;
         final fontGeneration = app.textSystem().fontGeneration;

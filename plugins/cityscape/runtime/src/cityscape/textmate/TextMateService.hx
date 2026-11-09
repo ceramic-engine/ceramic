@@ -52,8 +52,19 @@ typedef ITextMateGrammarDefinition = {
      */
     @:optional var tokenTypes:Map<String, StandardTokenType>;
 
+    /**
+     * The scopes whose brackets are balanced (VS Code's
+     * `balancedBracketScopes` of a grammar contribution). Null gives VS
+     * Code's default, `['*']`: the brackets of every token count for the
+     * bracket pairs (colorization, matching, guides) unless they are in a
+     * string, a comment or a regular expression.
+     */
     @:optional var balancedBracketSelectors:Array<String>;
 
+    /**
+     * The scopes whose brackets are not balanced (VS Code's
+     * `unbalancedBracketScopes`, `[]` by default).
+     */
     @:optional var unbalancedBracketSelectors:Array<String>;
 
     /**
@@ -265,8 +276,10 @@ class TextMateService extends Disposable {
         final grammar = _registry.loadGrammarWithConfiguration(scopeName, encodedLanguageId, {
             embeddedLanguages: embeddedLanguages,
             tokenTypes: tokenTypes,
-            balancedBracketSelectors: definition.balancedBracketSelectors,
-            unbalancedBracketSelectors: definition.unbalancedBracketSelectors
+            // VS Code's grammar contributions: `asStringArray(grammar.balancedBracketScopes, ['*'])`
+            // and `asStringArray(grammar.unbalancedBracketScopes, [])`
+            balancedBracketSelectors: definition.balancedBracketSelectors != null ? definition.balancedBracketSelectors : ['*'],
+            unbalancedBracketSelectors: definition.unbalancedBracketSelectors != null ? definition.unbalancedBracketSelectors : []
         });
         if (grammar == null) {
             return null;

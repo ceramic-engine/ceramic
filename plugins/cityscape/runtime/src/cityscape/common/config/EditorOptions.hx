@@ -140,6 +140,14 @@ typedef IEditorOptions = {
      */
     @:optional var stickyScroll:IEditorStickyScrollOptions;
     /**
+     * Configures bracket pair colorization (disabled by default).
+     */
+    @:optional var bracketPairColorization:IBracketPairColorizationOptions;
+    /**
+     * Controls the rendering of the guides (indentation and bracket pairs).
+     */
+    @:optional var guides:IGuidesOptions;
+    /**
      * Enable that scrolling can go one screen size after the last line.
      * Defaults to true.
      */
@@ -279,6 +287,10 @@ typedef IEditorOptions = {
      * Control the behavior of the find widget.
      */
     @:optional var find:cityscape.common.config.EditorFindOptions.IEditorFindOptions;
+    /**
+     * Control the behaviour of comments in the editor.
+     */
+    @:optional var comments:cityscape.common.config.EditorCommentsOptions.IEditorCommentsOptions;
     /**
      * Controls whether the definition link opens element in the peek widget.
      * Defaults to false.
@@ -1311,6 +1323,153 @@ class EditorStickyScroll extends BaseEditorOption<EditorStickyScrollOptions> {
 
 //#endregion
 
+//#region bracketPairColorization
+
+typedef IBracketPairColorizationOptions = {
+    /**
+     * Enable or disable bracket pair colorization.
+     */
+    @:optional var enabled:Bool;
+    /**
+     * Use independent color pool per bracket type.
+     */
+    @:optional var independentColorPoolPerBracketType:Bool;
+}
+
+/**
+ * @internal
+ */
+typedef InternalBracketPairColorizationOptions = {
+    final enabled:Bool;
+    final independentColorPoolPerBracketType:Bool;
+}
+
+/**
+ * Configuration options for inline suggestions
+ */
+class BracketPairColorization extends BaseEditorOption<InternalBracketPairColorizationOptions> {
+
+    public function new() {
+        final defaults:InternalBracketPairColorizationOptions = {
+            enabled: cityscape.common.core.TextModelDefaults.EDITOR_MODEL_DEFAULTS.bracketPairColorizationOptions.enabled,
+            independentColorPoolPerBracketType: cityscape.common.core.TextModelDefaults.EDITOR_MODEL_DEFAULTS.bracketPairColorizationOptions.independentColorPoolPerBracketType,
+        };
+        super(EditorOption.bracketPairColorization, 'bracketPairColorization', defaults);
+    }
+
+    public function validate(_input:Any):InternalBracketPairColorizationOptions {
+        if (!JsValues.truthy(_input) || !JsValues.isObject(_input)) {
+            return this.defaultValue;
+        }
+        final input = _input;
+        return {
+            enabled: EditorOptions.boolean(JsValues.field(input, 'enabled'), this.defaultValue.enabled),
+            independentColorPoolPerBracketType: EditorOptions.boolean(JsValues.field(input, 'independentColorPoolPerBracketType'), this.defaultValue.independentColorPoolPerBracketType),
+        };
+    }
+
+}
+
+//#endregion
+
+//#region guides
+
+typedef IGuidesOptions = {
+    /**
+     * Enable rendering of bracket pair guides: `true`, `false` or `'active'`.
+     * Defaults to false.
+     */
+    @:optional var bracketPairs:Any;
+    /**
+     * Enable rendering of vertical bracket pair guides: `true`, `false` or
+     * `'active'`. Defaults to 'active'.
+     */
+    @:optional var bracketPairsHorizontal:Any;
+    /**
+     * Enable highlighting of the active bracket pair.
+     * Defaults to true.
+     */
+    @:optional var highlightActiveBracketPair:Bool;
+    /**
+     * Enable rendering of indent guides.
+     * Defaults to true.
+     */
+    @:optional var indentation:Bool;
+    /**
+     * Enable highlighting of the active indent guide: `true`, `false` or
+     * `'always'`. Defaults to true.
+     */
+    @:optional var highlightActiveIndentation:Any;
+}
+
+/**
+ * @internal
+ *
+ * `bracketPairs` and `bracketPairsHorizontal` are `true`, `false` or
+ * `'active'`; `highlightActiveIndentation` is `true`, `false` or
+ * `'always'` (Monaco's `boolean | string` values, compared with
+ * `JsValues`).
+ */
+typedef InternalGuidesOptions = {
+    final bracketPairs:Any;
+    final bracketPairsHorizontal:Any;
+    final highlightActiveBracketPair:Bool;
+    final indentation:Bool;
+    final highlightActiveIndentation:Any;
+}
+
+/**
+ * Configuration options for inline suggestions
+ */
+class GuideOptions extends BaseEditorOption<InternalGuidesOptions> {
+
+    public function new() {
+        final defaults:InternalGuidesOptions = {
+            bracketPairs: false,
+            bracketPairsHorizontal: 'active',
+            highlightActiveBracketPair: true,
+            indentation: true,
+            highlightActiveIndentation: true
+        };
+        super(EditorOption.guides, 'guides', defaults);
+    }
+
+    public function validate(_input:Any):InternalGuidesOptions {
+        if (!JsValues.truthy(_input) || !JsValues.isObject(_input)) {
+            return this.defaultValue;
+        }
+        final input = _input;
+        return {
+            bracketPairs: primitiveSet(JsValues.field(input, 'bracketPairs'), this.defaultValue.bracketPairs, [true, false, 'active']),
+            bracketPairsHorizontal: primitiveSet(JsValues.field(input, 'bracketPairsHorizontal'), this.defaultValue.bracketPairsHorizontal, [true, false, 'active']),
+            highlightActiveBracketPair: EditorOptions.boolean(JsValues.field(input, 'highlightActiveBracketPair'), this.defaultValue.highlightActiveBracketPair),
+            indentation: EditorOptions.boolean(JsValues.field(input, 'indentation'), this.defaultValue.indentation),
+            highlightActiveIndentation: primitiveSet(JsValues.field(input, 'highlightActiveIndentation'), this.defaultValue.highlightActiveIndentation, [true, false, 'always']),
+        };
+    }
+
+    /**
+     * `allowedValues.indexOf(value)` with JavaScript's strict equality
+     * (a boolean or a string).
+     */
+    static function primitiveSet(value:Any, defaultValue:Any, allowedValues:Array<Any>):Any {
+        for (allowed in allowedValues) {
+            if (JsValues.isString(allowed)) {
+                if (JsValues.isString(value) && (value : String) == (allowed : String)) {
+                    return allowed;
+                }
+            }
+            else if (JsValues.isBoolean(value) && (value : Bool) == (allowed : Bool)) {
+                return allowed;
+            }
+        }
+        return defaultValue;
+    }
+
+}
+
+//#endregion
+
 //#region lineDecorationsWidth
 
 class EditorLineDecorationsWidth extends BaseEditorOption<Float> {
@@ -2103,15 +2262,15 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final autoIndent:EditorOption<EditorAutoIndentStrategy> = new EditorOption<EditorAutoIndentStrategy>(12);
     public static inline final automaticLayout:EditorOption<Bool> = new EditorOption<Bool>(13);
     public static inline final autoSurround:EditorOption<String> = new EditorOption<String>(14);
-    public static inline final bracketPairColorization:EditorOption<Any> = new EditorOption<Any>(15);
-    public static inline final guides:EditorOption<Any> = new EditorOption<Any>(16);
+    public static inline final bracketPairColorization:EditorOption<InternalBracketPairColorizationOptions> = new EditorOption<InternalBracketPairColorizationOptions>(15);
+    public static inline final guides:EditorOption<InternalGuidesOptions> = new EditorOption<InternalGuidesOptions>(16);
     public static inline final codeLens:EditorOption<Any> = new EditorOption<Any>(17);
     public static inline final codeLensFontFamily:EditorOption<Any> = new EditorOption<Any>(18);
     public static inline final codeLensFontSize:EditorOption<Any> = new EditorOption<Any>(19);
     public static inline final colorDecorators:EditorOption<Bool> = new EditorOption<Bool>(20);
     public static inline final colorDecoratorsLimit:EditorOption<Any> = new EditorOption<Any>(21);
     public static inline final columnSelection:EditorOption<Bool> = new EditorOption<Bool>(22);
-    public static inline final comments:EditorOption<Any> = new EditorOption<Any>(23);
+    public static inline final comments:EditorOption<cityscape.common.config.EditorCommentsOptions.EditorCommentsOptions> = new EditorOption<cityscape.common.config.EditorCommentsOptions.EditorCommentsOptions>(23);
     public static inline final contextmenu:EditorOption<Bool> = new EditorOption<Bool>(24);
     public static inline final copyWithSyntaxHighlighting:EditorOption<Bool> = new EditorOption<Bool>(25);
     public static inline final cursorBlinking:EditorOption<TextEditorCursorBlinkingStyle> = new EditorOption<TextEditorCursorBlinkingStyle>(26);
@@ -2367,6 +2526,8 @@ class EditorOptions {
     static var _showFoldingControls:IEditorOption<String>;
     static var _smoothScrolling:IEditorOption<Bool>;
     static var _stickyScroll:IEditorOption<EditorStickyScrollOptions>;
+    static var _bracketPairColorization:IEditorOption<InternalBracketPairColorizationOptions>;
+    static var _guides:IEditorOption<InternalGuidesOptions>;
     static var _suggest:IEditorOption<InternalSuggestOptions>;
     static var _suggestOnTriggerCharacters:IEditorOption<Bool>;
     static var _wordSeparators:IEditorOption<String>;
@@ -2830,6 +2991,22 @@ class EditorOptions {
         return _smoothScrolling;
     }
 
+    public static var bracketPairColorization(get, never):IEditorOption<InternalBracketPairColorizationOptions>;
+    static function get_bracketPairColorization():IEditorOption<InternalBracketPairColorizationOptions> {
+        if (_registry == null) {
+            init();
+        }
+        return _bracketPairColorization;
+    }
+
+    public static var guides(get, never):IEditorOption<InternalGuidesOptions>;
+    static function get_guides():IEditorOption<InternalGuidesOptions> {
+        if (_registry == null) {
+            init();
+        }
+        return _guides;
+    }
+
     public static var stickyScroll(get, never):IEditorOption<EditorStickyScrollOptions>;
     static function get_stickyScroll():IEditorOption<EditorStickyScrollOptions> {
         if (_registry == null) {
@@ -2898,6 +3075,8 @@ class EditorOptions {
         _autoIndent = register(new EditorEnumOption(EditorOption.autoIndent, 'autoIndent', EditorAutoIndentStrategy.Full, 'full', ['none', 'keep', 'brackets', 'advanced', 'full'], _autoIndentFromString));
         _automaticLayout = register(new EditorBooleanOption(EditorOption.automaticLayout, 'automaticLayout', false));
         _autoSurround = register(new EditorStringEnumOption(EditorOption.autoSurround, 'autoSurround', 'languageDefined', ['languageDefined', 'quotes', 'brackets', 'never']));
+        _bracketPairColorization = register(new BracketPairColorization());
+        _guides = register(new GuideOptions());
         _colorDecorators = register(new EditorBooleanOption(EditorOption.colorDecorators, 'colorDecorators', true));
         _contextmenu = register(new EditorBooleanOption(EditorOption.contextmenu, 'contextmenu', true));
         _cursorBlinking = register(new EditorEnumOption(EditorOption.cursorBlinking, 'cursorBlinking', TextEditorCursorBlinkingStyle.Blink, 'blink', ['blink', 'smooth', 'phase', 'expand', 'solid'], _cursorBlinkingStyleFromString));
@@ -2959,6 +3138,8 @@ class EditorOptions {
         EditorCursorOptions.registerSimple(o -> register(o));
         // The find option (EditorFindOptions.hx), registered with the find contribution
         cityscape.common.config.EditorFindOptions.EditorFindOptionsRegistration.registerSimple(o -> register(o));
+        // The comments option (EditorCommentsOptions.hx), registered with the comment contribution
+        cityscape.common.config.EditorCommentsOptions.EditorCommentsOptionsRegistration.registerSimple(o -> register(o));
         EditorViewOptions.registerComputed(o -> register(o));
     }
 

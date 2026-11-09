@@ -487,6 +487,9 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
                 final layoutInfo = options.get(EditorOption.layoutInfo);
                 this._onDidLayoutChange.fire(layoutInfo);
             }
+            if (e.hasChanged(EditorOption.bracketPairColorization) && this._modelData != null) {
+                this._applyBracketPairColorization(this._modelData.model);
+            }
         }));
 
         final options = this._configuration.options;
@@ -1629,6 +1632,24 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
         return _wrappingIndentColumns;
     }
 
+    /**
+     * Monaco's standalone editor writes the `bracketPairColorization`
+     * option to the configuration service, whose model service gives it to
+     * the models (`bracketColorizationOptions`). Without a configuration
+     * service, an editor gives the option it was set with to its model.
+     */
+    function _applyBracketPairColorization(model:ITextModel):Void {
+        final raw:Dynamic = this._configuration.getRawOptions();
+        if (raw == null || !Reflect.hasField(raw, 'bracketPairColorization')) {
+            return;
+        }
+        final value = this._configuration.options.get(EditorOption.bracketPairColorization);
+        final current = model.getOptions().bracketPairColorizationOptions;
+        if (current.enabled != value.enabled || current.independentColorPoolPerBracketType != value.independentColorPoolPerBracketType) {
+            model.updateOptions({bracketColorizationOptions: {enabled: value.enabled, independentColorPoolPerBracketType: value.independentColorPoolPerBracketType}});
+        }
+    }
+
     function _attachModel(model:Null<ITextModel>):Void {
         if (model == null) {
             this._modelData = null;
@@ -1639,6 +1660,7 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
 
         this._configuration.setIsDominatedByLongLines(model.isDominatedByLongLines());
         this._configuration.setModelLineCount(model.getLineCount());
+        this._applyBracketPairColorization(model);
 
         final domFactory = _view != null ? _view.createDomLineBreaksComputerFactory() : null;
         final viewModel = new ViewModel(
