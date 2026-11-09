@@ -116,6 +116,16 @@ class Tests {
         runner.add(new tests.commands.ShiftCommandTest());
         runner.add(new tests.contrib.wordOperations.WordOperationsTest());
 
+        // Folding (step 4, cs4-fold)
+        runner.add(new tests.contrib.folding.FoldingRangesTest());
+        runner.add(new tests.contrib.folding.IndentRangeProviderTest());
+        runner.add(new tests.contrib.folding.IndentRangeProviderTest.FoldingWithRegionsTest());
+        runner.add(new tests.contrib.folding.IndentFoldTest());
+        runner.add(new tests.contrib.folding.SyntaxFoldTest());
+        runner.add(new tests.contrib.folding.HiddenRangeModelTest());
+        runner.add(new tests.contrib.folding.FoldingModelTest());
+        runner.add(new tests.contrib.folding.FoldingControllerTest());
+
     }
 
 }

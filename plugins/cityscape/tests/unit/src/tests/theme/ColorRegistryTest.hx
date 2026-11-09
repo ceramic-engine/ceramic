@@ -24,8 +24,9 @@ class ColorRegistryTest extends TestCase {
         final colors = ColorUtils.getColorRegistry().getColors();
         // 297 registerColor calls in baseColors, editorColors, inputColors,
         // listColors, menuColors, minimapColors, miscColors, quickpickColors,
-        // searchColors and editorColorRegistry, all with distinct ids
-        assertEquals(297, colors.length);
+        // searchColors and editorColorRegistry, all with distinct ids, and
+        // the 3 of the folding contribution (foldingDecorations.ts)
+        assertEquals(297 + 3, colors.length);
         final ids = new Map<String, Bool>();
         for (c in colors) {
             ids.set(c.id, true);
@@ -35,6 +36,9 @@ class ColorRegistryTest extends TestCase {
         assertTrue(ids.exists('editorCursor.foreground'));
         assertTrue(ids.exists('minimap.background'));
         assertTrue(ids.exists('editorIndentGuide.background1'));
+        assertTrue(ids.exists('editor.foldBackground'));
+        assertTrue(ids.exists('editor.foldPlaceholderForeground'));
+        assertTrue(ids.exists('editorGutter.foldingControlForeground'));
         assertEquals('editor.background', EditorColors.editorBackground);
         assertEquals('minimap.background', MinimapColors.minimapBackground);
         assertEquals('editorIndentGuide.activeBackground1', EditorColorRegistry.editorActiveIndentGuide1);

@@ -39,6 +39,8 @@ class ColorRegistry {
         QuickpickColors.registerColors();
         SearchColors.registerColors();
         EditorColorRegistry.registerColors();
+        // Colors of the editor contributions (registered when Monaco loads them)
+        cityscape.contrib.folding.view.FoldingDecorations.FoldingColors.registerColors();
     }
 
 }

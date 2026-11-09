@@ -20,7 +20,8 @@ import haxe.extern.EitherType;
  * autoClosingQuotes, autoIndent, automaticLayout, autoSurround,
  * colorDecorators, contextmenu, cursorBlinking, cursorSmoothCaretAnimation,
  * cursorStyle, cursorSurroundingLines, cursorWidth,
- * definitionLinkOpensInPeek, fixedOverflowWidgets, folding, foldingStrategy,
+ * definitionLinkOpensInPeek, fixedOverflowWidgets, folding, foldingHighlight,
+ * foldingImportsByDefault, foldingMaximumRegions, foldingStrategy,
  * fontFamily, fontLigatures, fontSize, fontWeight, glyphMargin, gotoLocation,
  * hover, letterSpacing, lineDecorationsWidth, lineHeight, lineNumbers,
  * lineNumbersMinChars, links, matchBrackets, mouseWheelZoom,
@@ -29,7 +30,8 @@ import haxe.extern.EitherType;
  * renderFinalNewline, renderLineHighlight, renderWhitespace, roundedSelection,
  * rulers, scrollbar, scrollBeyondLastColumn, scrollBeyondLastLine,
  * selectionHighlight, showFoldingControls, smoothScrolling, stickyScroll,
- * suggest, suggestOnTriggerCharacters, wordSeparators, wordWrap,
+ * suggest, suggestOnTriggerCharacters, unfoldOnClickAfterEndOfLine,
+ * wordSeparators, wordWrap,
  * wordWrapColumn, wrappingIndent; and the options of the view, see
  * `EditorViewOptions` (including the computed `fontInfo`, `pixelRatio`,
  * `layoutInfo` and `wrappingInfo`).
@@ -309,6 +311,26 @@ typedef IEditorOptions = {
      * Defaults to 'mouseover'.
      */
     @:optional var showFoldingControls:String;
+    /**
+     * Enable highlight for folded regions.
+     * Defaults to true.
+     */
+    @:optional var foldingHighlight:Bool;
+    /**
+     * Auto fold imports folding regions.
+     * Defaults to true.
+     */
+    @:optional var foldingImportsByDefault:Bool;
+    /**
+     * Maximum number of foldable regions.
+     * Defaults to 5000.
+     */
+    @:optional var foldingMaximumRegions:Int;
+    /**
+     * Controls whether clicking on the empty content after a folded line will unfold the line.
+     * Defaults to false.
+     */
+    @:optional var unfoldOnClickAfterEndOfLine:Bool;
     /**
      * Enable rendering of control characters.
      * Defaults to true.
@@ -2107,10 +2129,10 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final fixedOverflowWidgets:EditorOption<Bool> = new EditorOption<Bool>(42);
     public static inline final folding:EditorOption<Bool> = new EditorOption<Bool>(43);
     public static inline final foldingStrategy:EditorOption<String> = new EditorOption<String>(44);
-    public static inline final foldingHighlight:EditorOption<Any> = new EditorOption<Any>(45);
-    public static inline final foldingImportsByDefault:EditorOption<Any> = new EditorOption<Any>(46);
-    public static inline final foldingMaximumRegions:EditorOption<Any> = new EditorOption<Any>(47);
-    public static inline final unfoldOnClickAfterEndOfLine:EditorOption<Any> = new EditorOption<Any>(48);
+    public static inline final foldingHighlight:EditorOption<Bool> = new EditorOption<Bool>(45);
+    public static inline final foldingImportsByDefault:EditorOption<Bool> = new EditorOption<Bool>(46);
+    public static inline final foldingMaximumRegions:EditorOption<Int> = new EditorOption<Int>(47);
+    public static inline final unfoldOnClickAfterEndOfLine:EditorOption<Bool> = new EditorOption<Bool>(48);
     public static inline final fontFamily:EditorOption<String> = new EditorOption<String>(49);
     public static inline final fontInfo:EditorOption<FontInfo> = new EditorOption<FontInfo>(50);
     public static inline final fontLigatures:EditorOption<String> = new EditorOption<String>(51);
@@ -2302,6 +2324,10 @@ class EditorOptions {
     static var _fixedOverflowWidgets:IEditorOption<Bool>;
     static var _folding:IEditorOption<Bool>;
     static var _foldingStrategy:IEditorOption<String>;
+    static var _foldingHighlight:IEditorOption<Bool>;
+    static var _foldingImportsByDefault:IEditorOption<Bool>;
+    static var _foldingMaximumRegions:IEditorOption<Int>;
+    static var _unfoldOnClickAfterEndOfLine:IEditorOption<Bool>;
     static var _fontFamily:IEditorOption<String>;
     static var _fontLigatures:IEditorOption<String>;
     static var _fontSize:IEditorOption<Float>;
@@ -2494,6 +2520,38 @@ class EditorOptions {
             init();
         }
         return _foldingStrategy;
+    }
+
+    public static var foldingHighlight(get, never):IEditorOption<Bool>;
+    static function get_foldingHighlight():IEditorOption<Bool> {
+        if (_registry == null) {
+            init();
+        }
+        return _foldingHighlight;
+    }
+
+    public static var foldingImportsByDefault(get, never):IEditorOption<Bool>;
+    static function get_foldingImportsByDefault():IEditorOption<Bool> {
+        if (_registry == null) {
+            init();
+        }
+        return _foldingImportsByDefault;
+    }
+
+    public static var foldingMaximumRegions(get, never):IEditorOption<Int>;
+    static function get_foldingMaximumRegions():IEditorOption<Int> {
+        if (_registry == null) {
+            init();
+        }
+        return _foldingMaximumRegions;
+    }
+
+    public static var unfoldOnClickAfterEndOfLine(get, never):IEditorOption<Bool>;
+    static function get_unfoldOnClickAfterEndOfLine():IEditorOption<Bool> {
+        if (_registry == null) {
+            init();
+        }
+        return _unfoldOnClickAfterEndOfLine;
     }
 
     public static var fontFamily(get, never):IEditorOption<String>;
@@ -2847,6 +2905,10 @@ class EditorOptions {
         _fixedOverflowWidgets = register(new EditorBooleanOption(EditorOption.fixedOverflowWidgets, 'fixedOverflowWidgets', false));
         _folding = register(new EditorBooleanOption(EditorOption.folding, 'folding', true));
         _foldingStrategy = register(new EditorStringEnumOption(EditorOption.foldingStrategy, 'foldingStrategy', 'auto', ['auto', 'indentation']));
+        _foldingHighlight = register(new EditorBooleanOption(EditorOption.foldingHighlight, 'foldingHighlight', true));
+        _foldingImportsByDefault = register(new EditorBooleanOption(EditorOption.foldingImportsByDefault, 'foldingImportsByDefault', false));
+        _foldingMaximumRegions = register(new EditorIntOption(EditorOption.foldingMaximumRegions, 'foldingMaximumRegions', 5000, 10, 65000)); // limit must be less than foldingRanges MAX_FOLDING_REGIONS
+        _unfoldOnClickAfterEndOfLine = register(new EditorBooleanOption(EditorOption.unfoldOnClickAfterEndOfLine, 'unfoldOnClickAfterEndOfLine', false));
         _fontFamily = register(new EditorStringOption(EditorOption.fontFamily, 'fontFamily', EditorOptions.EDITOR_FONT_DEFAULTS.fontFamily));
         _fontLigatures = register(new EditorFontLigatures());
         _fontSize = register(new EditorFontSize());

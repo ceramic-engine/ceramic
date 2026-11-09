@@ -28,6 +28,14 @@ class Errors {
         unexpectedErrorHandler(e);
     }
 
+    /**
+     * An error of code outside the editor (a language feature provider).
+     * Monaco's handler treats it like `onUnexpectedError`.
+     */
+    public static function onUnexpectedExternalError(e:Dynamic):Void {
+        unexpectedErrorHandler(e);
+    }
+
 }
 
 /**

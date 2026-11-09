@@ -34,11 +34,19 @@ class MainScene extends Scene {
 
     var view:Null<Entity<VisualView>> = null;
 
+    var foldingView:Null<Entity<FoldingVisualView>> = null;
+
     override function create() {
 
         out = Platform.getEnv('CITYSCAPE_VISUAL_OUT');
 
+        final scene = Platform.getEnv('CITYSCAPE_VISUAL_SCENE');
         ui = new Glaze((window, cx) -> {
+            if (scene == 'folding') {
+                // Folded regions (FoldingVisualView.hx)
+                foldingView = cx.newEntity((viewCx:Context<FoldingVisualView>) -> new FoldingVisualView(viewCx));
+                return foldingView;
+            }
             view = cx.newEntity((viewCx:Context<VisualView>) -> new VisualView(viewCx));
             return view;
         });
@@ -58,6 +66,10 @@ class MainScene extends Scene {
         // The cursors are drawn while the editor has focus
         if (view != null && ui.window != null) {
             final v:VisualView = view;
+            v.focusLeft(ui.window, Glaze.app);
+        }
+        if (foldingView != null && ui.window != null) {
+            final v:FoldingVisualView = foldingView;
             v.focusLeft(ui.window, Glaze.app);
         }
 

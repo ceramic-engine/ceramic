@@ -3,6 +3,7 @@
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.common;
 
+import cityscape.base.common.Cancellation.CancellationToken;
 import cityscape.base.common.Color;
 import cityscape.base.common.Event;
 import cityscape.base.common.Lifecycle.IDisposable;
@@ -275,4 +276,95 @@ typedef FormattingOptions = {
 typedef IInplaceReplaceSupportResult = {
     var value:String;
     var range:cityscape.common.core.Range.IRange;
+}
+
+typedef FoldingContext = {}
+
+/**
+ * A provider of folding ranges for editor models.
+ *
+ * Monaco's `provideFoldingRanges` returns a `ProviderResult` (the ranges,
+ * null, or a promise of them). Here the provider gives its result to
+ * `resolve`, once, at once or later (an LSP request): an array of ranges, or
+ * null when it has none for this model (the indentation ranges are used when
+ * every provider gives null).
+ */
+interface FoldingRangeProvider {
+
+    /**
+     * @internal
+     */
+    var id(default, null):Null<String>;
+
+    /**
+     * An optional event to signal that the folding ranges from this provider have changed.
+     */
+    var onDidChange(default, null):Null<Event<FoldingRangeProvider>>;
+
+    /**
+     * Provides the folding ranges for a specific model.
+     */
+    function provideFoldingRanges(model:ITextModel, context:FoldingContext, token:CancellationToken, resolve:(ranges:Null<Array<FoldingRange>>) -> Void):Void;
+}
+
+typedef FoldingRange = {
+
+    /**
+     * The one-based start line of the range to fold. The folded area starts after the line's last character.
+     */
+    var start:Int;
+
+    /**
+     * The one-based end line of the range to fold. The folded area ends with the line's last character.
+     */
+    var end:Int;
+
+    /**
+     * Describes the {@link FoldingRangeKind Kind} of the folding range such as {@link FoldingRangeKind.Comment Comment} or
+     * {@link FoldingRangeKind.Region Region}. The kind is used to categorize folding ranges and used by commands
+     * like 'Fold all comments'. See
+     * {@link FoldingRangeKind} for an enumeration of standardized kinds.
+     */
+    @:optional var kind:Null<FoldingRangeKind>;
+}
+
+class FoldingRangeKind {
+    /**
+     * Kind for folding range representing a comment. The value of the kind is 'comment'.
+     */
+    public static final Comment = new FoldingRangeKind('comment');
+    /**
+     * Kind for folding range representing a import. The value of the kind is 'imports'.
+     */
+    public static final Imports = new FoldingRangeKind('imports');
+    /**
+     * Kind for folding range representing regions (for example marked by `#region`, `#endregion`).
+     * The value of the kind is 'region'.
+     */
+    public static final Region = new FoldingRangeKind('region');
+
+    /**
+     * Returns a {@link FoldingRangeKind} for the given value.
+     *
+     * @param value of the kind.
+     */
+    public static function fromValue(value:String):FoldingRangeKind {
+        switch (value) {
+            case 'comment': return FoldingRangeKind.Comment;
+            case 'imports': return FoldingRangeKind.Imports;
+            case 'region': return FoldingRangeKind.Region;
+        }
+        return new FoldingRangeKind(value);
+    }
+
+    public var value:String;
+
+    /**
+     * Creates a new {@link FoldingRangeKind}.
+     *
+     * @param value of the kind.
+     */
+    public function new(value:String) {
+        this.value = value;
+    }
 }

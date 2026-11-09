@@ -293,6 +293,27 @@ class CityscapeViewElement extends Element {
             LinePaint.paintLineAligned(new Point(contentX, lineTop(startLine + i)), line.layout, lineHeight, TextAlign.Left, line.layout.width, line.decorationRuns, null, painter, null);
         }
 
+        // The `⋯` after the first line of a folded range (folding.css
+        // `.inline-folded:after`)
+        var ellipsisRuns:Null<Array<glaze.DecorationRun>> = null;
+        for (i in 0...lines.length) {
+            final line = lines[i];
+            final names = line.runs.partClassNames;
+            for (p in 0...names.length) {
+                if (names[p].indexOf('inline-folded') == -1) {
+                    continue;
+                }
+                final ellipsis = v.foldedEllipsisLayout();
+                if (ellipsisRuns == null) {
+                    final color = theme.getColor('editor.foldPlaceholderForeground');
+                    ellipsisRuns = [new glaze.DecorationRun(ellipsis.len, color != null ? color : new Hsla(0, 0, 0.5, 1), null, null, null)];
+                }
+                final x = contentX + line.layout.xForIndex(line.offsets.utf16ToByte(line.runs.partStarts[p])) + fontInfo.fontSize * 0.2;
+                LinePaint.paintLineAligned(new Point(x, lineTop(startLine + i)), ellipsis, lineHeight, TextAlign.Left, ellipsis.width, ellipsisRuns, null, painter, null);
+                break;
+            }
+        }
+
         // Cursors (Monaco's viewCursors: line, block, underline styles, blink)
         if (focused && v.cursorVisible) {
             final cursorColor = theme.getColor('editorCursor.foreground');
@@ -372,6 +393,9 @@ class CityscapeViewElement extends Element {
                     }
                 }
             }
+            // folding controls (the chevrons of the `firstLineDecorationClassName`
+            // codicons of the folding decorations)
+            paintFoldingControls(window, cx, v, decorations, startLine, endLine, originX, originY - scrollTop, layoutInfo.decorationsLeft, layoutInfo.decorationsWidth, lineHeight, fontInfo.fontSize);
             // line numbers
             final lineNumbers = options.get(EditorOption.lineNumbers);
             if (lineNumbers.renderType != RenderLineNumbersType.Off && layoutInfo.lineNumbersWidth > 0) {
@@ -465,6 +489,78 @@ class CityscapeViewElement extends Element {
         }
 
         v.trimRenderCache(startLine, endLine);
+    }
+
+    /**
+     * Monaco's folding codicons in the line decorations (folding.css): a
+     * chevron right for a collapsed range (always shown), a chevron down for
+     * an expanded one, shown when the mouse is over the gutter
+     * (`showFoldingControls: 'mouseover'`) or always (`alwaysShowFoldIcons`,
+     * `'always'`). Drawn with the chevrons of the kit's icons, colored by
+     * `editorGutter.foldingControlForeground`.
+     */
+    static function paintFoldingControls(window:Window, cx:App, v:CityscapeView, decorations:Array<cityscape.common.ViewModel.ViewModelDecoration>, startLine:Int, endLine:Int, originX:Float, linesOriginY:Float, decorationsLeft:Float, decorationsWidth:Float, lineHeight:Float, fontSize:Float):Void {
+        var color:Null<Hsla> = null;
+        for (d in decorations) {
+            final className = d.options.firstLineDecorationClassName;
+            if (className == null || className.indexOf('codicon-folding-') == -1) {
+                continue;
+            }
+            final ln = d.range.startLineNumber;
+            if (ln < startLine || ln > endLine) {
+                continue;
+            }
+            final collapsed = className.indexOf('codicon-folding-collapsed') != -1 || className.indexOf('codicon-folding-manual-collapsed') != -1;
+            if (!collapsed && className.indexOf('alwaysShowFoldIcons') == -1 && !v.gutterHovered) {
+                continue;
+            }
+            if (color == null) {
+                color = v.theme.getColor('editorGutter.foldingControlForeground');
+                if (color == null) {
+                    color = new Hsla(0, 0, 0.77, 1);
+                }
+            }
+            // `font-size: 140%; margin-left: 2px`, centered in the line
+            // decorations (the kit's chevrons are drawn smaller in their
+            // box than the codicons: the box is grown to match)
+            final size = Math.min(lineHeight, Math.round(fontSize * 1.4 * 1.2));
+            final centerX = originX + decorationsLeft + 2 + decorationsWidth / 2;
+            final centerY = linesOriginY + v.viewModel.viewLayout.getVerticalOffsetForLineNumber(ln) + lineHeight / 2;
+            final icon = collapsed ? glaze.kit.IconName.ChevronRight : glaze.kit.IconName.ChevronDown;
+            final path = glaze.kit.Icon.resolveIconPath(icon.path(), cx);
+            // The kit's icon (or the one the kit theme maps it to); its
+            // embedded SVG when the app did not add the kit's icons to its
+            // asset source (an app without the kit's `init`)
+            final data = path == icon.path() ? embeddedIcon(icon) : null;
+            try {
+                window.paintSvg(new Bounds(new Point(centerX - size / 2, centerY - size / 2), new Size(size, size)), path, data, null, color, cx);
+            }
+            catch (e:Dynamic) {
+                // no icon assets: nothing drawn
+            }
+        }
+    }
+
+    static var _embeddedIcons:Null<Map<String, haxe.io.Bytes>> = null;
+
+    /**
+     * The SVG of a kit icon, embedded in the code (immutable, shared).
+     */
+    static function embeddedIcon(icon:glaze.kit.IconName):Null<haxe.io.Bytes> {
+        if (_embeddedIcons == null) {
+            _embeddedIcons = new Map();
+        }
+        final key = icon.path();
+        var data = _embeddedIcons.get(key);
+        if (data == null) {
+            final index = glaze.kit.IconName.ALL.indexOf(icon);
+            if (index == -1) {
+                return null;
+            }
+            data = haxe.io.Bytes.ofString(@:privateAccess glaze.kit.IconName.embeddedSvgs()[index]);
+            _embeddedIcons.set(key, data);
+        }
+        return data;
     }
 
     /**

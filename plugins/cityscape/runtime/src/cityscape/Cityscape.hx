@@ -74,6 +74,12 @@ class Cityscape {
      */
     public final backgroundScheduler:BackgroundScheduler;
 
+    /**
+     * The registries of the language feature providers (Monaco's
+     * `ILanguageFeaturesService`): folding ranges...
+     */
+    public final languageFeaturesService:cityscape.common.services.LanguageFeaturesService = new cityscape.common.services.LanguageFeaturesService();
+
     var _textMate:Null<TextMateService> = null;
 
     /**
