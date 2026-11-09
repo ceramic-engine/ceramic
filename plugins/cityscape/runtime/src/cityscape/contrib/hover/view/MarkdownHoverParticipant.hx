@@ -174,23 +174,50 @@ class MarkdownHoverParticipant implements IEditorHoverParticipant {
     public function renderHoverParts(context:IEditorHoverRenderContext, hoverParts:Array<IHoverPart>, window:Window, cx:App):Array<IntoElement> {
         final result:Array<IntoElement> = [];
         var partIndex = 0;
-        // Monaco sorts the markdown hovers by ordinal before rendering them
+        // Sort hover parts to keep them stable since they might come in async, out-of-order
         final parts:Array<MarkdownHover> = [for (p in hoverParts) cast p];
         haxe.ds.ArraySort.sort(parts, (a, b) -> a.ordinal - b.ordinal);
         for (hoverPart in parts) {
-            final row = div().flex().flexCol().gap(px(4)).px(px(8)).py(px(4));
+            // renderMarkdownInContainer: a `div.hover-row-contents` with a
+            // `div.markdown-hover > div.hover-contents` per markdown string
+            final row = div().flex().flexCol().minW0();
             var contentIndex = 0;
             for (content in hoverPart.contents) {
                 if (content.value == null || content.value.length == 0) {
                     continue;
                 }
-                row.child(MarkdownRenderer.render(_editor, 'cityscape-hover-md-' + partIndex + '-' + contentIndex, content, cx));
+                row.child(renderMarkdownContents(context, content, 'cityscape-hover-md-' + partIndex + '-' + contentIndex, window, cx));
                 contentIndex++;
             }
             result.push(row);
             partIndex++;
         }
         return result;
+    }
+
+    /**
+     * The `.hover-contents` of a markdown string (`MarkdownRenderer`'s
+     * hover blocks); a subclass changes the blocks in `styleBlocks`.
+     */
+    function renderMarkdownContents(context:IEditorHoverRenderContext, content:IMarkdownString, id:String, window:Window, cx:App):glaze.Div {
+        final fontSize:Float = _editor.getOption(EditorOption.fontInfo).fontSize;
+        final blocks = MarkdownRenderer.parseHoverMarkdown(content, fontSize);
+        styleBlocks(context, blocks, window, cx);
+        return MarkdownRenderer.renderHoverMarkdown(_editor, id, blocks, window, cx, linkHandler());
+    }
+
+    /**
+     * Changes the boxes of the blocks of a markdown string before they
+     * render (nothing by default).
+     */
+    function styleBlocks(context:IEditorHoverRenderContext, blocks:Array<MarkdownRenderer.HoverMarkdownBlock>, window:Window, cx:App):Void {}
+
+    /**
+     * What a click on a link of the hover does (null: the text view's
+     * default).
+     */
+    function linkHandler():Null<(url:String) -> Void> {
+        return null;
     }
 
     public function getAccessibleContent(hoverPart:IHoverPart):String {

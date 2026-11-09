@@ -847,6 +847,40 @@ class LspClientTest extends TestCase {
         client.dispose();
     }
 
+    /**
+     * `registerProviders`: none (`false`) or a list of capabilities; the
+     * documents are synced and the diagnostics become markers either way.
+     */
+    function testRegisterProvidersOption() {
+        for (list in [false, true]) {
+            final option:Any = list ? (['hoverProvider', 'executeCommandProvider'] : Any) : (false : Any);
+            final context = newContext();
+            final server = new FakeLspServer();
+            final model = context.modelService.createModel('x', 'fakelang', Uri.parse(URI_A));
+            final client = new LspClient(context, new InProcessTransport(server), {languageIds: ['fakelang'], registerProviders: option});
+            client.start();
+            assertEquals(list, client.registersProvider('hoverProvider'));
+            assertFalse(client.registersProvider('completionProvider'));
+            assertEquals(list, context.languageFeaturesService.hoverProvider.has(model));
+            assertFalse(context.languageFeaturesService.completionProvider.has(model));
+            assertFalse(context.languageFeaturesService.definitionProvider.has(model));
+            assertFalse(context.languageFeaturesService.codeActionProvider.has(model));
+            assertFalse(context.languageFeaturesService.signatureHelpProvider.has(model));
+            assertFalse(context.languageFeaturesService.documentFormattingEditProvider.has(model));
+            assertEquals(list, context.commandsRegistry.getCommand('fake.run') != null);
+            // synced, diagnostics as markers
+            assertEquals(1, server.messagesOf('textDocument/didOpen').length);
+            server.publish(URI_A, [{range: lspRange(0, 0, 0, 1), severity: 1, message: 'Bad'}]);
+            assertEquals(1, context.markerService.read({resource: model.uri}).length);
+            client.dispose();
+        }
+        // all of them by default (and with `true`)
+        final setup = startWithModel('x');
+        assertTrue(setup.client.registersProvider('completionProvider'));
+        assertTrue(setup.context.languageFeaturesService.completionProvider.has(setup.model));
+        setup.client.dispose();
+    }
+
     //#endregion
 
     //#region cancellation, custom messages, commands, dispose

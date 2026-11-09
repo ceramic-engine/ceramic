@@ -153,6 +153,29 @@ class LanguageFeaturesTest extends TestCase {
         assertEquals(11, editor.getPosition().column);
     }
 
+    /**
+     * Monaco creates the `BeforeFirstInteraction` contributions (the
+     * suggest controller...) in idle time too, not only before a mouse or
+     * key event: an editor typed into through its API alone
+     * (`trigger('keyboard', 'type', ...)`) shows its quick suggestions.
+     */
+    function asyncTestQuickSuggestionsWithoutInteraction(done:() -> Void) {
+        final editor = newEditor();
+        final contributions = @:privateAccess editor._contributions;
+        assertFalse(@:privateAccess contributions._instances.exists(SuggestController.ID));
+        ceramic.Timer.delay(null, 0.05, () -> {
+            assertTrue(@:privateAccess contributions._instances.exists(SuggestController.ID));
+            editor.setPosition(new Position(1, 5));
+            editor.trigger('keyboard', 'type', {text: 'a'});
+            final controller:SuggestController = @:privateAccess cast contributions._instances.get(SuggestController.ID);
+            controller.model._flushQuickSuggest();
+            assertTrue(controller.widget.isVisible());
+            final labels = [for (item in controller.widget.items) item.textLabel];
+            assertTrue(labels.indexOf('alpha') >= 0, labels.join(','));
+            done();
+        });
+    }
+
     function testCompletionResolvesDocumentation() {
         final editor = newEditor();
         editor.setPosition(new Position(1, 5));

@@ -142,6 +142,14 @@ class MarkerHoverParticipant implements IEditorHoverParticipant {
         return (cast hoverPart : MarkerHover).marker.message;
     }
 
+    /**
+     * markerHoverParticipant.ts `_renderMarkerHover`: a `div.hover-row` with
+     * `div.marker.hover-contents` (4 and 8 pixels of padding) in the
+     * editor's font: the message (its line breaks kept), the source and code
+     * at 60% opacity 6 pixels after it (the code of a code with a target in
+     * parentheses, in `textLink.foreground`, underlined), and the related
+     * information below, 8 pixels apart, with its location as a link.
+     */
     function _renderMarkerHover(markerHover:MarkerHover):IntoElement {
         final marker = markerHover.marker;
         final source = marker.source;
@@ -149,45 +157,47 @@ class MarkerHoverParticipant implements IEditorHoverParticipant {
         final code:Any = marker.code;
         final relatedInformation = marker.relatedInformation;
 
-        final style = severityStyle(_editor, marker.severity);
         final fontFamily = EditorWidgets.editorFontFamily(_editor);
-        final fontSize = _editor.getOption(EditorOption.fontSize);
+        final fontInfo = _editor.getOption(EditorOption.fontInfo);
+        final link = EditorWidgets.color(_editor, 'textLink.foreground', rgb(0x3794FF).toHsla());
 
         final markerElement = div()
             .flex()
             .flexCol()
-            .gap(px(2))
             .fontFamily(fontFamily)
-            .textSize(px(fontSize));
+            .textSize(px(fontInfo.fontSize))
+            .lineHeight(px(fontInfo.lineHeight));
 
-        final first = div().flex().flexRow().itemsStart().gap(px(6));
-        first.child(div().flexNone().pt(px(2)).child(Icon.empty().data(SymbolIcons.codiconSvg(style.codicon)).withSize(Math.round(fontSize * 1.1)).textColor(style.color)));
-        final messageBox = div().flex().flexRow().flexWrap().gap(px(6)).minW0();
-        messageBox.child(div().whitespaceNormal().child(message));
+        final first = div().flex().flexRow().flexWrap().minW0();
+        first.child(div().whitespaceNormal().child(message));
 
-        if ((source != null && source.length > 0) || code != null) {
-            var details:String;
+        final hasSource = source != null && source.length > 0;
+        if (hasSource || code != null) {
             // Code has link
             if (code != null && !JsValues.isString(code) && JsValues.isObject(code)) {
                 final value:String = JsValues.toJsString(JsValues.field(code, 'value'));
-                details = source != null && source.length > 0 ? source + '(' + value + ')' : value;
+                final details = div().flex().flexRow().opacity(0.6).pl(px(6));
+                if (hasSource) {
+                    details.child(source);
+                }
+                // a.code-link: `(` and `)` around the underlined code
+                details.child('(').child(div().textColor(link).underline().child(value)).child(')');
+                first.child(details);
             }
             else {
                 final c:Null<String> = code != null ? JsValues.toJsString(code) : null;
-                details = source != null && source.length > 0 && c != null ? source + '(' + c + ')' : (source != null && source.length > 0 ? source : '(' + c + ')');
+                final text = hasSource && c != null ? source + '(' + c + ')' : (hasSource ? source : '(' + c + ')');
+                first.child(div().opacity(0.6).pl(px(6)).child(text));
             }
-            messageBox.child(div().opacity(0.6).child(details));
         }
-        first.child(messageBox);
         markerElement.child(first);
 
         if (relatedInformation != null && relatedInformation.length > 0) {
             for (info in relatedInformation) {
-                final resource = info.resource;
-                final path = resource.path;
+                final path = info.resource.path;
                 final basename = path.substr(path.lastIndexOf('/') + 1);
-                markerElement.child(div().mt(px(8)).flex().flexRow().gap(px(4))
-                    .child(div().textColor(EditorWidgets.color(_editor, 'textLink.foreground', rgb(0x3794FF).toHsla())).child(basename + '(' + info.startLineNumber + ', ' + info.startColumn + '): '))
+                markerElement.child(div().mt(px(8)).flex().flexRow().flexWrap()
+                    .child(div().textColor(link).child(basename + '(' + info.startLineNumber + ', ' + info.startColumn + '): '))
                     .child(info.message));
             }
         }
@@ -195,7 +205,18 @@ class MarkerHoverParticipant implements IEditorHoverParticipant {
         return div().px(px(8)).py(px(4)).child(markerElement);
     }
 
+    /**
+     * The hover whose status bar this participant filled last (its parts
+     * render again at every frame: the quick fixes are asked for once).
+     */
+    var _statusBarContext:Null<IEditorHoverRenderContext> = null;
+
     function renderMarkerStatusbar(context:IEditorHoverRenderContext, markerHover:MarkerHover):Void {
+        final rendered = Std.downcast(context, cityscape.contrib.hover.view.ContentHoverController.RenderedContentHover);
+        if (rendered != null && rendered.renderCount > 0 && _statusBarContext == context) {
+            return;
+        }
+        _statusBarContext = context;
         final severity = markerHover.marker.severity;
         if (severity == MarkerSeverity.Error || severity == MarkerSeverity.Warning || severity == MarkerSeverity.Info) {
             final markerController = cityscape.contrib.gotoError.view.GotoError.MarkerController.get(this._editor);

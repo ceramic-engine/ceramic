@@ -59,6 +59,16 @@ typedef LspClientOptions = {
      * `LspClient.defaultClientCapabilities()`.
      */
     @:optional var capabilities:Any;
+
+    /**
+     * Which of the server's features the client registers as providers of
+     * the context (and commands, `executeCommandProvider`): all of them when
+     * missing or `true`, none with `false`, or the list of the capabilities
+     * to register (`['hoverProvider', 'completionProvider']`). A host that
+     * registers its own providers still gets the document sync, the
+     * diagnostics and `sendRequest`.
+     */
+    @:optional var registerProviders:Any;
 }
 
 /**
@@ -983,8 +993,41 @@ class LspClient {
         return cast ids;
     }
 
+    /**
+     * Whether the provider of a server capability is registered
+     * (`LspClientOptions.registerProviders`).
+     */
+    public function registersProvider(capability:String):Bool {
+        final option:Dynamic = options.registerProviders;
+        if (option == null) {
+            return true;
+        }
+        if (Std.isOfType(option, Bool)) {
+            final enabled:Bool = option;
+            return enabled;
+        }
+        final list = LspConversions.asArray(option);
+        if (list == null) {
+            return true;
+        }
+        for (item in list) {
+            if (LspConversions.asString(item) == capability) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function registerProviders():Void {
-        final caps:Dynamic = serverCapabilities;
+        final serverCaps:Dynamic = serverCapabilities;
+        // the capabilities of the features the host leaves to the client
+        final caps:Dynamic = {};
+        for (field in Reflect.fields(serverCaps)) {
+            if (StringTools.endsWith(field, 'Provider') && !registersProvider(field)) {
+                continue;
+            }
+            Reflect.setField(caps, field, Reflect.field(serverCaps, field));
+        }
         final selector = languageSelector();
         if (isEnabled(caps.completionProvider)) {
             registrations.add(context.registerCompletionItemProvider(selector, new LspCompletionProvider(this, caps.completionProvider)));
@@ -1020,7 +1063,7 @@ class LspClient {
      */
     function registerCommands():Void {
         final provider:Dynamic = serverCapabilities.executeCommandProvider;
-        if (provider == null) {
+        if (provider == null || !registersProvider('executeCommandProvider')) {
             return;
         }
         final commands = LspConversions.asArray(provider.commands);

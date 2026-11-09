@@ -150,4 +150,22 @@ class EditorWidgets {
         return view.measurements.resolveEditorFont(fontInfo.fontFamily, glaze.FontWeight.NORMAL, false, glaze.FontFeatures.defaultValue()).family;
     }
 
+    /**
+     * standalone-tokens.css `--monaco-monospace-font`: the font of the
+     * inline code of hovers.
+     */
+    public static inline final MONOSPACE_FONT = '"SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace';
+
+    /**
+     * The Glaze font family of `--monaco-monospace-font` (the first family
+     * of the list the text system has, like a browser).
+     */
+    public static function monospaceFontFamily(editor:ICodeEditor):String {
+        final view = viewOf(editor);
+        if (view == null) {
+            return 'JetBrains Mono';
+        }
+        return view.measurements.resolveEditorFont(MONOSPACE_FONT, glaze.FontWeight.NORMAL, false, glaze.FontFeatures.defaultValue()).family;
+    }
+
 }

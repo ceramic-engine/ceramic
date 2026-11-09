@@ -185,7 +185,19 @@ private class CodeEditorContributions implements IDisposable {
                 _instantiateById(desc.id);
             }
         }
+        // BeforeFirstInteraction
+        // - these extensions will be instantiated at the latest before a mouse or a keyboard event.
+        // - but if there is idle time, we will instantiate them sooner.
+        // (Monaco's `runWhenWindowIdle`: the next turn of the app here, so
+        // that an editor driven by its API alone, `trigger('keyboard',
+        // 'type', ...)`, gets its quick suggestions like Monaco's)
+        _idleTimer = cityscape.base.common.Async.setTimeout(() -> {
+            _idleTimer = null;
+            onBeforeInteractionEvent();
+        }, 0);
     }
+
+    var _idleTimer:Null<() -> Void> = null;
 
     public function onAfterModelAttached():Null<IDisposable> {
         // Monaco creates the AfterFirstRender contributions when the window is
@@ -207,6 +219,9 @@ private class CodeEditorContributions implements IDisposable {
      * interaction event.
      */
     public function onBeforeInteractionEvent():Void {
+        if (_editor == null) {
+            return;
+        }
         for (id in _order.copy()) {
             final desc = _pending.get(id);
             if (desc != null && desc.instantiation == EditorContributionInstantiation.BeforeFirstInteraction) {
@@ -258,6 +273,10 @@ private class CodeEditorContributions implements IDisposable {
     }
 
     public function dispose():Void {
+        if (_idleTimer != null) {
+            _idleTimer();
+            _idleTimer = null;
+        }
         for (id in _order) {
             final instance = _instances.get(id);
             if (instance != null) {

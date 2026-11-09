@@ -287,6 +287,13 @@ class Cityscape {
      */
     var _markdownCodeBlockHighlighter:Null<{colorMap:Null<Array<cityscape.base.common.Color>>, highlighter:glaze.kit.base.text.CodeBlockHighlighterFn}> = null;
 
+    /**
+     * Restyles the surface of the hovers of the context's editors after
+     * Monaco's look (1 pixel border, 3 pixels corners, no shadow), like a
+     * host's style sheet: rounder corners, a shadow... Null by default.
+     */
+    public var hoverChrome:Null<(surface:glaze.Div) -> Void> = null;
+
     var _suggestMemoryService:Null<cityscape.contrib.suggest.view.SuggestMemory.SuggestMemoryService> = null;
 
     /**

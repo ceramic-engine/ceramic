@@ -22,6 +22,7 @@ import cityscape.contrib.hover.view.HoverTypes;
 import cityscape.platform.contextkey.common.ContextKey;
 import cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent;
 import cityscape.platform.keybinding.common.KeybindingsRegistry.KeybindingWeight;
+import cityscape.platform.keybinding.common.KeybindingResolver.ResultKind;
 import cityscape.view.EditorBrowser;
 import cityscape.view.EditorExtensions;
 import cityscape.view.EditorWidgets;
@@ -35,7 +36,8 @@ import glaze.Model;
 import glaze.MouseButton;
 import glaze.Render;
 import glaze.Window;
-import glaze.kit.base.Geometry.Placement;
+import glaze.kit.scroll.Scrollable.ScrollableElement;
+import cityscape.view.ContentWidgetPositioner;
 import glaze.kit.theme.Theme;
 
 import glaze.Prelude.*;
@@ -71,6 +73,42 @@ class HoverResult {
 }
 
 /**
+ * An action of the status bar of the hover (Monaco's `HoverAction`).
+ */
+class HoverStatusBarAction {
+
+    public final label:String;
+    public final commandId:String;
+    /** The label of the primary keybinding of the command, or null. */
+    public final keybindingLabel:Null<String>;
+    public final run:() -> Void;
+
+    public function new(label:String, commandId:String, keybindingLabel:Null<String>, run:() -> Void) {
+        this.label = label;
+        this.commandId = commandId;
+        this.keybindingLabel = keybindingLabel;
+        this.run = run;
+    }
+
+    /**
+     * What the status bar shows: `label (keybinding)`, or the label alone.
+     */
+    public var text(get, never):String;
+    function get_text():String {
+        return keybindingLabel != null ? label + ' (' + keybindingLabel + ')' : label;
+    }
+
+}
+
+/**
+ * An item of the status bar: an action, or a text (null when hidden).
+ */
+enum HoverStatusBarItem {
+    Action(action:HoverStatusBarAction);
+    Text(entry:{text:Null<String>});
+}
+
+/**
  * The hover parts on screen (Monaco's `RenderedContentHover`): where the
  * hover shows, the highlight of the hovered range, the status bar.
  */
@@ -83,8 +121,33 @@ class RenderedContentHover implements IEditorHoverRenderContext {
     public final shouldFocus:Bool;
     public final source:HoverStartSource;
     public final hoverParts:Array<IHoverPart>;
-    public final statusBarActions:Array<{label:String, commandId:String, run:() -> Void}> = [];
+    /**
+     * The actions of the status bar (Monaco's `HoverAction`s): `label`,
+     * `keybindingLabel` (the label of the primary keybinding of the command,
+     * null without one) and `text`, what the status bar shows
+     * (`View Problem (⌥F8)`).
+     */
+    public final statusBarActions:Array<HoverStatusBarAction> = [];
     public final statusBarTexts:Array<{text:Null<String>}> = [];
+    /**
+     * The actions and texts of the status bar, in the order they were added
+     * (Monaco appends them to the status bar's `div.actions`).
+     */
+    public final statusBarItems:Array<HoverStatusBarItem> = [];
+    /**
+     * Monaco's `initialMousePosX`, `initialMousePosY` and
+     * `closestMouseDistance` (`ContentHoverWidget.isMouseGettingCloser`).
+     */
+    public var initialMousePosX:Null<Float> = null;
+    public var initialMousePosY:Null<Float> = null;
+    public var closestMouseDistance:Null<Float> = null;
+    /**
+     * A background for the whole content of the hover when it has one part
+     * row and no status bar, without the 2 pixels of padding at its bottom
+     * (a host's style sheet can do this with `:has()`): set by a participant
+     * while it renders a part that fills the hover, null for none.
+     */
+    public var contentsBackground:Null<glaze.Hsla> = null;
 
     final _editor:ICodeEditor;
     final _participants:Array<IEditorHoverParticipant>;
@@ -104,6 +167,8 @@ class RenderedContentHover implements IEditorHoverRenderContext {
         this.showAtSecondaryPosition = positions.showAtSecondaryPosition;
         this.shouldFocus = computer.shouldFocus;
         this.source = computer.source;
+        this.initialMousePosX = anchor.initialMousePosX;
+        this.initialMousePosY = anchor.initialMousePosY;
 
         if (_decorationOptions == null) {
             _decorationOptions = ModelDecorationOptions.register({
@@ -171,13 +236,29 @@ class RenderedContentHover implements IEditorHoverRenderContext {
 
     // IEditorHoverRenderContext
 
+    /**
+     * Monaco's `EditorHoverStatusBar.addAction`: the label of the primary
+     * keybinding of the command follows the label in parentheses
+     * (`HoverAction`).
+     */
     public function addStatusBarAction(label:String, commandId:String, run:() -> Void):Void {
-        statusBarActions.push({label: label, commandId: commandId, run: run});
+        if (ignoresStatusBar()) {
+            return;
+        }
+        final keybinding = _editor.context.keybindingService.lookupKeybinding(commandId);
+        final keybindingLabel = keybinding != null ? keybinding.getLabel() : null;
+        final action = new HoverStatusBarAction(label, commandId, keybindingLabel, run);
+        statusBarActions.push(action);
+        statusBarItems.push(HoverStatusBarItem.Action(action));
     }
 
     public function addStatusBarText(text:String):(text:Null<String>) -> Void {
+        if (ignoresStatusBar()) {
+            return _ -> {};
+        }
         final entry = {text: (text : Null<String>)};
         statusBarTexts.push(entry);
+        statusBarItems.push(HoverStatusBarItem.Text(entry));
         return value -> {
             entry.text = value;
             onContentsChanged();
@@ -207,8 +288,8 @@ class RenderedContentHover implements IEditorHoverRenderContext {
      */
     public function renderParts(window:Window, cx:App):Array<IntoElement> {
         final result:Array<IntoElement> = [];
-        statusBarActions.resize(0);
-        statusBarTexts.resize(0);
+        contentsBackground = null;
+        _rendering = true;
         for (participant in _participants) {
             final parts = [for (p in hoverParts) if (p.owner == participant) p];
             if (parts.length == 0) {
@@ -218,7 +299,23 @@ class RenderedContentHover implements IEditorHoverRenderContext {
                 result.push(e);
             }
         }
+        _rendering = false;
+        renderCount++;
         return result;
+    }
+
+    /**
+     * How many times the parts were rendered. Monaco renders them once per
+     * result; Glaze renders the hover's elements at every frame it shows
+     * them, so the status bar is the one of the first render: what a
+     * participant adds to it while the parts render again is ignored, what
+     * it adds later (when the quick fixes of a marker arrive) is kept.
+     */
+    public var renderCount(default, null):Int = 0;
+    var _rendering = false;
+
+    inline function ignoresStatusBar():Bool {
+        return _rendering && renderCount > 0;
     }
 }
 
@@ -476,6 +573,18 @@ class ContentHoverWidgetWrapper extends Disposable {
         return this._widget.isMouseOver;
     }
 
+    public var isVisibleFromKeyboard(get, never):Bool;
+    function get_isVisibleFromKeyboard():Bool {
+        return this._widget.isVisibleFromKeyboard;
+    }
+
+    /**
+     * The hover on screen (tests).
+     */
+    public function getWidget():ContentHoverWidget {
+        return this._widget;
+    }
+
     /**
      * Whether a window point is over the hover.
      */
@@ -511,10 +620,8 @@ class ContentHoverWidgetWrapper extends Disposable {
 
 /**
  * The hover on screen (Monaco's `ContentHoverWidget`, its DOM replaced by
- * the Glaze kit's popover look): above the line when there is room and the
- * `hover.above` option is on, else below, its leading edge at the start of
- * the hovered word, at most 500 pixels wide and 250 high, scrolling. Its
- * colors are the theme's `editorHoverWidget.*`.
+ * the Glaze view `ContentHoverView`): its state (shown, mouse over, bounds,
+ * side, `isMouseGettingCloser`) for the controller.
  */
 class ContentHoverWidget implements IOverlayWidget implements IDisposable {
 
@@ -555,6 +662,8 @@ class ContentHoverWidget implements IOverlayWidget implements IDisposable {
     public function show(rendered:RenderedContentHover):Void {
         _rendered = rendered;
         bounds = null;
+        _contentEnd = null;
+        positionPreference = null;
         changed();
     }
 
@@ -564,6 +673,7 @@ class ContentHoverWidget implements IOverlayWidget implements IDisposable {
         }
         _rendered = null;
         bounds = null;
+        positionPreference = null;
         isMouseOver = false;
         changed();
     }
@@ -582,6 +692,39 @@ class ContentHoverWidget implements IOverlayWidget implements IDisposable {
     @:allow(cityscape.contrib.hover.view)
     function setBounds(b:Bounds):Void {
         bounds = b;
+    }
+
+    var _contentEnd:Null<Float> = null;
+
+    @:allow(cityscape.contrib.hover.view)
+    function setContentEnd(y:Float):Void {
+        _contentEnd = y;
+    }
+
+    /**
+     * The height of the content of the hover, all of it, scrolled or not
+     * (Monaco's `scrollbar.getScrollDimensions().scrollHeight`), from its
+     * last layout while not scrolled; null before.
+     */
+    public var scrollHeight(get, never):Null<Float>;
+    function get_scrollHeight():Null<Float> {
+        final b = bounds;
+        if (b == null || _contentEnd == null) {
+            return null;
+        }
+        // inside the 1 pixel border, with the 2 pixels at the bottom
+        return _contentEnd - (b.origin.y + 1) + 2;
+    }
+
+    /**
+     * The side the hover took at its last layout (Monaco's
+     * `_positionPreference`), null before.
+     */
+    public var positionPreference(default, null):Null<ContentWidgetPositionPreference> = null;
+
+    @:allow(cityscape.contrib.hover.view)
+    function setPositionPreference(preference:ContentWidgetPositionPreference):Void {
+        positionPreference = preference;
     }
 
     @:allow(cityscape.contrib.hover.view)
@@ -607,31 +750,51 @@ class ContentHoverWidget implements IOverlayWidget implements IDisposable {
     }
 
     /**
-     * Monaco's `isMouseGettingCloser`: whether the mouse moves toward the
-     * hover (its last position against the hover's center).
+     * Monaco's `isMouseGettingCloser`: whether the mouse is not getting
+     * farther from the hover than the closest it came (4 pixels of
+     * tolerance), its first position recorded on the rendered hover.
      */
-    var _lastMouseX:Null<Float> = null;
-    var _lastMouseY:Null<Float> = null;
-
     public function isMouseGettingCloser(posx:Float, posy:Float):Bool {
+        final rendered = _rendered;
+        if (rendered == null) {
+            return false;
+        }
+        if (rendered.initialMousePosX == null || rendered.initialMousePosY == null) {
+            rendered.initialMousePosX = posx;
+            rendered.initialMousePosY = posy;
+            return false;
+        }
         final b = bounds;
         if (b == null) {
             return false;
         }
-        if (_lastMouseX == null) {
-            _lastMouseX = posx;
-            _lastMouseY = posy;
+        if (rendered.closestMouseDistance == null) {
+            rendered.closestMouseDistance = computeDistanceFromPointToRectangle(rendered.initialMousePosX, rendered.initialMousePosY, b.origin.x, b.origin.y, b.size.width, b.size.height);
+        }
+        final distance = computeDistanceFromPointToRectangle(posx, posy, b.origin.x, b.origin.y, b.size.width, b.size.height);
+        if (distance > rendered.closestMouseDistance + 4 /* tolerance of 4 pixels */) {
+            // The mouse is getting farther away
             return false;
         }
-        final cx = b.origin.x + b.size.width / 2;
-        final cy = b.origin.y + b.size.height / 2;
-        final before = Math.abs(_lastMouseX - cx) + Math.abs(_lastMouseY - cy);
-        final after = Math.abs(posx - cx) + Math.abs(posy - cy);
-        _lastMouseX = posx;
-        _lastMouseY = posy;
-        // Monaco checks that the mouse moves inside the triangle between its
-        // first position and the hover; moving closer is the gist of it
-        return after < before - 1 && (posx >= b.origin.x - 20 && posx <= b.origin.x + b.size.width + 20);
+        rendered.closestMouseDistance = Math.min(rendered.closestMouseDistance, distance);
+        return true;
+    }
+
+    public static function computeDistanceFromPointToRectangle(pointX:Float, pointY:Float, left:Float, top:Float, width:Float, height:Float):Float {
+        final x = (left + width / 2); // x center of rectangle
+        final y = (top + height / 2); // y center of rectangle
+        final dx = Math.max(Math.abs(pointX - x) - width / 2, 0);
+        final dy = Math.max(Math.abs(pointY - y) - height / 2, 0);
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * Whether the hover was shown from the keyboard (Monaco's
+     * `isVisibleFromKeyboard`).
+     */
+    public var isVisibleFromKeyboard(get, never):Bool;
+    function get_isVisibleFromKeyboard():Bool {
+        return _rendered != null && _rendered.source == HoverStartSource.Keyboard;
     }
 
     public function getId():String {
@@ -655,12 +818,26 @@ class ContentHoverWidget implements IOverlayWidget implements IDisposable {
 }
 
 /**
- * The Glaze view of the hover.
+ * The Glaze view of the hover (Monaco's `ContentHoverWidget` and its
+ * `HoverWidget`, styled by hover.css and hoverWidget.css): the parts one
+ * under the other (`hover-row`s, a line of `editorHoverWidget.border` at 50%
+ * between two), then the status bar (12 pixels, 22 high, its actions in
+ * `textLink.foreground` 16 pixels apart on `editorHoverWidget.statusBarBackground`).
+ * The text is at the editor's font size and line height. The hover is as
+ * wide as its content up to `max(0.66 × the editor's width, 500)` and as
+ * high up to `max(the editor's height / 4, 250)` (`_updateMaxDimensions`),
+ * scrolling with a scrollbar beyond, and placed by
+ * `ContentWidgetPositioner` (above the line by default, `hover.above`).
  */
 class ContentHoverView extends Model implements Render {
 
+    /** The minimum of the maximum width and height (`_updateMaxDimensions`). */
     public static inline final MAX_WIDTH = 500;
     public static inline final MAX_HEIGHT = 250;
+
+    /** hoverWidget.css `.hover-row.status-bar` */
+    public static inline final STATUS_BAR_FONT_SIZE = 12;
+    public static inline final STATUS_BAR_LINE_HEIGHT = 22;
 
     final widget:ContentHoverWidget;
     final editor:ICodeEditor;
@@ -671,15 +848,31 @@ class ContentHoverView extends Model implements Render {
         this.editor = editor;
     }
 
+    /**
+     * `_updateMaxDimensions` (the hover is never resized by hand here, so
+     * `_lastDimensions` stays at zero).
+     */
+    public static function maxDimensions(editor:ICodeEditor):{width:Float, height:Float} {
+        final layoutInfo = editor.getOption(EditorOption.layoutInfo);
+        return {
+            width: Math.max(layoutInfo.width * 0.66, MAX_WIDTH),
+            height: Math.max(layoutInfo.height / 4, MAX_HEIGHT)
+        };
+    }
+
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final rendered = widget.getRendered();
         if (rendered == null || !editor.hasModel()) {
             return new Empty();
         }
-        final anchor = EditorWidgets.positionBounds(editor, rendered.showAtSecondaryPosition);
-        if (anchor == null || !EditorWidgets.isPositionVisible(editor, rendered.showAtSecondaryPosition)) {
+        final primaryPosition = rendered.showAtPosition;
+        final secondaryPosition = rendered.showAtSecondaryPosition;
+        final primary = EditorWidgets.positionBounds(editor, primaryPosition);
+        final editorBounds = EditorWidgets.editorBounds(editor);
+        if (primary == null || editorBounds == null || !EditorWidgets.isPositionVisible(editor, primaryPosition)) {
             return new Empty();
         }
+        final secondary = secondaryPosition.lineNumber == primaryPosition.lineNumber ? EditorWidgets.positionBounds(editor, secondaryPosition) : null;
         final app:App = cx.app;
         final theme = Theme.global(cx);
         final background = EditorWidgets.color(editor, 'editorHoverWidget.background', EditorWidgets.color(editor, 'editorWidget.background', theme.popover));
@@ -687,83 +880,141 @@ class ContentHoverView extends Model implements Render {
         final border = EditorWidgets.color(editor, 'editorHoverWidget.border', EditorWidgets.color(editor, 'editorWidget.border', theme.border));
         final statusBarBackground = EditorWidgets.color(editor, 'editorHoverWidget.statusBarBackground', background);
         final link = EditorWidgets.color(editor, 'textLink.foreground', theme.link);
+        final fontInfo = editor.getOption(EditorOption.fontInfo);
+        final max = maxDimensions(editor);
 
         final parts = rendered.renderParts(window, app);
+        // `.monaco-hover-content`: 2 pixels of padding on the right and at
+        // the bottom, the font size and line height of the editor
         final content = div()
             .id('cityscape-hover-content')
             .flex()
             .flexCol()
-            .maxH(px(ContentHoverView.MAX_HEIGHT))
-            .overflowYScroll();
-        var first = true;
+            .pr(px(2))
+            .pb(px(2))
+            .textSize(px(fontInfo.fontSize))
+            .lineHeight(px(fontInfo.lineHeight));
+        var rows = 0;
         for (part in parts) {
-            if (!first) {
-                content.child(div().h(px(1)).bg(border.opacity(0.5)));
+            // `.hover-row` (flex) around `.hover-row-contents` (a column)
+            final row = div().flex().flexCol().minW0().child(part);
+            if (rows > 0) {
+                // `.hover-row:not(:first-child):not(:empty)`
+                row.borderT1().borderColor(border.opacity(0.5));
             }
-            content.child(part);
-            first = false;
+            content.child(row);
+            rows++;
         }
+
+        final items = rendered.statusBarItems;
+        var hasStatusBar = false;
+        for (item in items) {
+            switch item {
+                case Action(_): hasStatusBar = true;
+                case Text(entry): if (entry.text != null) hasStatusBar = true;
+            }
+        }
+        if (hasStatusBar) {
+            final actions = div()
+                .flex()
+                .flexRow()
+                .wFull()
+                .px(px(8))
+                .bg(statusBarBackground);
+            for (item in items) {
+                switch item {
+                    case Action(action):
+                        final run = action.run;
+                        // `.action-container`: 16 pixels on the right, on one
+                        // line (the [loreline] patch of hoverWidget.css)
+                        actions.child(div()
+                            .id('cityscape-hover-action-' + action.commandId)
+                            .flexNone()
+                            .whitespaceNowrap()
+                            .mr(px(16))
+                            .cursorPointer()
+                            .textColor(link)
+                            .onMouseDown(MouseButton.Left, (_, _, cx) -> {
+                                cx.stopPropagation();
+                                run();
+                            })
+                            .child(action.text));
+                    case Text(entry):
+                        if (entry.text != null) {
+                            // an empty placeholder keeps its line (Monaco's &nbsp;)
+                            final text = StringTools.trim(entry.text).length == 0 ? '\u00A0' : entry.text;
+                            actions.child(div().flexNone().whitespaceNowrap().child(text));
+                        }
+                }
+            }
+            final statusBar = div()
+                .id('cityscape-hover-status')
+                .flex()
+                .flexRow()
+                .textSize(px(STATUS_BAR_FONT_SIZE))
+                .lineHeight(px(STATUS_BAR_LINE_HEIGHT))
+                .child(actions);
+            if (rows > 0) {
+                statusBar.borderT1().borderColor(border.opacity(0.5));
+            }
+            content.child(statusBar);
+        }
+
+        // the end of the content (the height of what scrolls, read by
+        // `ContentHoverWidget.scrollHeight`)
+        content.child(canvas((b, _, _) -> {
+            widget.setContentEnd(b.origin.y);
+            return null;
+        }, (_, _, _, _) -> {}));
+
+        if (rendered.contentsBackground != null && rows == 1 && !hasStatusBar) {
+            // a single row filling the hover: its background under the
+            // padding of the content, without the padding at the bottom
+            content.bg(rendered.contentsBackground).pb(px(0));
+        }
+
+        // the content scrolls beyond the maximum height (Monaco's
+        // `DomScrollableElement`), inside the 1 pixel border
+        final scrollable = ScrollableElement.overflowYScrollbar(content.maxH(px(max.height - 2))).id('cityscape-hover-scroll');
 
         final surface = div()
             .id('cityscape-hover')
             .flex()
             .flexCol()
-            .maxW(px(ContentHoverView.MAX_WIDTH))
+            .maxW(px(max.width))
+            .maxH(px(max.height))
             .bg(background)
             .textColor(foreground)
-            .textSize(px(editor.getOption(EditorOption.fontSize)))
             .border1()
             .borderColor(border)
             .rounded(px(3))
-            .shadowMd()
             .overflowHidden()
             .onHover(hovered -> widget.setMouseOver(hovered))
             .onMouseDown(MouseButton.Left, (_, _, cx) -> cx.stopPropagation())
-            .child(content);
-
-        final actions = rendered.statusBarActions;
-        final texts = [for (t in rendered.statusBarTexts) if (t.text != null) t.text];
-        if (actions.length > 0 || texts.length > 0) {
-            final statusBar = div()
-                .id('cityscape-hover-status')
-                .flex()
-                .flexRow()
-                .itemsCenter()
-                .gap(px(12))
-                .px(px(8))
-                .h(px(22))
-                .bg(statusBarBackground)
-                .borderT1()
-                .borderColor(border.opacity(0.5));
-            for (action in actions) {
-                final run = action.run;
-                // [loreline] patch of hoverWidget.css: an action stays on one
-                // line (a hover as narrow as a short message would wrap it
-                // below the status bar and clip it)
-                statusBar.child(div()
-                    .id('cityscape-hover-action-' + action.commandId)
-                    .flexNone()
-                    .whitespaceNowrap()
-                    .cursorPointer()
-                    .textColor(link)
-                    .onMouseDown(MouseButton.Left, (_, _, cx) -> {
-                        cx.stopPropagation();
-                        run();
-                    })
-                    .child(action.label));
-            }
-            for (text in texts) {
-                statusBar.child(div().flexNone().whitespaceNowrap().opacity(0.7).child(text));
-            }
-            surface.child(statusBar);
+            .child(scrollable);
+        final chrome = editor.context.hoverChrome;
+        if (chrome != null) {
+            chrome(surface);
         }
 
         final above = editor.getOption(EditorOption.hover).above;
-        return EditorWidgets.popup(anchor, above ? Placement.Top : Placement.Bottom, surface, resolved -> {
-            widget.setBounds(resolved.bounds);
-            // the status bar sits at the bottom of the hover
-            rendered.setStatusBarBounds(new Bounds(new glaze.Point(resolved.bounds.origin.x, resolved.bounds.origin.y + resolved.bounds.size.height - 22), new glaze.Size(resolved.bounds.size.width, 22)));
-        });
+        final positioner = new ContentWidgetPositioner({
+            primary: primary,
+            secondary: secondary,
+            editor: editorBounds,
+            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth
+        }, above)
+            .onPlacement(placement -> {
+                final b = placement.bounds;
+                widget.setBounds(b);
+                widget.setPositionPreference(placement.preference);
+                // the status bar sits at the bottom of the hover, above the
+                // padding of the content and the border
+                final statusTop = b.origin.y + b.size.height - 1 - 2 - STATUS_BAR_LINE_HEIGHT;
+                rendered.setStatusBarBounds(new Bounds(new glaze.Point(b.origin.x, statusTop), new glaze.Size(b.size.width, STATUS_BAR_LINE_HEIGHT)));
+            })
+            .child(surface);
+        return deferred(positioner).withPriority(glaze.kit.base.Popup.POPUP_PRIORITY).intoAnyElement();
     }
 
 }
@@ -936,6 +1187,11 @@ class ContentHoverController extends Disposable implements IEditorContribution {
 
         this._mouseMoveEvent = mouseEvent;
         final sticky = this._hoverSettings.sticky;
+        if (sticky && this._contentWidget != null && this._contentWidget.isVisibleFromKeyboard) {
+            // Sticky mode is on and the hover has been shown via keyboard
+            // so moving the mouse has no effect
+            return;
+        }
 
         final shouldNotRecomputeCurrentHoverWidget = this._shouldNotRecomputeCurrentHoverWidget(mouseEvent);
         if (shouldNotRecomputeCurrentHoverWidget) {
@@ -988,11 +1244,25 @@ class ContentHoverController extends Disposable implements IEditorContribution {
             return;
         }
 
+        final resolvedKeyboardEvent = this._editor.context.keybindingService.softDispatch(e, this._editor.contextKeyService);
+
+        // If the beginning of a multi-chord keybinding is pressed,
+        // or the command aims to focus the hover,
+        // set the variable to true, otherwise false
+        final shouldKeepHoverVisible = (
+            resolvedKeyboardEvent.kind == ResultKind.MoreChordsNeeded ||
+            (resolvedKeyboardEvent.kind == ResultKind.KbFound
+                && resolvedKeyboardEvent.commandId == ShowOrFocusHoverAction.ID
+                && this._contentWidget != null && this._contentWidget.isVisible
+            )
+        );
+
         if (
             e.keyCode == KeyCode.Ctrl
             || e.keyCode == KeyCode.Alt
             || e.keyCode == KeyCode.Meta
             || e.keyCode == KeyCode.Shift
+            || shouldKeepHoverVisible
         ) {
             // Do not hide hover when a modifier key is pressed
             return;
