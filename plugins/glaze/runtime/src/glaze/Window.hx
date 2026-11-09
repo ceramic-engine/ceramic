@@ -2639,15 +2639,24 @@ class Window implements WindowInvalidator {
      * around its largest border free interior.
      */
     public function paintQuad(quad:PaintQuad):Void {
+        final bounds = quad.bounds;
+        paintQuadAt(quad, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+    }
+
+    /**
+     * `paintQuad()` with the bounds given as numbers (`quad.bounds` is not
+     * read): elements painting many rectangles from a scratch quad
+     * (`scratchPaintQuad()`) need no `Bounds` per rectangle.
+     */
+    public function paintQuadAt(quad:PaintQuad, x:Float, y:Float, width:Float, height:Float):Void {
         final opacity = clamp01(elementOpacity);
         final scaleFactor = _scaleFactor;
 
         // Snap bounds
-        final bounds = quad.bounds;
-        final left = roundToDevice(bounds.origin.x);
-        final top = roundToDevice(bounds.origin.y);
-        final right = Math.max(roundToDevice(bounds.origin.x + bounds.size.width), left);
-        final bottom = Math.max(roundToDevice(bounds.origin.y + bounds.size.height), top);
+        final left = roundToDevice(x);
+        final top = roundToDevice(y);
+        final right = Math.max(roundToDevice(x + width), left);
+        final bottom = Math.max(roundToDevice(y + height), top);
 
         // Snap border widths
         final borderTop = snapStroke(quad.borderWidthTop);

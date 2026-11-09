@@ -95,8 +95,37 @@ enum abstract FontSmoothing(Int) from Int to Int {
      * light gray and white are the measured steps 0, 1, 2, 2 and 3).
      */
     public static function luminanceLevel(color:Hsla):Int {
-        final rgb = color.toRgb();
-        final luma = 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b;
+        // `color.toRgb()` (`Rgba.fromHsla`) without the `Rgba`: this runs for
+        // every glyph painted
+        final h = color.h;
+        final s = color.s;
+        final l = color.l;
+        final c = (1.0 - Math.abs(2.0 * l - 1.0)) * s;
+        final x = c * (1.0 - Math.abs((h * 6.0) % 2.0 - 1.0));
+        final m = l - c / 2.0;
+        final cm = c + m;
+        final xm = x + m;
+        var r:Float;
+        var g:Float;
+        var b:Float;
+        switch glaze.util.MathUtil.toI32(Math.ffloor(h * 6.0)) {
+            case 0 | 6:
+                r = cm; g = xm; b = m;
+            case 1:
+                r = xm; g = cm; b = m;
+            case 2:
+                r = m; g = cm; b = xm;
+            case 3:
+                r = m; g = xm; b = cm;
+            case 4:
+                r = xm; g = m; b = cm;
+            case _:
+                r = cm; g = m; b = xm;
+        }
+        r = glaze.util.MathUtil.clamp(r, 0.0, 1.0);
+        g = glaze.util.MathUtil.clamp(g, 0.0, 1.0);
+        b = glaze.util.MathUtil.clamp(b, 0.0, 1.0);
+        final luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
         var level = Math.floor(4 * luma);
         if (level < 0) {
             level = 0;
