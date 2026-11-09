@@ -7,7 +7,7 @@ import cityscape.Cityscape;
 import cityscape.common.core.Range;
 import cityscape.common.core.Selection;
 import cityscape.common.model.TextModel;
-import cityscape.standalone.CityscapeEditor;
+import cityscape.CityscapeEditor;
 import cityscape.view.CityscapeView;
 import glaze.App;
 import glaze.Context;

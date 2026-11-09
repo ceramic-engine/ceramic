@@ -1,6 +1,6 @@
 // New code for Cityscape (not a port): the editor as a persistent Glaze
-// component (the plan, "cityscape/standalone"; AUDIT B.13 recipe).
-package cityscape.standalone;
+// component (AUDIT B.13 recipe).
+package cityscape;
 
 import cityscape.Cityscape;
 import cityscape.common.Model.ITextModel;

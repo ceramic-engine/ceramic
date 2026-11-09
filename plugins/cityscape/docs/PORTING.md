@@ -2,6 +2,11 @@
 
 Cityscape is a port of Monaco (vscode `src/vs/editor`, commit a7d9e2c32d573e29e68975838196722ae9bb0f15, the `vscodeRef` of monaco-editor 0.52.2), not a rewrite. The goal is code that can be compared line by line with the TypeScript, behaving the same, while staying idiomatic Haxe and fast on hxcpp. Expected values in tests come from vscode (its tests, ported) or from recordings of the real Monaco, never from Cityscape.
 
+## Public surface and the end of the port
+
+- What a Cityscape user writes against sits at the package root: `cityscape.CityscapeEditor` (the Glaze component), `cityscape.Cityscape` (the context). Code that is Cityscape's own (the component, the context, the typed decoration API) goes to the root or to a package with a meaningful name, never to a vscode folder name such as `standalone`.
+- Ported files keep vscode's paths during the port only, so that each one can be compared with its original. This mapping is a tool for the port, not a lasting constraint: once Monaco is ported, Cityscape is its own code base. From then on files are moved, merged, renamed and changed freely like any other code, without keeping a correspondence with Monaco's files (owner decision, 2026-11-09). The `Ported from` headers stay as the record of origin and license.
+
 ## Sources
 
 - vscode sources: glaze-golden `reference/vscode` (shallow, sparse, read only clone of `src/vs/editor`, `src/vs/base` and a few `src/vs/platform` folders).
