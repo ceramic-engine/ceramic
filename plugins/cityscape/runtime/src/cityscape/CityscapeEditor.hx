@@ -283,6 +283,16 @@ class CityscapeEditor extends Component implements Styled {
         widget = null;
     }
 
+    /**
+     * The font family of an editor whose host gives none (`fontFamily`
+     * option or prop): JetBrains Mono, the monospace font bundled with
+     * Glaze, the same on every target (the web cannot read system font
+     * files). Monaco's default list (`EditorOptions.EDITOR_FONT_DEFAULTS`,
+     * `Menlo, Monaco, 'Courier New', monospace` on macOS) is used only when
+     * a host gives it.
+     */
+    public static inline final DEFAULT_FONT_FAMILY = 'JetBrains Mono';
+
     function shortcutsKey():String {
         return '' + fontSize + '|' + fontFamily + '|' + wordWrap + '|' + readOnly + '|' + lineNumbers + '|' + tabSize;
     }
@@ -298,6 +308,10 @@ class CityscapeEditor extends Component implements Styled {
         result.glyphMargin = false;
         result.autoIndent = 'advanced';
         result.overviewRulerLanes = 2;
+        // Cityscape's own default (owner decision 2026-11-10, DEVIATIONS.md):
+        // Glaze's bundled monospace font instead of Monaco's list of system
+        // fonts, so that every target renders the same
+        result.fontFamily = DEFAULT_FONT_FAMILY;
         final o = options;
         if (o != null) {
             for (field in Reflect.fields(o)) {
@@ -380,6 +394,51 @@ class CityscapeEditor extends Component implements Styled {
         keyContextValue = created;
         return created;
     }
+
+    /**
+     * The width of the vertical scrollbar band of the layout (Monaco's
+     * `verticalScrollbarWidth`, the `scrollbar.verticalScrollbarSize`
+     * option): the text area ends where it starts.
+     */
+    static function verticalScrollbarWidth(widget:CodeEditorWidget):Float {
+        final layoutInfo = widget.getLayoutInfo();
+        return layoutInfo != null ? layoutInfo.verticalScrollbarWidth : Scrollbar.width();
+    }
+
+    /**
+     * The kit scrollbar sized to the layout's band: the kit look (a 6 pixel
+     * thumb 4 pixels from the edge, 8 pixels when hovered or dragged) in its
+     * own 16 pixel band, else thumbs no wider than `verticalSliderSize`,
+     * centered when the band is too narrow for the kit's inset.
+     */
+    static function styledScrollbar(scrollbar:Scrollbar, widget:CodeEditorWidget):Scrollbar {
+        final width = verticalScrollbarWidth(widget);
+        if (width == Scrollbar.width()) {
+            return scrollbar;
+        }
+        final slider:Float = widget.getOption(EditorOption.scrollbar).verticalSliderSize;
+        inline function thumbWidth(kitWidth:Float):Float {
+            return Math.max(0, Math.min(kitWidth, slider));
+        }
+        inline function inset(kitInset:Float, thumb:Float):Float {
+            return Math.max(0, Math.min(kitInset, Math.floor((width - thumb) / 2)));
+        }
+        final normal = thumbWidth(KIT_THUMB_WIDTH);
+        final active = thumbWidth(KIT_THUMB_ACTIVE_WIDTH);
+        return scrollbar.styles(s -> s
+            .track(t -> t.width(width))
+            .thumb(t -> t.width(normal).inset(inset(KIT_THUMB_INSET, normal)))
+            .thumbHover(t -> t.width(active).inset(inset(KIT_THUMB_INSET, active)))
+            .thumbActive(t -> t.width(active).inset(inset(KIT_THUMB_INSET, active)))
+        );
+    }
+
+    /** The kit scrollbar's thumb sizes (`glaze.kit.base.Scrollbar`) */
+    static inline final KIT_THUMB_WIDTH:Float = 6.;
+
+    static inline final KIT_THUMB_ACTIVE_WIDTH:Float = 8.;
+
+    static inline final KIT_THUMB_INSET:Float = 4.;
 
     var appliedFontSize:Null<Float> = null;
     var appliedFontFamily:Null<String> = null;
@@ -498,11 +557,16 @@ class CityscapeEditor extends Component implements Styled {
             .onScroll(listeners.scroll)
             .onKeyDown(listeners.keyDown)
             .onModifiersChanged((event, window, cx) -> view.handleModifiersChanged(event.modifiers))
-            .child(view.ensurePaintView(entity, cx))
-            .child(
-                div().absolute().top0().right0().bottom0().w(px(Scrollbar.width()))
-                    .child(Scrollbar.vertical(view.scrollHandle))
+            .child(view.ensurePaintView(entity, cx));
+        // The vertical scrollbar in the band the layout leaves it
+        // (`verticalScrollbarSize`, Monaco's `verticalScrollbarWidth`)
+        final scrollbarWidth = verticalScrollbarWidth(widget);
+        if (scrollbarWidth > 0) {
+            root.child(
+                div().absolute().top0().right0().bottom0().w(px(scrollbarWidth))
+                    .child(styledScrollbar(Scrollbar.vertical(view.scrollHandle), widget))
             );
+        }
         for (overlay in widget.getOverlayWidgets()) {
             final element = overlay.render(window, cx);
             if (element == null) {
@@ -516,11 +580,11 @@ class CityscapeEditor extends Component implements Styled {
             else if (JsValues.isNumber(preference)) {
                 switch ((preference : OverlayWidgetPositionPreference)) {
                     case OverlayWidgetPositionPreference.BOTTOM_RIGHT_CORNER:
-                        root.child(div().absolute().bottom0().right(px(Scrollbar.width())).child(element));
+                        root.child(div().absolute().bottom0().right(px(scrollbarWidth)).child(element));
                     case OverlayWidgetPositionPreference.TOP_CENTER:
                         root.child(div().absolute().top0().left0().right0().flex().flexRow().justifyCenter().child(element));
                     case _:
-                        root.child(div().absolute().top0().right(px(Scrollbar.width())).child(element));
+                        root.child(div().absolute().top0().right(px(scrollbarWidth)).child(element));
                 }
             }
             else {

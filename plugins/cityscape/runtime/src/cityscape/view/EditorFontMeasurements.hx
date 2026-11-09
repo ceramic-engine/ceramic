@@ -7,6 +7,7 @@ import cityscape.common.config.FontInfo;
 import cityscape.view.MeasuredLineBreaksComputer.ILineMeasurer;
 import glaze.App;
 import glaze.Font;
+import glaze.FontFallbacks;
 import glaze.FontFeatures;
 import glaze.FontId;
 import glaze.FontStyle;
@@ -61,6 +62,13 @@ class EditorFontMeasurements implements ILineMeasurer {
             }
         }
         return result;
+    }
+
+    static function isGenericFamily(family:String):Bool {
+        return switch family {
+            case 'monospace' | 'sans-serif' | 'serif' | 'system-ui' | 'ui-monospace': true;
+            case _: false;
+        }
     }
 
     /**
@@ -123,7 +131,13 @@ class EditorFontMeasurements implements ILineMeasurer {
 
     /**
      * The Glaze font of the editor (the first resolvable family), with the
-     * given weight, style and features.
+     * given weight, style and features, shaped like a browser
+     * (`Font.wholeRunShaping`). The families after it in the CSS list are
+     * its fallbacks (those available, and the generic families), tried in
+     * order for the characters it lacks before the fonts of the system,
+     * like a browser resolves a `font-family` list: `'Maple Mono',
+     * monospace` draws `☕` with Menlo's glyph (the generic `monospace`) on
+     * macOS, not with the emoji font.
      */
     public function resolveEditorFont(fontFamily:String, weight:FontWeight, italic:Bool, features:FontFeatures):Font {
         final key = fontFamily + '|' + weight + '|' + italic + '|' + features.key() + '|' + textSystem.fontGeneration;
@@ -166,6 +180,21 @@ class EditorFontMeasurements implements ILineMeasurer {
             result = new Font('JetBrains Mono', features, null, weight, italic ? FontStyle.Italic : FontStyle.Normal);
             result.synthesizeStyle = true;
         }
+        final fallbacks:Array<String> = [];
+        final primaryIndex = candidates.indexOf(result.family);
+        if (primaryIndex != -1) {
+            // the CSS list after the primary family, without the JetBrains Mono added above
+            for (i in primaryIndex + 1...candidates.length - 1) {
+                final family = candidates[i];
+                if (family != result.family && fallbacks.indexOf(family) == -1 && (isGenericFamily(family) || textSystem.isFamilyAvailable(family))) {
+                    fallbacks.push(family);
+                }
+            }
+        }
+        if (fallbacks.length > 0) {
+            result.fallbacks = FontFallbacks.fromFonts(fallbacks);
+        }
+        result.wholeRunShaping = true;
         _fontCache.set(key, result);
         return result;
     }

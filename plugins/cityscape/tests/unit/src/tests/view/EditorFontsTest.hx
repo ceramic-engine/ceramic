@@ -92,10 +92,11 @@ class EditorFontsTest extends TestCase {
      * (folding on): recorded by the chevrons probe of the recorder
      * (1000 x 700 editor): line numbers 0 to 42, decorations (folding) 42
      * to 68, content from 68, line height 21 (Monaco's golden ratio 1.5 on
-     * macOS, 1.35 elsewhere).
+     * macOS, 1.35 elsewhere). Monaco's default font is asked explicitly
+     * (Cityscape's own default is the bundled JetBrains Mono).
      */
     function testGutterLayoutAtFontSize14() {
-        final e = open('def first():\n    a = 1\n', {fontSize: 14, showFoldingControls: 'always'});
+        final e = open('def first():\n    a = 1\n', {fontSize: 14, showFoldingControls: 'always', fontFamily: EditorOptions.EDITOR_FONT_DEFAULTS.fontFamily});
         final layout = e.getLayoutInfo();
         final fontInfo = e.getOption(EditorOption.fontInfo);
         trace('layout: lineNumbers ' + layout.lineNumbersLeft + '+' + layout.lineNumbersWidth + ' decorations ' + layout.decorationsLeft + '+' + layout.decorationsWidth + ' contentLeft ' + layout.contentLeft + ' lineHeight ' + fontInfo.lineHeight + ' n ' + fontInfo.typicalHalfwidthCharacterWidth + ' digit ' + fontInfo.maxDigitWidth);
@@ -107,6 +108,19 @@ class EditorFontsTest extends TestCase {
         assertEquals(42.0, layout.decorationsLeft);
         assertEquals(26.0, layout.decorationsWidth);
         assertEquals(68.0, layout.contentLeft);
+    }
+
+    /**
+     * Without a `fontFamily` from the host, the editor uses Glaze's bundled
+     * monospace font on every target (owner decision 2026-11-10); a system
+     * font is used when the host asks for it.
+     */
+    function testDefaultFontIsTheBundledMonospaceFont() {
+        final e = open('a\n', {fontSize: 14});
+        assertEquals(CityscapeEditor.DEFAULT_FONT_FAMILY, e.getOption(EditorOption.fontInfo).fontFamily);
+        assertEquals('JetBrains Mono', e.getOption(EditorOption.fontInfo).fontFamily);
+        final explicit = open('a\n', {fontSize: 14, fontFamily: 'Menlo, monospace'});
+        assertEquals('Menlo, monospace', explicit.getOption(EditorOption.fontInfo).fontFamily);
     }
 
     function testItalicFontsSynthesizeTheirStyle() {
@@ -121,6 +135,38 @@ class EditorFontsTest extends TestCase {
             assertTrue(ts.resolveFont(italic) != ts.resolveFont(upright));
         }
         assertFloatEquals(ts.advance(ts.resolveFont(upright), 14, 'm'.code).width, ts.advance(ts.resolveFont(italic), 14, 'm'.code).width, 0);
+    }
+
+    /**
+     * The CSS font list after the first available family gives the
+     * fallbacks, tried before the fonts of the system like a browser does:
+     * with a primary family that lacks `☕` (U+2615, emoji presentation by
+     * default), the generic `monospace` (Menlo on macOS) draws it with its
+     * text glyph, like Chromium (recorded: a monochrome glyph in the token
+     * color, 8.4 px wide at 14 px, loreline-monaco's Writer preset); a
+     * character no family of the list has (`🌧`) comes from the emoji font.
+     */
+    function testFontListFallbacksBeforeTheSystemFonts() {
+        final measurements = new EditorFontMeasurements(app.textSystem());
+        final font = measurements.resolveEditorFont("'JetBrains Mono', 'No Such Font', monospace", 400, false, new glaze.FontFeatures());
+        assertEquals('JetBrains Mono', font.family);
+        assertEquals('monospace', font.fallbacks.fallbackList().join(','));
+        assertTrue(font.wholeRunShaping);
+        final ts = app.textSystem();
+        if (!ts.isFamilyAvailable('Menlo')) {
+            // no system fonts (node, the web): nothing more to check
+            return;
+        }
+        final fontId = ts.resolveFont(font);
+        final text = 'a\u2615b\u{1F327}\uFE0F';
+        final layout = ts.platformTextSystem.layoutLine(text, 14, [new glaze.FontRun(glaze.util.Utf8.byteLength(text), fontId)]);
+        final coffee = [for (run in layout.runs) for (g in run.glyphs) if (g.index == 1) {run: run, glyph: g}][0];
+        assertFalse(coffee.glyph.isEmoji);
+        final menlo = ts.resolveFont(glaze.Font.of('Menlo'));
+        assertEquals(ts.platformTextSystem.glyphForChar(menlo, 0x2615), coffee.glyph.id);
+        assertFloatEquals(ts.advance(menlo, 14, 'm'.code).width, ts.advance(menlo, 14, 0x2615).width, 0.01);
+        final rain = [for (run in layout.runs) for (g in run.glyphs) if (g.index == 5) g][0];
+        assertTrue(rain.isEmoji);
     }
 
     /**

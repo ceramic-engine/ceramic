@@ -87,6 +87,8 @@ model.deltaDecorations([], [
 cityscape.registerDecorationStyle('my-class', {color: '#e06c75', fontWeight: 'bold'});
 ```
 
+Without a `fontFamily`, the editor uses JetBrains Mono, the monospace font bundled with Glaze, on every target; give `fontFamily` (`'Menlo, monospace'`) to use system fonts.
+
 The `onCreate` callback gives the `CityscapeEditor`, with Monaco's editor methods and events (`getValue`, `setValue`, `getSelection`, `setSelections`, `revealLineInCenter`, `executeEdits`, `deltaDecorations`, `createDecorationsCollection`, `saveViewState`, `onDidChangeModelContent`, `onDidChangeCursorPosition`...). Commands, actions and keybindings use Monaco's API:
 
 ```haxe
