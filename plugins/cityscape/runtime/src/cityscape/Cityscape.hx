@@ -181,6 +181,14 @@ class Cityscape {
     public final codeEditorService:CodeEditorService;
 
     /**
+     * The settings of the context (Monaco's standalone configuration
+     * service): the editors write their options there, the model service
+     * reads the model options (`editor.tabSize`, `editor.insertSpaces`,
+     * `editor.detectIndentation`...) from there.
+     */
+    public final configurationService:cityscape.standalone.StandaloneConfiguration.StandaloneConfigurationService;
+
+    /**
      * The models created by `Cityscape.createModel` (Monaco's model service).
      */
     public final modelService:ModelService;
@@ -303,7 +311,8 @@ class Cityscape {
         commandService = new StandaloneCommandService(this);
         keybindingService = new StandaloneKeybindingService(contextKeyService, commandService, keybindingsRegistry);
         codeEditorService = new CodeEditorService();
-        modelService = new ModelService(this);
+        configurationService = new cityscape.standalone.StandaloneConfiguration.StandaloneConfigurationService();
+        modelService = new ModelService(this, configurationService);
         markerService = new MarkerService();
         markerDecorationsService = new MarkerDecorationsService(modelService, markerService);
         registerDefaultDecorationStyles();

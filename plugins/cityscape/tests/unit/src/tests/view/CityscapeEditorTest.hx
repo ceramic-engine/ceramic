@@ -199,6 +199,70 @@ class CityscapeEditorTest extends TestCase {
         assertTrue(bold);
     }
 
+    /**
+     * The resolved style of the part holding UTF-16 offset `offset` of a
+     * rendered line: its color as `#rrggbb` and `i` when italic.
+     */
+    static function partLook(line:Dynamic, offset:Int):String {
+        final starts:Array<Int> = line.runs.partStarts;
+        final ends:Array<Int> = line.runs.partEnds;
+        for (p in 0...starts.length) {
+            if (starts[p] <= offset && offset < ends[p]) {
+                final style:cityscape.view.DecorationStyleResolver.ResolvedPartStyle = line.partStyles[p];
+                return style.color.toRgb().toHexString().substr(0, 7).toLowerCase() + (style.italic ? ' i' : '');
+            }
+        }
+        return 'none';
+    }
+
+    function testDecorationStyleCascade() {
+        // 'narration |pipe| tail': a long italic decoration with a short one
+        // inside. Monaco orders the classes of a part by decoration end
+        // offset (the pipe's first), so in span order the narration would
+        // win; the CSS cascade of loreline-monaco gives the pipe its
+        // `!important` color and upright style.
+        final model = createTextModel('narration |pipe| tail');
+        final context = model.context;
+        context.registerDecorationStyle('test-pipe', {color: '#00ff00', fontStyle: 'normal', important: true});
+        context.registerDecorationStyle('test-narration', {color: '#ff0000', fontStyle: 'italic'});
+        // non-important rules: the one registered last wins, whatever the
+        // order of the classes
+        context.registerDecorationStyle('test-late', {color: '#0000ff'});
+        context.registerDecorationStyle('test-early', {color: '#ffff00'});
+        context.registerDecorationStyle('test-late', {color: '#0000ff'});
+        // a higher priority wins over the registration order
+        context.registerDecorationStyle('test-priority', {color: '#ff00ff', priority: 1});
+        context.registerDecorationStyle('test-plain', {color: '#00ffff'});
+        final views = openTwo(model);
+        final a:CityscapeView = views.a;
+        model.deltaDecorations([], [
+            {range: new Range(1, 1, 1, 22), options: {description: 'narration', inlineClassName: 'test-narration'}},
+            {range: new Range(1, 11, 1, 12), options: {description: 'pipe', inlineClassName: 'test-pipe'}},
+            {range: new Range(1, 13, 1, 14), options: {description: 'late', inlineClassName: 'test-late'}},
+            {range: new Range(1, 13, 1, 15), options: {description: 'early', inlineClassName: 'test-early'}},
+            {range: new Range(1, 18, 1, 19), options: {description: 'plain', inlineClassName: 'test-plain'}},
+            {range: new Range(1, 18, 1, 20), options: {description: 'priority', inlineClassName: 'test-priority'}},
+            // a typed style wins over registered non-important styles
+            {range: new Range(1, 21, 1, 22), options: {description: 'typed', inlineStyle: {color: '#123456'}}},
+        ]);
+        draw();
+        final line:Dynamic = a.renderViewLine(1);
+        assertEquals('#ff0000 i', partLook(line, 0));
+        assertEquals('#00ff00', partLook(line, 10));
+        assertEquals('#0000ff i', partLook(line, 12));
+        assertEquals('#ffff00 i', partLook(line, 13));
+        assertEquals('#ff00ff i', partLook(line, 17));
+        assertEquals('#123456 i', partLook(line, 20));
+        // an important registered style wins over a typed one
+        context.registerDecorationStyle('test-narration', {color: '#ff0000', fontStyle: 'italic', important: true});
+        draw();
+        final line2:Dynamic = a.renderViewLine(1);
+        assertEquals('#ff0000 i', partLook(line2, 20));
+        // and among important styles the order applies again: the pipe was
+        // registered before the narration now
+        assertEquals('#ff0000 i', partLook(line2, 10));
+    }
+
     function testThemeChangeReachesTheView() {
         final model = createTextModel('themed');
         final views = openTwo(model);

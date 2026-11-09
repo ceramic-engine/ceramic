@@ -146,6 +146,10 @@ class DecorationStyleResolver {
         }
         final defaultColor = theme.getTokenColor(1);
         final result = new ResolvedPartStyle(defaultColor);
+        // Token classes first (Monaco's token style sheet), then the
+        // decoration styles in cascade order
+        final cascade:Array<CascadeEntry> = [];
+        var position = 0;
         for (name in classNames.split(' ')) {
             if (name.length == 0) {
                 continue;
@@ -155,18 +159,23 @@ class DecorationStyleResolver {
             } else if (StringTools.startsWith(name, TYPED_STYLE_PREFIX)) {
                 final index = Std.parseInt(name.substr(TYPED_STYLE_PREFIX.length));
                 if (index != null && index >= 0 && index < _typedStyles.length) {
-                    applyStyle(result, _typedStyles[index]);
+                    cascade.push(new CascadeEntry(_typedStyles[index], TYPED_STYLE_ORDER, position++));
                 }
             } else {
+                // the theming participants (Monaco's theme CSS) first
                 final participantColor = themeParticipantColor(name);
                 if (participantColor != null) {
                     result.color = participantColor;
                 }
                 final style = registry.get(name);
                 if (style != null) {
-                    applyStyle(result, style);
+                    cascade.push(new CascadeEntry(style, registry.orderOf(name), position++));
                 }
             }
+        }
+        sortCascade(cascade);
+        for (entry in cascade) {
+            applyStyle(result, entry.style);
         }
         var key = (result.fontWeight == null ? '' : '' + result.fontWeight) + '|' + (result.italic ? 'i' : '') + '|' + (result.fontFeatures == null ? '' : result.fontFeatures);
         result.fontKey = key;
@@ -347,7 +356,78 @@ class DecorationStyleResolver {
             }
             result.push(typed);
         }
+        if (result != null && result.length > 1) {
+            // several styles: in cascade order
+            final cascade:Array<CascadeEntry> = [];
+            var position = 0;
+            for (name in classNames.split(' ')) {
+                final s = registry.get(name);
+                if (s != null) {
+                    cascade.push(new CascadeEntry(s, registry.orderOf(name), position++));
+                }
+            }
+            if (typed != null) {
+                cascade.push(new CascadeEntry(typed, TYPED_STYLE_ORDER, position++));
+            }
+            sortCascade(cascade);
+            for (i in 0...cascade.length) {
+                result[i] = cascade[i].style;
+            }
+        }
         return result;
+    }
+
+    /**
+     * The order of typed styles given to decorations: after every registered
+     * class style.
+     */
+    static inline final TYPED_STYLE_ORDER:Int = 0x3fffffff;
+
+    /**
+     * Sorts styles from the weakest to the strongest (applied in this order,
+     * so each property ends with the value of the strongest style setting
+     * it, like the CSS cascade): not important before important, then by
+     * `priority`, then by order (registration order of class styles, typed
+     * styles last), then by position on the part.
+     */
+    static function sortCascade(cascade:Array<CascadeEntry>):Void {
+        if (cascade.length < 2) {
+            return;
+        }
+        haxe.ds.ArraySort.sort(cascade, (a, b) -> {
+            if (a.important != b.important) {
+                return a.important ? 1 : -1;
+            }
+            if (a.priority != b.priority) {
+                return a.priority < b.priority ? -1 : 1;
+            }
+            if (a.order != b.order) {
+                return a.order < b.order ? -1 : 1;
+            }
+            return a.position - b.position;
+        });
+    }
+
+}
+
+/**
+ * A style of a part with its rank in the cascade.
+ */
+private class CascadeEntry {
+
+    public final style:IDecorationStyle;
+    public final important:Bool;
+    public final priority:Float;
+    public final order:Int;
+    public final position:Int;
+
+    public function new(style:IDecorationStyle, order:Int, position:Int) {
+        this.style = style;
+        this.important = style.important == true;
+        final p:Null<Float> = style.priority;
+        this.priority = p == null ? 0 : p;
+        this.order = order;
+        this.position = position;
     }
 
 }

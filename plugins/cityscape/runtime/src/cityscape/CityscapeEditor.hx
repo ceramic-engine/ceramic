@@ -234,6 +234,10 @@ class CityscapeEditor extends Component implements Styled {
             throw 'CityscapeEditor: no context';
         }
         final measurements = EditorFontMeasurements.forApp(cx);
+        // Monaco's standalone editor writes its options to the configuration
+        // of its services first: models created afterwards take their model
+        // options (tabSize, insertSpaces, detectIndentation...) from there
+        cityscape.standalone.StandaloneConfiguration.updateConfigurationService(ctx.configurationService, mergedOptions(), false);
         final configuration = new EditorConfiguration(false, mergedOptions(), {width: 600, height: 400}, (bare) -> measurements.readFontInfo(bare));
         final widget = new CodeEditorWidget(ctx, configuration);
         this.widget = widget;
@@ -273,6 +277,12 @@ class CityscapeEditor extends Component implements Styled {
      */
     function mergedOptions():IEditorOptions {
         final result:Dynamic = {};
+        // The defaults of Monaco's standalone editor (editor.api.ts), under
+        // the options given
+        result.wrappingIndent = 'none';
+        result.glyphMargin = false;
+        result.autoIndent = 'advanced';
+        result.overviewRulerLanes = 2;
         final o = options;
         if (o != null) {
             for (field in Reflect.fields(o)) {
@@ -352,7 +362,10 @@ class CityscapeEditor extends Component implements Styled {
         if (options != appliedOptions || shortcuts != appliedShortcuts) {
             appliedOptions = options;
             appliedShortcuts = shortcuts;
-            view.updateOptions(mergedOptions());
+            final merged = mergedOptions();
+            // Monaco's `updateOptions` of the standalone editor
+            cityscape.standalone.StandaloneConfiguration.updateConfigurationService(widget.context.configurationService, merged, false);
+            view.updateOptions(merged);
         }
         view.setWrappingIndentColumns(wrappingIndentColumns);
         // The view rendering this component lists the overlay widgets: the
@@ -568,6 +581,7 @@ class CityscapeEditor extends Component implements Styled {
     }
 
     public function updateOptions(newOptions:IEditorOptions):Void {
+        cityscape.standalone.StandaloneConfiguration.updateConfigurationService(widget.context.configurationService, newOptions, false);
         widget.updateOptions(newOptions);
         final v = viewEntity;
         if (v != null) {

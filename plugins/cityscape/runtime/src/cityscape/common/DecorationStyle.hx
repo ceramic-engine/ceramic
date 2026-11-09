@@ -44,6 +44,25 @@ typedef IDecorationBorder = {
  * (`ThemeColor`, `{id: 'editorError.foreground'}`).
  */
 typedef IDecorationStyle = {
+    // Cascade
+
+    /**
+     * Like CSS `!important` on every property of the style: when several
+     * styles of a part set a property, an important one wins over the
+     * others, whatever their priority and order.
+     */
+    @:optional var important:Bool;
+    /**
+     * The precedence of the style among the styles of a part with the same
+     * importance (0 by default): when several set a property, the highest
+     * priority wins; on equal priority the style registered last wins (the
+     * order of rules in a CSS style sheet), and typed styles given directly
+     * to a decoration win over registered class styles, in the order of the
+     * decorations on the part (Monaco orders the class names of a part by
+     * decoration end offset).
+     */
+    @:optional var priority:Float;
+
     // Text
 
     /**
@@ -111,6 +130,8 @@ typedef IDecorationStyle = {
 class DecorationStyles {
 
     final styles:Map<String, IDecorationStyle> = new Map();
+    final orders:Map<String, Int> = new Map();
+    var nextOrder:Int = 0;
 
     /**
      * Incremented at each change, so that resolved styles can be cached.
@@ -120,18 +141,32 @@ class DecorationStyles {
     public function new() {}
 
     /**
-     * Gives a style to a class name. Several class names separated by spaces
-     * in a decoration combine their styles, in order.
+     * Gives a style to a class name. When several styles apply to a part of
+     * a line, each property comes from the style that wins the cascade
+     * (`important`, then `priority`, then the style registered last, like
+     * the rules of a CSS style sheet): registering a class name again moves
+     * it to the end of that order.
      */
     public function registerDecorationStyle(className:String, style:IDecorationStyle):Void {
         styles.set(className, style);
+        orders.set(className, nextOrder++);
         version++;
     }
 
     public function unregisterDecorationStyle(className:String):Void {
+        orders.remove(className);
         if (styles.remove(className)) {
             version++;
         }
+    }
+
+    /**
+     * The registration order of `className` (higher is later), -1 when not
+     * registered.
+     */
+    public function orderOf(className:String):Int {
+        final order = orders.get(className);
+        return order == null ? -1 : order;
     }
 
     /**

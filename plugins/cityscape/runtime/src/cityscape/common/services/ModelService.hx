@@ -19,6 +19,8 @@ import cityscape.common.Model.DefaultEndOfLine;
 import cityscape.common.Model.ITextModelCreationOptions;
 import cityscape.common.Model.IndentSize;
 import cityscape.common.core.TextModelDefaults;
+import cityscape.common.Model.EndOfLineSequence;
+import cityscape.platform.configuration.common.Configuration;
 
 /**
  * The model options of the settings (`editor.tabSize`, `editor.insertSpaces`...),
@@ -45,9 +47,13 @@ typedef IRawConfig = {
  * `createModel`, `getModel`, `getModels`, `destroyModel`, and the events of
  * models added and removed. A model leaves the service when it is disposed.
  *
- * The undo/redo snapshots of disposed models and the configuration service
- * (the creation options come from the defaults, Monaco's
- * `_readModelOptions` of an empty configuration) are not ported.
+ * The creation options of a model come from the `editor` settings of the
+ * configuration of the context (`Cityscape.configurationService`), where the
+ * editors write their options (`tabSize`, `insertSpaces`,
+ * `detectIndentation`...) like Monaco's standalone editor; a change of these
+ * settings updates the options of the models (`_updateModelOptions`).
+ *
+ * The undo/redo snapshots of disposed models are not ported.
  */
 class ModelService {
 
@@ -61,10 +67,113 @@ class ModelService {
     final _onModelRemoved = new Emitter<ITextModel>();
     public final onModelRemoved:Event<ITextModel>;
 
-    public function new(?context:Cityscape) {
+    final _configurationService:Null<IConfigurationService>;
+    var _configurationListener:Null<IDisposable> = null;
+    var _modelCreationOptionsByLanguageAndResource:Map<String, ITextModelCreationOptions> = new Map();
+
+    public function new(?context:Cityscape, ?configurationService:IConfigurationService) {
         this._context = context;
         onModelAdded = _onModelAdded.event;
         onModelRemoved = _onModelRemoved.event;
+        this._configurationService = configurationService;
+        if (configurationService != null) {
+            _configurationListener = configurationService.onDidChangeConfiguration(e -> this._updateModelOptions(e));
+        }
+        this._updateModelOptions(null);
+    }
+
+    function _getEOL(resource:Null<Uri>, language:String):String {
+        // Monaco's StandaloneResourcePropertiesService: `files.eol`, else
+        // the platform's
+        final eol:Any = _configurationService != null ? _configurationService.getValue('files.eol') : null;
+        if (eol != null && JsValues.isString(eol) && (eol : String) != '' && (eol : String) != 'auto') {
+            return eol;
+        }
+        return (Platform.isLinux || Platform.isMacintosh) ? '\n' : '\r\n';
+    }
+
+    /**
+     * The creation options of a model of this language and uri, from the
+     * configuration (cached until the configuration changes).
+     */
+    public function getCreationOptions(languageIdOrSelection:EitherType<String, ILanguageSelection>, resource:Null<Uri>, isForSimpleWidget:Bool):ITextModelCreationOptions {
+        final language = JsValues.isString(languageIdOrSelection) ? (languageIdOrSelection : String) : (languageIdOrSelection : ILanguageSelection).languageId;
+        final cacheKey = language + (resource != null ? resource.toString() : 'undefined');
+        var creationOptions = _modelCreationOptionsByLanguageAndResource.get(cacheKey);
+        if (creationOptions == null) {
+            final editor:Null<IRawEditorConfig> = _configurationService != null ? _configurationService.getValue('editor') : null;
+            final eol = this._getEOL(resource, language);
+            creationOptions = ModelService._readModelOptions({editor: editor, eol: eol}, isForSimpleWidget);
+            _modelCreationOptionsByLanguageAndResource.set(cacheKey, creationOptions);
+        }
+        return creationOptions;
+    }
+
+    function _updateModelOptions(e:Null<ConfigurationChangeEvent>):Void {
+        final oldOptionsByLanguageAndResource = _modelCreationOptionsByLanguageAndResource;
+        _modelCreationOptionsByLanguageAndResource = new Map();
+
+        // Update options on all models
+        for (key in _order) {
+            final modelData = _models.get(key);
+            final model = modelData.model;
+            final language = model.getLanguageId();
+            final uri = model.uri;
+
+            if (e != null && !e.affectsConfiguration('editor') && !e.affectsConfiguration('files.eol')) {
+                continue; // perf: skip if this model is not affected by configuration change
+            }
+
+            final oldOptions = oldOptionsByLanguageAndResource.get(language + uri.toString());
+            final newOptions = this.getCreationOptions(language, uri, model.isForSimpleWidget);
+            ModelService._setModelOptionsForModel(model, newOptions, oldOptions);
+        }
+    }
+
+    static function _setModelOptionsForModel(model:TextModel, newOptions:ITextModelCreationOptions, currentOptions:Null<ITextModelCreationOptions>):Void {
+        if (currentOptions != null && currentOptions.defaultEOL != newOptions.defaultEOL && model.getLineCount() == 1) {
+            model.setEOL(newOptions.defaultEOL == DefaultEndOfLine.LF ? EndOfLineSequence.LF : EndOfLineSequence.CRLF);
+        }
+
+        if (currentOptions != null
+            && (currentOptions.detectIndentation == newOptions.detectIndentation)
+            && (currentOptions.insertSpaces == newOptions.insertSpaces)
+            && (currentOptions.tabSize == newOptions.tabSize)
+            && (currentOptions.indentSize == newOptions.indentSize)
+            && (currentOptions.trimAutoWhitespace == newOptions.trimAutoWhitespace)
+            && sameBracketPairColorizationOptions(currentOptions.bracketPairColorizationOptions, newOptions.bracketPairColorizationOptions)
+        ) {
+            // Same indent opts, no need to touch the model
+            return;
+        }
+
+        if (newOptions.detectIndentation) {
+            model.detectIndentation(newOptions.insertSpaces, newOptions.tabSize);
+            model.updateOptions({
+                trimAutoWhitespace: newOptions.trimAutoWhitespace,
+                bracketColorizationOptions: newOptions.bracketPairColorizationOptions
+            });
+        }
+        else {
+            model.updateOptions({
+                insertSpaces: newOptions.insertSpaces,
+                tabSize: newOptions.tabSize,
+                indentSize: newOptions.indentSize,
+                trimAutoWhitespace: newOptions.trimAutoWhitespace,
+                bracketColorizationOptions: newOptions.bracketPairColorizationOptions
+            });
+        }
+    }
+
+    static function sameBracketPairColorizationOptions(a:BracketPairColorizationOptions, b:BracketPairColorizationOptions):Bool {
+        // Monaco's `equals` (objects.ts): deep equality
+        if (a == b) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        return a.enabled == b.enabled && a.independentColorPoolPerBracketType == b.independentColorPoolPerBracketType;
     }
 
     /**
@@ -77,8 +186,9 @@ class ModelService {
         if (resource != null && _models.exists(resource.toString())) {
             throw 'ModelService: Cannot add model because it already exists!';
         }
-        final options = ModelService._readModelOptions({}, isForSimpleWidget);
-        final model = new TextModel(value, languageIdOrSelection != null ? languageIdOrSelection : 'plaintext', options, resource, _context);
+        final languageId:EitherType<String, ILanguageSelection> = languageIdOrSelection != null ? languageIdOrSelection : 'plaintext';
+        final options = this.getCreationOptions(languageId, resource, isForSimpleWidget);
+        final model = new TextModel(value, languageId, options, resource, _context);
         final key = model.uri.toString();
         if (_models.exists(key)) {
             model.dispose();
@@ -134,6 +244,10 @@ class ModelService {
         }
         _models.clear();
         _order.resize(0);
+        if (_configurationListener != null) {
+            _configurationListener.dispose();
+            _configurationListener = null;
+        }
         _onModelAdded.dispose();
         _onModelRemoved.dispose();
     }

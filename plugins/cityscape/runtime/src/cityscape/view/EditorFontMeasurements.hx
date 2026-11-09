@@ -16,9 +16,13 @@ import glaze.TextSystem;
 /**
  * Glaze fonts and Monaco `FontInfo` metrics for the editor fonts.
  *
- * - The font family is the first family of Monaco's CSS font list that the
- *   text system resolves (`Menlo`, `SF Mono`, `monospace`... map to the
- *   bundled JetBrains Mono, AUDIT A.5.2).
+ * - The font family is the first family of Monaco's CSS font list that is
+ *   added or installed (`TextSystem.isFamilyAvailable`: Glaze loads the
+ *   families of the system by name on macOS), else the first one the text
+ *   system resolves (`Menlo`, `SF Mono`, `monospace`... map to the bundled
+ *   JetBrains Mono where they are not installed, on the web for instance).
+ * - Italic runs synthesize an oblique when the family has no italic face
+ *   (`Font.synthesizeStyle`), like the browser Monaco runs in.
  * - `fontLigatures` (`font-feature-settings` syntax) gives `FontFeatures`
  *   passed explicitly: an empty feature list means ligatures on in Glaze,
  *   so Monaco's `'"liga" off, "calt" off'` default must be given (AUDIT A.2.3).
@@ -130,8 +134,26 @@ class EditorFontMeasurements implements ILineMeasurer {
         var result:Null<Font> = null;
         final candidates = parseFontFamilies(fontFamily);
         candidates.push('JetBrains Mono');
+        // like a CSS font family list: the first family that is added or
+        // installed on the system
         for (family in candidates) {
+            if (textSystem.isFamilyAvailable(family)) {
+                final font = new Font(family, features, null, weight, italic ? FontStyle.Italic : FontStyle.Normal);
+                font.synthesizeStyle = true;
+                try {
+                    textSystem.resolveFont(font);
+                    result = font;
+                    break;
+                } catch (e:Dynamic) {}
+            }
+        }
+        // else the first one the text system resolves (Glaze substitutes its
+        // bundled fonts for well known names: `SF Mono` is JetBrains Mono)
+        if (result == null) for (family in candidates) {
             final font = new Font(family, features, null, weight, italic ? FontStyle.Italic : FontStyle.Normal);
+            // like the browser: an italic run of a family without an italic
+            // face is drawn slanted (synthetic oblique)
+            font.synthesizeStyle = true;
             try {
                 textSystem.resolveFont(font);
                 result = font;
@@ -142,6 +164,7 @@ class EditorFontMeasurements implements ILineMeasurer {
         }
         if (result == null) {
             result = new Font('JetBrains Mono', features, null, weight, italic ? FontStyle.Italic : FontStyle.Normal);
+            result.synthesizeStyle = true;
         }
         _fontCache.set(key, result);
         return result;

@@ -183,6 +183,9 @@ class Tests {
         runner.add(new tests.contrib.smartSelect.SmartSelectTest());
         runner.add(new tests.contrib.caretOperations.MoveCaretCommandTest());
         runner.add(new tests.contrib.cursorUndo.CursorUndoTest());
+        runner.add(new tests.services.ModelServiceTest());
+        runner.add(new tests.view.ViewportTokenizationTest());
+        runner.add(new tests.view.EditorFontsTest());
 
         // Language features (step 4, cs4-lang)
         runner.add(new tests.base.FiltersTest());
