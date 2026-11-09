@@ -737,8 +737,13 @@ class ContentHoverView extends Model implements Render {
                 .borderColor(border.opacity(0.5));
             for (action in actions) {
                 final run = action.run;
+                // [loreline] patch of hoverWidget.css: an action stays on one
+                // line (a hover as narrow as a short message would wrap it
+                // below the status bar and clip it)
                 statusBar.child(div()
                     .id('cityscape-hover-action-' + action.commandId)
+                    .flexNone()
+                    .whitespaceNowrap()
                     .cursorPointer()
                     .textColor(link)
                     .onMouseDown(MouseButton.Left, (_, _, cx) -> {
@@ -748,7 +753,7 @@ class ContentHoverView extends Model implements Render {
                     .child(action.label));
             }
             for (text in texts) {
-                statusBar.child(div().opacity(0.7).child(text));
+                statusBar.child(div().flexNone().whitespaceNowrap().opacity(0.7).child(text));
             }
             surface.child(statusBar);
         }
