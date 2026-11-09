@@ -156,6 +156,120 @@ class CityscapeEditorTest extends TestCase {
         draw();
     }
 
+    /**
+     * viewLines.ts `onFlushed`: after `setValue` the widest line is measured
+     * again, so the scroll width follows the new text and a horizontal
+     * scroll past its end is clamped (a long line scrolled to its end, then
+     * replaced by short lines, shows them from their start).
+     */
+    function testSetValueMeasuresTheWidestLineAgain() {
+        final long = [for (_ in 0...40) 'word'].join(' ');
+        final model = createTextModel(long);
+        final views = openTwo(model);
+        final a:CityscapeView = views.a;
+        draw();
+        final layout = a.viewModel.viewLayout;
+        final wide = layout.getScrollWidth();
+        layout.setScrollPosition({scrollLeft: wide}, cityscape.common.EditorCommon.ScrollType.Immediate);
+        draw();
+        assertTrue(layout.getCurrentScrollLeft() > 0);
+        model.setValue('{\n  "a": 1\n}');
+        draw();
+        draw();
+        assertTrue(layout.getScrollWidth() < wide, 'the scroll width follows the new text');
+        assertEquals(0., layout.getCurrentScrollLeft());
+    }
+
+    /**
+     * The text cursor (I-beam) of an editor is set in paint, so it stays
+     * when the editor's view is reused from the view cache while another
+     * view renders again (GPUI replays the cursor styles of a reused paint).
+     */
+    function testTextCursorSurvivesViewCacheReuse() {
+        final model = createTextModel('hello\nworld');
+        openTwo(model);
+        draw();
+        inline function cursorStyles():String {
+            final summary = window.debugFrameSummary();
+            final start = summary.indexOf('cursor styles');
+            return summary.substring(start, summary.indexOf('\n', start));
+        }
+        final expected = cursorStyles();
+        final views = [for (id in @:privateAccess window.trackers.keys()) id];
+        assertTrue(views.length >= 2);
+        for (id in views) {
+            app.update(cx -> cx.notify(id));
+            window.drawIfDirty();
+            assertEquals(expected, cursorStyles(), 'after a notify of view $id');
+        }
+    }
+
+    /**
+     * Cityscape additions: `scrollBeyondLastLineGap` (gpui-kit's space past
+     * the last line, max(fraction of the viewport without padding, minimum
+     * lines)) and `scrollbarThumbExcludesPadding` (the thumb measured
+     * without the vertical padding). Monaco's default stays one viewport
+     * less a line.
+     */
+    function testScrollBeyondLastLineGapAndThumbPadding() {
+        final model = createTextModel('a\nb\nc\nd');
+        final views = openTwo(model);
+        final a:CityscapeView = views.a;
+        draw();
+        final layout = a.viewModel.viewLayout;
+        final lineHeight:Float = a.configuration.options.get(cityscape.common.config.EditorOptions.EditorOption.lineHeight);
+        final height:Float = a.configuration.options.get(cityscape.common.config.EditorOptions.EditorOption.layoutInfo).height;
+        // Monaco: 4 lines, then the viewport less a line
+        assertEquals(4 * lineHeight + Math.max(0, height - lineHeight), layout.getContentHeight());
+        // validation: missing fields are 0, the fraction is clamped to 0..1
+        a.updateOptions({padding: {top: 8, bottom: 8}, scrollBeyondLastLineGap: {viewportFraction: 2}});
+        final gap = a.configuration.options.get(cityscape.common.config.EditorOptions.EditorOption.scrollBeyondLastLineGap);
+        assertEquals(1., gap.viewportFraction);
+        assertEquals(0., gap.minLines);
+        // gpui-kit's rule: max(half the viewport without padding, 3 lines)
+        a.updateOptions({padding: {top: 8, bottom: 8}, scrollBeyondLastLineGap: {viewportFraction: 0.5, minLines: 3}});
+        final viewport = height - 16;
+        assertEquals(16 + 4 * lineHeight + Math.max(viewport * 0.5, 3 * lineHeight), layout.getContentHeight());
+        // the scrollbar sees the exact height (Monaco's scroll state rounds it)
+        final exact = 16 + 4 * lineHeight + Math.max(viewport * 0.5, 3 * lineHeight);
+        assertEquals(Math.max(exact, height), a.scrollHandle.contentSize().height);
+        // a tiny viewport: the minimum lines
+        a.updateOptions({padding: {top: 8, bottom: 8}, scrollBeyondLastLineGap: {viewportFraction: 0.01, minLines: 3}});
+        assertEquals(16 + 4 * lineHeight + 3 * lineHeight, layout.getContentHeight());
+        // without scrollBeyondLastLine, no gap
+        a.updateOptions({padding: {top: 8, bottom: 8}, scrollBeyondLastLine: false, scrollBeyondLastLineGap: {viewportFraction: 0.5, minLines: 3}});
+        assertTrue(layout.getContentHeight() <= 16 + 4 * lineHeight + 20);
+        // the thumb padding of the scroll handle
+        final handle:cityscape.view.CityscapeView.CityscapeScrollHandle = cast a.scrollHandle;
+        assertEquals(0., handle.thumbVerticalPadding());
+        a.updateOptions({padding: {top: 8, bottom: 8}, scrollbarThumbExcludesPadding: true});
+        assertEquals(16., handle.thumbVerticalPadding());
+    }
+
+    /**
+     * The key context of the editor root follows context keys set after its
+     * render (the contributions, created one app turn after the editor, set
+     * theirs then; here a key of the host): the root renders again, so the
+     * dispatch tree of the next frame lists the key without a refresh of
+     * the window.
+     */
+    function testLateContextKeysReachTheDispatchTree() {
+        final model = createTextModel('hello');
+        var editorA:Null<CityscapeEditor> = null;
+        window = Window.open(app, {width: 800, height: 400, scaleFactor: 2, autoDraw: false, bindInput: false},
+            TwoEditors.component(model, model, _ -> {}, _ -> {}, e -> editorA = e));
+        draw();
+        app.update(_ -> window.drawIfDirty());
+        app.update(_ -> window.drawIfDirty());
+        assertTrue(window.debugFrameSummary().indexOf('cs6LateKey') < 0);
+        assertFalse(window.dirty, 'nothing left to draw');
+        final key = editorA.createContextKey('cs6LateKey', false);
+        key.set(true);
+        // a frame drawn because something is dirty, not a refresh
+        app.update(_ -> window.drawIfDirty());
+        assertTrue(window.debugFrameSummary().indexOf('cs6LateKey') >= 0, 'the key context lists the key set after the render');
+    }
+
     function testCjkAndEmojiColumns() {
         final model = createTextModel('ab日本語😀cd');
         final views = openTwo(model);
@@ -327,18 +441,24 @@ class TwoEditors extends glaze.Component {
     final modelB:TextModel;
     final onA:(view:Entity<CityscapeView>) -> Void;
     final onB:(view:Entity<CityscapeView>) -> Void;
+    final onEditorA:Null<(editor:CityscapeEditor) -> Void>;
 
-    public function new(modelA:TextModel, modelB:TextModel, onA:(view:Entity<CityscapeView>) -> Void, onB:(view:Entity<CityscapeView>) -> Void) {
+    public function new(modelA:TextModel, modelB:TextModel, onA:(view:Entity<CityscapeView>) -> Void, onB:(view:Entity<CityscapeView>) -> Void,
+            ?onEditorA:(editor:CityscapeEditor) -> Void) {
         super();
         this.modelA = modelA;
         this.modelB = modelB;
         this.onA = onA;
         this.onB = onB;
+        this.onEditorA = onEditorA;
     }
 
     public function render(window:Window, cx:App):glaze.IntoElement {
         return div().flex().sizeFull()
-            .child(CityscapeEditor.component().model(modelA).options({lineNumbers: 'on'}).onCreate(e -> onA(e.getView())).flex1())
+            .child(CityscapeEditor.component().model(modelA).options({lineNumbers: 'on'}).onCreate(e -> {
+                onA(e.getView());
+                if (onEditorA != null) onEditorA(e);
+            }).flex1())
             .child(CityscapeEditor.component().model(modelB).onCreate(e -> onB(e.getView())).flex1());
     }
 

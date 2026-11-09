@@ -245,6 +245,21 @@ class CityscapeEditor extends Component implements Styled {
         appliedOptions = options;
         appliedShortcuts = shortcutsKey();
         widget.setWrappingIndentColumns(wrappingIndentColumns);
+        // The key context of the root lists the context keys: a key set after
+        // the render (the contributions are created one app turn after the
+        // editor, and set their keys then) renders the root again, otherwise
+        // the dispatch tree keeps the keys of the last render
+        final keyService = Std.downcast(widget.contextKeyService, AbstractContextKeyService);
+        if (keyService != null) {
+            final app = cx;
+            final viewForHost = viewEntity;
+            ownDisposables.add(keyService.onDidChangeContext(_ -> {
+                final host = (viewForHost : CityscapeView).hostViewId;
+                if (host != -1 && keyContextValue != null) {
+                    app.notify(host);
+                }
+            }));
+        }
         // The model is set before `onCreate`, which can then use the view model
         lastPropModel = model;
         widget.setModel(model);

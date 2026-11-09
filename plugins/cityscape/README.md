@@ -4,7 +4,9 @@ Cityscape is a code editor for Ceramic and Glaze: a Haxe port of [Monaco](https:
 
 Package `cityscape`. Monaco is by Microsoft, MIT licensed; see [NOTICE.md](NOTICE.md).
 
-**Status: in progress.** The text model, tokenization (TextMate grammars, themes) and the view are in place: `CityscapeEditor` shows a model with wrapping, decorations (Monaco's and typed styles), hidden ranges, selections and cursors, with minimal typing, mouse selection, clipboard and IME. The cursor controller, commands and the contributions come next.
+Cityscape is Glaze's code editor: it replaces gpui-kit's code editor, which Glaze does not include (the kit keeps its text inputs, `Input`, `Textarea` and the others).
+
+**Status: in progress.** In place: the text model, tokenization (TextMate grammars, themes), the view (wrapping, decorations of Monaco and typed styles, hidden ranges, selections, cursors, mouse, clipboard, IME, sticky scroll), Monaco's commands and keybindings, the editing contributions (find and replace, folding, bracket matching, multicursor, comments, line operations, indentation), the language features (suggest, hover, markers, code actions, definitions, symbols) with an LSP client, and the diff editor. Not yet: inlay hints, code lens, rename, semantic tokens, inline completions, parameter hints, color decorators, and Unity.
 
 ## Setup
 
@@ -18,6 +20,32 @@ app:
 ```
 
 Ceramic has no way for a plugin to enable another one, hence both entries. Until the Ceramic tools are rebuilt with this plugin, add its sources too (`paths: [<ceramic>/plugins/cityscape/runtime/src]`), like the test projects do.
+
+## In a Glaze UI
+
+A `CityscapeEditor` is placed like any kit component, inside the kit's window root, and sized by the flex layout of its parent:
+
+```haxe
+// A view of the app: a toolbar of the kit above an editor that takes the rest
+vFlex().sizeFull()
+    .child(hFlex().gap2().p2().child(Button.component('run').label('Run').onClick(() -> run())))
+    .child(CityscapeEditor.component().model(model).context(cityscape).flex1())
+```
+
+To make an editor look like the kit around it, `cityscape.kit.KitTheme.apply(context, Theme.global(cx))` defines and sets a theme made of the kit theme's colors (call it from a render: it changes the theme only when the kit's colors changed), and `cityscape.kit.KitGrammars.register(context, 'rust')` registers a TextMate grammar bundled with Glaze (on the web, load its file first with `glaze.kit.highlighter.Highlighter.preload(['rust'], done)`). For VS Code's colors, `cityscape.standalone.common.VSCodeDefaultThemes.apply(context, dark)` sets Dark+ or Light+ (the story gallery of Glaze follows the kit's theme mode with them).
+
+### The kit inspector
+
+Glaze's element inspector (define `glaze_inspector`, see Glaze's README) edits the style of the inspected element as Rust builder calls and as JSON in two `CityscapeEditor`s, configured to look like gpui-kit's code editor (the kit's mono font and size, rows of 1.5 times the size, the kit theme's colors with `KitTheme`, indent guides, no line numbers, the kit frame and scrollbar, and gpui-kit's scrolling past the last line with the Cityscape options `scrollBeyondLastLineGap` and `scrollbarThumbExcludesPadding`), with a completion provider for the style methods and the parse errors as markers. A project built with `glaze_inspector` lists this plugin too:
+
+```yaml
+app:
+    plugins:
+        - glaze
+        - cityscape
+    defines:
+        - glaze_inspector
+```
 
 ## Languages, grammars and themes
 
@@ -152,7 +180,7 @@ cityscape.registerInlineCompletionsProvider('haxe', myProvider); // provideInlin
 
 ## Layout
 
-- `runtime/src/cityscape`: the port, organized like `src/vs/editor` (`common/core`, `common/config`, `common/...`; `browser` becomes `view`), with the parts of `src/vs/base` and `src/vs/platform` it needs under `base/` and `platform/`.
+- `runtime/src/cityscape`: the port, organized like `src/vs/editor` (`common/core`, `common/config`, `common/...`; `browser` becomes `view`), with the parts of `src/vs/base` and `src/vs/platform` it needs under `base/` and `platform/`. `kit/` is new code tying the editor to the Glaze kit (`KitTheme`, `KitGrammars`).
 - `tests/unit`: unit tests (vscode's own tests, ported, and comparisons with recordings of the real Monaco in `tests/unit/data/monaco`). Node: `ceramic headless run node --setup --assets --allow-multiple`; macOS: `ceramic clay build mac --setup --assets --allow-multiple`, then `project/mac/unit.app/Contents/MacOS/unit`.
 - `tests/bench`: benchmarks (see its README).
 - `tests/visual`: a visual check of the view (a Haxe sample in two editors), captured to PNG on macOS and the web (see `tests/visual/src/Project.hx`).

@@ -49,6 +49,9 @@ class CityscapeViewElement extends Element {
 
     final view:Entity<CityscapeView>;
 
+    /** The hitbox of the text area, inserted in prepaint, its cursor set in paint. */
+    var hitbox:Null<glaze.Hitbox> = null;
+
     public function new(view:Entity<CityscapeView>) {
         this.view = view;
     }
@@ -64,8 +67,7 @@ class CityscapeViewElement extends Element {
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final v = view.read(cx);
         v.layoutTo(bounds, window.scaleFactor(), window);
-        final hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
-        window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : CursorStyle.IBeam, hitbox);
+        hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
     }
 
     static final NO_RADII = new Corners(0, 0, 0, 0);
@@ -100,7 +102,13 @@ class CityscapeViewElement extends Element {
     }
 
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
+        // A paint phase call (GPUI's `set_cursor_style`): recorded with the
+        // paint of the view, so a view reused from the cache keeps it
         final v = view.read(cx);
+        final hitbox = this.hitbox;
+        if (hitbox != null) {
+            window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : CursorStyle.IBeam, hitbox);
+        }
         final viewModel = v.viewModel;
         final theme = v.theme;
         final options = v.configuration.options;

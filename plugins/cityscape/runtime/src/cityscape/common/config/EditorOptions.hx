@@ -153,6 +153,23 @@ typedef IEditorOptions = {
      */
     @:optional var scrollBeyondLastLine:Bool;
     /**
+     * Cityscape addition (not in Monaco): how far past the last line the
+     * editor scrolls when `scrollBeyondLastLine` is on, as gpui-kit's code
+     * editor does it: `max(viewportFraction * viewport, minLines * lineHeight)`,
+     * the viewport being the editor height without the top and bottom padding
+     * (gpui-kit `TextElement::empty_bottom_height` is `{viewportFraction: 0.5,
+     * minLines: 3}`). Null (the default): Monaco's, one viewport less a line.
+     */
+    @:optional var scrollBeyondLastLineGap:IScrollBeyondLastLineGap;
+    /**
+     * Cityscape addition (not in Monaco): the vertical scrollbar thumb is
+     * measured against the viewport and the content without the editor's
+     * top and bottom padding, like the scrollbar of gpui-kit's editors (whose
+     * padding is outside the scrolled text). The track and the scroll range
+     * stay the editor's. Defaults to false.
+     */
+    @:optional var scrollbarThumbExcludesPadding:Bool;
+    /**
      * Enable that scrolling can go beyond the last column by a number of columns.
      * Defaults to 5.
      */
@@ -2019,6 +2036,63 @@ class EditorScrollbar extends BaseEditorOption<InternalEditorScrollbarOptions> {
 
 //#endregion
 
+//#region scrollBeyondLastLineGap
+
+/**
+ * Cityscape addition: the space past the last line (see
+ * `IEditorOptions.scrollBeyondLastLineGap`).
+ */
+typedef IScrollBeyondLastLineGap = {
+    /**
+     * Fraction of the viewport (the editor height without its vertical
+     * padding), from 0 to 1.
+     */
+    @:optional var viewportFraction:Float;
+    /**
+     * Minimum, in lines.
+     */
+    @:optional var minLines:Float;
+}
+
+typedef InternalScrollBeyondLastLineGap = {
+    final viewportFraction:Float;
+    final minLines:Float;
+    /**
+     * The height of the editor as laid out (computed: Monaco's layout
+     * truncates it to an integer, gpui-kit's rule takes the exact height).
+     */
+    final outerHeight:Float;
+}
+
+class EditorScrollBeyondLastLineGap extends BaseEditorOption<Null<InternalScrollBeyondLastLineGap>> {
+
+    public function new() {
+        super(EditorOption.scrollBeyondLastLineGap, 'scrollBeyondLastLineGap', null);
+    }
+
+    public function validate(_input:Any):Null<InternalScrollBeyondLastLineGap> {
+        if (!JsValues.truthy(_input) || !JsValues.isObject(_input)) {
+            return null;
+        }
+        final input = _input;
+        return {
+            viewportFraction: EditorFloatOption.clamp(EditorFloatOption.float(JsValues.field(input, 'viewportFraction'), 0), 0, 1),
+            minLines: EditorFloatOption.clamp(EditorFloatOption.float(JsValues.field(input, 'minLines'), 0), 0, 1000),
+            outerHeight: 0
+        };
+    }
+
+    override public function compute(env:IEnvironmentalOptions, options:IComputedEditorOptions, value:Null<InternalScrollBeyondLastLineGap>):Null<InternalScrollBeyondLastLineGap> {
+        if (value == null) {
+            return null;
+        }
+        return {viewportFraction: value.viewportFraction, minLines: value.minLines, outerHeight: env.outerHeight};
+    }
+
+}
+
+//#endregion
+
 //#region suggest
 
 /**
@@ -2483,11 +2557,20 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final defaultColorDecorators:EditorOption<Bool> = new EditorOption<Bool>(148);
     public static inline final colorDecoratorsActivatedOn:EditorOption<String> = new EditorOption<String>(149);
     public static inline final inlineCompletionsAccessibilityVerbose:EditorOption<Any> = new EditorOption<Any>(150);
+    /** Cityscape addition. */
+    public static inline final scrollBeyondLastLineGap:EditorOption<Null<cityscape.common.config.EditorOptions.InternalScrollBeyondLastLineGap>> = new EditorOption<Null<cityscape.common.config.EditorOptions.InternalScrollBeyondLastLineGap>>(151);
 
     /**
      * The number of option ids.
      */
-    public static inline final COUNT:Int = 151;
+    /** Cityscape addition. */
+    public static inline final scrollbarThumbExcludesPadding:EditorOption<Bool> = new EditorOption<Bool>(152);
+
+    /**
+     * The number of option ids (Monaco's 151 and the Cityscape additions,
+     * `scrollBeyondLastLineGap` and `scrollbarThumbExcludesPadding`).
+     */
+    public static inline final COUNT:Int = 153;
 
 }
 
@@ -3208,6 +3291,8 @@ class EditorOptions {
         _scrollbar = register(new EditorScrollbar());
         _scrollBeyondLastColumn = register(new EditorIntOption(EditorOption.scrollBeyondLastColumn, 'scrollBeyondLastColumn', 4, 0, EditorOptions.MAX_SAFE_SMALL_INTEGER));
         _scrollBeyondLastLine = register(new EditorBooleanOption(EditorOption.scrollBeyondLastLine, 'scrollBeyondLastLine', true));
+        register(new EditorScrollBeyondLastLineGap());
+        register(new EditorBooleanOption(EditorOption.scrollbarThumbExcludesPadding, 'scrollbarThumbExcludesPadding', false));
         _selectionHighlight = register(new EditorBooleanOption(EditorOption.selectionHighlight, 'selectionHighlight', true));
         _showFoldingControls = register(new EditorStringEnumOption(EditorOption.showFoldingControls, 'showFoldingControls', 'mouseover', ['always', 'never', 'mouseover']));
         _smoothScrolling = register(new EditorBooleanOption(EditorOption.smoothScrolling, 'smoothScrolling', false));

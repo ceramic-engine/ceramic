@@ -855,9 +855,14 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     }
 
     @:allow(cityscape.view.CityscapeViewEventHandler)
-    function onViewEvents(flush:Bool):Void {
+    function onViewEvents(flush:Bool, flushed:Bool = false):Void {
         if (flush) {
             resetRenderCache();
+        }
+        if (flushed) {
+            // viewLines.ts `onFlushed`: the widest line is measured again
+            // (the scroll width follows the new text)
+            maxLineWidth = 0;
         }
         notifyChanged();
     }
@@ -1941,8 +1946,12 @@ class CityscapeViewEventHandler extends ViewEventHandler {
     override public function handleEvents(events:Array<ViewEvent>):Void {
         var flush = false;
         var paint = false;
+        var flushed = false;
         for (i in 0...events.length) {
             final e = events[i];
+            if (e.type == ViewEventType.ViewFlushed) {
+                flushed = true;
+            }
             if (e.type != ViewEventType.ViewScrollChanged) {
                 paint = true;
             }
@@ -1975,7 +1984,7 @@ class CityscapeViewEventHandler extends ViewEventHandler {
         if (paint) {
             view.invalidatePaint();
         }
-        view.onViewEvents(flush);
+        view.onViewEvents(flush, flushed);
     }
 
 }
@@ -2003,7 +2012,7 @@ class CityscapePaintView extends GlazeModel implements glaze.Render {
  * The kit scrollbar handle of a Cityscape view: GPUI offsets (0 at the top,
  * negative down) over Monaco's scroll position (AUDIT B.1).
  */
-class CityscapeScrollHandle implements ScrollbarHandleImpl {
+class CityscapeScrollHandle implements ScrollbarHandleImpl implements glaze.kit.base.Scrollbar.ScrollbarThumbPadding {
 
     final view:CityscapeView;
     var dragging:Bool = false;
@@ -2043,7 +2052,24 @@ class CityscapeScrollHandle implements ScrollbarHandleImpl {
         if (viewModel == null) {
             return new Size(0, 0);
         }
-        return new Size(viewModel.viewLayout.getScrollWidth(), viewModel.viewLayout.getScrollHeight());
+        final layout = viewModel.viewLayout;
+        // `scrollBeyondLastLineGap`: the exact height (Monaco's scroll state
+        // keeps integers), so that the thumb follows gpui-kit's rule exactly
+        final exact = layout.exactContentHeight > 0 ? Math.max(layout.exactContentHeight, layout.exactHeight) : layout.getScrollHeight();
+        return new Size(layout.getScrollWidth(), exact);
+    }
+
+    /**
+     * The vertical padding left out of the thumb: the editor's padding with
+     * the Cityscape option `scrollbarThumbExcludesPadding`, else 0.
+     */
+    public function thumbVerticalPadding():Float {
+        final options = view.configuration.options;
+        if (!options.get(EditorOption.scrollbarThumbExcludesPadding)) {
+            return 0;
+        }
+        final padding = options.get(EditorOption.padding);
+        return padding.top + padding.bottom;
     }
 
     public function startDrag():Void {

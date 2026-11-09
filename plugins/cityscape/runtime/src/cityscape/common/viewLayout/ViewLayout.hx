@@ -263,12 +263,38 @@ class ViewLayout implements IViewLayout {
         return scrollbar.horizontalScrollbarSize;
     }
 
+    /**
+     * Cityscape addition: with `scrollBeyondLastLineGap`, the content height
+     * before Monaco's scroll state rounds it to an integer, and the exact
+     * height of the editor (the scrollbar thumb of gpui-kit's rule is
+     * measured with them). 0 without the option.
+     */
+    public var exactContentHeight(default, null):Float = 0;
+
+    public var exactHeight(default, null):Float = 0;
+
     function _getContentHeight(width:Float, height:Float, contentWidth:Float):Float {
         final options = this._configuration.options;
+        exactContentHeight = 0;
+        exactHeight = 0;
 
         var result = this._linesLayout.getLinesTotalHeight();
         if (options.get(EditorOption.scrollBeyondLastLine)) {
-            result += Math.max(0, height - options.get(EditorOption.lineHeight) - options.get(EditorOption.padding).bottom);
+            final gap = options.get(EditorOption.scrollBeyondLastLineGap);
+            if (gap != null) {
+                // Cityscape addition: gpui-kit's rule, max(fraction of the
+                // viewport without padding, minimum lines)
+                final padding = options.get(EditorOption.padding);
+                // the exact height laid out (Monaco's layout height is an integer)
+                final outerHeight = gap.outerHeight > 0 ? gap.outerHeight : height;
+                final viewport = Math.max(0, outerHeight - padding.top - padding.bottom);
+                result += Math.max(viewport * gap.viewportFraction, gap.minLines * options.get(EditorOption.lineHeight));
+                exactContentHeight = result;
+                exactHeight = outerHeight;
+            }
+            else {
+                result += Math.max(0, height - options.get(EditorOption.lineHeight) - options.get(EditorOption.padding).bottom);
+            }
         } else if (!options.get(EditorOption.scrollbar).ignoreHorizontalScrollbarInContentHeight) {
             result += this._getHorizontalScrollbarHeight(width, contentWidth);
         }
