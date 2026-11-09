@@ -31,6 +31,20 @@ class Font {
     /** The font style. */
     public var style(default, set):FontStyle;
 
+    /**
+     * Whether an italic or oblique style may be synthesized (CSS
+     * `font-synthesis-style: auto`, Glaze addition): when the family has no
+     * italic face, the upright face is drawn slanted (`x += y / 4`, like
+     * browsers), with the same advances. False by default, like GPUI, which
+     * draws the upright face.
+     */
+    public var synthesizeStyle(default, set):Bool = false;
+
+    inline function set_synthesizeStyle(value:Bool):Bool {
+        _key = null;
+        return synthesizeStyle = value;
+    }
+
     /** `key()`, computed on first use */
     var _key:Null<String> = null;
 
@@ -95,7 +109,17 @@ class Font {
     }
 
     public function clone():Font {
-        return new Font(family, features, fallbacks, weight, style);
+        final result = new Font(family, features, fallbacks, weight, style);
+        if (synthesizeStyle)
+            result.synthesizeStyle = true;
+        return result;
+    }
+
+    /** Returns a copy of this font that may synthesize its italic style (`synthesizeStyle`) */
+    public function withStyleSynthesis():Font {
+        final result = clone();
+        result.synthesizeStyle = true;
+        return result;
     }
 
     /**
@@ -106,6 +130,8 @@ class Font {
         var key = _key;
         if (key == null) {
             key = family + '\x00' + features.key() + '\x00' + (fallbacks != null ? fallbacks.key() : '-') + '\x00' + (weight:Float) + '\x00' + (cast style:Int);
+            if (synthesizeStyle)
+                key += '\x00s';
             _key = key;
         }
         return key;
@@ -114,7 +140,7 @@ class Font {
     public function equals(other:Font):Bool {
         return other != null && family == other.family && features.equals(other.features)
             && (fallbacks == null ? other.fallbacks == null : fallbacks.equals(other.fallbacks))
-            && (weight:Float) == (other.weight:Float) && style == other.style;
+            && (weight:Float) == (other.weight:Float) && style == other.style && synthesizeStyle == other.synthesizeStyle;
     }
 
     public function toString():String {

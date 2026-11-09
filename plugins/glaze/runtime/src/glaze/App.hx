@@ -125,7 +125,9 @@ class App {
      * On native desktop targets, characters missing from every added font
      * are taken from the fonts of the operating system
      * (`glaze.platform.SystemFontFallback`, loaded on first use; define
-     * `glaze_no_system_fonts` to skip). In browsers (clay web, Electron),
+     * `glaze_no_system_fonts` to skip), and families that no added font
+     * provides are loaded from the installed fonts by name
+     * (`glaze.platform.SystemFontFamilies`, macOS for now). In browsers (clay web, Electron),
      * graphemes missing from the added fonts are drawn by the browser,
      * emoji and CJK text included (`CanvasFontFallback.EmojiAndCjk`; change it with
      * `CeramicTextSystem.canvasFontFallback`, define
@@ -136,6 +138,7 @@ class App {
             final platform = new glaze.platform.CeramicTextSystem('Inter');
             #if (sys && !glaze_no_system_fonts && !ios && !android && !tvos)
             platform.systemFallback = new glaze.platform.SystemFontFallback();
+            platform.systemFamilies = new glaze.platform.SystemFontFamilies();
             #end
             #if (js && !glaze_no_canvas_fallback)
             if (glaze.platform.CanvasText.BrowserCanvasText.available())

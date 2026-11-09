@@ -125,6 +125,15 @@ Icons are `IconName` values: `Button.component('add').icon(IconName.Plus)`. The 
 
 The names are gpui-kit's in camelCase, so its documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences. `Kit.window(view)` is `Root.component().child(view)`: `Root` is itself a component.
 
+## Text and fonts
+
+Glaze draws text with its own text system: fonts are TTF, OTF or TTC files added to the text system (Inter and JetBrains Mono are bundled). Two choices of Glaze go beyond the real GPUI and are deliberate:
+
+- **Font smoothing.** `TextSystem.fontSmoothing` is `Dense` by default, on every platform: stems are made a little thicker, close to the text of macOS (Safari, Chrome and native apps), by an amount that depends on the size and on the luminance of the text color, measured on Chromium on macOS. `Thin` is the raw coverage of the outlines, what GPUI renders with its font file text system (Glaze's golden scenes use it, with the define `glaze_font_smoothing: thin`), and `Auto` follows the platform (`Dense` on macOS, `Thin` on Windows and Linux). Set it once at startup: `app.textSystem().fontSmoothing = Thin`, or with the define.
+- **Fonts of the system by name.** On macOS, a family that no added font provides (`Menlo`, a font the user installed) is read from the system font folders, all its faces, and drawn like an added font (`glaze.platform.SystemFontFamilies`, not on the web, TODO on Windows and Linux; define `glaze_no_system_fonts` to keep the added fonts only). `TextSystem.isFamilyAvailable(name)` tells whether a family is there, to pick the first of a CSS like list. Well known names that are not found keep their bundled substitutes.
+
+`Font.synthesizeStyle` (off by default, like GPUI) draws the italic of a family without an italic face as a slanted upright face, like a browser.
+
 ## Samples
 
 The `glaze-settings` sample of [ceramic-samples](https://github.com/ceramic-engine/ceramic-samples) is the reference for the component pattern: a settings window with tabs, labeled rows, switches, selects, a stepper and a confirmation dialog, over a small tracker model.

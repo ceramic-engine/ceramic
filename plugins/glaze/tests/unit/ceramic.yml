@@ -83,6 +83,9 @@ app:
         # Native runs keep the fonts of the reference only (no system font fallback
         # in App.defaultTextSystem); SystemFontFallbackTest enables it explicitly
         - glaze_no_system_fonts
+        # The truths come from GPUI's raw coverage: thin font smoothing
+        # (FontSmoothingTest sets Dense explicitly)
+        - glaze_font_smoothing: thin
         #- some_define
         #- some_define: 'some value'
 

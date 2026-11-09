@@ -120,6 +120,41 @@ class TextSystem {
     }
 
     /**
+     * Whether the font family `name` is available as it is: added, or
+     * installed on the system (`CeramicTextSystem.systemFamilies`), without
+     * the substitutes `resolveFont` takes for well known names (`Menlo`
+     * drawn with the bundled monospace font). A CSS like font family list
+     * takes the first available family. True for text systems other than
+     * Glaze's own.
+     */
+    public function isFamilyAvailable(name:String):Bool {
+        final ceramicTextSystem = Std.downcast(platformTextSystem, glaze.platform.CeramicTextSystem);
+        return ceramicTextSystem == null || ceramicTextSystem.isFamilyAvailable(name);
+    }
+
+    /**
+     * How glyphs are rasterized, for the whole text system (see
+     * `FontSmoothing`): `Dense` by default (or the `glaze_font_smoothing`
+     * define), `Thin` for the raw coverage of GPUI's font file text system.
+     * Windows already drawn show the change at their next frame that
+     * repaints their text. Text systems other than Glaze's own are always
+     * `Thin`.
+     */
+    public var fontSmoothing(get, set):FontSmoothing;
+
+    function get_fontSmoothing():FontSmoothing {
+        final ceramicTextSystem = Std.downcast(platformTextSystem, glaze.platform.CeramicTextSystem);
+        return ceramicTextSystem != null ? ceramicTextSystem.fontSmoothing : Thin;
+    }
+
+    function set_fontSmoothing(value:FontSmoothing):FontSmoothing {
+        final ceramicTextSystem = Std.downcast(platformTextSystem, glaze.platform.CeramicTextSystem);
+        if (ceramicTextSystem != null)
+            ceramicTextSystem.fontSmoothing = value;
+        return value;
+    }
+
+    /**
      * The scale factor of the windows (device pixels per logical pixel), for
      * the platform text systems whose line layouts depend on it: the Canvas
      * fallback of the web measures at the device font size, like the

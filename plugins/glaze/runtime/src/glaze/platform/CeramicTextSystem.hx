@@ -69,7 +69,11 @@ import ttf.shape.Shaper;
  * the system emoji font and the browser canvas, which keep the graphemes it
  * lacks.
  *
- * Not supported: subpixel (LCD) masks, glyph dilation, complex scripts and
+ * Glyphs are dilated with `FontSmoothing.Dense` (`fontSmoothing`), and the
+ * italic of a family without italic face can be synthesized
+ * (`Font.synthesizeStyle`), see `GlyphEffects`.
+ *
+ * Not supported: subpixel (LCD) masks, complex scripts and
  * bidirectional text (see the `ttf` library).
  */
 class CeramicTextSystem implements PlatformTextSystem {
@@ -108,6 +112,19 @@ class CeramicTextSystem implements PlatformTextSystem {
     final rasterizer:GlyphRasterizer = new GlyphRasterizer();
 
     final bitmap:GlyphBitmap = new GlyphBitmap();
+
+    /** Synthetic oblique and dilation (`FontSmoothing.Dense`) */
+    final effects:GlyphEffects = new GlyphEffects();
+
+    /** The synthetic oblique font id of a loaded font id */
+    final syntheticObliqueIds:Map<Int, Int> = new Map();
+
+    /**
+     * How glyphs are rasterized (see `FontSmoothing`): `Dense` by default
+     * (or the `glaze_font_smoothing` define). The glyphs already in the
+     * atlas stay valid: the dilation is part of their key.
+     */
+    public var fontSmoothing:FontSmoothing = FontSmoothing.compileTimeDefault();
 
     final decoded:Utf8Text = new Utf8Text();
 
@@ -170,6 +187,48 @@ class CeramicTextSystem implements PlatformTextSystem {
     public function setCanvasLayoutScale(scale:Float):Bool {
         return canvas.setLayoutScale(scale) && canvas.backend != null;
     }
+
+    /**
+     * The font families installed on the system, loaded by name when no
+     * added font has the family asked for (null: only the added fonts,
+     * like GPUI's `new_without_system_fonts`). `App.defaultTextSystem()`
+     * sets it on native desktop targets unless `glaze_no_system_fonts` is
+     * defined (macOS only for now, see `SystemFontFamilies`).
+     */
+    public var systemFamilies:Null<SystemFontFamilies> = null;
+
+    /**
+     * Adds the faces of the installed family `name` (see `systemFamilies`)
+     * and returns its family name as the faces give it, or null when it is
+     * not installed.
+     */
+    function loadSystemFamily(name:String):Null<String> {
+        final families = systemFamilies;
+        if (families == null || name.length == 0 || name.charAt(0) == '.')
+            return null;
+        final lower = name.toLowerCase();
+        if (systemFamilyNames.exists(lower))
+            return systemFamilyNames.get(lower);
+        final added = families.loadFamily(name);
+        for (face in added)
+            addFace(face);
+        final result = added.length > 0 ? added[0].familyName : null;
+        systemFamilyNames.set(lower, result);
+        return result;
+    }
+
+    /**
+     * Whether the family `name` is added or installed (loading it from the
+     * system when it is installed), without the substitutes of well known
+     * names: what a CSS font family list tries in turn.
+     */
+    public function isFamilyAvailable(name:String):Bool {
+        final resolvedName = Font.fontNameWithFallbacks(name, systemFontFallback);
+        return hasFamily(resolvedName) || loadSystemFamily(resolvedName) != null;
+    }
+
+    /** Lowercased family names asked for to the family name of their loaded faces (null: not installed) */
+    final systemFamilyNames:Map<String, Null<String>> = new Map();
 
     function set_systemFallback(fallback:Null<SystemFontFallback>):Null<SystemFontFallback> {
         systemFallback = fallback;
@@ -279,12 +338,36 @@ class CeramicTextSystem implements PlatformTextSystem {
         }
 
         final ix = findBestMatch(font, candidates);
-        final fontId = candidates[ix];
+        var fontId = candidates[ix];
         if (CanvasFallbackText.isCanvasFontId(fontId))
             throw 'native font ID space exhausted';
         final face = loadedFonts[fontId].face;
+        if (font.synthesizeStyle && !face.italic && (font.style == Italic || font.style == Oblique) && !loadedFonts[fontId].isKnownEmojiFont) {
+            // the family has no italic face: the upright one, slanted
+            fontId = syntheticObliqueId(fontId);
+            canvas.recordDescriptor(fontId, font, face.weight, Italic);
+            return fontId;
+        }
         canvas.recordDescriptor(fontId, font, face.weight, face.italic ? Italic : Normal);
         return fontId;
+    }
+
+    /**
+     * The font id of the synthetic oblique of a loaded font (same face,
+     * features and fallbacks, glyphs slanted when rasterized like a
+     * browser's synthetic italic: Skia's `setSkewX(-1/4)`).
+     */
+    function syntheticObliqueId(fontId:Int):Int {
+        final existing = syntheticObliqueIds.get(fontId);
+        if (existing != null)
+            return existing;
+        final base = loadedFonts[fontId];
+        final loaded = new LoadedFont(base.face, base.features, base.isKnownEmojiFont, base.userFallbackChain);
+        loaded.obliqueSkew = 0.25;
+        final id = loadedFonts.length;
+        loadedFonts.push(loaded);
+        syntheticObliqueIds.set(fontId, id);
+        return id;
     }
 
     function loadFamily(name:String, features:FontFeatures, fallbacks:Null<FontFallbacks>):Array<Int> {
@@ -310,7 +393,12 @@ class CeramicTextSystem implements PlatformTextSystem {
 
         var resolvedName = Font.fontNameWithFallbacks(name, systemFontFallback);
         if (!hasFamily(resolvedName)) {
-            resolvedName = substituteFamily(resolvedName);
+            // an installed family of the system, else a substitute
+            final systemName = loadSystemFamily(resolvedName);
+            if (systemName != null)
+                resolvedName = systemName;
+            else
+                resolvedName = substituteFamily(resolvedName);
         }
 
         final ttfFeatures = featuresFor(features);
@@ -547,7 +635,9 @@ class CeramicTextSystem implements PlatformTextSystem {
             if (color != null && color.bounds(params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), colorBitmap))
                 return new Bounds(new Point(colorBitmap.left, -colorBitmap.top), new Size(colorBitmap.width, colorBitmap.height));
         }
-        final b = rasterizer.rasterBounds(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap);
+        final b = setupEffects(params)
+            ? effects.rasterBounds(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap)
+            : rasterizer.rasterBounds(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap);
         if (b.width <= 0 || b.height <= 0)
             return new Bounds(new Point(0, 0), new Size(0, 0));
         return new Bounds(new Point(b.left, -b.top), new Size(b.width, b.height));
@@ -572,7 +662,9 @@ class CeramicTextSystem implements PlatformTextSystem {
         final face = loadedFonts[params.fontId].face;
         if (params.isEmoji)
             return rasterizeColorGlyph(face, params, rasterBounds);
-        final b = rasterizer.rasterize(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap);
+        final b = setupEffects(params)
+            ? effects.rasterize(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap)
+            : rasterizer.rasterize(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap);
         final width = Std.int(rasterBounds.size.width);
         final height = Std.int(rasterBounds.size.height);
         final result = Bytes.alloc(width * height);
@@ -622,8 +714,40 @@ class CeramicTextSystem implements PlatformTextSystem {
         return Grayscale;
     }
 
+    /**
+     * The dilation code of a glyph painted in `color`: 0 with
+     * `FontSmoothing.Thin`, 1 + the luminance level of the color with
+     * `Dense` (see `FontSmoothing.dilationCodeForColor`).
+     */
     public function glyphDilationForColor(color:Hsla):Int {
-        return 0;
+        if (fontSmoothing == Thin)
+            return 0;
+        // the color of consecutive glyphs is usually the same: no conversion
+        if (color.h != lastDilationH || color.s != lastDilationS || color.l != lastDilationL || fontSmoothing != lastDilationSmoothing) {
+            lastDilationH = color.h;
+            lastDilationS = color.s;
+            lastDilationL = color.l;
+            lastDilationSmoothing = fontSmoothing;
+            lastDilationCode = fontSmoothing.dilationCodeForColor(color);
+        }
+        return lastDilationCode;
+    }
+
+    var lastDilationH:Float = -1;
+    var lastDilationS:Float = -1;
+    var lastDilationL:Float = -1;
+    var lastDilationSmoothing:FontSmoothing = Thin;
+    var lastDilationCode:Int = 0;
+
+    /**
+     * Sets the outline effects of a glyph (synthetic oblique of its font,
+     * dilation of its params); true when there is one.
+     */
+    function setupEffects(params:RenderGlyphParams):Bool {
+        final ppem = params.fontSize * params.scaleFactor;
+        effects.skewX = loadedFonts[params.fontId].obliqueSkew;
+        effects.dilation = params.dilation > 0 ? FontSmoothing.denseDilation(ppem, params.dilation - 1) : 0;
+        return effects.active();
     }
 
 /// Layout
@@ -1182,6 +1306,9 @@ private class LoadedFont {
 
     /** Font ids of the user fallbacks, resolved at load time */
     public var userFallbackChain:Array<Int>;
+
+    /** Horizontal shear of a synthetic oblique (0: upright as drawn) */
+    public var obliqueSkew:Float = 0;
 
     public function new(face:ttf.Font, features:Features, isKnownEmojiFont:Bool, userFallbackChain:Array<Int>) {
         this.face = face;

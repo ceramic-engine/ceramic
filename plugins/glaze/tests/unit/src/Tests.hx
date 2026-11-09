@@ -34,6 +34,8 @@ class Tests {
         runner.add(new tests.AnimationElementTest());
         runner.add(new tests.TextSystemTest());
         runner.add(new tests.LineLayoutTest());
+        runner.add(new tests.FontSmoothingTest());
+        runner.add(new tests.SystemFontFamiliesTest());
         runner.add(new tests.LineWrapperTest());
         runner.add(new tests.SystemFontFallbackTest());
         runner.add(new tests.CanvasFallbackTest());
