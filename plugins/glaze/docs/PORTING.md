@@ -1,6 +1,6 @@
 # Porting conventions (Rust to Haxe)
 
-Rules shared by every port in this project: GPUI itself (`runtime/src/glaze`), gpui-kit later, and the pure Haxe libraries written in `ceramic/git/` (plutovg, lunasvg, taffy...). The goal is code that can be compared line by line with the Rust (or C / C++) source, while staying idiomatic Haxe and fast on hxcpp.
+Rules shared by every port in this project: GPUI itself (`runtime/src/glaze`), gpui-kit (`runtime/src/glaze/kit`, written with components since, see below), and the pure Haxe libraries written in `ceramic/git/` (plutovg, lunasvg, taffy...). The goal is code that can be compared line by line with the Rust (or C / C++) source, while staying idiomatic Haxe and fast on hxcpp.
 
 ## Sources and files
 
@@ -116,6 +116,10 @@ During the initial port, Glaze matched the original GPUI and gpui-kit exactly, a
 Now that the port is done, Glaze evolves on its own: new changes are made directly in the code, without a DEVIATIONS entry or a reference patch. The golden tests of glaze-golden still compare the port with the original and show where it has moved away from it.
 
 Some of the initial deviations were product decisions rather than fixes of a rendered defect, and followed the same procedure (patch, declaration, safeguards): the web keyboard and comma of number fields (DEV-017, DEV-018), files in a browser (DEV-019) and the scrollbar mode (DEV-020: `Theme.init` sets `Hover` on every platform where gpui-kit syncs with the system; an app that wants the system setting calls GPUI's own `Theme.syncScrollbarAppearance(cx)` after `init`, read once, not followed afterwards), system notifications in a browser (DEV-021) and resizable panels at exactly 100 px that no longer update on every frame (DEV-022).
+
+## The kit written with components
+
+Since 2026-11-09, every component of the kit (`glaze.kit` and `glaze.kit.base`) is a `glaze.Component` instead of a `RenderOnce`: its options are `@prop` fields with generated chained setters, and only the setters with logic (conversions, aliases, delegation) are written by hand. The kit is no longer line by line with gpui-kit's Rust: the `render` methods still follow it, but the fields and setters are written the Glaze way. Every kit component stays stateless (rebuilt on each render of its parent, like before); the controls with a separate state entity (`InputState`, `SelectState`...) keep it. `RenderOnce` stays for the GPUI core and for user code, and a stateless `Component` is a `RenderOnce`. New kit code is written as components.
 
 ## Writing style
 
