@@ -960,6 +960,7 @@ class Window implements WindowInvalidator {
         this.viewCaching = options.viewCaching != null ? options.viewCaching : defaultViewCaching;
         fixedScaleFactor = options.scaleFactor;
         _scaleFactor = platformScaleFactor();
+        app.textSystem().setLayoutScaleFactor(_scaleFactor);
         _remSize = options.remSize;
         _viewportSize = new Size(options.width, options.height);
         windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
@@ -1282,6 +1283,7 @@ class Window implements WindowInvalidator {
     public function setScaleFactor(scaleFactor:Float):Void {
         fixedScaleFactor = scaleFactor;
         _scaleFactor = scaleFactor;
+        app.textSystem().setLayoutScaleFactor(_scaleFactor);
         refresh();
     }
 
@@ -1316,6 +1318,7 @@ class Window implements WindowInvalidator {
      */
     public function boundsChanged():Void {
         _scaleFactor = platformScaleFactor();
+        app.textSystem().setLayoutScaleFactor(_scaleFactor);
         windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
         renderable.size(_viewportSize.width, _viewportSize.height);
         refresh();

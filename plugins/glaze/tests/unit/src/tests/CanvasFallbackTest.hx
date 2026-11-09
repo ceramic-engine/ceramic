@@ -760,6 +760,54 @@ class CanvasFallbackTest extends TestCase {
         assertEquals(2, canvas.measureCalls);
     }
 
+    /**
+     * Glaze deviation (DEVIATIONS.md, "Canvas fallback advances at the device
+     * font size"): with a layout scale, canvas advances are measured at the
+     * device font size and divided by the scale, like the browser's own text,
+     * so a font whose advances depend on the size (Apple Color Emoji in
+     * Chromium: 18 px at 14 px, 28 px at 28 px) advances by what is drawn.
+     */
+    function testLayoutScaleMeasuresAtTheDeviceFontSize() {
+        final canvas = new TrackedCanvas();
+        final p = platform(EmojiAndCjk, canvas);
+        // Scale 1 (GPUI): measured at 14 px, 0.75 em + 4 px of tracking
+        final l1 = lineOf(p, 'a😀b', 'JetBrains Mono', 14);
+        assertTrue(Math.abs(14 * 0.75 + 4 - (flat(l1)[2].position.x - flat(l1)[1].position.x)) < 1e-4, 'advance at scale 1');
+        assertEquals('normal 400 14px emoji', canvas.fonts[canvas.fonts.length - 1]);
+        // Scale 2: measured at 28 px (no tracking there), half of it
+        assertTrue(p.setCanvasLayoutScale(2));
+        assertFalse(p.setCanvasLayoutScale(2), 'unchanged');
+        final l2 = lineOf(p, 'a😀b', 'JetBrains Mono', 14);
+        assertTrue(Math.abs(28 * 0.75 / 2 - (flat(l2)[2].position.x - flat(l2)[1].position.x)) < 1e-4, 'advance at scale 2');
+        assertEquals('normal 400 28px emoji', canvas.fonts[canvas.fonts.length - 1]);
+        // Invalid scales mean 1
+        assertTrue(p.setCanvasLayoutScale(Math.NaN));
+        assertEquals(1.0, p.canvas.layoutScale);
+        // Without a canvas, layouts never depend on the scale
+        final plain = new CeramicTextSystem('Inter');
+        plain.addFonts([TextFixtures.interBytes(), TextFixtures.monoBytes()]);
+        assertFalse(plain.setCanvasLayoutScale(2));
+    }
+
+    function testTextSystemLayoutScaleFactorInvalidatesLayouts() {
+        final p = platform(EmojiAndCjk, new TrackedCanvas());
+        final ts = new glaze.TextSystem(p);
+        final generation = ts.fontGeneration;
+        ts.setLayoutScaleFactor(1);
+        assertEquals(generation, ts.fontGeneration, 'same scale');
+        ts.setLayoutScaleFactor(2);
+        assertEquals(generation + 1, ts.fontGeneration, 'new scale');
+        ts.setLayoutScaleFactor(2);
+        assertEquals(generation + 1, ts.fontGeneration, 'same scale again');
+        // A text system without canvas ignores it
+        final plain = new CeramicTextSystem('Inter');
+        plain.addFonts([TextFixtures.interBytes(), TextFixtures.monoBytes()]);
+        final ts2 = new glaze.TextSystem(plain);
+        final g2 = ts2.fontGeneration;
+        ts2.setLayoutScaleFactor(2);
+        assertEquals(g2, ts2.fontGeneration);
+    }
+
     function testLayoutKeepsCoveredGraphemes() {
         // Inter covers é, ©, and → (text presentation): nothing to replace
         final p = platform(EmojiAndCjk);
@@ -796,6 +844,21 @@ class CanvasFallbackTest extends TestCase {
 
     static inline function referenceContent():String {
         return CanvasFallbackReference.content();
+    }
+
+}
+
+/**
+ * A `FakeCanvas` whose advances get 4 px of tracking under 24 px, like the
+ * size dependent advances of Apple Color Emoji in Chromium.
+ */
+class TrackedCanvas extends FakeCanvas {
+
+    override public function measureText(text:String, cssFont:String, result:Array<Float>):Void {
+        super.measureText(text, cssFont, result);
+        final re = ~/([0-9.]+)px/;
+        if (re.match(cssFont) && Std.parseFloat(re.matched(1)) < 24)
+            result[0] += 4;
     }
 
 }

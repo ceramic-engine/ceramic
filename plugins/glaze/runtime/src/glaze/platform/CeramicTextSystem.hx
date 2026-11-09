@@ -160,6 +160,17 @@ class CeramicTextSystem implements PlatformTextSystem {
         return canvas.backend = backend;
     }
 
+    /**
+     * Sets the scale at which the Canvas fallback measures line layouts (the
+     * device pixel ratio of the windows, see `CanvasFallbackText.layoutScale`).
+     * Returns true when line layouts made before are stale (a canvas is set
+     * and the scale changed); `TextSystem.setLayoutScaleFactor` then
+     * invalidates them.
+     */
+    public function setCanvasLayoutScale(scale:Float):Bool {
+        return canvas.setLayoutScale(scale) && canvas.backend != null;
+    }
+
     function set_systemFallback(fallback:Null<SystemFontFallback>):Null<SystemFontFallback> {
         systemFallback = fallback;
         coverageChecked.clear();

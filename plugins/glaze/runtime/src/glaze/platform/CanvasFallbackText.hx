@@ -56,6 +56,19 @@ class CanvasFallbackText {
 
     var measurementCount:Int = 0;
 
+    /**
+     * Scale at which the browser measures the advances of line layouts: the
+     * device pixel ratio of the windows (1 by default, GPUI's behaviour).
+     * Glaze deviation: GPUI measures them at the font size in CSS pixels and
+     * draws them at the device font size, so a font whose advances depend on
+     * the size (Apple Color Emoji: 18 px at 14 px, 28 px at 28 px in
+     * Chromium) is drawn narrower than it advances. The browser's own text
+     * (DOM) measures at the device size and divides by the ratio; measuring
+     * at `fontSize * layoutScale` gives the same advances, consistent with
+     * the rasterized glyphs. Set through `CeramicTextSystem.setCanvasLayoutScale`.
+     */
+    public var layoutScale(default, null):Float = 1.0;
+
     public function new(native:CeramicTextSystem, backend:Null<CanvasTextBackend>, policy:CanvasFontFallback) {
         this.native = native;
         this.backend = backend;
@@ -78,6 +91,18 @@ class CanvasFallbackText {
     public function nativeFontId(fontId:FontId):FontId {
         final font = canvasFont(fontId);
         return font != null ? font.nativeId : fontId;
+    }
+
+    /**
+     * Sets `layoutScale` (a positive finite value, else 1). Returns true when
+     * it changed: line layouts measured before are stale.
+     */
+    public function setLayoutScale(scale:Float):Bool {
+        final s = (Math.isFinite(scale) && scale > 0) ? f32(scale) : 1.0;
+        if (s == layoutScale)
+            return false;
+        layoutScale = s;
+        return true;
     }
 
     /** Called when fonts are added */
@@ -155,12 +180,18 @@ class CanvasFallbackText {
         return metrics;
     }
 
-    /** Rust `fallback_glyph` */
-    function fallbackGlyph(nativeId:FontId, text:String, color:Bool, fontSize:Float):{fontId:FontId, glyphId:GlyphId, metrics:CanvasTextMetrics} {
+    /**
+     * Rust `fallback_glyph`, with the advance measured at `fontSize *
+     * layoutScale` and divided by `layoutScale` (see `layoutScale`).
+     */
+    function fallbackGlyph(nativeId:FontId, text:String, color:Bool, fontSize:Float):{fontId:FontId, glyphId:GlyphId, advance:Float} {
         final fontId = canvasFontId(nativeId);
         final glyphId = registerGlyph(fontId, text, color);
-        final metrics = measure(fontId, glyphId, fontSize);
-        return {fontId: fontId, glyphId: glyphId, metrics: metrics};
+        final scale = layoutScale;
+        if (scale == 1.0)
+            return {fontId: fontId, glyphId: glyphId, advance: measure(fontId, glyphId, fontSize).advance};
+        final metrics = measure(fontId, glyphId, f32(fontSize * scale));
+        return {fontId: fontId, glyphId: glyphId, advance: f32(metrics.advance / scale)};
     }
 
     /**
@@ -192,7 +223,7 @@ class CanvasFallbackText {
                     glyphs.rangeEnd,
                     fallback.fontId,
                     new ShapedGlyph(fallback.glyphId, glyphs.position, candidate.sourceStart, candidate.color),
-                    f32(fallback.metrics.advance - oldWidth)
+                    f32(fallback.advance - oldWidth)
                 ));
             }
             catch (e:Dynamic) {

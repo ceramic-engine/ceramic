@@ -120,6 +120,23 @@ class TextSystem {
     }
 
     /**
+     * The scale factor of the windows (device pixels per logical pixel), for
+     * the platform text systems whose line layouts depend on it: the Canvas
+     * fallback of the web measures at the device font size, like the
+     * browser's own text (`CanvasFallbackText.layoutScale`). Windows call it
+     * when they are created and when their scale factor changes. When the
+     * layouts change, the line layout caches and the line wrappers are
+     * invalidated (`fontGeneration`).
+     */
+    public function setLayoutScaleFactor(scaleFactor:Float):Void {
+        final ceramicTextSystem = Std.downcast(platformTextSystem, glaze.platform.CeramicTextSystem);
+        if (ceramicTextSystem != null && ceramicTextSystem.setCanvasLayoutScale(scaleFactor)) {
+            wrapperPool.clear();
+            fontGeneration++;
+        }
+    }
+
+    /**
      * Get the Font for the Font Id.
      */
     public function getFontForId(id:FontId):Null<Font> {
