@@ -35,6 +35,7 @@ class Tests {
         runner.add(new tests.TextSystemTest());
         runner.add(new tests.LineLayoutTest());
         runner.add(new tests.FontSmoothingTest());
+        runner.add(new tests.WholeRunShapingTest());
         runner.add(new tests.SystemFontFamiliesTest());
         runner.add(new tests.LineWrapperTest());
         runner.add(new tests.SystemFontFallbackTest());

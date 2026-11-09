@@ -45,6 +45,22 @@ class Font {
         return synthesizeStyle = value;
     }
 
+    /**
+     * Whether the text of this font is shaped by whole runs, like a browser
+     * (Glaze addition): HarfBuzz shapes each run of a font and script
+     * whole there, so kerning and contextual features apply across words,
+     * and between CJK characters (a line break opportunity after each of
+     * them), in the fallback fonts too (Hiragino's `kern` pairs of kana).
+     * False by default, like GPUI, whose text system (cosmic-text) shapes
+     * each word on its own. Applies to a line whose runs all use such fonts.
+     */
+    public var wholeRunShaping(default, set):Bool = false;
+
+    inline function set_wholeRunShaping(value:Bool):Bool {
+        _key = null;
+        return wholeRunShaping = value;
+    }
+
     /** `key()`, computed on first use */
     var _key:Null<String> = null;
 
@@ -112,6 +128,8 @@ class Font {
         final result = new Font(family, features, fallbacks, weight, style);
         if (synthesizeStyle)
             result.synthesizeStyle = true;
+        if (wholeRunShaping)
+            result.wholeRunShaping = true;
         return result;
     }
 
@@ -132,6 +150,8 @@ class Font {
             key = family + '\x00' + features.key() + '\x00' + (fallbacks != null ? fallbacks.key() : '-') + '\x00' + (weight:Float) + '\x00' + (cast style:Int);
             if (synthesizeStyle)
                 key += '\x00s';
+            if (wholeRunShaping)
+                key += '\x00w';
             _key = key;
         }
         return key;
@@ -140,7 +160,8 @@ class Font {
     public function equals(other:Font):Bool {
         return other != null && family == other.family && features.equals(other.features)
             && (fallbacks == null ? other.fallbacks == null : fallbacks.equals(other.fallbacks))
-            && (weight:Float) == (other.weight:Float) && style == other.style && synthesizeStyle == other.synthesizeStyle;
+            && (weight:Float) == (other.weight:Float) && style == other.style && synthesizeStyle == other.synthesizeStyle
+            && wholeRunShaping == other.wholeRunShaping;
     }
 
     public function toString():String {

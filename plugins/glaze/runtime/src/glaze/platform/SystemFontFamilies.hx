@@ -54,6 +54,27 @@ class SystemFontFamilies {
     }
 
     /**
+     * The installed families the generic family `monospace` stands for, in
+     * order: the default fixed font of a browser on this platform (Menlo
+     * for Chromium on macOS, Consolas on Windows; fontconfig's usual
+     * monospace match on Linux).
+     */
+    public static function genericMonospaceFamilies():Array<String> {
+        var os = '';
+        try {
+            if (ceramic.App.app != null && ceramic.App.app.backend != null)
+                os = ceramic.App.app.backend.info.operatingSystem();
+        }
+        catch (e:Dynamic) {}
+        return switch os {
+            case 'mac': ['Menlo'];
+            case 'windows': ['Consolas', 'Courier New'];
+            case 'linux': ['DejaVu Sans Mono', 'Noto Sans Mono', 'Liberation Mono'];
+            case _: [];
+        }
+    }
+
+    /**
      * The font directories of this platform.
      */
     public static function platformDirectories():Array<String> {

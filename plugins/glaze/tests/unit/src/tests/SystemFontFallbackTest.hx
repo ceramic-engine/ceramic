@@ -106,9 +106,11 @@ class SystemFontFallbackTest extends TestCase {
         // Only the font of Han ideographs was read
         assertEquals(1, p.systemFallback.loadedPaths.length);
         assertEquals('/System/Library/Fonts/Hiragino Sans GB.ttc', p.systemFallback.loadedPaths[0]);
-        // Kana is in that font too; hangul needs Apple SD Gothic Neo
+        // Kana is in that font too, but kana prefer the kana font of the
+        // list (Hiragino Sans, see testKanaPreferTheirOwnFontAfterHan);
+        // hangul needs Apple SD Gothic Neo
         assertSystemGlyphs(p, 'あいうえお カタカナ 가나다');
-        assertEquals(2, p.systemFallback.loadedPaths.length);
+        assertEquals(3, p.systemFallback.loadedPaths.length);
         trace('System fallback: ${p.systemFallback.loadedPaths.join(', ')}: '
             + '${Math.round(p.systemFallback.loadedBytes / 1048576)} MB read in ${Math.round(p.systemFallback.loadTime * 1000)} ms');
     }
@@ -288,5 +290,55 @@ class SystemFontFallbackTest extends TestCase {
         final line = layout(p, '世');
         assertEquals(0, glyphAt(line, 0).glyphId);
         assertEquals(0, p.systemFallback.loadedPaths.length);
+    }
+
+    /**
+     * Kana come from the kana font of the system list (Hiragino Sans on
+     * macOS) even after Han text loaded Hiragino Sans GB, which maps kana
+     * too, like the per script fallbacks of a browser and cosmic-text.
+     */
+    function testKanaPreferTheirOwnFontAfterHan() {
+        if (!hasMacFonts() || !ceramic.Files.exists('/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc'))
+            return;
+        final p = platform(true);
+        final text = '雨が降って';
+        final line = layout(p, text);
+        assertEquals('Hiragino Sans GB', p.ttfFont(glyphAt(line, 0).fontId).familyName);
+        assertEquals('Hiragino Sans', p.ttfFont(glyphAt(line, 3).fontId).familyName);
+        assertEquals('Hiragino Sans', p.ttfFont(glyphAt(line, 9).fontId).familyName);
+    }
+
+    /**
+     * Whole run shaping (`Font.wholeRunShaping`) applies the kerning of the
+     * fallback font across the break opportunities between CJK characters:
+     * Hiragino Sans kerns `って` by -30 units (HarfBuzz, hb-shape), word by
+     * word shaping (GPUI) does not.
+     */
+    function testWholeRunKerningOfKana() {
+        if (!hasMacFonts() || !ceramic.Files.exists('/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc'))
+            return;
+        final p = platform(true);
+        final text = 'って';
+        final words = p.layoutLine(text, 1000, [new FontRun(Utf8.byteLength(text), p.fontId(Font.of('Inter')))]);
+        assertFloatEquals(1000, words.runs[0].glyphs[1].position.x, 0.5);
+        final font = Font.of('Inter');
+        font.wholeRunShaping = true;
+        final whole = p.layoutLine(text, 1000, [new FontRun(Utf8.byteLength(text), p.fontId(font))]);
+        assertFloatEquals(970, whole.runs[0].glyphs[1].position.x, 0.5);
+    }
+
+    /** The generic family `monospace` is Menlo on macOS with the system fonts */
+    function testGenericMonospaceIsThePlatformFont() {
+        if (!ceramic.Files.exists('/System/Library/Fonts/Menlo.ttc'))
+            return;
+        final os = ceramic.App.app.backend.info.operatingSystem();
+        if (os != 'mac' || glaze.platform.SystemFontFamilies.platformDirectories().length == 0)
+            return;
+        final p = platform(true);
+        p.systemFamilies = new glaze.platform.SystemFontFamilies();
+        assertEquals('Menlo', p.ttfFont(p.fontId(Font.of('monospace'))).familyName);
+        // without the system fonts: the first monospace face added
+        final q = platform(false);
+        assertEquals('JetBrains Mono', q.ttfFont(q.fontId(Font.of('monospace'))).familyName);
     }
 }

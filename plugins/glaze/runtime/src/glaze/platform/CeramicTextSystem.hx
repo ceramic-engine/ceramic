@@ -209,6 +209,18 @@ class CeramicTextSystem implements PlatformTextSystem {
         final lower = name.toLowerCase();
         if (systemFamilyNames.exists(lower))
             return systemFamilyNames.get(lower);
+        if (lower == 'monospace') {
+            // the generic family: the platform's monospace font, like a
+            // browser's default fixed font (Menlo on macOS)
+            var result:Null<String> = null;
+            for (family in SystemFontFamilies.genericMonospaceFamilies()) {
+                result = loadSystemFamily(family);
+                if (result != null)
+                    break;
+            }
+            systemFamilyNames.set(lower, result);
+            return result;
+        }
         final added = families.loadFamily(name);
         for (face in added)
             addFace(face);
@@ -345,11 +357,36 @@ class CeramicTextSystem implements PlatformTextSystem {
         if (font.synthesizeStyle && !face.italic && (font.style == Italic || font.style == Oblique) && !loadedFonts[fontId].isKnownEmojiFont) {
             // the family has no italic face: the upright one, slanted
             fontId = syntheticObliqueId(fontId);
+            if (font.wholeRunShaping)
+                fontId = wholeRunId(fontId);
             canvas.recordDescriptor(fontId, font, face.weight, Italic);
             return fontId;
         }
+        if (font.wholeRunShaping)
+            fontId = wholeRunId(fontId);
         canvas.recordDescriptor(fontId, font, face.weight, face.italic ? Italic : Normal);
         return fontId;
+    }
+
+    /** The whole run shaping font id of a loaded font id */
+    final wholeRunIds:Map<Int, Int> = new Map();
+
+    /**
+     * The font id of a loaded font shaped by whole runs (`Font.wholeRunShaping`):
+     * same face, features, fallbacks and oblique.
+     */
+    function wholeRunId(fontId:Int):Int {
+        final existing = wholeRunIds.get(fontId);
+        if (existing != null)
+            return existing;
+        final base = loadedFonts[fontId];
+        final loaded = new LoadedFont(base.face, base.features, base.isKnownEmojiFont, base.userFallbackChain);
+        loaded.obliqueSkew = base.obliqueSkew;
+        loaded.wholeRuns = true;
+        final id = loadedFonts.length;
+        loadedFonts.push(loaded);
+        wholeRunIds.set(fontId, id);
+        return id;
     }
 
     /**
@@ -1007,7 +1044,10 @@ class CeramicTextSystem implements PlatformTextSystem {
                 continue;
             }
             final loaded = loadedFonts[run.fontId];
-            if (loaded.userFallbackChain.length == 0) {
+            if (systemFallback != null) {
+                computeSystemRunSpans(d, offs, runEnd, run.fontId, loaded.userFallbackChain);
+            }
+            else if (loaded.userFallbackChain.length == 0) {
                 if (runEnd > offs)
                     pushSpan(offs, runEnd, run.fontId);
             }
@@ -1017,11 +1057,16 @@ class CeramicTextSystem implements PlatformTextSystem {
             offs = runEnd;
         }
 
-        // Shape each word on its own, like cosmic-text
+        // Shape each word on its own, like cosmic-text, or the whole line
+        // when every run asks for whole run shaping, like a browser
         shapeRuns.resize(0);
         wordStarts.resize(0);
-        if (spanStarts.length > 0)
-            addWordRuns(d);
+        if (spanStarts.length > 0) {
+            if (allWholeRuns(fontRuns))
+                addWord(0, d.byteLength);
+            else
+                addWordRuns(d);
+        }
 
         if (shapeRuns.length == 0 || d.count == 0) {
             return new LineLayout(fontSize, 0, 0, 0, [], d.byteLength);
@@ -1112,6 +1157,20 @@ class CeramicTextSystem implements PlatformTextSystem {
 
     static inline final TAB_WIDTH:Int = 4;
 
+    /** Whether every run of a line uses a font shaped by whole runs */
+    function allWholeRuns(fontRuns:Array<FontRun>):Bool {
+        var any = false;
+        for (run in fontRuns) {
+            final id:Int = run.fontId;
+            if (id < 0 || id >= loadedFonts.length)
+                continue;
+            if (!loadedFonts[id].wholeRuns)
+                return false;
+            any = true;
+        }
+        return any;
+    }
+
     inline function pushSpan(start:Int, end:Int, fontId:Int):Void {
         // cosmic-text keeps spans in a `RangeMap`, which coalesces adjacent
         // spans with the same attributes: runs of the same font that only
@@ -1160,6 +1219,73 @@ class CeramicTextSystem implements PlatformTextSystem {
         if (spanStart < runEnd) {
             pushSpan(spanStart, runEnd, spanFontId);
         }
+    }
+
+    /**
+     * `computeRunSpans` with the fonts of the system: a grapheme that
+     * neither the primary font, nor its user fallbacks, nor any added face
+     * maps goes to the system font of its script in the order of the
+     * system's lists (`SystemFontFallback.preferredFaceFor`: kana in
+     * Hiragino Sans before the Hiragino Sans GB loaded for Han text, like
+     * the per script fallbacks of cosmic-text and of a browser), instead of
+     * the first system face loaded that maps it.
+     */
+    function computeSystemRunSpans(d:Utf8Text, runOffset:Int, runEnd:Int, primary:Int, fallbackChain:Array<Int>):Void {
+        if (runEnd <= runOffset)
+            return;
+        final system = systemFallback;
+        var spanStart = runOffset;
+        var spanFontId = primary;
+        var k = d.indexAtByte(runOffset);
+        while (k < d.count && d.byteOffsets[k] < runEnd) {
+            final abs = d.byteOffsets[k];
+            final ch = d.codePoints[k];
+            k++;
+            while (k < d.count && d.byteOffsets[k] < runEnd && ttf.Utf8.isContinuation(d.codePoints[k]))
+                k++;
+            var fontId = primary;
+            if (ch > 0x7F && !covers(primary, ch)) {
+                // the user fallback of the span when it maps the character
+                // (Rust `pick_covering_slot`), else the first one that does
+                if (spanFontId != primary && fallbackChain.indexOf(spanFontId) != -1 && covers(spanFontId, ch)) {
+                    fontId = spanFontId;
+                }
+                else {
+                    var found = false;
+                    for (id in fallbackChain) {
+                        if (covers(id, ch)) {
+                            fontId = id;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found && !addedFaceCovers(ch)) {
+                        final count = system.faces.length;
+                        final face = system.preferredFaceFor(ch);
+                        if (system.faces.length != count)
+                            fallbackGeneration++;
+                        if (face != null)
+                            fontId = fontIdForFace(face);
+                    }
+                }
+            }
+            if (fontId == spanFontId)
+                continue;
+            if (abs > spanStart)
+                pushSpan(spanStart, abs, spanFontId);
+            spanStart = abs;
+            spanFontId = fontId;
+        }
+        if (spanStart < runEnd)
+            pushSpan(spanStart, runEnd, spanFontId);
+    }
+
+    function addedFaceCovers(ch:Int):Bool {
+        for (f in faces) {
+            if (f.glyphForChar(ch) != 0)
+                return true;
+        }
+        return false;
     }
 
     inline function covers(fontId:Int, ch:Int):Bool {
@@ -1309,6 +1435,9 @@ private class LoadedFont {
 
     /** Horizontal shear of a synthetic oblique (0: upright as drawn) */
     public var obliqueSkew:Float = 0;
+
+    /** Shaped by whole runs, not word by word (`Font.wholeRunShaping`) */
+    public var wholeRuns:Bool = false;
 
     public function new(face:ttf.Font, features:Features, isKnownEmojiFont:Bool, userFallbackChain:Array<Int>) {
         this.face = face;

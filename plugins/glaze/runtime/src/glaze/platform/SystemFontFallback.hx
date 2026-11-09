@@ -76,8 +76,10 @@ class SystemFontFallback {
     }
 
     function set_cjkLocale(locale:String):String {
-        if (locale != cjkLocale)
+        if (locale != cjkLocale) {
             candidates = null;
+            preferredFaces.clear();
+        }
         return cjkLocale = locale;
     }
 
@@ -110,6 +112,55 @@ class SystemFontFallback {
                 return true;
         }
         return false;
+    }
+
+    /** The face preferred for each script kind and code point, once found */
+    final preferredFaces:Map<Int, Null<ttf.Font>> = new Map();
+
+    /**
+     * The face of the first file of the system's list for the script of
+     * `codePoint` that maps it (Han, kana, hangul: the lists of the CJK
+     * locale; reading that file if needed), or null for the other
+     * characters. Kana go to Hiragino Sans on macOS even when the Han text
+     * before them loaded Hiragino Sans GB, which maps kana too (without the
+     * kerning of Hiragino Sans).
+     */
+    public function preferredFaceFor(codePoint:Int):Null<ttf.Font> {
+        final kind = kindOf(codePoint);
+        if (kind != HAN && kind != KANA && kind != HANGUL)
+            return null;
+        if (preferredFaces.exists(codePoint))
+            return preferredFaces.get(codePoint);
+        if (candidates == null)
+            candidates = systemCandidates(cjkLocale);
+        final paths = switch kind {
+            case HAN: candidates.han;
+            case KANA: candidates.kana;
+            case _: candidates.hangul;
+        }
+        var result:Null<ttf.Font> = null;
+        for (path in paths) {
+            var rank = loadedPaths.indexOf(path);
+            if (rank == -1) {
+                if (triedPaths.exists(path))
+                    continue;
+                triedPaths.set(path, true);
+                loadFile(path, codePoint);
+                rank = loadedPaths.indexOf(path);
+                if (rank == -1)
+                    continue;
+            }
+            for (i in 0...faces.length) {
+                if (fileRanks[i] == rank && faces[i].glyphForChar(codePoint) != 0) {
+                    result = faces[i];
+                    break;
+                }
+            }
+            if (result != null)
+                break;
+        }
+        preferredFaces.set(codePoint, result);
+        return result;
     }
 
     /**
