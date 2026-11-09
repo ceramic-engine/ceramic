@@ -355,6 +355,10 @@ class CityscapeEditor extends Component implements Styled {
             view.updateOptions(mergedOptions());
         }
         view.setWrappingIndentColumns(wrappingIndentColumns);
+        // The view rendering this component lists the overlay widgets: the
+        // editor view is not a view of the dispatch tree, so a widget added
+        // later (a hover, a menu) notifies this one to be listed
+        view.hostViewId = window.currentView();
         if (model != lastPropModel) {
             // the model prop changed (an imperative `setModel` is kept until then)
             lastPropModel = model;
@@ -387,6 +391,7 @@ class CityscapeEditor extends Component implements Styled {
             .onHover((hovered:Bool) -> view.handleHover(hovered))
             .onScroll((event, window, cx) -> view.onScroll(event, window, cx))
             .onKeyDown((event, window, cx) -> view.onKeyDown(event, window, cx))
+            .onModifiersChanged((event, window, cx) -> view.handleModifiersChanged(event.modifiers))
             .child(new CityscapeViewElement(entity))
             .child(
                 div().absolute().top0().right0().bottom0().w(px(Scrollbar.width()))

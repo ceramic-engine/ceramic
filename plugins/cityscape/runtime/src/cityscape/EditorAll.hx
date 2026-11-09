@@ -29,6 +29,12 @@ class EditorAll {
         cityscape.contrib.smartSelect.view.SmartSelect.SmartSelectRegistration.register(r);
         cityscape.contrib.stickyScroll.view.StickyScrollActions.StickyScrollRegistration.register(r);
         cityscape.contrib.wordHighlighter.view.WordHighlighter.WordHighlighterRegistration.register(r);
+        cityscape.contrib.snippet.view.SnippetController2.SnippetRegistration.register(r);
+        cityscape.contrib.suggest.view.SuggestController.SuggestRegistration.register(r);
+        cityscape.contrib.hover.view.ContentHoverController.HoverRegistration.register(r);
+        cityscape.contrib.codeAction.view.CodeActionController.CodeActionRegistration.register(r);
+        cityscape.contrib.gotoError.view.GotoError.GotoErrorRegistration.register(r);
+        cityscape.contrib.gotoSymbol.view.GoToCommands.GoToSymbolRegistration.register(r);
         cityscape.contrib.wordOperations.view.WordOperations.WordOperationsRegistration.register(r);
     }
 

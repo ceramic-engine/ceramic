@@ -282,6 +282,89 @@ class JsValues {
         return Std.parseFloat(s.substring(start, i));
     }
 
+    /**
+     * `Number(value)` for a string (JavaScript's `StringToNumber`): the
+     * string without its leading and trailing white space must be a decimal
+     * literal, `Infinity` (with a sign), or a `0x`, `0o`, `0b` integer; an
+     * empty string is 0; `NaN` otherwise. A number is returned as is, null
+     * gives 0, a boolean 1 or 0.
+     */
+    public static function toNumber(value:Any):Float {
+        if (isNumber(value))
+            return (value : Float);
+        if (value == null)
+            return 0;
+        if (isBoolean(value))
+            return (value : Bool) ? 1 : 0;
+        final s = toJsString(value);
+        var start = skipWhiteSpace(s, 0);
+        var end = s.length;
+        while (end > start) {
+            final c = StringTools.fastCodeAt(s, end - 1);
+            final isSpace = switch c {
+                case 0x09 | 0x0a | 0x0b | 0x0c | 0x0d | 0x20 | 0xa0 | 0x1680 | 0x2028 | 0x2029 | 0x202f | 0x205f | 0x3000 | 0xfeff: true;
+                case _: c >= 0x2000 && c <= 0x200a;
+            }
+            if (!isSpace)
+                break;
+            end--;
+        }
+        final t = s.substring(start, end);
+        if (t.length == 0)
+            return 0;
+        if (t.length > 2 && StringTools.fastCodeAt(t, 0) == '0'.code) {
+            final p = StringTools.fastCodeAt(t, 1);
+            final radix = (p == 'x'.code || p == 'X'.code) ? 16 : ((p == 'o'.code || p == 'O'.code) ? 8 : ((p == 'b'.code || p == 'B'.code) ? 2 : 0));
+            if (radix != 0) {
+                var result = 0.0;
+                for (i in 2...t.length) {
+                    final c = StringTools.fastCodeAt(t, i);
+                    final d = (c >= '0'.code && c <= '9'.code) ? c - '0'.code : ((c >= 'a'.code && c <= 'z'.code) ? c - 'a'.code + 10 : ((c >= 'A'.code && c <= 'Z'.code) ? c - 'A'.code + 10 : 99));
+                    if (d >= radix)
+                        return Math.NaN;
+                    result = result * radix + d;
+                }
+                return result;
+            }
+        }
+        var i = 0;
+        final c0 = StringTools.fastCodeAt(t, 0);
+        if (c0 == '+'.code || c0 == '-'.code)
+            i++;
+        if (t.substr(i) == 'Infinity')
+            return c0 == '-'.code ? Math.NEGATIVE_INFINITY : Math.POSITIVE_INFINITY;
+        // a decimal literal: digits, fraction, exponent, nothing else
+        var digits = 0;
+        while (i < t.length && isDigit(StringTools.fastCodeAt(t, i))) {
+            i++;
+            digits++;
+        }
+        if (i < t.length && StringTools.fastCodeAt(t, i) == '.'.code) {
+            i++;
+            while (i < t.length && isDigit(StringTools.fastCodeAt(t, i))) {
+                i++;
+                digits++;
+            }
+        }
+        if (digits == 0)
+            return Math.NaN;
+        if (i < t.length && (StringTools.fastCodeAt(t, i) == 'e'.code || StringTools.fastCodeAt(t, i) == 'E'.code)) {
+            i++;
+            if (i < t.length && (StringTools.fastCodeAt(t, i) == '+'.code || StringTools.fastCodeAt(t, i) == '-'.code))
+                i++;
+            var expDigits = 0;
+            while (i < t.length && isDigit(StringTools.fastCodeAt(t, i))) {
+                i++;
+                expDigits++;
+            }
+            if (expDigits == 0)
+                return Math.NaN;
+        }
+        if (i != t.length)
+            return Math.NaN;
+        return parseFloat(t);
+    }
+
     static inline function isDigit(c:Int):Bool {
         return c >= '0'.code && c <= '9'.code;
     }

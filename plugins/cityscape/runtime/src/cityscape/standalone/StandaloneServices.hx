@@ -8,6 +8,7 @@ import cityscape.base.common.Event;
 import cityscape.base.common.Keybindings;
 import cityscape.base.common.Lifecycle;
 import cityscape.base.common.Platform;
+import cityscape.base.common.Uri;
 import cityscape.platform.commands.common.Commands;
 import cityscape.platform.contextkey.common.ContextKey;
 import cityscape.platform.keybinding.common.AbstractKeybindingService;
@@ -65,6 +66,33 @@ class StandaloneCommandService implements ICommandService {
  * Monaco's `ICodeEditorService` (the parts the commands use): the editors of
  * a context and the one that has the focus.
  */
+/**
+ * The options of an editor input (the parts of Monaco's
+ * `ITextEditorOptions` Cityscape uses): `selection` is a range, or a
+ * position when its end is null.
+ */
+typedef ITextEditorOptions = {
+    @:optional var selection:Null<cityscape.common.core.Range.IRange>;
+    @:optional var selectionRevealType:Null<Int>;
+    @:optional var revealIfOpened:Null<Bool>;
+    @:optional var pinned:Null<Bool>;
+    @:optional var preserveFocus:Null<Bool>;
+}
+
+/**
+ * A resource to open with its options (Monaco's `ITextResourceEditorInput`).
+ */
+typedef ITextResourceEditorInput = {
+    var resource:Uri;
+    @:optional var options:Null<ITextEditorOptions>;
+}
+
+/**
+ * Opens a resource (Monaco's `ICodeEditorOpenHandler`): gives the editor
+ * showing it to `resolve`, or null when the handler does not open it.
+ */
+typedef ICodeEditorOpenHandler = (input:ITextResourceEditorInput, source:Null<ICodeEditor>, sideBySide:Bool, resolve:(editor:Null<ICodeEditor>) -> Void) -> Void;
+
 class CodeEditorService {
 
     final _codeEditors:Array<ICodeEditor> = [];
@@ -82,9 +110,100 @@ class CodeEditorService {
     final _onCodeEditorRemove = new Emitter<ICodeEditor>();
     public final onCodeEditorRemove:Event<ICodeEditor>;
 
+    final _codeEditorOpenHandlers:Array<ICodeEditorOpenHandler> = [];
+
     public function new() {
         onCodeEditorAdd = _onCodeEditorAdd.event;
         onCodeEditorRemove = _onCodeEditorRemove.event;
+        // Monaco's StandaloneCodeEditorService: a location in the model of
+        // the source editor is shown in that editor
+        registerCodeEditorOpenHandler((input, source, sideBySide, resolve) -> {
+            if (source == null) {
+                resolve(null);
+                return;
+            }
+            resolve(doOpenEditor(source, input));
+        });
+    }
+
+    function doOpenEditor(editor:ICodeEditor, input:ITextResourceEditorInput):Null<ICodeEditor> {
+        final model = findModel(editor, input.resource);
+        if (model == null) {
+            return null;
+        }
+
+        final selection:Null<cityscape.common.core.Range.IRange> = input.options != null ? input.options.selection : null;
+        if (selection != null) {
+            if (selection.endLineNumber > 0 && selection.endColumn > 0) {
+                editor.setSelection(selection);
+                editor.revealRangeInCenter(selection, cityscape.common.EditorCommon.ScrollType.Immediate);
+            }
+            else {
+                final pos:cityscape.common.core.Position.IPosition = {
+                    lineNumber: selection.startLineNumber,
+                    column: selection.startColumn
+                };
+                editor.setPosition(pos);
+                editor.revealPositionInCenter(pos, cityscape.common.EditorCommon.ScrollType.Immediate);
+            }
+        }
+
+        return editor;
+    }
+
+    function findModel(editor:ICodeEditor, resource:Uri):Null<cityscape.common.Model.ITextModel> {
+        final model = editor.getModel();
+        if (model != null && model.uri.toString() != resource.toString()) {
+            return null;
+        }
+        return model;
+    }
+
+    /**
+     * Opens a location (Monaco's `openCodeEditor`): the handlers are asked
+     * in turn, the last registered first, until one gives an editor. The
+     * default handler shows locations of the source editor's model in that
+     * editor; a host registers a handler (`registerCodeEditorOpenHandler`)
+     * to open other models or files (switch the model of an editor, open a
+     * tab...). `callback` gets the editor showing the location, or null.
+     */
+    public function openCodeEditor(input:ITextResourceEditorInput, source:Null<ICodeEditor>, sideBySide:Bool = false, ?callback:(editor:Null<ICodeEditor>) -> Void):Void {
+        final handlers = _codeEditorOpenHandlers.copy();
+        function next(index:Int):Void {
+            if (index >= handlers.length) {
+                if (callback != null) {
+                    callback(null);
+                }
+                return;
+            }
+            var answered = false;
+            handlers[index](input, source, sideBySide, candidate -> {
+                if (answered) {
+                    return;
+                }
+                answered = true;
+                if (candidate != null) {
+                    if (callback != null) {
+                        callback(candidate);
+                    }
+                }
+                else {
+                    next(index + 1);
+                }
+            });
+        }
+        next(0);
+    }
+
+    /**
+     * Registers a handler opening locations (Monaco's
+     * `registerCodeEditorOpenHandler`), asked before the ones registered
+     * earlier. It gives the editor showing the location to `resolve`, or
+     * null to let the next handler try.
+     */
+    public function registerCodeEditorOpenHandler(handler:ICodeEditorOpenHandler):IDisposable {
+        _codeEditorOpenHandlers.unshift(handler);
+        return Lifecycle.toDisposable(() -> _codeEditorOpenHandlers.remove(handler));
     }
 
     public function addCodeEditor(editor:ICodeEditor):Void {

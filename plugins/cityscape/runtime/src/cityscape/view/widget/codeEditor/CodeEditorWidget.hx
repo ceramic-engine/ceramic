@@ -1973,33 +1973,131 @@ private class EditorContextKeysManager extends Disposable {
 }
 
 /**
- * Monaco's `EditorModeContext`: the language of the model. The provider
- * keys (`editorHasCompletionItemProvider`...) are not set yet (TODO(step 4):
- * the language features registries).
+ * Monaco's `EditorModeContext`: the language of the model and whether the
+ * registries of the context have providers for it
+ * (`editorHasCompletionItemProvider`...).
  */
 private class EditorModeContext extends Disposable {
 
     final _editor:CodeEditorWidget;
     final _langId:IContextKey<String>;
+    final _hasCompletionItemProvider:IContextKey<Bool>;
+    final _hasCodeActionsProvider:IContextKey<Bool>;
+    final _hasCodeLensProvider:IContextKey<Bool>;
+    final _hasDefinitionProvider:IContextKey<Bool>;
+    final _hasDeclarationProvider:IContextKey<Bool>;
+    final _hasImplementationProvider:IContextKey<Bool>;
+    final _hasTypeDefinitionProvider:IContextKey<Bool>;
+    final _hasHoverProvider:IContextKey<Bool>;
+    final _hasDocumentHighlightProvider:IContextKey<Bool>;
+    final _hasDocumentSymbolProvider:IContextKey<Bool>;
+    final _hasReferenceProvider:IContextKey<Bool>;
+    final _hasRenameProvider:IContextKey<Bool>;
+    final _hasDocumentFormattingProvider:IContextKey<Bool>;
+    final _hasDocumentSelectionFormattingProvider:IContextKey<Bool>;
+    final _hasMultipleDocumentFormattingProvider:IContextKey<Bool>;
+    final _hasMultipleDocumentSelectionFormattingProvider:IContextKey<Bool>;
+    final _hasSignatureHelpProvider:IContextKey<Bool>;
+    final _hasInlayHintsProvider:IContextKey<Bool>;
+    final _isInEmbeddedEditor:IContextKey<Bool>;
 
     public function new(editor:CodeEditorWidget, contextKeyService:IContextKeyService) {
         super();
         this._editor = editor;
         this._langId = EditorContextKeys.languageId.bindTo(contextKeyService);
+        this._hasCompletionItemProvider = EditorContextKeys.hasCompletionItemProvider.bindTo(contextKeyService);
+        this._hasCodeActionsProvider = EditorContextKeys.hasCodeActionsProvider.bindTo(contextKeyService);
+        this._hasCodeLensProvider = EditorContextKeys.hasCodeLensProvider.bindTo(contextKeyService);
+        this._hasDefinitionProvider = EditorContextKeys.hasDefinitionProvider.bindTo(contextKeyService);
+        this._hasDeclarationProvider = EditorContextKeys.hasDeclarationProvider.bindTo(contextKeyService);
+        this._hasImplementationProvider = EditorContextKeys.hasImplementationProvider.bindTo(contextKeyService);
+        this._hasTypeDefinitionProvider = EditorContextKeys.hasTypeDefinitionProvider.bindTo(contextKeyService);
+        this._hasHoverProvider = EditorContextKeys.hasHoverProvider.bindTo(contextKeyService);
+        this._hasDocumentHighlightProvider = EditorContextKeys.hasDocumentHighlightProvider.bindTo(contextKeyService);
+        this._hasDocumentSymbolProvider = EditorContextKeys.hasDocumentSymbolProvider.bindTo(contextKeyService);
+        this._hasReferenceProvider = EditorContextKeys.hasReferenceProvider.bindTo(contextKeyService);
+        this._hasRenameProvider = EditorContextKeys.hasRenameProvider.bindTo(contextKeyService);
+        this._hasDocumentFormattingProvider = EditorContextKeys.hasDocumentFormattingProvider.bindTo(contextKeyService);
+        this._hasDocumentSelectionFormattingProvider = EditorContextKeys.hasDocumentSelectionFormattingProvider.bindTo(contextKeyService);
+        this._hasMultipleDocumentFormattingProvider = EditorContextKeys.hasMultipleDocumentFormattingProvider.bindTo(contextKeyService);
+        this._hasMultipleDocumentSelectionFormattingProvider = EditorContextKeys.hasMultipleDocumentSelectionFormattingProvider.bindTo(contextKeyService);
+        this._hasSignatureHelpProvider = EditorContextKeys.hasSignatureHelpProvider.bindTo(contextKeyService);
+        this._hasInlayHintsProvider = EditorContextKeys.hasInlayHintsProvider.bindTo(contextKeyService);
+        this._isInEmbeddedEditor = EditorContextKeys.isInEmbeddedEditor.bindTo(contextKeyService);
 
+        // update when model/mode changes
         this._register(editor.onDidChangeModel((_) -> this._update()));
         this._register(editor.onDidChangeModelLanguage((_) -> this._update()));
 
+        // update when registries change
+        final lfs = editor.context.languageFeaturesService;
+        this._register(lfs.completionProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.codeActionProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.codeLensProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.definitionProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.declarationProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.implementationProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.typeDefinitionProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.hoverProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.documentHighlightProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.documentSymbolProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.referenceProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.renameProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.documentFormattingEditProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.documentRangeFormattingEditProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.signatureHelpProvider.onDidChange(_ -> this._update()));
+        this._register(lfs.inlayHintsProvider.onDidChange(_ -> this._update()));
+
         this._update();
+    }
+
+    function reset():Void {
+        this._langId.reset();
+        this._hasCompletionItemProvider.reset();
+        this._hasCodeActionsProvider.reset();
+        this._hasCodeLensProvider.reset();
+        this._hasDefinitionProvider.reset();
+        this._hasDeclarationProvider.reset();
+        this._hasImplementationProvider.reset();
+        this._hasTypeDefinitionProvider.reset();
+        this._hasHoverProvider.reset();
+        this._hasDocumentHighlightProvider.reset();
+        this._hasDocumentSymbolProvider.reset();
+        this._hasReferenceProvider.reset();
+        this._hasRenameProvider.reset();
+        this._hasDocumentFormattingProvider.reset();
+        this._hasDocumentSelectionFormattingProvider.reset();
+        this._hasSignatureHelpProvider.reset();
+        this._isInEmbeddedEditor.reset();
     }
 
     function _update():Void {
         final model = this._editor.getModel();
         if (model == null) {
-            this._langId.reset();
+            this.reset();
             return;
         }
+        final lfs = this._editor.context.languageFeaturesService;
         this._langId.set(model.getLanguageId());
+        this._hasCompletionItemProvider.set(lfs.completionProvider.has(model));
+        this._hasCodeActionsProvider.set(lfs.codeActionProvider.has(model));
+        this._hasCodeLensProvider.set(lfs.codeLensProvider.has(model));
+        this._hasDefinitionProvider.set(lfs.definitionProvider.has(model));
+        this._hasDeclarationProvider.set(lfs.declarationProvider.has(model));
+        this._hasImplementationProvider.set(lfs.implementationProvider.has(model));
+        this._hasTypeDefinitionProvider.set(lfs.typeDefinitionProvider.has(model));
+        this._hasHoverProvider.set(lfs.hoverProvider.has(model));
+        this._hasDocumentHighlightProvider.set(lfs.documentHighlightProvider.has(model));
+        this._hasDocumentSymbolProvider.set(lfs.documentSymbolProvider.has(model));
+        this._hasReferenceProvider.set(lfs.referenceProvider.has(model));
+        this._hasRenameProvider.set(lfs.renameProvider.has(model));
+        this._hasSignatureHelpProvider.set(lfs.signatureHelpProvider.has(model));
+        this._hasInlayHintsProvider.set(lfs.inlayHintsProvider.has(model));
+        this._hasDocumentFormattingProvider.set(lfs.documentFormattingEditProvider.has(model) || lfs.documentRangeFormattingEditProvider.has(model));
+        this._hasDocumentSelectionFormattingProvider.set(lfs.documentRangeFormattingEditProvider.has(model));
+        this._hasMultipleDocumentFormattingProvider.set(lfs.documentFormattingEditProvider.all(model).length + lfs.documentRangeFormattingEditProvider.all(model).length > 1);
+        this._hasMultipleDocumentSelectionFormattingProvider.set(lfs.documentRangeFormattingEditProvider.all(model).length > 1);
+        this._isInEmbeddedEditor.set(model.uri.scheme == 'walkThroughSnippet' || model.uri.scheme == 'vscode-chat-code-block');
     }
 
 }

@@ -754,5 +754,12 @@ interface ICodeEditor extends IEditor {
      */
     function getConfiguredWordAtPosition(position:Position):Null<IWordAtPosition>;
 
+    /**
+     * Change the decorations of the editor (owned by it) in one call. All
+     * decorations added through this changeAccessor are owned by the
+     * editor (Monaco's `changeDecorations`).
+     */
+    function changeDecorations<T>(callback:(changeAccessor:IModelDecorationsChangeAccessor) -> T):Null<T>;
+
 
 }

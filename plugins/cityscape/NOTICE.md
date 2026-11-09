@@ -25,3 +25,10 @@ This project contains Haxe translations ("ports") of third party code. The origi
 - Copyright (c) Microsoft Corporation
 - License: Creative Commons Attribution 4.0 International (CC BY 4.0), <https://creativecommons.org/licenses/by/4.0/>
 - Used in: `runtime/src/cityscape/view/Codicons.hx`, the outlines of the `chevron-down` (U+EAB4) and `chevron-right` (U+EAB6) glyphs, written as SVG paths (the glyph points of the font, flipped to SVG's y axis). Modified: converted from the font's glyph outlines to SVG paths; the shapes are unchanged.
+
+## Lucide
+
+- Project: Lucide, <https://lucide.dev>, version lucide-static 1.60.0
+- Copyright (c) 2026 Lucide Icons and Contributors (some icons derived from Feather, Copyright (c) 2013-present Cole Bemis, MIT, listed in the license file)
+- License: ISC, see [LICENSES/ISC-lucide.txt](LICENSES/ISC-lucide.txt)
+- Used in: `runtime/src/cityscape/view/SymbolIcons.hx`, the SVG icons standing for Monaco's codicons in the suggest widget, the hover, the quick fix menu and the lightbulb (completion and symbol kinds, marker severities, lightbulb). Unmodified, embedded as SVG text.

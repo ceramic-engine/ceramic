@@ -116,6 +116,7 @@ class TimeoutTimer implements IDisposable {
 
     var _cancel:Null<() -> Void> = null;
     var _isDisposed = false;
+    var _runner:Null<() -> Void> = null;
 
     public function new(?runner:() -> Void, ?timeout:Float) {
         if (runner != null && timeout != null) {
@@ -132,6 +133,7 @@ class TimeoutTimer implements IDisposable {
         if (this._cancel != null) {
             final c = this._cancel;
             this._cancel = null;
+            this._runner = null;
             c();
         }
     }
@@ -145,8 +147,10 @@ class TimeoutTimer implements IDisposable {
         }
 
         this.cancel();
+        this._runner = runner;
         this._cancel = Async.setTimeout(() -> {
             this._cancel = null;
+            this._runner = null;
             runner();
         }, timeout);
     }
@@ -163,10 +167,24 @@ class TimeoutTimer implements IDisposable {
             // timer is already set
             return;
         }
+        this._runner = runner;
         this._cancel = Async.setTimeout(() -> {
             this._cancel = null;
+            this._runner = null;
             runner();
         }, timeout);
+    }
+
+    /**
+     * Runs the pending runner at once (not in Monaco: tests use it instead
+     * of waiting).
+     */
+    public function flush():Void {
+        final runner = this._runner;
+        if (this._cancel != null && runner != null) {
+            this.cancel();
+            runner();
+        }
     }
 
 }

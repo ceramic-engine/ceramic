@@ -158,6 +158,47 @@ class Arrays {
      *
      * @returns `endIdxEx` if predicate is false for all items, otherwise the index of the first item that matches the predicate.
      */
+    /**
+     * Returns the n-th smallest element of `data` (quick select, the pivot
+     * picked at random like Monaco's).
+     */
+    public static function quickSelect<T>(nth:Float, data:Array<T>, compare:(a:T, b:T) -> Int):T {
+
+        final n:Int = Std.int(nth);
+
+        if (n >= data.length) {
+            throw 'invalid index';
+        }
+
+        final pivotValue = data[Math.floor(data.length * Math.random())];
+        final lower:Array<T> = [];
+        final higher:Array<T> = [];
+        final pivots:Array<T> = [];
+
+        for (value in data) {
+            final val = compare(value, pivotValue);
+            if (val < 0) {
+                lower.push(value);
+            }
+            else if (val > 0) {
+                higher.push(value);
+            }
+            else {
+                pivots.push(value);
+            }
+        }
+
+        if (n < lower.length) {
+            return quickSelect(n, lower, compare);
+        }
+        else if (n < lower.length + pivots.length) {
+            return pivots[0];
+        }
+        else {
+            return quickSelect(n - (lower.length + pivots.length), higher, compare);
+        }
+    }
+
     public static function findFirstIdxMonotonousOrArrLen<T>(array:Array<T>, predicate:(item:T) -> Bool, startIdx:Int = 0, ?endIdxEx:Int):Int {
         var i = startIdx;
         var j = endIdxEx != null ? endIdxEx : array.length;

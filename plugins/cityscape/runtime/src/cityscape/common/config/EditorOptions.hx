@@ -472,6 +472,35 @@ typedef IEditorOptions = {
      */
     @:optional var tabCompletion:String;
     /**
+     * Accept suggestions on provider defined characters.
+     * Defaults to true.
+     */
+    @:optional var acceptSuggestionOnCommitCharacter:Bool;
+    /**
+     * Enable snippet suggestions: `'top'`, `'bottom'`, `'inline'` or `'none'`.
+     * Default to 'inline'.
+     */
+    @:optional var snippetSuggestions:String;
+    /**
+     * Font size for the suggest widget.
+     * Defaults to the editor font size.
+     */
+    @:optional var suggestFontSize:Int;
+    /**
+     * Line height for the suggest widget.
+     * Defaults to the editor line height.
+     */
+    @:optional var suggestLineHeight:Int;
+    /**
+     * The history mode for suggestions: `'first'`, `'recentlyUsed'` or
+     * `'recentlyUsedByPrefix'`.
+     */
+    @:optional var suggestSelection:String;
+    /**
+     * Control the behavior and rendering of the code action lightbulb.
+     */
+    @:optional var lightbulb:cityscape.common.config.EditorLanguageFeatureOptions.IEditorLightbulbOptions;
+    /**
      * Inserting and deleting whitespace follows tab stops.
      */
     @:optional var useTabStops:Bool;
@@ -2247,7 +2276,7 @@ abstract EditorOption<V>(Int) to Int {
         this = id;
     }
 
-    public static inline final acceptSuggestionOnCommitCharacter:EditorOption<Any> = new EditorOption<Any>(0);
+    public static inline final acceptSuggestionOnCommitCharacter:EditorOption<Bool> = new EditorOption<Bool>(0);
     public static inline final acceptSuggestionOnEnter:EditorOption<String> = new EditorOption<String>(1);
     public static inline final accessibilitySupport:EditorOption<AccessibilitySupport> = new EditorOption<AccessibilitySupport>(2);
     public static inline final accessibilityPageSize:EditorOption<Any> = new EditorOption<Any>(3);
@@ -2312,7 +2341,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final inlineSuggest:EditorOption<Any> = new EditorOption<Any>(62);
     public static inline final inlineEdit:EditorOption<Any> = new EditorOption<Any>(63);
     public static inline final letterSpacing:EditorOption<Float> = new EditorOption<Float>(64);
-    public static inline final lightbulb:EditorOption<Any> = new EditorOption<Any>(65);
+    public static inline final lightbulb:EditorOption<cityscape.common.config.EditorLanguageFeatureOptions.EditorLightbulbOptions> = new EditorOption<cityscape.common.config.EditorLanguageFeatureOptions.EditorLightbulbOptions>(65);
     public static inline final lineDecorationsWidth:EditorOption<Float> = new EditorOption<Float>(66);
     public static inline final lineHeight:EditorOption<Float> = new EditorOption<Float>(67);
     public static inline final lineNumbers:EditorOption<InternalEditorRenderLineNumbersOptions> = new EditorOption<InternalEditorRenderLineNumbersOptions>(68);
@@ -2360,17 +2389,17 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final selectOnLineNumbers:EditorOption<Any> = new EditorOption<Any>(110);
     public static inline final showFoldingControls:EditorOption<String> = new EditorOption<String>(111);
     public static inline final showUnused:EditorOption<Any> = new EditorOption<Any>(112);
-    public static inline final snippetSuggestions:EditorOption<Any> = new EditorOption<Any>(113);
+    public static inline final snippetSuggestions:EditorOption<String> = new EditorOption<String>(113);
     public static inline final smartSelect:EditorOption<Any> = new EditorOption<Any>(114);
     public static inline final smoothScrolling:EditorOption<Bool> = new EditorOption<Bool>(115);
     public static inline final stickyScroll:EditorOption<EditorStickyScrollOptions> = new EditorOption<EditorStickyScrollOptions>(116);
     public static inline final stickyTabStops:EditorOption<Bool> = new EditorOption<Bool>(117);
     public static inline final stopRenderingLineAfter:EditorOption<Int> = new EditorOption<Int>(118);
     public static inline final suggest:EditorOption<InternalSuggestOptions> = new EditorOption<InternalSuggestOptions>(119);
-    public static inline final suggestFontSize:EditorOption<Any> = new EditorOption<Any>(120);
-    public static inline final suggestLineHeight:EditorOption<Any> = new EditorOption<Any>(121);
+    public static inline final suggestFontSize:EditorOption<Int> = new EditorOption<Int>(120);
+    public static inline final suggestLineHeight:EditorOption<Int> = new EditorOption<Int>(121);
     public static inline final suggestOnTriggerCharacters:EditorOption<Bool> = new EditorOption<Bool>(122);
-    public static inline final suggestSelection:EditorOption<Any> = new EditorOption<Any>(123);
+    public static inline final suggestSelection:EditorOption<String> = new EditorOption<String>(123);
     public static inline final tabCompletion:EditorOption<String> = new EditorOption<String>(124);
     public static inline final tabIndex:EditorOption<Any> = new EditorOption<Any>(125);
     public static inline final unicodeHighlighting:EditorOption<Any> = new EditorOption<Any>(126);
@@ -3140,6 +3169,8 @@ class EditorOptions {
         cityscape.common.config.EditorFindOptions.EditorFindOptionsRegistration.registerSimple(o -> register(o));
         // The comments option (EditorCommentsOptions.hx), registered with the comment contribution
         cityscape.common.config.EditorCommentsOptions.EditorCommentsOptionsRegistration.registerSimple(o -> register(o));
+        // The options of suggest, code actions (EditorLanguageFeatureOptions.hx)
+        cityscape.common.config.EditorLanguageFeatureOptions.EditorLanguageFeatureOptionsRegistration.registerSimple(o -> register(o));
         EditorViewOptions.registerComputed(o -> register(o));
     }
 

@@ -56,8 +56,10 @@ class EditorOptionsTruthTest extends TestCase {
         // 4 of the folding contribution (foldingHighlight, foldingImportsByDefault, foldingMaximumRegions,
         // unfoldOnClickAfterEndOfLine), 1 of the find contribution (find, EditorFindOptions), 2 of the
         // bracket pair colorization and guides (bracketPairColorization, guides), 1 of the comment
-        // contribution (comments, EditorCommentsOptions)
-        assertEquals(98, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
+        // contribution (comments, EditorCommentsOptions), 6 of the language features
+        // (EditorLanguageFeatureOptions: acceptSuggestionOnCommitCharacter, lightbulb,
+        // snippetSuggestions, suggestFontSize, suggestLineHeight, suggestSelection)
+        assertEquals(104, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
     }
 
     function testDefaults() {

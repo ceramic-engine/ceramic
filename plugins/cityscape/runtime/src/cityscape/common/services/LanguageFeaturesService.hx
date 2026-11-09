@@ -4,20 +4,40 @@
 package cityscape.common.services;
 
 import cityscape.common.LanguageFeatureRegistry;
-import cityscape.common.Languages.FoldingRangeProvider;
-import cityscape.common.Languages.SelectionRangeProvider;
+import cityscape.common.Languages;
 import cityscape.common.Model.ITextModel;
 
 /**
  * The registries of the language feature providers of a `Cityscape`
  * context (Monaco's `ILanguageFeaturesService`, one per context here).
  *
- * TODO(step 4): the other registries (hover, completion, definition...)
- * come with the contributions that use them.
+ * The registries Monaco has for features Cityscape does not port
+ * (notebooks, inline values, evaluatable expressions, paste and drop
+ * edits, mapped edits, inline edits, multi document highlights, linked
+ * editing, new symbol names, selection ranges, on type formatting, inline
+ * completions) are not here yet.
  */
 class LanguageFeaturesService {
 
+    public final referenceProvider:LanguageFeatureRegistry<ReferenceProvider> = new LanguageFeatureRegistry<ReferenceProvider>();
+    public final renameProvider:LanguageFeatureRegistry<RenameProvider> = new LanguageFeatureRegistry<RenameProvider>();
+    public final codeActionProvider:LanguageFeatureRegistry<CodeActionProvider> = new LanguageFeatureRegistry<CodeActionProvider>();
+    public final definitionProvider:LanguageFeatureRegistry<DefinitionProvider> = new LanguageFeatureRegistry<DefinitionProvider>();
+    public final typeDefinitionProvider:LanguageFeatureRegistry<TypeDefinitionProvider> = new LanguageFeatureRegistry<TypeDefinitionProvider>();
+    public final declarationProvider:LanguageFeatureRegistry<DeclarationProvider> = new LanguageFeatureRegistry<DeclarationProvider>();
+    public final implementationProvider:LanguageFeatureRegistry<ImplementationProvider> = new LanguageFeatureRegistry<ImplementationProvider>();
+    public final codeLensProvider:LanguageFeatureRegistry<CodeLensProvider> = new LanguageFeatureRegistry<CodeLensProvider>();
     public final foldingRangeProvider:LanguageFeatureRegistry<FoldingRangeProvider> = new LanguageFeatureRegistry<FoldingRangeProvider>();
+    public final linkProvider:LanguageFeatureRegistry<LinkProvider> = new LanguageFeatureRegistry<LinkProvider>();
+    public final colorProvider:LanguageFeatureRegistry<DocumentColorProvider> = new LanguageFeatureRegistry<DocumentColorProvider>();
+    public final signatureHelpProvider:LanguageFeatureRegistry<SignatureHelpProvider> = new LanguageFeatureRegistry<SignatureHelpProvider>();
+    public final hoverProvider:LanguageFeatureRegistry<HoverProvider> = new LanguageFeatureRegistry<HoverProvider>();
+    public final documentRangeSemanticTokensProvider:LanguageFeatureRegistry<DocumentRangeSemanticTokensProvider> = new LanguageFeatureRegistry<DocumentRangeSemanticTokensProvider>();
+    public final documentSemanticTokensProvider:LanguageFeatureRegistry<DocumentSemanticTokensProvider> = new LanguageFeatureRegistry<DocumentSemanticTokensProvider>();
+    public final documentFormattingEditProvider:LanguageFeatureRegistry<DocumentFormattingEditProvider> = new LanguageFeatureRegistry<DocumentFormattingEditProvider>();
+    public final documentRangeFormattingEditProvider:LanguageFeatureRegistry<DocumentRangeFormattingEditProvider> = new LanguageFeatureRegistry<DocumentRangeFormattingEditProvider>();
+    public final completionProvider:LanguageFeatureRegistry<CompletionItemProvider> = new LanguageFeatureRegistry<CompletionItemProvider>();
+    public final inlayHintsProvider:LanguageFeatureRegistry<InlayHintsProvider> = new LanguageFeatureRegistry<InlayHintsProvider>();
 
     /**
      * Chooses the folding range providers of a model among the registered

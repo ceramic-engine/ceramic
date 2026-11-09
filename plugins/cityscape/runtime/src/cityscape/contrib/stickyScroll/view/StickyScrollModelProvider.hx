@@ -229,7 +229,7 @@ class StickyModelFromCandidateOutlineProvider extends StickyModelCandidateProvid
     }
 
     function createModelFromProvider(token:CancellationToken, done:(model:Any) -> Void):Void {
-        OutlineModel.create(this._languageFeaturesService.documentSymbolProvider, this._editor.getModel(), token, (model) -> done(model));
+        OutlineModel.create(this._languageFeaturesService.documentSymbolProvider, this._editor.getModel(), token).done(model -> done(model));
     }
 
     function createStickyModel(token:CancellationToken, model:Any):StickyModel {

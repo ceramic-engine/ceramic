@@ -734,6 +734,133 @@ class Strings {
         return len;
     }
 
+    // Added with the filters (step 5, worker cs4-lang): helpers of
+    // filters.ts
+
+    /**
+     * `pattern.replace(/[\-\\\{\}\+\?\|\^\$\.\,\[\]\(\)\#\s]/g, '\\$&').replace(/[\*]/g, '.*')`,
+     * written as a loop (`\s` is JavaScript's whitespace set).
+     */
+    public static function convertSimple2RegExpPattern(pattern:String):String {
+        final buf = new StringBuf();
+        for (i in 0...pattern.length) {
+            final c = StringTools.fastCodeAt(pattern, i);
+            switch c {
+                case '-'.code | '\\'.code | '{'.code | '}'.code | '+'.code | '?'.code | '|'.code | '^'.code | '$'.code | '.'.code | ','.code | '['.code | ']'.code | '('.code | ')'.code | '#'.code:
+                    buf.addChar('\\'.code);
+                    buf.addChar(c);
+                case '*'.code:
+                    buf.add('.*');
+                case _:
+                    if (isJsWhitespace(c)) {
+                        buf.addChar('\\'.code);
+                    }
+                    buf.addChar(c);
+            }
+        }
+        return buf.toString();
+    }
+
+    public static function compareSubstring(a:String, b:String, aStart:Int = 0, ?aEnd:Int, bStart:Int = 0, ?bEnd:Int):Int {
+        if (aEnd == null) {
+            aEnd = a.length;
+        }
+        if (bEnd == null) {
+            bEnd = b.length;
+        }
+        while (aStart < aEnd && bStart < bEnd) {
+            final codeA = StringTools.fastCodeAt(a, aStart);
+            final codeB = StringTools.fastCodeAt(b, bStart);
+            if (codeA < codeB) {
+                return -1;
+            }
+            else if (codeA > codeB) {
+                return 1;
+            }
+            aStart++;
+            bStart++;
+        }
+        final aLen = aEnd - aStart;
+        final bLen = bEnd - bStart;
+        if (aLen < bLen) {
+            return -1;
+        }
+        else if (aLen > bLen) {
+            return 1;
+        }
+        return 0;
+    }
+
+    public static function compareIgnoreCase(a:String, b:String):Int {
+        return compareSubstringIgnoreCase(a, b, 0, a.length, 0, b.length);
+    }
+
+    public static function compareSubstringIgnoreCase(a:String, b:String, aStart:Int = 0, ?aEnd:Int, bStart:Int = 0, ?bEnd:Int):Int {
+        if (aEnd == null) {
+            aEnd = a.length;
+        }
+        if (bEnd == null) {
+            bEnd = b.length;
+        }
+        while (aStart < aEnd && bStart < bEnd) {
+
+            var codeA = StringTools.fastCodeAt(a, aStart);
+            var codeB = StringTools.fastCodeAt(b, bStart);
+
+            if (codeA == codeB) {
+                // equal
+                aStart++;
+                bStart++;
+                continue;
+            }
+
+            if (codeA >= 128 || codeB >= 128) {
+                // not ASCII letters -> fallback to lower-casing strings
+                return compareSubstring(a.toLowerCase(), b.toLowerCase(), aStart, aEnd, bStart, bEnd);
+            }
+
+            // mapper lower-case ascii letter onto upper-case varinats
+            // [97-122] (lower ascii) --> [65-90] (upper ascii)
+            if (isLowerAsciiLetter(codeA)) {
+                codeA -= 32;
+            }
+            if (isLowerAsciiLetter(codeB)) {
+                codeB -= 32;
+            }
+
+            // compare both code points
+            final diff = codeA - codeB;
+            if (diff == 0) {
+                aStart++;
+                bStart++;
+                continue;
+            }
+
+            return diff;
+        }
+
+        final aLen = aEnd - aStart;
+        final bLen = bEnd - bStart;
+
+        if (aLen < bLen) {
+            return -1;
+        }
+        else if (aLen > bLen) {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    public static function startsWithIgnoreCase(str:String, candidate:String):Bool {
+        final candidateLength = candidate.length;
+        if (candidate.length > str.length) {
+            return false;
+        }
+
+        return compareSubstringIgnoreCase(str, candidate, 0, candidateLength) == 0;
+    }
+
 }
 
 /**

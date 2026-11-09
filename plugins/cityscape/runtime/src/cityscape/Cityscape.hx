@@ -12,6 +12,7 @@ import cityscape.platform.contextkey.view.ContextKeyService;
 import cityscape.platform.keybinding.common.KeybindingsRegistry;
 import cityscape.platform.markers.common.MarkerService;
 import cityscape.platform.markers.common.Markers;
+import cityscape.standalone.StandaloneLanguages;
 import cityscape.standalone.StandaloneServices;
 import cityscape.view.EditorExtensions.EditorExtensionsRegistry;
 import cityscape.common.TokenizationRegistry;
@@ -129,7 +130,9 @@ class Cityscape {
 
     /**
      * The registries of the language feature providers (Monaco's
-     * `ILanguageFeaturesService`): folding ranges...
+     * `ILanguageFeaturesService`): completion, hover, definition, symbols,
+     * code actions, folding ranges... `registerXProvider` (Monaco's
+     * `monaco.languages.registerXProvider`) registers in them.
      */
     public final languageFeaturesService:cityscape.common.services.LanguageFeaturesService = new cityscape.common.services.LanguageFeaturesService();
 
@@ -214,6 +217,82 @@ class Cityscape {
      * there, so a new find widget starts with the last ones. In memory by
      * default; a host can set its own to persist them.
      */
+    /**
+     * Reads the text of the clipboard for the `CLIPBOARD` variable of
+     * snippets (Monaco's `IClipboardService.readText`); null when the host
+     * gives no clipboard text.
+     */
+    public var readClipboardText:Null<() -> Null<String>> = null;
+
+    /**
+     * Monaco's global snippet completion provider
+     * (`setSnippetSuggestSupport`), asked with the other completion
+     * providers; null for none.
+     */
+    public var snippetSuggestSupport:Null<cityscape.common.Languages.CompletionItemProvider> = null;
+
+    /**
+     * Applies a workspace edit before Cityscape does (a code action's
+     * edit): returns true when it applied it (Monaco's bulk edit service
+     * of the host). Cityscape applies the text edits of models it knows
+     * (the model service, the models of its editors); a host handles file
+     * operations and models it opens itself here. Null: Cityscape only.
+     */
+    public var workspaceEditHandler:Null<(edit:cityscape.common.Languages.WorkspaceEdit, editor:Null<cityscape.view.EditorBrowser.ICodeEditor>) -> Bool> = null;
+
+    /**
+     * Called with the messages Monaco shows next to the cursor (its
+     * `MessageController`): "No definition found for 'x'"... Null: no
+     * message.
+     */
+    public var onNoResult:Null<(editor:cityscape.view.EditorBrowser.ICodeEditor, message:String, position:cityscape.common.core.Position) -> Void> = null;
+
+    /**
+     * The words of the documents suggested by the word based completions
+     * (Monaco's global `wordBasedSuggestions` option): `'off'`,
+     * `'currentDocument'`, `'matchingDocuments'` (documents of the same
+     * language, the default) or `'allDocuments'`.
+     */
+    public var wordBasedSuggestions:String = 'matchingDocuments';
+
+    var _hoverParticipants:Null<Array<(editor:cityscape.view.EditorBrowser.ICodeEditor) -> cityscape.contrib.hover.view.HoverTypes.IEditorHoverParticipant>> = null;
+
+    /**
+     * The participants of the content hover (Monaco's
+     * `HoverParticipantRegistry`): the markdown and marker participants by
+     * default; a host adds its own before creating editors.
+     */
+    public var hoverParticipants(get, never):Array<(editor:cityscape.view.EditorBrowser.ICodeEditor) -> cityscape.contrib.hover.view.HoverTypes.IEditorHoverParticipant>;
+    function get_hoverParticipants():Array<(editor:cityscape.view.EditorBrowser.ICodeEditor) -> cityscape.contrib.hover.view.HoverTypes.IEditorHoverParticipant> {
+        if (_hoverParticipants == null) {
+            _hoverParticipants = [
+                editor -> new cityscape.contrib.hover.view.MarkdownHoverParticipant(editor),
+                editor -> new cityscape.contrib.hover.view.MarkerHoverParticipant(editor)
+            ];
+        }
+        return _hoverParticipants;
+    }
+
+    /**
+     * The code block highlighter of the markdown of the widgets and the
+     * token colors it was made for (`MarkdownRenderer.codeBlockHighlighter`).
+     */
+    var _markdownCodeBlockHighlighter:Null<{colorMap:Null<Array<cityscape.base.common.Color>>, highlighter:glaze.kit.base.text.CodeBlockHighlighterFn}> = null;
+
+    var _suggestMemoryService:Null<cityscape.contrib.suggest.view.SuggestMemory.SuggestMemoryService> = null;
+
+    /**
+     * The accepted completions remembered by the suggest widget (Monaco's
+     * `ISuggestMemoryService`), created on first use.
+     */
+    public var suggestMemoryService(get, never):cityscape.contrib.suggest.view.SuggestMemory.SuggestMemoryService;
+    function get_suggestMemoryService():cityscape.contrib.suggest.view.SuggestMemory.SuggestMemoryService {
+        if (_suggestMemoryService == null) {
+            _suggestMemoryService = new cityscape.contrib.suggest.view.SuggestMemory.SuggestMemoryService();
+        }
+        return _suggestMemoryService;
+    }
+
     public var storageService:cityscape.platform.storage.common.Storage.IStorageService = new cityscape.platform.storage.common.Storage.InMemoryStorageService();
 
     public function new() {
@@ -366,6 +445,164 @@ class Cityscape {
     static function contextOfModel(model:ITextModel):Cityscape {
         final textModel = Std.downcast(model, cityscape.common.model.TextModel);
         return textModel != null && textModel.context != null ? textModel.context : defaultContext;
+    }
+
+    //#endregion
+
+    //#region monaco.languages
+
+    /**
+     * Registers a hover provider (`monaco.languages.registerHoverProvider`):
+     * a hover without range gets the range of the word at the position.
+     */
+    public function registerHoverProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.HoverProvider):IDisposable {
+        return StandaloneLanguages.registerHoverProvider(this, languageSelector, provider);
+    }
+
+    /**
+     * Registers a completion item provider
+     * (`monaco.languages.registerCompletionItemProvider`).
+     */
+    public function registerCompletionItemProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.CompletionItemProvider):IDisposable {
+        return languageFeaturesService.completionProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a definition provider (`monaco.languages.registerDefinitionProvider`).
+     */
+    public function registerDefinitionProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DefinitionProvider):IDisposable {
+        return languageFeaturesService.definitionProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a declaration provider (`monaco.languages.registerDeclarationProvider`).
+     */
+    public function registerDeclarationProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DeclarationProvider):IDisposable {
+        return languageFeaturesService.declarationProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a type definition provider (`monaco.languages.registerTypeDefinitionProvider`).
+     */
+    public function registerTypeDefinitionProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.TypeDefinitionProvider):IDisposable {
+        return languageFeaturesService.typeDefinitionProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers an implementation provider (`monaco.languages.registerImplementationProvider`).
+     */
+    public function registerImplementationProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.ImplementationProvider):IDisposable {
+        return languageFeaturesService.implementationProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a reference provider (`monaco.languages.registerReferenceProvider`).
+     */
+    public function registerReferenceProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.ReferenceProvider):IDisposable {
+        return languageFeaturesService.referenceProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a document symbol provider (`monaco.languages.registerDocumentSymbolProvider`).
+     */
+    public function registerDocumentSymbolProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DocumentSymbolProvider):IDisposable {
+        return languageFeaturesService.documentSymbolProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a code action provider (`monaco.languages.registerCodeActionProvider`):
+     * the context given to the provider has the markers touching the range.
+     */
+    public function registerCodeActionProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.CodeActionProvider, ?metadata:cityscape.standalone.StandaloneLanguages.CodeActionProviderMetadata):IDisposable {
+        return StandaloneLanguages.registerCodeActionProvider(this, languageSelector, provider, metadata);
+    }
+
+    /**
+     * Registers a signature help provider (`monaco.languages.registerSignatureHelpProvider`).
+     */
+    public function registerSignatureHelpProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.SignatureHelpProvider):IDisposable {
+        return languageFeaturesService.signatureHelpProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a document highlight provider (`monaco.languages.registerDocumentHighlightProvider`).
+     */
+    public function registerDocumentHighlightProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DocumentHighlightProvider):IDisposable {
+        return languageFeaturesService.documentHighlightProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a link provider (`monaco.languages.registerLinkProvider`).
+     */
+    public function registerLinkProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.LinkProvider):IDisposable {
+        return languageFeaturesService.linkProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a rename provider (`monaco.languages.registerRenameProvider`).
+     */
+    public function registerRenameProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.RenameProvider):IDisposable {
+        return languageFeaturesService.renameProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a formatter of whole documents
+     * (`monaco.languages.registerDocumentFormattingEditProvider`).
+     */
+    public function registerDocumentFormattingEditProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DocumentFormattingEditProvider):IDisposable {
+        return languageFeaturesService.documentFormattingEditProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a formatter of ranges
+     * (`monaco.languages.registerDocumentRangeFormattingEditProvider`).
+     */
+    public function registerDocumentRangeFormattingEditProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DocumentRangeFormattingEditProvider):IDisposable {
+        return languageFeaturesService.documentRangeFormattingEditProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a color provider (`monaco.languages.registerColorProvider`).
+     */
+    public function registerColorProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DocumentColorProvider):IDisposable {
+        return languageFeaturesService.colorProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a folding range provider (`monaco.languages.registerFoldingRangeProvider`).
+     */
+    public function registerFoldingRangeProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.FoldingRangeProvider):IDisposable {
+        return languageFeaturesService.foldingRangeProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers an inlay hints provider (`monaco.languages.registerInlayHintsProvider`).
+     */
+    public function registerInlayHintsProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.InlayHintsProvider):IDisposable {
+        return languageFeaturesService.inlayHintsProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a code lens provider (`monaco.languages.registerCodeLensProvider`).
+     */
+    public function registerCodeLensProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.CodeLensProvider):IDisposable {
+        return languageFeaturesService.codeLensProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a semantic tokens provider of whole documents
+     * (`monaco.languages.registerDocumentSemanticTokensProvider`).
+     */
+    public function registerDocumentSemanticTokensProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DocumentSemanticTokensProvider):IDisposable {
+        return languageFeaturesService.documentSemanticTokensProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a semantic tokens provider of ranges
+     * (`monaco.languages.registerDocumentRangeSemanticTokensProvider`).
+     */
+    public function registerDocumentRangeSemanticTokensProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DocumentRangeSemanticTokensProvider):IDisposable {
+        return languageFeaturesService.documentRangeSemanticTokensProvider.register(languageSelector, provider);
     }
 
     //#endregion

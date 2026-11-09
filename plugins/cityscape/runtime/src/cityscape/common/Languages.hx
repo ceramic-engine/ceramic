@@ -3,6 +3,13 @@
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.common;
 
+import cityscape.base.common.HtmlContent.IMarkdownString;
+import cityscape.base.common.Uri;
+import cityscape.common.core.Position;
+import cityscape.common.core.Range;
+import cityscape.common.core.Selection;
+import cityscape.platform.markers.common.Markers.IMarkerData;
+import haxe.extern.EitherType;
 import cityscape.base.common.Cancellation.CancellationToken;
 import cityscape.base.common.Color;
 import cityscape.base.common.Event;
@@ -15,8 +22,18 @@ import haxe.io.UInt32Array;
 /**
  * Types of languages.ts (tokenization and language features).
  *
- * TODO(step 4): the provider interfaces (hover, completion, definition...)
- * come with the contributions that use them.
+ * Monaco's providers return a `ProviderResult` (a value, null, or a
+ * promise). Cityscape's providers are interfaces whose methods give their
+ * result to a callback, once, at once or later (an LSP request): the last
+ * argument `resolve` takes the result or null. Optional members of Monaco's
+ * provider interfaces are nullable fields here: an optional method is a
+ * nullable function field (`resolveCompletionItem`), so that the editor
+ * can tell whether the provider has it, like Monaco's `typeof x === 'function'`.
+ *
+ * The enums whose value names hide Haxe types when imported live in
+ * modules of their own: `cityscape.common.languages.CompletionItemKind`,
+ * `cityscape.common.SymbolKind`,
+ * `cityscape.common.languages.LanguageKinds` (`InlayHintKind`).
  */
 
 /**
@@ -500,6 +517,830 @@ interface DocumentSymbolProvider {
      * Provide symbol information for the given document.
      */
     function provideDocumentSymbols(model:ITextModel, token:CancellationToken, resolve:(symbols:Null<std.Array<DocumentSymbol>>) -> Void):Void;
+}
+
+//#endregion
+
+//#region language features
+
+/**
+ * A hover represents additional information for a symbol or word. Hovers are
+ * rendered in a tooltip-like widget.
+ */
+typedef Hover = {
+    /**
+     * The contents of this hover.
+     */
+    var contents:Array<IMarkdownString>;
+
+    /**
+     * The range to which this hover applies. When missing, the
+     * editor will use the range at the current position or the
+     * current position itself.
+     */
+    @:optional var range:Null<IRange>;
+
+    /**
+     * Can increase the verbosity of the hover
+     */
+    @:optional var canIncreaseVerbosity:Bool;
+
+    /**
+     * Can decrease the verbosity of the hover
+     */
+    @:optional var canDecreaseVerbosity:Bool;
+}
+
+typedef HoverVerbosityRequest = {
+    /**
+     * The delta by which to increase/decrease the hover verbosity level
+     */
+    var verbosityDelta:Int;
+    /**
+     * The previous hover for the same position
+     */
+    var previousHover:Hover;
+}
+
+typedef HoverContext = {
+    /**
+     * Hover verbosity request
+     */
+    @:optional var verbosityRequest:Null<HoverVerbosityRequest>;
+}
+
+enum abstract HoverVerbosityAction(Int) from Int to Int {
+    /**
+     * Increase the verbosity of the hover
+     */
+    var Increase = 0;
+    /**
+     * Decrease the verbosity of the hover
+     */
+    var Decrease = 1;
+}
+
+/**
+ * The hover provider interface defines the contract between extensions and
+ * the hover feature.
+ */
+interface HoverProvider {
+    /**
+     * Provide a hover for the given position, context and document. Multiple hovers at the same
+     * position will be merged by the editor. A hover can have a range which defaults
+     * to the word range at the position when omitted.
+     */
+    function provideHover(model:ITextModel, position:Position, token:CancellationToken, context:Null<HoverContext>, resolve:(hover:Null<Hover>) -> Void):Void;
+}
+
+typedef CompletionItemLabel = {
+    var label:String;
+    @:optional var detail:String;
+    @:optional var description:String;
+}
+
+enum abstract CompletionItemTag(Int) from Int to Int {
+    var Deprecated = 1;
+}
+
+enum abstract CompletionItemInsertTextRule(Int) from Int to Int {
+    var None = 0;
+
+    /**
+     * Adjust whitespace/indentation of multiline insert texts to
+     * match the current line indentation.
+     */
+    var KeepWhitespace = 1;
+
+    /**
+     * `insertText` is a snippet.
+     */
+    var InsertAsSnippet = 4;
+}
+
+typedef CompletionItemRanges = {
+    var insert:IRange;
+    var replace:IRange;
+}
+
+/**
+ * A completion item represents a text snippet that is
+ * proposed to complete text that is being typed.
+ */
+typedef CompletionItem = {
+    /**
+     * The label of this completion item (a string or a
+     * `CompletionItemLabel`). By default this is also the text that is
+     * inserted when selecting this completion.
+     */
+    var label:EitherType<String, CompletionItemLabel>;
+    /**
+     * The kind of this completion item. Based on the kind
+     * an icon is chosen by the editor.
+     */
+    var kind:cityscape.common.languages.CompletionItemKind;
+    /**
+     * A modifier to the `kind` which affect how the item
+     * is rendered, e.g. Deprecated is rendered with a strikeout
+     */
+    @:optional var tags:Null<Array<CompletionItemTag>>;
+    /**
+     * A human-readable string with additional information
+     * about this item, like type or symbol information.
+     */
+    @:optional var detail:Null<String>;
+    /**
+     * A human-readable string that represents a doc-comment (a string or
+     * an `IMarkdownString`).
+     */
+    @:optional var documentation:Null<EitherType<String, IMarkdownString>>;
+    /**
+     * A string that should be used when comparing this item
+     * with other items. When `falsy` the label is used.
+     */
+    @:optional var sortText:Null<String>;
+    /**
+     * A string that should be used when filtering a set of
+     * completion items. When `falsy` the label is used.
+     */
+    @:optional var filterText:Null<String>;
+    /**
+     * Select this item when showing. *Note* that only one completion item can be selected and
+     * that the editor decides which item that is. The rule is that the *first* item of those
+     * that match best is selected.
+     */
+    @:optional var preselect:Bool;
+    /**
+     * A string or snippet that should be inserted in a document when selecting
+     * this completion.
+     */
+    var insertText:String;
+    /**
+     * Additional rules (as bitmask) that should be applied when inserting
+     * this completion.
+     */
+    @:optional var insertTextRules:Null<CompletionItemInsertTextRule>;
+    /**
+     * A range of text that should be replaced by this completion item: an
+     * `IRange` or `CompletionItemRanges` (insert and replace). Defaults to
+     * a range from the start of the current word to the current position.
+     *
+     * *Note:* The range must be a single line and it must
+     * contain the position at which completion has been requested.
+     */
+    @:optional var range:Null<EitherType<IRange, CompletionItemRanges>>;
+    /**
+     * An optional set of characters that when pressed while this completion is active will accept it first and
+     * then type that character. *Note* that all commit characters should have `length=1` and that superfluous
+     * characters will be ignored.
+     */
+    @:optional var commitCharacters:Null<Array<String>>;
+    /**
+     * An optional array of additional text edits that are applied when
+     * selecting this completion. Edits must not overlap with the main edit
+     * nor with themselves.
+     */
+    @:optional var additionalTextEdits:Null<Array<cityscape.common.core.EditOperation.ISingleEditOperation>>;
+    /**
+     * A command that should be run upon acceptance of this item.
+     */
+    @:optional var command:Null<Command>;
+}
+
+typedef CompletionList = {
+    var suggestions:Array<CompletionItem>;
+    @:optional var incomplete:Bool;
+    @:optional var dispose:Null<() -> Void>;
+    /**
+     * @internal
+     */
+    @:optional var duration:Null<Float>;
+}
+
+/**
+ * How a suggest provider was triggered.
+ */
+enum abstract CompletionTriggerKind(Int) from Int to Int {
+    var Invoke = 0;
+    var TriggerCharacter = 1;
+    var TriggerForIncompleteCompletions = 2;
+}
+
+/**
+ * Contains additional information about the context in which
+ * completion provider is triggered.
+ */
+typedef CompletionContext = {
+    /**
+     * How the completion was triggered.
+     */
+    var triggerKind:CompletionTriggerKind;
+    /**
+     * Character that triggered the completion item provider.
+     *
+     * Null if provider was not triggered by a character.
+     */
+    @:optional var triggerCharacter:Null<String>;
+}
+
+/**
+ * The completion item provider interface defines the contract between extensions and
+ * the IntelliSense.
+ *
+ * When computing *complete* completion items is expensive, providers can optionally implement
+ * `resolveCompletionItem`. In that case it is enough to return completion
+ * items with a label from `provideCompletionItems`. Subsequently,
+ * when a completion item is shown in the UI and gains focus this provider is asked to resolve
+ * the item, like adding doc-comment or details.
+ */
+interface CompletionItemProvider {
+
+    /**
+     * Used to identify completions in the (debug) UI and telemetry.
+     * @internal
+     */
+    var _debugDisplayName(default, null):Null<String>;
+
+    var triggerCharacters(default, null):Null<Array<String>>;
+
+    /**
+     * Provide completion items for the given position and document.
+     */
+    function provideCompletionItems(model:ITextModel, position:Position, context:CompletionContext, token:CancellationToken, resolve:(list:Null<CompletionList>) -> Void):Void;
+
+    /**
+     * Given a completion item fill in more data, like doc-comment
+     * or details (null when the provider does not resolve items). It gives
+     * the fields to add to the item (or null) to `resolve`.
+     *
+     * The editor will only resolve a completion item once.
+     */
+    var resolveCompletionItem(default, null):Null<(item:CompletionItem, token:CancellationToken, resolve:(item:Null<CompletionItem>) -> Void) -> Void>;
+}
+
+typedef Command = {
+    var id:String;
+    var title:String;
+    @:optional var tooltip:Null<String>;
+    @:optional var arguments:Null<Array<Any>>;
+}
+
+/**
+ * Monaco's `Command` namespace.
+ */
+class Commands {
+    public static function is(obj:Any):Bool {
+        if (obj == null || !cityscape.base.common.JsValues.isObject(obj)) {
+            return false;
+        }
+        final c:Command = obj;
+        return cityscape.base.common.JsValues.isString(c.id) && cityscape.base.common.JsValues.isString(c.title);
+    }
+}
+
+typedef CodeAction = {
+    var title:String;
+    @:optional var command:Null<Command>;
+    @:optional var edit:Null<WorkspaceEdit>;
+    @:optional var diagnostics:Null<Array<IMarkerData>>;
+    @:optional var kind:Null<String>;
+    @:optional var isPreferred:Null<Bool>;
+    @:optional var isAI:Null<Bool>;
+    @:optional var disabled:Null<String>;
+    @:optional var ranges:Null<Array<IRange>>;
+}
+
+enum abstract CodeActionTriggerType(Int) from Int to Int {
+    var Invoke = 1;
+    var Auto = 2;
+}
+
+/**
+ * @internal
+ */
+typedef CodeActionContext = {
+    @:optional var only:Null<String>;
+    var trigger:CodeActionTriggerType;
+    /**
+     * The markers of the model that touch the range: Monaco's standalone
+     * `CodeActionContext` (`monaco.languages.CodeActionContext`). Filled by
+     * `Cityscape.registerCodeActionProvider`, like Monaco's
+     * `registerCodeActionProvider`; null for a provider registered in the
+     * registry directly.
+     */
+    @:optional var markers:Null<Array<IMarkerData>>;
+}
+
+typedef CodeActionList = {
+    var actions:Array<CodeAction>;
+    @:optional var dispose:Null<() -> Void>;
+}
+
+/**
+ * The documentation of a code action kind (`CodeActionProvider.documentation`).
+ */
+typedef CodeActionProviderDocumentation = {
+    var kind:String;
+    var command:Command;
+}
+
+/**
+ * The code action interface defines the contract between extensions and
+ * the light bulb feature.
+ * @internal
+ */
+interface CodeActionProvider {
+
+    var displayName(default, null):Null<String>;
+
+    /**
+     * Provide commands for the given document and range (a `Range` or a
+     * `Selection`).
+     */
+    function provideCodeActions(model:ITextModel, range:Range, context:CodeActionContext, token:CancellationToken, resolve:(list:Null<CodeActionList>) -> Void):Void;
+
+    /**
+     * Given a code action fill in the edit. Will only invoked when missing
+     * (null when the provider does not resolve actions).
+     */
+    var resolveCodeAction(default, null):Null<(codeAction:CodeAction, token:CancellationToken, resolve:(codeAction:Null<CodeAction>) -> Void) -> Void>;
+
+    /**
+     * Optional list of CodeActionKinds that this provider returns.
+     */
+    var providedCodeActionKinds(default, null):Null<Array<String>>;
+
+    var documentation(default, null):Null<Array<CodeActionProviderDocumentation>>;
+}
+
+typedef ParameterInformation = {
+    /**
+     * The label of this signature: a string, or an array of two offsets
+     * (inclusive start and exclusive end) into its containing signature
+     * label.
+     */
+    var label:EitherType<String, Array<Int>>;
+    /**
+     * The human-readable doc-comment of this signature (a string or an
+     * `IMarkdownString`).
+     */
+    @:optional var documentation:Null<EitherType<String, IMarkdownString>>;
+}
+
+typedef SignatureInformation = {
+    var label:String;
+    @:optional var documentation:Null<EitherType<String, IMarkdownString>>;
+    var parameters:Array<ParameterInformation>;
+    @:optional var activeParameter:Null<Int>;
+}
+
+typedef SignatureHelp = {
+    var signatures:Array<SignatureInformation>;
+    var activeSignature:Int;
+    var activeParameter:Int;
+}
+
+typedef SignatureHelpResult = {
+    var value:SignatureHelp;
+    @:optional var dispose:Null<() -> Void>;
+}
+
+enum abstract SignatureHelpTriggerKind(Int) from Int to Int {
+    var Invoke = 1;
+    var TriggerCharacter = 2;
+    var ContentChange = 3;
+}
+
+typedef SignatureHelpContext = {
+    final triggerKind:SignatureHelpTriggerKind;
+    @:optional final triggerCharacter:Null<String>;
+    final isRetrigger:Bool;
+    @:optional final activeSignatureHelp:Null<SignatureHelp>;
+}
+
+/**
+ * The signature help provider interface defines the contract between extensions and
+ * the parameter hints feature.
+ */
+interface SignatureHelpProvider {
+
+    var signatureHelpTriggerCharacters(default, null):Null<Array<String>>;
+    var signatureHelpRetriggerCharacters(default, null):Null<Array<String>>;
+
+    /**
+     * Provide help for the signature at the given position and document.
+     */
+    function provideSignatureHelp(model:ITextModel, position:Position, token:CancellationToken, context:SignatureHelpContext, resolve:(result:Null<SignatureHelpResult>) -> Void):Void;
+}
+
+/**
+ * Value-object that contains additional information when
+ * requesting references.
+ */
+typedef ReferenceContext = {
+    /**
+     * Include the declaration of the current symbol.
+     */
+    var includeDeclaration:Bool;
+}
+
+/**
+ * The reference provider interface defines the contract between extensions and
+ * the find references-feature.
+ */
+interface ReferenceProvider {
+    function provideReferences(model:ITextModel, position:Position, context:ReferenceContext, token:CancellationToken, resolve:(locations:Null<Array<Location>>) -> Void):Void;
+}
+
+/**
+ * Represents a location inside a resource, such as a line
+ * inside a text file.
+ */
+typedef Location = {
+    /**
+     * The resource identifier of this location.
+     */
+    var uri:Uri;
+    /**
+     * The document range of this locations.
+     */
+    var range:IRange;
+}
+
+/**
+ * A location with the range of its origin (Monaco's `LocationLink`), which
+ * is also a `Location`.
+ */
+typedef LocationLink = {
+    /**
+     * A range to select where this link originates from.
+     */
+    @:optional var originSelectionRange:Null<IRange>;
+
+    /**
+     * The target uri this link points to.
+     */
+    var uri:Uri;
+
+    /**
+     * The full range this link points to.
+     */
+    var range:IRange;
+
+    /**
+     * A range to select this link points to. Must be contained
+     * in `LocationLink.range`.
+     */
+    @:optional var targetSelectionRange:Null<IRange>;
+}
+
+/**
+ * The definition of a symbol: Monaco's `Definition` (`Location |
+ * Location[] | LocationLink[]`) is always an array of `LocationLink`s here
+ * (a `Location` is a `LocationLink` without the optional ranges).
+ */
+typedef Definition = Array<LocationLink>;
+
+/**
+ * The definition provider interface defines the contract between extensions and
+ * the go to definition and peek definition features.
+ */
+interface DefinitionProvider {
+    /**
+     * Provide the definition of the symbol at the given position and document.
+     */
+    function provideDefinition(model:ITextModel, position:Position, token:CancellationToken, resolve:(definition:Null<Definition>) -> Void):Void;
+}
+
+/**
+ * The definition provider interface defines the contract between extensions and
+ * the go to declaration feature.
+ */
+interface DeclarationProvider {
+    function provideDeclaration(model:ITextModel, position:Position, token:CancellationToken, resolve:(definition:Null<Definition>) -> Void):Void;
+}
+
+/**
+ * The implementation provider interface defines the contract between extensions and
+ * the go to implementation feature.
+ */
+interface ImplementationProvider {
+    function provideImplementation(model:ITextModel, position:Position, token:CancellationToken, resolve:(definition:Null<Definition>) -> Void):Void;
+}
+
+/**
+ * The type definition provider interface defines the contract between extensions and
+ * the go to type definition feature.
+ */
+interface TypeDefinitionProvider {
+    function provideTypeDefinition(model:ITextModel, position:Position, token:CancellationToken, resolve:(definition:Null<Definition>) -> Void):Void;
+}
+
+/**
+ * Module functions of languages.ts about locations.
+ */
+class LocationUtils {
+    /**
+     * Monaco's `isLocationLink`.
+     */
+    public static function isLocationLink(thing:Any):Bool {
+        if (thing == null || !cityscape.base.common.JsValues.isObject(thing)) {
+            return false;
+        }
+        final l:LocationLink = thing;
+        return Std.isOfType(l.uri, Uri) && Range.isIRange(l.range) && (Range.isIRange(l.originSelectionRange) || Range.isIRange(l.targetSelectionRange));
+    }
+}
+
+typedef TextEdit = {
+    var range:IRange;
+    var text:String;
+    @:optional var eol:Null<cityscape.common.Model.EndOfLineSequence>;
+}
+
+/**
+ * Monaco's `TextEdit` class (its static function).
+ */
+class TextEdits {
+    public static function asEditOperation(edit:TextEdit):cityscape.common.core.EditOperation.ISingleEditOperation {
+        return cityscape.common.core.EditOperation.replace(Range.lift(edit.range), edit.text);
+    }
+}
+
+/**
+ * The document formatting provider interface defines the contract between extensions and
+ * the formatting-feature.
+ */
+interface DocumentFormattingEditProvider {
+
+    var displayName(default, null):Null<String>;
+
+    /**
+     * Provide formatting edits for a whole document.
+     */
+    function provideDocumentFormattingEdits(model:ITextModel, options:FormattingOptions, token:CancellationToken, resolve:(edits:Null<Array<TextEdit>>) -> Void):Void;
+}
+
+/**
+ * The document formatting provider interface defines the contract between extensions and
+ * the formatting-feature.
+ */
+interface DocumentRangeFormattingEditProvider {
+
+    var displayName(default, null):Null<String>;
+
+    /**
+     * Provide formatting edits for a range in a document.
+     *
+     * The given range is a hint and providers can decide to format a smaller
+     * or larger range. Often this is done by adjusting the start and end
+     * of the range to full syntax nodes.
+     */
+    function provideDocumentRangeFormattingEdits(model:ITextModel, range:Range, options:FormattingOptions, token:CancellationToken, resolve:(edits:Null<Array<TextEdit>>) -> Void):Void;
+
+    /**
+     * Formats several ranges at once (null when the provider does not).
+     */
+    var provideDocumentRangesFormattingEdits(default, null):Null<(model:ITextModel, ranges:Array<Range>, options:FormattingOptions, token:CancellationToken, resolve:(edits:Null<Array<TextEdit>>) -> Void) -> Void>;
+}
+
+/**
+ * A link inside the editor.
+ */
+typedef ILink = {
+    var range:IRange;
+    /**
+     * A `Uri` or a string.
+     */
+    @:optional var url:Null<EitherType<Uri, String>>;
+    @:optional var tooltip:Null<String>;
+}
+
+typedef ILinksList = {
+    var links:Array<ILink>;
+    @:optional var dispose:Null<() -> Void>;
+}
+
+/**
+ * A provider of links.
+ */
+interface LinkProvider {
+    function provideLinks(model:ITextModel, token:CancellationToken, resolve:(links:Null<ILinksList>) -> Void):Void;
+    var resolveLink(default, null):Null<(link:ILink, token:CancellationToken, resolve:(link:Null<ILink>) -> Void) -> Void>;
+}
+
+/**
+ * A color in RGBA format.
+ */
+typedef IColor = {
+    /**
+     * The red component in the range [0-1].
+     */
+    final red:Float;
+    /**
+     * The green component in the range [0-1].
+     */
+    final green:Float;
+    /**
+     * The blue component in the range [0-1].
+     */
+    final blue:Float;
+    /**
+     * The alpha component in the range [0-1].
+     */
+    final alpha:Float;
+}
+
+/**
+ * String representations for a color
+ */
+typedef IColorPresentation = {
+    /**
+     * The label of this color presentation. It will be shown on the color
+     * picker header. By default this is also the text that is inserted when selecting
+     * this color presentation.
+     */
+    var label:String;
+    /**
+     * An edit which is applied to a document when selecting
+     * this presentation for the color.
+     */
+    @:optional var textEdit:Null<TextEdit>;
+    /**
+     * An optional array of additional text edits that are applied when
+     * selecting this color presentation.
+     */
+    @:optional var additionalTextEdits:Null<Array<TextEdit>>;
+}
+
+/**
+ * A color range is a range in a text model which represents a color.
+ */
+typedef IColorInformation = {
+    /**
+     * The range within the model.
+     */
+    var range:IRange;
+    /**
+     * The color represented in this range.
+     */
+    var color:IColor;
+}
+
+/**
+ * A provider of colors for editor models.
+ */
+interface DocumentColorProvider {
+    /**
+     * Provides the color ranges for a specific model.
+     */
+    function provideDocumentColors(model:ITextModel, token:CancellationToken, resolve:(colors:Null<Array<IColorInformation>>) -> Void):Void;
+    /**
+     * Provide the string representations for a color.
+     */
+    function provideColorPresentations(model:ITextModel, colorInfo:IColorInformation, token:CancellationToken, resolve:(presentations:Null<Array<IColorPresentation>>) -> Void):Void;
+}
+
+typedef IWorkspaceTextEditTextEdit = {
+    > TextEdit,
+    @:optional var insertAsSnippet:Null<Bool>;
+}
+
+/**
+ * A text edit of a workspace edit (Monaco's `IWorkspaceTextEdit`).
+ */
+typedef IWorkspaceTextEdit = {
+    var resource:Uri;
+    var textEdit:IWorkspaceTextEditTextEdit;
+    var versionId:Null<Int>;
+}
+
+/**
+ * A file operation of a workspace edit (Monaco's `IWorkspaceFileEdit`):
+ * create, rename or delete. Cityscape has no file service; the host applies
+ * them (`Cityscape.applyFileEdit`).
+ */
+typedef IWorkspaceFileEdit = {
+    @:optional var oldResource:Null<Uri>;
+    @:optional var newResource:Null<Uri>;
+    @:optional var options:Null<Any>;
+}
+
+/**
+ * A workspace edit: `edits` holds `IWorkspaceTextEdit`s and
+ * `IWorkspaceFileEdit`s (told apart by their `resource` field).
+ */
+typedef WorkspaceEdit = {
+    var edits:Array<EitherType<IWorkspaceTextEdit, IWorkspaceFileEdit>>;
+}
+
+typedef Rejection = {
+    @:optional var rejectReason:Null<String>;
+}
+
+typedef WorkspaceEditAndRejection = {
+    > WorkspaceEdit,
+    @:optional var rejectReason:Null<String>;
+}
+
+typedef RenameLocation = {
+    var range:IRange;
+    var text:String;
+    @:optional var rejectReason:Null<String>;
+}
+
+interface RenameProvider {
+    function provideRenameEdits(model:ITextModel, position:Position, newName:String, token:CancellationToken, resolve:(edit:Null<WorkspaceEditAndRejection>) -> Void):Void;
+    var resolveRenameLocation(default, null):Null<(model:ITextModel, position:Position, token:CancellationToken, resolve:(location:Null<RenameLocation>) -> Void) -> Void>;
+}
+
+typedef CodeLens = {
+    var range:IRange;
+    @:optional var id:Null<String>;
+    @:optional var command:Null<Command>;
+}
+
+typedef CodeLensList = {
+    var lenses:Array<CodeLens>;
+    @:optional var dispose:Null<() -> Void>;
+}
+
+interface CodeLensProvider {
+    var onDidChange(default, null):Null<Event<CodeLensProvider>>;
+    function provideCodeLenses(model:ITextModel, token:CancellationToken, resolve:(lenses:Null<CodeLensList>) -> Void):Void;
+    var resolveCodeLens(default, null):Null<(model:ITextModel, codeLens:CodeLens, token:CancellationToken, resolve:(codeLens:Null<CodeLens>) -> Void) -> Void>;
+}
+
+typedef InlayHintLabelPart = {
+    var label:String;
+    /**
+     * A string or an `IMarkdownString`.
+     */
+    @:optional var tooltip:Null<EitherType<String, IMarkdownString>>;
+    @:optional var command:Null<Command>;
+    @:optional var location:Null<Location>;
+}
+
+typedef InlayHint = {
+    /**
+     * A string or an array of `InlayHintLabelPart`s.
+     */
+    var label:EitherType<String, Array<InlayHintLabelPart>>;
+    @:optional var tooltip:Null<EitherType<String, IMarkdownString>>;
+    @:optional var textEdits:Null<Array<TextEdit>>;
+    var position:IPosition;
+    @:optional var kind:Null<cityscape.common.languages.LanguageKinds.InlayHintKind>;
+    @:optional var paddingLeft:Null<Bool>;
+    @:optional var paddingRight:Null<Bool>;
+}
+
+typedef InlayHintList = {
+    var hints:Array<InlayHint>;
+    @:optional var dispose:Null<() -> Void>;
+}
+
+interface InlayHintsProvider {
+    var displayName(default, null):Null<String>;
+    var onDidChangeInlayHints(default, null):Null<VoidEvent>;
+    function provideInlayHints(model:ITextModel, range:Range, token:CancellationToken, resolve:(hints:Null<InlayHintList>) -> Void):Void;
+    var resolveInlayHint(default, null):Null<(hint:InlayHint, token:CancellationToken, resolve:(hint:Null<InlayHint>) -> Void) -> Void>;
+}
+
+typedef SemanticTokensLegend = {
+    final tokenTypes:Array<String>;
+    final tokenModifiers:Array<String>;
+}
+
+typedef SemanticTokens = {
+    @:optional final resultId:Null<String>;
+    final data:UInt32Array;
+}
+
+typedef SemanticTokensEdit = {
+    final start:Int;
+    final deleteCount:Int;
+    @:optional final data:Null<UInt32Array>;
+}
+
+typedef SemanticTokensEdits = {
+    @:optional final resultId:Null<String>;
+    final edits:Array<SemanticTokensEdit>;
+}
+
+interface DocumentSemanticTokensProvider {
+    var onDidChange(default, null):Null<VoidEvent>;
+    function getLegend():SemanticTokensLegend;
+    /**
+     * Gives `SemanticTokens` or `SemanticTokensEdits` (told apart by their
+     * `data` or `edits` field) to `resolve`.
+     */
+    function provideDocumentSemanticTokens(model:ITextModel, lastResultId:Null<String>, token:CancellationToken, resolve:(result:Null<EitherType<SemanticTokens, SemanticTokensEdits>>) -> Void):Void;
+    function releaseDocumentSemanticTokens(resultId:Null<String>):Void;
+}
+
+interface DocumentRangeSemanticTokensProvider {
+    function getLegend():SemanticTokensLegend;
+    function provideDocumentRangeSemanticTokens(model:ITextModel, range:Range, token:CancellationToken, resolve:(result:Null<SemanticTokens>) -> Void):Void;
 }
 
 //#endregion

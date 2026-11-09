@@ -48,6 +48,10 @@ class MainScene extends Scene {
 
     var editingReady:Bool = false;
 
+    var languageView:Null<Entity<LanguageVisualView>> = null;
+
+    var languageReady:Bool = false;
+
     override function create() {
 
         out = Platform.getEnv('CITYSCAPE_VISUAL_OUT');
@@ -73,6 +77,12 @@ class MainScene extends Scene {
                 // Bracket pairs, guides, word highlight, multicursor, sticky scroll (EditingVisualView.hx)
                 editingView = cx.newEntity((viewCx:Context<EditingVisualView>) -> new EditingVisualView(viewCx));
                 return editingView;
+            }
+            if (scene == 'suggest' || scene == 'hover' || scene == 'quickfix') {
+                // The suggest widget, the marker hover with a quick fix (LanguageVisualView.hx)
+                final dark = Platform.getEnv('CITYSCAPE_VISUAL_THEME') != 'light';
+                languageView = cx.newEntity((viewCx:Context<LanguageVisualView>) -> new LanguageVisualView(viewCx, scene, dark));
+                return languageView;
             }
             if (scene == 'find') {
                 // The find widget open over one editor (FindVisualView.hx)
@@ -112,6 +122,10 @@ class MainScene extends Scene {
             final v:EditingVisualView = editingView;
             editingReady = v.update(ui.window, Glaze.app);
         }
+        if (languageView != null && ui.window != null && !languageReady) {
+            final v:LanguageVisualView = languageView;
+            languageReady = v.update(ui.window, Glaze.app);
+        }
         if (findView != null && ui.window != null) {
             final v:FindVisualView = findView;
             v.openFind(ui.window, Glaze.app);
@@ -127,7 +141,7 @@ class MainScene extends Scene {
             return;
         }
         frames++;
-        if (frames < SETTLE_FRAMES || (columnsView != null && !columnsChecked) || (editingView != null && !editingReady)) {
+        if (frames < SETTLE_FRAMES || (columnsView != null && !columnsChecked) || (editingView != null && !editingReady) || (languageView != null && !languageReady)) {
             return;
         }
         captured = true;

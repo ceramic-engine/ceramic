@@ -184,6 +184,20 @@ class Tests {
         runner.add(new tests.contrib.caretOperations.MoveCaretCommandTest());
         runner.add(new tests.contrib.cursorUndo.CursorUndoTest());
 
+        // Language features (step 4, cs4-lang)
+        runner.add(new tests.base.FiltersTest());
+        runner.add(new tests.contrib.snippet.SnippetParserTest());
+        runner.add(new tests.contrib.suggest.CompletionModelTest());
+        runner.add(new tests.contrib.suggest.SuggestTest());
+        runner.add(new tests.contrib.suggest.SuggestModelTest());
+        runner.add(new tests.lsp.LspConversionsTest());
+        runner.add(new tests.lsp.LspClientTest());
+        runner.add(new tests.contrib.documentSymbols.OutlineModelTest());
+        runner.add(new tests.contrib.LanguageFeaturesTest());
+        runner.add(new tests.contrib.gotoSymbol.ReferencesModelTest());
+        runner.add(new tests.contrib.codeAction.CodeActionTest());
+        runner.add(new tests.contrib.codeAction.CodeActionKeybindingResolverTest());
+
     }
 
 }

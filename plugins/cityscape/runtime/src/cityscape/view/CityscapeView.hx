@@ -433,8 +433,18 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         notifyChanged();
     }
 
+    /**
+     * The view rendering the `CityscapeEditor` component of this view (-1
+     * before its first render), notified when the overlay widgets change:
+     * the component lists them in its render.
+     */
+    public var hostViewId:Int = -1;
+
     public function overlayWidgetsChanged():Void {
         notifyChanged();
+        if (hostViewId != -1) {
+            app.notify(hostViewId);
+        }
     }
 
     public function getOffsetForColumn(modelLineNumber:Int, modelColumn:Int):Float {
@@ -1119,6 +1129,56 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public function handleHover(hovered:Bool):Void {
         if (!hovered) {
             setGutterHovered(false);
+            if (viewModel != null) {
+                // Monaco's `onMouseLeave` (the hover and the link gesture hide)
+                widget._fireMouseLeave({
+                    event: new EditorMouseEventData(false, false, false, lastModifiers.control, lastModifiers.shift, lastModifiers.alt, lastModifiers.platform, 0),
+                    target: null
+                });
+            }
+        }
+    }
+
+    var lastModifiers:glaze.Modifiers = glaze.Modifiers.of();
+
+    /**
+     * Called when the modifier keys change while the editor has the focus:
+     * Monaco's text area gets a `keydown` and a `keyup` for Ctrl and Meta
+     * (the link gesture of go to definition listens to them); Glaze reports
+     * the modifiers instead, turned into those events here.
+     */
+    public function handleModifiersChanged(modifiers:glaze.Modifiers):Void {
+        final previous = lastModifiers;
+        lastModifiers = modifiers;
+        if (viewModel == null) {
+            return;
+        }
+        inline function keyEvent(keyCode:cityscape.base.common.KeyCodes.KeyCode, code:String):cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent {
+            return {
+                ctrlKey: modifiers.control,
+                shiftKey: modifiers.shift,
+                altKey: modifiers.alt,
+                metaKey: modifiers.platform,
+                altGraphKey: false,
+                keyCode: keyCode,
+                code: code
+            };
+        }
+        if (modifiers.platform != previous.platform) {
+            final e = keyEvent(cityscape.base.common.KeyCodes.KeyCode.Meta, 'MetaLeft');
+            modifiers.platform ? widget._fireKeyDown(e) : widget._fireKeyUp(e);
+        }
+        if (modifiers.control != previous.control) {
+            final e = keyEvent(cityscape.base.common.KeyCodes.KeyCode.Ctrl, 'ControlLeft');
+            modifiers.control ? widget._fireKeyDown(e) : widget._fireKeyUp(e);
+        }
+        if (modifiers.alt != previous.alt) {
+            final e = keyEvent(cityscape.base.common.KeyCodes.KeyCode.Alt, 'AltLeft');
+            modifiers.alt ? widget._fireKeyDown(e) : widget._fireKeyUp(e);
+        }
+        if (modifiers.shift != previous.shift) {
+            final e = keyEvent(cityscape.base.common.KeyCodes.KeyCode.Shift, 'ShiftLeft');
+            modifiers.shift ? widget._fireKeyDown(e) : widget._fireKeyUp(e);
         }
     }
 
