@@ -31,16 +31,33 @@ class BenchRunner {
         for (scenario in Scenarios.all()) {
             if (names != null && names.indexOf(scenario.name) == -1)
                 continue;
+            var frames = frames;
+            var warmup = warmup;
+            #if !macro
+            final view = Std.downcast(scenario, scenarios.ViewBench);
+            if (view != null) {
+                if (view.frameLimit > 0 && view.frameLimit < frames)
+                    frames = view.frameLimit;
+                if (view.warmupLimit >= 0 && view.warmupLimit < warmup)
+                    warmup = view.warmupLimit;
+            }
+            #end
             scenario.setup();
             for (frame in 0...warmup) {
                 scenario.step(frame);
             }
             final times:Array<Float> = [];
+            final volumeBefore = gcInfo(MEM_INFO_ALLOCATION_VOLUME);
+            final minorsBefore = gcInfo(MEM_INFO_MINOR_PAUSE_COUNT);
+            AllocProfile.start();
             for (frame in 0...frames) {
                 final start = Timer.stamp();
                 scenario.step(warmup + frame);
                 times.push((Timer.stamp() - start) * 1000);
             }
+            final bytesPerFrame = frames > 0 ? (gcInfo(MEM_INFO_ALLOCATION_VOLUME) - volumeBefore) / frames : 0.0;
+            final minors = gcInfo(MEM_INFO_MINOR_PAUSE_COUNT) - minorsBefore;
+            final allocReport = AllocProfile.stop(frames, intEnv('CITYSCAPE_BENCH_ALLOC_TOP', 60));
             scenario.teardown();
 
             final sorted = times.copy();
@@ -56,12 +73,38 @@ class BenchRunner {
                 median: percentile(sorted, 0.5),
                 p95: percentile(sorted, 0.95),
                 p99: percentile(sorted, 0.99),
-                max: sorted.length > 0 ? sorted[sorted.length - 1] : 0.0
+                max: sorted.length > 0 ? sorted[sorted.length - 1] : 0.0,
+                bytesPerFrame: bytesPerFrame,
+                minorCollections: minors
             };
-            print('${scenario.name} (${target()}): mean ${fmt(result.mean)} ms, median ${fmt(result.median)} ms, p95 ${fmt(result.p95)} ms, p99 ${fmt(result.p99)} ms, max ${fmt(result.max)} ms');
+            print('${scenario.name} (${target()}): mean ${fmt(result.mean)} ms, median ${fmt(result.median)} ms, p95 ${fmt(result.p95)} ms, p99 ${fmt(result.p99)} ms, max ${fmt(result.max)} ms'
+                #if cpp + ', ${fmt(bytesPerFrame / 1024)} KiB allocated per frame, $minors minor collections' #end);
+            if (allocReport != null) {
+                print('  allocation profile of ${scenario.name}:');
+                print(allocReport);
+                write(resultsDir, '${scenario.name}-${target()}-allocs.txt', allocReport);
+            }
             write(resultsDir, '${scenario.name}-${target()}.json', Json.stringify(result, null, '  '));
         }
         exit(0);
+    }
+
+    /** hxcpp's allocation volume (bytes allocated since start) and minor collections (`cpp.vm.Gc.memInfo64`), 0 when missing. */
+    static inline final MEM_INFO_ALLOCATION_VOLUME = 117;
+    static inline final MEM_INFO_MINOR_PAUSE_COUNT = 107;
+
+    static function gcInfo(which:Int):Float {
+        #if cpp
+        try {
+            final value:Float = cpp.vm.Gc.memInfo64(which);
+            return Math.isNaN(value) ? 0.0 : value;
+        }
+        catch (e:Dynamic) {
+            return 0.0;
+        }
+        #else
+        return 0.0;
+        #end
     }
 
     static function percentile(sorted:Array<Float>, p:Float):Float {

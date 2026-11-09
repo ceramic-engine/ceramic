@@ -27,6 +27,15 @@ class Project extends Entity {
     }
 
     function ready() {
+        // The Glaze app of the view scenarios (headless windows)
+        final glazeApp = new glaze.App(new glaze.TestDispatcher());
+        scenarios.ViewBench.app = glazeApp;
+        // The kit's theme, as in an app using the kit (the editor's
+        // scrollbars and popups read it)
+        glazeApp.update(cx -> {
+            glaze.kit.theme.Theme.setMode(glaze.kit.theme.ThemeMode.Dark, cx);
+            glaze.kit.theme.Theme.syncBase(cx);
+        });
         new BenchRunner().run();
     }
 

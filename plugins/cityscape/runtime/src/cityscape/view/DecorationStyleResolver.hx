@@ -80,6 +80,39 @@ class ResolvedPartStyle {
  * editor view (it reads the view's theme and the context's registered
  * decoration styles).
  */
+/**
+ * What a decoration paints outside the text runs (`DecorationStyleResolver.paintStylesOf`):
+ * its styles (`combinedStyle`) with their resolved boxes and colors, for
+ * the whole line, the boxes behind the text, the margin, the glyph margin,
+ * the line decorations and the line number.
+ */
+class DecorationPaintStyles {
+
+    /** `isWholeLine` class names and `lineStyle`. */
+    public var lineStyles:Null<Array<IDecorationStyle>> = null;
+    public var lineBoxes:Null<Array<Null<ResolvedBox>>> = null;
+
+    /** `className` (not whole line) and `style`, with the colors of their squiggles. */
+    public var boxStyles:Null<Array<IDecorationStyle>> = null;
+    public var boxBoxes:Null<Array<Null<ResolvedBox>>> = null;
+    public var boxUnderlineColors:Null<Array<Null<Hsla>>> = null;
+
+    public var marginStyles:Null<Array<IDecorationStyle>> = null;
+    public var marginBoxes:Null<Array<Null<ResolvedBox>>> = null;
+
+    public var glyphStyles:Null<Array<IDecorationStyle>> = null;
+    public var glyphBoxes:Null<Array<Null<ResolvedBox>>> = null;
+
+    public var linesStyles:Null<Array<IDecorationStyle>> = null;
+    public var linesBoxes:Null<Array<Null<ResolvedBox>>> = null;
+
+    /** `lineNumberClassName` and `lineNumberStyle`: the colors of their styles. */
+    public var lineNumberColors:Null<Array<Null<Hsla>>> = null;
+
+    public function new() {}
+
+}
+
 class DecorationStyleResolver {
 
     public static inline final TYPED_STYLE_PREFIX = '__cs';
@@ -128,7 +161,61 @@ class DecorationStyleResolver {
             _themeVersion = theme.version;
             _registryVersion = registry.version;
             _cache.clear();
+            _paintStyles = new haxe.ds.ObjectMap();
+            _paintStylesCount = 0;
         }
+    }
+
+    var _paintStyles:haxe.ds.ObjectMap<{}, DecorationPaintStyles> = new haxe.ds.ObjectMap();
+    var _paintStylesCount:Int = 0;
+
+    /**
+     * What a decoration with these options paints outside the text runs
+     * (`combinedStyle` and `resolveBox` / `resolveColor` of each style),
+     * kept by options object while the theme and the registered styles stay
+     * the same: the view paints its decorations without resolving them again
+     * at each frame.
+     */
+    public function paintStylesOf(options:cityscape.common.Model.IModelDecorationOptions):DecorationPaintStyles {
+        checkVersions();
+        final cached = _paintStyles.get(options);
+        if (cached != null) {
+            return cached;
+        }
+        if (_paintStylesCount >= 8192) {
+            // decorations made new options for a long time: start over
+            _paintStyles = new haxe.ds.ObjectMap();
+            _paintStylesCount = 0;
+        }
+        final result = new DecorationPaintStyles();
+        final wholeLine = options.isWholeLine == true;
+        result.lineStyles = combinedStyle(wholeLine ? options.className : null, options.lineStyle);
+        result.lineBoxes = boxesOf(result.lineStyles);
+        result.boxStyles = combinedStyle(wholeLine ? null : options.className, options.style);
+        result.boxBoxes = boxesOf(result.boxStyles);
+        if (result.boxStyles != null) {
+            result.boxUnderlineColors = [for (st in result.boxStyles) {
+                final underline = st.underline;
+                underline != null && underline.color != null ? resolveColor(underline.color) : null;
+            }];
+        }
+        result.marginStyles = combinedStyle(options.marginClassName, options.marginStyle);
+        result.marginBoxes = boxesOf(result.marginStyles);
+        result.glyphStyles = combinedStyle(options.glyphMarginClassName, options.glyphMarginStyle);
+        result.glyphBoxes = boxesOf(result.glyphStyles);
+        result.linesStyles = combinedStyle(options.linesDecorationsClassName, options.linesDecorationsStyle);
+        result.linesBoxes = boxesOf(result.linesStyles);
+        final lineNumberStyles = combinedStyle(options.lineNumberClassName, options.lineNumberStyle);
+        if (lineNumberStyles != null) {
+            result.lineNumberColors = [for (st in lineNumberStyles) resolveColor(st.color)];
+        }
+        _paintStyles.set(options, result);
+        _paintStylesCount++;
+        return result;
+    }
+
+    function boxesOf(styles:Null<Array<IDecorationStyle>>):Null<Array<Null<ResolvedBox>>> {
+        return styles != null ? [for (st in styles) resolveBox(st)] : null;
     }
 
     public function resolveColor(color:Null<DecorationColor>):Null<Hsla> {

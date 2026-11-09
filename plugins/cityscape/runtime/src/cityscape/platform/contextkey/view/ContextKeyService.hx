@@ -33,9 +33,23 @@ class Context implements IContext {
         return this._value.copy();
     }
 
+    /**
+     * Cityscape: counts the changes of this context's own values (with
+     * `parentContext`, a reader of `collectAllValues` knows when to read again).
+     */
+    public var version(default, null):Int = 0;
+
+    /**
+     * Cityscape: the parent context (null for a root).
+     */
+    public inline function parentContext():Null<Context> {
+        return this._parent;
+    }
+
     public function setValue(key:String, value:Any):Bool {
         if (!this._value.exists(key) || !JsCompare.strictEquals(this._value.get(key), value)) {
             this._value.set(key, value);
+            this.version++;
             return true;
         }
         return false;
@@ -44,6 +58,7 @@ class Context implements IContext {
     public function removeValue(key:String):Bool {
         if (this._value.exists(key)) {
             this._value.remove(key);
+            this.version++;
             return true;
         }
         return false;

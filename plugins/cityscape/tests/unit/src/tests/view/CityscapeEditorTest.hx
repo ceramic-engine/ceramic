@@ -115,6 +115,31 @@ class CityscapeEditorTest extends TestCase {
         draw();
     }
 
+    /**
+     * A window caching its views (Glaze's default) paints the editor again
+     * after an edit: the editor view notifies the view that paints it (a
+     * model read by an element of a cached view would not make it render).
+     */
+    function testEditRepaintsInAViewCachingWindow() {
+        final model = createTextModel('first line\nsecond line');
+        final views = openTwo(model);
+        final a:CityscapeView = views.a;
+        assertTrue(window.viewCaching);
+        draw();
+        final count = () -> @:privateAccess window.renderedFrame.scene.len();
+        final before = count();
+        a.viewModel.setSelections('test', [new Selection(1, 11, 1, 11)]);
+        a.type(' with more text');
+        // drawn from the caches: the edited line is painted
+        assertTrue(window.drawIfDirty());
+        final cached = count();
+        assertTrue(cached > before, 'the typed glyphs are painted');
+        // the same frame as a full redraw
+        window.refresh();
+        window.draw();
+        assertEquals(count(), cached);
+    }
+
     function testMouseClickPlacesTheCursor() {
         final model = createTextModel('hello world\nsecond');
         final views = openTwo(model);

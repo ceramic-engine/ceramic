@@ -19,6 +19,11 @@ class Project extends Entity {
 
     function ready() {
 
+        // Every rendered view line is checked against its rendering input:
+        // a line the view events left valid must not have changed
+        // (`RenderCacheCheckTest`, registered last, reads the count)
+        cityscape.view.CityscapeView.checkRenderCache = true;
+
         final runner = new TestRunner();
         Tests.register(runner);
         runner.runAndExit();

@@ -186,10 +186,12 @@ class DomPosition {
  */
 class CharacterMapping {
 
+    @:allow(cityscape)
     static inline function getPartIndex(partData:Int):Int {
         return (partData >>> 16) & 0xFFFF;
     }
 
+    @:allow(cityscape)
     static inline function getCharIndex(partData:Int):Int {
         return partData & 0xFFFF;
     }
@@ -236,6 +238,14 @@ class CharacterMapping {
         final partIndex = CharacterMapping.getPartIndex(partData);
         final charIndex = CharacterMapping.getCharIndex(partData);
         return new DomPosition(partIndex, charIndex);
+    }
+
+    /**
+     * Cityscape: `getDomPosition` packed in an Int (read with `getPartIndex`
+     * and `getCharIndex`), without allocating.
+     */
+    public function getDomPartData(column:Int):Int {
+        return this.charOffsetToPartData(column - 1);
     }
 
     public function getColumn(domPosition:DomPosition, partLength:Int):Int {

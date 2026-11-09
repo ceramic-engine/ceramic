@@ -133,6 +133,8 @@ interface IViewLayout {
     function setOverlayWidgetsMinWidth(overlayWidgetsMinWidth:Float):Void;
 
     function getLinesViewportData():IPartialViewLinesViewportData;
+    /** Cityscape: the visible line numbers of `getLinesViewportData`, without allocating. */
+    function getLinesViewportRange(out:cityscape.common.viewLayout.LinesLayout.LinesViewportRange):Void;
     function getLinesViewportDataAtScrollTop(scrollTop:Float):IPartialViewLinesViewportData;
     function getWhitespaces():Array<IEditorWhitespace>;
 

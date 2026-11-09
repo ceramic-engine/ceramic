@@ -409,6 +409,17 @@ class ViewLayout implements IViewLayout {
         return this._linesLayout.getLinesViewportData(visibleBox.top, visibleBox.top + visibleBox.height);
     }
 
+    /**
+     * Cityscape: the visible line numbers of `getLinesViewportData`, written
+     * to `out` (no allocation).
+     */
+    public function getLinesViewportRange(out:LinesLayout.LinesViewportRange):Void {
+        final scrollDimensions = this._scrollable.getScrollDimensions();
+        final currentScrollPosition = this._scrollable.getCurrentScrollPosition();
+        final top = currentScrollPosition.scrollTop;
+        this._linesLayout.getLinesViewportRange(top, top + scrollDimensions.height, out);
+    }
+
     public function getLinesViewportDataAtScrollTop(scrollTop:Float):IPartialViewLinesViewportData {
         // do some minimal validations on scrollTop
         final scrollDimensions = this._scrollable.getScrollDimensions();

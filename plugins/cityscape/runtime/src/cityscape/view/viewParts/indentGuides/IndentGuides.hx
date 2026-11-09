@@ -25,12 +25,28 @@ class IndentGuides {
     /**
      * Monaco's `IndentGuidesOverlay.getGuidesByLine`.
      */
+    static final NO_GUIDES:Array<IndentGuide> = [];
+
+    static final INDENT_CLASS_NAMES:Array<String> = [for (i in 0...30) 'core-guide-indent lvl-' + i];
+
+    static final ACTIVE_INDENT_CLASS_NAMES:Array<String> = [for (i in 0...30) 'core-guide-indent lvl-' + i + ' indent-active'];
+
+    /**
+     * `'core-guide-indent lvl-' + level + (active ? ' indent-active' : '')`
+     * (level below 30), made once.
+     */
+    public static inline function indentClassName(level:Int, active:Bool):String {
+        return active ? ACTIVE_INDENT_CLASS_NAMES[level] : INDENT_CLASS_NAMES[level];
+    }
+
     public static function getGuidesByLine(
         viewModel:IViewModel,
         bracketPairGuideOptions:InternalGuidesOptions,
         visibleStartLineNumber:Int,
         visibleEndLineNumber:Int,
-        activeCursorPosition:Null<Position>
+        activeCursorPosition:Null<Position>,
+        ?cache:IndentGuideCache,
+        ?reuse:Array<Array<IndentGuide>>
     ):Array<Array<IndentGuide>> {
         final bracketGuides = !JsValues.strictEquals(bracketPairGuideOptions.bracketPairs, false)
             ? viewModel.getBracketGuidesInRangeByLine(
@@ -70,54 +86,89 @@ class IndentGuides {
         final indentSize = viewModel.model.getOptions().indentSize;
         final highlightAlways = JsValues.strictEquals(bracketPairGuideOptions.highlightActiveIndentation, 'always');
 
-        final result:Array<Array<IndentGuide>> = [];
+        final result:Array<Array<IndentGuide>> = reuse != null ? reuse : [];
+        final lineCount = visibleEndLineNumber - visibleStartLineNumber + 1;
+        if (result.length > lineCount) {
+            result.resize(lineCount);
+        }
         for (lineNumber in visibleStartLineNumber...visibleEndLineNumber + 1) {
-            final lineGuides:Array<IndentGuide> = [];
-            result.push(lineGuides);
+            final index = lineNumber - visibleStartLineNumber;
+            var lineGuides = index < result.length ? result[index] : null;
+            if (lineGuides == null) {
+                lineGuides = [];
+                if (index < result.length) {
+                    result[index] = lineGuides;
+                }
+                else {
+                    result.push(lineGuides);
+                }
+            }
+            else {
+                lineGuides.resize(0);
+            }
 
-            final bracketGuidesInLine:Array<IndentGuide> = bracketGuides != null ? bracketGuides[lineNumber - visibleStartLineNumber] : [];
-            final bracketGuidesInLineQueue = new ArrayQueue(bracketGuidesInLine);
+            // Monaco's ArrayQueue of the line's bracket guides, read by index
+            final bracketGuidesInLine:Array<IndentGuide> = bracketGuides != null ? bracketGuides[index] : NO_GUIDES;
+            final bracketCount = bracketGuidesInLine.length;
+            var next = 0;
 
-            final indentGuidesInLine = indentGuides != null ? indentGuides[lineNumber - visibleStartLineNumber] : 0;
+            final indentGuidesInLine = indentGuides != null ? indentGuides[index] : 0;
 
             for (indentLvl in 1...indentGuidesInLine + 1) {
                 final indentGuide = (indentLvl - 1) * indentSize + 1;
                 final isActive =
                     // Disable active indent guide if there are bracket guides.
-                    (highlightAlways || bracketGuidesInLine.length == 0) &&
+                    (highlightAlways || bracketCount == 0) &&
                     activeIndentStartLineNumber <= lineNumber &&
                     lineNumber <= activeIndentEndLineNumber &&
                     indentLvl == activeIndentLevel;
-                final taken = bracketGuidesInLineQueue.takeWhile(g -> g.visibleColumn < indentGuide);
-                if (taken != null) {
-                    for (g in taken) {
-                        lineGuides.push(g);
-                    }
+                // takeWhile(g -> g.visibleColumn < indentGuide)
+                while (next < bracketCount && bracketGuidesInLine[next].visibleColumn < indentGuide) {
+                    lineGuides.push(bracketGuidesInLine[next]);
+                    next++;
                 }
-                final peeked = bracketGuidesInLineQueue.peek();
+                final peeked = next < bracketCount ? bracketGuidesInLine[next] : null;
                 if (peeked == null || peeked.visibleColumn != indentGuide || peeked.horizontalLine != null) {
+                    final level = (indentLvl - 1) % 30;
                     lineGuides.push(
-                        new IndentGuide(
-                            indentGuide,
-                            -1,
-                            'core-guide-indent lvl-' + ((indentLvl - 1) % 30) + (isActive ? ' indent-active' : ''),
-                            null,
-                            -1,
-                            -1
-                        )
+                        cache != null
+                            ? cache.indentGuide(indentGuide, level, isActive)
+                            : new IndentGuide(indentGuide, -1, indentClassName(level, isActive), null, -1, -1)
                     );
                 }
             }
 
-            final rest = bracketGuidesInLineQueue.takeWhile(g -> true);
-            if (rest != null) {
-                for (g in rest) {
-                    lineGuides.push(g);
-                }
+            // takeWhile(g -> true)
+            while (next < bracketCount) {
+                lineGuides.push(bracketGuidesInLine[next]);
+                next++;
             }
         }
 
         return result;
+    }
+
+}
+
+/**
+ * The indentation guides made by `IndentGuides.getGuidesByLine` (immutable,
+ * the same for the same column, level and state), kept by a view so that
+ * its frames do not make them again.
+ */
+class IndentGuideCache {
+
+    final guides:Map<Int, IndentGuide> = new Map();
+
+    public function new() {}
+
+    public function indentGuide(visibleColumn:Int, level:Int, active:Bool):IndentGuide {
+        final key = (visibleColumn * 32 + level) * 2 + (active ? 1 : 0);
+        var guide = guides.get(key);
+        if (guide == null) {
+            guide = new IndentGuide(visibleColumn, -1, IndentGuides.indentClassName(level, active), null, -1, -1);
+            guides.set(key, guide);
+        }
+        return guide;
     }
 
 }

@@ -211,6 +211,9 @@ class Tests {
         runner.add(new tests.diffing.FixturesTest());
         runner.add(new tests.view.DiffEditorTest());
 
+        // Last: reads what the tests above rendered
+        runner.add(new tests.view.RenderCacheCheckTest());
+
     }
 
 }

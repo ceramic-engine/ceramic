@@ -39,6 +39,10 @@ class ApiHostState {
     public var b:Null<CityscapeEditor> = null;
     public var createdA:Int = 0;
     public var appShortcuts:Int = 0;
+    /** Renders of the host component. */
+    public var renders:Int = 0;
+    /** A state the host gives to an action as a prop would (`testActionStateKeptWhenTheHostRendersAgain`). */
+    public var onRender:Null<() -> Void> = null;
 
     public function new(modelA:TextModel, modelB:TextModel) {
         this.modelA = modelA;
@@ -61,6 +65,10 @@ class ApiHost extends glaze.Component {
 
     public function render(window:Window, cx:App):glaze.IntoElement {
         final state = this.state;
+        state.renders++;
+        if (state.onRender != null) {
+            state.onRender();
+        }
         return div().keyContext('TestApp').flex().sizeFull()
             .onAction(TestAppShortcut, (_, _, _) -> state.appShortcuts++)
             .child(CityscapeEditor.component().model(state.modelA).readOnly(state.readOnlyA).onCreate(e -> {
@@ -208,6 +216,69 @@ class CityscapeApiTest extends TestCase {
         enabled.set(true);
         key(mod() + '-shift-y');
         assertEquals(1, runs);
+    }
+
+    /**
+     * Regression (cs-perf-view): in a window caching its views, a change of
+     * the editor (typing, an action, decorations) paints the editor again,
+     * and the views around it render again (GPUI marks the ancestors of a
+     * dirty view dirty). An action added after the first render, with a
+     * keybinding, keeps working across those renders, and a host applying
+     * its props on change (not at every render) keeps the state the action
+     * changed: loreline-cityscape's Cmd+Shift+H toggle was reset by its
+     * host's render, which now happens at every repaint of the editor.
+     */
+    function testActionStateKeptWhenTheHostRendersAgain() {
+        open('alpha', 'gamma');
+        final a = state.a;
+        focus(a);
+        // the action's state, and the prop the host gives it (applied on change)
+        var hidden = false;
+        var hiddenProp = false;
+        var appliedProp = false;
+        state.onRender = () -> {
+            if (hiddenProp != appliedProp) {
+                appliedProp = hiddenProp;
+                hidden = hiddenProp;
+            }
+        };
+        var runs = 0;
+        a.addAction({
+            id: 'test.toggle',
+            label: 'Toggle',
+            keybindings: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyH],
+            run: (_, _) -> {
+                runs++;
+                hidden = !hidden;
+                // a change of the editor, like a decoration update
+                a.getModel().deltaDecorations([], [{range: new Range(1, 1, 1, 2), options: {description: 'mark', inlineClassName: 'mark'}}]);
+            }
+        });
+        window.drawIfDirty();
+        final rendersBefore = state.renders;
+        key(mod() + '-shift-h');
+        assertEquals(1, runs);
+        assertTrue(hidden);
+        // the editor repaints, its host renders again, the state stays
+        assertTrue(window.drawIfDirty());
+        assertTrue(state.renders > rendersBefore);
+        assertTrue(hidden);
+        // typing repaints the editor in the caching window
+        final view:CityscapeView = a.getView();
+        a.setPosition({lineNumber: 1, column: 6});
+        view.type('!');
+        assertTrue(window.drawIfDirty());
+        assertEquals('alpha!', a.getModel().getLineContent(1));
+        assertTrue(hidden);
+        // the keybinding still runs the action after these renders
+        key(mod() + '-shift-h');
+        assertEquals(2, runs);
+        assertFalse(hidden);
+        // the host's prop still wins when it changes
+        hiddenProp = true;
+        window.refresh();
+        assertTrue(window.drawIfDirty());
+        assertTrue(hidden);
     }
 
     function testAddAction() {

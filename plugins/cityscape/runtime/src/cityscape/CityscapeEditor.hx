@@ -316,6 +316,84 @@ class CityscapeEditor extends Component implements Styled {
      * values without dots), for the bindings of the host
      * (`CityscapeEditor && editorTextFocus`).
      */
+    /**
+     * The listeners of the editor's element, made once (the element is built
+     * again at each render).
+     */
+    var listeners:Null<EditorListeners> = null;
+
+    var keyContextValue:Null<KeyContext> = null;
+    final keyContextChain:Array<cityscape.platform.contextkey.view.ContextKeyService.Context> = [];
+    final keyContextVersions:Array<Int> = [];
+
+    /**
+     * `keyContextOf(widget)`, built again only when a value of the widget's
+     * context or of its parents changed (their `version`) or the chain of
+     * contexts changed.
+     */
+    function cachedKeyContext(widget:CodeEditorWidget):KeyContext {
+        final service = Std.downcast(widget.contextKeyService, AbstractContextKeyService);
+        if (service == null) {
+            return keyContextOf(widget);
+        }
+        final existing = keyContextValue;
+        if (existing != null) {
+            var context = service.getContextValuesContainer(service.contextId);
+            var i = 0;
+            var same = true;
+            while (context != null) {
+                if (i >= keyContextChain.length || keyContextChain[i] != context || keyContextVersions[i] != context.version) {
+                    same = false;
+                    break;
+                }
+                context = context.parentContext();
+                i++;
+            }
+            if (same && i == keyContextChain.length) {
+                return existing;
+            }
+        }
+        keyContextChain.resize(0);
+        keyContextVersions.resize(0);
+        var context = service.getContextValuesContainer(service.contextId);
+        while (context != null) {
+            keyContextChain.push(context);
+            keyContextVersions.push(context.version);
+            context = context.parentContext();
+        }
+        final created = keyContextOf(widget);
+        keyContextValue = created;
+        return created;
+    }
+
+    var appliedFontSize:Null<Float> = null;
+    var appliedFontFamily:Null<String> = null;
+    var appliedWordWrap:Null<String> = null;
+    var appliedReadOnly:Null<Bool> = null;
+    var appliedLineNumbers:Null<String> = null;
+    var appliedTabSize:Null<Int> = null;
+    var appliedShortcutValues:Bool = false;
+
+    /**
+     * Whether the shortcut props differ from the ones applied
+     * (`shortcutsKey() != appliedShortcuts`, the key built only when a
+     * prop changed).
+     */
+    function shortcutsChanged():Bool {
+        if (appliedShortcutValues && appliedFontSize == fontSize && appliedFontFamily == fontFamily && appliedWordWrap == wordWrap
+            && appliedReadOnly == readOnly && appliedLineNumbers == lineNumbers && appliedTabSize == tabSize) {
+            return false;
+        }
+        appliedShortcutValues = true;
+        appliedFontSize = fontSize;
+        appliedFontFamily = fontFamily;
+        appliedWordWrap = wordWrap;
+        appliedReadOnly = readOnly;
+        appliedLineNumbers = lineNumbers;
+        appliedTabSize = tabSize;
+        return shortcutsKey() != appliedShortcuts;
+    }
+
     function keyContextOf(widget:CodeEditorWidget):KeyContext {
         final keyContext = new KeyContext();
         keyContext.add(CityscapeKeyBindings.KEY_CONTEXT);
@@ -358,16 +436,20 @@ class CityscapeEditor extends Component implements Styled {
         final entity = viewEntity;
         final view:CityscapeView = entity;
         final widget = this.widget;
-        final shortcuts = shortcutsKey();
-        if (options != appliedOptions || shortcuts != appliedShortcuts) {
+        if (options != appliedOptions || shortcutsChanged()) {
             appliedOptions = options;
-            appliedShortcuts = shortcuts;
+            appliedShortcuts = shortcutsKey();
             final merged = mergedOptions();
             // Monaco's `updateOptions` of the standalone editor
             cityscape.standalone.StandaloneConfiguration.updateConfigurationService(widget.context.configurationService, merged, false);
             view.updateOptions(merged);
         }
         view.setWrappingIndentColumns(wrappingIndentColumns);
+        var listeners = this.listeners;
+        if (listeners == null) {
+            listeners = new EditorListeners(view);
+            this.listeners = listeners;
+        }
         // The view rendering this component lists the overlay widgets: the
         // editor view is not a view of the dispatch tree, so a widget added
         // later (a hover, a menu) notifies this one to be listed
@@ -381,7 +463,7 @@ class CityscapeEditor extends Component implements Styled {
 
         final root = div()
             .id('cityscape-editor')
-            .keyContext(keyContextOf(widget))
+            .keyContext(cachedKeyContext(widget))
             .trackFocus(view.focusHandle)
             .relative()
             .flex()
@@ -389,23 +471,19 @@ class CityscapeEditor extends Component implements Styled {
             .minW0()
             .minH0()
             .overflowHidden()
-            .onAction(RunKeybinding, (action, window, cx) -> {
-                if (!view.onRunKeybinding(action.keypress, window, cx)) {
-                    cx.propagate();
-                }
-            })
-            .onMouseDown(MouseButton.Left, (event, window, cx) -> view.handleMouseDown(event, window, cx))
-            .onMouseDown(MouseButton.Middle, (event, window, cx) -> view.handleMouseDown(event, window, cx))
-            .onMouseDown(MouseButton.Right, (event, window, cx) -> view.handleMouseDown(event, window, cx))
-            .onMouseMove((event, window, cx) -> view.handleMouseMove(event, window, cx))
-            .onMouseUp(MouseButton.Left, (event, window, cx) -> view.handleMouseUp(event, window, cx))
-            .onMouseUp(MouseButton.Middle, (event, window, cx) -> view.handleMouseUp(event, window, cx))
-            .onMouseUp(MouseButton.Right, (event, window, cx) -> view.handleMouseUp(event, window, cx))
-            .onHover((hovered:Bool) -> view.handleHover(hovered))
-            .onScroll((event, window, cx) -> view.onScroll(event, window, cx))
-            .onKeyDown((event, window, cx) -> view.onKeyDown(event, window, cx))
+            .onAction(RunKeybinding, listeners.runKeybinding)
+            .onMouseDown(MouseButton.Left, listeners.mouseDown)
+            .onMouseDown(MouseButton.Middle, listeners.mouseDown)
+            .onMouseDown(MouseButton.Right, listeners.mouseDown)
+            .onMouseMove(listeners.mouseMove)
+            .onMouseUp(MouseButton.Left, listeners.mouseUp)
+            .onMouseUp(MouseButton.Middle, listeners.mouseUp)
+            .onMouseUp(MouseButton.Right, listeners.mouseUp)
+            .onHover(listeners.hover)
+            .onScroll(listeners.scroll)
+            .onKeyDown(listeners.keyDown)
             .onModifiersChanged((event, window, cx) -> view.handleModifiersChanged(event.modifiers))
-            .child(new CityscapeViewElement(entity))
+            .child(view.ensurePaintView(entity, cx))
             .child(
                 div().absolute().top0().right0().bottom0().w(px(Scrollbar.width()))
                     .child(Scrollbar.vertical(view.scrollHandle))
@@ -875,5 +953,34 @@ class CityscapeEditor extends Component implements Styled {
     inline function get_onContextMenu() return widget.onContextMenu;
 
     //#endregion
+
+}
+
+/**
+ * The listeners of a `CityscapeEditor`'s element, forwarding to its view.
+ */
+private class EditorListeners {
+
+    public final runKeybinding:(action:RunKeybinding, window:Window, cx:App) -> Void;
+    public final mouseDown:(event:glaze.MouseDownEvent, window:Window, cx:App) -> Void;
+    public final mouseMove:(event:glaze.MouseMoveEvent, window:Window, cx:App) -> Void;
+    public final mouseUp:(event:glaze.MouseUpEvent, window:Window, cx:App) -> Void;
+    public final hover:(hovered:Bool) -> Void;
+    public final scroll:(event:glaze.ScrollEvent, window:Window, cx:App) -> Void;
+    public final keyDown:(event:glaze.KeyDownEvent, window:Window, cx:App) -> Void;
+
+    public function new(view:CityscapeView) {
+        runKeybinding = (action, window, cx) -> {
+            if (!view.onRunKeybinding(action.keypress, window, cx)) {
+                cx.propagate();
+            }
+        };
+        mouseDown = (event, window, cx) -> view.handleMouseDown(event, window, cx);
+        mouseMove = (event, window, cx) -> view.handleMouseMove(event, window, cx);
+        mouseUp = (event, window, cx) -> view.handleMouseUp(event, window, cx);
+        hover = (hovered:Bool) -> view.handleHover(hovered);
+        scroll = (event, window, cx) -> view.onScroll(event, window, cx);
+        keyDown = (event, window, cx) -> view.onKeyDown(event, window, cx);
+    }
 
 }

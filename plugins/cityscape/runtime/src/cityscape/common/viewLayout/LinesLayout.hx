@@ -770,6 +770,81 @@ class LinesLayout {
         };
     }
 
+    /**
+     * Cityscape: the line numbers of `getLinesViewportData` (start, end and
+     * centered line), by the same steps, without the offsets of every line:
+     * the view paints from them at each frame without allocating.
+     */
+    public function getLinesViewportRange(verticalOffset1:Float, verticalOffset2:Float, out:LinesViewportRange):Void {
+        this._checkPendingChanges();
+        final verticalOffset1 = toInt32(verticalOffset1);
+        final verticalOffset2 = toInt32(verticalOffset2);
+        final lineHeight = this._lineHeight;
+
+        final startLineNumber = this.getLineNumberAtOrAfterVerticalOffset(verticalOffset1);
+        final startLineNumberVerticalOffset = toInt32(this.getVerticalOffsetForLineNumber(startLineNumber));
+
+        var endLineNumber = this._lineCount;
+
+        var whitespaceIndex = this.getFirstWhitespaceIndexAfterLineNumber(startLineNumber);
+        final whitespaceCount = this.getWhitespacesCount();
+        var currentWhitespaceHeight:Float;
+        var currentWhitespaceAfterLineNumber:Int;
+
+        if (whitespaceIndex == -1) {
+            whitespaceIndex = whitespaceCount;
+            currentWhitespaceAfterLineNumber = endLineNumber + 1;
+            currentWhitespaceHeight = 0;
+        } else {
+            currentWhitespaceAfterLineNumber = this.getAfterLineNumberForWhitespaceIndex(whitespaceIndex);
+            currentWhitespaceHeight = toInt32(this.getHeightForWhitespaceIndex(whitespaceIndex));
+        }
+
+        var currentVerticalOffset:Float = startLineNumberVerticalOffset;
+
+        final verticalCenter = verticalOffset1 + (verticalOffset2 - verticalOffset1) / 2;
+        var centeredLineNumber = -1;
+
+        var lineNumber = startLineNumber;
+        while (lineNumber <= endLineNumber) {
+
+            if (centeredLineNumber == -1) {
+                final currentLineTop = currentVerticalOffset;
+                final currentLineBottom = currentVerticalOffset + lineHeight;
+                if ((currentLineTop <= verticalCenter && verticalCenter < currentLineBottom) || currentLineTop > verticalCenter) {
+                    centeredLineNumber = lineNumber;
+                }
+            }
+
+            currentVerticalOffset += lineHeight;
+            while (currentWhitespaceAfterLineNumber == lineNumber) {
+                currentVerticalOffset += currentWhitespaceHeight;
+                whitespaceIndex++;
+
+                if (whitespaceIndex >= whitespaceCount) {
+                    currentWhitespaceAfterLineNumber = endLineNumber + 1;
+                } else {
+                    currentWhitespaceAfterLineNumber = this.getAfterLineNumberForWhitespaceIndex(whitespaceIndex);
+                    currentWhitespaceHeight = toInt32(this.getHeightForWhitespaceIndex(whitespaceIndex));
+                }
+            }
+
+            if (currentVerticalOffset >= verticalOffset2) {
+                endLineNumber = lineNumber;
+                break;
+            }
+            lineNumber++;
+        }
+
+        if (centeredLineNumber == -1) {
+            centeredLineNumber = endLineNumber;
+        }
+
+        out.startLineNumber = startLineNumber;
+        out.endLineNumber = endLineNumber;
+        out.centeredLineNumber = centeredLineNumber;
+    }
+
     public function getVerticalOffsetForWhitespaceIndex(whitespaceIndex:Int):Float {
         this._checkPendingChanges();
 
@@ -953,5 +1028,18 @@ class LinesLayout {
         this._checkPendingChanges();
         return this._arr[index].height;
     }
+
+}
+
+/**
+ * Cityscape: the visible lines of `LinesLayout.getLinesViewportRange`.
+ */
+class LinesViewportRange {
+
+    public var startLineNumber:Int = 1;
+    public var endLineNumber:Int = 1;
+    public var centeredLineNumber:Int = 1;
+
+    public function new() {}
 
 }

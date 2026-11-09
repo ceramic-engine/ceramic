@@ -42,6 +42,7 @@ import glaze.App;
 import glaze.Bounds;
 import glaze.ClipboardItem;
 import glaze.Context;
+import glaze.Entity;
 import glaze.DecorationRun;
 import glaze.Font;
 import glaze.FontId;
@@ -85,6 +86,21 @@ class RenderedViewLine {
     public final fontGeneration:Int;
     public final themeVersion:Int;
 
+    /**
+     * The `CityscapeView.renderGeneration` this line was last checked
+     * against (-1: one of its view events invalidated it).
+     */
+    public var generation:Int = -1;
+
+    /**
+     * The model line of this view line and whether the view line is its
+     * first one (for the line numbers), -1 until the paint asks (the line
+     * mapping does not change while the line is cached: a mapping change
+     * drops the cache).
+     */
+    public var modelLineNumber:Int = -1;
+    public var isFirstViewLine:Bool = false;
+
     public function new(input:RenderLineInput, runs:ViewLineRuns, output:RenderLineOutput, layout:LineLayout, offsets:LineOffsetMap, partStyles:Array<ResolvedPartStyle>, decorationRuns:Array<DecorationRun>, minColumn:Int, maxColumn:Int, fontGeneration:Int, themeVersion:Int) {
         this.input = input;
         this.runs = runs;
@@ -113,8 +129,8 @@ class RenderedViewLine {
         if (c > output.characterMapping.length) {
             c = output.characterMapping.length;
         }
-        final dom = output.characterMapping.getDomPosition(c);
-        final rendered = runs.renderedOffsetOf(dom.partIndex, dom.charIndex);
+        final partData = output.characterMapping.getDomPartData(c);
+        final rendered = runs.renderedOffsetOf(CharacterMapping.getPartIndex(partData), CharacterMapping.getCharIndex(partData));
         return xForRenderedOffset(rendered);
     }
 
@@ -343,6 +359,30 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     function notifyChanged():Void {
         app.notify(entityId);
+        final paint = paintView;
+        if (paint != null) {
+            app.notify(paint.entityId());
+        }
+    }
+
+    /**
+     * The Glaze view painting this editor view (its `CityscapeViewElement`):
+     * `notifyChanged` marks it dirty, so a window caching its views paints
+     * the editor again (a model only read by an element of a cached view
+     * would not make that view render again).
+     */
+    public var paintView(default, null):Null<Entity<CityscapePaintView>> = null;
+
+    /**
+     * Creates `paintView` (once; `view` is this view's entity).
+     */
+    public function ensurePaintView(view:Entity<CityscapeView>, cx:App):Entity<CityscapePaintView> {
+        var paint = paintView;
+        if (paint == null) {
+            paint = cx.newEntity((_:Context<CityscapePaintView>) -> new CityscapePaintView(view));
+            paintView = paint;
+        }
+        return paint;
     }
 
     /**
@@ -370,7 +410,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final handler = new CityscapeViewEventHandler(this);
         this.eventHandler = handler;
         viewModel.addViewEventHandler(handler);
-        renderCache = new Map();
+        resetRenderCache();
         maxLineWidth = 0;
         lastVisibleStart = -1;
         lastVisibleEnd = -1;
@@ -383,7 +423,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
             viewModel.removeViewEventHandler(eventHandler);
         }
         eventHandler = null;
-        renderCache = new Map();
+        resetRenderCache();
         notifyChanged();
     }
 
@@ -407,7 +447,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     public function render(forceRedraw:Bool):Void {
         if (forceRedraw) {
-            renderCache = new Map();
+            resetRenderCache();
         }
         notifyChanged();
     }
@@ -719,7 +759,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     public function updateOptions(options:IEditorOptions):Void {
         widget.updateOptions(options);
-        renderCache = new Map();
+        resetRenderCache();
         notifyChanged();
     }
 
@@ -728,14 +768,14 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
             return;
         }
         widget.setWrappingIndentColumns(value);
-        renderCache = new Map();
+        resetRenderCache();
         notifyChanged();
     }
 
     @:allow(cityscape.view.CityscapeViewEventHandler)
     function onViewEvents(flush:Bool):Void {
         if (flush) {
-            renderCache = new Map();
+            resetRenderCache();
         }
         notifyChanged();
     }
@@ -813,8 +853,43 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         return configuration.options.get(EditorOption.fontInfo);
     }
 
+    // `baseFont` results, by font info, weight, style and features
+    var baseFontInfo:Null<FontInfo> = null;
+    var baseFontGeneration:Int = -1;
+    final baseFontWeights:Array<Float> = [];
+    final baseFontItalics:Array<Bool> = [];
+    final baseFontFeatures:Array<Null<String>> = [];
+    final baseFonts:Array<Font> = [];
+
     function baseFont(weight:Null<Float>, italic:Bool, features:Null<String>):Font {
         final info = fontInfo();
+        // the resolved fonts change with the fonts added (`resolveEditorFont`)
+        final generation = app.textSystem().fontGeneration;
+        if (info != baseFontInfo || generation != baseFontGeneration || baseFonts.length >= 32) {
+            baseFontInfo = info;
+            baseFontGeneration = generation;
+            baseFontWeights.resize(0);
+            baseFontItalics.resize(0);
+            baseFontFeatures.resize(0);
+            baseFonts.resize(0);
+        }
+        // NaN for no weight (the font info's)
+        final w:Float = weight != null ? weight : Math.NaN;
+        for (i in 0...baseFonts.length) {
+            final cachedWeight = baseFontWeights[i];
+            if ((cachedWeight == w || (Math.isNaN(cachedWeight) && Math.isNaN(w))) && baseFontItalics[i] == italic && baseFontFeatures[i] == features) {
+                return baseFonts[i];
+            }
+        }
+        final font = resolveBaseFont(info, weight, italic, features);
+        baseFontWeights.push(w);
+        baseFontItalics.push(italic);
+        baseFontFeatures.push(features);
+        baseFonts.push(font);
+        return font;
+    }
+
+    function resolveBaseFont(info:FontInfo, weight:Null<Float>, italic:Bool, features:Null<String>):Font {
         final w = weight != null ? weight : EditorFontMeasurements.parseFontWeight(info.fontWeight);
         final f = EditorFontMeasurements.parseFontFeatureSettings(features != null ? features : info.fontFeatureSettings);
         return measurements.resolveEditorFont(info.fontFamily, w, italic, f);
@@ -843,7 +918,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         var selectionsOnLine:Null<Array<LineRange>> = null;
         if (renderWhitespace == 'selection') {
             selectionsOnLine = [];
-            for (s in viewModel.getViewSelections()) {
+            for (s in viewSelections()) {
                 if (s.isEmpty() || s.endLineNumber < viewLineNumber || s.startLineNumber > viewLineNumber) {
                     continue;
                 }
@@ -855,6 +930,10 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
             }
             if (selectionsOnLine.length == 0) {
                 selectionsOnLine = null;
+            }
+            else {
+                // its input changes when the selections change
+                selectionInputLines.push(viewLineNumber);
             }
         }
         final input = new RenderLineInput(
@@ -888,12 +967,27 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      */
     public function renderViewLine(viewLineNumber:Int, ?visibleRange:Range, ?cache:Map<Int, RenderedViewLine>):RenderedViewLine {
         final renderCache = cache != null ? cache : this.renderCache;
-        final created = createRenderLineInput(viewLineNumber, visibleRange);
-        final input = created.input;
+        if (cache != null && extraRenderCaches.indexOf(cache) == -1) {
+            extraRenderCaches.push(cache);
+        }
         final fontGeneration = app.textSystem().fontGeneration;
         final cached = renderCache.get(viewLineNumber);
-        if (cached != null && cached.fontGeneration == fontGeneration && cached.themeVersion == theme.version && cached.input.equals(input)) {
+        final current = cached != null && cached.fontGeneration == fontGeneration && cached.themeVersion == theme.version;
+        // No view event touched the line since it was checked (Monaco's
+        // `ViewLine` renders again only the lines its events invalidated):
+        // its rendering input is the same, not built again
+        if (current && cached.generation == renderGeneration && !checkRenderCache) {
             return cached;
+        }
+        final created = createRenderLineInput(viewLineNumber, visibleRange);
+        final input = created.input;
+        if (current && cached.input.equals(input)) {
+            cached.generation = renderGeneration;
+            return cached;
+        }
+        if (current && cached.generation == renderGeneration) {
+            // `checkRenderCache`: the line was taken as unchanged, wrongly
+            renderCacheErrors++;
         }
 
         final runs = new ViewLineRuns();
@@ -944,6 +1038,10 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
             : textSystem.platformTextSystem.layoutLine(text, info.fontSize, fontRuns);
 
         final rendered = new RenderedViewLine(input, runs, output, layout, offsets, partStyles, decorationRuns, created.minColumn, created.maxColumn, fontGeneration, theme.version);
+        rendered.generation = renderGeneration;
+        if (cache == null && cached == null) {
+            renderCacheKeys.push(viewLineNumber);
+        }
         renderCache.set(viewLineNumber, rendered);
         if (layout.width > maxLineWidth) {
             maxLineWidth = layout.width;
@@ -953,14 +1051,151 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     }
 
     /**
+     * Bumped by the view events that may change the rendering of any line
+     * (decorations, view zones, the selections when whitespace is rendered
+     * in them): the cached lines are checked again (`RenderLineInput.equals`).
+     */
+    var renderGeneration:Int = 0;
+
+    /**
+     * The other caches given to `renderViewLine` (the sticky scroll's), whose
+     * lines the view events invalidate too.
+     */
+    final extraRenderCaches:Array<Map<Int, RenderedViewLine>> = [];
+
+    /**
+     * Diagnostic (tests, benchmarks): `renderViewLine` builds the rendering
+     * input of every line and counts in `renderCacheErrors` the cached lines
+     * taken as unchanged by the view events while their input changed.
+     */
+    public static var checkRenderCache:Bool = false;
+
+    public static var renderCacheErrors:Int = 0;
+
+    var selectionsGeneration:Int = -1;
+    var selectionsValue:Null<Array<Selection>> = null;
+
+    /**
+     * `viewModel.getViewSelections()`, kept until the next view event (the
+     * paint and the rendering inputs of the lines read it many times per
+     * frame). Not to be modified.
+     */
+    public function viewSelections():Array<Selection> {
+        var value = selectionsValue;
+        if (value == null || selectionsGeneration != paintGeneration) {
+            value = viewModel.getViewSelections();
+            selectionsValue = value;
+            selectionsGeneration = paintGeneration;
+        }
+        return value;
+    }
+
+    /**
+     * The view lines whose rendering input holds selections
+     * (`renderWhitespace: 'selection'`), since the last cursor change.
+     */
+    final selectionInputLines:Array<Int> = [];
+
+    /**
+     * A cursor change with `renderWhitespace: 'selection'`: the lines whose
+     * input held selections and the lines of the new selections render again
+     * (Monaco checks every line again; the others keep no selection).
+     */
+    @:allow(cityscape.view.CityscapeViewEventHandler)
+    function invalidateSelectionLines(selections:Array<Selection>):Void {
+        for (i in 0...selectionInputLines.length) {
+            final ln = selectionInputLines[i];
+            invalidateLines(ln, ln);
+        }
+        selectionInputLines.resize(0);
+        for (i in 0...selections.length) {
+            final s = selections[i];
+            if (!s.isEmpty()) {
+                invalidateLines(s.startLineNumber, s.endLineNumber);
+            }
+        }
+    }
+
+    @:allow(cityscape.view.CityscapeViewEventHandler)
+    function invalidateAllLines():Void {
+        renderGeneration++;
+    }
+
+    /**
+     * Invalidates the cached view lines `[from, to]`.
+     */
+    @:allow(cityscape.view.CityscapeViewEventHandler)
+    function invalidateLines(from:Int, to:Int):Void {
+        invalidateLinesIn(renderCache, from, to);
+        for (i in 0...extraRenderCaches.length) {
+            invalidateLinesIn(extraRenderCaches[i], from, to);
+        }
+    }
+
+    static function invalidateLinesIn(cache:Map<Int, RenderedViewLine>, from:Int, to:Int):Void {
+        for (lineNumber in from...to + 1) {
+            final line = cache.get(lineNumber);
+            if (line != null) {
+                line.generation = -1;
+            }
+        }
+    }
+
+    /**
      * Drops the cached lines outside `[start, end]` (called after a paint).
      */
     public function trimRenderCache(start:Int, end:Int):Void {
-        final remove = [for (k in renderCache.keys()) if (k < start - 20 || k > end + 20) k];
-        for (k in remove) {
-            renderCache.remove(k);
+        final keys = renderCacheKeys;
+        var i = 0;
+        while (i < keys.length) {
+            final k = keys[i];
+            if (k < start - 20 || k > end + 20) {
+                renderCache.remove(k);
+                keys[i] = keys[keys.length - 1];
+                keys.pop();
+            }
+            else {
+                i++;
+            }
         }
     }
+
+    /**
+     * The view line numbers of `renderCache` (trimmed without iterating the
+     * map, which allocates its keys on hxcpp).
+     */
+    final renderCacheKeys:Array<Int> = [];
+
+    /**
+     * Drops the rendered lines and what the element keeps between frames.
+     */
+    function resetRenderCache():Void {
+        renderCache = new Map();
+        renderCacheKeys.resize(0);
+        selectionInputLines.resize(0);
+        // the lines of the other caches (sticky scroll) are checked again
+        renderGeneration++;
+        paintGeneration++;
+    }
+
+    /**
+     * Bumped by the view events (scrolling excepted) and when the rendered
+     * lines are dropped: what the paint keeps from one frame to the next
+     * (selections, guides, overview ruler marks, line number labels) is
+     * computed again.
+     */
+    public var paintGeneration(default, null):Int = 0;
+
+    @:allow(cityscape.view.CityscapeViewEventHandler)
+    function invalidatePaint():Void {
+        paintGeneration++;
+    }
+
+    /**
+     * The state the element keeps from one frame to the next.
+     */
+    @:allow(cityscape.view.CityscapeViewElement)
+    final paintState:CityscapeViewElement.PaintState = new CityscapeViewElement.PaintState();
 
     //#endregion
 
@@ -1620,16 +1855,61 @@ class CityscapeViewEventHandler extends ViewEventHandler {
 
     override public function handleEvents(events:Array<ViewEvent>):Void {
         var flush = false;
-        for (e in events) {
+        var paint = false;
+        for (i in 0...events.length) {
+            final e = events[i];
+            if (e.type != ViewEventType.ViewScrollChanged) {
+                paint = true;
+            }
             switch (e.type) {
                 case ViewEventType.ViewFlushed | ViewEventType.ViewLinesInserted | ViewEventType.ViewLinesDeleted | ViewEventType.ViewLineMappingChanged | ViewEventType.ViewConfigurationChanged | ViewEventType.ViewThemeChanged | ViewEventType.ViewTokensColorsChanged:
                     flush = true;
                 case ViewEventType.ViewRevealRangeRequest:
                     view.onRevealRange(cast e);
+                case ViewEventType.ViewLinesChanged:
+                    final changed:ViewLinesChangedEvent = cast e;
+                    view.invalidateLines(changed.fromLineNumber, changed.fromLineNumber + changed.count - 1);
+                case ViewEventType.ViewTokensChanged:
+                    final changed:ViewTokensChangedEvent = cast e;
+                    for (r in changed.ranges) {
+                        view.invalidateLines(r.fromLineNumber, r.toLineNumber);
+                    }
+                case ViewEventType.ViewCursorStateChanged:
+                    // the selections are part of the input with `renderWhitespace: 'selection'`
+                    if (view.configuration.options.get(EditorOption.renderWhitespace) == 'selection') {
+                        final changed:ViewCursorStateChangedEvent = cast e;
+                        view.invalidateSelectionLines(changed.selections);
+                    }
+                case ViewEventType.ViewScrollChanged | ViewEventType.ViewFocusChanged | ViewEventType.ViewCompositionStart | ViewEventType.ViewCompositionEnd | ViewEventType.ViewLanguageConfigurationChanged:
+                    // the rendering of the lines stays the same
                 case _:
+                    // decorations, view zones and anything else: every line is checked again
+                    view.invalidateAllLines();
             }
         }
+        if (paint) {
+            view.invalidatePaint();
+        }
         view.onViewEvents(flush);
+    }
+
+}
+
+/**
+ * The Glaze view of a `CityscapeView`'s painting: its element, rendered again
+ * when the editor view notifies (`CityscapeView.paintView`).
+ */
+class CityscapePaintView extends GlazeModel implements glaze.Render {
+
+    final element:CityscapeViewElement;
+
+    public function new(view:Entity<CityscapeView>) {
+        super();
+        element = new CityscapeViewElement(view);
+    }
+
+    public function render(window:Window, cx:Context<Dynamic>):glaze.IntoElement {
+        return element;
     }
 
 }
