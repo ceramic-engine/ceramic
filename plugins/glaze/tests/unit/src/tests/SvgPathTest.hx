@@ -249,18 +249,19 @@ class SvgPathTest extends TestCase {
     #if (sys || unity || (web && ceramic_use_electron))
     /**
      * The default asset source reads a bundled asset that was not preloaded
-     * synchronously (icons, grammars): from the assets folder on targets with
-     * a file system, from the Unity resources on Unity (no file there).
+     * synchronously (fonts, grammars): from the assets folder on targets with
+     * a file system, from the Unity resources on Unity (no file there). The
+     * kit's icons are not assets any more: they are embedded in the code.
      */
     function testDefaultAssetSourceReadsBundledAssetsSynchronously() {
         final assets = new glaze.CeramicAssetSource();
-        final icon = assets.load('icons/check.svg');
-        assertNotNull(icon);
-        assertEquals('<svg', icon.getString(0, 4));
+        final font = assets.load('glaze/fonts/Inter-Regular.ttf.bin');
+        assertNotNull(font);
+        assertTrue(font.length > 0);
         final grammar = assets.load('glaze/grammars/c.json');
         assertNotNull(grammar);
         assertEquals('{', StringTools.trim(grammar.toString()).charAt(0));
-        assertEquals(null, assets.load('icons/missing-icon.svg'));
+        assertEquals(null, assets.load('glaze/missing-asset.svg'));
     }
     #end
 
