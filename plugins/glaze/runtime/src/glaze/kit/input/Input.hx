@@ -10,6 +10,7 @@ import glaze.kit.KeyedEntity;
 import glaze.Model;
 import glaze.Context;
 import glaze.ClipboardItem;
+import glaze.Component;
 import glaze.DefiniteLength;
 import glaze.Edges;
 import glaze.ElementId;
@@ -18,7 +19,6 @@ import glaze.Entity;
 import glaze.FocusHandle;
 import glaze.Hsla;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.TextAlign;
@@ -65,17 +65,22 @@ using glaze.kit.theme.Colorize;
  * `Textarea` (and the code editor) render through this element too, with
  * their own state (Rust `Input::from_state`).
  */
-class Input implements RenderOnce implements Styled implements Sizable implements Selectable implements FocusableExt {
+class Input extends Component implements Styled implements Sizable implements Selectable implements FocusableExt {
 
     var tokenRenderer:Null<InlineTokenRenderer> = null;
 
+    /** Open a reference after a completed, unconsumed token click. */
     @:allow(tests)
-    var tokenClickListener:Null<InlineTokenClickListener> = null;
+    @prop var onTokenClick:Null<InlineTokenClickListener> = null;
 
+    /**
+     * Report pointer presence over a token so the application can show a
+     * tooltip or run custom logic. Hover never selects or edits.
+     */
     @:allow(tests)
-    var tokenHoverListener:Null<InlineTokenHoverListener> = null;
+    @prop var onTokenHover:Null<InlineTokenHoverListener> = null;
 
-    var idValue:Null<ElementId> = null;
+    @prop var id:Null<ElementId> = null;
 
     /**
      * The state rendered; `null` until the first render for an input built
@@ -96,9 +101,19 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     var hasValueToPush:Bool = false;
 
-    var changeHandler:Null<(String) -> Void> = null;
+    /**
+     * Called with the new text on each `InputEvent.Change` of the state
+     * created by `component()`. The handler of the latest render is the one
+     * called; replacing it invalidates nothing.
+     */
+    @prop var onChange:Null<(String) -> Void> = null;
 
-    var placeholderValue:Null<String> = null;
+    /**
+     * The placeholder of the state, pushed when it differs from the state's
+     * (`InputState.setPlaceholder`); for an input built by `component()`,
+     * or any input whose state the caller does not configure itself.
+     */
+    @prop var placeholder:Null<String> = null;
 
     var inputStyle:StyleRefinement = new StyleRefinement();
 
@@ -110,48 +125,78 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     var height:Null<DefiniteLength> = null;
 
-    var appearanceValue:Bool = true;
+    /** Set the appearance of the input field, if false the input field will no border, background. */
+    @prop var appearance:Bool = true;
 
-    var cleanableValue:Bool = false;
+    /** Set whether to show the clear button when the input field is not empty, default is false. */
+    @prop var cleanable:Bool = false;
 
     var maskToggleValue:Bool = false;
 
-    var disabledValue:Bool = false;
+    /** Set to disable the input field. */
+    @prop var disabled:Bool = false;
 
-    var readonlyValue:Bool = false;
+    /**
+     * Set the input field to read-only, default is `false`.
+     *
+     * Unlike `disabled`, a read-only input keeps the normal appearance and
+     * still can be focused, selected and copied, it only rejects the changes
+     * made by the user.
+     */
+    @prop var readonly:Bool = false;
 
-    var borderedValue:Bool = true;
+    /** Set the bordered for the input, default: true */
+    @prop var bordered:Bool = true;
 
     var focusBorderedValue:Bool = true;
 
-    var tabIndexValue:Int = 0;
+    /** Set the tab index for the input, default is 0. */
+    @prop var tabIndex:Int = 0;
 
-    var selectedValue:Bool = false;
-
-    var contentTypeValue:Null<InputContentType> = null;
-
-    var roleValue:RoleOverride = Implicit;
-
-    var accessibilityIdValue:Null<String> = null;
-
-    var ariaLabelValue:Null<String> = null;
+    @prop var selected:Bool = false;
 
     /**
-     * An optional context menu builder to allow a custom context menu on the input.
+     * Set the semantic content type for password managers and autofill.
      *
-     * If set, this overrides the built-in context menu.
+     * This is a component-level semantic hint. It does not change the text
+     * value or masked rendering state.
      */
-    var contextMenuBuilder:Null<(NativeMenu, Window, App) -> NativeMenu> = null;
+    @prop var contentType:Null<InputContentType> = null;
 
     /**
-     * An optional paste handler. If set, it is invoked with the clipboard item
-     * before the default text insertion. Return `true` if handled.
+     * Override the accessible role for the input.
+     *
+     * If unset, the role is inferred from multi-line mode and content type.
+     */
+    @prop var role:RoleOverride = Implicit;
+
+    /** Set the developer-assigned identifier exposed to accessibility clients. */
+    @prop var accessibilityId:Null<String> = null;
+
+    @prop var ariaLabel:Null<String> = null;
+
+    /**
+     * Sets a custom context menu builder for the input, shown as a native OS menu.
+     *
+     * If set, this overrides the built-in right-click context menu. It shows
+     * only while the state's context menu is enabled, which is the default.
+     */
+    @prop var contextMenu:Null<(NativeMenu, Window, App) -> NativeMenu> = null;
+
+    /**
+     * Intercept paste payloads (images, files) before the default text insertion.
+     *
+     * The handler receives the clipboard item and returns whether it took the
+     * paste: `true` stops the `input.Paste` action so the input inserts
+     * nothing, `false` lets it reach the engine, which inserts
+     * `clipboard.text()`.
      */
     @:allow(tests)
-    var pasteHandler:Null<(ClipboardItem, Window, App) -> Bool> = null;
+    @prop var onPaste:Null<(ClipboardItem, Window, App) -> Bool> = null;
 
     /** Create a new `Input` element bind to the `InputState`. */
     public function new(state:Entity<InputState>) {
+        super();
         final model:Null<InputBaseState> = (state : InputState);
         this.textState = model != null ? new TextInputState(model) : null;
     }
@@ -196,26 +241,6 @@ class Input implements RenderOnce implements Styled implements Sizable implement
     }
 
     /**
-     * The placeholder of the state, pushed when it differs from the state's
-     * (`InputState.setPlaceholder`); for an input built by `component()`,
-     * or any input whose state the caller does not configure itself.
-     */
-    public function placeholder(text:String):Input {
-        placeholderValue = text;
-        return this;
-    }
-
-    /**
-     * Called with the new text on each `InputEvent.Change` of the state
-     * created by `component()`. The handler of the latest render is the one
-     * called; replacing it invalidates nothing.
-     */
-    public function onChange(handler:(String) -> Void):Input {
-        changeHandler = handler;
-        return this;
-    }
-
-    /**
      * The `InputState` rendered by this input: the one given to
      * `component(state)` or `Input.component(state)`, or the one created by
      * `component()` once the input was rendered (`null` before, and for a
@@ -239,8 +264,8 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         final entity = keyed.entity;
         final base:Entity<InputBaseState> = (entity : InputState);
         textState = new TextInputState(base);
-        keyed.handler = changeHandler;
-        if (changeHandler != null) {
+        keyed.handler = onChange;
+        if (onChange != null) {
             keyed.subscribe(cx, InputEvent, (entity, event, cx) -> {
                 if (event.match(Change) && keyed.handler != null) {
                     keyed.handler(entity.read(cx).value());
@@ -262,7 +287,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
      */
     function applyPlaceholder(window:Window, cx:App):Void {
         final base = textState.state;
-        final text = placeholderValue;
+        final text = placeholder;
         tracker.Autorun.unobserve();
         final differs = base.read(cx).placeholder != text;
         tracker.Autorun.reobserve();
@@ -303,17 +328,12 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         return this;
     }
 
-    public function selected(selected:Bool):Input {
-        selectedValue = selected;
-        return this;
-    }
-
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
+        return selected;
     }
 
     public function setOpen(open:Bool):Void {
@@ -346,24 +366,9 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         return this;
     }
 
-    /** Open a reference after a completed, unconsumed token click. */
-    public function onTokenClick(listener:InlineTokenClickListener):Input {
-        tokenClickListener = listener;
-        return this;
-    }
-
-    /**
-     * Report pointer presence over a token so the application can show a
-     * tooltip or run custom logic. Hover never selects or edits.
-     */
-    public function onTokenHover(listener:InlineTokenHoverListener):Input {
-        tokenHoverListener = listener;
-        return this;
-    }
-
     /** Sets the GPUI identity of the input frame. By default it uses the state entity ID. */
     public function id(id:ElementIdArg):Input {
-        idValue = id;
+        this.id = id;
         return this;
     }
 
@@ -378,18 +383,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     @:allow(glaze.kit)
     inline function isDisabled():Bool {
-        return disabledValue;
-    }
-
-    /** Set the developer-assigned identifier exposed to accessibility clients. */
-    public function accessibilityId(id:String):Input {
-        accessibilityIdValue = id;
-        return this;
-    }
-
-    public function ariaLabel(label:String):Input {
-        ariaLabelValue = label;
-        return this;
+        return disabled;
     }
 
     public function prefix(prefix:IntoElement):Input {
@@ -414,102 +408,15 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         return this;
     }
 
-    /** Set the appearance of the input field, if false the input field will no border, background. */
-    public function appearance(appearance:Bool):Input {
-        appearanceValue = appearance;
-        return this;
-    }
-
-    /** Set the bordered for the input, default: true */
-    public function bordered(bordered:Bool):Input {
-        borderedValue = bordered;
-        return this;
-    }
-
     /** Set focus border for the input, default is true. */
     public function focusBordered(bordered:Bool):Input {
         focusBorderedValue = bordered;
         return this;
     }
 
-    /** Set whether to show the clear button when the input field is not empty, default is false. */
-    public function cleanable(cleanable:Bool):Input {
-        cleanableValue = cleanable;
-        return this;
-    }
-
     /** Set to enable toggle button for password mask state. */
     public function maskToggle():Input {
         maskToggleValue = true;
-        return this;
-    }
-
-    /**
-     * Set the semantic content type for password managers and autofill.
-     *
-     * This is a component-level semantic hint. It does not change the text
-     * value or masked rendering state.
-     */
-    public function contentType(contentType:InputContentType):Input {
-        contentTypeValue = contentType;
-        return this;
-    }
-
-    /**
-     * Override the accessible role for the input.
-     *
-     * If unset, the role is inferred from multi-line mode and content type.
-     */
-    public function role(role:RoleOverride):Input {
-        roleValue = role;
-        return this;
-    }
-
-    /** Set to disable the input field. */
-    public function disabled(disabled:Bool):Input {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Set the input field to read-only, default is `false`.
-     *
-     * Unlike `disabled`, a read-only input keeps the normal appearance and
-     * still can be focused, selected and copied, it only rejects the changes
-     * made by the user.
-     */
-    public function readonly(readonly:Bool):Input {
-        readonlyValue = readonly;
-        return this;
-    }
-
-    /** Set the tab index for the input, default is 0. */
-    public function tabIndex(index:Int):Input {
-        tabIndexValue = index;
-        return this;
-    }
-
-    /**
-     * Sets a custom context menu builder for the input, shown as a native OS menu.
-     *
-     * If set, this overrides the built-in right-click context menu. It shows
-     * only while the state's context menu is enabled, which is the default.
-     */
-    public function contextMenu(f:(NativeMenu, Window, App) -> NativeMenu):Input {
-        contextMenuBuilder = f;
-        return this;
-    }
-
-    /**
-     * Intercept paste payloads (images, files) before the default text insertion.
-     *
-     * The handler receives the clipboard item and returns whether it took the
-     * paste: `true` stops the `input.Paste` action so the input inserts
-     * nothing, `false` lets it reach the engine, which inserts
-     * `clipboard.text()`.
-     */
-    public function onPaste(handler:(ClipboardItem, Window, App) -> Bool):Input {
-        pasteHandler = handler;
         return this;
     }
 
@@ -636,15 +543,15 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     public function render(window:Window, cx:App):IntoElement {
         if (textState == null) resolveKeyedState(window, cx);
-        if (placeholderValue != null) applyPlaceholder(window, cx);
+        if (this.placeholder != null) applyPlaceholder(window, cx);
         final LINE_HEIGHT = rems(1.25);
         final textAlign:TextAlign = inputStyle.text != null && inputStyle.text.has(TextStyleRefinement.TEXT_ALIGN) ? inputStyle.text.textAlign : Left;
         final state = this.textState;
         final theme = Theme.global(cx);
-        final secret = contentTypeValue == Password || contentTypeValue == NewPassword;
+        final secret = this.contentType == Password || this.contentType == NewPassword;
         final renderer:InlineTokenRenderer = tokenRenderer != null ? tokenRenderer : (token, _, _) -> (InputToken.component(token) : IntoElement);
-        final clickListener = tokenClickListener;
-        final hoverListener = tokenHoverListener;
+        final clickListener = onTokenClick;
+        final hoverListener = onTokenHover;
         state.state.update(cx, (s, _) -> s.installTokenPresentation(renderer, clickListener, secret));
         state.state.update(cx, (s, _) -> s.installTokenHoverPresentation(hoverListener));
         // Which kind of input this registers as follows from the state itself.
@@ -680,10 +587,10 @@ class Input implements RenderOnce implements Styled implements Sizable implement
             new Edges();
         }
         state.state.update(cx, (s, _) -> s.setEditorPaddings(paddings));
-        state.setDisabled(disabledValue, cx);
-        state.setReadonly(readonlyValue, cx);
+        state.setDisabled(this.disabled, cx);
+        state.setReadonly(readonly, cx);
         state.setTextAlign(textAlign, cx);
-        final custom = contextMenuBuilder;
+        final custom = contextMenu;
         state.state.update(cx, (s, _) -> s.onContextMenu((_, capabilities, position, window, cx) -> {
             final menu = if (custom != null) {
                 custom(new NativeMenu(), window, cx);
@@ -714,17 +621,17 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         }));
         // The engine ignores `Paste` on a read-only or disabled input; the hook
         // must not see a paste the input itself would refuse.
-        final pasteHandler = this.pasteHandler != null && state.presentation(cx).isEditable() ? this.pasteHandler : null;
+        final pasteHandler = this.onPaste != null && state.presentation(cx).isEditable() ? this.onPaste : null;
         final overlays = InputOverlays.renderOverlays(state.state, window, cx);
         for (element in renderTouchSelection(state, window, cx)) overlays.floating.push(element);
 
         final presentation = state.presentation(cx);
-        final contentType = contentTypeValue;
-        final disabled = disabledValue;
+        final contentType = this.contentType;
+        final disabled = this.disabled;
         final isMultiLine = presentation.isMultiLine();
         // Without a content type, a masked input is a password field to screen
         // readers, so they announce it as one.
-        final accessibilityRole = Input.accessibilityRole(isMultiLine, contentType != null ? contentType : (presentation.isMasked() ? Password : null), roleValue);
+        final accessibilityRole = Input.accessibilityRole(isMultiLine, contentType != null ? contentType : (presentation.isMasked() ? Password : null), role);
         final inputFocused = presentation.focusHandle().isFocused(window) && !presentation.isDisabled();
         if (inputFocused) {
             InputContentType.syncNativeContentType(window, contentType, presentation.isEditable());
@@ -743,7 +650,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         if (presentation.isDisabled()) bg = bg.opacity(0.5);
         final prefix = prefixElement;
         final suffix = suffixElement;
-        final showClearButton = cleanableValue && presentation.isEditable() && !presentation.isLoading() && state.text(cx).len() > 0
+        final showClearButton = cleanable && presentation.isEditable() && !presentation.isLoading() && state.text(cx).len() > 0
             && !presentation.isMultiLine();
         final hasSuffix = suffix != null || presentation.isLoading() || maskToggleValue || showClearButton;
 
@@ -752,16 +659,16 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         // Don't use a mask-derived placeholder ("(___)___-___") as an aria_label fallback.
         final placeholderIsMask = presentation.maskPlaceholder() == placeholder;
 
-        final ariaLabel = ariaLabelValue != null ? ariaLabelValue : (placeholderIsMask ? null : placeholder);
+        final ariaLabel = this.ariaLabel != null ? this.ariaLabel : (placeholderIsMask ? null : placeholder);
         final accessibility = new InputAccessibility(accessibilityRole)
             .withLabel(ariaLabel)
             .withPlaceholder(placeholder)
-            .withAccessibilityId(accessibilityIdValue)
+            .withAccessibilityId(accessibilityId)
             .withValueExposed(exposesAccessibilityValue(contentType));
         state.state.update(cx, (s, _) -> s.setAccessibility(accessibility));
-        final id:ElementId = idValue != null ? idValue : ElementId.NamedInteger("input", state.entityId());
-        final appearance = appearanceValue;
-        final bordered = borderedValue;
+        final id:ElementId = this.id != null ? this.id : ElementId.NamedInteger("input", state.entityId());
+        final appearance = this.appearance;
+        final bordered = this.bordered;
         final focusBordered = focusBorderedValue;
         final frame = InputBase.component(id)
             .semanticOwner(state.entityId())

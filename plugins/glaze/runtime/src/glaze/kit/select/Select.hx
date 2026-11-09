@@ -5,6 +5,7 @@ package glaze.kit.select;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.kit.select.SelectState.SelectEvent;
 import glaze.kit.searchablelist.SearchableVec;
 import glaze.kit.searchablelist.SearchableListItems;
@@ -16,7 +17,6 @@ import glaze.Entity;
 import glaze.IntoElement;
 import glaze.IntoLength;
 import glaze.Length;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -70,9 +70,9 @@ class SelectOptions {
  * A Select element.
  */
 @:allow(glaze.kit, tests)
-class Select<I> implements RenderOnce implements Styled implements Sizable implements FocusableExt {
+class Select<I> extends Component implements Styled implements Sizable implements FocusableExt {
 
-    var idValue:Null<ElementId>;
+    @prop var id:Null<ElementId>;
 
     /**
      * The `SelectState` rendered: the one given to `component(state)` or
@@ -94,16 +94,27 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
     /** `.at(key)`: the identity of the created state instead of the call position. */
     var keyedId:Null<ElementId> = null;
 
-    var optionItems:Null<Array<I>> = null;
+    /**
+     * The items of the state created by `component()` (a `SearchableVec`):
+     * strings, or items implementing `SearchableListItem`. Items that
+     * differ from the ones applied last replace them (`setItems`).
+     */
+    @prop var options:Null<Array<I>> = null;
 
     var valueToPush:Null<Any> = null;
 
     var hasValueToPush:Bool = false;
 
-    var changeHandler:Null<(Null<Any>) -> Void> = null;
+    /**
+     * Called with the confirmed value (`SelectEvent.Confirm`, `null` when
+     * cleared) of the state created by `component()`. The handler of the
+     * latest render is the one called; replacing it invalidates nothing.
+     */
+    @prop var onChange:Null<(Null<Any>) -> Void> = null;
 
     public function new(state:Entity<SelectState<I>>) {
-        this.idValue = state != null ? ElementId.NamedInteger("select", state.entityId()) : null;
+        super();
+        this.id = state != null ? ElementId.NamedInteger("select", state.entityId()) : null;
         this.state = state;
     }
 
@@ -136,32 +147,12 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
     }
 
     /**
-     * The items of the state created by `component()` (a `SearchableVec`):
-     * strings, or items implementing `SearchableListItem`. Items that
-     * differ from the ones applied last replace them (`setItems`).
-     */
-    public function options(items:Array<I>):Select<I> {
-        optionItems = items;
-        return this;
-    }
-
-    /**
      * Selects the item of `value` (`SearchableListItems.value`) when it is
      * not the selected one. For a select built by `component()`.
      */
     public function value(value:Null<Any>):Select<I> {
         valueToPush = value;
         hasValueToPush = true;
-        return this;
-    }
-
-    /**
-     * Called with the confirmed value (`SelectEvent.Confirm`, `null` when
-     * cleared) of the state created by `component()`. The handler of the
-     * latest render is the one called; replacing it invalidates nothing.
-     */
-    public function onChange(handler:(Null<Any>) -> Void):Select<I> {
-        changeHandler = handler;
         return this;
     }
 
@@ -180,7 +171,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
      */
     function resolveKeyedState(window:Window, cx:App):Void {
         final key:ElementIdArg = keyedId != null ? keyedId : ElementId.CodeLocation(keyedPos.fileName, keyedPos.lineNumber);
-        final initialItems:Array<I> = optionItems != null ? optionItems : [];
+        final initialItems:Array<I> = options != null ? options : [];
         final keyed:KeyedEntity<SelectState<I>, (Null<Any>) -> Void> = window.useKeyedState(key, cx, w -> {
             #if cs
             // Names I in this closure's own body: Haxe's C# output makes a closure generic
@@ -193,8 +184,8 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
         }).read(cx).value;
         final entity = keyed.entity;
         state = entity;
-        keyed.handler = changeHandler;
-        if (changeHandler != null) {
+        keyed.handler = onChange;
+        if (onChange != null) {
             keyed.subscribe(cx, SelectEvent, (entity, event, cx) -> {
                 switch event {
                     case Confirm(value):
@@ -208,8 +199,8 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
         // bind the view to it and unbind the view from everything it read
         // before, mid render.
         tracker.Autorun.unobserve();
-        if (optionItems != null && !sameItems(optionItems, keyed.memo)) {
-            final items = optionItems;
+        if (options != null && !sameItems(options, keyed.memo)) {
+            final items = options;
             keyed.memo = items;
             entity.update(cx, (s, c) -> s.setItems(new SearchableVec<I>(items), window, c));
         }
@@ -222,7 +213,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
 
     /** Sets an explicit identity for the select root. */
     public function id(id:ElementIdArg):Select<I> {
-        this.idValue = id;
+        this.id = id;
         return this;
     }
 
@@ -338,7 +329,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
 
     public function render(window:Window, cx:App):IntoElement {
         if (state == null) resolveKeyedState(window, cx);
-        if (idValue == null) idValue = ElementId.NamedInteger("select", state.entityId());
+        if (id == null) id = ElementId.NamedInteger("select", state.entityId());
         final disabled = builderOptions.disabled;
         final accessibilityLabel = builderOptions.accessibilityLabel;
         final focusHandle = state.read(cx).state.focusHandle;
@@ -370,7 +361,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
         final contentFocusHandle = state.read(cx).state.list.read(cx).focusHandle(cx);
         final openState = state;
 
-        final root = glaze.kit.base.Select.component(idValue)
+        final root = glaze.kit.base.Select.component(id)
             .open(isOpen)
             .disabled(disabled);
         if (accessibilityLabel != null) root.accessibilityLabel(accessibilityLabel);

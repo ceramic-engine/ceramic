@@ -4,9 +4,9 @@
 package glaze.kit.list;
 
 import glaze.App;
+import glaze.Component;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -21,7 +21,7 @@ using glaze.kit.base.StyledExt;
 /**
  * The List element.
  */
-class List<D:ListDelegate> implements RenderOnce implements Styled implements Sizable {
+class List<D:ListDelegate> extends Component implements Styled implements Sizable {
 
     final state:Entity<ListState<D>>;
 
@@ -31,6 +31,7 @@ class List<D:ListDelegate> implements RenderOnce implements Styled implements Si
 
     /** Create a new List element with the given ListState entity. */
     public function new(state:Entity<ListState<D>>) {
+        super();
         this.state = state;
     }
 

@@ -6,10 +6,10 @@ package glaze.kit.input;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Entity;
 import glaze.FocusHandle;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -36,13 +36,14 @@ using glaze.kit.ThemeStyled;
  * (`glaze.kit.base.NumberInput.NumberInputEvent`, `glaze.kit.base.NumberStep`,
  * `glaze.kit.base.StepAction`), re-exported by Rust.
  */
-class NumberInput implements RenderOnce implements Styled implements Sizable implements Disableable implements FocusableExt {
+class NumberInput extends Component implements Styled implements Sizable implements Disableable implements FocusableExt {
 
     final state:Entity<InputState>;
 
     // Passed to the input state when rendering (initial port deviation DEV-007:
     // the original stored it but never used it).
-    var placeholderValue:String = "";
+    /** Set the placeholder text of the number input. */
+    @prop var placeholder:String = "";
 
     var size:Size = Medium;
 
@@ -50,25 +51,28 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
 
     var suffixElement:Null<AnyElement> = null;
 
-    var appearanceValue:Bool = true;
+    /** Set the appearance of the number input, if false will no border and background. */
+    @prop var appearance:Bool = true;
 
-    var focusRingEnabled:Bool = true;
+    @prop var focusRing:Bool = true;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /**
+     * Set the name a screen reader announces.
+     *
+     * A number input has no visible text of its own to be named by, so set
+     * this whenever it is shown without one, for example next to a separate
+     * label. This does not change what is displayed.
+     */
+    @prop var accessibilityLabel:Null<String> = null;
 
     final numberStyle:StyleRefinement = new StyleRefinement();
 
     /** Create a new `NumberInput` element bind to the `InputState`. */
     public function new(state:Entity<InputState>) {
+        super();
         this.state = state;
-    }
-
-    /** Set the placeholder text of the number input. */
-    public function placeholder(placeholder:String):NumberInput {
-        placeholderValue = placeholder;
-        return this;
     }
 
     /** Set the prefix element of the number input. */
@@ -83,44 +87,16 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
         return this;
     }
 
-    /** Set the appearance of the number input, if false will no border and background. */
-    public function appearance(appearance:Bool):NumberInput {
-        appearanceValue = appearance;
-        return this;
-    }
-
-    /**
-     * Set the name a screen reader announces.
-     *
-     * A number input has no visible text of its own to be named by, so set
-     * this whenever it is shown without one, for example next to a separate
-     * label. This does not change what is displayed.
-     */
-    public function accessibilityLabel(label:String):NumberInput {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):NumberInput {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
-    }
-
-    public function focusRing(enabled:Bool):NumberInput {
-        focusRingEnabled = enabled;
-        return this;
+        this.disabled = disabled;
     }
 
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     /** Rust `Focusable::focus_handle`. */
@@ -139,9 +115,9 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
 
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final focused = state.read(cx).focusHandle.isFocused(window) && !disabledValue;
-        final bg = @:privateAccess Input.inputStyleColors(disabledValue, cx).background;
-        final borderColor = disabledValue ? theme.input.opacity(0.5) : theme.input;
+        final focused = state.read(cx).focusHandle.isFocused(window) && !disabled;
+        final bg = @:privateAccess Input.inputStyleColors(disabled, cx).background;
+        final borderColor = disabled ? theme.input.opacity(0.5) : theme.input;
         // Transparent like a ghost button, but tinted to the frame on hover.
         final buttonForeground = theme.secondaryForeground;
         final buttonHover = theme.input.opacity(0.4);
@@ -149,17 +125,17 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
         final buttonSize = size;
         // The buttons sit inside the 1px frame, so their corners are a pixel
         // tighter than the frame's, or they paint over its inner curve.
-        final buttonRadius:glaze.Pixels = appearanceValue ? Math.max(theme.radius - 1., 0.) : theme.radius;
+        final buttonRadius:glaze.Pixels = appearance ? Math.max(theme.radius - 1., 0.) : theme.radius;
         // Initial port deviation DEV-007: the original never used the
         // placeholder. Pass it to the input state, only when it is set and
         // differs (`setPlaceholder` notifies).
-        if (placeholderValue != "" && state.read(cx).presentation().placeholder() != placeholderValue) {
-            final placeholder = placeholderValue;
+        if (this.placeholder != "" && state.read(cx).presentation().placeholder() != this.placeholder) {
+            final placeholder = this.placeholder;
             (cast state : Entity<glaze.kit.base.input.InputBaseState>).update(cx, (input, cx) -> input.setPlaceholder(placeholder, window, cx));
         }
         final baseState = state;
-        final content = glaze.kit.base.NumberInput.component(baseState).disabled(disabledValue);
-        if (accessibilityLabelValue != null) content.accessibilityLabel(accessibilityLabelValue);
+        final content = glaze.kit.base.NumberInput.component(baseState).disabled(disabled);
+        if (accessibilityLabel != null) content.accessibilityLabel(accessibilityLabel);
         content.sizeFull();
         content.decrementButton(button -> {
             button.accessibilityLabel(I18n.t("Input.Decrement"))
@@ -179,7 +155,7 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
             // Only the outer corners are rounded, to follow the frame.
             return button.roundedTl(buttonRadius).roundedBl(buttonRadius).child(Icon.component(IconName.Minus).withSize(buttonSize));
         });
-        final input = Input.component(state).appearance(false).withSize(buttonSize).hFull().disabled(disabledValue);
+        final input = Input.component(state).appearance(false).withSize(buttonSize).hFull().disabled(disabled);
         input.gap0().roundedNone().textAlign(glaze.TextAlign.Center);
         if (prefixElement != null) input.prefix(prefixElement);
         if (suffixElement != null) input.suffix(suffixElement);
@@ -204,14 +180,14 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
         // application children into its text slot, so putting the ring on that
         // element would incorrectly surround only the editable middle region.
         final frame = div().flex1().inputH(size).rounded(theme.radius);
-        if (appearanceValue) {
+        if (appearance) {
             frame.bg(bg).border1().borderColor(borderColor);
             if (focused) frame.border1().borderColor(theme.ring);
         }
         frame.refineStyle(numberStyle);
-        if (disabledValue) frame.opacity(0.5);
+        if (disabled) frame.opacity(0.5);
         frame.child(content);
-        if (focused && appearanceValue && focusRingEnabled) frame.focusRingStyle(window, cx);
+        if (focused && appearance && focusRing) frame.focusRingStyle(window, cx);
         return frame;
     }
 

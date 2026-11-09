@@ -4,8 +4,8 @@
 package glaze.kit.input;
 
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -21,20 +21,21 @@ using glaze.kit.base.StyledExt;
  * The element an `InlineToken` renders as by default. Editing and
  * activation belong to the input.
  */
-class InputToken implements RenderOnce implements Styled {
+class InputToken extends Component implements Styled {
 
     final context:InlineTokenContext;
 
-    var iconValue:Null<Icon> = null;
+    @prop var icon:Null<Icon> = null;
 
     final tokenStyle:StyleRefinement = new StyleRefinement();
 
     public function new(context:InlineTokenContext) {
+        super();
         this.context = context;
     }
 
     public function icon(icon:IntoIcon):InputToken {
-        iconValue = icon;
+        this.icon = icon;
         return this;
     }
 
@@ -63,7 +64,7 @@ class InputToken implements RenderOnce implements Styled {
         }
         element.textColor(theme.foreground);
         if (context.isDisabled()) element.opacity(0.5);
-        if (iconValue != null) element.child(iconValue.size3().flexShrink0());
+        if (icon != null) element.child(icon.size3().flexShrink0());
         element.child(div().minW0().textEllipsis().child(context.token().label()));
         return element.refineStyle(tokenStyle);
     }

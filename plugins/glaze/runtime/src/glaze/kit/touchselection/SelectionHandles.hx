@@ -5,6 +5,7 @@ package glaze.kit.touchselection;
 
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Hitbox;
 import glaze.HitboxBehavior;
 import glaze.IntoElement;
@@ -13,7 +14,6 @@ import glaze.MouseDownEvent;
 import glaze.MouseMoveEvent;
 import glaze.MouseUpEvent;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.TouchDragEvent;
 import glaze.TouchPhase;
 import glaze.Window;
@@ -65,22 +65,18 @@ private class LaidOutHandle {
  * take the drag for panning, and blocks the mouse so a stray tap on it does
  * not reach the text underneath. A mouse can drag it too.
  */
-class SelectionHandles implements RenderOnce {
+class SelectionHandles extends Component {
 
     final source:SnapshotSource;
 
     final onDrag:DragHandler;
 
-    var onPaintHandler:Null<SurfaceHandler> = null;
+    @prop var onPaint:Null<SurfaceHandler> = null;
 
     public function new(source:SnapshotSource, onDrag:DragHandler) {
+        super();
         this.source = source;
         this.onDrag = onDrag;
-    }
-
-    public function onPaint(onPaint:SurfaceHandler):SelectionHandles {
-        this.onPaintHandler = onPaint;
-        return this;
     }
 
     /** Lays out a handle for each end of a non-empty selection that is in view. */
@@ -186,7 +182,7 @@ class SelectionHandles implements RenderOnce {
     public function render(window:Window, cx:App):IntoElement {
         final source = this.source;
         final onDrag = this.onDrag;
-        final onPaint = this.onPaintHandler;
+        final onPaint = this.onPaint;
         return deferred(
             canvas((_, window, cx) -> layout(source, window, cx), (_, handles:Array<LaidOutHandle>, window, cx) -> {
                 for (handle in handles) {

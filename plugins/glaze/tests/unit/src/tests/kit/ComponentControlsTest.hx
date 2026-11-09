@@ -110,11 +110,11 @@ class ComponentControlsTest extends TestCase {
 
     function testAnExplicitAccessibilityLabelReplacesTheVisibleOne() {
         final plain = glaze.kit.button.Button.component('save').label('Save');
-        assertNull(plain.accessibilityLabelValue);
-        assertEquals('Save', plain.labelValue);
+        assertNull(plain.accessibilityLabelProp);
+        assertEquals('Save', plain.labelProp);
         final named = glaze.kit.button.Button.component('row').label('Save').accessibilityLabel('Save the current document');
-        assertEquals('Save the current document', named.accessibilityLabelValue);
-        assertEquals('Save', named.labelValue);
+        assertEquals('Save the current document', named.accessibilityLabelProp);
+        assertEquals('Save', named.labelProp);
     }
 
     function pointerHarness(make:(Array<Int>) -> Button):{cx:VisualTestContext, counts:Array<Int>} {
@@ -222,22 +222,22 @@ class ComponentControlsTest extends TestCase {
             .dropdownCaret(false)
             .rounded(Medium)
             .onClick((_, _, _) -> {});
-        assertEquals('Save Changes', button.labelValue);
+        assertEquals('Save Changes', button.labelProp);
         assertTrue(button.variantValue.equals(Primary));
         assertTrue(button.outlineValue);
         assertTrue(button.sizeValue.equals(Large));
         assertEquals('Click to save', button.tooltipValue);
-        assertEquals(0.1, button.tooltipShowDelayValue);
+        assertEquals(0.1, button.tooltipShowDelayProp);
         assertTrue(button.compactValue);
-        assertFalse(button.loadingValue);
-        assertFalse(button.disabledValue);
-        assertFalse(button.selectedValue);
-        assertNull(button.toggledValue);
-        assertNull(button.focusHandleValue);
-        assertEquals(1, button.tabIndexValue);
-        assertTrue(button.tabStopValue);
-        assertFalse(button.dropdownCaretValue);
-        assertTrue(button.roundedValue.match(Medium));
+        assertFalse(button.loadingProp);
+        assertFalse(button.disabledProp);
+        assertFalse(button.selectedProp);
+        assertNull(button.toggledProp);
+        assertNull(button.trackFocusProp);
+        assertEquals(1, button.tabIndexProp);
+        assertTrue(button.tabStopProp);
+        assertFalse(button.dropdownCaretProp);
+        assertTrue(button.roundedProp.match(Medium));
     }
 
     function testAnOpenTriggerIsStoredApartFromASelectedOne() {
@@ -254,11 +254,11 @@ class ComponentControlsTest extends TestCase {
 
     function testSelectedTriggerPresentationDoesNotImplyToggledAccessibility() {
         final selected = glaze.kit.button.Button.component('menu-trigger').selected(true);
-        assertTrue(selected.selectedValue);
-        assertNull(selected.toggledValue);
+        assertTrue(selected.selectedProp);
+        assertNull(selected.toggledProp);
         final selectedToggle = glaze.kit.button.Button.component('explicit-toggle').selected(true).toggled(true);
-        assertTrue(selectedToggle.selectedValue);
-        assertEquals(true, selectedToggle.toggledValue);
+        assertTrue(selectedToggle.selectedProp);
+        assertEquals(true, selectedToggle.toggledProp);
     }
 
     function testButtonLoadingIsNotInteractive() {
@@ -485,10 +485,10 @@ class ComponentControlsTest extends TestCase {
         assertTrue(group.sizeValue.equals(Large));
         assertTrue(group.outlineValue);
         assertTrue(group.compactValue);
-        assertTrue(group.multipleValue);
-        assertTrue(group.layoutValue == Vertical);
-        assertFalse(group.disabledValue);
-        assertNotNull(group.onClickHandler);
+        assertTrue(group.multipleProp);
+        assertTrue(group.layoutProp == Vertical);
+        assertFalse(group.disabledProp);
+        assertNotNull(group.onClickProp);
     }
 
     /// Toggle
@@ -579,10 +579,10 @@ class ComponentControlsTest extends TestCase {
             .disabled(false)
             .onClick((_, _, _) -> {});
         assertEquals(2, toggle.childElements.length);
-        assertTrue(toggle.checkedValue);
+        assertTrue(toggle.checkedProp);
         assertTrue(toggle.variantValue == Outline);
         assertTrue(toggle.sizeValue.equals(Large));
-        assertFalse(toggle.disabledValue);
+        assertFalse(toggle.disabledProp);
         assertNotNull(toggle.onClickHandler);
     }
 
@@ -600,8 +600,8 @@ class ComponentControlsTest extends TestCase {
         assertTrue(group.variantValue == Outline);
         assertTrue(group.sizeValue.equals(Large));
         assertTrue(group.segmentedValue);
-        assertFalse(group.disabledValue);
-        assertNotNull(group.onClickHandler);
+        assertFalse(group.disabledProp);
+        assertNotNull(group.onClickProp);
     }
 
     /// Checkbox

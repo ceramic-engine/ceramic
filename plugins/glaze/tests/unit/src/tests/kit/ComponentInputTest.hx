@@ -259,10 +259,10 @@ class ComponentInputTest extends TestCase {
                     .child(InputGroupText.component().child('Help'))
                     .child(InputGroupButton.component('send').primary().label('Send')));
             assertEquals(textarea.entityId(), @:privateAccess group.control.getState().entityId());
-            assertTrue(@:privateAccess group.disabledValue && @:privateAccess group.invalidValue);
+            assertTrue(@:privateAccess group.disabledProp && @:privateAccess group.invalidProp);
             assertTrue((@:privateAccess group.size : Size).equals(Small));
             assertEquals(2, @:privateAccess group.addons[0].childElements.length);
-            assertEquals(BlockEnd, @:privateAccess group.addons[0].alignment);
+            assertEquals(BlockEnd, @:privateAccess group.addons[0].alignProp);
 
             final button = InputGroupButton.component('icon').icon(IconName.Copy).small();
             assertTrue((@:privateAccess button.size : Size).equals(Small));

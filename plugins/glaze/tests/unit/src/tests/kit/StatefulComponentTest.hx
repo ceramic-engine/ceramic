@@ -385,9 +385,9 @@ class StatefulComponentTest extends TestCase {
         final swVoid = Switch.component('wifi2').onClick(() -> log.push('switch'));
         final checkbox = Checkbox.component('remember').onChange(v -> log.push('check:$v'));
         final checkboxFull = Checkbox.component('remember2').onChange((v, window, cx) -> log.push('checkfull:$v'));
-        @:privateAccess button.onClickHandler(null, null, null);
-        @:privateAccess buttonEvent.onClickHandler(null, null, null);
-        @:privateAccess buttonFull.onClickHandler(null, null, null);
+        @:privateAccess button.onClickProp(null, null, null);
+        @:privateAccess buttonEvent.onClickProp(null, null, null);
+        @:privateAccess buttonFull.onClickProp(null, null, null);
         @:privateAccess sw.onClickHandler(true, null, null);
         @:privateAccess swVoid.onClickHandler(false, null, null);
         @:privateAccess checkbox.onClickHandler(true, null, null);
@@ -408,9 +408,9 @@ class StatefulComponentTest extends TestCase {
         @:privateAccess radioGroup.onClickHandler(2, null, null);
         @:privateAccess radioGroupFull.onClickHandler(3, null, null);
         @:privateAccess toggle.onClickHandler(false, null, null);
-        @:privateAccess toggleGroup.onClickHandler([true, false], null, null);
-        @:privateAccess buttonGroup.onClickHandler([0, 2], null, null);
-        @:privateAccess buttonGroupVoid.onClickHandler([1], null, null);
+        @:privateAccess toggleGroup.onClickProp([true, false], null, null);
+        @:privateAccess buttonGroup.onClickProp([0, 2], null, null);
+        @:privateAccess buttonGroupVoid.onClickProp([1], null, null);
         assertEquals('radio:true,radio,group:2,groupfull:3,toggle:false,toggles:truefalse,buttons:02,buttons', log.join(','));
     }
 

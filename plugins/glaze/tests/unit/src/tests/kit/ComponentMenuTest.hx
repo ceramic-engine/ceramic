@@ -125,7 +125,7 @@ class ComponentMenuTest extends TestCase {
 
     function testAriaLabelSetsAccessibleName() {
         final item = MenuItemElement.component('open').ariaLabel('Open');
-        assertEquals('Open', item.ariaLabelValue);
+        assertEquals('Open', item.ariaLabelProp);
     }
 
     /// popup_menu.rs
@@ -472,13 +472,13 @@ class ComponentMenuTest extends TestCase {
             .selected(false)
             .dropdownMenuWithAnchor(BottomLeft, (menu, _, _) -> menu);
 
-        assertTrue(dropdown.buttonValue != null);
+        assertTrue(dropdown.buttonProp != null);
         assertTrue(dropdown.variant.equals(Primary));
         assertTrue(dropdown.outlineValue);
         assertTrue(dropdown.size.equals(Large));
-        assertFalse(dropdown.disabledValue);
-        assertFalse(dropdown.selectedValue);
-        assertTrue(dropdown.menu != null);
+        assertFalse(dropdown.disabledProp);
+        assertFalse(dropdown.selectedProp);
+        assertTrue(dropdown.dropdownMenuProp != null);
         assertEquals(glaze.Anchor.BottomLeft, dropdown.anchor);
     }
 
@@ -525,8 +525,8 @@ class ComponentMenuTest extends TestCase {
         final plain = DropdownButton.component('plain')
             .button(Button.component('plain-action').label('Run'))
             .dropdownMenu((menu, _, _) -> menu);
-        assertEquals('More save options', @:privateAccess save.menuAccessibilityLabelValue);
-        assertEquals(null, @:privateAccess plain.menuAccessibilityLabelValue);
+        assertEquals('More save options', @:privateAccess save.menuAccessibilityLabelProp);
+        assertEquals(null, @:privateAccess plain.menuAccessibilityLabelProp);
         assertEquals('More options', glaze.kit.I18n.t('DropdownButton.more_options'), 'the caret-only trigger needs a name without a caller-provided label');
         final opened = open((_, _) -> new ScriptView((_, _) -> div()
             .child(DropdownButton.component('save')

@@ -6,9 +6,9 @@ package glaze.kit.touchselection;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 import glaze.kit.base.Geometry.Placement;
 import glaze.kit.base.Popup;
@@ -52,7 +52,7 @@ class EditMenuItem {
  * family's press feedback. It carries no arrow: it belongs to the selection
  * it sits on, not to a trigger.
  */
-class EditMenu implements RenderOnce {
+class EditMenu extends Component {
 
     /** The height of a menu row. */
     static inline final ROW_HEIGHT:Float = 32.;
@@ -64,9 +64,10 @@ class EditMenu implements RenderOnce {
 
     final itemList:Array<EditMenuItem> = [];
 
-    var onPaintHandler:Null<SurfaceHandler> = null;
+    @prop var onPaint:Null<SurfaceHandler> = null;
 
     public function new(id:ElementId, anchor:Bounds) {
+        super();
         this.id = id;
         this.anchor = anchor;
     }
@@ -76,14 +77,9 @@ class EditMenu implements RenderOnce {
         return this;
     }
 
-    public function onPaint(onPaint:SurfaceHandler):EditMenu {
-        this.onPaintHandler = onPaint;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final onPaint = this.onPaintHandler;
+        final onPaint = this.onPaint;
         // A pill-like bar, as iOS draws its edit menu.
         final radius = theme.radiusLg;
         // The menu family's hover, not the ghost button's: the ghost's grey

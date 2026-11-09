@@ -7,6 +7,7 @@ package glaze.kit.list;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
@@ -14,7 +15,6 @@ import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.MouseMoveEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -49,7 +49,7 @@ private enum abstract ListItemMode(Int) {
  * label is kept as data (`accessibilityLabelValue`): the port has no
  * accessibility tree.
  */
-class ListItem implements ListDelegateItem implements Styled implements ParentElement implements Disableable {
+class ListItem extends Component implements ListDelegateItem implements Styled implements ParentElement implements Disableable {
 
     /** The stateful element the item renders (Rust `interactivity()`). */
     public final base:Div;
@@ -59,20 +59,23 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
     final itemStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(glaze.kit, tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
+    /** Set ListItem as the selected item style. */
     @:allow(glaze.kit, tests)
-    var selectedValue:Bool = false;
+    @prop var selected:Bool = false;
 
+    /** Rust `Selectable::secondary_selected`. */
     @:allow(glaze.kit, tests)
-    var secondarySelectedValue:Bool = false;
+    @prop var secondarySelected:Bool = false;
 
+    /** Set ListItem as the confirmed item style, it will show a check icon. */
     @:allow(glaze.kit, tests)
-    var confirmedValue:Bool = false;
+    @prop var confirmed:Bool = false;
 
     var checkIconValue:Null<Icon> = null;
 
-    var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
+    @prop var onClick:Null<(ClickEvent, Window, App) -> Void> = null;
 
     final onMouseDownHandlers:Array<{button:MouseButton, handler:(MouseDownEvent, Window, App) -> Void}> = [];
 
@@ -82,10 +85,17 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
 
     final childElements:Array<AnyElement> = [];
 
+    /**
+     * Set the accessibility label of the list item.
+     *
+     * Without this, list rows are exposed to assistive technology without a
+     * name: the visible children do not become the item's accessible name.
+     */
     @:allow(glaze.kit, tests)
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     public function new(id:ElementIdArg) {
+        super();
         base = hFlex().id(id);
     }
 
@@ -101,46 +111,13 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
         return this;
     }
 
-    /** Set ListItem as the selected item style. */
-    public function selected(selected:Bool):ListItem {
-        selectedValue = selected;
-        return this;
-    }
-
-    /** Set ListItem as the confirmed item style, it will show a check icon. */
-    public function confirmed(confirmed:Bool):ListItem {
-        confirmedValue = confirmed;
-        return this;
-    }
-
-    /**
-     * Set the accessibility label of the list item.
-     *
-     * Without this, list rows are exposed to assistive technology without a
-     * name: the visible children do not become the item's accessible name.
-     */
-    public function accessibilityLabel(label:String):ListItem {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):ListItem {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
+        this.disabled = disabled;
     }
 
     /** Set the suffix element of the input field, for example a clear button. */
     public function suffix(builder:(Window, App) -> IntoElement):ListItem {
         suffixBuilder = (window, cx) -> (builder(window, cx) : AnyElement);
-        return this;
-    }
-
-    public function onClick(handler:(ClickEvent, Window, App) -> Void):ListItem {
-        onClickHandler = handler;
         return this;
     }
 
@@ -164,21 +141,15 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
     // Selectable
 
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
+        return selected;
     }
 
     public function setSecondarySelected(selected:Bool):Void {
-        secondarySelectedValue = selected;
-    }
-
-    /** Rust `Selectable::secondary_selected`. */
-    public function secondarySelected(selected:Bool):ListItem {
-        secondarySelectedValue = selected;
-        return this;
+        secondarySelected = selected;
     }
 
     public function setOpen(open:Bool):Void {
@@ -209,9 +180,9 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
 
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final isActive = confirmedValue || selectedValue || secondarySelectedValue;
+        final isActive = confirmed || selected || secondarySelected;
 
-        final isSelectable = !(disabledValue || mode.isSeparator());
+        final isSelectable = !(disabled || mode.isSeparator());
 
         // The outline is an absolute child, so it has to repeat the item's own radius.
         final outlineStyle = new StyleRefinement();
@@ -232,9 +203,9 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
             .itemsCenter()
             .justifyBetween()
             .refineStyle(itemStyle);
-        // Rust `.aria_label(label)`: kept in `accessibilityLabelValue`.
+        // Rust `.aria_label(label)`: kept in `accessibilityLabel`.
         if (isSelectable) {
-            if (onClickHandler != null) element.onClick(onClickHandler);
+            if (onClick != null) element.onClick(onClick);
             if (onMouseEnterHandler != null) {
                 final onMouseEnter = onMouseEnterHandler;
                 element.onMouseMove((ev, window, cx) -> onMouseEnter(ev, window, cx));
@@ -259,18 +230,18 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
         if (checkIconValue != null) {
             final icon = checkIconValue;
             final slot = div().w5().itemsCenter().justifyCenter();
-            if (confirmedValue) {
+            if (confirmed) {
                 slot.child(icon.small().textColor(theme.mutedForeground));
             }
             row.child(slot);
         }
         element.child(row);
         if (suffixBuilder != null) element.child(suffixBuilder(window, cx));
-        if (isSelectable && selectedValue) {
+        if (isSelectable && selected) {
             final bg = theme.listSettings.activeHighlight ? theme.listActive : theme.accent;
             element.bg(bg);
         }
-        if (isSelectable && secondarySelectedValue) {
+        if (isSelectable && secondarySelected) {
             element.child(div()
                 .absolute()
                 .inset0()
@@ -286,13 +257,15 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
 /**
  * A disabled list row used as a separator.
  */
-class ListSeparatorItem implements ListDelegateItem implements Styled implements ParentElement {
+class ListSeparatorItem extends Component implements ListDelegateItem implements Styled implements ParentElement {
 
     final separatorStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return separatorStyle;
@@ -334,9 +307,11 @@ class ListSeparatorItem implements ListDelegateItem implements Styled implements
 /**
  * The built-in skeleton loading view of a list.
  */
-class Loading implements RenderOnce {
+class Loading extends Component {
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function render(window:Window, cx:App):IntoElement {
         return vFlex()
@@ -349,9 +324,11 @@ class Loading implements RenderOnce {
 
 }
 
-private class LoadingItem implements RenderOnce {
+private class LoadingItem extends Component {
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function render(window:Window, cx:App):IntoElement {
         return new ListItem("skeleton").disabled(true).child(

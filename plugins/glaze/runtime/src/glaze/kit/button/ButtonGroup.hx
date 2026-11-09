@@ -6,10 +6,10 @@ package glaze.kit.button;
 import glaze.App;
 import glaze.kit.ValueListener;
 import glaze.Axis;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -26,7 +26,7 @@ using glaze.kit.base.StyledExt;
 /**
  * A ButtonGroup element, to wrap multiple buttons in a group.
  */
-class ButtonGroup implements RenderOnce implements Styled implements Sizable implements Disableable {
+class ButtonGroup extends Component implements Styled implements Sizable implements Disableable {
 
     final id:ElementId;
 
@@ -35,14 +35,20 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
     @:allow(glaze.kit, tests)
     final childButtons:Array<Button> = [];
 
+    /**
+     * With the multiple selection mode, default is false (single selection).
+     */
     @:allow(glaze.kit, tests)
-    var multipleValue:Bool = false;
+    @prop var multiple:Bool = false;
 
     @:allow(glaze.kit, tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
+    /**
+     * Set the layout of the button group. Default is `Axis.Horizontal`.
+     */
     @:allow(glaze.kit, tests)
-    var layoutValue:Axis = Axis.Horizontal;
+    @prop var layout:Axis = Axis.Horizontal;
 
     // The button props
     @:allow(glaze.kit, tests)
@@ -58,12 +64,13 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
     var sizeValue:Null<Size> = null;
 
     @:allow(glaze.kit, tests)
-    var onClickHandler:Null<(Array<Int>, Window, App) -> Void> = null;
+    @prop var onClick:Null<(Array<Int>, Window, App) -> Void> = null;
 
     /**
      * Creates a new ButtonGroup.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -71,13 +78,8 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
         return groupStyle;
     }
 
-    public function disabled(disabled:Bool):ButtonGroup {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
+        this.disabled = disabled;
     }
 
     /**
@@ -85,7 +87,7 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
      * disabled state as set so far).
      */
     public function child(child:Button):ButtonGroup {
-        if (child != null) childButtons.push(child.disabled(disabledValue));
+        if (child != null) childButtons.push(child.disabled(disabled));
         return this;
     }
 
@@ -94,22 +96,6 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
      */
     public function children(children:Array<Button>):ButtonGroup {
         for (child in children) if (child != null) childButtons.push(child);
-        return this;
-    }
-
-    /**
-     * With the multiple selection mode, default is false (single selection).
-     */
-    public function multiple(multiple:Bool):ButtonGroup {
-        multipleValue = multiple;
-        return this;
-    }
-
-    /**
-     * Set the layout of the button group. Default is `Axis.Horizontal`.
-     */
-    public function layout(layout:Axis):ButtonGroup {
-        layoutValue = layout;
         return this;
     }
 
@@ -139,7 +125,7 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
      * `onClick(indices -> ...)` or `onClick(() -> ...)` (`ValueListener`).
      */
     public function onClick(handler:ValueListener<Array<Int>>):ButtonGroup {
-        onClickHandler = handler;
+        this.onClick = handler;
         return this;
     }
 
@@ -179,10 +165,10 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
         final state:Array<Null<Int>> = [null];
 
         for (ix in 0...childButtons.length) {
-            if (childButtons[ix].selectedValue) selectedIxs.push(ix);
+            if (childButtons[ix].selectedProp) selectedIxs.push(ix);
         }
 
-        final vertical = layoutValue == Axis.Vertical;
+        final vertical = layout == Axis.Vertical;
 
         final element = div().id(id).flex();
         if (vertical) element.flexCol().justifyCenter();
@@ -193,7 +179,7 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
             // The group as a whole is a toggle control, so every child
             // advertises its pressed state.
             var child = childButtons[childIndex];
-            child.toggled(child.selectedValue);
+            child.toggled(child.selectedProp);
             if (childrenLen == 1) {
                 // Single
             } else if (childIndex == 0) {
@@ -210,16 +196,16 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
             if (variantValue != null) child.withVariant(variantValue);
             if (compactValue) child.compact();
             if (outlineValue) child.outline();
-            if (onClickHandler != null) {
+            if (this.onClick != null) {
                 final ix = childIndex;
                 child.onClick((_, _, _) -> state[0] = ix);
             }
             element.child(child);
         }
 
-        final onClick = onClickHandler;
-        final multiple = multipleValue;
-        if (onClick != null && !disabledValue) {
+        final onClick = this.onClick;
+        final multiple = this.multiple;
+        if (onClick != null && !disabled) {
             element.onClick((_, window, cx) -> {
                 final next = selectedIxs.copy();
                 final ix = state[0];

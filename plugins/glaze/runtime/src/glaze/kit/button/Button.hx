@@ -8,6 +8,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Background;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Listeners;
 import glaze.Corners;
 import glaze.ElementId;
@@ -18,7 +19,6 @@ import glaze.IntoBackground;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -471,7 +471,7 @@ class ButtonVariantTools {
  * Tooltips (`tooltip`, `tooltipWithAction`, `tooltipPlacement`,
  * `tooltipShowDelay`) are managed tooltips (`glaze.kit.tooltip`).
  */
-class Button implements RenderOnce implements Styled implements ParentElement implements Sizable implements Selectable implements Disableable implements FocusableExt {
+class Button extends Component implements Styled implements ParentElement implements Sizable implements Selectable implements Disableable implements FocusableExt {
 
     /** The mouse down listener of an enabled button (shared, it captures nothing) */
     static final MOUSE_DOWN:(glaze.MouseDownEvent, Window, App) -> Void = (_, window, cx) -> {
@@ -497,40 +497,55 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     var base:glaze.kit.base.Button;
 
     @:allow(glaze.kit, tests)
-    var iconValue:Null<ButtonIcon> = null;
+    @prop var icon:Null<ButtonIcon> = null;
 
+    /**
+     * Set label to the Button, if no label is set, the button will be in Icon Button mode.
+     */
     @:allow(glaze.kit, tests)
-    var labelValue:Null<String> = null;
+    @prop var label:Null<String> = null;
 
-    /** The announced name, when the visible content is not it. */
+    /**
+     * Set the name a screen reader announces, when the visible content is not
+     * it (an icon-only button, a row-shaped button). It replaces the announced
+     * name without adding anything to the screen.
+     */
     @:allow(glaze.kit, tests)
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     final childElements:Array<AnyElement> = [];
 
     @:allow(glaze.kit, tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     @:allow(glaze.kit, tests)
-    var selectedValue:Bool = false;
+    @prop var selected:Bool = false;
 
     /**
      * Held by the popover, menu or dropdown this button triggers, for as long
      * as it is open. Kept apart from `selected` because the two states mean
      * different things, even though they paint the same today.
      */
-    var openValue:Bool = false;
+    @prop var open:Bool = false;
 
+    /**
+     * Expose this button as a toggle button to assistive technology, with
+     * `toggled` as its pressed state.
+     *
+     * Only affects accessibility metadata. Use `selected` for the selected
+     * styling, and call this in addition when the button really is a toggle,
+     * otherwise the button stays an ordinary push button.
+     */
     @:allow(glaze.kit, tests)
-    var toggledValue:Null<Bool> = null;
+    @prop var toggled:Null<Bool> = null;
 
-    var roleValue:RoleOverride = Implicit;
+    @prop var role:RoleOverride = Implicit;
 
     @:allow(glaze.kit, tests)
     var variantValue:ButtonVariant = Default;
 
     @:allow(glaze.kit, tests)
-    var roundedValue:ButtonRounded = Medium;
+    @prop var rounded:ButtonRounded = Medium;
 
     @:allow(glaze.kit, tests)
     var outlineValue:Bool = false;
@@ -544,8 +559,11 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     /** Every corner or edge (shared by the buttons that keep them all) */
     static final ALL_SIDES:Array<Bool> = [true, true, true, true];
 
+    /**
+     * Set to show a dropdown caret icon at the end of the button.
+     */
     @:allow(glaze.kit, tests)
-    var dropdownCaretValue:Bool = false;
+    @prop var dropdownCaret:Bool = false;
 
     var hoverGroupValue:Null<String> = null;
 
@@ -567,34 +585,67 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     /** The action whose key binding the tooltip shows (Rust: the second half of `tooltip`). */
     var tooltipActionValue:Null<{action:glaze.Action, context:Null<String>}> = null;
 
-    var tooltipPlacementValue:Null<glaze.kit.base.Geometry.Placement> = null;
+    /**
+     * Prefer a side for the tooltip, falling back when it does not fit.
+     *
+     * Applies to `tooltip` and `tooltipWithAction`. Omitting placement keeps
+     * automatic positioning.
+     */
+    @prop var tooltipPlacement:Null<glaze.kit.base.Geometry.Placement> = null;
 
     var tooltipBuilder:Null<(Window, App) -> glaze.AnyView> = null;
 
+    /**
+     * Overrides how long the pointer must rest before the tooltip shows, in seconds.
+     */
     @:allow(glaze.kit, tests)
-    var tooltipShowDelayValue:Null<Float> = null;
+    @prop var tooltipShowDelay:Null<Float> = null;
 
-    var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
+    @prop var onClick:Null<(ClickEvent, Window, App) -> Void> = null;
 
-    var onHoverHandler:Null<(Bool, Window, App) -> Void> = null;
+    /**
+     * Add hover handler, the bool parameter indicates whether the mouse is hovering.
+     */
+    @prop var onHover:Null<(Bool, Window, App) -> Void> = null;
 
+    /**
+     * Set true to show the loading indicator.
+     */
     @:allow(glaze.kit, tests)
-    var loadingValue:Bool = false;
+    @prop var loading:Bool = false;
 
-    var loadingIconValue:Null<Icon> = null;
+    @prop var loadingIcon:Null<Icon> = null;
 
-    var focusRingEnabled:Bool = true;
+    @prop var focusRing:Bool = true;
 
+    /**
+     * Use a caller-owned focus handle instead of the one the button keeps for
+     * itself, so the application can focus the button and restore focus to it.
+     *
+     * The handle drives the focus ring, Enter and Space activation and the
+     * accessibility focus state alike.
+     */
     @:allow(glaze.kit, tests)
-    var focusHandleValue:Null<FocusHandle> = null;
+    @prop var trackFocus:Null<FocusHandle> = null;
 
+    /**
+     * Set the tab index of the button, it will be used to focus the button by tab key.
+     *
+     * Default is 0.
+     */
     @:allow(glaze.kit, tests)
-    var tabIndexValue:Int = 0;
+    @prop var tabIndex:Int = 0;
 
+    /**
+     * Set the tab stop of the button, if true, the button will be focusable by tab key.
+     *
+     * Default is true.
+     */
     @:allow(glaze.kit, tests)
-    var tabStopValue:Bool = true;
+    @prop var tabStop:Bool = true;
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = glaze.kit.base.Button.component(id);
     }
@@ -636,7 +687,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
 
     @:allow(glaze.kit, tests)
     function isDisabled():Bool {
-        return disabledValue;
+        return disabled;
     }
 
     @:allow(glaze.kit, tests)
@@ -649,7 +700,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      */
     @:allow(glaze.kit, tests)
     function isIconOnly():Bool {
-        return iconValue != null && labelValue == null && childElements.length == 0;
+        return icon != null && label == null && childElements.length == 0;
     }
 
     public inline function style():StyleRefinement {
@@ -670,11 +721,6 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         return this;
     }
 
-    public function role(role:RoleOverride):Button {
-        roleValue = role;
-        return this;
-    }
-
     /**
      * Set the outline style of the Button.
      */
@@ -687,7 +733,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * Set the border radius of the Button.
      */
     public function rounded(rounded:IntoButtonRounded):Button {
-        roundedValue = rounded;
+        this.rounded = rounded;
         return this;
     }
 
@@ -732,28 +778,10 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     }
 
     /**
-     * Set label to the Button, if no label is set, the button will be in Icon Button mode.
-     */
-    public function label(label:String):Button {
-        labelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the name a screen reader announces, when the visible content is not
-     * it (an icon-only button, a row-shaped button). It replaces the announced
-     * name without adding anything to the screen.
-     */
-    public function accessibilityLabel(label:String):Button {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
      * Set the icon of the button, if the Button have no label, the button well in Icon Button mode.
      */
     public function icon(icon:IntoButtonIcon):Button {
-        iconValue = icon;
+        this.icon = icon;
         return this;
     }
 
@@ -767,38 +795,11 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     }
 
     /**
-     * Prefer a side for the tooltip, falling back when it does not fit.
-     *
-     * Applies to `tooltip` and `tooltipWithAction`. Omitting placement keeps
-     * automatic positioning.
-     */
-    public function tooltipPlacement(placement:glaze.kit.base.Geometry.Placement):Button {
-        tooltipPlacementValue = placement;
-        return this;
-    }
-
-    /**
      * Set the tooltip of the button with action to show keybinding.
      */
     public function tooltipWithAction(tooltip:String, action:glaze.Action, context:Null<String>):Button {
         tooltipValue = tooltip;
         tooltipActionValue = {action: action, context: context};
-        return this;
-    }
-
-    /**
-     * Overrides how long the pointer must rest before the tooltip shows, in seconds.
-     */
-    public function tooltipShowDelay(delay:Float):Button {
-        tooltipShowDelayValue = delay;
-        return this;
-    }
-
-    /**
-     * Set true to show the loading indicator.
-     */
-    public function loading(loading:Bool):Button {
-        loadingValue = loading;
         return this;
     }
 
@@ -815,15 +816,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * `onClick(event -> ...)` (`glaze.Listeners.ClickListener`).
      */
     public function onClick(handler:ClickListener):Button {
-        onClickHandler = handler;
-        return this;
-    }
-
-    /**
-     * Add hover handler, the bool parameter indicates whether the mouse is hovering.
-     */
-    public function onHover(handler:(Bool, Window, App) -> Void):Button {
-        onHoverHandler = handler;
+        this.onClick = handler;
         return this;
     }
 
@@ -842,60 +835,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * Default is a spinner icon.
      */
     public function loadingIcon(icon:IntoIcon):Button {
-        loadingIconValue = icon;
-        return this;
-    }
-
-    /**
-     * Use a caller-owned focus handle instead of the one the button keeps for
-     * itself, so the application can focus the button and restore focus to it.
-     *
-     * The handle drives the focus ring, Enter and Space activation and the
-     * accessibility focus state alike.
-     */
-    public function trackFocus(focusHandle:FocusHandle):Button {
-        focusHandleValue = focusHandle;
-        return this;
-    }
-
-    /**
-     * Set the tab index of the button, it will be used to focus the button by tab key.
-     *
-     * Default is 0.
-     */
-    public function tabIndex(tabIndex:Int):Button {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    /**
-     * Set the tab stop of the button, if true, the button will be focusable by tab key.
-     *
-     * Default is true.
-     */
-    public function tabStop(tabStop:Bool):Button {
-        tabStopValue = tabStop;
-        return this;
-    }
-
-    /**
-     * Set to show a dropdown caret icon at the end of the button.
-     */
-    public function dropdownCaret(dropdownCaret:Bool):Button {
-        dropdownCaretValue = dropdownCaret;
-        return this;
-    }
-
-    /**
-     * Expose this button as a toggle button to assistive technology, with
-     * `toggled` as its pressed state.
-     *
-     * Only affects accessibility metadata. Use `selected` for the selected
-     * styling, and call this in addition when the button really is a toggle,
-     * otherwise the button stays an ordinary push button.
-     */
-    public function toggled(toggled:Bool):Button {
-        toggledValue = toggled;
+        this.loadingIcon = icon;
         return this;
     }
 
@@ -905,7 +845,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      */
     @:allow(glaze.kit, tests)
     inline function showsSelectedStyle():Bool {
-        return selectedValue || openValue;
+        return selected || open;
     }
 
     /**
@@ -916,66 +856,46 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      */
     @:allow(glaze.kit, tests)
     inline function interactive():Bool {
-        return !(disabledValue || loadingValue);
+        return !(disabled || loading);
     }
 
     @:allow(glaze.kit, tests)
     inline function hoverable():Bool {
-        return interactive() && onHoverHandler != null;
+        return interactive() && onHover != null;
     }
 
     /// Disableable
 
-    public function disabled(disabled:Bool):Button {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
+        this.disabled = disabled;
     }
 
     /// FocusableExt
 
-    public function focusRing(enabled:Bool):Button {
-        focusRingEnabled = enabled;
-        return this;
-    }
-
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     /// Selectable
 
-    public function selected(selected:Bool):Button {
-        selectedValue = selected;
-        return this;
-    }
-
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
-    }
-
-    public function open(open:Bool):Button {
-        openValue = open;
-        return this;
+        return selected;
     }
 
     public function setOpen(open:Bool):Void {
-        openValue = open;
+        this.open = open;
     }
 
     public function isOpen():Bool {
-        return openValue;
+        return open;
     }
 
     /// Sizable
@@ -1032,9 +952,9 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         final style:ButtonVariant = variantValue;
         final interactive = this.interactive();
         final hoverable = this.hoverable();
-        final disabled = disabledValue;
+        final disabled = this.disabled;
         final selected = showsSelectedStyle();
-        final loading = loadingValue;
+        final loading = this.loading;
         final hoverGroup = hoverGroupValue;
         final hoverGroupHeld = hoverGroupHeldValue;
         final base = this.base;
@@ -1049,7 +969,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
             case Size(v): Size(v * 0.75);
             case _: size;
         }
-        final hasContent = iconValue != null || labelValue != null || children.length > 0;
+        final hasContent = icon != null || label != null || children.length > 0;
         // Only borderless variants use this; the others tint their border.
         final focusLine:FocusLine = if (style.noPadding()) {
             Outside;
@@ -1059,10 +979,10 @@ class Button implements RenderOnce implements Styled implements ParentElement im
             Inside(normalStyle.fg.opacity(FOCUS_LINE_OPACITY));
         }
 
-        final focusHandle:FocusHandle = focusHandleValue != null ? focusHandleValue : window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
+        final focusHandle:FocusHandle = trackFocus != null ? trackFocus : window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
         final isFocused = focusHandle.isFocused(window);
 
-        final rounding:Pixels = switch roundedValue {
+        final rounding:Pixels = switch rounded {
             case Small: theme.radius * 0.5;
             case Medium: theme.radius;
             case Large: theme.radius * 2.0;
@@ -1076,7 +996,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         if (!style.noPadding()) {
             // Initial port deviation DEV-003: an icon with a dropdown caret does
             // not fit the icon square, size it like a normal button.
-            if (labelValue == null && children.length == 0 && !(iconValue != null && dropdownCaretValue)) {
+            if (label == null && children.length == 0 && !(icon != null && dropdownCaret)) {
                 // Icon Button
                 switch size {
                     case Size(px): root.size(px);
@@ -1116,7 +1036,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
             if (borderEdges[2]) root.borderB1();
         }
         final outline = outlineValue;
-        if (!disabledValue && !selected) {
+        if (!this.disabled && !selected) {
             root.borderColor(normalStyle.border).bg(normalStyle.bg).textColor(normalStyle.fg);
             if (normalStyle.underline) root.textDecoration1();
             // A loading button keeps its normal colors, but must not react
@@ -1144,7 +1064,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
 
         // The explicit name wins: it exists precisely for the cases where the
         // visible content is not what a listener needs to hear.
-        final accessibilityLabel = accessibilityLabelValue != null ? accessibilityLabelValue : labelValue;
+        final accessibilityLabel = this.accessibilityLabel != null ? this.accessibilityLabel : label;
         final content = hFlex()
             .id('label')
             .sizeFull()
@@ -1159,22 +1079,22 @@ class Button implements RenderOnce implements Styled implements ParentElement im
             case _: content.gap2();
         }
         content.refineStyle(contentStyleValue);
-        if (iconValue != null) {
-            content.child(iconValue.loadingIcon(loadingIconValue).loading(loadingValue).withSize(iconSize));
+        if (icon != null) {
+            content.child(icon.loadingIcon(loadingIcon).loading(this.loading).withSize(iconSize));
         }
-        if (labelValue != null) {
-            content.child(div().minW0().whitespaceNowrap().textEllipsis().child(labelValue));
+        if (label != null) {
+            content.child(div().minW0().whitespaceNowrap().textEllipsis().child(label));
         }
         for (child in children) content.child(child);
-        if (dropdownCaretValue) {
+        if (dropdownCaret) {
             if (hasContent) content.justifyBetween();
             content.child(Caret.component(size).textColor(normalStyle.fg.opacity(0.75)));
         }
 
-        // `roleValue.resolve(() -> ...)` without a closure per render
-        final resolvedRole = switch roleValue {
+        // `role.resolve(() -> ...)` without a closure per render
+        final resolvedRole = switch role {
             case Implicit: variantValue.isLink() ? Role.Link : Role.Button;
-            case _: roleValue.resolve(null);
+            case _: role.resolve(null);
         }
         root.role(resolvedRole != null ? Explicit(resolvedRole) : Presentational)
             .selected(selected)
@@ -1199,8 +1119,8 @@ class Button implements RenderOnce implements Styled implements ParentElement im
                     .refineStyle(instanceStyle)));
         }
         if (accessibilityLabel != null) root.accessibilityLabel(accessibilityLabel);
-        if (toggledValue != null) root.a11y.toggled = toggledValue ? Toggled.True : Toggled.False;
-        root.trackFocus(focusHandle).tabIndex(tabIndexValue).tabStop(tabStopValue).child(content);
+        if (toggled != null) root.a11y.toggled = toggled ? Toggled.True : Toggled.False;
+        root.trackFocus(focusHandle).tabIndex(tabIndex).tabStop(tabStop).child(content);
         // Fade the whole button while loading, so every variant is dimmed by
         // the same amount. Fading `bg`, `border` and `fg` one by one instead
         // only shows up on variants that have a background to begin with:
@@ -1210,7 +1130,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         if (!disabled) {
             root.onMouseDown(Left, loading ? LOADING_MOUSE_DOWN : MOUSE_DOWN);
         }
-        final onClick = onClickHandler;
+        final onClick = this.onClick;
         if (onClick != null) {
             // While loading, the click stops there
             root.onClick(loading ? STOP_CLICK : onClick);
@@ -1218,12 +1138,12 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         if (loading) {
             root.onClick(STOP_CLICK);
         }
-        final onHover = onHoverHandler;
+        final onHover = this.onHover;
         if (onHover != null && hoverable) {
             root.onHover(onHover);
         }
-        final tooltipPlacement = tooltipPlacementValue;
-        final tooltipShowDelay = tooltipShowDelayValue;
+        final tooltipPlacement = this.tooltipPlacement;
+        final tooltipShowDelay = this.tooltipShowDelay;
         final tooltipBuilder = this.tooltipBuilder;
         final tooltip = tooltipValue;
         final tooltipAction = tooltipActionValue;
@@ -1239,7 +1159,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
                 return view.build(window, cx);
             });
         }
-        if (isFocused && focusRingEnabled) {
+        if (isFocused && focusRing) {
             root.focusStyle(focusLine, window, cx);
         }
         return root;

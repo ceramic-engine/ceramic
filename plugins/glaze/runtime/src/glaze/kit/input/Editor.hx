@@ -5,10 +5,10 @@ package glaze.kit.input;
 
 import glaze.App;
 import glaze.ClipboardItem;
+import glaze.Component;
 import glaze.DefiniteLength;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -30,7 +30,7 @@ using glaze.kit.base.StyledExt;
  * Keep the state on your view (`cx.newEntity(c -> new EditorState(window, c).language('json'))`)
  * and render it with `Editor.component(state)`.
  */
-class Editor implements RenderOnce implements Styled implements Sizable {
+class Editor extends Component implements Styled implements Sizable {
 
     /**
      * A code editor takes its rows from the font, so that a smaller or larger
@@ -46,57 +46,11 @@ class Editor implements RenderOnce implements Styled implements Sizable {
 
     var height:Null<DefiniteLength> = null;
 
-    var appearanceValue:Bool = true;
+    @prop var appearance:Bool = true;
 
-    var borderedValue:Bool = true;
+    @prop var bordered:Bool = true;
 
-    var disabledValue:Bool = false;
-
-    var readonlyValue:Bool = false;
-
-    var tabIndexValue:Int = 0;
-
-    var roleValue:RoleOverride = Implicit;
-
-    var ariaLabelValue:Null<String> = null;
-
-    /**
-     * An optional context menu builder to allow a custom context menu.
-     *
-     * If set, this overrides the built-in context menu.
-     */
-    var contextMenuBuilder:Null<(NativeMenu, Window, App) -> NativeMenu> = null;
-
-    @:allow(tests)
-    var pasteHandler:Null<(ClipboardItem, Window, App) -> Bool> = null;
-
-    public function new(state:Entity<EditorState>) {
-        this.state = state;
-    }
-
-    public inline function style():StyleRefinement {
-        return editorStyle;
-    }
-
-    public function h(height:glaze.IntoDefiniteLength):Editor {
-        this.height = height;
-        return this;
-    }
-
-    public function appearance(appearance:Bool):Editor {
-        appearanceValue = appearance;
-        return this;
-    }
-
-    public function bordered(bordered:Bool):Editor {
-        borderedValue = bordered;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Editor {
-        disabledValue = disabled;
-        return this;
-    }
+    @prop var disabled:Bool = false;
 
     /**
      * Set the editor to read-only, default is `false`.
@@ -105,25 +59,13 @@ class Editor implements RenderOnce implements Styled implements Sizable {
      * and still can be focused, selected and copied, it only rejects the changes
      * made by the user.
      */
-    public function readonly(readonly:Bool):Editor {
-        readonlyValue = readonly;
-        return this;
-    }
+    @prop var readonly:Bool = false;
 
-    public function tabIndex(index:Int):Editor {
-        tabIndexValue = index;
-        return this;
-    }
+    @prop var tabIndex:Int = 0;
 
-    public function role(role:RoleOverride):Editor {
-        roleValue = role;
-        return this;
-    }
+    @prop var role:RoleOverride = Implicit;
 
-    public function ariaLabel(label:String):Editor {
-        ariaLabelValue = label;
-        return this;
-    }
+    @prop var ariaLabel:Null<String> = null;
 
     /**
      * Replace the built-in context menu shown on right-click.
@@ -133,10 +75,7 @@ class Editor implements RenderOnce implements Styled implements Sizable {
      * shows only while the state's context menu is enabled, which is the
      * default.
      */
-    public function contextMenu(f:(NativeMenu, Window, App) -> NativeMenu):Editor {
-        contextMenuBuilder = f;
-        return this;
-    }
+    @prop var contextMenu:Null<(NativeMenu, Window, App) -> NativeMenu> = null;
 
     /**
      * Intercept paste payloads (images, files) before the default text insertion.
@@ -144,8 +83,20 @@ class Editor implements RenderOnce implements Styled implements Sizable {
      * `true` consumes the paste so nothing is inserted, `false` falls through
      * to `clipboard.text()`.
      */
-    public function onPaste(handler:(ClipboardItem, Window, App) -> Bool):Editor {
-        pasteHandler = handler;
+    @:allow(tests)
+    @prop var onPaste:Null<(ClipboardItem, Window, App) -> Bool> = null;
+
+    public function new(state:Entity<EditorState>) {
+        super();
+        this.state = state;
+    }
+
+    public inline function style():StyleRefinement {
+        return editorStyle;
+    }
+
+    public function h(height:glaze.IntoDefiniteLength):Editor {
+        this.height = height;
         return this;
     }
 
@@ -170,21 +121,21 @@ class Editor implements RenderOnce implements Styled implements Sizable {
             .textSize(theme.monoFontSize)
             .lineHeight(glaze.Prelude.relative(EDITOR_LINE_HEIGHT))
             .withSize(size)
-            .appearance(appearanceValue)
-            .bordered(borderedValue)
+            .appearance(appearance)
+            .bordered(bordered)
             .focusBordered(false)
-            .disabled(disabledValue)
-            .readonly(readonlyValue)
-            .tabIndex(tabIndexValue)
-            .role(roleValue);
+            .disabled(disabled)
+            .readonly(readonly)
+            .tabIndex(tabIndex)
+            .role(role);
         if (height != null) input.h(height);
-        if (ariaLabelValue != null) input.ariaLabel(ariaLabelValue);
-        if (contextMenuBuilder != null) {
-            final build = contextMenuBuilder;
+        if (ariaLabel != null) input.ariaLabel(ariaLabel);
+        if (contextMenu != null) {
+            final build = contextMenu;
             input.contextMenu((menu, window, cx) -> build(menu, window, cx));
         }
-        if (pasteHandler != null) {
-            final handler = pasteHandler;
+        if (onPaste != null) {
+            final handler = onPaste;
             input.onPaste((item, window, cx) -> handler(item, window, cx));
         }
         return input.refineStyle(editorStyle);

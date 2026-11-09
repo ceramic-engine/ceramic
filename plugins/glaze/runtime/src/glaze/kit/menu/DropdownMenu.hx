@@ -7,6 +7,7 @@ import glaze.Anchor;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Context;
 import glaze.DismissEvent;
 import glaze.Element;
@@ -16,7 +17,6 @@ import glaze.FocusHandle;
 import glaze.GlobalElementId;
 import glaze.IntoElement;
 import glaze.LayoutId;
-import glaze.RenderOnce;
 import glaze.Window;
 import glaze.kit.base.Popover.PopoverState;
 import glaze.kit.button.Button;
@@ -53,41 +53,32 @@ class DropdownMenu {
  * trigger is any `Selectable` (Rust `DropdownMenuPopover<T: Selectable>`):
  * a `Button`, a `SidebarHeader` or a `SidebarFooter`.
  */
-class DropdownMenuPopover implements RenderOnce {
+class DropdownMenuPopover extends Component {
 
     final id:ElementId;
 
-    var anchorValue:Anchor;
+    /**
+     * Set the anchor corner for the dropdown menu popover.
+     */
+    @prop var anchor:Anchor;
 
     final trigger:glaze.kit.base.ComponentTraits.Selectable;
 
     final builder:MenuBuilder;
 
-    var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
-
-    @:allow(glaze.kit.menu)
-    function new(id:ElementId, anchor:Anchor, trigger:glaze.kit.base.ComponentTraits.Selectable, builder:MenuBuilder) {
-        this.id = ElementId.Name('dropdown-menu:' + ContextMenu.debugElementId(id));
-        this.anchorValue = anchor;
-        this.trigger = trigger;
-        this.builder = builder;
-    }
-
-    /**
-     * Set the anchor corner for the dropdown menu popover.
-     */
-    public function anchor(anchor:Anchor):DropdownMenuPopover {
-        anchorValue = anchor;
-        return this;
-    }
-
     /**
      * Add a callback to be called when the menu opens or closes, with the
      * new open state.
      */
-    public function onOpenChange(callback:(Bool, Window, App) -> Void):DropdownMenuPopover {
-        onOpenChangeHandler = callback;
-        return this;
+    @prop var onOpenChange:Null<(Bool, Window, App) -> Void> = null;
+
+    @:allow(glaze.kit.menu)
+    function new(id:ElementId, anchor:Anchor, trigger:glaze.kit.base.ComponentTraits.Selectable, builder:MenuBuilder) {
+        super();
+        this.id = ElementId.Name('dropdown-menu:' + ContextMenu.debugElementId(id));
+        this.anchor = anchor;
+        this.trigger = trigger;
+        this.builder = builder;
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -110,9 +101,9 @@ class DropdownMenuPopover implements RenderOnce {
             .appearance(false)
             .overlayClosable(false)
             .trigger(trigger)
-            .anchor(anchorValue);
-        if (onOpenChangeHandler != null) {
-            final callback = onOpenChangeHandler;
+            .anchor(anchor);
+        if (onOpenChange != null) {
+            final callback = onOpenChange;
             popover.onOpenChange((open, window, cx) -> callback(open, window, cx));
         }
         return popover.content((_, window, cx) -> {

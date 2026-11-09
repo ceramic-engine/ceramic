@@ -4,8 +4,8 @@
 package glaze.kit.button;
 
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 import glaze.kit.Icon;
 import glaze.kit.Sizable;
@@ -50,7 +50,7 @@ abstract IntoButtonIcon(ButtonIcon) from ButtonIcon to ButtonIcon {
 /**
  * Renders a `ButtonIconVariant`, or a spinner in its place while loading.
  */
-class ButtonIcon implements RenderOnce implements Sizable {
+class ButtonIcon extends Component implements Sizable {
 
     @:allow(glaze.kit, tests)
     final icon:ButtonIconVariant;
@@ -68,6 +68,7 @@ class ButtonIcon implements RenderOnce implements Sizable {
      * Creates a new ButtonIcon with the given icon.
      */
     public function new(icon:ButtonIconVariant) {
+        super();
         this.icon = icon;
     }
 

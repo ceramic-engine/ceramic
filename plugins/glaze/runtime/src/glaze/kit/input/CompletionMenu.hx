@@ -6,6 +6,7 @@ package glaze.kit.input;
 import glaze.Action;
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Context;
 import glaze.Empty;
 import glaze.Entity;
@@ -18,7 +19,6 @@ import glaze.ParentElement;
 import glaze.Pixels;
 import glaze.Range;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.StyledText;
@@ -401,7 +401,7 @@ class ContextMenuDelegate extends ListDelegateBase {
 
 }
 
-class CompletionMenuItem implements ListDelegateItem implements ParentElement {
+class CompletionMenuItem extends Component implements ListDelegateItem implements ParentElement {
 
     final ix:Int;
 
@@ -416,6 +416,7 @@ class CompletionMenuItem implements ListDelegateItem implements ParentElement {
     final highlight:CompletionHighlighter;
 
     public function new(ix:Int, item:CompletionItem, query:String, highlight:CompletionHighlighter) {
+        super();
         this.ix = ix;
         this.item = item;
         this.query = query;

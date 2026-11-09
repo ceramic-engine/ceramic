@@ -6,6 +6,7 @@ package glaze.kit.input;
 import glaze.Action;
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Context;
 import glaze.Empty;
 import glaze.Entity;
@@ -268,7 +269,7 @@ class MenuDelegate extends ListDelegateBase {
 }
 
 /** Rust `MenuItem` of `code_action_menu.rs`. */
-class CodeActionMenuItem implements ListDelegateItem implements ParentElement {
+class CodeActionMenuItem extends Component implements ListDelegateItem implements ParentElement {
 
     final ix:Int;
 
@@ -279,6 +280,7 @@ class CodeActionMenuItem implements ListDelegateItem implements ParentElement {
     var selected:Bool = false;
 
     public function new(ix:Int, item:CodeActionItem) {
+        super();
         this.ix = ix;
         this.item = item;
     }

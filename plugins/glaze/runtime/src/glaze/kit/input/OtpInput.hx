@@ -5,10 +5,10 @@ package glaze.kit.input;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 import glaze.kit.base.ComponentTraits;
 import glaze.kit.base.OtpInput.OtpState;
@@ -38,27 +38,23 @@ using glaze.kit.ThemeStyled;
  * `OtpEvent` and `OtpState` are gpui-base's (`glaze.kit.base.OtpInput`),
  * re-exported by Rust.
  */
-class OtpInput implements RenderOnce implements Sizable implements Disableable implements FocusableExt {
+class OtpInput extends Component implements Sizable implements Disableable implements FocusableExt {
 
     final state:Entity<OtpState>;
 
-    var numberOfGroups:Int = 2;
+    /** Set number of groups in the OTP Input. */
+    @prop var groups:Int = 2;
 
     var size:Size = Medium;
 
-    var focusRingEnabled:Bool = true;
+    @prop var focusRing:Bool = true;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     /** Create a new `OtpInput` element bind to the `OtpState`. */
     public function new(state:Entity<OtpState>) {
+        super();
         this.state = state;
-    }
-
-    /** Set number of groups in the OTP Input. */
-    public function groups(n:Int):OtpInput {
-        numberOfGroups = n;
-        return this;
     }
 
     @:allow(tests)
@@ -68,26 +64,16 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
         return atLeastOne < maxGroups ? atLeastOne : maxGroups;
     }
 
-    public function disabled(disabled:Bool):OtpInput {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
-    }
-
-    public function focusRing(enabled:Bool):OtpInput {
-        focusRingEnabled = enabled;
-        return this;
+        this.disabled = disabled;
     }
 
     public function setFocusRing(enabled:Bool):Void {
-        focusRingEnabled = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingEnabled;
+        return focusRing;
     }
 
     public function withSize(size:IntoSize):OtpInput {
@@ -105,7 +91,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
         final chars = [for (c in new haxe.iterators.StringIteratorUnicode(state.value())) c];
         final lastIx = state.len() > 0 ? state.len() - 1 : 0;
         final cursorIx = chars.length < lastIx ? chars.length : lastIx;
-        final numberOfGroups = resolvedGroups(state.len(), this.numberOfGroups);
+        final numberOfGroups = resolvedGroups(state.len(), this.groups);
         final groups:Array<Array<IntoElement>> = [];
         var groupIx = 0;
         final perGroup = Math.ceil(state.len() / numberOfGroups);
@@ -114,7 +100,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
             groups.push([]);
         }
 
-        final colors = @:privateAccess Input.inputStyleColors(disabledValue, cx);
+        final colors = @:privateAccess Input.inputStyleColors(disabled, cx);
         final bg = colors.background;
         final fg = colors.foreground;
         final entity = this.state;
@@ -126,7 +112,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
             }
 
             final isInputFocused = ix == cursorIx && isFocused;
-            final focusVisible = isInputFocused && !disabledValue && focusRingEnabled;
+            final focusVisible = isInputFocused && !disabled && focusRing;
 
             final cell = hFlex()
                 .id(ix)
@@ -134,7 +120,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
                 .borderColor(theme.input)
                 .bg(bg)
                 .textColor(fg);
-            if (disabledValue) cell.opacity(0.5);
+            if (disabled) cell.opacity(0.5);
             if (focusVisible) cell.borderColor(theme.ring);
             cell.itemsCenter().justifyCenter().rounded(theme.radius);
             switch size {
@@ -153,7 +139,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
             if (c != null) {
                 if (state.isMasked()) {
                     final icon = Icon.component(IconName.Asterisk).textColor(theme.secondaryForeground);
-                    if (disabledValue) icon.textColor(theme.mutedForeground);
+                    if (disabled) icon.textColor(theme.mutedForeground);
                     cell.child(icon);
                 } else {
                     final buf = new StringBuf();
@@ -169,7 +155,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
         }
 
         return glaze.kit.base.OtpInput.component(this.state)
-            .disabled(disabledValue)
+            .disabled(disabled)
             .child(
                 vFlex()
                     .id(ElementId.NamedInteger("otp-input", this.state.entityId()))

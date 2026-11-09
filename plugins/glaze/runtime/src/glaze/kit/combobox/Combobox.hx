@@ -6,13 +6,13 @@ package glaze.kit.combobox;
 import glaze.AbsoluteLength;
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.DefiniteLength;
 import glaze.ElementId;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.IntoLength;
 import glaze.Length;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -61,7 +61,7 @@ private class ComboboxOptions {
  * Clicking an item toggles it in the selection; the dropdown stays open until the user
  * presses Escape or clicks outside.
  */
-class Combobox<I> implements RenderOnce implements Styled implements Sizable implements FocusableExt {
+class Combobox<I> extends Component implements Styled implements Sizable implements FocusableExt {
 
     final id:ElementId;
 
@@ -76,6 +76,7 @@ class Combobox<I> implements RenderOnce implements Styled implements Sizable imp
     var emptyValue:Null<(Window, App) -> AnyElement> = null;
 
     public function new(state:Entity<ComboboxState<I>>) {
+        super();
         this.id = ElementId.NamedInteger("multi-combo-box", state.entityId());
         this.state = state;
     }

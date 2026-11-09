@@ -6,6 +6,7 @@ package glaze.kit.input;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Hsla;
@@ -50,7 +51,7 @@ using glaze.kit.ThemeStyled;
  * group owns only composition and the frame, the control keeps every `Input`
  * capability and renders without its own frame. `input` replaces the slot.
  */
-class InputGroup implements RenderOnce implements Styled implements Sizable implements FocusableExt {
+class InputGroup extends Component implements Styled implements Sizable implements FocusableExt {
 
     final id:ElementId;
 
@@ -62,20 +63,25 @@ class InputGroup implements RenderOnce implements Styled implements Sizable impl
 
     var size:Size = Medium;
 
-    var disabledValue:Bool = false;
+    /** Prevent editing and interaction throughout this group. */
+    @prop var disabled:Bool = false;
 
-    var readonlyValue:Bool = false;
+    /** Prevent editing while preserving selection, copying, and addon actions. */
+    @prop var readonly:Bool = false;
 
-    var invalidValue:Bool = false;
+    /** Display the caller's validation result. This does not reject text edits. */
+    @prop var invalid:Bool = false;
 
-    var focusRingValue:Bool = true;
+    @prop var focusRing:Bool = true;
 
-    var ariaLabelValue:Null<String> = null;
+    /** Set a name for the group. Name its text control separately with `ariaLabel`. */
+    @prop var ariaLabel:Null<String> = null;
 
     /** The accessibility properties the group declares (filled by `render`). */
     public final a11y:A11y = new A11y(Role.Group);
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -94,46 +100,17 @@ class InputGroup implements RenderOnce implements Styled implements Sizable impl
         return this;
     }
 
-    /** Prevent editing and interaction throughout this group. */
-    public function disabled(disabled:Bool):InputGroup {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /** Prevent editing while preserving selection, copying, and addon actions. */
-    public function readonly(readonly:Bool):InputGroup {
-        readonlyValue = readonly;
-        return this;
-    }
-
-    /** Display the caller's validation result. This does not reject text edits. */
-    public function invalid(invalid:Bool):InputGroup {
-        invalidValue = invalid;
-        return this;
-    }
-
-    /** Set a name for the group. Name its text control separately with `ariaLabel`. */
-    public function ariaLabel(label:String):InputGroup {
-        ariaLabelValue = label;
-        return this;
-    }
-
     public function withSize(size:IntoSize):InputGroup {
         this.size = size;
         return this;
     }
 
-    public function focusRing(enabled:Bool):InputGroup {
-        focusRingValue = enabled;
-        return this;
-    }
-
     public function setFocusRing(enabled:Bool):Void {
-        focusRingValue = enabled;
+        focusRing = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return focusRingValue;
+        return focusRing;
     }
 
     public inline function style():StyleRefinement {
@@ -142,21 +119,21 @@ class InputGroup implements RenderOnce implements Styled implements Sizable impl
 
     public function render(window:Window, cx:App):IntoElement {
         final state = control != null ? @:privateAccess control.getState() : null;
-        final disabled = disabledValue || (control != null && @:privateAccess control.isDisabled());
+        final disabled = this.disabled || (control != null && @:privateAccess control.isDisabled());
         final focused = !disabled && state != null && state.hasSelectionFocus(window, cx);
         final multiline = state != null && state.presentation(cx).isMultiLine();
         function has(alignment:InputGroupAddonAlignment):Bool {
-            for (addon in addons) if (addon.alignment == alignment) return true;
+            for (addon in addons) if (addon.alignProp == alignment) return true;
             return false;
         }
-        final presentation = new GroupPresentation(size, disabled, readonlyValue, has(InlineStart), has(InlineEnd), has(BlockStart),
+        final presentation = new GroupPresentation(size, disabled, readonly, has(InlineStart), has(InlineEnd), has(BlockStart),
             has(BlockEnd));
         final inlineStart:Array<IntoElement> = [];
         final inlineEnd:Array<IntoElement> = [];
         final blockStart:Array<IntoElement> = [];
         final blockEnd:Array<IntoElement> = [];
         for (addon in addons) {
-            final target = switch addon.alignment {
+            final target = switch addon.alignProp {
                 case InlineStart: inlineStart;
                 case InlineEnd: inlineEnd;
                 case BlockStart: blockStart;
@@ -166,10 +143,10 @@ class InputGroup implements RenderOnce implements Styled implements Sizable impl
         }
         final controlElement:Null<IntoElement> = control != null ? renderControl(control, presentation, multiline) : null;
         final theme = Theme.global(cx);
-        final appearance = new GroupAppearance(theme, focused, disabled, invalidValue);
+        final appearance = new GroupAppearance(theme, focused, disabled, invalid);
         final radius = theme.radius;
         final foreground = theme.foreground;
-        final showRing = theme.focusRing && focusRingValue;
+        final showRing = theme.focusRing && focusRing;
         final motion = theme.motionTokens();
         final duration = motion.durationFast;
         final easing = motion.easingMove;
@@ -192,7 +169,7 @@ class InputGroup implements RenderOnce implements Styled implements Sizable impl
         final background = colors.background;
         // Rust `.role(Role::Group)` and `.aria_label(..)` on the root: the
         // port's `Div` has no accessibility node, the group keeps them in `a11y`.
-        if (ariaLabelValue != null) a11y.label = ariaLabelValue;
+        if (ariaLabel != null) a11y.label = ariaLabel;
         final root = vFlex().id(id).testSupport();
         root.relative().wFull().minW0();
         if (!multiline && !presentation.blockStart && !presentation.blockEnd) root.inputH(size);
@@ -349,24 +326,20 @@ enum abstract InputGroupAddonAlignment(Int) {
  * Children retain their insertion order. Direct `InputGroupButton` children
  * inherit the group's disabled state. Custom children retain their own semantics.
  */
-class InputGroupAddon implements RenderOnce implements Styled implements ParentElement {
+class InputGroupAddon extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
     @:allow(glaze.kit.input)
-    var alignment:InputGroupAddonAlignment = InlineStart;
+    @prop var align:InputGroupAddonAlignment = InlineStart;
 
     final addonStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
-    }
-
-    public function align(alignment:InputGroupAddonAlignment):InputGroupAddon {
-        this.alignment = alignment;
-        return this;
     }
 
     public inline function style():StyleRefinement {
@@ -417,7 +390,7 @@ class InputGroupAddon implements RenderOnce implements Styled implements ParentE
             .inputTextSize(presentation.size)
             .textColor(Theme.global(cx).mutedForeground)
             .cursorText();
-        switch alignment {
+        switch align {
             case InlineStart: element.pl1p5();
             case InlineEnd: element.pr1p5();
             case BlockStart:
@@ -473,7 +446,7 @@ class InputGroupAddon implements RenderOnce implements Styled implements ParentE
  * can find its direct button children and pass the group's disabled state
  * to them; here the addon finds the component and sets `inheritedDisabled`.
  */
-class InputGroupButton implements RenderOnce implements Styled implements Sizable implements Disableable implements Selectable implements ParentElement {
+class InputGroupButton extends Component implements Styled implements Sizable implements Disableable implements Selectable implements ParentElement {
 
     final button:Button;
 
@@ -485,6 +458,7 @@ class InputGroupButton implements RenderOnce implements Styled implements Sizabl
     var inheritedDisabled:Bool = false;
 
     public function new(id:ElementIdArg) {
+        super();
         button = glaze.kit.button.Button.component(id).ghost();
     }
 
@@ -676,13 +650,15 @@ class InputGroupButton implements RenderOnce implements Styled implements Sizabl
 /**
  * Muted helper text, optionally combined with icons, inside an input group.
  */
-class InputGroupText implements RenderOnce implements Styled implements ParentElement {
+class InputGroupText extends Component implements Styled implements ParentElement {
 
     final textStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return textStyle;

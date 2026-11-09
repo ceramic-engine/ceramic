@@ -6,11 +6,11 @@ package glaze.kit.menu;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -27,22 +27,34 @@ using glaze.kit.base.StyledExt;
  * The accessibility properties (`Role::MenuItem`, the label, `aria_selected`)
  * are kept as data: the port has no accessibility tree.
  */
-class MenuItemElement implements RenderOnce implements Styled implements ParentElement implements Disableable {
+class MenuItemElement extends Component implements Styled implements ParentElement implements Disableable {
 
     final id:ElementId;
 
+    /**
+     * Set the accessible label for the menu item.
+     */
     @:allow(glaze.kit, tests)
-    var ariaLabelValue:Null<String> = null;
+    @prop var ariaLabel:Null<String> = null;
 
     final menuItemStyle:StyleRefinement = new StyleRefinement();
 
+    /**
+     * Set the disabled state of the MenuItem.
+     */
     @:allow(glaze.kit, tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
+    /**
+     * Set ListItem as the selected item style.
+     */
     @:allow(glaze.kit, tests)
-    var selectedValue:Bool = false;
+    @prop var selected:Bool = false;
 
-    var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
+    /**
+     * Set a handler for when the MenuItem is clicked.
+     */
+    @prop var onClick:Null<(ClickEvent, Window, App) -> Void> = null;
 
     var onHoverHandler:Null<(Bool, Window, App) -> Void> = null;
 
@@ -52,43 +64,12 @@ class MenuItemElement implements RenderOnce implements Styled implements ParentE
      * Create a new MenuItem with the given ID.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
-    /**
-     * Set ListItem as the selected item style.
-     */
-    public function selected(selected:Bool):MenuItemElement {
-        selectedValue = selected;
-        return this;
-    }
-
-    /**
-     * Set the accessible label for the menu item.
-     */
-    public function ariaLabel(label:String):MenuItemElement {
-        ariaLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Set the disabled state of the MenuItem.
-     */
-    public function disabled(disabled:Bool):MenuItemElement {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
-    }
-
-    /**
-     * Set a handler for when the MenuItem is clicked.
-     */
-    public function onClick(handler:(ClickEvent, Window, App) -> Void):MenuItemElement {
-        onClickHandler = handler;
-        return this;
+        this.disabled = disabled;
     }
 
     /**
@@ -134,21 +115,21 @@ class MenuItemElement implements RenderOnce implements Styled implements ParentE
             final onHover = onHoverHandler;
             element.onHover((hovered, window, cx) -> onHover(hovered, window, cx));
         }
-        if (!disabledValue) {
+        if (!disabled) {
             // Not `group_hover` on the item's own group: GPUI styles an
             // element before registering its group, and that fallback keeps
             // the pointer's item lit after a key moves the highlight away.
             element.hover(s -> s.bg(theme.tokens.accent.background).textColor(theme.accentForeground));
-            if (selectedValue) {
+            if (selected) {
                 element.bg(theme.tokens.accent.background).textColor(theme.accentForeground);
             }
-            if (onClickHandler != null) {
+            if (onClick != null) {
                 element.onMouseDown(Left, (_, _, cx) -> {
                     cx.stopPropagation();
-                }).onClick(onClickHandler);
+                }).onClick(onClick);
             }
         }
-        if (disabledValue) {
+        if (disabled) {
             element.textColor(theme.mutedForeground);
         }
         element.extend(childElements);

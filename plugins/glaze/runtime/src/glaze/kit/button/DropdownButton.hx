@@ -5,10 +5,10 @@ package glaze.kit.button;
 
 import glaze.Anchor;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -34,7 +34,7 @@ using glaze.kit.menu.DropdownMenu;
  * emphasized, and it stays surfaced while the menu is open, so the pair reads
  * as one control rather than two buttons.
  */
-class DropdownButton implements RenderOnce implements Styled implements Sizable implements Selectable implements Disableable {
+class DropdownButton extends Component implements Styled implements Sizable implements Selectable implements Disableable {
 
     /** Group name shared by both halves, so hovering one can style the other. */
     static inline final HALVES_GROUP = 'dropdown-button';
@@ -43,19 +43,37 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
 
     final dropdownButtonStyle:StyleRefinement = new StyleRefinement();
 
+    /**
+     * Set the left button of the dropdown button.
+     *
+     * The button keeps its own label, icon, tooltip and click handler. A
+     * variant or size set on the `DropdownButton` applies to both halves and
+     * overrides the one set here. When either outer value is unset, this
+     * button's value becomes the shared value for both halves.
+     */
     @:allow(glaze.kit, tests)
-    var buttonValue:Null<Button> = null;
+    @prop var button:Null<Button> = null;
+
+    /**
+     * Set the dropdown menu of the button.
+     */
+    @:allow(glaze.kit, tests)
+    @prop var dropdownMenu:Null<MenuBuilder> = null;
 
     @:allow(glaze.kit, tests)
-    var menu:Null<MenuBuilder> = null;
+    @prop var selected:Bool = false;
 
     @:allow(glaze.kit, tests)
-    var selectedValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    @:allow(glaze.kit, tests)
-    var disabledValue:Bool = false;
-
-    var menuAccessibilityLabelValue:Null<String> = null;
+    /**
+     * Set the name a screen reader announces for the menu trigger. Defaults
+     * to the localized "More options".
+     *
+     * The trigger shows only a caret, so it has no visible label to read.
+     * The inner `Button` names the action half.
+     */
+    @prop var menuAccessibilityLabel:Null<String> = null;
 
     // The button props, applied to both halves. Unset means the inner
     // `Button` keeps whatever it was given.
@@ -75,6 +93,7 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
      * Create a new DropdownButton.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -82,8 +101,8 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
     function effectiveVariant():ButtonVariant {
         if (variant != null)
             return variant;
-        if (buttonValue != null)
-            return buttonValue.variant();
+        if (button != null)
+            return button.variant();
         return Default;
     }
 
@@ -91,50 +110,17 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
     function effectiveSize():Size {
         if (size != null)
             return size;
-        if (buttonValue != null)
-            return buttonValue.buttonSize();
+        if (button != null)
+            return button.buttonSize();
         return Medium;
-    }
-
-    /**
-     * Set the left button of the dropdown button.
-     *
-     * The button keeps its own label, icon, tooltip and click handler. A
-     * variant or size set on the `DropdownButton` applies to both halves and
-     * overrides the one set here. When either outer value is unset, this
-     * button's value becomes the shared value for both halves.
-     */
-    public function button(button:Button):DropdownButton {
-        buttonValue = button;
-        return this;
-    }
-
-    /**
-     * Set the dropdown menu of the button.
-     */
-    public function dropdownMenu(menu:MenuBuilder):DropdownButton {
-        this.menu = menu;
-        return this;
     }
 
     /**
      * Set the dropdown menu of the button with anchor corner.
      */
     public function dropdownMenuWithAnchor(anchor:Anchor, menu:MenuBuilder):DropdownButton {
-        this.menu = menu;
+        this.dropdownMenu = menu;
         this.anchor = anchor;
-        return this;
-    }
-
-    /**
-     * Set the name a screen reader announces for the menu trigger. Defaults
-     * to the localized "More options".
-     *
-     * The trigger shows only a caret, so it has no visible label to read.
-     * The inner `Button` names the action half.
-     */
-    public function menuAccessibilityLabel(label:String):DropdownButton {
-        menuAccessibilityLabelValue = label;
         return this;
     }
 
@@ -148,13 +134,8 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
 
     /// Disableable
 
-    public function disabled(disabled:Bool):DropdownButton {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
+        this.disabled = disabled;
     }
 
     /// Styled
@@ -209,17 +190,12 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
 
     /// Selectable
 
-    public function selected(selected:Bool):DropdownButton {
-        selectedValue = selected;
-        return this;
-    }
-
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
+        return selected;
     }
 
     public function setOpen(open:Bool):Void {
@@ -232,14 +208,14 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
 
     public function render(window:Window, cx:App):IntoElement {
         #if debug
-        if (buttonValue == null && menu == null) {
+        if (this.button == null && dropdownMenu == null) {
             throw 'a DropdownButton needs a `button`, a `dropdownMenu`, or both';
         }
         #end
 
         final variant = effectiveVariant();
         final size = effectiveSize();
-        final selected = selectedValue || (buttonValue != null && buttonValue.isSelected());
+        final selected = this.selected || (this.button != null && this.button.isSelected());
         // Only a ghost split has no surface at rest, so only it needs hovering
         // one half to reveal the other, and the action half to stay revealed
         // while the menu holds the trigger pressed.
@@ -252,9 +228,9 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
         element
             .hFlex()
             .refineStyle(dropdownButtonStyle);
-        if (buttonValue != null) {
-            final button = buttonValue;
-            final disabled = disabledValue || button.isDisabled();
+        if (this.button != null) {
+            final button = this.button;
+            final disabled = this.disabled || button.isDisabled();
             button
                 .withBorderCorners(true, false, false, true)
                 .withBorderEdges(true, true, true, true)
@@ -270,14 +246,14 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
             }
             element.child(button);
         }
-        if (menu != null) {
+        if (dropdownMenu != null) {
             final popup = Button.component('popup')
                 .dropdownCaret(true)
-                .accessibilityLabel(menuAccessibilityLabelValue != null ? menuAccessibilityLabelValue : I18n.t('DropdownButton.more_options'))
+                .accessibilityLabel(menuAccessibilityLabel != null ? menuAccessibilityLabel : I18n.t('DropdownButton.more_options'))
                 .withBorderCorners(false, true, true, false)
                 .withBorderEdges(true, true, true, false)
                 .selected(selected)
-                .disabled(disabledValue);
+                .disabled(this.disabled);
             if (outlineValue) popup.outline();
             popup
                 .withSize(size)
@@ -285,7 +261,7 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
             if (isGhost) popup.hoverGroup(HALVES_GROUP);
             element.child(
                 popup
-                    .dropdownMenuWithAnchor(anchor, menu)
+                    .dropdownMenuWithAnchor(anchor, dropdownMenu)
                     .onOpenChange((open, _, cx) -> {
                         menuOpen.update(cx, (state, _) -> {
                             state.value = open;

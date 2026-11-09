@@ -5,10 +5,10 @@ package glaze.kit.searchablelist;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -37,7 +37,7 @@ using glaze.kit.StyleSized;
  * - `checked` controls the visibility of the trailing check icon; set by the adapter based on
  *   the current selection state and NOT overwritten by the `List`.
  */
-class SearchableListItemElement implements RenderOnce implements Styled implements ParentElement implements Disableable implements ListDelegateItem implements Sizable {
+class SearchableListItemElement extends Component implements Styled implements ParentElement implements Disableable implements ListDelegateItem implements Sizable {
 
     final id:ElementId;
 
@@ -48,14 +48,16 @@ class SearchableListItemElement implements RenderOnce implements Styled implemen
 
     /** Cursor/highlight background (overridden by `List` to the keyboard cursor row). */
     @:allow(glaze.kit, tests)
-    var selectedValue:Bool = false;
+    @prop var selected:Bool = false;
 
-    /** Whether the trailing check icon is shown. */
+    /**
+     * Set whether the trailing check icon is visible.
+     */
     @:allow(glaze.kit, tests)
-    var checkedValue:Bool = false;
+    @prop var checked:Bool = false;
 
     @:allow(glaze.kit, tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
@@ -64,16 +66,9 @@ class SearchableListItemElement implements RenderOnce implements Styled implemen
     var checkIconValue:Null<Icon>;
 
     public function new(ix:Int) {
+        super();
         this.id = ElementId.NamedInteger("searchable-list-item", ix);
         this.checkIconValue = Icon.component(IconName.Check);
-    }
-
-    /**
-     * Set whether the trailing check icon is visible.
-     */
-    public function checked(checked:Bool):SearchableListItemElement {
-        checkedValue = checked;
-        return this;
     }
 
     /**
@@ -84,26 +79,16 @@ class SearchableListItemElement implements RenderOnce implements Styled implemen
         return this;
     }
 
-    public function disabled(disabled:Bool):SearchableListItemElement {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function setDisabled(disabled:Bool):Void {
-        disabledValue = disabled;
-    }
-
-    public function selected(selected:Bool):SearchableListItemElement {
-        selectedValue = selected;
-        return this;
+        this.disabled = disabled;
     }
 
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
+        return selected;
     }
 
     public function setOpen(open:Bool):Void {
@@ -151,14 +136,14 @@ class SearchableListItemElement implements RenderOnce implements Styled implemen
             .inputTextSize(size)
             .listSize(size)
             .refineStyle(itemStyle);
-        if (!disabledValue && !selectedValue) {
+        if (!disabled && !selected) {
             final hoverBg = theme.accent.opacity(0.7);
             element.hover(s -> s.bg(hoverBg));
         }
-        if (selectedValue) {
+        if (selected) {
             element.bg(theme.tokens.accent.background);
         }
-        if (disabledValue) {
+        if (disabled) {
             element.cursorNotAllowed().textColor(theme.mutedForeground);
         }
         final inner = hFlex()
@@ -175,7 +160,7 @@ class SearchableListItemElement implements RenderOnce implements Styled implemen
                 .children(cast childElements));
         if (checkIconValue != null) {
             final icon = checkIconValue.xsmall().flexShrink0().textColor(theme.foreground);
-            if (!checkedValue) icon.invisible();
+            if (!checked) icon.invisible();
             inner.child(icon);
         }
         return element.child(inner);

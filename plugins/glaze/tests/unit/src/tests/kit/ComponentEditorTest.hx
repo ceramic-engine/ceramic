@@ -228,9 +228,9 @@ class ComponentEditorTest extends TestCase {
         init();
         addWindowView((window, cx) -> {
             final state = cx.newEntity((c:Context<EditorState>) -> new EditorState(window, c));
-            assertNull(Editor.component(state).pasteHandler);
+            assertNull(Editor.component(state).onPasteProp);
             final editor = Editor.component(state).onPaste((_, _, _) -> true);
-            assertNotNull(editor.pasteHandler);
+            assertNotNull(editor.onPasteProp);
             return new PasteProbe();
         });
     }

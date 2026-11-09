@@ -5,10 +5,10 @@ package glaze.kit.input;
 
 import glaze.App;
 import glaze.ClipboardItem;
+import glaze.Component;
 import glaze.DefiniteLength;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -28,14 +28,19 @@ using glaze.kit.base.StyledExt;
 /**
  * A styled ordinary multi-line text field.
  */
-class Textarea implements RenderOnce implements Styled implements Sizable {
+class Textarea extends Component implements Styled implements Sizable {
 
     var tokenRenderer:Null<InlineTokenRenderer> = null;
 
-    var tokenClickListener:Null<InlineTokenClickListener> = null;
+    /** Open a reference after a completed, unconsumed token click. */
+    @prop var onTokenClick:Null<InlineTokenClickListener> = null;
 
+    /**
+     * Report pointer presence over a token so the application can show a
+     * tooltip or run custom logic. Hover never selects or edits.
+     */
     @:allow(tests)
-    var tokenHoverListener:Null<InlineTokenHoverListener> = null;
+    @prop var onTokenHover:Null<InlineTokenHoverListener> = null;
 
     final state:Entity<TextareaState>;
 
@@ -45,33 +50,51 @@ class Textarea implements RenderOnce implements Styled implements Sizable {
 
     var height:Null<DefiniteLength> = null;
 
-    var appearanceValue:Bool = true;
+    @prop var appearance:Bool = true;
 
-    var borderedValue:Bool = true;
+    @prop var bordered:Bool = true;
 
-    var disabledValue:Bool = false;
-
-    var readonlyValue:Bool = false;
-
-    var tabIndexValue:Int = 0;
-
-    var roleValue:RoleOverride = Implicit;
-
-    var accessibilityIdValue:Null<String> = null;
-
-    var ariaLabelValue:Null<String> = null;
+    @prop var disabled:Bool = false;
 
     /**
-     * An optional context menu builder to allow a custom context menu.
+     * Set the textarea to read-only, default is `false`.
      *
-     * If set, this overrides the built-in context menu.
+     * Unlike `disabled`, a read-only textarea keeps the normal appearance
+     * and still can be focused, selected and copied, it only rejects the changes
+     * made by the user.
      */
-    var contextMenuBuilder:Null<(NativeMenu, Window, App) -> NativeMenu> = null;
+    @prop var readonly:Bool = false;
 
+    @prop var tabIndex:Int = 0;
+
+    @prop var role:RoleOverride = Implicit;
+
+    /** Set the developer-assigned accessibility identifier. */
+    @prop var accessibilityId:Null<String> = null;
+
+    @prop var ariaLabel:Null<String> = null;
+
+    /**
+     * Replace the built-in context menu shown on right-click.
+     *
+     * The closure receives an empty menu and returns the one to show, so it
+     * decides entirely what appears: the default items are not added. It
+     * shows only while the state's context menu is enabled, which is the
+     * default.
+     */
+    @prop var contextMenu:Null<(NativeMenu, Window, App) -> NativeMenu> = null;
+
+    /**
+     * Intercept paste payloads (images, files) before the default text insertion.
+     *
+     * `true` consumes the paste so nothing is inserted, `false` falls through
+     * to `clipboard.text()`.
+     */
     @:allow(tests)
-    var pasteHandler:Null<(ClipboardItem, Window, App) -> Bool> = null;
+    @prop var onPaste:Null<(ClipboardItem, Window, App) -> Bool> = null;
 
     public function new(state:Entity<TextareaState>) {
+        super();
         this.state = state;
     }
 
@@ -88,95 +111,8 @@ class Textarea implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    /** Open a reference after a completed, unconsumed token click. */
-    public function onTokenClick(listener:InlineTokenClickListener):Textarea {
-        tokenClickListener = listener;
-        return this;
-    }
-
-    /**
-     * Report pointer presence over a token so the application can show a
-     * tooltip or run custom logic. Hover never selects or edits.
-     */
-    public function onTokenHover(listener:InlineTokenHoverListener):Textarea {
-        tokenHoverListener = listener;
-        return this;
-    }
-
     public function h(height:glaze.IntoDefiniteLength):Textarea {
         this.height = height;
-        return this;
-    }
-
-    public function appearance(appearance:Bool):Textarea {
-        appearanceValue = appearance;
-        return this;
-    }
-
-    public function bordered(bordered:Bool):Textarea {
-        borderedValue = bordered;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Textarea {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Set the textarea to read-only, default is `false`.
-     *
-     * Unlike `disabled`, a read-only textarea keeps the normal appearance
-     * and still can be focused, selected and copied, it only rejects the changes
-     * made by the user.
-     */
-    public function readonly(readonly:Bool):Textarea {
-        readonlyValue = readonly;
-        return this;
-    }
-
-    public function tabIndex(index:Int):Textarea {
-        tabIndexValue = index;
-        return this;
-    }
-
-    public function role(role:RoleOverride):Textarea {
-        roleValue = role;
-        return this;
-    }
-
-    /** Set the developer-assigned accessibility identifier. */
-    public function accessibilityId(id:String):Textarea {
-        accessibilityIdValue = id;
-        return this;
-    }
-
-    public function ariaLabel(label:String):Textarea {
-        ariaLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Replace the built-in context menu shown on right-click.
-     *
-     * The closure receives an empty menu and returns the one to show, so it
-     * decides entirely what appears: the default items are not added. It
-     * shows only while the state's context menu is enabled, which is the
-     * default.
-     */
-    public function contextMenu(f:(NativeMenu, Window, App) -> NativeMenu):Textarea {
-        contextMenuBuilder = f;
-        return this;
-    }
-
-    /**
-     * Intercept paste payloads (images, files) before the default text insertion.
-     *
-     * `true` consumes the paste so nothing is inserted, `false` falls through
-     * to `clipboard.text()`.
-     */
-    public function onPaste(handler:(ClipboardItem, Window, App) -> Bool):Textarea {
-        pasteHandler = handler;
         return this;
     }
 
@@ -193,20 +129,20 @@ class Textarea implements RenderOnce implements Styled implements Sizable {
             final render = tokenRenderer;
             input.token((token, window, cx) -> render(token, window, cx));
         }
-        if (tokenClickListener != null) input.onTokenClick(tokenClickListener);
-        if (tokenHoverListener != null) input.onTokenHover(tokenHoverListener);
-        input.appearance(appearanceValue)
-            .bordered(borderedValue)
-            .disabled(disabledValue)
-            .readonly(readonlyValue)
-            .tabIndex(tabIndexValue)
-            .role(roleValue)
+        if (onTokenClick != null) input.onTokenClick(onTokenClick);
+        if (onTokenHover != null) input.onTokenHover(onTokenHover);
+        input.appearance(appearance)
+            .bordered(bordered)
+            .disabled(disabled)
+            .readonly(readonly)
+            .tabIndex(tabIndex)
+            .role(role)
             .withSize(size);
         if (height != null) input.h(height);
-        if (accessibilityIdValue != null) input.accessibilityId(accessibilityIdValue);
-        if (ariaLabelValue != null) input.ariaLabel(ariaLabelValue);
-        if (contextMenuBuilder != null) input.contextMenu(contextMenuBuilder);
-        if (pasteHandler != null) input.onPaste(pasteHandler);
+        if (accessibilityId != null) input.accessibilityId(accessibilityId);
+        if (ariaLabel != null) input.ariaLabel(ariaLabel);
+        if (contextMenu != null) input.contextMenu(contextMenu);
+        if (onPaste != null) input.onPaste(onPaste);
         return input.refineStyle(textareaStyle);
     }
 
