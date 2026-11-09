@@ -1,0 +1,16 @@
+plugin:
+    name: Cityscape
+
+    # Cityscape is built on Glaze. Ceramic has no way for a plugin to enable
+    # another one only when it is enabled itself (a `+plugins` entry under
+    # `if plugin_cityscape` is ignored: the plugin_* defines are set after the
+    # plugin list is read), so a project lists both plugins:
+    #
+    #     plugins:
+    #         - glaze
+    #         - cityscape
+
+    runtime:
+        if plugin_cityscape:
+            +paths:
+                - '{plugin:cwd}/runtime/src'

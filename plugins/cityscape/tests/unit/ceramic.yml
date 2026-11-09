@@ -1,0 +1,23 @@
+app:
+    package: mycompany.cityscapeunit
+    name: unit
+    displayName: unit
+    author: My Company
+    version: '1.0'
+
+    # Cityscape needs Glaze: a project lists both plugins (see the plugin's
+    # ceramic.yml).
+    plugins:
+        - glaze
+        - cityscape
+
+    # Cityscape's sources, added directly until the Ceramic tools are rebuilt
+    # with the cityscape plugin (the list of built-in plugins is compiled into
+    # the tools; a plugin without a tools part cannot be loaded from a
+    # project's plugins folder). Harmless once the plugin adds them itself.
+    paths:
+        - ../../runtime/src
+
+    defines:
+        # Native test runs use a hidden SDL window (no window on screen)
+        - clay_sdl_headless

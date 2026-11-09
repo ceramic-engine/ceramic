@@ -1,0 +1,29 @@
+app:
+    package: mycompany.cityscapebench
+    name: bench
+    displayName: bench
+    author: My Company
+    version: '1.0'
+
+    # Cityscape needs Glaze: a project lists both plugins (see the plugin's
+    # ceramic.yml).
+    plugins:
+        - glaze
+        - cityscape
+
+    # Cityscape's sources, added directly until the Ceramic tools are rebuilt
+    # with the cityscape plugin (see tests/unit/ceramic.yml).
+    paths:
+        - ../../runtime/src
+
+    defines:
+        # Native bench runs use a hidden SDL window (no window on screen)
+        - clay_sdl_headless
+
+    # `ceramic clay build mac --variant perf`: release build without the hxcpp
+    # pointer checks, safe mode and stack bookkeeping that Ceramic adds for
+    # crash dumps, for timings (diagnostic: the default build is the one whose
+    # numbers count)
+    if perf:
+        +defines:
+            - ceramic_no_hxcpp_checks
