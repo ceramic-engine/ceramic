@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
+import glaze.Component;
 import glaze.Context;
 import glaze.ElementId;
 import glaze.Entity;
@@ -16,7 +17,6 @@ import glaze.Model;
 import glaze.MouseButton;
 import glaze.Range;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.ScrollStrategy;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -520,7 +520,7 @@ class TreeState extends Model implements Render {
  * selection. To drag entries, use `onDrag` on that content: a press that
  * starts a drag is not a click.
  */
-class Tree implements RenderOnce implements Styled {
+class Tree extends Component implements Styled {
 
     final id:ElementId;
 
@@ -528,11 +528,14 @@ class Tree implements RenderOnce implements Styled {
 
     final treeStyle:StyleRefinement = new StyleRefinement();
 
-    var listStyleValue:StyleRefinement = new StyleRefinement();
+    /** Applies caller-owned presentation to the internal virtual list. */
+    @prop var listStyle:StyleRefinement = new StyleRefinement();
 
-    var renderItemValue:TreeRenderItem = (_, _, _, _, _) -> div().intoAnyElement();
+    /** Supplies the application-owned content for each visible entry. */
+    @prop var item:TreeRenderItem = (_, _, _, _, _) -> div().intoAnyElement();
 
     public function new(state:Entity<TreeState>) {
+        super();
         id = ElementId.Name('tree-' + state.entityId());
         this.state = state;
     }
@@ -541,22 +544,10 @@ class Tree implements RenderOnce implements Styled {
         return treeStyle;
     }
 
-    /** Supplies the application-owned content for each visible entry. */
-    public function item(renderItem:TreeRenderItem):Tree {
-        renderItemValue = renderItem;
-        return this;
-    }
-
-    /** Applies caller-owned presentation to the internal virtual list. */
-    public function listStyle(style:StyleRefinement):Tree {
-        listStyleValue = style;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
         final focusHandle = state.read(cx).focusHandle;
-        final renderItem = renderItemValue;
-        final listStyle = listStyleValue;
+        final renderItem = item;
+        final listStyle = this.listStyle;
         state.update(cx, (state, _) -> {
             state.renderItem = renderItem;
             state.listStyle = listStyle;

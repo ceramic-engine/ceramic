@@ -5,11 +5,11 @@ package glaze.kit.base;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -24,7 +24,7 @@ using glaze.kit.base.StyledExt;
  * `ProgressIndicator` role and numeric accessibility values (0 to 100, none
  * while indeterminate), hosting a `ProgressTrack` and a `ProgressIndicator`.
  */
-class Progress implements RenderOnce implements Styled implements ParentElement {
+class Progress extends Component implements Styled implements ParentElement {
 
     /** The stateful element the progress renders (Rust delegates `InteractiveElement` to it). */
     public final base:Div;
@@ -33,9 +33,9 @@ class Progress implements RenderOnce implements Styled implements ParentElement 
 
     var valueValue:Float = 0.;
 
-    var indeterminateValue:Bool = false;
+    @prop var indeterminate:Bool = false;
 
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     final childElements:Array<AnyElement> = [];
 
@@ -43,6 +43,7 @@ class Progress implements RenderOnce implements Styled implements ParentElement 
     public final a11y:A11y = new A11y(Role.ProgressIndicator);
 
     public function new(id:ElementIdArg) {
+        super();
         base = div().id(id);
     }
 
@@ -51,16 +52,6 @@ class Progress implements RenderOnce implements Styled implements ParentElement 
      */
     public function value(value:Float):Progress {
         valueValue = value < 0. ? 0. : (value > 100. ? 100. : value);
-        return this;
-    }
-
-    public function indeterminate(indeterminate:Bool):Progress {
-        indeterminateValue = indeterminate;
-        return this;
-    }
-
-    public function accessibilityLabel(label:String):Progress {
-        accessibilityLabelValue = label;
         return this;
     }
 
@@ -78,10 +69,10 @@ class Progress implements RenderOnce implements Styled implements ParentElement 
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        a11y.label = accessibilityLabelValue;
+        a11y.label = accessibilityLabel;
         a11y.minNumericValue = 0.;
         a11y.maxNumericValue = 100.;
-        a11y.numericValue = indeterminateValue ? null : valueValue;
+        a11y.numericValue = indeterminate ? null : valueValue;
         base.extend(childElements);
         return base.refineStyle(progressStyle);
     }
@@ -91,13 +82,15 @@ class Progress implements RenderOnce implements Styled implements ParentElement 
 /**
  * An unstyled progress track.
  */
-class ProgressTrack implements RenderOnce implements Styled implements ParentElement {
+class ProgressTrack extends Component implements Styled implements ParentElement {
 
     final partStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return partStyle;
@@ -123,13 +116,15 @@ class ProgressTrack implements RenderOnce implements Styled implements ParentEle
 /**
  * An unstyled progress indicator.
  */
-class ProgressIndicator implements RenderOnce implements Styled implements ParentElement {
+class ProgressIndicator extends Component implements Styled implements ParentElement {
 
     final partStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return partStyle;

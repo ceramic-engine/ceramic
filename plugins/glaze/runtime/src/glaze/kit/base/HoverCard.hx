@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.Anchor;
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Context;
 import glaze.Div;
 import glaze.ElementId;
@@ -15,7 +16,6 @@ import glaze.IntoElement;
 import glaze.Model;
 import glaze.MouseButton;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Task;
@@ -34,7 +34,7 @@ using glaze.kit.base.StyledExt;
  * the parent layout and whose bounds the card is anchored to. Delays are in
  * seconds.
  */
-class HoverCard implements RenderOnce implements Styled {
+class HoverCard extends Component implements Styled {
 
     /** The error thrown by `trigger(null)`. */
     public static inline final NULL_TRIGGER_ERROR = 'HoverCard.trigger: the trigger element must not be null';
@@ -43,32 +43,31 @@ class HoverCard implements RenderOnce implements Styled {
 
     final hoverCardStyle:StyleRefinement = new StyleRefinement();
 
-    var anchorValue:Anchor = Anchor.TopCenter;
+    @prop var anchor:Anchor = Anchor.TopCenter;
 
     @:allow(tests)
     var tapToOpen:Bool = glaze.kit.base.Prelude.isMobile();
 
     var triggerElement:Null<AnyElement> = null;
 
-    var contentBuilder:Null<(HoverCardState, Window, Context<HoverCardState>) -> Div> = null;
+    /**
+     * The content builder, returning a stateful `Div` (Rust `Stateful<Div>`).
+     */
+    @prop var content:Null<(HoverCardState, Window, Context<HoverCardState>) -> Div> = null;
 
-    var openDelayValue:Float = 0.6;
+    @prop var openDelay:Float = 0.6;
 
-    var closeDelayValue:Float = 0.3;
+    @prop var closeDelay:Float = 0.3;
 
-    var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
+    @prop var onOpenChange:Null<(Bool, Window, App) -> Void> = null;
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
     public inline function style():StyleRefinement {
         return hoverCardStyle;
-    }
-
-    public function anchor(anchor:Anchor):HoverCard {
-        anchorValue = anchor;
-        return this;
     }
 
     /**
@@ -81,34 +80,11 @@ class HoverCard implements RenderOnce implements Styled {
         return this;
     }
 
-    /**
-     * The content builder, returning a stateful `Div` (Rust `Stateful<Div>`).
-     */
-    public function content(content:(HoverCardState, Window, Context<HoverCardState>) -> Div):HoverCard {
-        contentBuilder = content;
-        return this;
-    }
-
-    public function openDelay(duration:Float):HoverCard {
-        openDelayValue = duration;
-        return this;
-    }
-
-    public function closeDelay(duration:Float):HoverCard {
-        closeDelayValue = duration;
-        return this;
-    }
-
-    public function onOpenChange(callback:(Bool, Window, App) -> Void):HoverCard {
-        onOpenChangeHandler = callback;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
-        final openDelay = openDelayValue;
-        final closeDelay = closeDelayValue;
+        final openDelay = this.openDelay;
+        final closeDelay = this.closeDelay;
         final state:Entity<HoverCardState> = KeyedEntity.use(window, id, cx, (_, _) -> new HoverCardState(openDelay, closeDelay));
-        final onOpenChange = onOpenChangeHandler;
+        final onOpenChange = this.onOpenChange;
         state.update(cx, (state, _) -> state.sync(openDelay, closeDelay, onOpenChange));
         final open = (state : HoverCardState).isOpen();
 
@@ -129,13 +105,13 @@ class HoverCard implements RenderOnce implements Styled {
         }
         final popup = Popup.component(id, triggerDiv)
             .refineStyle(hoverCardStyle)
-            .anchor(anchorValue);
+            .anchor(anchor);
 
         if (!open) {
             return popup;
         }
 
-        final content = contentBuilder;
+        final content = this.content;
         if (content != null) {
             final hover = (hovered:Bool, window:Window, cx:App) -> state.update(cx, (state, cx) -> state.onContentHover(hovered, window, cx));
             final dismiss = (_, window:Window, cx:App) -> state.update(cx, (state, cx) -> {

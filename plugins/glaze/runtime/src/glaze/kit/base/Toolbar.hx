@@ -5,6 +5,7 @@ package glaze.kit.base;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -12,7 +13,6 @@ import glaze.FocusHandle;
 import glaze.IntoElement;
 import glaze.KeyDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -52,7 +52,7 @@ using glaze.kit.base.StyledExt;
  * them. Place inputs at the trailing end of a horizontal toolbar, as the
  * Base UI Toolbar recommends.
  */
-class Toolbar implements RenderOnce implements Styled implements ParentElement {
+class Toolbar extends Component implements Styled implements ParentElement {
 
     /**
      * Upper bound on tab-stop hops when wrapping focus back into the toolbar, so
@@ -68,8 +68,12 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement {
 
     final toolbarStyle:StyleRefinement = new StyleRefinement();
 
+    /**
+     * Disables the toolbar's own keyboard navigation. Hosted controls are
+     * not automatically disabled.
+     */
     @:allow(tests)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
@@ -78,6 +82,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement {
     public final a11y:A11y = new A11y(Role.Toolbar);
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = div().id(id);
     }
@@ -97,15 +102,6 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement {
 
     public function children(children:Array<IntoElement>):Toolbar {
         for (child in children) if (child != null) childElements.push(child);
-        return this;
-    }
-
-    /**
-     * Disables the toolbar's own keyboard navigation. Hosted controls are
-     * not automatically disabled.
-     */
-    public function disabled(disabled:Bool):Toolbar {
-        disabledValue = disabled;
         return this;
     }
 
@@ -165,7 +161,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final disabled = disabledValue;
+        final disabled = this.disabled;
 
         // The handle must survive across frames so containment checks and the
         // key handler refer to the same dispatch-tree node; Button uses the
@@ -199,15 +195,18 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement {
  * Unlike Base UI's `Toolbar.Group`, the group cannot disable its children:
  * disabling the hosted controls is the group owner's job.
  */
-class ToolbarGroup implements RenderOnce implements Styled implements ParentElement {
+class ToolbarGroup extends Component implements Styled implements ParentElement {
 
     /** The stateful element the group renders. */
     public final base:Div;
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
+    /**
+     * Sets the accessible name announced for the group, e.g. "History".
+     */
     @:allow(tests)
-    var labelValue:Null<String> = null;
+    @prop var label:Null<String> = null;
 
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
@@ -216,6 +215,7 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
     public final a11y:A11y = new A11y(Role.Group);
 
     public function new(id:ElementIdArg) {
+        super();
         base = div().id(id);
     }
 
@@ -237,20 +237,12 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
         return this;
     }
 
-    /**
-     * Sets the accessible name announced for the group, e.g. "History".
-     */
-    public function label(label:String):ToolbarGroup {
-        labelValue = label;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
         // A group is one inline segment of the bar, so its children flow
         // along the row and center on the bar's cross axis; the same neutral
         // geometry `Tab` applies. Spacing between items is the caller's
         // (matching the bar's own gap).
-        if (labelValue != null) a11y.label = labelValue;
+        if (label != null) a11y.label = label;
         base.flex().itemsCenter();
         base.extend(childElements);
         return base.refineStyle(groupStyle);

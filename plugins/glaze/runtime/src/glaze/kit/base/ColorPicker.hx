@@ -7,6 +7,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Context;
 import glaze.Div;
 import glaze.ElementId;
@@ -21,7 +22,6 @@ import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.Rgba;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
@@ -453,74 +453,45 @@ class ColorPickerState extends Model implements Render {
  * This root owns focus, accessibility semantics, and the keyboard behavior
  * that opens and dismisses the picker.
  */
-class ColorPicker implements RenderOnce implements Styled implements ParentElement {
+class ColorPicker extends Component implements Styled implements ParentElement {
 
     /** The stateful element the picker renders. */
     public final base:Div;
 
-    var openValue:Bool = false;
+    /** Sets the application-controlled open state. */
+    @prop var open:Bool = false;
 
-    var disabledValue:Bool = false;
+    /** Prevents keyboard interaction and removes the trigger from tab traversal. */
+    @prop var disabled:Bool = false;
 
-    var focusHandleValue:Null<FocusHandle> = null;
+    /** Supplies the focus handle for the picker trigger. */
+    @prop var trackFocus:Null<FocusHandle> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /** Sets the accessible name exposed by the controlled root. */
+    @prop var accessibilityLabel:Null<String> = null;
 
     final pickerStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
-
-    var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
-
-    var keyContextValue:String = @:privateAccess ColorPickerState.CONTEXT;
-
-    var roleValue:RoleOverride = RoleOverride.Implicit;
-
-    /** The accessibility properties the picker exports (filled by `render`). */
-    public final a11y:A11y = new A11y();
-
-    public function new(id:ElementIdArg) {
-        base = div().id(id);
-    }
-
-    /** Sets the application-controlled open state. */
-    public function open(open:Bool):ColorPicker {
-        openValue = open;
-        return this;
-    }
-
-    /** Prevents keyboard interaction and removes the trigger from tab traversal. */
-    public function disabled(disabled:Bool):ColorPicker {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /** Supplies the focus handle for the picker trigger. */
-    public function trackFocus(focusHandle:FocusHandle):ColorPicker {
-        focusHandleValue = focusHandle;
-        return this;
-    }
-
-    /** Sets the accessible name exposed by the controlled root. */
-    public function accessibilityLabel(label:String):ColorPicker {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /** Overrides the accessibility role. The default is `Role.Button`. */
-    public function role(role:RoleOverride):ColorPicker {
-        roleValue = role;
-        return this;
-    }
 
     /**
      * Handles requests to update the controlled open state.
      *
      * Confirm toggles the picker and Cancel dismisses an open one.
      */
-    public function onOpenChange(handler:(Bool, Window, App) -> Void):ColorPicker {
-        onOpenChangeHandler = handler;
-        return this;
+    @prop var onOpenChange:Null<(Bool, Window, App) -> Void> = null;
+
+    var keyContextValue:String = @:privateAccess ColorPickerState.CONTEXT;
+
+    /** Overrides the accessibility role. The default is `Role.Button`. */
+    @prop var role:RoleOverride = RoleOverride.Implicit;
+
+    /** The accessibility properties the picker exports (filled by `render`). */
+    public final a11y:A11y = new A11y();
+
+    public function new(id:ElementIdArg) {
+        super();
+        base = div().id(id);
     }
 
     @:noCompletion
@@ -538,16 +509,16 @@ class ColorPicker implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final open = openValue;
-        final disabled = disabledValue;
-        final handler = onOpenChangeHandler;
+        final open = this.open;
+        final disabled = this.disabled;
+        final handler = onOpenChange;
 
-        a11y.role = roleValue.resolve(() -> Role.Button);
+        a11y.role = role.resolve(() -> Role.Button);
         a11y.expanded = open;
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
         base.keyContext(keyContextValue);
-        if (focusHandleValue != null && !disabled) {
-            base.trackFocus(focusHandleValue.tabStop(true));
+        if (trackFocus != null && !disabled) {
+            base.trackFocus(trackFocus.tabStop(true));
         }
         base
             .onAction(Confirm, (_, window, cx) -> {
@@ -584,7 +555,7 @@ class ColorPicker implements RenderOnce implements Styled implements ParentEleme
  *
  * Interactive styles go to `base`.
  */
-class ColorSwatch implements RenderOnce implements Styled implements ParentElement {
+class ColorSwatch extends Component implements Styled implements ParentElement {
 
     final id:ElementIdArg;
 
@@ -593,30 +564,39 @@ class ColorSwatch implements RenderOnce implements Styled implements ParentEleme
 
     final colorValue:Hsla;
 
-    var selectedValue:Bool = false;
+    /** Marks this swatch as the picker's current color. */
+    @prop var selected:Bool = false;
 
-    var disabledValue:Bool = false;
+    /** Sets whether pointer and keyboard activation are ignored. */
+    @prop var disabled:Bool = false;
 
     final swatchStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    var accessibilityLabelValue:Null<String> = null;
+    /** Overrides the accessible name. The default is the color's hex value. */
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var onClickHandler:Null<(Hsla, ClickEvent, Window, App) -> Void> = null;
+    /** Handles activation with the swatch's color. */
+    @prop var onClick:Null<(Hsla, ClickEvent, Window, App) -> Void> = null;
 
-    var onHoverHandler:Null<(Hsla, Bool, Window, App) -> Void> = null;
+    /** Handles hover enter and exit with the swatch's color. */
+    @prop var onHover:Null<(Hsla, Bool, Window, App) -> Void> = null;
 
-    var tabIndexValue:Int = 0;
+    /** Sets the focus traversal index. The default is `0`. */
+    @prop var tabIndex:Int = 0;
 
-    var tabStopValue:Bool = true;
+    /** Sets whether this swatch participates in keyboard focus traversal. */
+    @prop var tabStop:Bool = true;
 
-    var roleValue:RoleOverride = RoleOverride.Implicit;
+    /** Overrides the accessibility role. The default is `Role.RadioButton`. */
+    @prop var role:RoleOverride = RoleOverride.Implicit;
 
     /** The accessibility properties the swatch exports (filled by `render`). */
     public final a11y:A11y = new A11y();
 
     public function new(id:ElementIdArg, color:Hsla) {
+        super();
         this.id = id;
         this.base = div().id(id);
         this.colorValue = color;
@@ -625,54 +605,6 @@ class ColorSwatch implements RenderOnce implements Styled implements ParentEleme
     /** The color this swatch represents. */
     public inline function color():Hsla {
         return colorValue;
-    }
-
-    /** Marks this swatch as the picker's current color. */
-    public function selected(selected:Bool):ColorSwatch {
-        selectedValue = selected;
-        return this;
-    }
-
-    /** Sets whether pointer and keyboard activation are ignored. */
-    public function disabled(disabled:Bool):ColorSwatch {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /** Overrides the accessible name. The default is the color's hex value. */
-    public function accessibilityLabel(label:String):ColorSwatch {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /** Overrides the accessibility role. The default is `Role.RadioButton`. */
-    public function role(role:RoleOverride):ColorSwatch {
-        roleValue = role;
-        return this;
-    }
-
-    /** Handles activation with the swatch's color. */
-    public function onClick(handler:(Hsla, ClickEvent, Window, App) -> Void):ColorSwatch {
-        onClickHandler = handler;
-        return this;
-    }
-
-    /** Handles hover enter and exit with the swatch's color. */
-    public function onHover(handler:(Hsla, Bool, Window, App) -> Void):ColorSwatch {
-        onHoverHandler = handler;
-        return this;
-    }
-
-    /** Sets the focus traversal index. The default is `0`. */
-    public function tabIndex(tabIndex:Int):ColorSwatch {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    /** Sets whether this swatch participates in keyboard focus traversal. */
-    public function tabStop(tabStop:Bool):ColorSwatch {
-        tabStopValue = tabStop;
-        return this;
     }
 
     /** Interactive style while hovered (on `base`). */
@@ -697,25 +629,25 @@ class ColorSwatch implements RenderOnce implements Styled implements ParentEleme
 
     public function render(window:Window, cx:App):IntoElement {
         final color = colorValue;
-        final disabled = disabledValue;
-        final selected = selectedValue;
-        final label = accessibilityLabelValue != null ? accessibilityLabelValue : ColorPickerState.hexString(color);
+        final disabled = this.disabled;
+        final selected = this.selected;
+        final label = accessibilityLabel != null ? accessibilityLabel : ColorPickerState.hexString(color);
         final focusHandle = window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
 
-        a11y.role = roleValue.resolve(() -> Role.RadioButton);
+        a11y.role = role.resolve(() -> Role.RadioButton);
         a11y.label = label;
         // A palette color is both "toggled" and "selected"; assistive
         // technology reads one or the other, so state both.
         a11y.toggled = selected ? Toggled.True : Toggled.False;
         a11y.selected = selected;
         if (!disabled) {
-            base.trackFocus(focusHandle.tabIndex(tabIndexValue).tabStop(tabStopValue));
+            base.trackFocus(focusHandle.tabIndex(tabIndex).tabStop(tabStop));
         }
-        final onHover = onHoverHandler;
+        final onHover = this.onHover;
         if (!disabled && onHover != null) {
             base.onHover((entered, window, cx) -> onHover(color, entered, window, cx));
         }
-        final onClick = onClickHandler;
+        final onClick = this.onClick;
         if (!disabled && onClick != null) {
             a11y.clickable = true;
             base.onClick((event, window, cx) -> onClick(color, event, window, cx));

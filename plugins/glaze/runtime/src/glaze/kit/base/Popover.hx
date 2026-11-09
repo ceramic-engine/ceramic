@@ -8,6 +8,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Context;
 import glaze.DismissEvent;
 import glaze.ElementId;
@@ -192,7 +193,7 @@ class PopoverState extends Model implements Render {
  * Its style applies to the trigger container: the element that takes part in
  * the parent layout and whose bounds the popup is anchored to.
  */
-class Popover implements RenderOnce implements Styled {
+class Popover extends Component implements Styled {
 
     static inline final CONTEXT = 'Popover';
 
@@ -216,29 +217,39 @@ class Popover implements RenderOnce implements Styled {
 
     final popoverStyle:StyleRefinement = new StyleRefinement();
 
-    var anchorValue:Anchor = Anchor.TopLeft;
+    @prop var anchor:Anchor = Anchor.TopLeft;
 
-    var offsetValue:Float = 0.;
+    /**
+     * Gap from the trigger along the anchor's outward direction, zero by default.
+     */
+    @prop var offset:Float = 0.;
 
-    var onPositionCallback:Null<(ResolvedPosition, Bounds) -> Void> = null;
+    /**
+     * Observe geometry to supply presentation such as a pointer arrow.
+     */
+    @prop var onPosition:Null<(ResolvedPosition, Bounds) -> Void> = null;
 
-    var defaultOpenValue:Bool = false;
+    @prop var defaultOpen:Bool = false;
 
-    var openValue:Null<Bool> = null;
+    @prop var open:Null<Bool> = null;
 
-    var trackedFocusHandle:Null<FocusHandle> = null;
+    @prop var trackFocus:Null<FocusHandle> = null;
 
-    var triggerBuilder:Null<(Bool, Window, App) -> AnyElement> = null;
+    /**
+     * Supplies a trigger builder for higher-level presentation facades.
+     */
+    @prop var triggerWith:Null<(Bool, Window, App) -> AnyElement> = null;
 
     var contentBuilder:Null<(PopoverState, Window, Context<PopoverState>) -> AnyElement> = null;
 
-    var mouseButtonValue:MouseButton = MouseButton.Left;
+    @prop var mouseButton:MouseButton = MouseButton.Left;
 
-    var overlayClosableValue:Bool = true;
+    @prop var overlayClosable:Bool = true;
 
-    var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
+    @prop var onOpenChange:Null<(Bool, Window, App) -> Void> = null;
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -246,38 +257,12 @@ class Popover implements RenderOnce implements Styled {
         return popoverStyle;
     }
 
-    public function anchor(anchor:Anchor):Popover {
-        anchorValue = anchor;
-        return this;
-    }
-
-    /**
-     * Gap from the trigger along the anchor's outward direction, zero by default.
-     */
-    public function offset(offset:Float):Popover {
-        offsetValue = offset;
-        return this;
-    }
-
-    /**
-     * Observe geometry to supply presentation such as a pointer arrow.
-     */
-    public function onPosition(callback:(ResolvedPosition, Bounds) -> Void):Popover {
-        onPositionCallback = callback;
-        return this;
-    }
-
-    public function mouseButton(mouseButton:MouseButton):Popover {
-        mouseButtonValue = mouseButton;
-        return this;
-    }
-
     /**
      * Sets the trigger: a `Selectable` element, marked open while the
      * popover is open.
      */
     public function trigger(trigger:Selectable):Popover {
-        triggerBuilder = (isOpen, _, _) -> {
+        triggerWith = (isOpen, _, _) -> {
             final open = trigger.isOpen();
             trigger.setOpen(open || isOpen);
             return selectableElement(trigger);
@@ -298,50 +283,17 @@ class Popover implements RenderOnce implements Styled {
         return (element : IntoElement);
     }
 
-    /**
-     * Supplies a trigger builder for higher-level presentation facades.
-     */
-    public function triggerWith(trigger:(Bool, Window, App) -> AnyElement):Popover {
-        triggerBuilder = trigger;
-        return this;
-    }
-
-    public function defaultOpen(open:Bool):Popover {
-        defaultOpenValue = open;
-        return this;
-    }
-
-    public function open(open:Bool):Popover {
-        openValue = open;
-        return this;
-    }
-
-    public function trackFocus(handle:FocusHandle):Popover {
-        trackedFocusHandle = handle;
-        return this;
-    }
-
-    public function overlayClosable(closable:Bool):Popover {
-        overlayClosableValue = closable;
-        return this;
-    }
-
-    public function onOpenChange(callback:(Bool, Window, App) -> Void):Popover {
-        onOpenChangeHandler = callback;
-        return this;
-    }
-
     public function content(content:(PopoverState, Window, Context<PopoverState>) -> IntoElement):Popover {
         contentBuilder = (state, window, cx) -> content(state, window, cx);
         return this;
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final defaultOpen = defaultOpenValue;
+        final defaultOpen = this.defaultOpen;
         final state:Entity<PopoverState> = KeyedEntity.use(window, id, cx, (_, stateCx:Context<PopoverState>) -> new PopoverState(defaultOpen, stateCx.app));
-        final trackedFocusHandle = this.trackedFocusHandle;
-        final onOpenChange = onOpenChangeHandler;
-        final openValue = this.openValue;
+        final trackedFocusHandle = this.trackFocus;
+        final onOpenChange = this.onOpenChange;
+        final openValue = this.open;
         state.update(cx, (state, stateCx) -> {
             state.trackFocus(trackedFocusHandle);
             state.setOnOpenChange(onOpenChange);
@@ -353,16 +305,16 @@ class Popover implements RenderOnce implements Styled {
 
         final open = (state : PopoverState).isOpen();
         final focusHandle = (state : PopoverState).focusHandle(cx);
-        final trigger = triggerBuilder;
+        final trigger = triggerWith;
         if (trigger == null) {
             return div().id('empty');
         }
         final parentViewId = window.currentView();
         final popup = Popup.component(id, trigger(open, window, cx))
             .refineStyle(popoverStyle)
-            .anchor(anchorValue)
-            .offset(offsetValue);
-        final onPosition = onPositionCallback;
+            .anchor(anchor)
+            .offset(offset);
+        final onPosition = this.onPosition;
         if (onPosition != null) {
             popup.onPosition(onPosition);
         }
@@ -372,7 +324,7 @@ class Popover implements RenderOnce implements Styled {
                 state.update(cx, (state, cx) -> state.toggleOpen(window, cx));
                 cx.notify(parentViewId);
             })
-            .onMouseDown(mouseButtonValue, (_, window, cx) -> {
+            .onMouseDown(mouseButton, (_, window, cx) -> {
                 cx.stopPropagation();
                 state.update(cx, (state, cx) -> {
                     if (state.isOpen() == open) {
@@ -400,7 +352,7 @@ class Popover implements RenderOnce implements Styled {
         if (contentBuilder != null) {
             content.child(state.update(cx, (state, stateCx) -> contentBuilder(state, window, stateCx)));
         }
-        if (overlayClosableValue) {
+        if (overlayClosable) {
             content.onMouseDownOut((_, window, cx) -> {
                 state.update(cx, (state, cx) -> state.dismiss(window, cx));
                 cx.notify(parentViewId);

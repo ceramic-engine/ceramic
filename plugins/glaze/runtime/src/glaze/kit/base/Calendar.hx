@@ -7,6 +7,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Context;
 import glaze.Div;
 import glaze.ElementId;
@@ -20,7 +21,6 @@ import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -590,7 +590,7 @@ class CalendarItemState {
  *
  * Interactive styles and listeners go to `base` (see `glaze.kit.base.Button`).
  */
-class CalendarItem implements RenderOnce implements Styled implements ParentElement {
+class CalendarItem extends Component implements Styled implements ParentElement {
 
     /** The stateful element the item renders. */
     public final base:Div;
@@ -606,6 +606,7 @@ class CalendarItem implements RenderOnce implements Styled implements ParentElem
 
     @:allow(glaze.kit.base)
     function new(id:ElementIdArg, state:CalendarItemState) {
+        super();
         this.base = div().id(id);
         this.state = state;
     }
@@ -686,21 +687,21 @@ class CalendarItem implements RenderOnce implements Styled implements ParentElem
  * Base owns navigation, view switching, grids, disabled/selection state and
  * click handling. The UI crate only decorates the pre-wired item slot.
  */
-class Calendar implements RenderOnce implements Styled {
+class Calendar extends Component implements Styled {
 
     final id:ElementIdArg;
 
     final state:Entity<CalendarState>;
 
-    var numberOfMonthsValue:Int = 1;
+    @prop var numberOfMonths:Int = 1;
 
-    var firstDayOfWeekValue:Weekday = glaze.kit.base.chrono.Weekday.Sun;
+    @prop var firstDayOfWeek:Weekday = glaze.kit.base.chrono.Weekday.Sun;
 
     final calendarStyle:StyleRefinement = new StyleRefinement();
 
-    var itemRenderer:(CalendarItem, CalendarItemState, Window, App) -> AnyElement = (item, _, _, _) -> (item : IntoElement).intoAnyElement();
+    @prop var item:(CalendarItem, CalendarItemState, Window, App) -> AnyElement = (item, _, _, _) -> (item : IntoElement).intoAnyElement();
 
-    var labeler:(CalendarItemKind, Int) -> String = (kind, value) -> switch kind {
+    @prop var label:(CalendarItemKind, Int) -> String = (kind, value) -> switch kind {
         case CalendarItemKind.Previous: '‹';
         case CalendarItemKind.Next: '›';
         case CalendarItemKind.Weekday: Std.string(value);
@@ -708,6 +709,7 @@ class Calendar implements RenderOnce implements Styled {
     }
 
     public function new(id:ElementIdArg, state:Entity<CalendarState>) {
+        super();
         this.id = id;
         this.state = state;
     }
@@ -717,39 +719,24 @@ class Calendar implements RenderOnce implements Styled {
     }
 
     public function numberOfMonths(count:Int):Calendar {
-        numberOfMonthsValue = count < 1 ? 1 : count;
-        return this;
-    }
-
-    public function firstDayOfWeek(day:Weekday):Calendar {
-        firstDayOfWeekValue = day;
-        return this;
-    }
-
-    public function item(render:(CalendarItem, CalendarItemState, Window, App) -> AnyElement):Calendar {
-        itemRenderer = render;
-        return this;
-    }
-
-    public function label(label:(CalendarItemKind, Int) -> String):Calendar {
-        labeler = label;
+        this.numberOfMonths = count < 1 ? 1 : count;
         return this;
     }
 
     function renderItem(id:ElementIdArg, state:CalendarItemState, value:Int, window:Window, cx:App):AnyElement {
-        final label = labeler(state.kind(), value);
-        return itemRenderer(new CalendarItem(id, state).withLabel(label), state, window, cx);
+        final label = this.label(state.kind(), value);
+        return this.item(new CalendarItem(id, state).withLabel(label), state, window, cx);
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final count = numberOfMonthsValue;
+        final count = this.numberOfMonths;
         final entity = this.state;
         entity.update(cx, (s, cx) -> s.setNumberOfMonths(count, window, cx));
         final view = entity.read(cx).view();
         final header = hFlex().itemsCenter().justifyBetween();
         {
             final st = new CalendarItemState(CalendarItemKind.Previous).disabled(view.isMonth() || (view.isYear() && !entity.read(cx).hasPrevYearPage()));
-            final item = new CalendarItem('calendar-prev', st).withLabel(labeler(st.kind(), 0));
+            final item = new CalendarItem('calendar-prev', st).withLabel(this.label(st.kind(), 0));
             if (!st.isDisabled()) {
                 item.onClick((_, _, cx) -> {
                     entity.update(cx, (s, cx) -> {
@@ -762,7 +749,7 @@ class Calendar implements RenderOnce implements Styled {
                     });
                 });
             }
-            header.child(itemRenderer(item, st, window, cx));
+            header.child(this.item(item, st, window, cx));
         }
         if (count == 1) {
             final s = entity.read(cx);
@@ -774,7 +761,7 @@ class Calendar implements RenderOnce implements Styled {
             ]) {
                 final kind = entry.kind;
                 final st = new CalendarItemState(kind).active(entry.active);
-                final item = new CalendarItem('calendar-' + kind.toString(), st).withLabel(labeler(kind, entry.value));
+                final item = new CalendarItem('calendar-' + kind.toString(), st).withLabel(this.label(kind, entry.value));
                 item.onClick((_, _, cx) -> {
                     entity.update(cx, (s, cx) -> {
                         final target = kind == CalendarItemKind.MonthToggle ? CalendarView.Month : CalendarView.Year;
@@ -782,17 +769,17 @@ class Calendar implements RenderOnce implements Styled {
                         cx.notify();
                     });
                 });
-                header.child(itemRenderer(item, st, window, cx));
+                header.child(this.item(item, st, window, cx));
             }
         } else {
             for (offset in 0...count) {
                 final ym = entity.read(cx).offsetYearMonth(offset);
-                header.child(div().textSm().fontMedium().child(vFlex().itemsCenter().child(labeler(CalendarItemKind.MonthToggle, ym.month)).child(Std.string(ym.year))));
+                header.child(div().textSm().fontMedium().child(vFlex().itemsCenter().child(this.label(CalendarItemKind.MonthToggle, ym.month)).child(Std.string(ym.year))));
             }
         }
         {
             final st = new CalendarItemState(CalendarItemKind.Next).disabled(view.isMonth() || (view.isYear() && !entity.read(cx).hasNextYearPage()));
-            final item = new CalendarItem('calendar-next', st).withLabel(labeler(st.kind(), 0));
+            final item = new CalendarItem('calendar-next', st).withLabel(this.label(st.kind(), 0));
             if (!st.isDisabled()) {
                 item.onClick((_, _, cx) -> {
                     entity.update(cx, (s, cx) -> {
@@ -805,7 +792,7 @@ class Calendar implements RenderOnce implements Styled {
                     });
                 });
             }
-            header.child(itemRenderer(item, st, window, cx));
+            header.child(this.item(item, st, window, cx));
         }
 
         final layout = pickerGridLayout(view);
@@ -813,12 +800,12 @@ class Calendar implements RenderOnce implements Styled {
         if (view.isDay()) {
             for (offset in 0...count) {
                 final ym = entity.read(cx).offsetYearMonth(offset);
-                final weeks = daysInMonth(ym.year, ym.month, firstDayOfWeekValue);
+                final weeks = daysInMonth(ym.year, ym.month, this.firstDayOfWeek);
                 final month = vFlex();
                 final headerRow = hFlex();
                 for (weekday in 0...7) {
                     final st = new CalendarItemState(CalendarItemKind.Weekday).muted(true).disabled(true);
-                    headerRow.child(renderItem('weekday-$offset-$weekday', st, (weekday + firstDayOfWeekValue.numDaysFromSunday()) % 7, window, cx));
+                    headerRow.child(renderItem('weekday-$offset-$weekday', st, (weekday + this.firstDayOfWeek.numDaysFromSunday()) % 7, window, cx));
                 }
                 month.child(headerRow);
                 for (weekIndex in 0...weeks.length) {
@@ -836,7 +823,7 @@ class Calendar implements RenderOnce implements Styled {
                             .disabled(disabled)
                             .today(date == s.today());
                         final item = new CalendarItem('calendar-' + date.toString() + '-$offset-$weekIndex', st)
-                            .withLabel(labeler(st.kind(), date.day()))
+                            .withLabel(this.label(st.kind(), date.day()))
                             .ariaLabel(date.toString());
                         if (!st.isDisabled()) {
                             item.onClick((_, _, cx) -> {
@@ -845,7 +832,7 @@ class Calendar implements RenderOnce implements Styled {
                                 });
                             });
                         }
-                        weekRow.child(itemRenderer(item, st, window, cx));
+                        weekRow.child(this.item(item, st, window, cx));
                     }
                     month.child(weekRow);
                 }
@@ -856,14 +843,14 @@ class Calendar implements RenderOnce implements Styled {
             for (month in 1...13) {
                 final st = new CalendarItemState(CalendarItemKind.Month).active(month == current);
                 final item = new CalendarItem('calendar-month-$month', st)
-                    .withLabel(labeler(st.kind(), month))
+                    .withLabel(this.label(st.kind(), month))
                     .onClick((_, _, cx) -> {
                         entity.update(cx, (s, cx) -> {
                             s.selectMonth(month);
                             cx.notify();
                         });
                     });
-                body.child(itemRenderer(item, st, window, cx));
+                body.child(this.item(item, st, window, cx));
             }
         } else {
             final current = entity.read(cx).currentYear();
@@ -871,14 +858,14 @@ class Calendar implements RenderOnce implements Styled {
             for (year in years) {
                 final st = new CalendarItemState(CalendarItemKind.Year).active(year == current);
                 final item = new CalendarItem('calendar-year-$year', st)
-                    .withLabel(labeler(st.kind(), year))
+                    .withLabel(this.label(st.kind(), year))
                     .onClick((_, _, cx) -> {
                         entity.update(cx, (s, cx) -> {
                             s.selectYear(year);
                             cx.notify();
                         });
                     });
-                body.child(itemRenderer(item, st, window, cx));
+                body.child(this.item(item, st, window, cx));
             }
         }
         return vFlex()

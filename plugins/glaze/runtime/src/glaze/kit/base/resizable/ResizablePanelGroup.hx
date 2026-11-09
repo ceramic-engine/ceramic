@@ -7,6 +7,7 @@ package glaze.kit.base.resizable;
 import glaze.App;
 import glaze.Axis;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Context;
 import glaze.Element;
 import glaze.ElementId;
@@ -19,7 +20,6 @@ import glaze.Model;
 import glaze.MouseMoveEvent;
 import glaze.Pixels;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.Style;
 import glaze.Window;
 import glaze.kit.base.KeyedEntity;
@@ -65,19 +65,25 @@ class DragPanelView extends Model implements Render {
 /**
  * A group of resizable panels.
  */
-class ResizablePanelGroup implements RenderOnce {
+class ResizablePanelGroup extends Component {
 
     final id:ElementId;
 
     var stateValue:Null<Entity<ResizableState>> = null;
 
-    var axisValue:Axis = Horizontal;
+    /**
+     * Set the axis of the resizable panel group, default is horizontal.
+     */
+    @prop var axis:Axis = Horizontal;
 
     var sizeValue:Null<Pixels> = null;
 
     var childPanels:Array<ResizablePanel> = [];
 
-    var onResizeValue:(Entity<ResizableState>, Window, App) -> Void = (_, _, _) -> {};
+    /**
+     * Set the callback to be called when the panels are resized.
+     */
+    @prop var onResize:(Entity<ResizableState>, Window, App) -> Void = (_, _, _) -> {};
 
     var handleAppearance:Null<ResizeHandleRenderer> = null;
 
@@ -85,6 +91,7 @@ class ResizablePanelGroup implements RenderOnce {
      * Create a new resizable panel group.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -106,14 +113,6 @@ class ResizablePanelGroup implements RenderOnce {
      */
     public function withState(state:Entity<ResizableState>):ResizablePanelGroup {
         stateValue = state;
-        return this;
-    }
-
-    /**
-     * Set the axis of the resizable panel group, default is horizontal.
-     */
-    public function axis(axis:Axis):ResizablePanelGroup {
-        axisValue = axis;
         return this;
     }
 
@@ -150,19 +149,11 @@ class ResizablePanelGroup implements RenderOnce {
         return this;
     }
 
-    /**
-     * Set the callback to be called when the panels are resized.
-     */
-    public function onResize(onResize:(Entity<ResizableState>, Window, App) -> Void):ResizablePanelGroup {
-        onResizeValue = onResize;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
         // Rust `unwrap_or` evaluates the keyed state even when a state is bound.
         final ownState = KeyedEntity.useObserved(window, id, ResizableState, cx, (_, _) -> new ResizableState());
         final state = stateValue != null ? stateValue : ownState;
-        final axis = axisValue;
+        final axis = this.axis;
         final container = axis.isHorizontal() ? hFlex() : vFlex();
 
         // Sync panels to the state
@@ -214,7 +205,7 @@ class ResizablePanelGroup implements RenderOnce {
                 }
             });
         });
-        container.child(new ResizePanelGroupElement(state, axis, onResizeValue));
+        container.child(new ResizePanelGroupElement(state, axis, onResize));
         return container;
     }
 

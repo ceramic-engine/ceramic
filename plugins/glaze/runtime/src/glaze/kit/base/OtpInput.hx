@@ -5,6 +5,7 @@ package glaze.kit.base;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Context;
 import glaze.ElementId;
 import glaze.Empty;
@@ -15,7 +16,6 @@ import glaze.KeyDownEvent;
 import glaze.Model;
 import glaze.ParentElement;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Subscription;
@@ -214,23 +214,19 @@ class OtpState extends Model implements Render {
 /**
  * Unstyled OTP interaction root. Applications provide the visual cells as children.
  */
-class OtpInput implements RenderOnce implements Styled implements ParentElement {
+class OtpInput extends Component implements Styled implements ParentElement {
 
     final state:Entity<OtpState>;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final otpStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<OtpState>) {
+        super();
         this.state = state;
-    }
-
-    public function disabled(disabled:Bool):OtpInput {
-        disabledValue = disabled;
-        return this;
     }
 
     public inline function style():StyleRefinement {
@@ -256,7 +252,7 @@ class OtpInput implements RenderOnce implements Styled implements ParentElement 
         final element = div()
             .id(ElementId.NamedInteger("base-otp-input", state.entityId()))
             .trackFocus(state.read(cx).focusHandle);
-        if (!disabledValue) {
+        if (!disabled) {
             element.onKeyDown((event, window, cx) -> state.update(cx, (state, cx) -> @:privateAccess state.onKeyDown(event, window, cx)));
         }
         element.extend(childElements);

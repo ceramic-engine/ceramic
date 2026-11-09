@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -14,7 +15,6 @@ import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -31,7 +31,7 @@ using glaze.kit.base.StyledExt;
  * Interactive styles and listeners go to `base` (Rust `InteractiveElement`
  * of the root forwards to it).
  */
-class Accordion implements RenderOnce implements Styled implements ParentElement {
+class Accordion extends Component implements Styled implements ParentElement {
 
     /** The stateful element the accordion renders. */
     public final base:Div;
@@ -44,6 +44,7 @@ class Accordion implements RenderOnce implements Styled implements ParentElement
     public final a11y:A11y = new A11y(Role.Group);
 
     public function new(id:ElementIdArg) {
+        super();
         base = div().id(id);
     }
 
@@ -86,42 +87,24 @@ class Accordion implements RenderOnce implements Styled implements ParentElement
 /**
  * An unstyled accordion item connecting one trigger with its panel content.
  */
-class AccordionItem implements RenderOnce implements Styled implements ParentElement {
+class AccordionItem extends Component implements Styled implements ParentElement {
 
     final base:Div = div();
 
     final itemStyle:StyleRefinement = new StyleRefinement();
 
-    var openValue:Bool = false;
+    @prop var open:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    var headerValue:Null<AccordionHeader> = null;
+    @prop var header:Null<AccordionHeader> = null;
 
-    var panelValue:Null<AccordionPanel> = null;
+    @prop var panel:Null<AccordionPanel> = null;
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
-
-    public function open(open:Bool):AccordionItem {
-        openValue = open;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):AccordionItem {
-        disabledValue = disabled;
-        return this;
-    }
-
-    public function header(header:AccordionHeader):AccordionItem {
-        headerValue = header;
-        return this;
-    }
-
-    public function panel(panel:AccordionPanel):AccordionItem {
-        panelValue = panel;
-        return this;
+    public function new() {
+        super();
     }
 
     public inline function style():StyleRefinement {
@@ -138,11 +121,11 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        if (headerValue != null) {
-            base.child(@:privateAccess headerValue.setOpen(openValue).setDisabled(disabledValue));
+        if (header != null) {
+            base.child(@:privateAccess header.setOpen(open).setDisabled(disabled));
         }
-        if (panelValue != null) {
-            base.child(panelValue.open(openValue));
+        if (panel != null) {
+            base.child(panel.open(open));
         }
         base.extend(childElements);
         return base.refineStyle(itemStyle);
@@ -153,13 +136,13 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
 /**
  * An unstyled heading that owns the trigger for one accordion item.
  */
-class AccordionHeader implements RenderOnce implements Styled implements ParentElement {
+class AccordionHeader extends Component implements Styled implements ParentElement {
 
     var headerId:Null<ElementId> = null;
 
     final headerStyle:StyleRefinement = new StyleRefinement();
 
-    var levelValue:Int = 3;
+    @prop var level:Int = 3;
 
     var trigger:AccordionTrigger;
 
@@ -169,12 +152,8 @@ class AccordionHeader implements RenderOnce implements Styled implements ParentE
     public final a11y:A11y = new A11y();
 
     public function new(trigger:AccordionTrigger) {
+        super();
         this.trigger = trigger;
-    }
-
-    public function level(level:Int):AccordionHeader {
-        levelValue = level;
-        return this;
     }
 
     public function id(id:ElementIdArg):AccordionHeader {
@@ -212,7 +191,7 @@ class AccordionHeader implements RenderOnce implements Styled implements ParentE
         content.refineStyle(headerStyle);
         if (headerId != null) {
             a11y.role = Role.Heading;
-            a11y.level = levelValue;
+            a11y.level = level;
             return content.id(headerId);
         }
         return content;
@@ -223,31 +202,23 @@ class AccordionHeader implements RenderOnce implements Styled implements ParentE
 /**
  * An unstyled accordion panel with controlled mounting.
  */
-class AccordionPanel implements RenderOnce implements Styled implements ParentElement {
+class AccordionPanel extends Component implements Styled implements ParentElement {
 
     var panelId:Null<ElementId> = null;
 
     final panelStyle:StyleRefinement = new StyleRefinement();
 
-    var openValue:Bool = false;
+    @prop var open:Bool = false;
 
-    var keepMountedValue:Bool = false;
+    @prop var keepMounted:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
     /** The accessibility properties the panel exports (with an id only, filled by `render`). */
     public final a11y:A11y = new A11y();
 
-    public function new() {}
-
-    public function open(open:Bool):AccordionPanel {
-        openValue = open;
-        return this;
-    }
-
-    public function keepMounted(keepMounted:Bool):AccordionPanel {
-        keepMountedValue = keepMounted;
-        return this;
+    public function new() {
+        super();
     }
 
     public function id(id:ElementIdArg):AccordionPanel {
@@ -269,7 +240,7 @@ class AccordionPanel implements RenderOnce implements Styled implements ParentEl
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        if (!openValue && !keepMountedValue) {
+        if (!open && !keepMounted) {
             return new glaze.Empty();
         }
 
@@ -293,7 +264,7 @@ class AccordionPanel implements RenderOnce implements Styled implements ParentEl
  *
  * Interactive styles and listeners go to `base`.
  */
-class AccordionTrigger implements RenderOnce implements Styled implements ParentElement {
+class AccordionTrigger extends Component implements Styled implements ParentElement {
 
     /** The stateful element the trigger renders. */
     public final base:Div;
@@ -302,35 +273,21 @@ class AccordionTrigger implements RenderOnce implements Styled implements Parent
 
     final childElements:Array<AnyElement> = [];
 
-    var openValue:Bool = false;
+    @prop var open:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    var onChangeHandler:Null<(Bool, ClickEvent, Window, App) -> Void> = null;
+    /**
+     * Handles a requested change to the controlled expanded state.
+     */
+    @prop var onChange:Null<(Bool, ClickEvent, Window, App) -> Void> = null;
 
     /** The accessibility properties the trigger exports (filled by `render`). */
     public final a11y:A11y = new A11y(Role.Button);
 
     public function new(id:ElementIdArg) {
+        super();
         base = div().id(id);
-    }
-
-    public function open(open:Bool):AccordionTrigger {
-        openValue = open;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):AccordionTrigger {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Handles a requested change to the controlled expanded state.
-     */
-    public function onChange(handler:(Bool, ClickEvent, Window, App) -> Void):AccordionTrigger {
-        onChangeHandler = handler;
-        return this;
     }
 
     public inline function style():StyleRefinement {
@@ -369,10 +326,10 @@ class AccordionTrigger implements RenderOnce implements Styled implements Parent
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final nextOpen = !openValue;
+        final nextOpen = !open;
 
-        a11y.expanded = openValue;
-        final onChange = !disabledValue ? onChangeHandler : null;
+        a11y.expanded = open;
+        final onChange = !disabled ? this.onChange : null;
         if (onChange != null) {
             a11y.clickable = true;
             base.onClick((event, window, cx) -> onChange(nextOpen, event, window, cx));

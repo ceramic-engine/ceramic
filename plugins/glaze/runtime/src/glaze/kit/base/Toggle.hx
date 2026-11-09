@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -14,7 +15,6 @@ import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -33,7 +33,7 @@ using glaze.kit.base.StyledExt;
  *
  * Interactive styles and listeners go to `base` (see `glaze.kit.base.Button`).
  */
-class Toggle implements RenderOnce implements Styled implements ParentElement {
+class Toggle extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
@@ -44,26 +44,30 @@ class Toggle implements RenderOnce implements Styled implements ParentElement {
 
     var semanticStyles:ToggleStyles = new ToggleStyles();
 
-    var pressedValue:Bool = false;
+    @prop var pressed:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
-    var onChangeHandler:Null<(Bool, ClickEvent, Window, App) -> Void> = null;
+    /**
+     * Handles a request to change the controlled pressed state.
+     */
+    @prop var onChange:Null<(Bool, ClickEvent, Window, App) -> Void> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var tabIndexValue:Int = 0;
+    @prop var tabIndex:Int = 0;
 
-    var tabStopValue:Bool = true;
+    @prop var tabStop:Bool = true;
 
-    var trackedFocus:Null<FocusHandle> = null;
+    @prop var trackFocus:Null<FocusHandle> = null;
 
     /** The accessibility properties the toggle exports (filled by `render`). */
     public final a11y:A11y = new A11y(Role.Button);
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = div().id(id);
     }
@@ -86,16 +90,6 @@ class Toggle implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function pressed(pressed:Bool):Toggle {
-        pressedValue = pressed;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Toggle {
-        disabledValue = disabled;
-        return this;
-    }
-
     /**
      * Configures application-owned styles for the toggle's semantic states.
      */
@@ -107,37 +101,9 @@ class Toggle implements RenderOnce implements Styled implements ParentElement {
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        if (pressedValue) states.push(semanticStyles.pressedStyle);
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (pressed) states.push(semanticStyles.pressedStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(toggleStyle, states);
-    }
-
-    public function accessibilityLabel(label:String):Toggle {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Handles a request to change the controlled pressed state.
-     */
-    public function onChange(handler:(Bool, ClickEvent, Window, App) -> Void):Toggle {
-        onChangeHandler = handler;
-        return this;
-    }
-
-    public function tabIndex(tabIndex:Int):Toggle {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    public function tabStop(tabStop:Bool):Toggle {
-        tabStopValue = tabStop;
-        return this;
-    }
-
-    public function trackFocus(focusHandle:FocusHandle):Toggle {
-        trackedFocus = focusHandle;
-        return this;
     }
 
     /** Interactive style while hovered (on `base`). */
@@ -175,20 +141,20 @@ class Toggle implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final focusHandle = trackedFocus != null ? trackedFocus : this.focusHandle(window, cx);
-        final pressed = pressedValue;
-        final disabled = disabledValue;
+        final focusHandle = trackFocus != null ? trackFocus : this.focusHandle(window, cx);
+        final pressed = this.pressed;
+        final disabled = this.disabled;
         final style = resolvedStyle();
-        final onChange = onChangeHandler;
+        final onChange = this.onChange;
 
         // Match Button's neutral control geometry: a fixed-size toggle
         // centers ordinary content, while callers still own its size,
         // spacing and visual treatment.
         final element = base.flex().itemsCenter().justifyCenter().lineHeight(glaze.Prelude.relative(1.));
         a11y.toggled = pressed ? Toggled.True : Toggled.False;
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
         if (!disabled) {
-            element.trackFocus(focusHandle.tabIndex(tabIndexValue).tabStop(tabStopValue));
+            element.trackFocus(focusHandle.tabIndex(tabIndex).tabStop(tabStop));
         }
         if (disabled) {
             element.onMouseDown(Left, (_, _, cx) -> cx.stopPropagation());

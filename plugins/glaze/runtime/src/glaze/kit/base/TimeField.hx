@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
+import glaze.Component;
 import glaze.Context;
 import glaze.Div;
 import glaze.ElementIdArg;
@@ -20,7 +21,6 @@ import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -589,7 +589,7 @@ class TimeFieldSegmentState {
  *
  * Listeners go to `base`.
  */
-class TimeFieldSegment implements RenderOnce implements Styled implements ParentElement {
+class TimeFieldSegment extends Component implements Styled implements ParentElement {
 
     /** The stateful element the segment renders. */
     public final base:Div;
@@ -600,6 +600,7 @@ class TimeFieldSegment implements RenderOnce implements Styled implements Parent
 
     @:allow(glaze.kit.base)
     function new(base:Div) {
+        super();
         this.base = base;
     }
 
@@ -644,38 +645,29 @@ class TimeFieldSegment implements RenderOnce implements Styled implements Parent
  * segment through `renderSegment`. A `:` separates the numeric segments;
  * the AM/PM segment follows without one.
  */
-class TimeField implements RenderOnce implements Styled {
+class TimeField extends Component implements Styled {
 
     final id:ElementIdArg;
 
     final state:Entity<TimeFieldState>;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final fieldStyle:StyleRefinement = new StyleRefinement();
-
-    var segmentRenderer:(TimeFieldSegment, TimeFieldSegmentState, Window, App) -> AnyElement = (segment, _, _, _) -> (segment : IntoElement).intoAnyElement();
-
-    /** The accessibility properties the field exports (filled by `render`). */
-    public final a11y:A11y = new A11y(Role.TimeInput);
-
-    public function new(id:ElementIdArg, state:Entity<TimeFieldState>) {
-        this.id = id;
-        this.state = state;
-    }
-
-    public function disabled(disabled:Bool):TimeField {
-        disabledValue = disabled;
-        return this;
-    }
 
     /**
      * Decorate each segment. The segment already carries its label: two
      * digits, or `AM`/`PM`.
      */
-    public function renderSegment(render:(TimeFieldSegment, TimeFieldSegmentState, Window, App) -> AnyElement):TimeField {
-        segmentRenderer = render;
-        return this;
+    @prop var renderSegment:(TimeFieldSegment, TimeFieldSegmentState, Window, App) -> AnyElement = (segment, _, _, _) -> (segment : IntoElement).intoAnyElement();
+
+    /** The accessibility properties the field exports (filled by `render`). */
+    public final a11y:A11y = new A11y(Role.TimeInput);
+
+    public function new(id:ElementIdArg, state:Entity<TimeFieldState>) {
+        super();
+        this.id = id;
+        this.state = state;
     }
 
     public inline function style():StyleRefinement {
@@ -683,7 +675,7 @@ class TimeField implements RenderOnce implements Styled {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final disabled = disabledValue;
+        final disabled = this.disabled;
         final state = this.state;
         final s = state.read(cx);
         final focusHandle = s.focusHandle;
@@ -729,7 +721,7 @@ class TimeField implements RenderOnce implements Styled {
                     state.update(cx, (s, cx) -> @:privateAccess s.selectSegment(segment, cx));
                 });
             }
-            root.child(segmentRenderer(item, segmentState, window, cx));
+            root.child(renderSegment(item, segmentState, window, cx));
         }
 
         a11y.disabled = disabled;

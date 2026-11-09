@@ -681,19 +681,19 @@ class BaseControlsTest extends TestCase {
 
     function testToolbarBuilder() {
         final toolbar = glaze.kit.base.Toolbar.component('toolbar').disabled(true).child(div());
-        assertTrue(toolbar.disabledValue);
+        assertTrue(toolbar.disabledProp);
         assertEquals(1, toolbar.childElements.length);
     }
 
     function testToolbarDefaults() {
         final toolbar = glaze.kit.base.Toolbar.component('toolbar');
-        assertFalse(toolbar.disabledValue);
+        assertFalse(toolbar.disabledProp);
         assertEquals(0, toolbar.childElements.length);
     }
 
     function testToolbarGroupBuilder() {
         final group = ToolbarGroup.component('history-group').label('History').child(div()).child(div());
-        assertEquals('History', group.labelValue);
+        assertEquals('History', group.labelProp);
         assertEquals(2, group.childElements.length);
     }
 

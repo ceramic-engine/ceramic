@@ -8,13 +8,13 @@ import glaze.Action;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
+import glaze.Component;
 import glaze.Context;
 import glaze.ElementId;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.KeyBinding;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -48,7 +48,7 @@ enum NumberInputEvent {
 /**
  * An unstyled spinbutton root composed from the foundational `InputBase` frame.
  */
-class NumberInput implements RenderOnce implements Styled implements ParentElement {
+class NumberInput extends Component implements Styled implements ParentElement {
 
     static inline final CONTEXT:String = "NumberInput";
 
@@ -63,23 +63,32 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
 
     final childElements:Array<AnyElement> = [];
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final state:Entity<InputState>;
 
-    var onStepHandler:Null<(StepAction, Window, App) -> Void> = null;
+    @prop var onStep:Null<(StepAction, Window, App) -> Void> = null;
 
-    var decrementDecorator:Null<(Button) -> Button> = null;
+    /** Decorate the built-in decrement button with application-owned content and styles. */
+    @prop var decrementButton:Null<(Button) -> Button> = null;
 
-    var incrementDecorator:Null<(Button) -> Button> = null;
+    /** Decorate the built-in increment button with application-owned content and styles. */
+    @prop var incrementButton:Null<(Button) -> Button> = null;
 
     var inputElement:Null<AnyElement> = null;
 
     var controlsRightValue:Bool = false;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /**
+     * Sets the name exposed to accessibility clients.
+     *
+     * A number input has no visible text of its own to be named by, so set
+     * this unless the input is named some other way.
+     */
+    @prop var accessibilityLabel:Null<String> = null;
 
     public function new(state:Entity<InputState>) {
+        super();
         this.state = state;
     }
 
@@ -101,28 +110,6 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    public function disabled(disabled:Bool):NumberInput {
-        disabledValue = disabled;
-        return this;
-    }
-
-    public function onStep(handler:(StepAction, Window, App) -> Void):NumberInput {
-        onStepHandler = handler;
-        return this;
-    }
-
-    /** Decorate the built-in decrement button with application-owned content and styles. */
-    public function decrementButton(decorate:(Button) -> Button):NumberInput {
-        decrementDecorator = decorate;
-        return this;
-    }
-
-    /** Decorate the built-in increment button with application-owned content and styles. */
-    public function incrementButton(decorate:(Button) -> Button):NumberInput {
-        incrementDecorator = decorate;
-        return this;
-    }
-
     /** Decorate the built-in text region with an editor, adornments, and styles. */
     public function input(input:IntoElement):NumberInput {
         inputElement = input;
@@ -135,21 +122,10 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    /**
-     * Sets the name exposed to accessibility clients.
-     *
-     * A number input has no visible text of its own to be named by, so set
-     * this unless the input is named some other way.
-     */
-    public function accessibilityLabel(label:String):NumberInput {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
-        final disabled = disabledValue;
+        final disabled = this.disabled;
         final controlsRight = controlsRightValue;
-        final onStep:(StepAction, Window, App) -> Void = if (onStepHandler != null) onStepHandler else {
+        final onStep:(StepAction, Window, App) -> Void = if (this.onStep != null) this.onStep else {
             final state = this.state;
             (action, window, cx) -> {
                 (cast state : Entity<InputBaseState>).update(cx, (s, cx) -> {
@@ -160,8 +136,8 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
         }
         state.read(cx).ensureNumberMask();
         final value = parseF64(state.read(cx).value());
-        final decrementButton = decrementDecorator != null ? decrementDecorator(glaze.kit.base.Button.component("decrement")) : glaze.kit.base.Button.component("decrement");
-        final incrementButton = incrementDecorator != null ? incrementDecorator(glaze.kit.base.Button.component("increment")) : glaze.kit.base.Button.component("increment");
+        final decrementButton = this.decrementButton != null ? this.decrementButton(glaze.kit.base.Button.component("decrement")) : glaze.kit.base.Button.component("decrement");
+        final incrementButton = this.incrementButton != null ? this.incrementButton(glaze.kit.base.Button.component("increment")) : glaze.kit.base.Button.component("increment");
         final text = NumberInputText.component();
         if (inputElement != null) text.child(inputElement);
 
@@ -208,7 +184,7 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
             .trackFocus(state.read(cx).focusHandle);
         root.flex().itemsCenter();
         root.disabled(disabled).role(Explicit(Role.SpinButton));
-        if (accessibilityLabelValue != null) root.accessibilityLabel(accessibilityLabelValue);
+        if (accessibilityLabel != null) root.accessibilityLabel(accessibilityLabel);
         if (value != null) root.a11y.numericValue = value;
         root.base.keyContext(CONTEXT);
         root.base.onAction(Increment, (_, window, cx) -> {
@@ -395,13 +371,15 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
  * Applications provide the editor itself as a child and can style this region
  * without having to recreate the number input's fixed three-part structure.
  */
-class NumberInputText implements RenderOnce implements Styled implements ParentElement {
+class NumberInputText extends Component implements Styled implements ParentElement {
 
     final textStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return textStyle;

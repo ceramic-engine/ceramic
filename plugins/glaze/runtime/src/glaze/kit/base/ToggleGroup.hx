@@ -7,11 +7,11 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -27,14 +27,17 @@ using glaze.kit.base.StyledExt;
  * Listeners go to `base`, the stateful `Div` the group renders (Rust
  * implements `InteractiveElement` by delegation).
  */
-class ToggleGroup implements RenderOnce implements Styled implements ParentElement {
+class ToggleGroup extends Component implements Styled implements ParentElement {
 
     /** The stateful element the group renders. */
     public final base:Div;
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
-    var axisValue:Axis = Axis.Horizontal;
+    /**
+     * Sets the semantic axis of the group.
+     */
+    @prop var axis:Axis = Axis.Horizontal;
 
     final childElements:Array<AnyElement> = [];
 
@@ -42,6 +45,7 @@ class ToggleGroup implements RenderOnce implements Styled implements ParentEleme
     public final a11y:A11y = new A11y(Role.Toolbar);
 
     public function new(id:ElementIdArg) {
+        super();
         base = div().id(id);
     }
 
@@ -63,14 +67,6 @@ class ToggleGroup implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    /**
-     * Sets the semantic axis of the group.
-     */
-    public function axis(axis:Axis):ToggleGroup {
-        axisValue = axis;
-        return this;
-    }
-
     /** A click listener on the group element (on `base`). */
     public function onClick(listener:(ClickEvent, Window, App) -> Void):ToggleGroup {
         base.onClick(listener);
@@ -78,7 +74,7 @@ class ToggleGroup implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        a11y.orientation = axisValue == Axis.Horizontal ? Orientation.Horizontal : Orientation.Vertical;
+        a11y.orientation = axis == Axis.Horizontal ? Orientation.Horizontal : Orientation.Vertical;
         base.extend(childElements);
         return base.refineStyle(groupStyle);
     }

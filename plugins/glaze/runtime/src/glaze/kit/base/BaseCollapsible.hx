@@ -5,12 +5,12 @@ package glaze.kit.base;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -33,23 +33,20 @@ private enum CollapsibleChild {
  * Rust `gpui_base::Collapsible`, renamed: `glaze.kit.base.Collapsible` is the
  * component trait of `ComponentTraits`.
  */
-class BaseCollapsible implements RenderOnce implements Styled implements ParentElement {
+class BaseCollapsible extends Component implements Styled implements ParentElement {
 
     final base:Div = div();
 
     final childEntries:Array<CollapsibleChild> = [];
 
-    var openValue:Bool = false;
+    @prop var open:Bool = false;
 
     var revealId:Null<ElementId> = null;
 
     var revealProgress:Float = 0.;
 
-    public function new() {}
-
-    public function open(open:Bool):BaseCollapsible {
-        openValue = open;
-        return this;
+    public function new() {
+        super();
     }
 
     public function content(content:IntoElement):BaseCollapsible {
@@ -88,7 +85,7 @@ class BaseCollapsible implements RenderOnce implements Styled implements ParentE
                 case Content(content):
                     if (revealId != null) {
                         children.push(new MotionReveal(revealId, revealProgress, content).intoAnyElement());
-                    } else if (openValue) {
+                    } else if (open) {
                         children.push(content);
                     }
             }

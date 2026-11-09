@@ -5,12 +5,12 @@ package glaze.kit.base;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.Img;
 import glaze.IntoElement;
 import glaze.IntoImageSource;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -23,27 +23,19 @@ using glaze.kit.base.StyledExt;
  * An unstyled avatar: shows its image slot, or its fallback when it has no
  * image.
  */
-class Avatar implements RenderOnce implements Styled {
+class Avatar extends Component implements Styled {
 
     /** The element the avatar renders (Rust delegates `InteractiveElement` to it). */
     public final base:Div = div();
 
     final avatarStyle:StyleRefinement = new StyleRefinement();
 
-    var imageValue:Null<AvatarImage> = null;
+    @prop var image:Null<AvatarImage> = null;
 
-    var fallbackValue:Null<AvatarFallback> = null;
+    @prop var fallback:Null<AvatarFallback> = null;
 
-    public function new() {}
-
-    public function image(image:AvatarImage):Avatar {
-        imageValue = image;
-        return this;
-    }
-
-    public function fallback(fallback:AvatarFallback):Avatar {
-        fallbackValue = fallback;
-        return this;
+    public function new() {
+        super();
     }
 
     public inline function style():StyleRefinement {
@@ -51,11 +43,11 @@ class Avatar implements RenderOnce implements Styled {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        if (imageValue != null) {
-            base.child(imageValue);
+        if (image != null) {
+            base.child(image);
         }
-        else if (fallbackValue != null) {
-            base.child(fallbackValue);
+        else if (fallback != null) {
+            base.child(fallback);
         }
         return base.refineStyle(avatarStyle);
     }
@@ -65,7 +57,7 @@ class Avatar implements RenderOnce implements Styled {
 /**
  * The image slot of an `Avatar`.
  */
-class AvatarImage implements RenderOnce implements Styled {
+class AvatarImage extends Component implements Styled {
 
     /** The image element (Rust delegates `InteractiveElement` to it). */
     public final image:Img;
@@ -73,6 +65,7 @@ class AvatarImage implements RenderOnce implements Styled {
     final imageStyle:StyleRefinement = new StyleRefinement();
 
     public function new(source:IntoImageSource) {
+        super();
         image = img(source);
     }
 
@@ -89,7 +82,7 @@ class AvatarImage implements RenderOnce implements Styled {
 /**
  * The fallback slot of an `Avatar`, shown without an image.
  */
-class AvatarFallback implements RenderOnce implements Styled implements ParentElement {
+class AvatarFallback extends Component implements Styled implements ParentElement {
 
     final base:Div = div();
 
@@ -97,7 +90,9 @@ class AvatarFallback implements RenderOnce implements Styled implements ParentEl
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return fallbackStyle;

@@ -5,11 +5,11 @@ package glaze.kit.base;
 
 import glaze.AnyView;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.SpringMath.f32;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -39,7 +39,7 @@ import glaze.Prelude.div;
  *     .item((page, window, cx) -> page.left(px((1 - page.progress()) * 40)));
  * ```
  */
-class NavStack implements RenderOnce implements Styled {
+class NavStack extends Component implements Styled {
 
     final base:Div;
 
@@ -47,11 +47,20 @@ class NavStack implements RenderOnce implements Styled {
 
     final state:Entity<NavStackState>;
 
-    var policy:Null<Transition> = null;
+    /**
+     * The timing every push, pop and replace runs under.
+     */
+    @prop var transition:Null<Transition> = null;
 
-    var renderItem:Null<(NavPage, Window, App) -> IntoElement> = null;
+    /**
+     * Renders each mounted view. The item is already positioned to fill the
+     * container; refine it to move or fade the view by its phase and
+     * progress, then return it.
+     */
+    @prop var item:Null<(NavPage, Window, App) -> IntoElement> = null;
 
     public function new(state:Entity<NavStackState>) {
+        super();
         this.base = div();
         this.state = state;
     }
@@ -60,32 +69,14 @@ class NavStack implements RenderOnce implements Styled {
         return styleRefinement;
     }
 
-    /**
-     * The timing every push, pop and replace runs under.
-     */
-    public function transition(transition:Transition):NavStack {
-        policy = transition;
-        return this;
-    }
-
-    /**
-     * Renders each mounted view. The item is already positioned to fill the
-     * container; refine it to move or fade the view by its phase and
-     * progress, then return it.
-     */
-    public function item(render:(NavPage, Window, App) -> IntoElement):NavStack {
-        renderItem = render;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
         final stack:NavStackState = state.read(cx);
         final current = stack.current();
         final depth = stack.depth();
         final transit = stack.transit;
 
-        final immediate = cx.reduceMotion() || policy == null || (transit != null && transit.motion == Immediate);
-        final transition = immediate ? new Transition(0) : policy;
+        final immediate = cx.reduceMotion() || this.transition == null || (transit != null && transit.motion == Immediate);
+        final transition = immediate ? new Transition(0) : this.transition;
 
         // The outgoing view's presence is the change's clock: its exit runs
         // 1 to 0, reversing if the change is interrupted, and both pages of
@@ -136,7 +127,7 @@ class NavStack implements RenderOnce implements Styled {
 
         final base = this.base.relative();
         base.style().refine(styleRefinement);
-        final render = renderItem;
+        final render = this.item;
         base.children([for (item in items) render != null ? render(item, window, cx) : (item : IntoElement)]);
         // Neither page takes pointer input while the change runs: the
         // outgoing one is on its way out, and the incoming one is not yet

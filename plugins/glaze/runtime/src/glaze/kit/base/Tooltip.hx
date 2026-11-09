@@ -8,13 +8,13 @@ import glaze.AnyView;
 import glaze.App;
 import glaze.AppContext;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Context;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Task;
@@ -31,12 +31,13 @@ import glaze.Prelude.*;
  * tooltip role (Rust `Role::Tooltip`, no accesskit in the port) and accepts
  * application-owned content and presentation.
  */
-class Tooltip implements RenderOnce implements Styled implements ParentElement {
+class Tooltip extends Component implements Styled implements ParentElement {
 
     /** The stateful element the tooltip renders. */
     public final base:Div;
 
     public function new(id:ElementIdArg) {
+        super();
         base = div().id(id);
     }
 

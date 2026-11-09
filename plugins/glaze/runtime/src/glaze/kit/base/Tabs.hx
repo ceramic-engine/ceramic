@@ -6,13 +6,13 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -37,9 +37,10 @@ using glaze.kit.base.StyledExt;
 // TODO: Add compound keyboard navigation with roving focus, arrow keys,
 // Home/End, and Enter/Space activation before treating Tabs as a complete
 // desktop tab-list primitive.
-class BaseTab implements RenderOnce implements Styled implements ParentElement {
+class BaseTab extends Component implements Styled implements ParentElement {
 
-    var tabId:ElementIdArg;
+    /** Updates the element identity used when the tab is rendered. */
+    @prop var id:ElementIdArg;
 
     /** The element the tab renders. */
     public final base:Div;
@@ -48,15 +49,15 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
 
     var semanticStyles:TabStyles = new TabStyles();
 
-    var selectedValue:Bool = false;
+    @prop var selected:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
-    var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
+    @prop var onClick:Null<(ClickEvent, Window, App) -> Void> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     var positionInSet:Null<Int> = null;
 
@@ -66,29 +67,9 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
     public final a11y:A11y = new A11y(Role.Tab);
 
     public function new(id:ElementIdArg) {
-        tabId = id;
+        super();
+        this.id = id;
         base = div();
-    }
-
-    /** Updates the element identity used when the tab is rendered. */
-    public function id(id:ElementIdArg):BaseTab {
-        tabId = id;
-        return this;
-    }
-
-    public function selected(selected:Bool):BaseTab {
-        selectedValue = selected;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):BaseTab {
-        disabledValue = disabled;
-        return this;
-    }
-
-    public function accessibilityLabel(label:String):BaseTab {
-        accessibilityLabelValue = label;
-        return this;
     }
 
     /**
@@ -101,11 +82,6 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function onClick(handler:(ClickEvent, Window, App) -> Void):BaseTab {
-        onClickHandler = handler;
-        return this;
-    }
-
     public function styles(build:(TabStyles) -> TabStyles):BaseTab {
         semanticStyles = build(semanticStyles);
         return this;
@@ -114,8 +90,8 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        if (selectedValue) states.push(semanticStyles.selectedStyle);
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (selected) states.push(semanticStyles.selectedStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(tabStyle, states);
     }
 
@@ -140,10 +116,10 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final disabled = disabledValue;
+        final disabled = this.disabled;
         final style = resolvedStyle();
 
-        final element = base.id(tabId)
+        final element = base.id(id)
             // Match Button's neutral control geometry: a fixed-size tab
             // centers ordinary content, while callers still own its size,
             // spacing and visual treatment.
@@ -151,12 +127,12 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
             .itemsCenter()
             .justifyCenter()
             .lineHeight(glaze.Prelude.relative(1.));
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
-        a11y.selected = selectedValue;
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
+        a11y.selected = selected;
         if (positionInSet != null) a11y.positionInSet = positionInSet;
         if (sizeOfSet != null) a11y.sizeOfSet = sizeOfSet;
         element.onMouseDown(Left, (_, _, cx) -> cx.stopPropagation());
-        final onClick = onClickHandler;
+        final onClick = this.onClick;
         if (!disabled && onClick != null) {
             a11y.clickable = true;
             element.onClick((event, window, cx) -> onClick(event, window, cx));
@@ -200,7 +176,7 @@ class TabStyles {
  *
  * Interactive styles and listeners go to `base`.
  */
-class Tabs implements RenderOnce implements Styled implements ParentElement {
+class Tabs extends Component implements Styled implements ParentElement {
 
     /** The stateful element the tab list renders. */
     public final base:Div;
@@ -213,6 +189,7 @@ class Tabs implements RenderOnce implements Styled implements ParentElement {
     public final a11y:A11y = new A11y(Role.TabList);
 
     public function new(id:ElementIdArg) {
+        super();
         base = div().id(id);
     }
 

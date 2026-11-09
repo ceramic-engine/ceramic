@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -13,7 +14,6 @@ import glaze.FocusHandle;
 import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -33,7 +33,7 @@ using glaze.kit.base.StyledExt;
  * the stateful `Div` the link renders (Rust implements
  * `InteractiveElement` by delegation).
  */
-class Link implements RenderOnce implements Styled implements ParentElement {
+class Link extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
@@ -44,21 +44,30 @@ class Link implements RenderOnce implements Styled implements ParentElement {
 
     var semanticStyles:LinkStyles = new LinkStyles();
 
-    var hrefValue:Null<String> = null;
+    /**
+     * The link target, opened by the `openWith` strategy when activated.
+     */
+    @prop var href:Null<String> = null;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
-    var onActivateHandler:Null<(ClickEvent, Window, App) -> Void> = null;
+    /**
+     * Called on pointer or keyboard activation, after the open strategy.
+     */
+    @prop var onActivate:Null<(ClickEvent, Window, App) -> Void> = null;
 
-    var openWithHandler:Null<(String, ClickEvent, Window, App) -> Void> = null;
+    /**
+     * The strategy opening the link target (the application decides how).
+     */
+    @prop var openWith:Null<(String, ClickEvent, Window, App) -> Void> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var tabIndexValue:Int = 0;
+    @prop var tabIndex:Int = 0;
 
-    var tabStopValue:Bool = true;
+    @prop var tabStop:Bool = true;
 
     /**
      * The accessibility properties the link exports (filled by `render`).
@@ -66,6 +75,7 @@ class Link implements RenderOnce implements Styled implements ParentElement {
     public final a11y:A11y = new A11y(Role.Link);
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = div().id(id);
     }
@@ -88,35 +98,6 @@ class Link implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    /**
-     * The link target, opened by the `openWith` strategy when activated.
-     */
-    public function href(href:String):Link {
-        hrefValue = href;
-        return this;
-    }
-
-    /**
-     * The strategy opening the link target (the application decides how).
-     */
-    public function openWith(open:(String, ClickEvent, Window, App) -> Void):Link {
-        openWithHandler = open;
-        return this;
-    }
-
-    /**
-     * Called on pointer or keyboard activation, after the open strategy.
-     */
-    public function onActivate(handler:(ClickEvent, Window, App) -> Void):Link {
-        onActivateHandler = handler;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Link {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function styles(build:(LinkStyles) -> LinkStyles):Link {
         semanticStyles = build(semanticStyles);
         return this;
@@ -124,22 +105,7 @@ class Link implements RenderOnce implements Styled implements ParentElement {
 
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
-        return StateStyle.resolveStyle(linkStyle, disabledValue ? [semanticStyles.disabledStyle] : []);
-    }
-
-    public function accessibilityLabel(label:String):Link {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    public function tabIndex(tabIndex:Int):Link {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    public function tabStop(tabStop:Bool):Link {
-        tabStopValue = tabStop;
-        return this;
+        return StateStyle.resolveStyle(linkStyle, disabled ? [semanticStyles.disabledStyle] : []);
     }
 
     /** Interactive style while hovered (on `base`). */
@@ -166,20 +132,20 @@ class Link implements RenderOnce implements Styled implements ParentElement {
 
     public function render(window:Window, cx:App):IntoElement {
         final focusHandle = this.focusHandle(window, cx);
-        final disabled = disabledValue;
+        final disabled = this.disabled;
         final style = resolvedStyle();
-        final href = hrefValue;
-        final openWith = openWithHandler;
-        final onActivate = onActivateHandler;
+        final href = this.href;
+        final openWith = this.openWith;
+        final onActivate = this.onActivate;
         final activates = onActivate != null || href != null && openWith != null;
 
-        a11y.label = accessibilityLabelValue;
+        a11y.label = accessibilityLabel;
         a11y.disabled = disabled;
         a11y.clickable = !disabled && activates;
 
         final element = base;
         if (!disabled) {
-            element.trackFocus(focusHandle.tabIndex(tabIndexValue).tabStop(tabStopValue));
+            element.trackFocus(focusHandle.tabIndex(tabIndex).tabStop(tabStop));
         }
         if (disabled) {
             element.onMouseDown(Left, (_, _, cx) -> cx.stopPropagation());

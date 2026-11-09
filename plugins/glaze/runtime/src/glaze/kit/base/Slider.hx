@@ -7,6 +7,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Context;
 import glaze.Div;
 import glaze.DragMoveEvent;
@@ -19,7 +20,6 @@ import glaze.Model;
 import glaze.ParentElement;
 import glaze.Point;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -563,15 +563,18 @@ private class EmptyDragView extends Model implements Render {
  *
  * Applications provide the track, range, and thumb presentation as children.
  */
-class Slider implements RenderOnce implements Styled implements ParentElement {
+class Slider extends Component implements Styled implements ParentElement {
 
     final state:Entity<SliderState>;
 
-    var axisValue:Axis = Axis.Horizontal;
+    @prop var axis:Axis = Axis.Horizontal;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /**
+     * Sets the label exposed to accessibility clients.
+     */
+    @prop var accessibilityLabel:Null<String> = null;
 
     final base:Div = div();
 
@@ -581,6 +584,7 @@ class Slider implements RenderOnce implements Styled implements ParentElement {
     public final a11y:A11y = new A11y(Role.Slider);
 
     public function new(state:Entity<SliderState>) {
+        super();
         this.state = state;
     }
 
@@ -598,30 +602,12 @@ class Slider implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function horizontal():Slider {
-        axisValue = Axis.Horizontal;
+        axis = Axis.Horizontal;
         return this;
     }
 
     public function vertical():Slider {
-        axisValue = Axis.Vertical;
-        return this;
-    }
-
-    public function axis(axis:Axis):Slider {
-        axisValue = axis;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Slider {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Sets the label exposed to accessibility clients.
-     */
-    public function accessibilityLabel(label:String):Slider {
-        accessibilityLabelValue = label;
+        axis = Axis.Vertical;
         return this;
     }
 
@@ -648,13 +634,13 @@ class Slider implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final axis = axisValue;
+        final axis = this.axis;
         final entityId = state.entityId();
         final current = state.read(cx);
         final sliderState = state;
 
         final element = base.id(ElementId.NamedInteger('slider', entityId));
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
         a11y.numericValue = current.value().end();
         a11y.minNumericValue = current.minValue();
         a11y.maxNumericValue = current.maxValue();
@@ -662,14 +648,14 @@ class Slider implements RenderOnce implements Styled implements ParentElement {
         a11y.orientation = axis == Axis.Vertical ? Orientation.Vertical : Orientation.Horizontal;
         // A disabled slider takes no value, from the pointer or from
         // assistive technology.
-        if (!disabledValue) {
+        if (!disabled) {
             a11y.adjustable = true;
             element
                 .onMouseUp(MouseButton.Left, (_, _, cx) -> sliderState.update(cx, (state, cx) -> state.handleRelease(cx)))
                 .onMouseUpOut(MouseButton.Left, (_, _, cx) -> sliderState.update(cx, (state, cx) -> state.handleRelease(cx)));
         }
         element.extend(childElements);
-        a11y.disabled = disabledValue;
+        a11y.disabled = disabled;
         return element;
     }
 
@@ -678,13 +664,13 @@ class Slider implements RenderOnce implements Styled implements ParentElement {
 /**
  * An unstyled track that records the geometry used to map pointer positions.
  */
-class SliderTrack implements RenderOnce implements Styled implements ParentElement {
+class SliderTrack extends Component implements Styled implements ParentElement {
 
     final state:Entity<SliderState>;
 
-    var axisValue:Axis = Axis.Horizontal;
+    @prop var axis:Axis = Axis.Horizontal;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     /** The element the track renders (interactive styles and listeners). */
     public final base:Div = div();
@@ -692,6 +678,7 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<SliderState>) {
+        super();
         this.state = state;
     }
 
@@ -708,18 +695,8 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    public function axis(axis:Axis):SliderTrack {
-        axisValue = axis;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):SliderTrack {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
-        final axis = axisValue;
+        final axis = this.axis;
         final entityId = state.entityId();
         final current = state.read(cx);
         final isRange = current.value().isRange();
@@ -730,7 +707,7 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
         // Touch: GPUI routes a finger drag to `TouchDragEvent` (claimed with
         // `preventDefault`) or to scrolling; `onDrag` below is mouse-only.
         // Claim drags that start on the track, as the scrollbar thumb does.
-        if (!disabledValue) {
+        if (!disabled) {
             element.extend([
                 canvas((bounds, window, _) -> window.insertHitbox(bounds, HitboxBehavior.Normal), (_, hitbox, window, _) -> {
                     window.onMouseEvent(TouchDrag, (e, phase, window, cx) -> {
@@ -778,7 +755,7 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
                     .intoAnyElement()
             ]);
         }
-        if (!disabledValue) {
+        if (!disabled) {
             element.onMouseDown(MouseButton.Left, (event, window, cx) -> sliderState.update(cx, (state, cx) -> {
                 final isStart = if (isRange) {
                     final size = f32(state.bounds().size.along(axis));
@@ -815,7 +792,7 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
 /**
  * An unstyled slider indicator that records the value-mapping bounds.
  */
-class SliderIndicator implements RenderOnce implements Styled implements ParentElement {
+class SliderIndicator extends Component implements Styled implements ParentElement {
 
     final state:Entity<SliderState>;
 
@@ -825,6 +802,7 @@ class SliderIndicator implements RenderOnce implements Styled implements ParentE
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<SliderState>) {
+        super();
         this.state = state;
     }
 
@@ -865,15 +843,15 @@ class SliderIndicator implements RenderOnce implements Styled implements ParentE
 /**
  * An unstyled draggable slider thumb.
  */
-class SliderThumb implements RenderOnce implements Styled implements ParentElement {
+class SliderThumb extends Component implements Styled implements ParentElement {
 
     final state:Entity<SliderState>;
 
-    var axisValue:Axis = Axis.Horizontal;
+    @prop var axis:Axis = Axis.Horizontal;
 
-    var startValue:Bool = false;
+    @prop var start:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     /** The element the thumb renders (interactive styles and listeners). */
     public final base:Div = div();
@@ -881,6 +859,7 @@ class SliderThumb implements RenderOnce implements Styled implements ParentEleme
     final childElements:Array<AnyElement> = [];
 
     public function new(state:Entity<SliderState>) {
+        super();
         this.state = state;
     }
 
@@ -897,29 +876,14 @@ class SliderThumb implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    public function axis(axis:Axis):SliderThumb {
-        axisValue = axis;
-        return this;
-    }
-
-    public function start(start:Bool):SliderThumb {
-        startValue = start;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):SliderThumb {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
         final entityId = state.entityId();
-        final axis = axisValue;
-        final start = startValue;
+        final axis = this.axis;
+        final start = this.start;
         final sliderState = state;
         final element = base.id(ElementId.NamedInteger('slider-thumb', start ? 1 : 0));
         element.extend(childElements);
-        if (!disabledValue) {
+        if (!disabled) {
             element
                 .onMouseDown(MouseButton.Left, (_, _, cx) -> cx.stopPropagation())
                 .onDrag(new DragThumb(entityId, start), (drag, _, _, cx) -> {

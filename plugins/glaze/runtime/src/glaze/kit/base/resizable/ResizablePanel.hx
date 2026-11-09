@@ -6,12 +6,12 @@ package glaze.kit.base.resizable;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -41,7 +41,7 @@ using glaze.kit.base.StyledExt;
  * Reserved styles: do not call `flexBasis`, `absolute` or `overflowHidden`
  * from outside, they fight the panel's own layout management.
  */
-class ResizablePanel implements RenderOnce implements Styled implements ParentElement {
+class ResizablePanel extends Component implements Styled implements ParentElement {
 
     @:allow(glaze.kit.base.resizable)
     var axis:Axis = Horizontal;
@@ -58,13 +58,18 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
     var initialSize:Null<Pixels> = null;
 
     /**
-     * Size range limit of this panel.
+     * Set the size range to limit panel resize.
+     *
+     * Default is `PANEL_MIN_SIZE` to `Pixels.MAX`.
      */
-    var sizeRangeValue:PixelsRange = new PixelsRange(Resizable.PANEL_MIN_SIZE, Pixels.MAX);
+    @prop var sizeRange:PixelsRange = new PixelsRange(Resizable.PANEL_MIN_SIZE, Pixels.MAX);
 
     final childElements:Array<AnyElement> = [];
 
-    var visibleValue:Bool = true;
+    /**
+     * Set the visibility of the panel, default is true.
+     */
+    @prop var visible:Bool = true;
 
     final panelStyle:StyleRefinement = new StyleRefinement();
 
@@ -77,14 +82,8 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
      * Create a new resizable panel (see `Resizable.resizablePanel()`).
      */
     @:allow(glaze.kit.base.resizable)
-    function new() {}
-
-    /**
-     * Set the visibility of the panel, default is true.
-     */
-    public function visible(visible:Bool):ResizablePanel {
-        visibleValue = visible;
-        return this;
+    function new() {
+        super();
     }
 
     /**
@@ -92,16 +91,6 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
      */
     public function size(size:Pixels):ResizablePanel {
         initialSize = size;
-        return this;
-    }
-
-    /**
-     * Set the size range to limit panel resize.
-     *
-     * Default is `PANEL_MIN_SIZE` to `Pixels.MAX`.
-     */
-    public function sizeRange(range:PixelsRange):ResizablePanel {
-        sizeRangeValue = range;
         return this;
     }
 
@@ -132,7 +121,7 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        if (!visibleValue) {
+        if (!visible) {
             return div().id(ElementId.NamedInteger('resizable-panel', panelIx));
         }
 
@@ -141,7 +130,7 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
         final panels = state.read(cx).panels;
         if (panelIx >= panels.length) throw 'BUG: The `index` of ResizablePanel should be one of in `state`.';
         final panelState = panels[panelIx];
-        final sizeRange = sizeRangeValue;
+        final sizeRange = this.sizeRange;
         // A fixed panel needs a size to keep; without one it lays out as usual.
         final fixed = fixedValue && initialSize != null;
         final panelIx = this.panelIx;

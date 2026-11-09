@@ -5,9 +5,9 @@ package glaze.kit.base;
 
 import glaze.AnyView;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -25,7 +25,7 @@ import glaze.Prelude.div;
  * change; `progress` runs from `0.0` to `1.0` over the transition, already
  * eased, and is shared by both views of one change.
  */
-class NavPage implements RenderOnce implements Styled {
+class NavPage extends Component implements Styled {
 
     final base:Div;
 
@@ -43,6 +43,7 @@ class NavPage implements RenderOnce implements Styled {
 
     @:allow(glaze.kit.base.NavStack)
     function new(view:AnyView, index:Int, phase:PresencePhase, operation:Null<NavOperation>, progress:Float) {
+        super();
         this.base = div();
         this.pageView = view;
         this.pageIndex = index;

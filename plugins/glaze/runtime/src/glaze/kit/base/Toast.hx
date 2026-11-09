@@ -8,6 +8,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -17,7 +18,6 @@ import glaze.MouseMoveEvent;
 import glaze.ParentElement;
 import glaze.Pixels;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.Size;
 import glaze.SpringMath.f32;
 import glaze.StyleRefinement;
@@ -469,7 +469,7 @@ class ToastStackGeometry {
  * Interactive methods (Rust `InteractiveElement` by delegation) go to
  * `base`, the stateful `Div` the stack renders.
  */
-class ToastStack implements RenderOnce implements Styled implements ParentElement {
+class ToastStack extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
@@ -480,11 +480,20 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
 
     final state:ToastStackState;
 
-    var motionValue:ToastMotion;
+    /**
+     * Set the stack motion tokens.
+     */
+    @prop var motion:ToastMotion;
 
-    var placementValue:Anchor = Anchor.TopRight;
+    /**
+     * Set the viewport edge used to anchor stack geometry.
+     */
+    @prop var placement:Anchor = Anchor.TopRight;
 
-    var focusHandleValue:Null<FocusHandle> = null;
+    /**
+     * Set the focus scope that expands the stack and pauses auto-hide timers.
+     */
+    @prop var focusHandle:Null<FocusHandle> = null;
 
     final items:Array<{id:ElementId, child:AnyElement}> = [];
 
@@ -492,10 +501,11 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
      * Create a toast stack with Base UI-compatible motion.
      */
     public function new(id:ElementIdArg, state:ToastStackState) {
+        super();
         this.id = id;
         this.base = div().id(id).testSupport();
         this.state = state;
-        this.motionValue = ToastMotion.sonner();
+        this.motion = ToastMotion.sonner();
     }
 
     public inline function style():StyleRefinement {
@@ -516,30 +526,6 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
         return this;
     }
 
-    /**
-     * Set the stack motion tokens.
-     */
-    public function motion(motion:ToastMotion):ToastStack {
-        motionValue = motion;
-        return this;
-    }
-
-    /**
-     * Set the viewport edge used to anchor stack geometry.
-     */
-    public function placement(placement:Anchor):ToastStack {
-        placementValue = placement;
-        return this;
-    }
-
-    /**
-     * Set the focus scope that expands the stack and pauses auto-hide timers.
-     */
-    public function focusHandle(focusHandle:FocusHandle):ToastStack {
-        focusHandleValue = focusHandle;
-        return this;
-    }
-
     public function trackFocus(handle:FocusHandle):ToastStack {
         base.trackFocus(handle);
         return this;
@@ -550,7 +536,7 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final focused = focusHandleValue != null && focusHandleValue.containsFocused(window, cx);
+        final focused = focusHandle != null && focusHandle.containsFocused(window, cx);
         state.focused = focused;
         final expanded = state.isExpanded();
         final keys = [for (item in items) key(item.id)];
@@ -559,13 +545,13 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
         }
         final heights:Array<Pixels> = [for (id in keys) state.heights.exists(id) ? state.heights.get(id) : glaze.Prelude.px(0.)];
         final measured = state.heights;
-        final peek = motionValue.collapsedPeek;
-        final gap = motionValue.expandedGap;
-        final scaleStep = motionValue.collapsedScaleStep;
-        final collapsedVisible = motionValue.collapsedVisible > 1 ? motionValue.collapsedVisible : 1;
+        final peek = motion.collapsedPeek;
+        final gap = motion.expandedGap;
+        final scaleStep = motion.collapsedScaleStep;
+        final collapsedVisible = motion.collapsedVisible > 1 ? motion.collapsedVisible : 1;
         final stackWidth = state.width;
         final count = items.length;
-        final anchoredBottom = switch placementValue {
+        final anchoredBottom = switch placement {
             case BottomLeft | BottomCenter | BottomRight: true;
             case _: false;
         };
@@ -578,8 +564,8 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
         // new layout instead of restarting. Critically damped, because a height
         // or an opacity that overshoots its target reads as a glitch. Geometry
         // settles in pixels, so its tolerance is coarser than the fade's.
-        final geometry = new Spring(motionValue.duration).withEpsilon(0.1);
-        final fade = new Spring(motionValue.duration);
+        final geometry = new Spring(motion.duration).withEpsilon(0.1);
+        final fade = new Spring(motion.duration);
         final stackHeight:Pixels = Motion.spring(TransitionId.named(id, 'height'), expanded ? expandedHeight : collapsedHeight, geometry, window, cx);
         final rendered:Array<IntoElement> = [];
         for (index in 0...items.length) {
@@ -619,8 +605,8 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
         final element = base
             .relative()
             .h(stackHeight);
-        if (focusHandleValue != null) {
-            element.trackFocus(focusHandleValue);
+        if (focusHandle != null) {
+            element.trackFocus(focusHandle);
         }
         return element
             .child(canvas((_, _, _) -> null, (bounds:Bounds, _, window, cx) -> {
@@ -656,14 +642,17 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
  * Interactive methods (Rust `InteractiveElement` by delegation) go to
  * `base`. The port has no accessibility tree: the role is kept in `a11y`.
  */
-class Toast implements RenderOnce implements Styled implements ParentElement {
+class Toast extends Component implements Styled implements ParentElement {
 
     /** The stateful element the toast renders. */
     public final base:Div;
 
     final toastStyle:StyleRefinement = new StyleRefinement();
 
-    var transitionStatusValue:ToastTransitionStatus = Starting;
+    /**
+     * Set the lifecycle phase used by application-owned toast presentation.
+     */
+    @prop var transitionStatus:ToastTransitionStatus = Starting;
 
     final childElements:Array<AnyElement> = [];
 
@@ -674,6 +663,7 @@ class Toast implements RenderOnce implements Styled implements ParentElement {
      * Create an unstyled semantic toast in the starting transition phase.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.base = div().id(id).testSupport();
     }
 
@@ -691,18 +681,10 @@ class Toast implements RenderOnce implements Styled implements ParentElement {
     }
 
     /**
-     * Set the lifecycle phase used by application-owned toast presentation.
-     */
-    public function transitionStatus(status:ToastTransitionStatus):Toast {
-        transitionStatusValue = status;
-        return this;
-    }
-
-    /**
      * Return the lifecycle phase used by application-owned toast presentation.
      */
     public inline function status():ToastTransitionStatus {
-        return transitionStatusValue;
+        return transitionStatus;
     }
 
     /** Assigns the group of `base`. */

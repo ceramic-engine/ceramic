@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.FocusHandle;
@@ -13,7 +14,6 @@ import glaze.IntoElement;
 import glaze.KeyBinding;
 import glaze.OperatingSystem;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -30,7 +30,7 @@ using glaze.kit.base.StyledExt;
  * Applications own the trigger, popup, searchable collection, selection, and
  * appearance. This root owns combobox semantics and keyboard focus transfer.
  */
-class Combobox implements RenderOnce implements Styled implements ParentElement {
+class Combobox extends Component implements Styled implements ParentElement {
 
     static inline final CONTEXT:String = "Combobox";
 
@@ -49,60 +49,24 @@ class Combobox implements RenderOnce implements Styled implements ParentElement 
 
     final id:ElementIdArg;
 
-    var openValue:Bool = false;
+    @prop var open:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    var focusHandleValue:Null<FocusHandle> = null;
+    @prop var focusHandle:Null<FocusHandle> = null;
 
-    var contentFocusHandleValue:Null<FocusHandle> = null;
+    @prop var contentFocusHandle:Null<FocusHandle> = null;
 
     final comboboxStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
-
-    var onConfirmHandler:Null<(Window, App) -> Void> = null;
-
-    var onDismissHandler:Null<(Window, App) -> Void> = null;
-
-    public function new(id:ElementIdArg) {
-        this.id = id;
-    }
-
-    public function open(open:Bool):Combobox {
-        openValue = open;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Combobox {
-        disabledValue = disabled;
-        return this;
-    }
-
-    public function focusHandle(focusHandle:FocusHandle):Combobox {
-        focusHandleValue = focusHandle;
-        return this;
-    }
-
-    public function contentFocusHandle(focusHandle:FocusHandle):Combobox {
-        contentFocusHandleValue = focusHandle;
-        return this;
-    }
-
-    public function onOpenChange(handler:(Bool, Window, App) -> Void):Combobox {
-        onOpenChangeHandler = handler;
-        return this;
-    }
+    @prop var onOpenChange:Null<(Bool, Window, App) -> Void> = null;
 
     /**
      * Handles the Confirm action while the combobox is open.
      */
-    public function onConfirm(handler:(Window, App) -> Void):Combobox {
-        onConfirmHandler = handler;
-        return this;
-    }
+    @prop var onConfirm:Null<(Window, App) -> Void> = null;
 
     /**
      * Handles a dismissal requested through the Cancel action.
@@ -111,9 +75,11 @@ class Combobox implements RenderOnce implements Styled implements ParentElement 
      * combobox that commits its pending value on dismissal can still read
      * that value here.
      */
-    public function onDismiss(handler:(Window, App) -> Void):Combobox {
-        onDismissHandler = handler;
-        return this;
+    @prop var onDismiss:Null<(Window, App) -> Void> = null;
+
+    public function new(id:ElementIdArg) {
+        super();
+        this.id = id;
     }
 
     public inline function style():StyleRefinement {
@@ -136,21 +102,21 @@ class Combobox implements RenderOnce implements Styled implements ParentElement 
 
     public function render(window:Window, cx:App):IntoElement {
         final select = Select.component(id)
-            .open(openValue)
-            .disabled(disabledValue)
+            .open(this.open)
+            .disabled(disabled)
             .keyContext(CONTEXT);
-        if (focusHandleValue != null) select.focusHandle(focusHandleValue);
-        if (contentFocusHandleValue != null) select.contentFocusHandle(contentFocusHandleValue);
-        if (onOpenChangeHandler != null) {
-            final handler = onOpenChangeHandler;
+        if (focusHandle != null) select.focusHandle(focusHandle);
+        if (contentFocusHandle != null) select.contentFocusHandle(contentFocusHandle);
+        if (onOpenChange != null) {
+            final handler = onOpenChange;
             select.onOpenChange((open, window, cx) -> handler(open, window, cx));
         }
-        if (onConfirmHandler != null) {
-            final handler = onConfirmHandler;
+        if (onConfirm != null) {
+            final handler = onConfirm;
             select.onConfirm((window, cx) -> handler(window, cx));
         }
-        if (onDismissHandler != null) {
-            final handler = onDismissHandler;
+        if (onDismiss != null) {
+            final handler = onDismiss;
             select.onDismiss((window, cx) -> handler(window, cx));
         }
         select.extend(childElements);

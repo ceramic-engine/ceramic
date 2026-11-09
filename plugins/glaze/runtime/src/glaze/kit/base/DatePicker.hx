@@ -6,13 +6,13 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.FocusHandle;
 import glaze.IntoElement;
 import glaze.IntoKeyContext;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -30,14 +30,14 @@ using glaze.kit.base.StyledExt;
  *
  * Listeners and the key context go to `base` (Rust `InteractiveElement`).
  */
-class DatePicker implements RenderOnce implements Styled implements ParentElement {
+class DatePicker extends Component implements Styled implements ParentElement {
 
     /** The stateful element the picker renders. */
     public final base:Div;
 
-    var openValue:Bool = false;
+    @prop var open:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final focusHandle:FocusHandle;
 
@@ -45,29 +45,15 @@ class DatePicker implements RenderOnce implements Styled implements ParentElemen
 
     final childElements:Array<AnyElement> = [];
 
-    var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
+    @prop var onOpenChange:Null<(Bool, Window, App) -> Void> = null;
 
     /** The accessibility properties the picker exports (filled by `render`). */
     public final a11y:A11y = new A11y(Role.ComboBox);
 
     public function new(id:ElementIdArg, focusHandle:FocusHandle) {
+        super();
         this.base = div().id(id);
         this.focusHandle = focusHandle;
-    }
-
-    public function open(open:Bool):DatePicker {
-        openValue = open;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):DatePicker {
-        disabledValue = disabled;
-        return this;
-    }
-
-    public function onOpenChange(handler:(Bool, Window, App) -> Void):DatePicker {
-        onOpenChangeHandler = handler;
-        return this;
     }
 
     /** The value exposed to accessibility clients (Rust `aria_value`). */
@@ -103,9 +89,9 @@ class DatePicker implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final open = openValue;
-        final disabled = disabledValue;
-        final handler = onOpenChangeHandler;
+        final open = this.open;
+        final disabled = this.disabled;
+        final handler = onOpenChange;
         a11y.expanded = open;
         base
             .trackFocus(focusHandle.tabStop(!disabled))

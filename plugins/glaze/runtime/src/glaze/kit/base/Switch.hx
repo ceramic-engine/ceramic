@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -14,7 +15,6 @@ import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -34,7 +34,7 @@ using glaze.kit.base.StyledExt;
  *
  * Interactive styles and listeners go to `base` (see `glaze.kit.base.Button`).
  */
-class Switch implements RenderOnce implements Styled implements ParentElement {
+class Switch extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
@@ -45,26 +45,51 @@ class Switch implements RenderOnce implements Styled implements ParentElement {
 
     var semanticStyles:SwitchStyles = new SwitchStyles();
 
-    var checkedValue:Bool = false;
+    /**
+     * Sets the application-controlled checked value.
+     */
+    @prop var checked:Bool = false;
 
-    var disabledValue:Bool = false;
+    /**
+     * Sets whether pointer and keyboard activation are ignored.
+     */
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
-    var onChangeHandler:Null<(Bool, ClickEvent, Window, App) -> Void> = null;
+    /**
+     * Handles activation with the next checked value and its input event.
+     */
+    @prop var onChange:Null<(Bool, ClickEvent, Window, App) -> Void> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /**
+     * Sets the name exposed to accessibility clients.
+     *
+     * A switch without text children has no accessible name, so set this
+     * whenever it is drawn without visible text.
+     */
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var tabIndexValue:Int = 0;
+    /**
+     * Sets the focus traversal index. Use this within a GPUI tab group.
+     */
+    @prop var tabIndex:Int = 0;
 
-    var tabStopValue:Bool = true;
+    /**
+     * Sets whether the switch participates in keyboard focus traversal.
+     */
+    @prop var tabStop:Bool = true;
 
-    var providedFocusHandle:Null<FocusHandle> = null;
+    /**
+     * Uses a caller-owned focus handle instead of creating keyed state.
+     */
+    @prop var trackFocus:Null<FocusHandle> = null;
 
     /** The accessibility properties the switch exports (filled by `render`). */
     public final a11y:A11y = new A11y(Role.Switch);
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = div().id(id);
     }
@@ -88,22 +113,6 @@ class Switch implements RenderOnce implements Styled implements ParentElement {
     }
 
     /**
-     * Sets the application-controlled checked value.
-     */
-    public function checked(checked:Bool):Switch {
-        checkedValue = checked;
-        return this;
-    }
-
-    /**
-     * Sets whether pointer and keyboard activation are ignored.
-     */
-    public function disabled(disabled:Bool):Switch {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
      * Configures application-owned styles for the switch's semantic states.
      */
     public function styles(build:(SwitchStyles) -> SwitchStyles):Switch {
@@ -114,52 +123,9 @@ class Switch implements RenderOnce implements Styled implements ParentElement {
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        if (checkedValue) states.push(semanticStyles.checkedStyle);
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (checked) states.push(semanticStyles.checkedStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(switchStyle, states);
-    }
-
-    /**
-     * Handles activation with the next checked value and its input event.
-     */
-    public function onChange(handler:(Bool, ClickEvent, Window, App) -> Void):Switch {
-        onChangeHandler = handler;
-        return this;
-    }
-
-    /**
-     * Sets the name exposed to accessibility clients.
-     *
-     * A switch without text children has no accessible name, so set this
-     * whenever it is drawn without visible text.
-     */
-    public function accessibilityLabel(label:String):Switch {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Sets the focus traversal index. Use this within a GPUI tab group.
-     */
-    public function tabIndex(tabIndex:Int):Switch {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    /**
-     * Sets whether the switch participates in keyboard focus traversal.
-     */
-    public function tabStop(tabStop:Bool):Switch {
-        tabStopValue = tabStop;
-        return this;
-    }
-
-    /**
-     * Uses a caller-owned focus handle instead of creating keyed state.
-     */
-    public function trackFocus(focusHandle:FocusHandle):Switch {
-        providedFocusHandle = focusHandle;
-        return this;
     }
 
     /** Interactive style while hovered (on `base`). */
@@ -187,22 +153,22 @@ class Switch implements RenderOnce implements Styled implements ParentElement {
     }
 
     function focusHandle(window:Window, cx:App):FocusHandle {
-        if (providedFocusHandle != null) return providedFocusHandle;
+        if (trackFocus != null) return trackFocus;
         return window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final focusHandle = this.focusHandle(window, cx);
-        final checked = checkedValue;
-        final disabled = disabledValue;
+        final checked = this.checked;
+        final disabled = this.disabled;
         final style = resolvedStyle();
-        final onChange = onChangeHandler;
+        final onChange = this.onChange;
 
         final element = base;
         a11y.toggled = checked ? Toggled.True : Toggled.False;
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
         if (!disabled) {
-            element.trackFocus(focusHandle.tabIndex(tabIndexValue).tabStop(tabStopValue));
+            element.trackFocus(focusHandle.tabIndex(tabIndex).tabStop(tabStop));
         }
         if (disabled) {
             element.onMouseDown(Left, (_, _, cx) -> cx.stopPropagation());
@@ -251,7 +217,7 @@ typedef SwitchThumbStyles = SwitchStyles;
 /**
  * An unstyled switch track with typed checked and disabled state projection.
  */
-class SwitchTrack implements RenderOnce implements Styled implements ParentElement {
+class SwitchTrack extends Component implements Styled implements ParentElement {
 
     /** The stateful element the track renders. */
     @:allow(tests)
@@ -264,13 +230,14 @@ class SwitchTrack implements RenderOnce implements Styled implements ParentEleme
 
     var semanticStyles:SwitchStyles = new SwitchStyles();
 
-    var checkedValue:Bool = false;
+    @prop var checked:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
     public function new(id:ElementIdArg) {
+        super();
         trackId = id;
         base = div().id(id);
     }
@@ -288,16 +255,6 @@ class SwitchTrack implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    public function checked(checked:Bool):SwitchTrack {
-        checkedValue = checked;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):SwitchTrack {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function styles(build:(SwitchStyles) -> SwitchStyles):SwitchTrack {
         semanticStyles = build(semanticStyles);
         return this;
@@ -312,8 +269,8 @@ class SwitchTrack implements RenderOnce implements Styled implements ParentEleme
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        if (checkedValue) states.push(semanticStyles.checkedStyle);
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (checked) states.push(semanticStyles.checkedStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(trackStyle, states);
     }
 
@@ -328,7 +285,7 @@ class SwitchTrack implements RenderOnce implements Styled implements ParentEleme
 /**
  * An unstyled switch thumb with typed checked and disabled state projection.
  */
-class SwitchThumb implements RenderOnce implements Styled implements ParentElement {
+class SwitchThumb extends Component implements Styled implements ParentElement {
 
     final thumbStyle:StyleRefinement = new StyleRefinement();
 
@@ -336,11 +293,12 @@ class SwitchThumb implements RenderOnce implements Styled implements ParentEleme
 
     final checkedValue:Bool;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
     public function new(checked:Bool) {
+        super();
         checkedValue = checked;
     }
 
@@ -357,11 +315,6 @@ class SwitchThumb implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    public function disabled(disabled:Bool):SwitchThumb {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function styles(build:(SwitchStyles) -> SwitchStyles):SwitchThumb {
         semanticStyles = build(semanticStyles);
         return this;
@@ -371,7 +324,7 @@ class SwitchThumb implements RenderOnce implements Styled implements ParentEleme
     function resolvedStyle():StyleRefinement {
         final states = [];
         if (checkedValue) states.push(semanticStyles.checkedStyle);
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(thumbStyle, states);
     }
 

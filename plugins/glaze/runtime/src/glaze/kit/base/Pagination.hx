@@ -6,12 +6,12 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Range;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -198,7 +198,7 @@ class PaginationState {
  *
  * Interactive styles and listeners go to `base`.
  */
-class Pagination implements RenderOnce implements Styled implements ParentElement {
+class Pagination extends Component implements Styled implements ParentElement {
 
     /** The stateful element the pagination renders. */
     public final base:Div;
@@ -207,7 +207,7 @@ class Pagination implements RenderOnce implements Styled implements ParentElemen
 
     final paginationStyle:StyleRefinement = new StyleRefinement();
 
-    var accessibilityLabelValue:String = 'Pagination';
+    @prop var accessibilityLabel:String = 'Pagination';
 
     final childElements:Array<AnyElement> = [];
 
@@ -215,13 +215,9 @@ class Pagination implements RenderOnce implements Styled implements ParentElemen
     public final a11y:A11y = new A11y(Role.Navigation);
 
     public function new(id:ElementIdArg, state:PaginationState) {
+        super();
         base = div().id(id);
         paginationState = state;
-    }
-
-    public function accessibilityLabel(label:String):Pagination {
-        accessibilityLabelValue = label;
-        return this;
     }
 
     public function state():PaginationState {
@@ -253,7 +249,7 @@ class Pagination implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        a11y.label = accessibilityLabelValue;
+        a11y.label = accessibilityLabel;
         base.extend(childElements);
         return base.refineStyle(paginationStyle);
     }
