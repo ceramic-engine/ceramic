@@ -17,6 +17,8 @@ app:
     # with the cityscape plugin (see tests/unit/ceramic.yml).
     paths:
         - ../../runtime/src
+        # Test data shared with the unit tests (WideColumns)
+        - ../shared
 
     defines:
         # Native captures use a hidden SDL window (no window on screen)

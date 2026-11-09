@@ -115,7 +115,69 @@ class RenderedViewLine {
         }
         final dom = output.characterMapping.getDomPosition(c);
         final rendered = runs.renderedOffsetOf(dom.partIndex, dom.charIndex);
-        return layout.xForIndex(offsets.utf16ToByte(rendered));
+        return xForRenderedOffset(rendered);
+    }
+
+    /**
+     * The x of a UTF-16 offset of the rendered text, like the caret
+     * positions of the browser (Blink's `ShapeResult`), which Monaco reads
+     * from the DOM: the x of the glyph cluster starting at the offset; inside
+     * a cluster (an emoji sequence, a keycap, a ligature), the cluster's x
+     * plus its advance shared evenly between the graphemes it holds, the
+     * offset taken back to the start of its grapheme. So the columns inside
+     * one emoji are at its left edge, like in Monaco.
+     */
+    function xForRenderedOffset(offset:Int):Float {
+        final byte = offsets.utf16ToByte(offset);
+        if (byte >= offsets.byteLength) {
+            return layout.width;
+        }
+        var clusterIndex = -1;
+        var clusterX = 0.0;
+        var nextIndex = -1;
+        var nextX:Float = layout.width;
+        for (run in layout.runs) {
+            for (glyph in run.glyphs) {
+                final index = glyph.index;
+                if (index <= byte) {
+                    if (index != clusterIndex) {
+                        clusterIndex = index;
+                        clusterX = glyph.position.x;
+                    }
+                } else {
+                    nextIndex = index;
+                    nextX = glyph.position.x;
+                    break;
+                }
+            }
+            if (nextIndex != -1) {
+                break;
+            }
+        }
+        if (clusterIndex == -1) {
+            return layout.xForIndex(byte);
+        }
+        if (clusterIndex == byte) {
+            return clusterX;
+        }
+        // Inside a cluster: its graphemes (Monaco's rules) share its advance
+        final text = runs.text;
+        final start = offsets.byteToUtf16(clusterIndex);
+        final end = nextIndex == -1 ? text.length : offsets.byteToUtf16(nextIndex);
+        var graphemes = 0;
+        var containing = 0;
+        var o = start;
+        while (o < end) {
+            if (o <= offset) {
+                containing = graphemes;
+            }
+            graphemes++;
+            o += Std.int(Math.max(1, Strings.nextCharLength(text, o)));
+        }
+        if (graphemes <= 1) {
+            return clusterX;
+        }
+        return clusterX + (nextX - clusterX) * containing / graphemes;
     }
 
     /**
@@ -374,7 +436,10 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         if (viewModel == null) {
             return -1;
         }
-        final viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(new Position(modelLineNumber, modelColumn));
+        // Monaco's View.getOffsetForColumn: the position is validated first
+        // (a column inside a surrogate pair goes to the start of the pair)
+        final modelPosition = viewModel.model.validatePosition({lineNumber: modelLineNumber, column: modelColumn});
+        final viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(modelPosition);
         return renderViewLine(viewPosition.lineNumber).columnToX(viewPosition.column);
     }
 

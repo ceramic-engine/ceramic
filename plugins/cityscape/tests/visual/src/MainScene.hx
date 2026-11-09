@@ -30,6 +30,8 @@ class MainScene extends Scene {
 
     var captured:Bool = false;
 
+    var columnsChecked:Bool = false;
+
     var out:Null<String> = null;
 
     var view:Null<Entity<VisualView>> = null;
@@ -37,6 +39,8 @@ class MainScene extends Scene {
     var foldingView:Null<Entity<FoldingVisualView>> = null;
 
     var apiView:Null<Entity<ApiVisualView>> = null;
+
+    var columnsView:Null<Entity<ColumnsVisualView>> = null;
 
     var findView:Null<Entity<FindVisualView>> = null;
 
@@ -50,6 +54,11 @@ class MainScene extends Scene {
                 // Folded regions (FoldingVisualView.hx)
                 foldingView = cx.newEntity((viewCx:Context<FoldingVisualView>) -> new FoldingVisualView(viewCx));
                 return foldingView;
+            }
+            if (scene == 'columns') {
+                // Column positions of wide text against Monaco (ColumnsVisualView.hx)
+                columnsView = cx.newEntity((viewCx:Context<ColumnsVisualView>) -> new ColumnsVisualView(viewCx));
+                return columnsView;
             }
             if (scene == 'api') {
                 // The editor API (ApiVisualView.hx)
@@ -95,11 +104,17 @@ class MainScene extends Scene {
             v.openFind(ui.window, Glaze.app);
         }
 
+        if (columnsView != null && !columnsChecked && frames >= SETTLE_FRAMES) {
+            final v:ColumnsVisualView = columnsView;
+            columnsChecked = v.check(Platform.getEnv('CITYSCAPE_VISUAL_COLUMNS_OUT'));
+        }
+
         if (out == null || out == '' || captured) {
+            frames++;
             return;
         }
         frames++;
-        if (frames < SETTLE_FRAMES) {
+        if (frames < SETTLE_FRAMES || (columnsView != null && !columnsChecked)) {
             return;
         }
         captured = true;

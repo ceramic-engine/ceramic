@@ -9,9 +9,12 @@ import ceramic.InitSettings;
  * Visual check of the Cityscape view: a Haxe sample in two editors (word
  * wrap with an indent per level, typed decorations, a hidden range,
  * selections, cursors, rulers, whitespace, CJK and emoji), `vs-dark` theme.
- * Other scenes with `CITYSCAPE_VISUAL_SCENE`: `folding` (FoldingVisualView)
- * and `api` (ApiVisualView: models switched through the editor API, markers,
- * an action).
+ * Other scenes with `CITYSCAPE_VISUAL_SCENE`: `folding` (FoldingVisualView),
+ * `api` (ApiVisualView: models switched through the editor API, markers,
+ * an action) and `columns` (ColumnsVisualView: the column positions of wide
+ * text compared with the real Monaco, written as JSON to
+ * `CITYSCAPE_VISUAL_COLUMNS_OUT`; the web half of the unit test
+ * `WideColumnsTest`).
  *
  * Capture: set `CITYSCAPE_VISUAL_OUT` to a PNG path. After a few frames the
  * pixels are written there with `screen.toPng()`, then the app quits (native)

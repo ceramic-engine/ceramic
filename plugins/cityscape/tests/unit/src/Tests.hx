@@ -100,6 +100,7 @@ class Tests {
         runner.add(new tests.viewModel.ModelLineProjectionTest());
         runner.add(new tests.viewModel.ViewModelHiddenRangesTest());
         runner.add(new tests.view.CityscapeEditorTest());
+        runner.add(new tests.view.WideColumnsTest());
 
         // Cursor (step 3, cs3-cursor)
         runner.add(new tests.base.StringsTest());

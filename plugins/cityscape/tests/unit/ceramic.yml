@@ -17,6 +17,8 @@ app:
     # project's plugins folder). Harmless once the plugin adds them itself.
     paths:
         - ../../runtime/src
+        # Test data shared with the visual check (WideColumns)
+        - ../shared
 
     defines:
         # Native test runs use a hidden SDL window (no window on screen)
