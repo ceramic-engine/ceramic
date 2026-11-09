@@ -13,6 +13,14 @@ class Scenarios {
     public static function all():Array<Scenario> {
         return [
             new scenarios.RangeSort(),
+            // Not typed in the macro context of `BenchRunner.benchDir()`
+            // (the model reaches Glaze and Ceramic through `Platform`)
+            #if !macro
+            new scenarios.ModelOpen(),
+            new scenarios.ModelEdit(),
+            new scenarios.ModelType(),
+            new scenarios.ModelReadLines(),
+            #end
         ];
     }
 

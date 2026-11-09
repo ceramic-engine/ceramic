@@ -6,6 +6,7 @@ package cityscape.common;
 import cityscape.base.common.Event;
 import cityscape.base.common.HtmlContent.IMarkdownString;
 import cityscape.base.common.Lifecycle.IDisposable;
+import cityscape.base.common.RegExp;
 import cityscape.base.common.Themables.ThemeColor;
 import cityscape.base.common.Uri;
 import cityscape.common.Languages.FormattingOptions;
@@ -18,6 +19,7 @@ import cityscape.common.core.Position;
 import cityscape.common.core.Range;
 import cityscape.common.core.Selection;
 import cityscape.common.core.TextChange;
+import cityscape.common.core.WordCharacterClassifier;
 import cityscape.common.core.WordHelper.IWordAtPosition;
 import cityscape.common.languages.Language.ILanguageSelection;
 import cityscape.platform.undoRedo.common.UndoRedo.UndoRedoGroup;
@@ -1421,10 +1423,6 @@ class ValidAnnotatedEditOperation {
  * @internal
  *
  * `IReadonlyTextBuffer` is a text buffer that cannot be modified.
- *
- * TODO(step 1): `findMatchesLineByLine(searchRange, searchData,
- * captureMatches, limitResultCount)` is added with `SearchData`, once the
- * regular expression engine of the find model is chosen.
  */
 interface IReadonlyTextBuffer {
     final onDidChangeContent:VoidEvent;
@@ -1457,6 +1455,36 @@ interface IReadonlyTextBuffer {
     function getLineLastNonWhitespaceColumn(lineNumber:Int):Int;
 
     function getNearestChunk(offset:Int):String;
+
+    function findMatchesLineByLine(searchRange:Range, searchData:SearchData, captureMatches:Bool, limitResultCount:Int):Array<FindMatch>;
+}
+
+/**
+ * @internal
+ */
+class SearchData {
+
+    /**
+     * The regex to search for. Always defined.
+     */
+    public final regex:RegExp;
+
+    /**
+     * The word separator classifier.
+     */
+    public final wordSeparators:Null<WordCharacterClassifier>;
+
+    /**
+     * The simple string to search for (if possible).
+     */
+    public final simpleSearch:Null<String>;
+
+    public function new(regex:RegExp, wordSeparators:Null<WordCharacterClassifier>, simpleSearch:Null<String>) {
+        this.regex = regex;
+        this.wordSeparators = wordSeparators;
+        this.simpleSearch = simpleSearch;
+    }
+
 }
 
 /**

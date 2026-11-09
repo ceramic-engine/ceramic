@@ -117,4 +117,343 @@ class Strings {
         return false;
     }
 
+    /**
+     * The source of Monaco's `UNUSUAL_LINE_TERMINATORS` regular expression
+     * (`/[  ]/`): LINE SEPARATOR (LS) or PARAGRAPH SEPARATOR (PS).
+     */
+    public static inline final UNUSUAL_LINE_TERMINATORS_SOURCE = '[\\u2028\\u2029]';
+
+    /**
+     * `String.fromCharCode(CharCode.UTF8_BOM)`.
+     */
+    public static final UTF8_BOM_CHARACTER:String = String.fromCharCode(CharCode.UTF8_BOM);
+
+    public static function startsWithUTF8BOM(str:Null<String>):Bool {
+        return (str != null && str.length > 0 && StringTools.fastCodeAt(str, 0) == CharCode.UTF8_BOM);
+    }
+
+    public static function stripUTF8BOM(str:String):String {
+        return startsWithUTF8BOM(str) ? str.substr(1) : str;
+    }
+
+    /**
+     * True when `str` is null, empty or only whitespace (`str.trim()` is
+     * empty, with JavaScript's whitespace set).
+     */
+    public static function isFalsyOrWhitespace(str:Null<String>):Bool {
+        if (str == null || str.length == 0) {
+            return true;
+        }
+        for (i in 0...str.length) {
+            if (!isJsWhitespace(StringTools.fastCodeAt(str, i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Whether `c` is a whitespace or line terminator for JavaScript's
+     * `String.prototype.trim` and the `\s` class of regular expressions.
+     */
+    public static function isJsWhitespace(c:Int):Bool {
+        return switch c {
+            case 0x09 | 0x0A | 0x0B | 0x0C | 0x0D | 0x20 | 0xA0 | 0x1680 | 0x2028 | 0x2029 | 0x202F | 0x205F | 0x3000 | 0xFEFF: true;
+            case _: (c >= 0x2000 && c <= 0x200A);
+        }
+    }
+
+    /**
+     * Escapes regular expression characters in a given string
+     * (`value.replace(/[\\\{\}\*\+\?\|\^\$\.\[\]\(\)]/g, '\\$&')`).
+     */
+    public static function escapeRegExpCharacters(value:String):String {
+        final buf = new StringBuf();
+        for (i in 0...value.length) {
+            final c = StringTools.fastCodeAt(value, i);
+            switch c {
+                case '\\'.code | '{'.code | '}'.code | '*'.code | '+'.code | '?'.code | '|'.code | '^'.code | '$'.code | '.'.code | '['.code | ']'.code | '('.code | ')'.code:
+                    buf.addChar('\\'.code);
+                case _:
+            }
+            buf.addChar(c);
+        }
+        return buf.toString();
+    }
+
+    /**
+     * Counts how often `substr` occurs inside `value`.
+     */
+    public static function count(value:String, substr:String):Int {
+        var result = 0;
+        var index = value.indexOf(substr);
+        while (index != -1) {
+            result++;
+            index = value.indexOf(substr, index + substr.length);
+        }
+        return result;
+    }
+
+    /**
+     * Creates the regular expression of a search (`strings.createRegExp`).
+     * Throws when `searchString` is empty or is not a valid regular
+     * expression.
+     */
+    public static function createRegExp(searchString:String, isRegex:Bool, ?options:RegExpOptions):RegExp {
+        if (searchString == null || searchString.length == 0) {
+            throw 'Cannot create regex from empty string';
+        }
+        if (options == null) {
+            options = {};
+        }
+        if (!isRegex) {
+            searchString = escapeRegExpCharacters(searchString);
+        }
+        if (options.wholeWord == true) {
+            // `/\B/.test(c)` is true when the character is not a word character
+            if (!isNotWordBoundaryChar(searchString.charAt(0))) {
+                searchString = '\\b' + searchString;
+            }
+            if (!isNotWordBoundaryChar(searchString.charAt(searchString.length - 1))) {
+                searchString = searchString + '\\b';
+            }
+        }
+        var modifiers = '';
+        if (options.global == true) {
+            modifiers += 'g';
+        }
+        if (options.matchCase != true) {
+            modifiers += 'i';
+        }
+        if (options.multiline == true) {
+            modifiers += 'm';
+        }
+        if (options.unicode == true) {
+            modifiers += 'u';
+        }
+
+        return new RegExp(searchString, modifiers);
+    }
+
+    /**
+     * `/\B/.test(c)` on a one character string: true when the character is
+     * not an ASCII word character (`[A-Za-z0-9_]`), or when it is empty.
+     */
+    static function isNotWordBoundaryChar(c:String):Bool {
+        if (c.length == 0) {
+            return true;
+        }
+        return !RegExp.isAsciiWordChar(StringTools.fastCodeAt(c, 0));
+    }
+
+    public static function regExpLeadsToEndlessLoop(regexp:RegExp):Bool {
+        // Exit early if it's one of these special cases which are meant to match
+        // against an empty string
+        if (regexp.source == '^' || regexp.source == '^$' || regexp.source == '$' || regexp.source == '^\\s*$') {
+            return false;
+        }
+
+        // We check against an empty string. If the regular expression doesn't advance
+        // (e.g. ends in an endless loop) it will match an empty string.
+        final match = regexp.exec('');
+        return (match != null && regexp.lastIndex == 0);
+    }
+
+    /**
+     * `str.split(/\r\n|\r|\n/)`.
+     */
+    public static function splitLines(str:String):Array<String> {
+        final result:Array<String> = [];
+        var start = 0;
+        var i = 0;
+        final len = str.length;
+        while (i < len) {
+            final c = StringTools.fastCodeAt(str, i);
+            if (c == CharCode.CarriageReturn) {
+                result.push(str.substring(start, i));
+                if (i + 1 < len && StringTools.fastCodeAt(str, i + 1) == CharCode.LineFeed) {
+                    i++;
+                }
+                start = i + 1;
+            }
+            else if (c == CharCode.LineFeed) {
+                result.push(str.substring(start, i));
+                start = i + 1;
+            }
+            i++;
+        }
+        result.push(str.substring(start, len));
+        return result;
+    }
+
+    /**
+     * `str.replace(/\r\n|\r|\n/g, eol)`.
+     */
+    public static function replaceLineBreaks(str:String, eol:String):String {
+        final len = str.length;
+        var i = 0;
+        // Most strings have nothing to replace (or are already normalized)
+        var buf:Null<StringBuf> = null;
+        var start = 0;
+        while (i < len) {
+            final c = StringTools.fastCodeAt(str, i);
+            if (c == CharCode.CarriageReturn || c == CharCode.LineFeed) {
+                var end = i + 1;
+                if (c == CharCode.CarriageReturn && end < len && StringTools.fastCodeAt(str, end) == CharCode.LineFeed) {
+                    end++;
+                }
+                final same = (end - i == eol.length) && (eol.length == 1 ? StringTools.fastCodeAt(eol, 0) == c : c == CharCode.CarriageReturn);
+                if (!same) {
+                    if (buf == null) {
+                        buf = new StringBuf();
+                    }
+                    buf.addSub(str, start, i - start);
+                    buf.add(eol);
+                    start = end;
+                }
+                i = end;
+                continue;
+            }
+            i++;
+        }
+        if (buf == null) {
+            return str;
+        }
+        buf.addSub(str, start, len - start);
+        return buf.toString();
+    }
+
+    /**
+     * `str.replace(/(\r\n|\r|\n)$/, '')`: removes one trailing line break.
+     */
+    public static function removeTrailingLineBreak(str:String):String {
+        final len = str.length;
+        if (len == 0) {
+            return str;
+        }
+        final last = StringTools.fastCodeAt(str, len - 1);
+        if (last == CharCode.LineFeed) {
+            if (len >= 2 && StringTools.fastCodeAt(str, len - 2) == CharCode.CarriageReturn) {
+                return str.substring(0, len - 2);
+            }
+            return str.substring(0, len - 1);
+        }
+        if (last == CharCode.CarriageReturn) {
+            return str.substring(0, len - 1);
+        }
+        return str;
+    }
+
+    /**
+     * Returns first index of the string that is not whitespace.
+     * If string is empty or contains only whitespaces, returns -1
+     */
+    public static function firstNonWhitespaceIndex(str:String):Int {
+        for (i in 0...str.length) {
+            final chCode = StringTools.fastCodeAt(str, i);
+            if (chCode != CharCode.Space && chCode != CharCode.Tab) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the leading whitespace of the string.
+     * If the string contains only whitespaces, returns entire string
+     */
+    public static function getLeadingWhitespace(str:String, start:Int = 0, end:Int = -1):String {
+        if (end == -1) {
+            end = str.length;
+        }
+        for (i in start...end) {
+            final chCode = StringTools.fastCodeAt(str, i);
+            if (chCode != CharCode.Space && chCode != CharCode.Tab) {
+                return str.substring(start, i);
+            }
+        }
+        return str.substring(start, end);
+    }
+
+    /**
+     * Returns last index of the string that is not whitespace.
+     * If string is empty or contains only whitespaces, returns -1
+     * (`startIndex` defaults to `str.length - 1`).
+     */
+    public static function lastNonWhitespaceIndex(str:String, ?startIndex:Int):Int {
+        var i:Int = (startIndex == null ? str.length - 1 : startIndex);
+        while (i >= 0) {
+            final chCode = StringTools.fastCodeAt(str, i);
+            if (chCode != CharCode.Space && chCode != CharCode.Tab) {
+                return i;
+            }
+            i--;
+        }
+        return -1;
+    }
+
+    /**
+     * get the code point that begins at offset `offset`
+     * (`NaN` in JavaScript when out of range, -1 here).
+     */
+    public static function getNextCodePoint(str:String, len:Int, offset:Int):Int {
+        if (offset < 0 || offset >= len) {
+            return -1;
+        }
+        final charCode = StringTools.fastCodeAt(str, offset);
+        if (isHighSurrogate(charCode) && offset + 1 < len) {
+            final nextCharCode = StringTools.fastCodeAt(str, offset + 1);
+            if (isLowSurrogate(nextCharCode)) {
+                return computeCodePoint(charCode, nextCharCode);
+            }
+        }
+        return charCode;
+    }
+
+    /**
+     * Escapes the characters of an HTML attribute value.
+     */
+    public static function htmlAttributeEncodeValue(value:String):String {
+        final buf = new StringBuf();
+        for (i in 0...value.length) {
+            final c = StringTools.fastCodeAt(value, i);
+            switch c {
+                case '<'.code: buf.add('&lt;');
+                case '>'.code: buf.add('&gt;');
+                case '"'.code: buf.add('&quot;');
+                case '\''.code: buf.add('&apos;');
+                case '&'.code: buf.add('&amp;');
+                case _: buf.addChar(c);
+            }
+        }
+        return buf.toString();
+    }
+
+    /**
+     * A one character hash of `n` (`a`-`z`, `A`-`Z`, `0`-`9` and then longer
+     * strings).
+     */
+    public static function singleLetterHash(n:Int):String {
+        final LETTERS_CNT = ('Z'.code - 'A'.code + 1);
+
+        n = n % (2 * LETTERS_CNT);
+
+        if (n < LETTERS_CNT) {
+            return String.fromCharCode('a'.code + n);
+        }
+
+        return String.fromCharCode('A'.code + n - LETTERS_CNT);
+    }
+
+}
+
+/**
+ * Options of `Strings.createRegExp`.
+ */
+typedef RegExpOptions = {
+    @:optional var matchCase:Bool;
+    @:optional var wholeWord:Bool;
+    @:optional var multiline:Bool;
+    @:optional var global:Bool;
+    @:optional var unicode:Bool;
 }

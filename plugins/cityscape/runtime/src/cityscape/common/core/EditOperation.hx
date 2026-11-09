@@ -3,6 +3,7 @@
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.common.core;
 
+import cityscape.common.Model.IIdentifiedSingleEditOperation;
 import cityscape.common.core.Range.IRange;
 
 /**
@@ -25,9 +26,15 @@ typedef ISingleEditOperation = {
     @:optional var forceMoveMarkers:Bool;
 }
 
+/**
+ * Monaco's functions return `ISingleEditOperation`s, which TypeScript also
+ * accepts where an `IIdentifiedSingleEditOperation` is expected (the extra
+ * fields are optional). Haxe does not: they return the identified type here,
+ * which also passes as an `ISingleEditOperation`.
+ */
 class EditOperation {
 
-    public static function insert(position:Position, text:String):ISingleEditOperation {
+    public static function insert(position:Position, text:String):IIdentifiedSingleEditOperation {
         return {
             range: new Range(position.lineNumber, position.column, position.lineNumber, position.column),
             text: text,
@@ -35,21 +42,21 @@ class EditOperation {
         };
     }
 
-    public static function delete(range:Range):ISingleEditOperation {
+    public static function delete(range:Range):IIdentifiedSingleEditOperation {
         return {
             range: range,
             text: null
         };
     }
 
-    public static function replace(range:Range, text:Null<String>):ISingleEditOperation {
+    public static function replace(range:Range, text:Null<String>):IIdentifiedSingleEditOperation {
         return {
             range: range,
             text: text
         };
     }
 
-    public static function replaceMove(range:Range, text:Null<String>):ISingleEditOperation {
+    public static function replaceMove(range:Range, text:Null<String>):IIdentifiedSingleEditOperation {
         return {
             range: range,
             text: text,

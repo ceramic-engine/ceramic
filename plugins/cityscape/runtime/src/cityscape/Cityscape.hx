@@ -17,6 +17,12 @@ package cityscape;
  */
 class Cityscape {
 
+    /**
+     * The undo/redo stacks of the models of this context (Monaco's
+     * `IUndoRedoService`).
+     */
+    public final undoRedoService:cityscape.platform.undoRedo.common.UndoRedoService;
+
     static var _defaultContext:Null<Cityscape> = null;
 
     /**
@@ -30,6 +36,8 @@ class Cityscape {
         return _defaultContext;
     }
 
-    public function new() {}
+    public function new() {
+        this.undoRedoService = new cityscape.platform.undoRedo.common.UndoRedoService();
+    }
 
 }
