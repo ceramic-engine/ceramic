@@ -89,3 +89,10 @@ app:
         #- some_define
         #- some_define: 'some value'
 
+    # `--variant glaze_inspector` (the inspector tests): the inspector's style
+    # editors are Cityscape editors, so the variant lists the cityscape plugin
+    # too (a plugin cannot enable another one)
+    if glaze_inspector:
+        +plugins:
+            - cityscape
+

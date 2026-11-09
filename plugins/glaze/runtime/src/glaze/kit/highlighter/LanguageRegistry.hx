@@ -28,8 +28,7 @@ class LanguageConfig {
 }
 
 /**
- * Explicit name for grammar resources; editing rules use
- * `glaze.kit.input.LanguageConfig`.
+ * Explicit name for grammar resources.
  */
 typedef GrammarConfig = LanguageConfig;
 
@@ -87,10 +86,6 @@ class LanguageRegistry {
     }
 
     @:allow(glaze.kit)
-    function editingLanguageName(name:String):String {
-        return languagesByName.exists(name) ? name : LanguageName.languageName(name);
-    }
-
     public function languages():Array<String> {
         return names.copy();
     }

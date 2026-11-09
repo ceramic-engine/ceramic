@@ -120,8 +120,6 @@ class InputKeyBindings {
         if (macos) bind('cmd-shift-down', new SelectToEnd());
         if (!macos) bind('ctrl-z', new Undo());
         if (!macos) bind('ctrl-y', new Redo());
-        if (macos) bind('cmd-.', new ToggleCodeActions());
-        if (!macos) bind('ctrl-.', new ToggleCodeActions());
         if (macos) bind('cmd-f', new Search());
         if (!macos) bind('ctrl-f', new Search());
         if (macos) bind('cmd-shift-f', new Replace());

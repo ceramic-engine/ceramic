@@ -125,12 +125,7 @@ class Enter implements Action {
 
 @:action(namespace = input) class Escape implements Action {}
 
-@:action(namespace = input) class ToggleCodeActions implements Action {}
-
-@:action(namespace = input) class ShowCompletions implements Action {}
-
 @:action(namespace = input) class Search implements Action {}
 
 @:action(namespace = input) class Replace implements Action {}
 
-@:action(namespace = input) class GoToDefinition implements Action {}

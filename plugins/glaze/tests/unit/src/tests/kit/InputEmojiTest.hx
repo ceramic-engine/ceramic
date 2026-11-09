@@ -60,7 +60,7 @@ class InputEmojiTest extends InputStateTestCase {
     }
 
     function testMoveRightAndLeftStepByCodePoint() {
-        for (make in [() -> build(), () -> buildEditor()]) {
+        for (make in [() -> build(), () -> buildTextarea()]) {
             for (sequence in [FAMILY, THUMB, FLAG, KEYCAP, HEART, COMBINING]) {
                 final view = make();
                 final text = 'a' + sequence + 'b';
@@ -90,7 +90,7 @@ class InputEmojiTest extends InputStateTestCase {
     }
 
     function testBackspaceAndDeleteRemoveOneCodePoint() {
-        final view = buildEditor();
+        final view = buildTextarea();
         // Backspace after the skin tone removes it, then the thumb
         setText(view, 'x' + THUMB + 'y', 1 + Utf8.byteLength(THUMB));
         view.update((state, window, cx) -> state.backspace(new Backspace(), window, cx));
@@ -144,7 +144,7 @@ class InputEmojiTest extends InputStateTestCase {
     }
 
     function testHitTestingLandsOnCodePointBoundaries() {
-        final view = buildEditor();
+        final view = buildTextarea();
         final text = 'a' + FAMILY + ' ' + THUMB + FLAG + KEYCAP + COMBINING;
         setText(view, text, 0);
         draw(view);
@@ -155,7 +155,7 @@ class InputEmojiTest extends InputStateTestCase {
         var x = 0.0;
         var hits = 0;
         while (x < 400) {
-            final p = origin.add(new Point(layout.lineNumberWidth + x, layout.lineHeight * 0.5));
+            final p = origin.add(new Point(x, layout.lineHeight * 0.5));
             final offset = state.indexForMousePosition(p).offset;
             assertTrue(boundaries.indexOf(offset) != -1, 'hit at x=$x gives $offset');
             hits++;
@@ -167,17 +167,17 @@ class InputEmojiTest extends InputStateTestCase {
             final local = layout.lines[0].positionForIndex(offset, layout, false);
             if (local == null)
                 continue;
-            final p = origin.add(new Point(layout.lineNumberWidth + local.x, layout.lineHeight * 0.5));
+            final p = origin.add(new Point(local.x, layout.lineHeight * 0.5));
             final hit = state.indexForMousePosition(p).offset;
             assertTrue(boundaries.indexOf(hit) != -1);
         }
     }
 
     function testLineHeightDoesNotGrowWithEmoji() {
-        final plain = buildEditor();
+        final plain = buildTextarea();
         setText(plain, 'plain text\nsecond line', 0);
         draw(plain);
-        final emoji = buildEditor();
+        final emoji = buildTextarea();
         setText(emoji, 'emoji ' + FAMILY + THUMB + FLAG + '\nsecond ' + KEYCAP + HEART, 0);
         draw(emoji);
         final a = plain.state().lastLayout;

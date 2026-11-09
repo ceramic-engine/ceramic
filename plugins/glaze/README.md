@@ -105,7 +105,7 @@ Element listeners take short callbacks: `.onClick(() -> ...)` or `.onClick(event
 
 ## Using the kit
 
-`glaze.kit` is gpui-kit's component library: buttons, inputs, selects, menus, dialogs, tabs, tables, trees, charts, a code editor, markdown views, a dock system, and more. Wrap your interface in the kit's window root, which carries the theme, dialogs, sheets, notifications, tooltips and text selection:
+`glaze.kit` is gpui-kit's component library: buttons, inputs, selects, menus, dialogs, tabs, tables, trees, charts, markdown views, a dock system, and more. Wrap your interface in the kit's window root, which carries the theme, dialogs, sheets, notifications, tooltips and text selection:
 
 ```haxe
 ui = new Glaze(Kit.window(AppView.component()));
@@ -124,6 +124,12 @@ The kit initializes itself the first time it is needed. A setting made before th
 Icons are `IconName` values: `Button.component('add').icon(IconName.Plus)`. The SVG files of your project's `resources/glaze/icons` become icons too (`resources/glaze/icons/alarm-clock.svg` is `IconName.AlarmClock`), and more directories can be listed in `ceramic.yml` (`glaze:` then `icons:` with a list of paths). Every icon is embedded in the code at compile time, so nothing has to be preloaded, on the web included.
 
 The names are gpui-kit's in camelCase, so its documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences. `Kit.window(view)` is `Root.component().child(view)`: `Root` is itself a component.
+
+### Code editor
+
+The code editor of Glaze is [Cityscape](../cityscape/README.md) (plugin `cityscape`), a port of Monaco, the editor of Visual Studio Code. It replaces gpui-kit's code editor (`Editor`, `EditorState`), which Glaze does not include: list both plugins in `ceramic.yml` and place a `CityscapeEditor` in your interface like any kit component. The kit's text inputs (`Input`, `Textarea`, `InputGroup`, `NumberInput`, `OtpInput`), rich text and `TextView` stay in Glaze.
+
+The kit's element inspector (define `glaze_inspector`, toggled with cmd-alt-i on macOS and ctrl-shift-i elsewhere) edits styles in Cityscape editors: a project built with `glaze_inspector` lists the `cityscape` plugin too, the build stops with an error saying so otherwise. Without `glaze_inspector`, Glaze does not depend on Cityscape.
 
 ## Text and fonts
 

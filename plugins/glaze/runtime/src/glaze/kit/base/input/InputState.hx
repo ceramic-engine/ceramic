@@ -21,9 +21,8 @@ using glaze.kit.base.input.InputTokens;
  * State for a single-line text input.
  *
  * This is the shared editing engine in its single-line kind (Rust
- * `InputBaseState<InputMode>`). Multi-line layout, auto-grow, and
- * code-editor configuration do not exist on this type: those methods live
- * on `TextareaState` and `EditorState`.
+ * `InputBaseState<InputMode>`). Multi-line layout and auto-grow do not
+ * exist on this type: those methods live on `TextareaState`.
  *
  * The builders of `InputBaseState` are overridden here with this type as
  * their result, so that a chain keeps it.
@@ -203,10 +202,6 @@ class InputState extends InputBaseState {
 
     override public function withShowWhitespaces(show:Bool):InputState {
         return cast super.withShowWhitespaces(show);
-    }
-
-    override public function withScrollBeyondLastLine(rows:Null<Int>):InputState {
-        return cast super.withScrollBeyondLastLine(rows);
     }
 
     override public function withCursorSurroundingLines(lines:Null<Int>):InputState {

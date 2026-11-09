@@ -13,12 +13,9 @@ class Replay {
 
     public final selections:Null<Array<CursorSelection>>;
 
-    public final autoClosedPairs:Null<AutoClosedPairs>;
-
-    public function new(changes:Array<Change>, selections:Null<Array<CursorSelection>>, autoClosedPairs:Null<AutoClosedPairs>) {
+    public function new(changes:Array<Change>, selections:Null<Array<CursorSelection>>) {
         this.changes = changes;
         this.selections = selections;
-        this.autoClosedPairs = autoClosedPairs;
     }
 
 }

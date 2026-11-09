@@ -26,7 +26,6 @@ import glaze.TextStyleRefinement;
 import glaze.Window;
 import glaze.kit.base.A11y;
 import glaze.kit.base.ComponentTraits;
-import glaze.kit.base.input.DiagnosticColors;
 import glaze.kit.base.input.InlineTokenClickListener;
 import glaze.kit.base.input.InlineTokenContext;
 import glaze.kit.base.input.InlineTokenHoverListener;
@@ -557,8 +556,6 @@ class Input extends Component implements Styled implements Sizable implements Se
         // Which kind of input this registers as follows from the state itself.
         @:privateAccess AnyInputState.syncFocusedInputRegistry(state.toAny(), window, cx);
 
-        state.state.update(cx, (s, _) -> s.ensureHighlighterFactory(glaze.kit.highlighter.Highlighter.inputHighlighterFactory()));
-        final status = theme.highlightTheme.style.status;
         final editorStyle = new InputEditorStyle(
             theme.foreground,
             theme.mutedForeground,
@@ -566,23 +563,12 @@ class Input extends Component implements Styled implements Sizable implements Se
             theme.border,
             theme.selection,
             theme.caret,
-            new DiagnosticColors(status.error(cx), status.warning(cx), status.info(cx), status.hint(cx)),
-            theme.highlightTheme.resolver(),
-            theme.highlightTheme.style.editorInvisible,
-            theme.highlightTheme.style.editorActiveLine,
-            theme.highlightTheme.style.editorGutterBackground,
-            (ix, isFolded) -> (glaze.kit.button.Button.component(ElementId.NamedInteger("fold-icon", ix))
-                .ghost()
-                .icon(isFolded ? IconName.ChevronRight : IconName.ChevronDown)
-                .xsmall()
-                .rounded(glaze.kit.button.Button.ButtonRounded.Small)
-                .size(glaze.Prelude.px(14.))
-                .selected(isFolded) : IntoElement)
+            theme.highlightTheme.style.editorInvisible
         );
         state.state.update(cx, (s, _) -> s.setEditorStyle(editorStyle));
         final presentation0 = state.presentation(cx);
         final paddings = if (presentation0.isMultiLine()) {
-            new Edges(size.inputPy(), size.inputPx(), size.inputPy(), presentation0.isCodeEditor() ? Math.min(size.inputPx(), 6.) : size.inputPx());
+            new Edges(size.inputPy(), size.inputPx(), size.inputPy(), size.inputPx());
         } else {
             new Edges();
         }
@@ -599,13 +585,7 @@ class Input extends Component implements Styled implements Sizable implements Se
                 // A read-only input can still navigate the code, it only
                 // rejects the items that would change the text.
                 final editable = enabled && !capabilities.isReadonly();
-                var menu = new NativeMenu();
-                if (capabilities.isCodeEditor()) {
-                    menu = menu
-                        .menuWithDisabled(I18n.t("Input.Go to Definition"), !(enabled && capabilities.hasDefinition()), new GoToDefinition())
-                        .menuWithDisabled(I18n.t("Input.Show Code Actions"), !(editable && capabilities.hasCodeActions()), new ToggleCodeActions())
-                        .separator();
-                }
+                final menu = new NativeMenu();
                 menu.menuWithDisabled(I18n.t("Input.Cut"), !(editable && capabilities.isCopyable()), new Cut())
                     .menuWithDisabled(I18n.t("Input.Copy"), !capabilities.isCopyable(), new Copy())
                     // Offered whenever the text can change, without peeking
@@ -646,7 +626,6 @@ class Input extends Component implements Styled implements Sizable implements Se
         }
 
         var bg = inputStyleColors(presentation.isDisabled(), cx).background;
-        if (presentation.isCodeEditor()) bg = editorBackground(theme);
         if (presentation.isDisabled()) bg = bg.opacity(0.5);
         final prefix = prefixElement;
         final suffix = suffixElement;

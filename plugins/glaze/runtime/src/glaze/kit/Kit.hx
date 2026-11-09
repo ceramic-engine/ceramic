@@ -95,8 +95,9 @@ class Kit {
         #end
         Root.registerPlugin(cx, WindowState, (window, cx) -> new WindowState(window, cx));
         Base.init(cx);
-        // Rust order: gpui_base, input, diff, date_picker, dock, sheet...
-        glaze.kit.input.ComponentLanguages.init(cx);
+        // Rust order: gpui_base, input, diff, date_picker, dock, sheet... (the
+        // language service of gpui-kit's code editor, `input::init`, is not
+        // part of Glaze: its code editor is Cityscape)
         glaze.kit.diff.DiffActions.init(cx);
         glaze.kit.time.DatePicker.DatePickerState.init(cx);
         glaze.kit.dock.DockSkin.init(cx);

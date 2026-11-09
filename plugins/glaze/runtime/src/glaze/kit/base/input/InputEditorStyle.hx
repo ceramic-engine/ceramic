@@ -3,15 +3,16 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package glaze.kit.base.input;
 
-import glaze.AnyElement;
 import glaze.Hsla;
 import glaze.kit.base.theme.SemanticThemeTokens;
 
 /**
- * Application-owned colors and highlight resolver consumed by editor painting.
+ * Application-owned colors consumed by the painting of multi-line inputs.
  *
  * Without arguments, Rust's `InputEditorStyle::default()`: every color is
- * transparent (unset) and the resolver resolves nothing.
+ * transparent (unset). gpui-kit's fields for its code editor (diagnostic
+ * colors, highlight resolver, active line, gutter, fold icons) are not part
+ * of Glaze: its code editor is Cityscape (plugin `cityscape`).
  */
 class InputEditorStyle {
 
@@ -27,40 +28,25 @@ class InputEditorStyle {
 
     public var caret:Hsla;
 
-    public var diagnostics:DiagnosticColors;
-
-    public var highlightStyles:HighlightStyleResolver;
-
     public var editorInvisible:Null<Hsla>;
 
-    public var editorActiveLine:Null<Hsla>;
-
-    public var editorGutterBackground:Null<Hsla>;
-
-    public var foldIconRenderer:Null<FoldIconRenderer>;
-
-    public function new(?foreground:Hsla, ?mutedForeground:Hsla, ?background:Hsla, ?border:Hsla, ?selection:Hsla, ?caret:Hsla, ?diagnostics:DiagnosticColors, ?highlightStyles:HighlightStyleResolver, ?editorInvisible:Hsla, ?editorActiveLine:Hsla, ?editorGutterBackground:Hsla, ?foldIconRenderer:FoldIconRenderer) {
+    public function new(?foreground:Hsla, ?mutedForeground:Hsla, ?background:Hsla, ?border:Hsla, ?selection:Hsla, ?caret:Hsla, ?editorInvisible:Hsla) {
         this.foreground = foreground != null ? foreground : new Hsla();
         this.mutedForeground = mutedForeground != null ? mutedForeground : new Hsla();
         this.background = background != null ? background : new Hsla();
         this.border = border != null ? border : new Hsla();
         this.selection = selection != null ? selection : new Hsla();
         this.caret = caret != null ? caret : new Hsla();
-        this.diagnostics = diagnostics != null ? diagnostics : new DiagnosticColors();
-        this.highlightStyles = highlightStyles != null ? highlightStyles : new NoHighlightStyles();
         this.editorInvisible = editorInvisible;
-        this.editorActiveLine = editorActiveLine;
-        this.editorGutterBackground = editorGutterBackground;
-        this.foldIconRenderer = foldIconRenderer;
     }
 
     public static inline function defaultValue():InputEditorStyle {
         return new InputEditorStyle();
     }
 
-    /** Rust `Clone` (the resolver and the fold icon renderer are shared, like their `Rc`) */
+    /** Rust `Clone` */
     public function clone():InputEditorStyle {
-        return new InputEditorStyle(foreground, mutedForeground, background, border, selection, caret, diagnostics.copy(), highlightStyles, editorInvisible, editorActiveLine, editorGutterBackground, foldIconRenderer);
+        return new InputEditorStyle(foreground, mutedForeground, background, border, selection, caret, editorInvisible);
     }
 
     /**

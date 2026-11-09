@@ -9,9 +9,10 @@ import glaze.Point;
 import glaze.Window;
 
 /**
- * The methods Rust shares between the two multi-line modes (`impl<M:
- * MultiLineMode> InputBaseState<M>`). `TextareaState` and `EditorState`
- * forward to them; a single-line `InputState` does not offer them.
+ * The methods Rust shares between the multi-line modes (`impl<M:
+ * MultiLineMode> InputBaseState<M>`, gpui-kit's code editor included).
+ * `TextareaState` forwards to them; a single-line `InputState` does not
+ * offer them.
  */
 @:access(glaze.kit.base.input.LayoutMode)
 class MultiLineInputs {
@@ -66,13 +67,13 @@ class MultiLineInputs {
     }
 
     /**
-     * Rust's `rows` / `set_rows` match: plain text and code editor set the
-     * rows, auto grow sets both the rows and the maximum rows.
+     * Rust's `rows` / `set_rows` match: plain text sets the rows, auto grow
+     * sets both the rows and the maximum rows.
      */
     public static function setLayoutRows(self:InputBaseState, rows:Int):Void {
         final mode = self.mode;
         switch mode.kind {
-            case PlainText | CodeEditor:
+            case PlainText:
                 mode._rows = rows;
             case AutoGrow:
                 mode._rows = rows;

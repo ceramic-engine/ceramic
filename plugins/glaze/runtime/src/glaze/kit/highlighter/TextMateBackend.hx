@@ -4,17 +4,9 @@
 // library) instead of syntect. See NOTICE.md.
 package glaze.kit.highlighter;
 
-import glaze.Context;
 import glaze.HighlightStyle;
 import glaze.Range;
-import glaze.Task;
-import glaze.Window;
-import glaze.kit.base.input.FoldRange;
 import glaze.kit.base.input.HighlightStyleResolver;
-import glaze.kit.base.input.InputBaseState;
-import glaze.kit.base.input.InputEdit;
-import glaze.kit.base.input.InputHighlighter;
-import glaze.kit.base.input.InputHighlighterFactory;
 import glaze.kit.base.input.StyledRange;
 import ropey.Rope;
 import textmate.IGrammar;
@@ -93,27 +85,18 @@ class Syntax {
  * scopes are mapped by the same rules (`semanticName`), and the colors keep
  * following the application's `HighlightTheme`.
  *
+ * It colors the code blocks of `TextView` and the diffs of `DiffView`.
+ * gpui-kit's code editor highlighter (an `InputHighlighter`) is not part of
+ * Glaze: its code editor is Cityscape (plugin `cityscape`), which tokenizes
+ * with the same `textmate` library.
+ *
  * Differences with the syntect backend, all additions:
  * - the grammars come from `TextMateGrammars` (bundled tm-grammars files and
  *   registered ones) instead of bat's syntax set;
- * - the editor highlighter keeps the tokenizer state of every line and only
- *   tokenizes the lines an edit changed, until the state of the next line is
- *   the one it had before (VSCode's approach), instead of reparsing the whole
- *   document; documents above `SYNC_PARSE_MAX_BYTES` are tokenized after a
- *   debounce like the original, still incrementally;
  * - a line that takes more than `LINE_TIME_LIMIT` ms to tokenize keeps the
  *   tokens found so far and passes its start state on, like VSCode.
  */
 class TextMateBackend {
-
-    /**
-     * Documents up to this size are retokenized on the keystroke; larger ones
-     * keep their shifted highlights until a deferred tokenization catches up.
-     */
-    public static final SYNC_PARSE_MAX_BYTES:Int = 64 * 1024;
-
-    /** Seconds. */
-    public static final PARSE_DEBOUNCE:Float = 0.15;
 
     /** Milliseconds a single line may take to tokenize (VSCode uses the same limit). */
     public static final LINE_TIME_LIMIT:Int = 500;
@@ -128,13 +111,6 @@ class TextMateBackend {
 
     /** `semanticName` results, by scope ("" for none). */
     static final names:Map<String, String> = new Map();
-
-    public static function inputHighlighterFactory():InputHighlighterFactory {
-        return language -> {
-            final syntax = findSyntax(language);
-            return syntax != null ? (new TextMateInputHighlighter(language, syntax) : InputHighlighter) : null;
-        };
-    }
 
     /**
      * Styles for one code block of a text view, or nothing for a language
@@ -459,106 +435,6 @@ class TextMateBackend {
     }
 
     /**
-     * Moves the highlights after an edit by its length and drops the ones it
-     * touched, so the text that did not change keeps its colors while a
-     * deferred tokenization catches up.
-     */
-    public static function shift(highlights:Array<Highlight>, edit:InputEdit):Void {
-        final delta = edit.newEndByte - edit.oldEndByte;
-        var write = 0;
-        for (read in 0...highlights.length) {
-            final highlight = highlights[read];
-            if (highlight.end <= edit.startByte) {
-                highlights[write++] = highlight;
-            }
-            else if (highlight.start >= edit.oldEndByte) {
-                highlight.start = saturatingAdd(highlight.start, delta);
-                highlight.end = saturatingAdd(highlight.end, delta);
-                highlights[write++] = highlight;
-            }
-        }
-        highlights.resize(write);
-    }
-
-    static inline function saturatingAdd(value:Int, delta:Int):Int {
-        final result = value + delta;
-        return result < 0 ? 0 : result;
-    }
-
-    /**
-     * Fold candidates from matching braces outside strings and line comments.
-     *
-     * Without a syntax tree this is the structure most languages share; a
-     * language that nests by indentation alone gets no candidates.
-     */
-    public static function braceFoldRanges(text:String):Array<FoldRange> {
-        final starts:Array<Int> = [];
-        final ranges:Array<FoldRange> = [];
-
-        // Rust `str::lines`: split at `\n`, a trailing `\r` dropped, no
-        // empty last line after a final newline.
-        final lines = text.split('\n');
-        if (lines.length > 0 && lines[lines.length - 1].length == 0)
-            glaze.util.Stacks.drop(lines);
-        for (lineNumber in 0...lines.length) {
-            var line = lines[lineNumber];
-            if (StringTools.endsWith(line, '\r'))
-                line = line.substr(0, line.length - 1);
-            var quote:Int = -1;
-            var escaped = false;
-            var i = 0;
-            final length = line.length;
-            while (i < length) {
-                final character = line.charCodeAt(i);
-                i++;
-                if (quote >= 0) {
-                    if (escaped) {
-                        escaped = false;
-                    }
-                    else if (character == '\\'.code) {
-                        escaped = true;
-                    }
-                    else if (character == quote) {
-                        quote = -1;
-                    }
-                }
-                else {
-                    if (character == '/'.code && i < length && line.charCodeAt(i) == '/'.code) {
-                        break;
-                    }
-                    else if (character == '#'.code) {
-                        break;
-                    }
-                    else if (character == '"'.code || character == '\''.code || character == '`'.code) {
-                        quote = character;
-                    }
-                    else if (character == '{'.code) {
-                        starts.push(lineNumber);
-                    }
-                    else if (character == '}'.code) {
-                        // `pop()` without boxing (an empty stack pops nothing)
-                        if (starts.length == 0)
-                            continue;
-                        final start = glaze.util.Stacks.popInt(starts);
-                        if (lineNumber - start >= 2) {
-                            ranges.push(new FoldRange(start, lineNumber));
-                        }
-                    }
-                }
-            }
-        }
-        // Rust `sort_by_key` (stable) then `dedup_by_key` on the start line.
-        // A sign (a difference returned through the function value is boxed on hxcpp)
-        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.startLine < b.startLine ? -1 : (a.startLine > b.startLine ? 1 : 0));
-        final result:Array<FoldRange> = [];
-        for (range in ranges) {
-            if (result.length == 0 || result[result.length - 1].startLine != range.startLine)
-                result.push(range);
-        }
-        return result;
-    }
-
-    /**
      * What `braceFoldRanges` does with one line, reduced: the braces that
      * close a block of an earlier line (`braceCloses`), then the blocks left
      * open at its end (`braceOpens`). A block opened and closed on the same
@@ -567,88 +443,12 @@ class TextMateBackend {
      * ignored like Rust `str::lines`).
      */
     @:allow(glaze.kit.highlighter)
-    static function scanLineBraces(line:String, info:LineInfo):Void {
-        var length = line.length;
-        if (length > 0 && line.charCodeAt(length - 1) == '\r'.code)
-            length--;
-        var closes = 0;
-        var opens = 0;
-        var quote:Int = -1;
-        var escaped = false;
-        var i = 0;
-        while (i < length) {
-            final character = line.charCodeAt(i);
-            i++;
-            if (quote >= 0) {
-                if (escaped) {
-                    escaped = false;
-                }
-                else if (character == '\\'.code) {
-                    escaped = true;
-                }
-                else if (character == quote) {
-                    quote = -1;
-                }
-            }
-            else {
-                if (character == '/'.code && i < length && line.charCodeAt(i) == '/'.code) {
-                    break;
-                }
-                else if (character == '#'.code) {
-                    break;
-                }
-                else if (character == '"'.code || character == '\''.code || character == '`'.code) {
-                    quote = character;
-                }
-                else if (character == '{'.code) {
-                    opens++;
-                }
-                else if (character == '}'.code) {
-                    if (opens > 0)
-                        opens--;
-                    else
-                        closes++;
-                }
-            }
-        }
-        info.braceCloses = closes;
-        info.braceOpens = opens;
-    }
-
     /**
      * `braceFoldRanges` of the whole text from the reduced braces of its
      * lines (`scanLineBraces`): the same ranges, without converting the
      * text to a string or scanning the lines that did not change.
      */
     @:allow(glaze.kit.highlighter)
-    static function braceFoldRangesOfLines(lines:Array<LineInfo>):Array<FoldRange> {
-        final starts:Array<Int> = [];
-        final ranges:Array<FoldRange> = [];
-        for (lineNumber in 0...lines.length) {
-            final line = lines[lineNumber];
-            for (_ in 0...line.braceCloses) {
-                // `pop()` without boxing (an empty stack pops nothing)
-                if (starts.length == 0)
-                    continue;
-                final start = glaze.util.Stacks.popInt(starts);
-                if (lineNumber - start >= 2) {
-                    ranges.push(new FoldRange(start, lineNumber));
-                }
-            }
-            for (_ in 0...line.braceOpens)
-                starts.push(lineNumber);
-        }
-        // Rust `sort_by_key` (stable) then `dedup_by_key` on the start line.
-        // A sign (a difference returned through the function value is boxed on hxcpp)
-        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.startLine < b.startLine ? -1 : (a.startLine > b.startLine ? 1 : 0));
-        final result:Array<FoldRange> = [];
-        for (range in ranges) {
-            if (result.length == 0 || result[result.length - 1].startLine != range.startLine)
-                result.push(range);
-        }
-        return result;
-    }
-
     /** The UTF-8 length of a string. */
     public static function utf8Length(text:String):Int {
         var bytes = 0;
@@ -735,238 +535,6 @@ class LineResult {
     public inline function new(highlights:Array<Highlight>, endState:textmate.IGrammar.StateStack) {
         this.highlights = highlights;
         this.endState = endState;
-    }
-
-}
-
-/**
- * What the editor highlighter keeps for each line.
- */
-private class LineInfo {
-
-    /** Bytes of the line, with its `\n` when it has one. */
-    public var bytes:Int;
-
-    /** Whether `highlights` and `endState` were computed from the current text of the line. */
-    public var valid:Bool = false;
-
-    /** The state the line was tokenized from. */
-    public var startState:Null<textmate.IGrammar.StateStack> = null;
-
-    public var endState:Null<textmate.IGrammar.StateStack> = null;
-
-    public var highlights:Array<Highlight> = [];
-
-    /** Braces of the line closing blocks of earlier lines (`TextMateBackend.scanLineBraces`), valid with `highlights`. */
-    public var braceCloses:Int = 0;
-
-    /** Blocks the line leaves open, valid with `highlights`. */
-    public var braceOpens:Int = 0;
-
-    public function new(bytes:Int) {
-        this.bytes = bytes;
-    }
-
-}
-
-/**
- * The code editor's highlighter (Rust `SyntectInputHighlighter`).
- */
-class TextMateInputHighlighter extends InputHighlighterBase {
-
-    final _language:String;
-
-    final syntax:Syntax;
-
-    var lines:Array<LineInfo> = [];
-
-    /** The start offset of every line, rebuilt after a change of the lines. */
-    var lineStarts:Null<Array<Int>> = null;
-
-    var folds:Array<FoldRange> = [];
-
-    var parseTask:Null<glaze.AnyTask> = null;
-
-    /** Lines tokenized by the last update (for tests and measurements). */
-    @:allow(glaze.kit.highlighter, tests)
-    var lastTokenizedLines:Int = 0;
-
-    public function new(language:String, syntax:Syntax) {
-        this._language = language;
-        this.syntax = syntax;
-    }
-
-    public function language():String {
-        return _language;
-    }
-
-    public function update(edit:Null<InputEdit>, text:Rope, folding:Bool, window:Window, cx:Context<InputBaseState>):Void {
-        if (edit != null && lines.length > 0) {
-            applyEdit(edit, text);
-        }
-        else {
-            reset(text);
-        }
-
-        if (text.len() <= TextMateBackend.SYNC_PARSE_MAX_BYTES) {
-            // Only the lines the edit changed are tokenized again, up to the
-            // first line whose start state did not change.
-            cancelTask();
-            tokenize(text);
-            // Rust scans the whole text again (`syntect_backend.rs:367`);
-            // the reduced braces of the lines give the same ranges
-            folds = folding ? TextMateBackend.braceFoldRangesOfLines(lines) : [];
-            return;
-        }
-
-        final snapshot = text.clone();
-        // Replacing the task cancels a tokenization still waiting out its debounce.
-        cancelTask();
-        parseTask = cx.spawn((entity, acx) -> acx.backgroundExecutor().timer(TextMateBackend.PARSE_DEBOUNCE).then(_ -> {
-            tokenize(snapshot);
-            final folded = folding ? TextMateBackend.braceFoldRangesOfLines(lines) : [];
-            folds = folded;
-            entity.tryUpdate(acx, (state, cx) -> {
-                state.applyHighlighterFoldCandidates(folded, cx);
-            });
-        }));
-    }
-
-    public function styles(range:Range, resolver:HighlightStyleResolver):Array<StyledRange> {
-        return TextMateBackend.resolveStyles(highlightsIn(range), range, resolver);
-    }
-
-    public function foldRanges(_:Rope):Array<FoldRange> {
-        return [for (fold in folds) fold.copy()];
-    }
-
-    /**
-     * The highlights of the lines overlapping `range`, absolute and merged
-     * across lines like a whole-document parse would give them.
-     */
-    @:allow(glaze.kit.highlighter, tests)
-    function highlightsIn(range:Range):Array<Highlight> {
-        final starts = ensureLineStarts();
-        final result:Array<Highlight> = [];
-        // The last line starting at or before `range.start`.
-        var lo = 0;
-        var hi = starts.length;
-        while (lo < hi) {
-            final mid = (lo + hi) >> 1;
-            if (starts[mid] <= range.start)
-                lo = mid + 1;
-            else
-                hi = mid;
-        }
-        var row = lo > 0 ? lo - 1 : 0;
-        // One line back, so a highlight continued from the previous line merges.
-        if (row > 0)
-            row--;
-        while (row < lines.length && starts[row] < range.end) {
-            TextMateBackend.appendHighlights(result, lines[row].highlights, starts[row]);
-            row++;
-        }
-        return result;
-    }
-
-    function ensureLineStarts():Array<Int> {
-        if (lineStarts == null) {
-            final starts:Array<Int> = [];
-            starts.resize(lines.length);
-            var offset = 0;
-            for (i in 0...lines.length) {
-                starts[i] = offset;
-                offset += lines[i].bytes;
-            }
-            lineStarts = starts;
-        }
-        return lineStarts;
-    }
-
-    function cancelTask():Void {
-        if (parseTask != null) {
-            parseTask.cancel();
-            parseTask = null;
-        }
-    }
-
-    /** Forgets every line: the whole text is tokenized again. */
-    function reset(text:Rope):Void {
-        final count = text.linesLen();
-        lines = [for (row in 0...count) new LineInfo(lineBytes(text, row, count))];
-        lineStarts = null;
-    }
-
-    /**
-     * Replaces the lines an edit touched by placeholders for the new lines.
-     * The other lines keep their highlights (relative to their start), so
-     * the text that did not change keeps its colors.
-     */
-    function applyEdit(edit:InputEdit, text:Rope):Void {
-        final count = text.linesLen();
-        final startRow = edit.startPosition.row;
-        final oldEndRow = edit.oldEndPosition.row;
-        final newEndRow = edit.newEndPosition.row;
-        if (startRow > lines.length || oldEndRow >= lines.length || count - (newEndRow - startRow + 1) != lines.length - (oldEndRow - startRow + 1)) {
-            // The edit does not match what this highlighter saw: start over.
-            reset(text);
-            return;
-        }
-        final replacement = [for (row in startRow...newEndRow + 1) new LineInfo(lineBytes(text, row, count))];
-        final removed = oldEndRow - startRow + 1;
-        lines = lines.slice(0, startRow).concat(replacement).concat(lines.slice(startRow + removed));
-        // The line that became the last one has lost its newline (or the
-        // previous last one gained one): recompute its length.
-        final last = lines.length - 1;
-        for (row in (last > 0 ? last - 1 : 0)...last + 1) {
-            final bytes = lineBytes(text, row, count);
-            if (lines[row].bytes != bytes) {
-                lines[row].bytes = bytes;
-                lines[row].valid = false;
-            }
-        }
-        lineStarts = null;
-    }
-
-    static function lineBytes(text:Rope, row:Int, count:Int):Int {
-        return text.lineLen(row) + (row < count - 1 ? 1 : 0);
-    }
-
-    /**
-     * Tokenizes the lines that are not valid, and the following lines while
-     * their start state changed.
-     */
-    function tokenize(text:Rope):Void {
-        final count = lines.length;
-        var tokenized = 0;
-        var row = 0;
-        var state:textmate.IGrammar.StateStack = Textmate.INITIAL;
-        while (row < count) {
-            final line = lines[row];
-            if (line.valid && line.startState != null && line.startState.equals(state)) {
-                // Up to date: skip to the next line that is not.
-                var next = row + 1;
-                while (next < count && lines[next].valid)
-                    next++;
-                if (next >= count)
-                    break;
-                row = next;
-                state = lines[row - 1].endState;
-                continue;
-            }
-            final lineText = text.sliceLine(row).toString();
-            final newline = row < count - 1 ? 1 : 0;
-            final result = TextMateBackend.tokenizeLine(syntax.grammar, lineText, line.bytes - newline, newline, state);
-            line.startState = state;
-            line.endState = result.endState;
-            line.highlights = result.highlights;
-            TextMateBackend.scanLineBraces(lineText, line);
-            line.valid = true;
-            state = result.endState;
-            tokenized++;
-            row++;
-        }
-        lastTokenizedLines = tokenized;
     }
 
 }

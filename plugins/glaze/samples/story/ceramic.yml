@@ -8,6 +8,8 @@ app:
     plugins:
         # Glaze, the GPUI port with the gpui-kit components (built-in plugin)
         - glaze
+        # Cityscape, Glaze's code editor (built-in plugin): the Editor story
+        - cityscape
         # HTTP client: img() loads http(s) images through CeramicHttpClient
         - http
         # Native file dialogs: cx.promptForNewPath (CSV export of the data table)

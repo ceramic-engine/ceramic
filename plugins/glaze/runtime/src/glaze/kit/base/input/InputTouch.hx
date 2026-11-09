@@ -200,7 +200,6 @@ class InputTouch {
                 // selection from starting a drag under it.
                 glaze.kit.base.GlobalState.suppressTextSelection(cx.app);
                 self.undoManager.breakTransactionCoalescing();
-                self.modeKind.clearInlineCompletion(self, cx);
                 self.touchSelection = new TouchSelection();
 
                 final resolved = self.resolveMousePosition(event.startPosition);

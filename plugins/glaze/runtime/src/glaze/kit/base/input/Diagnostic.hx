@@ -4,10 +4,11 @@
 package glaze.kit.base.input;
 
 /**
- * A diagnostic of an editor.
+ * A diagnostic (the data of gpui-kit's `Diagnostic`, as the inspector's
+ * `rustToStyle` reports its errors). gpui-kit's code editor, which paints
+ * them, is not part of Glaze: Cityscape shows diagnostics as markers.
  *
- * Rust's `From<lsp_types::Diagnostic>` is not ported (wave 11, LSP): build
- * diagnostics with `new` and the `with*` builders.
+ * Build diagnostics with `new` and the `with*` builders.
  */
 class Diagnostic {
 
@@ -38,15 +39,6 @@ class Diagnostic {
 
     /** The diagnostic's message. */
     public var message:String;
-
-    /**
-     * An array of related diagnostic information, e.g. when symbol-names within
-     * a scope collide all definitions can be marked via this property.
-     */
-    public var relatedInformation:Null<Array<DiagnosticRelatedInformation>>;
-
-    /** Additional metadata about the diagnostic. */
-    public var tags:Null<Array<DiagnosticTag>>;
 
     /**
      * A data entry field that is preserved between a `textDocument/publishDiagnostics`

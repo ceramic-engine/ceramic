@@ -65,9 +65,10 @@ using glaze.kit.base.input.RopeExt;
 /**
  * The element drawing the text of an input: the visible lines laid out
  * through the display map, the selections, the carets, the IME marked text
- * underline, the placeholder, masked text, inline tokens, whitespace
- * indicators and, for the code editor, line numbers, indent guides, fold
- * icons and inline completion ghost text. Its paint registers the input
+ * underline, the placeholder, masked text, inline tokens and whitespace
+ * indicators (gpui-kit's code editor parts, line numbers, indent guides,
+ * fold icons, highlighting, diagnostics, decorations and inline completion,
+ * are not part of Glaze: its code editor is Cityscape). Its paint registers the input
  * handler of the state (`window.handleInput`) and the mouse listeners of
  * the text.
  *
@@ -94,24 +95,6 @@ class TextElement extends Element {
 
     public static inline final RIGHT_MARGIN:Float = 10.;
 
-    public static inline final LINE_NUMBER_RIGHT_MARGIN:Float = 6.;
-
-    static inline final FOLD_ICON_WIDTH:Float = 14.;
-
-    static inline final FOLD_ICON_HITBOX_WIDTH:Float = 18.;
-
-    static inline final MAX_HIGHLIGHT_LINE_LENGTH:Int = 10000;
-
-    static inline final MIN_LINE_NUMBER_DIGITS:Int = 3;
-
-    static inline final MAX_LINE_NUMBER_DIGITS:Int = 7;
-
-    static inline final MAX_DISPLAYED_LINE_NUMBER:Int = 9999999;
-
-    static final FOLD_CHEVRON_RIGHT_SVG:String = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
-
-    static final FOLD_CHEVRON_DOWN_SVG:String = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
-
     /** Room left around a reveal request for the field's padding and border. */
     static inline final REVEAL_MARGIN:Float = 8.;
 
@@ -137,76 +120,6 @@ class TextElement extends Element {
     }
 
 /// Free functions of element.rs
-
-    static function lineNumberLen(totalLines:Int):Int {
-        var n = totalLines < 1 ? 1 : totalLines;
-        var digits = 1;
-        while (n >= 10) {
-            n = Std.int(n / 10);
-            digits++;
-        }
-        return digits < MIN_LINE_NUMBER_DIGITS ? MIN_LINE_NUMBER_DIGITS : (digits > MAX_LINE_NUMBER_DIGITS ? MAX_LINE_NUMBER_DIGITS : digits);
-    }
-
-    static inline function displayedLineNumber(number:Int):Int {
-        return number < MAX_DISPLAYED_LINE_NUMBER ? number : MAX_DISPLAYED_LINE_NUMBER;
-    }
-
-    static function diagnosticHighlightStyle(severity:DiagnosticSeverity, colors:DiagnosticColors):HighlightStyle {
-        final color = switch severity {
-            case Error: colors.error;
-            case Warning: colors.warning;
-            case Info: colors.info;
-            case Hint: colors.hint;
-        }
-        final style = new HighlightStyle();
-        style.underline = new UnderlineStyle(1., color, true);
-        return style;
-    }
-
-    static function composeDecorations(styles:Array<StyledRange>, decorations:Array<StyledRange>, visibleByteRange:Range):Null<Array<StyledRange>> {
-        final visibleDecorations:Array<StyledRange> = [];
-        for (decoration in decorations) {
-            final start = decoration.range.start > visibleByteRange.start ? decoration.range.start : visibleByteRange.start;
-            final end = decoration.range.end < visibleByteRange.end ? decoration.range.end : visibleByteRange.end;
-            if (start < end) {
-                visibleDecorations.push(new StyledRange(new Range(start, end), decoration.style));
-            }
-        }
-
-        if (visibleDecorations.length == 0) {
-            return styles.length > 0 ? styles : null;
-        }
-        if (styles.length == 0) {
-            styles.push(new StyledRange(visibleByteRange, new HighlightStyle()));
-        }
-
-        // Decorations are application-authored overrides and must win over syntax
-        // and semantic highlighting when both set the same style property.
-        return combineHighlights(styles, visibleDecorations);
-    }
-
-    static function composeDecorationCollections(styles:Array<StyledRange>, collections:Array<Array<TextDecoration>>,
-            visibleByteRange:Range):Null<Array<StyledRange>> {
-        // Apply collections in reverse creation order so the first collection is
-        // composed last and retains its documented precedence.
-        var i = collections.length - 1;
-        while (i >= 0) {
-            final decorations = [for (decoration in collections[i]) new StyledRange(decoration.range, decoration.style)];
-            final composed = composeDecorations(styles, decorations, visibleByteRange);
-            styles = composed != null ? composed : [];
-            i--;
-        }
-
-        return styles.length > 0 ? styles : null;
-    }
-
-    /** `gpui::combine_highlights` over `(Range, HighlightStyle)` pairs. */
-    static function combineHighlights(a:Array<StyledRange>, b:Array<StyledRange>):Array<StyledRange> {
-        final combined = HighlightStyle.combineHighlights([for (s in a) new TextHighlight(s.range.start, s.range.end, s.style)],
-            [for (s in b) new TextHighlight(s.range.start, s.range.end, s.style)]);
-        return [for (h in combined) new StyledRange(new Range(h.start, h.end), h.style)];
-    }
 
     /** Prepaint and retained state must use the same range, including after content shrinks. */
     public static function clampHorizontalScrollOffset(offset:Float, scrollWidth:Float, inputWidth:Float, textAlign:TextAlign):Float {
@@ -236,11 +149,6 @@ class TextElement extends Element {
     /** Rust `Ord::clamp` on `Pixels`. */
     static inline function pixelsClamp(value:Float, min:Float, max:Float):Float {
         return pixelsLess(value, min) ? min : (pixelsLess(max, value) ? max : value);
-    }
-
-    static function editorGutterBounds(inputBounds:Bounds, lineNumberWidth:Float, ghostLinesHeight:Float, paddings:Edges):Bounds {
-        return new Bounds(new Point(inputBounds.origin.x - paddings.left, inputBounds.origin.y - paddings.top),
-            new Size(lineNumberWidth + paddings.left, inputBounds.size.height + ghostLinesHeight + paddings.top + paddings.bottom));
     }
 
     /**
@@ -326,24 +234,6 @@ class TextElement extends Element {
     }
 
     /**
-     * Pixel height of the empty area below the last line in the editor's
-     * scrollable region. Backs `InputBaseState.scrollBeyondLastLine`.
-     *
-     * `0` outside code-editor mode. Inside it, `null` is half the viewport
-     * (floored at `BOTTOM_MARGIN_ROWS` line-heights); `n` is exactly
-     * `n` line-heights.
-     */
-    static function emptyBottomHeight(isCodeEditor:Bool, overrideRows:Null<Int>, viewportHeight:Float, lineHeight:Float):Float {
-        if (!isCodeEditor) {
-            return 0.;
-        }
-        if (overrideRows != null) {
-            return overrideRows * lineHeight;
-        }
-        return MathUtil.max(viewportHeight / 2., BOTTOM_MARGIN_ROWS * lineHeight);
-    }
-
-    /**
      * Align a caret to whole device pixels.
      *
      * Text positions are fractional, and a one-pixel caret at a fractional x is
@@ -356,6 +246,7 @@ class TextElement extends Element {
         return new Bounds(new Point(x, bounds.origin.y), new Size(width, bounds.size.height));
     }
 
+    /** Split placeholder text into display lines and trim runs to each line. */
     static function frameOutlinePoints(corners:Array<CornersOf<Point>>):Array<Point> {
         final rects = [for (c in corners) new FrameRect(c.topLeft, c.bottomRight)];
         final points:Array<Point> = [];
@@ -389,32 +280,6 @@ class TextElement extends Element {
         return points;
     }
 
-    static function padFrameCorners(corners:Array<CornersOf<Point>>, horizontalPadding:Float):Array<CornersOf<Point>> {
-        return [
-            for (c in corners)
-                new CornersOf<Point>(new Point(c.topLeft.x - horizontalPadding, c.topLeft.y), new Point(c.topRight.x + horizontalPadding, c.topRight.y),
-                    new Point(c.bottomRight.x + horizontalPadding, c.bottomRight.y), new Point(c.bottomLeft.x - horizontalPadding, c.bottomLeft.y))
-        ];
-    }
-
-    static function snapFrameOutline(points:Array<Point>, strokeWidth:Float, scaleFactor:Float):FrameOutline {
-        final physicalWidth = MathUtil.max(Math.fceil(Math.abs(strokeWidth * scaleFactor) - 0.5), 1.);
-        final strokeWidth:Float = physicalWidth / scaleFactor;
-        final centerOffset = physicalWidth % 2. == 0. ? 0. : 0.5;
-        inline function snap(value:Float):Float {
-            return (MathUtil.round(value * scaleFactor - centerOffset) + centerOffset) / scaleFactor;
-        }
-        return new FrameOutline(strokeWidth, [for (p in points) new Point(snap(p.x), snap(p.y))]);
-    }
-
-    static function clampFrameToContentMask(points:Array<Point>, strokeWidth:Float, contentMask:Bounds):Array<Point> {
-        final halfWidth = strokeWidth / 2.;
-        final minX = contentMask.left() + halfWidth;
-        final maxX = MathUtil.max(contentMask.right() - halfWidth, minX);
-        return [for (p in points) new Point(MathUtil.min(MathUtil.max(p.x, minX), maxX), p.y)];
-    }
-
-    /** Split placeholder text into display lines and trim runs to each line. */
     static function placeholderLineRuns(displayText:String, runs:Array<TextRun>):Array<PlaceholderLine> {
         final result:Array<PlaceholderLine> = [];
         var lineOffset = 0;
@@ -463,34 +328,6 @@ class TextElement extends Element {
             }
 
             cursor = runEnd;
-        }
-
-        return result;
-    }
-
-    /**
-     * Clip sorted `styles` to the sorted, disjoint `ranges`, splitting styles
-     * that span several ranges and dropping coverage in the gaps between them.
-     */
-    static function clipStylesToRanges(styles:Array<StyledRange>, ranges:Array<Range>):Array<StyledRange> {
-        final result:Array<StyledRange> = [];
-        var rangeIx = 0;
-
-        for (styled in styles) {
-            final styleRange = styled.range;
-            while (rangeIx < ranges.length && ranges[rangeIx].end <= styleRange.start) {
-                rangeIx++;
-            }
-
-            var ix = rangeIx;
-            while (ix < ranges.length && ranges[ix].start < styleRange.end) {
-                final start = styleRange.start > ranges[ix].start ? styleRange.start : ranges[ix].start;
-                final end = styleRange.end < ranges[ix].end ? styleRange.end : ranges[ix].end;
-                if (start < end) {
-                    result.push(new StyledRange(new Range(start, end), styled.style));
-                }
-                ix++;
-            }
         }
 
         return result;
@@ -579,53 +416,6 @@ class TextElement extends Element {
         return false;
     }
 
-    static function splitRunsByBgSegments(startOffset:Int, runs:Array<TextRun>, bgSegments:Array<ColorSwatch>):Array<TextRun> {
-        final result:Array<TextRun> = [];
-
-        var cursor = startOffset;
-        for (run in runs) {
-            var runStart = cursor;
-            final runEnd = cursor + run.len;
-
-            for (segment in bgSegments) {
-                final bgRange = segment.range;
-                if (runEnd <= bgRange.start || runStart >= bgRange.end) {
-                    continue;
-                }
-
-                // Overlap exists
-                if (runStart < bgRange.start) {
-                    // Add the part before the background range
-                    result.push(run.withLen(bgRange.start - runStart));
-                }
-
-                // Add the overlapping part with background color
-                final overlapStart = runStart > bgRange.start ? runStart : bgRange.start;
-                final overlapEnd = runEnd < bgRange.end ? runEnd : bgRange.end;
-                final textColor = segment.color.l >= 0.5 ? black() : white();
-
-                final runLen = overlapEnd > overlapStart ? overlapEnd - overlapStart : 0;
-                if (runLen > 0) {
-                    final colored = run.withLen(runLen);
-                    colored.color = textColor;
-                    result.push(colored);
-
-                    cursor = bgRange.end;
-                    runStart = cursor;
-                }
-            }
-
-            if (runEnd > cursor) {
-                // Add the part after the background range
-                result.push(run.withLen(runEnd - cursor));
-            }
-
-            cursor = runEnd;
-        }
-
-        return result;
-    }
-
     /** Rust `as usize` on a float: truncates, saturating at 0 (and NaN to 0). */
     static inline function usize(value:Float):Int {
         return value > 0. ? (value >= 2147483647. ? 2147483647 : Std.int(value)) : 0;
@@ -670,7 +460,6 @@ class TextElement extends Element {
         final lineHeight:Float = lastLayout.lineHeight;
         final visibleRange = lastLayout.visibleRange;
         final lines = lastLayout.lines;
-        final lineNumberWidth:Float = lastLayout.lineNumberWidth;
 
         final activeId = state.activeSelection().id;
         var scrollOffsetX:Float = state.scrollHandle.offset().x;
@@ -784,8 +573,8 @@ class TextElement extends Element {
                             case Right: 0.;
                             case Center: CURSOR_WIDTH;
                         };
-                        scrollOffsetX = if (scrollOffsetX + cursorPos.x > (bounds.size.width - lineNumberWidth - safetyMargin)) {
-                            bounds.size.width - lineNumberWidth - safetyMargin - cursorPos.x;
+                        scrollOffsetX = if (scrollOffsetX + cursorPos.x > (bounds.size.width - safetyMargin)) {
+                            bounds.size.width - safetyMargin - cursorPos.x;
                         }
                         else if (scrollOffsetX + cursorPos.x < 0.) {
                             -cursorPos.x;
@@ -830,7 +619,7 @@ class TextElement extends Element {
 
             // Apply the final horizontal offset to every caret after cursor-follow and
             // deferred scrolling have been resolved, regardless of selection order.
-            final cursorX = bounds.left() + cursorPos.x + lineNumberWidth;
+            final cursorX = bounds.left() + cursorPos.x;
             cursorInfos.push(new CursorRenderInfo(new Bounds(new Point(cursorX, bounds.top() + cursorPos.y + ((lineHeight - cursorHeight) / 2.)),
                 new Size(CURSOR_WIDTH, cursorHeight)), isActive));
         }
@@ -865,7 +654,7 @@ class TextElement extends Element {
         final points = frameOutlinePoints(corners);
         if (points.length == 0)
             return null;
-        final origin = bounds.origin.add(new Point(lastLayout.lineNumberWidth, 0.));
+        final origin = bounds.origin;
         final builder = PathBuilder.fill();
         builder.moveTo(origin.add(points[0]));
         for (i in 1...points.length) {
@@ -928,62 +717,6 @@ class TextElement extends Element {
         return corners.length > 0 ? corners : null;
     }
 
-    function layoutRangeDecorations(lastLayout:LastLayout, bounds:Bounds, window:Window, contentMask:Bounds, cx:App):RangeDecorationPaths {
-        final state = this.state.read(cx);
-        final fills:Array<ColoredPath> = [];
-        final frames:Array<ColoredPath> = [];
-        // Query separate buffer spans across folds instead of scanning annotations
-        // in the hidden text between the first and last visible buffer offsets.
-        final visibleSpans:Array<Range> = [];
-        final count = lastLayout.visibleLineByteOffsets.length < lastLayout.lines.length ? lastLayout.visibleLineByteOffsets.length : lastLayout.lines.length;
-        for (li in 0...count) {
-            final offset = lastLayout.visibleLineByteOffsets[li];
-            final line = lastLayout.lines[li];
-            final end = offset + line.len() + 1 < lastLayout.visibleRangeOffset.end ? offset + line.len() + 1 : lastLayout.visibleRangeOffset.end;
-            if (visibleSpans.length > 0 && visibleSpans[visibleSpans.length - 1].end == offset) {
-                visibleSpans[visibleSpans.length - 1] = new Range(visibleSpans[visibleSpans.length - 1].start, end);
-            }
-            else if (offset < end) {
-                visibleSpans.push(new Range(offset, end));
-            }
-        }
-        for (decoration in state.extras.rangeDecorations(visibleSpans)) {
-            switch decoration.style() {
-                case Fill:
-                    final color = decoration.color() != null ? decoration.color() : state.editorStyle.foreground.opacity(0.12);
-                    final path = layoutMatchRange(decoration.range(), lastLayout, bounds);
-                    if (path != null) {
-                        fills.push(new ColoredPath(path, color));
-                    }
-                case Frame:
-                    final color = decoration.color() != null ? decoration.color() : state.editorStyle.foreground;
-                    var corners = layoutRangeCorners(decoration.range(), lastLayout);
-                    if (corners == null) {
-                        continue;
-                    }
-                    final origin = bounds.origin.add(new Point(lastLayout.lineNumberWidth, 0.));
-                    corners = padFrameCorners(corners, 1.);
-                    final points = [for (point in frameOutlinePoints(corners)) origin.add(point)];
-                    final outline = snapFrameOutline(points, 1., window.scaleFactor());
-                    final points = clampFrameToContentMask(outline.points, outline.strokeWidth, contentMask);
-                    if (points.length == 0) {
-                        continue;
-                    }
-                    final builder = PathBuilder.stroke(outline.strokeWidth);
-                    builder.moveTo(points[0]);
-                    for (i in 1...points.length) {
-                        builder.lineTo(points[i]);
-                    }
-                    builder.close();
-                    final path = buildPath(builder);
-                    if (path != null) {
-                        frames.push(new ColoredPath(path, color));
-                    }
-            }
-        }
-        return new RangeDecorationPaths(fills, frames);
-    }
-
     function layoutSearchMatches(lastLayout:LastLayout, bounds:Bounds, cx:App):Array<MatchPath> {
         final state = this.state.read(cx);
         if (!state.searchSession.isActive()) {
@@ -1023,28 +756,6 @@ class TextElement extends Element {
             }
         }
         return lo;
-    }
-
-    function layoutHoverHighlight(lastLayout:LastLayout, bounds:Bounds, cx:App):Null<Path> {
-        final state = this.state.read(cx);
-        final symbolRange = state.extras.hoverSymbolRange();
-        if (symbolRange == null) {
-            return null;
-        }
-
-        return layoutMatchRange(symbolRange, lastLayout, bounds);
-    }
-
-    function layoutDocumentColors(documentColors:Array<ColorSwatch>, lastLayout:LastLayout, bounds:Bounds, cx:App):Array<ColoredPath> {
-        final paths:Array<ColoredPath> = [];
-        for (swatch in documentColors) {
-            final path = layoutMatchRange(swatch.range, lastLayout, bounds);
-            if (path != null) {
-                paths.push(new ColoredPath(path, swatch.color));
-            }
-        }
-
-        return paths;
     }
 
     function layoutSelections(lastLayout:LastLayout, bounds:Bounds, window:Window, cx:App):Array<Path> {
@@ -1141,10 +852,7 @@ class TextElement extends Element {
 
         var scrollTop:Float = state.deferredScrollOffset != null ? state.deferredScrollOffset.y : state.scrollHandle.offset().y;
         // Clamp as `layoutCursors` does, so we lay out the rows we paint.
-        // Ghost lines are left out: a tighter clamp only lays out extra rows
-        // above, and the last row stays in range.
-        final scrollHeight = lineHeight * totalLines
-            + emptyBottomHeight(state.isCodeEditor(), state.scrollBeyondLastLine, inputHeight, lineHeight);
+        final scrollHeight = lineHeight * totalLines;
         scrollTop = clampVerticalScrollOffset(scrollTop, scrollHeight, inputHeight);
 
         // Display rows are uniformly `lineHeight` tall, so the visible window maps
@@ -1179,34 +887,6 @@ class TextElement extends Element {
         return a < b ? a : b;
     }
 
-    /** Return (lineNumberWidth, lineNumberLen) */
-    static function layoutLineNumbers(state:InputBaseState, text:Rope, fontSize:Float, style:TextStyle, window:Window):LineNumberLayout {
-        final totalLines = text.linesLen();
-        // Reserve three digits for small documents, then follow the actual
-        // line count up to seven digits.
-        final lineNumberLen = TextElement.lineNumberLen(totalLines);
-
-        var lineNumberWidth:Float = if (state.mode.lineNumber()) {
-            final emptyLineNumber = window.textSystem().shapeLine(StringTools.lpad('', '+', lineNumberLen), fontSize,
-                [new TextRun(lineNumberLen, style.font(), black(), null, null, null)]);
-
-            emptyLineNumber.width() + LINE_NUMBER_RIGHT_MARGIN;
-        }
-        else if (state.isCodeEditor()) {
-            LINE_NUMBER_RIGHT_MARGIN;
-        }
-        else {
-            0.;
-        };
-
-        if (state.mode.isFolding()) {
-            // Add extra space for fold icons
-            lineNumberWidth += FOLD_ICON_HITBOX_WIDTH;
-        }
-
-        return new LineNumberLayout(lineNumberWidth, lineNumberLen);
-    }
-
     /**
      * Layout shaped lines for whitespace indicators (space and tab).
      *
@@ -1230,181 +910,6 @@ class TextElement extends Element {
         final tab = window.textSystem().shapeLine(tabText, tabFontSize, [new TextRun(Utf8.byteLength(tabText), style.font(), invisibleColor, null, null, null)]);
 
         return new WhitespaceIndicators(space, tab);
-    }
-
-    /**
-     * Compute inline completion ghost lines for rendering.
-     *
-     * Returns (firstLine, ghostLines) where:
-     * - firstLine: Shaped text for the first line (goes after cursor on same line)
-     * - ghostLines: Shaped lines for subsequent lines (shift content down)
-     */
-    static function layoutInlineCompletion(state:InputBaseState, visibleRange:Range, fontSize:Float, window:Window, cx:App):InlineCompletionLayout {
-        // Must be focused to show inline completion
-        if (!state.focusHandle.isFocused(window)) {
-            return new InlineCompletionLayout(null, []);
-        }
-
-        final completionItem = state.extras.inlineCompletionItem();
-        if (completionItem == null) {
-            return new InlineCompletionLayout(null, []);
-        }
-
-        // Get cursor row from cursor position
-        final cursorRow = state.cursorPosition().line;
-
-        // Only show if cursor row is visible
-        if (cursorRow < visibleRange.start || cursorRow >= visibleRange.end) {
-            return new InlineCompletionLayout(null, []);
-        }
-
-        final completionText = completionItem.insertText;
-        final completionColor = state.editorStyle.mutedForeground.opacity(0.5);
-
-        final textStyle = window.textStyle();
-        final font = textStyle.font();
-
-        final lines = completionText.split('\n');
-        if (lines.length == 0) {
-            return new InlineCompletionLayout(null, []);
-        }
-
-        // Shape first line (goes after cursor)
-        final firstText = lines[0];
-        final firstLine = if (firstText.length > 0) {
-            final firstRun = new TextRun(Utf8.byteLength(firstText), font, completionColor, null, null, null);
-            window.textSystem().shapeLine(firstText, fontSize, [firstRun]);
-        }
-        else {
-            null;
-        };
-
-        // Shape ghost lines (lines 2+ that shift content down)
-        final ghostLines:Array<ShapedLine> = [];
-        for (i in 1...lines.length) {
-            final text = lines[i];
-            final textLen = Utf8.byteLength(text);
-            final len = textLen > 1 ? textLen : 1; // Ensure at least 1 for empty lines
-            final run = new TextRun(len, font, completionColor, null, null, null);
-            // Use space for empty lines so they take up height
-            final shapedText = text.length == 0 ? ' ' : text;
-            ghostLines.push(window.textSystem().shapeLine(shapedText, fontSize, [run]));
-        }
-
-        return new InlineCompletionLayout(firstLine, ghostLines);
-    }
-
-    /**
-     * Layout fold icon hitboxes during prepaint phase.
-     *
-     * This creates hitboxes for the fold icon area, positioned to the right of line numbers.
-     * Icons are created and prepainted here to avoid panics.
-     */
-    function layoutFoldIcons(originX:Float, bounds:Bounds, lastLayout:LastLayout, window:Window, cx:App):FoldIconLayout {
-        final lineNumberHitbox = window.insertHitbox(new Bounds(new Point(originX, bounds.origin.y + lastLayout.visibleTop),
-            new Size(lastLayout.lineNumberWidth, bounds.size.height)), Normal);
-
-        final iconLayout = new FoldIconLayout(lineNumberHitbox, []);
-
-        // First pass: collect fold information from state
-        final foldInfos:Array<FoldInfo> = [];
-        {
-            final state = this.state.read(cx);
-            if (!state.mode.isFolding()) {
-                return iconLayout;
-            }
-
-            var offsetY:Float = lastLayout.visibleTop;
-
-            final count = lastLayout.lines.length < lastLayout.visibleBufferLines.length ? lastLayout.lines.length : lastLayout.visibleBufferLines.length;
-            for (li in 0...count) {
-                final line = lastLayout.lines[li];
-                final bufferLine = lastLayout.visibleBufferLines[li];
-                if (state.displayMap.isFoldCandidate(bufferLine)) {
-                    final isFolded = state.displayMap.isFoldedAt(bufferLine);
-                    foldInfos.push(new FoldInfo(bufferLine, isFolded, bufferLine, offsetY));
-                }
-
-                offsetY += line.wrappedLines.length * (lastLayout.lineHeight : Float);
-            }
-        }
-
-        // Second pass: create and prepaint icons
-        final lineHeight:Float = lastLayout.lineHeight;
-        final lineNumberWidth:Float = lastLayout.lineNumberWidth - LINE_NUMBER_RIGHT_MARGIN - FOLD_ICON_HITBOX_WIDTH;
-        final iconRelativePos = new Point((FOLD_ICON_HITBOX_WIDTH - FOLD_ICON_WIDTH) / 2., (lineHeight - FOLD_ICON_WIDTH) / 2.);
-
-        for (ix in 0...foldInfos.length) {
-            final info = foldInfos[ix];
-            // Position fold icon to the right of line numbers.
-            // Use originX (unscrolled) so icons stay fixed in the gutter during horizontal scroll.
-            final foldIconBounds = new Bounds(new Point(originX + iconRelativePos.x + lineNumberWidth, bounds.origin.y + iconRelativePos.y + info.offsetY),
-                new Size(FOLD_ICON_HITBOX_WIDTH, lineHeight));
-
-            // Create and prepaint icon
-            final renderer = this.state.read(cx).editorStyle.foldIconRenderer;
-            final child:AnyElement = if (renderer != null) {
-                renderer(ix, info.isFolded);
-            }
-            else {
-                final path = info.isFolded ? 'input-fold-chevron-right' : 'input-fold-chevron-down';
-                final svg = info.isFolded ? FOLD_CHEVRON_RIGHT_SVG : FOLD_CHEVRON_DOWN_SVG;
-                (canvas((_, _, _) -> null, (bounds, _, window, cx) -> {
-                    final color = window.textStyle().color;
-                    window.paintSvg(bounds, path, haxe.io.Bytes.ofString(svg), new TransformationMatrix(), color, cx);
-                }).size(px(FOLD_ICON_WIDTH)) : IntoElement).intoAnyElement();
-            };
-            final state = this.state;
-            final bufferLine = info.bufferLine;
-            final icon = (div().id(ElementId.NamedInteger('fold', ix)).size(px(FOLD_ICON_WIDTH)).child(child).onMouseDown(Left, (_, _, cx) -> {
-                cx.stopPropagation();
-
-                state.update(cx, (state, cx) -> {
-                    state.displayMap.toggleFold(bufferLine);
-                    cx.notify();
-                });
-            }) : IntoElement).intoAnyElement();
-
-            icon.prepaintAsRoot(foldIconBounds.origin, new SizeOf<AvailableSpace>(Definite(foldIconBounds.size.width), Definite(foldIconBounds.size.height)),
-                window, cx);
-
-            iconLayout.icons.push(new FoldIcon(info.displayRow, info.isFolded, icon));
-        }
-
-        return iconLayout;
-    }
-
-    /**
-     * Paint fold icons using prepaint hitboxes.
-     *
-     * This handles:
-     * - Rendering fold icons (chevron-right for folded, chevron-down for expanded)
-     * - Mouse click handling to toggle fold state
-     * - Cursor style changes on hover
-     * - Only show icon on hover or for current line
-     */
-    function paintFoldIcons(foldIconLayout:FoldIconLayout, currentRow:Null<Int>, window:Window, cx:App):Void {
-        final isHovered = foldIconLayout.lineNumberHitbox.isHovered(window);
-        if (foldIconLayout.icons.length > 0) {
-            // Mouse moves do not repaint the editor, so repaint when the pointer
-            // enters or leaves the gutter to show or hide the hover chevrons.
-            final hitbox = foldIconLayout.lineNumberHitbox;
-            final entityId = this.state.entityId();
-            window.onMouseEvent(MouseMove, (_, phase, window, cx) -> {
-                if (phase == Bubble && hitbox.isHovered(window) != isHovered) {
-                    cx.notify(entityId);
-                }
-            });
-        }
-        for (icon in foldIconLayout.icons) {
-            final isCurrentLine = currentRow != null && currentRow == icon.displayRow;
-
-            if (!isHovered && !isCurrentLine && !icon.isFolded) {
-                continue;
-            }
-
-            icon.element.paint(window, cx);
-        }
     }
 
     function tokenElement(token:InlineTokenContext, window:Window, cx:App):AnyElement {
@@ -1835,7 +1340,7 @@ class TextElement extends Element {
                 final position = layout.lines[ix].positionForIndex(span.range().start - start, layout, false);
                 if (position != null) {
                     placements.push(new TokenPlacement(state.tokenContext(span, layout.lineHeight, width),
-                        bounds.origin.add(position).add(new Point(layout.lineNumberWidth, y))));
+                        bounds.origin.add(position).add(new Point(0., y))));
                 }
                 si++;
             }
@@ -1864,7 +1369,7 @@ class TextElement extends Element {
     }
 
     static function layoutLines(state:InputBaseState, displayText:Rope, lastLayout:LastLayout, fontSize:Float, runs:Array<TextRun>,
-            bgSegments:Array<ColorSwatch>, whitespaceIndicators:Null<WhitespaceIndicators>, window:Window):Array<InputLineLayout> {
+            whitespaceIndicators:Null<WhitespaceIndicators>, window:Window):Array<InputLineLayout> {
         final isSingleLine = state.isSingleLine();
         if (state.tokensVisible()) {
             return layoutTokenLines(state, lastLayout, fontSize, runs, window);
@@ -1918,9 +1423,6 @@ class TextElement extends Element {
 
             for (range in lineItem.wrappedLines) {
                 var lineRuns = runsForRange(runs, runOffset, range);
-                if (bgSegments.length > 0) {
-                    lineRuns = splitRunsByBgSegments(lastLayout.visibleLineByteOffsets[vi] + range.start, lineRuns, bgSegments);
-                }
 
                 final subLine = Utf8.substring(lineText, range.start, range.end);
                 final aligned = alignRunsToCharBoundaries(subLine, lineRuns);
@@ -1952,117 +1454,6 @@ class TextElement extends Element {
         }
 
         return lines;
-    }
-
-    /** The highlight styles of the visible bytes (Rust's doc: "First usize is the offset of skipped"). */
-    function highlightLines(visibleBufferLines:Array<Int>, visibleTop:Float, visibleByteRange:Range, cx:App):Null<Array<StyledRange>> {
-        final state = this.state.read(cx);
-        final text = state.text;
-        final isMultiLine = state.isMultiLine();
-
-        final cell = state.mode.highlighter();
-        if (cell == null || cell.value == null) {
-            return !state.masked ? composeDecorationCollections([], state.extras.decorationLayers(), visibleByteRange) : null;
-        }
-        final highlighter = cell.value;
-        final diagnostics = state.mode.diagnostics();
-
-        var styles:Array<StyledRange> = [];
-        // Byte ranges of the flushed line groups; the composed styles are
-        // clipped to these at the end so the resulting runs cover exactly the
-        // visible (non-folded) lines' bytes.
-        final groupRanges:Array<Range> = [];
-
-        // Helper to flush a contiguous range of lines. These ranges are disjoint,
-        // so appending avoids repeatedly cloning and recombining prior styles.
-        function flushRange(startLine:Int, endLine:Int, skip:Bool):Void {
-            final byteStart = text.lineStartOffset(startLine);
-            final byteEnd = if (isMultiLine) {
-                // +1 for `\n`
-                text.lineStartOffset(endLine + 1);
-            }
-            else {
-                text.lineEndOffset(endLine);
-            };
-            final range = new Range(byteStart, byteEnd);
-            final rangeStyles = if (skip) {
-                [new StyledRange(range, new HighlightStyle())];
-            }
-            else {
-                highlighter.styles(range, state.editorStyle.highlightStyles);
-            };
-
-            groupRanges.push(range);
-            for (s in rangeStyles)
-                styles.push(s);
-        }
-
-        // Group contiguous visible lines into ranges and call styles() once per range
-        var rangeStart:Null<Int> = null;
-
-        for (i in 0...visibleBufferLines.length) {
-            final line = visibleBufferLines[i];
-            // Check if this line is too long for highlighting
-            final lineLen = text.sliceLine(line).len();
-            if (lineLen > MAX_HIGHLIGHT_LINE_LENGTH) {
-                // Flush any accumulated range first
-                if (rangeStart != null) {
-                    final start = rangeStart;
-                    rangeStart = null;
-                    flushRange(start, line - 1, false);
-                }
-
-                flushRange(line, line, true);
-                continue;
-            }
-
-            if (rangeStart == null)
-                rangeStart = line;
-
-            // Check if next line is contiguous, if so keep accumulating
-            if (i + 1 < visibleBufferLines.length && visibleBufferLines[i + 1] == line + 1) {
-                continue;
-            }
-
-            // Flush the contiguous range
-            final startLine = rangeStart;
-            rangeStart = null;
-            flushRange(startLine, line, false);
-        }
-
-        final diagnosticStyles:Array<StyledRange> = diagnostics == null ? [] : [
-            for (entry in diagnostics.range(visibleByteRange))
-                new StyledRange(entry.range, diagnosticHighlightStyle(entry.severity, state.editorStyle.diagnostics))
-        ];
-
-        // Range semantic tokens, resolved from the LSP provider's cached
-        // result through the active highlight theme so it shares the same
-        // colour vocabulary as the tree-sitter path. Empty when no
-        // provider is set, so `combineHighlights` short-circuits.
-        final customStyles = state.extras.semanticTokenStyles(text, visibleByteRange, state.editorStyle.highlightStyles);
-
-        // hover definition style
-        final hoverStyle = state.modeKind.hoverDefinitionStyle(this.state.read(cx), cx);
-        if (hoverStyle != null) {
-            styles.push(hoverStyle);
-        }
-
-        // Compose tree-sitter, semantic, application, then diagnostic styles.
-        styles = combineHighlights(customStyles, styles);
-        if (!state.masked) {
-            final composed = composeDecorationCollections(styles, state.extras.decorationLayers(), visibleByteRange);
-            styles = composed != null ? composed : [];
-        }
-        styles = combineHighlights(diagnosticStyles, styles);
-
-        // Some sources reach outside the flushed groups (a diagnostic
-        // straddling the viewport edge, or any range inside a folded region),
-        // which would inject extra bytes into the runs coordinate space and
-        // shift every later run boundary (see `layoutLines`). Clip the
-        // composed styles back to the groups.
-        styles = clipStylesToRanges(styles, groupRanges);
-
-        return styles;
     }
 
 /// impl Element for TextElement
@@ -2141,14 +1532,9 @@ class TextElement extends Element {
         };
         final textColor = isEmpty ? dim(state.editorStyle.mutedForeground) : fg;
 
-        // Calculate the width of the line numbers
-        final lineNumbers = layoutLineNumbers(state, text, textSize, textStyle, window);
-        final lineNumberWidth = lineNumbers.width;
-        final lineNumberLen = lineNumbers.len;
-
         var bounds = bounds;
         final wrapWidth:Null<Float> = if (multiLine && state.softWrap) {
-            bounds.size.width - lineNumberWidth - RIGHT_MARGIN;
+            bounds.size.width - RIGHT_MARGIN;
         }
         else {
             null;
@@ -2167,7 +1553,7 @@ class TextElement extends Element {
         }
 
         final lineHeight:Float = window.lineHeight();
-        final tokenElements = measureTokens(MathUtil.max(bounds.size.width - lineNumberWidth - RIGHT_MARGIN, 1.), lineHeight, bounds.size.height, window, cx);
+        final tokenElements = measureTokens(MathUtil.max(bounds.size.width - RIGHT_MARGIN, 1.), lineHeight, bounds.size.height, window, cx);
         state = this.state.read(cx);
 
         final visible = calculateVisibleRange(state, lineHeight, bounds.size.height);
@@ -2176,8 +1562,6 @@ class TextElement extends Element {
         final visibleTop = visible.top;
         final visibleStartOffset = state.text.lineStartOffset(visibleRange.start);
         final visibleEndOffset = state.text.lineEndOffset(visibleRange.end > 0 ? visibleRange.end - 1 : 0);
-
-        final highlightStyles = highlightLines(visibleBufferLines, visibleTop, new Range(visibleStartOffset, visibleEndOffset), cx);
 
         state = this.state.read(cx);
 
@@ -2194,7 +1578,7 @@ class TextElement extends Element {
         };
 
         final lastLayout = new LastLayout(visibleRange, visibleBufferLines, visibleLineByteOffsets, visibleTop, visibleRangeOffset, [], lineHeight,
-            wrapWidth, wrappingIndent, lineNumberWidth, spaceWidth, null, state.textAlign, bounds.size.width);
+            wrapWidth, wrappingIndent, spaceWidth, null, state.textAlign, bounds.size.width);
 
         final run = new TextRun(displayText.len(), style.font(), textColor, null, null, null);
         final markedUnderline = new UnderlineStyle(1., textColor, false);
@@ -2202,30 +1586,14 @@ class TextElement extends Element {
         final imeMarkedRange = imeMarkedDisplayRange(text, state.imeMarkedRange != null ? new Range(state.imeMarkedRange.start, state.imeMarkedRange.end) : null,
             state.masked);
 
-        final runs:Array<TextRun> = if (!isEmpty && highlightStyles != null) {
-            final runs:Array<TextRun> = [];
-
-            for (styled in highlightStyles) {
-                final run = textStyle.clone().highlight(styled.style).toRun(styled.range.end - styled.range.start);
-                if (disabled) {
-                    run.color = run.color.opacity(0.5);
-                }
-
-                for (part in splitRunForImeUnderline(run, styled.range, imeMarkedRange, markedUnderline))
-                    runs.push(part);
-            }
-            runs;
-        }
-        else {
-            splitRunForImeUnderline(run, new Range(0, displayText.len()), imeMarkedRange, markedUnderline);
-        };
-
-        final documentColors = state.extras.documentColorSwatches(text, lastLayout.visibleRange);
+        // gpui-kit's code editor styles the runs with its highlighter,
+        // diagnostics and decorations; inputs and textareas have one style.
+        final runs:Array<TextRun> = splitRunForImeUnderline(run, new Range(0, displayText.len()), imeMarkedRange, markedUnderline);
 
         // Create shaped lines for whitespace indicators before layout
         final whitespaceIndicators = layoutWhitespaceIndicators(state, textSize, textStyle, window, cx);
 
-        final lines = layoutLines(state, displayText, lastLayout, textSize, runs, documentColors, whitespaceIndicators, window);
+        final lines = layoutLines(state, displayText, lastLayout, textSize, runs, whitespaceIndicators, window);
 
         var longestLineWidth:Float = wrapWidth != null ? wrapWidth : 0.;
         // 1. Single line
@@ -2277,28 +1645,20 @@ class TextElement extends Element {
         }
         lastLayout.lines = lines;
 
-        final inlineCompletion = layoutInlineCompletion(state, lastLayout.visibleRange, textSize, window, cx);
-        final ghostFirstLine = inlineCompletion.firstLine;
-        final ghostLines = inlineCompletion.ghostLines;
-        final ghostLineCount = ghostLines.length;
-        final ghostLinesHeight:Float = ghostLineCount * lineHeight;
-
         final totalWrappedLines = state.displayMap.wrapRowCount();
-        final emptyBottomHeight = TextElement.emptyBottomHeight(state.isCodeEditor(), state.scrollBeyondLastLine, bounds.size.height, lineHeight);
 
-        // Empty bottom and ghost lines both describe extra height past the
-        // last content row, so take the max rather than summing: summing
-        // left a band of empty space the cursor could never reach.
-        var scrollSize = new Size(if (longestLineWidth + lineNumberWidth + RIGHT_MARGIN > bounds.size.width) {
-            longestLineWidth + lineNumberWidth + RIGHT_MARGIN;
+        // gpui-kit's code editor adds empty rows and inline completion ghost
+        // lines past the last content row; inputs and textareas have none.
+        var scrollSize = new Size(if (longestLineWidth + RIGHT_MARGIN > bounds.size.width) {
+            longestLineWidth + RIGHT_MARGIN;
         }
         else {
             longestLineWidth;
-        }, MathUtil.max(totalWrappedLines * lineHeight + MathUtil.max(emptyBottomHeight, ghostLinesHeight), bounds.size.height));
+        }, MathUtil.max(totalWrappedLines * lineHeight, bounds.size.height));
 
         // TODO: should be add some gap to right, to convenient to focus on boundary position
         if (lastLayout.textAlign == Right || lastLayout.textAlign == Center) {
-            scrollSize = new Size(longestLineWidth + lineNumberWidth, scrollSize.height);
+            scrollSize = new Size(longestLineWidth, scrollSize.height);
         }
 
         // `positionForIndex` for example
@@ -2332,11 +1692,7 @@ class TextElement extends Element {
 
         // Calculate the scroll offset to keep the cursor in view
 
-        // Save the unscrolled x before layoutCursors modifies bounds.origin with scroll_offset.
-        // Fold icons and their hitboxes must use this value so they stay fixed in the gutter
-        // regardless of horizontal scroll position.
         final inputBounds = bounds;
-        final originalX = bounds.origin.x;
         // Resolved content and viewport sizes can change during a gesture.
         // A non-scrolling input must not retain a drag that will no longer
         // receive its Ended packet through the overscroll path.
@@ -2345,7 +1701,7 @@ class TextElement extends Element {
             stretch = 0.;
         }
         // Keep viewport geometry for scrollbars and hitboxes fixed; only
-        // text, its carets, selections, and gutter contents are displaced.
+        // text, its carets and selections are displaced.
         bounds = new Bounds(new Point(bounds.origin.x, bounds.origin.y + stretch), bounds.size);
 
         final cursorLayout = layoutCursors(lastLayout, bounds, scrollSize, window, cx);
@@ -2388,49 +1744,15 @@ class TextElement extends Element {
 
         final searchMatchPaths = layoutSearchMatches(lastLayout, bounds, cx);
         final selectionPaths = layoutSelections(lastLayout, bounds, window, cx);
-        final hoverHighlightPath = layoutHoverHighlight(lastLayout, bounds, cx);
-        final documentColorPaths = layoutDocumentColors(documentColors, lastLayout, bounds, cx);
-        final rangeDecorations = layoutRangeDecorations(lastLayout, bounds, window, window.contentMask().bounds, cx);
 
         state = this.state.read(cx);
-        final lineNumberLines:Null<Array<Array<ShapedLine>>> = if (state.mode.lineNumber()) {
-            final lineNumberLines:Array<Array<ShapedLine>> = [];
-            final otherLineRuns = [new TextRun(lineNumberLen, style.font(), state.editorStyle.mutedForeground, null, null, null)];
-            final currentLineRuns = [new TextRun(lineNumberLen, style.font(), state.editorStyle.foreground, null, null, null)];
-
-            // build line numbers
-            final count = lastLayout.lines.length < lastLayout.visibleBufferLines.length ? lastLayout.lines.length : lastLayout.visibleBufferLines.length;
-            for (li in 0...count) {
-                final line = lastLayout.lines[li];
-                final bufferLine = lastLayout.visibleBufferLines[li];
-                final lineNo = StringTools.lpad(Std.string(displayedLineNumber(bufferLine + 1)), ' ', lineNumberLen);
-
-                final runs = currentRow != null && currentRow == bufferLine ? currentLineRuns : otherLineRuns;
-
-                final subLines:Array<ShapedLine> = [];
-                subLines.push(window.textSystem().shapeLine(lineNo, textSize, runs));
-                for (_ in 0...(line.wrappedLines.length > 1 ? line.wrappedLines.length - 1 : 0)) {
-                    subLines.push(new ShapedLine(new LineLayout(), ''));
-                }
-                lineNumberLines.push(subLines);
-            }
-            lineNumberLines;
-        }
-        else {
-            null;
-        };
-
-        final hoverDefinitionHitbox = state.modeKind.hoverDefinitionHitbox(state, window, cx);
-        final indentGuidesPath = InputIndentExt.layoutIndentGuides(state, bounds, lastLayout, textStyle, window);
         state.editorScrollbarSnapshot = EditorScrollbarSnapshot.create(inputBounds, lastLayout, scrollSize, cursorScrollOffset, state);
-        final foldIconLayout = layoutFoldIcons(originalX, bounds, lastLayout, window, cx);
         final hitbox = window.insertHitbox(inputBounds, Normal);
         requestReveal(inputBounds, cursorInfos, cursorScrollOffset, lineHeight, window, cx);
 
         final tokenElements = prepaintTokens(lastLayout, bounds, tokenElements, window, cx);
-        prepaintState = new TextElementPrepaintState(lastLayout, tokenElements, lineNumberLines, scrollSize, cursorInfos, cursorScrollOffset, currentRow,
-            selectionPaths, hoverHighlightPath, searchMatchPaths, documentColorPaths, rangeDecorations.fills, rangeDecorations.frames, hoverDefinitionHitbox,
-            indentGuidesPath, hitbox, bounds, foldIconLayout, ghostLines, ghostFirstLine, ghostLinesHeight);
+        prepaintState = new TextElementPrepaintState(lastLayout, tokenElements, scrollSize, cursorInfos, cursorScrollOffset, currentRow, selectionPaths,
+            searchMatchPaths, hitbox, bounds);
     }
 
     static inline function sameWidth(a:Null<Float>, b:Null<Float>):Bool {
@@ -2449,7 +1771,6 @@ class TextElement extends Element {
         final disabled = state.disabled;
         final selectedRange = state.activeSelection().copy();
         final editorStyle = state.editorStyle;
-        final editorPaddings = state.editorPaddings;
 
         final focused = focusHandle.isFocused(window);
         final bounds = prepaint.bounds;
@@ -2462,31 +1783,6 @@ class TextElement extends Element {
         final origin = bounds.origin;
 
         final invisibleTopPadding:Float = prepaint.lastLayout.visibleTop;
-        final activeLineColor:Null<Hsla> = editorStyle.editorActiveLine != null ? (disabled ? editorStyle.editorActiveLine.opacity(0.5) : editorStyle.editorActiveLine) : null;
-        final editorBackground = disabled ? editorStyle.background.opacity(0.5) : editorStyle.background;
-
-        // Paint active line
-        var offsetY:Float = 0.;
-        if (prepaint.lineNumbers != null) {
-            offsetY += invisibleTopPadding;
-
-            // Each item is the normal lines.
-            final count = prepaint.lineNumbers.length < prepaint.lastLayout.visibleBufferLines.length ? prepaint.lineNumbers.length : prepaint.lastLayout.visibleBufferLines.length;
-            for (li in 0...count) {
-                final lines = prepaint.lineNumbers[li];
-                final bufferLine = prepaint.lastLayout.visibleBufferLines[li];
-                final isActive = prepaint.currentRow != null && prepaint.currentRow == bufferLine;
-                final p = new Point(inputBounds.origin.x, origin.y + offsetY);
-                final height = lineHeight * lines.length;
-                // Paint the current line background
-                if (isActive) {
-                    if (activeLineColor != null) {
-                        window.paintQuad(fill(new Bounds(p, new Size(bounds.size.width, height)), activeLineColor));
-                    }
-                }
-                offsetY += height;
-            }
-        }
 
         // Keep scrollbar offset always be positive, Start from the left position
         final scrollOffset:Float = if (textAlign == Right) {
@@ -2509,31 +1805,11 @@ class TextElement extends Element {
         var offsetY:Float = invisibleTopPadding;
         for (li in 0...lineCount) {
             final line = prepaint.lastLayout.lines[li];
-            final bufferLine = prepaint.lastLayout.visibleBufferLines[li];
-            final p = new Point(origin.x + prepaint.lastLayout.lineNumberWidth + scrollOffset, origin.y + offsetY);
+            final p = new Point(origin.x + scrollOffset, origin.y + offsetY);
 
             line.paintBackgroundAligned(p, lineHeight, textAlign, prepaint.lastLayout.contentWidth, window, cx);
 
             offsetY += line.size(lineHeight).height;
-
-            // Ghost lines shift every later line down.
-            if (prepaint.currentRow != null && prepaint.currentRow == bufferLine) {
-                offsetY += prepaint.ghostLinesHeight;
-            }
-        }
-
-        // Paint indent guides
-        if (prepaint.indentGuidesPath != null) {
-            window.paintPath(prepaint.indentGuidesPath, editorStyle.border.opacity(0.85));
-            prepaint.indentGuidesPath = null;
-        }
-
-        // Application decorations sit below the user's selection.
-        for (entry in prepaint.rangeDecorationFills) {
-            window.paintPath(entry.path, entry.color);
-        }
-        for (entry in prepaint.rangeDecorationFrames) {
-            window.paintPath(entry.path, entry.color);
         }
 
         // Paint selections
@@ -2552,59 +1828,18 @@ class TextElement extends Element {
                 window.paintPath(path, editorStyle.selection);
             }
             prepaint.selectionPaths = [];
-
-            // Paint hover highlight
-            if (prepaint.hoverHighlightPath != null) {
-                window.paintPath(prepaint.hoverHighlightPath, secondarySelection);
-                prepaint.hoverHighlightPath = null;
-            }
         }
 
-        // Paint document colors
-        for (entry in prepaint.documentColorPaths) {
-            final color = disabled ? entry.color.opacity(0.5) : entry.color;
-            window.paintPath(entry.path, color);
-        }
-
-        // Paint text with inline completion ghost line support
+        // Paint text
         var offsetY:Float = invisibleTopPadding;
-        final ghostLines = prepaint.ghostLines;
-        final hasGhostLines = ghostLines.length > 0;
-
-        // Track the y-position of the cursor row for positioning the first line suffix
-        var cursorRowY:Null<Float> = null;
-
         for (li in 0...lineCount) {
             final line = prepaint.lastLayout.lines[li];
-            final row = prepaint.lastLayout.visibleBufferLines[li];
             final lineY = origin.y + offsetY;
-            final p = new Point(origin.x + prepaint.lastLayout.lineNumberWidth + scrollOffset, lineY);
+            final p = new Point(origin.x + scrollOffset, lineY);
 
             // Paint the actual line
             line.paintAligned(p, lineHeight, textAlign, prepaint.lastLayout.contentWidth, window, cx);
             offsetY += line.size(lineHeight).height;
-
-            final isCurrentRow = prepaint.currentRow != null && prepaint.currentRow == row;
-            if (isCurrentRow) {
-                cursorRowY = lineY;
-            }
-
-            // After the cursor row, paint ghost lines (which shifts subsequent content down)
-            if (hasGhostLines && isCurrentRow) {
-                final ghostX = origin.x + prepaint.lastLayout.lineNumberWidth;
-
-                for (ghostLine in ghostLines) {
-                    final ghostP = new Point(ghostX, origin.y + offsetY);
-
-                    // Paint semi-transparent background for ghost line
-                    final ghostBounds = new Bounds(ghostP, new Size(bounds.size.width - (prepaint.lastLayout.lineNumberWidth : Float), lineHeight));
-                    window.paintQuad(fill(ghostBounds, editorBackground));
-
-                    // Paint ghost line text
-                    ghostLine.paint(ghostP, lineHeight, textAlign, prepaint.lastLayout.contentWidth, window.textPainter());
-                    offsetY += lineHeight;
-                }
-            }
         }
 
         for (element in prepaint.tokenElements) {
@@ -2618,50 +1853,6 @@ class TextElement extends Element {
             }
         }
 
-        // Paint line numbers
-        var offsetY:Float = 0.;
-        if (prepaint.lineNumbers != null) {
-            offsetY += invisibleTopPadding;
-
-            // The gutter is a fixed overlay above horizontally scrolling text.
-            // Always give it an opaque editor background when the theme does not
-            // provide a dedicated gutter color, and cover the complete gutter so
-            // text cannot show through its right-side spacing/fold-icon area.
-            final gutterBg = editorStyle.editorGutterBackground != null ? editorStyle.editorGutterBackground : editorBackground;
-            final gutterBounds = editorGutterBounds(inputBounds, prepaint.lastLayout.lineNumberWidth, prepaint.ghostLinesHeight, editorPaddings);
-            window.paintQuad(fill(gutterBounds, gutterBg));
-
-            // Each item is the normal lines.
-            final count = prepaint.lineNumbers.length < prepaint.lastLayout.visibleBufferLines.length ? prepaint.lineNumbers.length : prepaint.lastLayout.visibleBufferLines.length;
-            for (li in 0...count) {
-                final lines = prepaint.lineNumbers[li];
-                final bufferLine = prepaint.lastLayout.visibleBufferLines[li];
-                final p = new Point(inputBounds.origin.x, origin.y + offsetY);
-                final isActive = prepaint.currentRow != null && prepaint.currentRow == bufferLine;
-
-                final height = lineHeight * lines.length;
-                // paint active line number background
-                if (isActive) {
-                    if (activeLineColor != null) {
-                        window.paintQuad(fill(new Bounds(new Point(gutterBounds.origin.x, p.y), new Size(gutterBounds.size.width, height)), activeLineColor));
-                    }
-                }
-
-                for (line in lines) {
-                    line.paint(p, lineHeight, Left, null, window.textPainter());
-                    offsetY += lineHeight;
-                }
-
-                // Add ghost line height after cursor row for line numbers alignment
-                if (prepaint.ghostLines.length > 0 && isActive) {
-                    offsetY += prepaint.ghostLinesHeight;
-                }
-            }
-        }
-
-        // Paint fold icons (only visible on hover or for current line)
-        paintFoldIcons(prepaint.foldIconLayout, prepaint.currentRow, window, cx);
-
         this.state.update(cx, (state, cx) -> {
             final geometryChanged = state.lastBounds == null
                 || !state.lastBounds.equals(bounds)
@@ -2672,13 +1863,11 @@ class TextElement extends Element {
                 || (state.lastLayout.lineHeight : Float) != (prepaint.lastLayout.lineHeight : Float);
             // Deviation DEV-016: when the input only moved (a scrolled page),
             // its own render reads nothing that changed, and the caret,
-            // selection, completion menu and IME bounds follow from this paint
-            // and prepaint. Only the hover and diagnostic popovers read the
-            // position when they lay out, so they keep the notify.
+            // selection and IME bounds follow from this paint and prepaint.
+            // (gpui-kit's code editor also keeps the notify while its hover or
+            // diagnostic popover is shown; Glaze's code editor is Cityscape.)
             final movedOnly = geometryChanged
-                && onlyMoved(state, bounds, inputBounds, prepaint)
-                && state.extras.hoverSymbolRange() == null
-                && state.diagnosticPopover == null;
+                && onlyMoved(state, bounds, inputBounds, prepaint);
             state.lastLayout = prepaint.lastLayout.clone();
             state.lastBounds = bounds;
             state.lastCursor = state.cursor();
@@ -2694,36 +1883,6 @@ class TextElement extends Element {
                 cx.notify();
             }
         });
-
-        if (prepaint.hoverDefinitionHitbox != null && !window.modifiers().alt) {
-            window.setCursorStyle(PointingHand, prepaint.hoverDefinitionHitbox);
-        }
-
-        // Paint inline completion first line suffix (after cursor on same line)
-        if (focused) {
-            final firstLine = prepaint.ghostFirstLine;
-            if (firstLine != null) {
-                var activeCursor:Null<CursorRenderInfo> = null;
-                for (info in prepaint.cursorInfosWithScroll()) {
-                    if (info.isActive) {
-                        activeCursor = info;
-                        break;
-                    }
-                }
-                if (activeCursor != null && cursorRowY != null) {
-                    final cursorBounds = activeCursor.bounds;
-                    final firstLineX = cursorBounds.origin.x + cursorBounds.size.width;
-                    final p = new Point(firstLineX, cursorRowY);
-
-                    // Paint background to cover any existing text
-                    final bgBounds = new Bounds(p, new Size(firstLine.width() + 4., lineHeight));
-                    window.paintQuad(fill(bgBounds, editorBackground));
-
-                    // Paint first line completion text
-                    firstLine.paint(p, lineHeight, textAlign, null, window.textPainter());
-                }
-            }
-        }
 
         paintMouseListeners(prepaint.hitbox, window, cx);
     }
@@ -2810,20 +1969,6 @@ class CursorsLayout {
 
 }
 
-/** A path painted with a color (Rust tuple `(Path<Pixels>, Hsla)`). */
-class ColoredPath {
-
-    public final path:Path;
-
-    public final color:Hsla;
-
-    public inline function new(path:Path, color:Hsla) {
-        this.path = path;
-        this.color = color;
-    }
-
-}
-
 /** A search match path and whether it is the current match (Rust tuple `(Path<Pixels>, bool)`). */
 class MatchPath {
 
@@ -2834,20 +1979,6 @@ class MatchPath {
     public inline function new(path:Path, isActive:Bool) {
         this.path = path;
         this.isActive = isActive;
-    }
-
-}
-
-/** The result of `TextElement.layoutRangeDecorations`: (fills, frames). */
-class RangeDecorationPaths {
-
-    public final fills:Array<ColoredPath>;
-
-    public final frames:Array<ColoredPath>;
-
-    public inline function new(fills:Array<ColoredPath>, frames:Array<ColoredPath>) {
-        this.fills = fills;
-        this.frames = frames;
     }
 
 }
@@ -2869,34 +2000,6 @@ class VisibleLines {
 
 }
 
-/** (lineNumberWidth, lineNumberLen) */
-class LineNumberLayout {
-
-    public final width:Float;
-
-    public final len:Int;
-
-    public inline function new(width:Float, len:Int) {
-        this.width = width;
-        this.len = len;
-    }
-
-}
-
-/** (firstLine, ghostLines) of an inline completion. */
-class InlineCompletionLayout {
-
-    public final firstLine:Null<ShapedLine>;
-
-    public final ghostLines:Array<ShapedLine>;
-
-    public inline function new(firstLine:Null<ShapedLine>, ghostLines:Array<ShapedLine>) {
-        this.firstLine = firstLine;
-        this.ghostLines = ghostLines;
-    }
-
-}
-
 /** A placeholder line and its runs (Rust tuple `(&str, Vec<TextRun>)`). */
 class PlaceholderLine {
 
@@ -2907,34 +2010,6 @@ class PlaceholderLine {
     public inline function new(line:String, runs:Array<TextRun>) {
         this.line = line;
         this.runs = runs;
-    }
-
-}
-
-/** The stroke width and points of a snapped frame outline (Rust tuple). */
-class FrameOutline {
-
-    public final strokeWidth:Float;
-
-    public final points:Array<Point>;
-
-    public inline function new(strokeWidth:Float, points:Array<Point>) {
-        this.strokeWidth = strokeWidth;
-        this.points = points;
-    }
-
-}
-
-/** A rectangle as its (top left, bottom right) points. */
-private class FrameRect {
-
-    public final a:Point;
-
-    public final b:Point;
-
-    public inline function new(a:Point, b:Point) {
-        this.a = a;
-        this.b = b;
     }
 
 }
@@ -2966,58 +2041,6 @@ private class TokenPlacement {
 
 }
 
-private class FoldInfo {
-
-    public final bufferLine:Int;
-
-    public final isFolded:Bool;
-
-    public final displayRow:Int;
-
-    public final offsetY:Float;
-
-    public inline function new(bufferLine:Int, isFolded:Bool, displayRow:Int, offsetY:Float) {
-        this.bufferLine = bufferLine;
-        this.isFolded = isFolded;
-        this.displayRow = displayRow;
-        this.offsetY = offsetY;
-    }
-
-}
-
-/** A fold icon: (displayRow, isFolded, element). */
-class FoldIcon {
-
-    public final displayRow:Int;
-
-    public final isFolded:Bool;
-
-    public final element:AnyElement;
-
-    public inline function new(displayRow:Int, isFolded:Bool, element:AnyElement) {
-        this.displayRow = displayRow;
-        this.isFolded = isFolded;
-        this.element = element;
-    }
-
-}
-
-/** Layout information for fold icons. */
-class FoldIconLayout {
-
-    /** Hitbox for the line number area (used for hover detection) */
-    public final lineNumberHitbox:Hitbox;
-
-    /** List of (displayRow, isFolded, iconElement) for each fold candidate */
-    public final icons:Array<FoldIcon>;
-
-    public inline function new(lineNumberHitbox:Hitbox, icons:Array<FoldIcon>) {
-        this.lineNumberHitbox = lineNumberHitbox;
-        this.icons = icons;
-    }
-
-}
-
 /** Rust `PrepaintState` of `TextElement`. */
 class TextElementPrepaintState {
 
@@ -3025,13 +2048,6 @@ class TextElementPrepaintState {
     public final lastLayout:LastLayout;
 
     public final tokenElements:Array<AnyElement>;
-
-    /**
-     * The lines only contains the visible lines in the viewport, based on `visibleRange`.
-     *
-     * The child is the soft lines.
-     */
-    public final lineNumbers:Null<Array<Array<ShapedLine>>>;
 
     /** Size of the scrollable area by entire lines. */
     public final scrollSize:Size;
@@ -3046,62 +2062,25 @@ class TextElementPrepaintState {
 
     public var selectionPaths:Array<Path>;
 
-    public var hoverHighlightPath:Null<Path>;
-
     public final searchMatchPaths:Array<MatchPath>;
-
-    public final documentColorPaths:Array<ColoredPath>;
-
-    public final rangeDecorationFills:Array<ColoredPath>;
-
-    public final rangeDecorationFrames:Array<ColoredPath>;
-
-    public final hoverDefinitionHitbox:Null<Hitbox>;
-
-    public var indentGuidesPath:Null<Path>;
 
     /** The whole input, for deciding whether a long press started in it. */
     public final hitbox:Hitbox;
 
     public final bounds:Bounds;
 
-    /** Fold icon layout data */
-    public final foldIconLayout:FoldIconLayout;
-
-    /** Shaped ghost lines to paint after cursor row (completion lines 2+) */
-    public final ghostLines:Array<ShapedLine>;
-
-    /** First line of inline completion (painted after cursor on same line) */
-    public final ghostFirstLine:Null<ShapedLine>;
-
-    public final ghostLinesHeight:Float;
-
-    public function new(lastLayout:LastLayout, tokenElements:Array<AnyElement>, lineNumbers:Null<Array<Array<ShapedLine>>>, scrollSize:Size,
-            cursorInfos:Array<CursorRenderInfo>, cursorScrollOffset:Point, currentRow:Null<Int>, selectionPaths:Array<Path>, hoverHighlightPath:Null<Path>,
-            searchMatchPaths:Array<MatchPath>, documentColorPaths:Array<ColoredPath>, rangeDecorationFills:Array<ColoredPath>,
-            rangeDecorationFrames:Array<ColoredPath>, hoverDefinitionHitbox:Null<Hitbox>, indentGuidesPath:Null<Path>, hitbox:Hitbox, bounds:Bounds,
-            foldIconLayout:FoldIconLayout, ghostLines:Array<ShapedLine>, ghostFirstLine:Null<ShapedLine>, ghostLinesHeight:Float) {
+    public function new(lastLayout:LastLayout, tokenElements:Array<AnyElement>, scrollSize:Size, cursorInfos:Array<CursorRenderInfo>,
+            cursorScrollOffset:Point, currentRow:Null<Int>, selectionPaths:Array<Path>, searchMatchPaths:Array<MatchPath>, hitbox:Hitbox, bounds:Bounds) {
         this.lastLayout = lastLayout;
         this.tokenElements = tokenElements;
-        this.lineNumbers = lineNumbers;
         this.scrollSize = scrollSize;
         this.cursorInfos = cursorInfos;
         this.cursorScrollOffset = cursorScrollOffset;
         this.currentRow = currentRow;
         this.selectionPaths = selectionPaths;
-        this.hoverHighlightPath = hoverHighlightPath;
         this.searchMatchPaths = searchMatchPaths;
-        this.documentColorPaths = documentColorPaths;
-        this.rangeDecorationFills = rangeDecorationFills;
-        this.rangeDecorationFrames = rangeDecorationFrames;
-        this.hoverDefinitionHitbox = hoverDefinitionHitbox;
-        this.indentGuidesPath = indentGuidesPath;
         this.hitbox = hitbox;
         this.bounds = bounds;
-        this.foldIconLayout = foldIconLayout;
-        this.ghostLines = ghostLines;
-        this.ghostFirstLine = ghostFirstLine;
-        this.ghostLinesHeight = ghostLinesHeight;
     }
 
     /** Returns all cursor infos adjusted for scroll offset. */
@@ -3236,6 +2215,20 @@ private class TextMouseUpEntry extends glaze.Window.MouseListenerEntry {
             state.selecting = false;
             state.columnSelectStart = null;
         });
+    }
+
+}
+
+/** A rectangle as its (top left, bottom right) points. */
+private class FrameRect {
+
+    public final a:Point;
+
+    public final b:Point;
+
+    public inline function new(a:Point, b:Point) {
+        this.a = a;
+        this.b = b;
     }
 
 }

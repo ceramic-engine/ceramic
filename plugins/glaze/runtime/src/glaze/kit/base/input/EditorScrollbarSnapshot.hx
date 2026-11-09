@@ -29,7 +29,7 @@ class EditorScrollbarSnapshot {
 
     /** Rust `EditorScrollbarSnapshot::new` */
     public static function create(inputBounds:Bounds, lastLayout:LastLayout, scrollSize:Size, cursorScrollOffset:Point, state:InputBaseState):EditorScrollbarSnapshot {
-        return new EditorScrollbarSnapshot(EditorScrollbarLayout.create(inputBounds, lastLayout.lineNumberWidth, scrollSize, state.editorPaddings), cursorScrollOffset,
+        return new EditorScrollbarSnapshot(EditorScrollbarLayout.create(inputBounds, scrollSize, state.editorPaddings), cursorScrollOffset,
             state.softWrap);
     }
 
@@ -57,14 +57,15 @@ class EditorScrollbarLayout {
         this.scrollViewportSize = scrollViewportSize;
     }
 
-    /** Rust `EditorScrollbarLayout::new` */
-    public static function create(inputBounds:Bounds, lineNumberWidth:Float, scrollSize:Size, paddings:Edges):EditorScrollbarLayout {
-        final left:Float = (lineNumberWidth : Float) == 0. ? 0. : paddings.left + lineNumberWidth - TextElement.LINE_NUMBER_RIGHT_MARGIN;
+    /**
+     * Rust `EditorScrollbarLayout::new` (without gpui-kit's code editor
+     * gutter, which shifts the track right of the line numbers).
+     */
+    public static function create(inputBounds:Bounds, scrollSize:Size, paddings:Edges):EditorScrollbarLayout {
+        final bounds = new Bounds(new Point(inputBounds.origin.x, inputBounds.origin.y - paddings.top),
+            new Size(inputBounds.size.width + paddings.right, inputBounds.size.height + paddings.top + paddings.bottom));
 
-        final bounds = new Bounds(new Point(inputBounds.origin.x + left, inputBounds.origin.y - paddings.top),
-            new Size(inputBounds.size.width - left + paddings.right, inputBounds.size.height + paddings.top + paddings.bottom));
-
-        return new EditorScrollbarLayout(bounds, new Size(scrollSize.width - left + paddings.right + TextElement.RIGHT_MARGIN, scrollSize.height),
+        return new EditorScrollbarLayout(bounds, new Size(scrollSize.width + paddings.right + TextElement.RIGHT_MARGIN, scrollSize.height),
             new Size(bounds.size.width, inputBounds.size.height));
     }
 

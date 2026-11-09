@@ -129,8 +129,6 @@ class InputMovement {
         self.scrollTo(offset, direction, cx);
         self.pauseBlinkCursor(cx);
         updatePreferredColumn(self);
-        self.modeKind.hideContextMenu(self, cx);
-        self.modeKind.clearInlineCompletion(self, cx);
         cx.notify();
     }
 
@@ -246,8 +244,6 @@ class InputMovement {
         self.cursorLineEndAffinity = activeAffinity;
         self.scrollTo(self.cursor(), direction, cx);
         self.pauseBlinkCursor(cx);
-        self.modeKind.hideContextMenu(self, cx);
-        self.modeKind.clearInlineCompletion(self, cx);
         cx.notify();
     }
 
@@ -326,18 +322,10 @@ class InputMovement {
     }
 
     public static function up(self:InputBaseState, action:MoveUp, window:Window, cx:Context<InputBaseState>):Void {
-        if (self.modeKind.handleContextMenuAction(self, action.boxedClone(), window, cx)) {
-            return;
-        }
-
         moveVertical(self, -1, true, window, cx);
     }
 
     public static function down(self:InputBaseState, action:MoveDown, window:Window, cx:Context<InputBaseState>):Void {
-        if (self.modeKind.handleContextMenuAction(self, action.boxedClone(), window, cx)) {
-            return;
-        }
-
         moveVertical(self, 1, true, window, cx);
     }
 

@@ -394,7 +394,7 @@ class InputTextWrapperTest extends TestCase {
 
     /** A layout context whose only load-bearing field is the line height. */
     static function testLastLayout(lineHeight:Float):LastLayout {
-        return new LastLayout(r(0, 1), [0], [0], 0., r(0, 0), [], lineHeight, null, WrappingIndent.defaultValue(), 0., 0., null, TextAlign.Left, 0.);
+        return new LastLayout(r(0, 1), [0], [0], 0., r(0, 0), [], lineHeight, null, WrappingIndent.defaultValue(), 0., null, TextAlign.Left, 0.);
     }
 
     static function pointString(p:Null<Point>):String {
@@ -528,7 +528,7 @@ class InputTextWrapperTest extends TestCase {
 
         lineLayout = lineLayout.withWrapIndent(20.0);
 
-        final lastLayout = new LastLayout(r(0, 1), [0], [0], 0., r(0, 0), [], 20.0, 10., WrappingIndent.Same, 0., 0., null, TextAlign.Left, 0.);
+        final lastLayout = new LastLayout(r(0, 1), [0], [0], 0., r(0, 0), [], 20.0, 10., WrappingIndent.Same, 0., null, TextAlign.Left, 0.);
 
         assertEquals('(0, 0)', pointString(lineLayout.positionForIndex(0, lastLayout, false)));
         assertEquals('(20, 20)', pointString(lineLayout.positionForIndex(6, lastLayout, false)));

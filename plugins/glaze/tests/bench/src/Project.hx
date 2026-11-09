@@ -31,12 +31,11 @@ class Project extends Entity {
 
     function ready() {
         final app = new App(new TestDispatcher());
-        // The editor scenarios need their TextMate grammar, loaded
-        // asynchronously. The icons need no loading: the kit's icons and the
-        // full-catalog icons of the stories (ToolbarStory's save icon, the
-        // reference icons of InputTokens, copied in resources/glaze/icons like
-        // samples/story) are embedded in the code (`IconName`)
-        scenarios.EditorBench.preload(_ -> new BenchRunner(this, app).run());
+        // The icons need no loading: the kit's icons and the full-catalog
+        // icons of the stories (ToolbarStory's save icon, the reference icons
+        // of InputTokens, copied in resources/glaze/icons like samples/story)
+        // are embedded in the code (`IconName`)
+        new BenchRunner(this, app).run();
     }
 
 }

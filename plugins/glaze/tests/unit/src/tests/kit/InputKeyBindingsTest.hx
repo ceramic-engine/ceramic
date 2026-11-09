@@ -26,8 +26,9 @@ class InputKeyBindingsTest extends TestCase {
 
     function testMacosBindings() {
         final list = describe(InputKeyBindings.bindings(Mac));
-        // The Rust list has 59 bindings compiled for macOS.
-        assertEquals(59, list.length);
+        // The Rust list has 59 bindings compiled for macOS; Glaze leaves out
+        // cmd-. (ToggleCodeActions, gpui-kit's code editor).
+        assertEquals(58, list.length);
         assertTrue(list.indexOf(b('ctrl-backspace', 'input::Backspace')) != -1);
         assertTrue(list.indexOf(b('cmd-a', 'input::SelectAll')) != -1);
         assertTrue(list.indexOf(b('ctrl-a', 'input::MoveHome')) != -1);
@@ -41,8 +42,9 @@ class InputKeyBindingsTest extends TestCase {
 
     function testOtherPlatformBindings() {
         final windows = describe(InputKeyBindings.bindings(Windows));
-        // 49 for Windows, 49 for Linux.
-        assertEquals(49, windows.length);
+        // 49 for Windows, 49 for Linux in Rust; Glaze leaves out ctrl-.
+        // (ToggleCodeActions, gpui-kit's code editor).
+        assertEquals(48, windows.length);
         assertTrue(windows.indexOf(b('ctrl-backspace', 'input::DeleteToPreviousWordStart')) != -1);
         assertTrue(windows.indexOf(b('ctrl-enter', 'input::Enter')) != -1);
         assertTrue(windows.indexOf(b('ctrl-alt-up', 'input::AddCursorAbove')) != -1);
@@ -50,7 +52,7 @@ class InputKeyBindingsTest extends TestCase {
         assertEquals(-1, windows.indexOf(b('alt-shift-left', 'input::SelectToPreviousWordStart')));
 
         final linux = describe(InputKeyBindings.bindings(Linux));
-        assertEquals(49, linux.length);
+        assertEquals(48, linux.length);
         assertTrue(linux.indexOf(b('shift-alt-up', 'input::AddCursorAbove')) != -1);
         assertTrue(linux.indexOf(b('alt-shift-left', 'input::SelectToPreviousWordStart')) != -1);
         assertEquals(-1, linux.indexOf(b('shift-alt-left', 'ui::SelectLeft')));

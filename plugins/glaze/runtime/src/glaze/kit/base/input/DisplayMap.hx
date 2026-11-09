@@ -11,23 +11,21 @@ import ropey.Rope;
 using glaze.kit.base.input.RopeExt;
 
 /**
- * DisplayMap is the main interface for Editor/Input coordinate mapping.
+ * DisplayMap is the main interface for Input/Textarea coordinate mapping.
  *
- * It manages the two-layer projection:
- * 1. Buffer to Wrap (soft-wrapping)
- * 2. Wrap to Display (folding)
+ * gpui-kit projects buffer to wrap (soft-wrapping), then wrap to display
+ * (folding). Folding is a feature of gpui-kit's code editor, which Glaze does
+ * not have (its code editor is Cityscape): the display rows here are the wrap
+ * rows.
  *
- * Editor/Input only needs to work with BufferPoint and DisplayPoint.
+ * Input only needs to work with BufferPoint and DisplayPoint.
  */
 class DisplayMap {
 
     final wrapMap:WrapMap;
 
-    final foldMap:FoldMap;
-
     public function new(font:Font, fontSize:Float, wrapWidth:Null<Float>) {
         wrapMap = new WrapMap(font, fontSize, wrapWidth);
-        foldMap = new FoldMap();
     }
 
 /// Core Coordinate Mapping
@@ -38,18 +36,18 @@ class DisplayMap {
         final wrapPos = wrapMap.bufferPosToWrapPos(pos);
 
         // Wrap to Display
-        final displayRow = foldMap.wrapRowToDisplayRow(wrapPos.row);
+        final displayRow = wrapRowToDisplayRow(wrapPos.row);
         if (displayRow != null)
             return new DisplayPoint(displayRow, wrapPos.col);
 
-        // Cursor is in a folded region, find nearest visible row
-        return new DisplayPoint(foldMap.nearestVisibleDisplayRow(wrapPos.row), 0); // Column 0 at fold boundary
+        // Past the last row: the nearest visible row
+        return new DisplayPoint(nearestVisibleDisplayRow(wrapPos.row), 0);
     }
 
     /** Convert display position to buffer position */
     public function displayPosToBufferPos(pos:DisplayPoint):BufferPoint {
         // Display to Wrap
-        final wrapRow = foldMap.displayRowToWrapRow(pos.row);
+        final wrapRow = displayRowToWrapRow(pos.row);
 
         // Wrap to Buffer
         return wrapMap.wrapPosToBufferPos(new WrapPoint(wrapRow != null ? wrapRow : 0, pos.col));
@@ -57,13 +55,13 @@ class DisplayMap {
 
     /** Get total number of visible display rows */
     public inline function displayRowCount():Int {
-        return foldMap.displayRowCount();
+        return wrapMap.wrapRowCount();
     }
 
     /** Get the buffer line for a given display row */
     public function displayRowToBufferLine(displayRow:Int):Int {
         // Display to Wrap
-        final wrapRow = foldMap.displayRowToWrapRow(displayRow);
+        final wrapRow = displayRowToWrapRow(displayRow);
 
         // Wrap to Buffer line
         return wrapMap.wrapRowToBufferLine(wrapRow != null ? wrapRow : 0);
@@ -71,18 +69,18 @@ class DisplayMap {
 
     /**
      * Get the display row range for a buffer line: [start, end)
-     * Returns null if the buffer line is completely hidden
+     * Returns null if the buffer line has no row
      */
     public function bufferLineToDisplayRowRange(line:Int):Null<Range> {
         // Buffer line to Wrap row range
         final wrapRowRange = wrapMap.bufferLineToWrapRowRange(line);
 
-        // Find first and last visible display rows in this range
+        // Find first and last display rows in this range
         var firstDisplayRow:Null<Int> = null;
         var lastDisplayRow:Null<Int> = null;
 
         for (wrapRow in wrapRowRange.start...wrapRowRange.end) {
-            final displayRow = foldMap.wrapRowToDisplayRow(wrapRow);
+            final displayRow = wrapRowToDisplayRow(wrapRow);
             if (displayRow != null) {
                 if (firstDisplayRow == null)
                     firstDisplayRow = displayRow;
@@ -92,168 +90,59 @@ class DisplayMap {
 
         if (firstDisplayRow != null && lastDisplayRow != null)
             return new Range(firstDisplayRow, lastDisplayRow + 1);
-        return null; // Completely folded
-    }
-
-    /** Check if a buffer line is completely hidden */
-    public inline function isBufferLineHidden(line:Int):Bool {
-        return bufferLineToDisplayRowRange(line) == null;
+        return null;
     }
 
     /**
-     * First display row of a buffer line. If the line is fully folded, returns the
-     * nearest visible display row.
+     * First display row of a buffer line, or the nearest visible display row.
      */
     public function bufferLineToDisplayRow(line:Int):Int {
         final range = bufferLineToDisplayRowRange(line);
         if (range != null)
             return range.start;
         final wrapRow = wrapMap.bufferLineToFirstWrapRow(line);
-        return foldMap.nearestVisibleDisplayRow(wrapRow);
-    }
-
-    /** Set fold candidates (from tree-sitter/LSP) */
-    public function setFoldCandidates(candidates:Array<FoldRange>):Void {
-        foldMap.setCandidates(candidates);
-        rebuildFoldProjection();
-    }
-
-    /** Set a fold at the given start_line (must be in candidates) */
-    public function setFolded(startLine:Int, folded:Bool):Void {
-        foldMap.setFolded(startLine, folded);
-        rebuildFoldProjection();
-    }
-
-    /** Toggle fold at the given start_line */
-    public function toggleFold(startLine:Int):Void {
-        foldMap.toggleFold(startLine);
-        rebuildFoldProjection();
-    }
-
-    /** Check if a line is currently folded */
-    public inline function isFoldedAt(startLine:Int):Bool {
-        return foldMap.isFoldedAt(startLine);
-    }
-
-    /** Check if a line is a fold candidate */
-    public inline function isFoldCandidate(startLine:Int):Bool {
-        return foldMap.isFoldCandidate(startLine);
-    }
-
-    /** Get all currently folded ranges */
-    public inline function foldedRanges():Array<FoldRange> {
-        return foldMap.foldedRanges();
-    }
-
-    /** Clear all folds */
-    public function clearFolds():Void {
-        foldMap.clearFolds();
-        rebuildFoldProjection();
+        return nearestVisibleDisplayRow(wrapRow);
     }
 
 /// Text and Layout Updates
 
-    /**
-     * Adjust folds and candidates for a text edit before updating the wrap map.
-     *
-     * Must be called with the OLD text (before replacement) and the edit range/new_text
-     * so we can compute which old lines were affected.
-     */
-    public function adjustFoldsForEdit(oldText:Rope, range:Range, newText:String):Void {
-        if (foldMap.foldedRanges().length == 0 && foldMap.foldCandidates().length == 0)
-            return;
-
-        final editStartLine = oldText.offsetToPoint(range.start).row;
-        final editEndLine = oldText.offsetToPoint(range.end < oldText.len() ? range.end : oldText.len()).row;
-
-        final oldLinesInRange = editEndLine > editStartLine ? editEndLine - editStartLine : 0;
-        var newLinesInRange = 0;
-        for (i in 0...newText.length) {
-            if (StringTools.fastCodeAt(newText, i) == '\n'.code)
-                newLinesInRange++;
-        }
-        final lineDelta = newLinesInRange - oldLinesInRange;
-
-        foldMap.adjustFoldsForEdit(editStartLine, editEndLine, lineDelta);
-    }
-
-    /**
-     * Incrementally update fold candidates after a text edit.
-     *
-     * Extracts new fold candidates only within the edited byte range
-     * and merges them with existing (already adjusted) candidates.
-     */
-    public function updateFoldCandidatesForEdit(extractFoldRanges:(Range, Rope) -> Array<FoldRange>, editByteRange:Range, newText:Rope):Void {
-        final newStartLine = newText.offsetToPoint(editByteRange.start).row;
-        final newEndLine = newText.offsetToPoint(editByteRange.end < newText.len() ? editByteRange.end : newText.len()).row;
-
-        final newCandidates = extractFoldRanges(editByteRange, newText);
-        foldMap.mergeCandidatesForEdit(newStartLine, newEndLine, newCandidates);
-    }
-
     /** Update text (incremental or full) */
     public function onTextChanged(changedText:Rope, range:Range, newText:Rope, cx:App):Void {
         wrapMap.onTextChanged(changedText, range, newText, cx);
-        rebuildFoldProjection();
     }
 
     /** Update layout parameters (wrap width or font) */
     public function setInlineMetrics(metrics:Array<InlineMetric>, cx:App):Void {
         wrapMap.setInlineMetrics(metrics, cx);
-        rebuildFoldProjection();
     }
 
     public function onLayoutChanged(wrapWidth:Null<Float>, cx:App):Void {
         wrapMap.onLayoutChanged(wrapWidth, cx);
-        rebuildFoldProjection();
     }
 
     /** Set the wrapping indent for continuation lines. */
     public function setWrappingIndent(wrappingIndent:WrappingIndent, cx:App):Void {
         wrapMap.setWrappingIndent(wrappingIndent, cx);
-        rebuildFoldProjection();
     }
 
     /** Set the number of spaces per tab stop. */
     public function setTabSize(tabSize:Int, cx:App):Void {
-        if (wrapMap.setTabSize(tabSize, cx))
-            rebuildFoldProjection();
+        wrapMap.setTabSize(tabSize, cx);
     }
 
     /** Set font parameters */
     public function setFont(font:Font, fontSize:Float, cx:App):Void {
         wrapMap.setFont(font, fontSize, cx);
-        rebuildFoldProjection();
     }
 
     /** Ensure text is prepared (initializes wrapper if needed) */
     public function ensureTextPrepared(text:Rope, cx:App):Void {
-        final didInitialize = wrapMap.ensureTextPrepared(text, cx);
-        if (didInitialize)
-            rebuildFoldProjection();
+        wrapMap.ensureTextPrepared(text, cx);
     }
 
     /** Initialize with text */
     public function setText(text:Rope, cx:App):Void {
         wrapMap.setText(text, cx);
-        rebuildFoldProjection();
-    }
-
-/// Internal Helpers
-
-    /**
-     * Rebuild fold projection after wrap_map or fold state changes
-     * Only rebuilds if there are actually folded ranges
-     */
-    function rebuildFoldProjection():Void {
-        if (foldMap.foldedRanges().length > 0) {
-            foldMap.rebuild(wrapMap);
-        }
-        else {
-            // No active folds: identity mapping (wrap_row == display_row).
-            // Just update cached count so query methods work without Vec allocation.
-            foldMap.markDirtyWithWrapCount(wrapMap.wrapRowCount());
-        }
     }
 
 /// Wrap Display Point Operations
@@ -271,7 +160,7 @@ class DisplayMap {
         return wrapMap.wrapper().offsetToDisplayPointWithAffinity(offset, lineEndAffinity);
     }
 
-    /** Resolve the caret's visual row through both wrapping and folded regions. */
+    /** Resolve the caret's visual row through wrapping. */
     public function offsetToDisplayRow(offset:Int, lineEndAffinity:Bool):Int {
         final point = offsetToWrapDisplayPointWithAffinity(offset, lineEndAffinity);
         final row = wrapRowToDisplayRow(point.row);
@@ -289,25 +178,27 @@ class DisplayMap {
     }
 
     /**
-     * Convert a wrap row to a display row (skipping folded rows).
-     * Returns null if the wrap row is folded.
+     * Convert a wrap row to a display row (the same row). Returns null past
+     * the last row.
      */
     public inline function wrapRowToDisplayRow(wrapRow:Int):Null<Int> {
-        return foldMap.wrapRowToDisplayRow(wrapRow);
+        return wrapRow < wrapMap.wrapRowCount() ? wrapRow : null;
     }
 
     /** Find the nearest visible display row for a given wrap row. */
-    public inline function nearestVisibleDisplayRow(wrapRow:Int):Int {
-        return foldMap.nearestVisibleDisplayRow(wrapRow);
+    public function nearestVisibleDisplayRow(wrapRow:Int):Int {
+        final count = wrapMap.wrapRowCount();
+        final last = count > 0 ? count - 1 : 0;
+        return wrapRow < last ? wrapRow : last;
     }
 
-    /** Convert a display row to a wrap row. */
+    /** Convert a display row to a wrap row (the same row), or null past the last row. */
     public inline function displayRowToWrapRow(displayRow:Int):Null<Int> {
-        return foldMap.displayRowToWrapRow(displayRow);
+        return displayRow < wrapMap.wrapRowCount() ? displayRow : null;
     }
 
     public function displayRowColumnToOffset(displayRow:Int, column:Int):Int {
-        final wrapRow = foldMap.displayRowToWrapRow(displayRow);
+        final wrapRow = displayRowToWrapRow(displayRow);
         return wrapMap.wrapper().displayPointToOffset(new WrapDisplayPoint(wrapRow != null ? wrapRow : 0, 0, column));
     }
 
@@ -328,12 +219,13 @@ class DisplayMap {
         return wrapMap.text();
     }
 
-    /** Calculate how many wrap rows of a buffer line are visible (not folded) */
+    /** How many wrap rows a buffer line has */
     public inline function visibleWrapRowCountForBufferLine(line:Int):Int {
-        return wrapMap.visibleWrapRowCountForLine(line, foldMap);
+        final range = wrapMap.bufferLineToWrapRowRange(line);
+        return range.end - range.start;
     }
 
-    /** Get the wrap row count (before folding) */
+    /** Get the wrap row count */
     public inline function wrapRowCount():Int {
         return wrapMap.wrapRowCount();
     }

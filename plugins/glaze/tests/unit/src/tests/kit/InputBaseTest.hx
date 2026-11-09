@@ -51,7 +51,6 @@ class InputBaseTest extends TestCase {
 
     function testContextMenuCapabilitiesDocExample() {
         final capabilities = new InputContextMenuCapabilities()
-            .codeEditor(true)
             .selection(true);
 
         assertTrue(capabilities.isEditable());

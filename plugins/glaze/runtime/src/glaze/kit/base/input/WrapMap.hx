@@ -147,15 +147,4 @@ class WrapMap {
         return _wrapper.text;
     }
 
-    /** Calculate how many wrap rows of a buffer line are visible (not folded) */
-    public function visibleWrapRowCountForLine(line:Int, foldMap:FoldMap):Int {
-        final wrapRange = bufferLineToWrapRowRange(line);
-        var count = 0;
-        for (wr in wrapRange.start...wrapRange.end) {
-            if (foldMap.wrapRowToDisplayRow(wr) != null)
-                count++;
-        }
-        return count;
-    }
-
 }

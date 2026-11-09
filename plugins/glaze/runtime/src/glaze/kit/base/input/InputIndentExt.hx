@@ -50,11 +50,10 @@ enum abstract IndentDirection(Int) {
  * The indentation methods of `InputBaseState` (Rust `impl InputBaseState`
  * blocks of `indent.rs`), as static extensions: see `InputSearchExt`.
  *
- * - `tabSize` / `setTabSize` belong to the multi-line modes (Rust
- *   `impl<M: MultiLineMode>`), `indentGuides` / `setIndentGuides` to the
- *   editor (`impl InputBaseState<EditorMode>`);
- * - `measureIndentWidth` / `layoutIndentGuides` are Rust `TextElement`
- *   methods that do not read the element: they take the state instead.
+ * `tabSize` / `setTabSize` belong to the multi-line modes (Rust
+ * `impl<M: MultiLineMode>`). The indent guides of gpui-kit's code editor
+ * (`indentGuides`, `layoutIndentGuides`) are not part of Glaze: its code
+ * editor is Cityscape.
  *
  * The state is read through the Rust fields (`text`, `selections`, `mode`,
  * `undoManager`) and methods (`isEditable`, `isMultiLine`,
@@ -63,84 +62,6 @@ enum abstract IndentDirection(Int) {
 @:access(glaze.kit.base.input.InputBaseState)
 @:access(glaze.kit.base.input.LayoutMode)
 class InputIndentExt {
-
-/// impl<M: InputModeKind> TextElement<M>
-
-    /** Measure the indent width in pixels for given column count. */
-    public static function measureIndentWidth(style:TextStyle, column:Int, window:Window):Float {
-        final fontSize = glaze.AbsoluteLengthTools.toPixels(style.fontSize, window.remSize());
-        final layout = window.textSystem().shapeLine(StringTools.lpad('', ' ', column), fontSize, [new TextRun(column, style.font(), new Hsla())]);
-
-        return layout.width();
-    }
-
-    public static function layoutIndentGuides(state:InputBaseState, bounds:Bounds, lastLayout:LastLayout, textStyle:TextStyle, window:Window):Null<Path> {
-        if (!state.isMultiLine() || !state.mode.hasIndentGuides())
-            return null;
-
-        final indentWidth = measureIndentWidth(textStyle, state.mode.tabSize().tabSize, window);
-
-        final tabSize = state.mode.tabSize();
-        final lineHeight:Float = lastLayout.lineHeight;
-        final builder = PathBuilder.stroke(1.);
-        var offsetY:Float = lastLayout.visibleTop;
-        var lastIndents:Array<Float> = [];
-
-        final count = lastLayout.visibleBufferLines.length < lastLayout.lines.length ? lastLayout.visibleBufferLines.length : lastLayout.lines.length;
-        for (i in 0...count) {
-            final bufferLine = lastLayout.visibleBufferLines[i];
-            final lineLayout = lastLayout.lines[i];
-            final line = state.text.sliceLine(bufferLine);
-            var currentIndents:Array<Float> = [];
-            if (line.len() > 0) {
-                final indentCount = tabSize.indentCount(line);
-                // (0..indent_count).step_by(tab_size): `step_by(0)` panics in Rust
-                if (tabSize.tabSize == 0)
-                    throw 'assertion failed: step != 0';
-                var offset = 0;
-                while (offset < indentCount) {
-                    final x = indentCount > 0 ? indentWidth * offset / tabSize.tabSize : 0.0;
-
-                    final pos = new Point(x + lastLayout.lineNumberWidth, offsetY);
-
-                    builder.moveTo(pos);
-                    builder.lineTo(new Point(pos.x, pos.y + lineHeight));
-                    currentIndents.push(pos.x);
-                    offset += tabSize.tabSize;
-                }
-            }
-            else if (lastIndents.length > 0) {
-                for (x in lastIndents) {
-                    final pos = new Point(x, offsetY);
-                    builder.moveTo(pos);
-                    builder.lineTo(new Point(pos.x, pos.y + lineHeight));
-                }
-                currentIndents = lastIndents.copy();
-            }
-
-            offsetY += lineLayout.wrappedLines.length * lineHeight;
-            lastIndents = currentIndents;
-        }
-
-        builder.translate(bounds.origin);
-        return builder.build();
-    }
-
-/// impl InputBaseState<EditorMode>
-
-    /** Set whether to show indent guides, default is true. */
-    public static function indentGuides(self:InputBaseState, indentGuides:Bool):InputBaseState {
-        if (self.mode.kind == CodeEditor)
-            self.mode.indentGuides = indentGuides;
-        return self;
-    }
-
-    /** Set indent guides at runtime. */
-    public static function setIndentGuides(self:InputBaseState, indentGuides:Bool, window:Window, cx:Context<InputBaseState>):Void {
-        if (self.mode.kind == CodeEditor)
-            self.mode.indentGuides = indentGuides;
-        cx.notify();
-    }
 
 /// impl<M: MultiLineMode> InputBaseState<M>
 
@@ -158,9 +79,6 @@ class InputIndentExt {
 /// impl<M: InputModeKind> InputBaseState<M>
 
     public static function indentInline(self:InputBaseState, action:IndentInline, window:Window, cx:Context<InputBaseState>):Void {
-        // First, try to accept inline completion if present
-        if (self.modeKind.acceptInlineCompletion(self, window, cx))
-            return;
         indent(self, false, window, cx);
     }
 

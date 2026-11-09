@@ -9,7 +9,6 @@ import glaze.Entity;
 import glaze.FocusHandle;
 import glaze.Window;
 import glaze.kit.base.OtpInput.OtpState;
-import glaze.kit.base.input.EditorState;
 import glaze.kit.base.input.InputBaseState;
 import glaze.kit.base.input.InputState;
 import glaze.kit.base.input.TextareaState;
@@ -18,7 +17,7 @@ import glaze.kit.WindowState;
 /**
  * Any input-like state, regardless of which input element renders it.
  *
- * `InputState`, `TextareaState`, `EditorState` and `OtpState` are separate
+ * `InputState`, `TextareaState` and `OtpState` are separate
  * types, so an API that refers to "whatever input is here" takes this type
  * instead of one of them. `WindowExt.focusedInput` returns it.
  *
@@ -26,11 +25,12 @@ import glaze.kit.WindowState;
  * `focusHandle` when the kind does not matter. Compare with `equals` (Rust
  * `PartialEq`: the same entity).
  *
- * Rust is an enum with the variants `Input`, `Textarea`, `Editor` and `Otp`.
- * A Haxe enum would import constructors named like the `Input` and
- * `Textarea` elements wherever the type is imported, so this is a class:
- * `kind` is the variant (`InputKind`, `TextareaKind`, `EditorKind`, `OtpKind`), `AnyInputState.input(state)` (and `textarea`,
- * `editor`, `otp`) builds one.
+ * Rust is an enum with the variants `Input`, `Textarea`, `Editor` and `Otp`
+ * (gpui-kit's code editor is not part of Glaze: its code editor is
+ * Cityscape). A Haxe enum would import constructors named like the `Input`
+ * and `Textarea` elements wherever the type is imported, so this is a class:
+ * `kind` is the variant (`InputKind`, `TextareaKind`, `OtpKind`),
+ * `AnyInputState.input(state)` (and `textarea`, `otp`) builds one.
  */
 class AnyInputState {
 
@@ -53,11 +53,6 @@ class AnyInputState {
         return new AnyInputState(TextareaKind, state);
     }
 
-    /** A source-code `Editor` state. */
-    public static function editor(state:Entity<EditorState>):AnyInputState {
-        return new AnyInputState(EditorKind, state);
-    }
-
     /** A one-time-code `OtpInput` state. */
     public static function otp(state:Entity<OtpState>):AnyInputState {
         return new AnyInputState(OtpKind, state);
@@ -67,8 +62,7 @@ class AnyInputState {
     public static function fromBase(state:Entity<InputBaseState>):AnyInputState {
         final model:InputBaseState = state;
         if (Std.isOfType(model, InputState)) return new AnyInputState(InputKind, model);
-        if (Std.isOfType(model, TextareaState)) return new AnyInputState(TextareaKind, model);
-        return new AnyInputState(EditorKind, model);
+        return new AnyInputState(TextareaKind, model);
     }
 
     /** Rust `PartialEq`: the same kind and the same entity. */
@@ -76,7 +70,7 @@ class AnyInputState {
         return other != null && kind == other.kind && model == other.model;
     }
 
-    /** The engine of an input, textarea or editor state; null for an OTP state. */
+    /** The engine of an input or textarea state; null for an OTP state. */
     inline function base():Null<InputBaseState> {
         return kind == OtpKind ? null : cast model;
     }
@@ -103,11 +97,6 @@ class AnyInputState {
     /** Returns the `TextareaState`, if this is a `Textarea` state. */
     public function asTextarea():Null<Entity<TextareaState>> {
         return kind == TextareaKind ? (cast model : TextareaState) : null;
-    }
-
-    /** Returns the `EditorState`, if this is an `Editor` state. */
-    public function asEditor():Null<Entity<EditorState>> {
-        return kind == EditorKind ? (cast model : EditorState) : null;
     }
 
     /** Returns the `OtpState`, if this is an `OtpInput` state. */
@@ -172,28 +161,27 @@ class AnyInputState {
 enum abstract AnyInputStateKind(Int) {
     var InputKind = 0;
     var TextareaKind = 1;
-    var EditorKind = 2;
     var OtpKind = 3;
 
     public function toString():String {
         return switch (cast this : AnyInputStateKind) {
             case InputKind: 'Input';
             case TextareaKind: 'Textarea';
-            case EditorKind: 'Editor';
             case OtpKind: 'Otp';
         }
     }
 }
 
 /**
- * The three states the `Input` element can render.
+ * The states the `Input` element can render (`InputState`, `TextareaState`).
  *
  * `AnyInputState` also covers `OtpState`, which is a different engine with
  * none of these methods, so the element takes this narrower type instead.
  *
- * Rust is an enum over the three concrete states whose `dispatch!` macro
- * forwards every call to the shared engine; the port's three states share
- * one class, `InputBaseState`, so this holds it directly.
+ * Rust is an enum over the concrete states (with gpui-kit's code editor)
+ * whose `dispatch!` macro forwards every call to the shared engine; the
+ * port's states share one class, `InputBaseState`, so this holds it
+ * directly.
  */
 class TextInputState {
 

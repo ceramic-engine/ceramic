@@ -7,16 +7,9 @@ import glaze.App;
 import glaze.ElementId;
 import glaze.GlobalElementId;
 import glaze.StyleRefinement;
-import glaze.kit.base.input.CompletionContext;
-import glaze.kit.base.input.CompletionItem;
-import glaze.kit.base.input.CompletionProvider.CompletionProviderBase;
-import glaze.kit.base.input.CompletionTextEdit;
 import glaze.kit.base.input.Diagnostic;
 import glaze.kit.base.input.DiagnosticSeverity;
 import glaze.kit.base.input.LspPosition;
-import glaze.kit.base.input.LspRange;
-import glaze.kit.base.input.LspTextEdit;
-import glaze.Task;
 import glaze.Window;
 import ropey.Rope;
 
@@ -24,6 +17,25 @@ using glaze.StyleRefinementOps;
 using glaze.kit.base.input.RopeExt;
 
 #if glaze_inspector
+#if !plugin_cityscape
+#error 'The Glaze inspector (define glaze_inspector) edits styles with Cityscape: list the cityscape plugin next to glaze in the plugins of ceramic.yml'
+#end
+import cityscape.Cityscape;
+import cityscape.CityscapeEditor;
+import cityscape.base.common.Cancellation.CancellationToken;
+import cityscape.common.Languages.CompletionContext;
+import cityscape.common.Languages.CompletionItem;
+import cityscape.common.Languages.CompletionItemProvider;
+import cityscape.common.Languages.CompletionList;
+import cityscape.common.languages.CompletionItemKind;
+import cityscape.common.Model.ITextModel;
+import cityscape.common.config.EditorOptions.IEditorOptions;
+import cityscape.common.core.Position;
+import cityscape.common.core.Range as CityscapeRange;
+import cityscape.common.model.TextModel;
+import cityscape.kit.KitGrammars;
+import cityscape.kit.KitTheme;
+import cityscape.platform.markers.common.Markers.MarkerSeverity;
 import glaze.AnyElement;
 import glaze.Context;
 import glaze.DivInspectorState;
@@ -34,18 +46,13 @@ import glaze.KeyBinding;
 import glaze.Model;
 import glaze.OperatingSystem;
 import glaze.Render;
-import glaze.Subscription;
-import glaze.kit.base.input.EditorState;
-import glaze.kit.base.input.InputBaseState;
-import glaze.kit.base.input.InputEvent;
-import glaze.kit.base.input.TabSize;
 import glaze.kit.IconName;
 import glaze.kit.TitleBar;
 import glaze.kit.alert.Alert;
 import glaze.kit.button.Button;
 import glaze.kit.clipboard.Clipboard;
 import glaze.kit.descriptionlist.DescriptionList;
-import glaze.kit.input.Editor;
+import glaze.kit.highlighter.Highlighter;
 import glaze.kit.link.Link;
 import glaze.kit.theme.Theme;
 import glaze.kit.inspector.SerdeJson.SerdeError;
@@ -54,7 +61,6 @@ import glaze.Prelude.*;
 import glaze.kit.base.Prelude.*;
 
 using glaze.kit.base.StyledExt;
-using glaze.kit.base.input.InputIndentExt;
 #end
 
 /**
@@ -62,14 +68,20 @@ using glaze.kit.base.input.InputIndentExt;
  *
  * The data side is always available: the reflected style methods
  * (`InspectorStyleMethods`), `rustToStyle` (Rust builder calls to a style,
- * with diagnostics), `styleToRust` and `styleToJson`, and the completion
- * provider of the Rust editor (`InspectorCompletionProvider`).
+ * with diagnostics), `styleToRust` and `styleToJson`, and the completions of
+ * the Rust editor (`styleMethodCompletions`).
  *
  * The panel needs GPUI's inspector (define `glaze_inspector`, Rust feature
  * `inspector`): `Inspector.init` (called by `Kit.init`) binds
  * `ToggleInspector` (cmd-alt-i on macOS, ctrl-shift-i elsewhere), registers
  * `DivInspector` for `DivInspectorState` and sets `renderInspector` as the
  * renderer of GPUI's inspector panel.
+ *
+ * The panel's style editors are Cityscape editors (gpui-kit's code editor
+ * is not part of Glaze), so a project built with `glaze_inspector` lists the
+ * `cityscape` plugin next to `glaze` in its `ceramic.yml` (a Ceramic plugin
+ * cannot enable another one): the build stops with an error saying so
+ * otherwise. Without `glaze_inspector`, Glaze does not depend on Cityscape.
  */
 class Inspector {
 
@@ -210,6 +222,47 @@ class Inspector {
         return {style: style, diagnostics: diagnostics};
     }
 
+    /**
+     * The style methods to complete at `offset` (a UTF-16 offset in `text`,
+     * the code of the Rust editor), the logic of the Rust `LspProvider`:
+     * looking left of the cursor (at most 100 characters) for a `.`, the
+     * methods whose name starts with what follows it. Null when the text
+     * before the cursor does not start with a dot. `start` is the offset of
+     * the dot (the completion replaces the dot and the typed prefix).
+     *
+     * Rust lists the methods in the iteration order of a `HashMap`
+     * (random); the port lists them in table order.
+     */
+    public static function styleMethodCompletions(text:String, offset:Int):Null<{start:Int, prefix:String, methods:Array<{name:String, documentation:Null<String>}>}> {
+        // Rust `rope.char_at(offset - left_offset)`: the character at the
+        // cursor first (none at the very end of the text), then leftwards
+        var leftOffset = 0;
+        while (leftOffset < 100) {
+            final index = offset - leftOffset > 0 ? offset - leftOffset : 0;
+            if (index >= text.length) {
+                break;
+            }
+            if (StringTools.fastCodeAt(text, index) == '.'.code) {
+                break;
+            }
+            leftOffset++;
+        }
+        final start = offset - leftOffset > 0 ? offset - leftOffset : 0;
+        final triggerCharacter = text.substring(start, offset);
+        if (!StringTools.startsWith(triggerCharacter, '.')) {
+            return null;
+        }
+        final methods = InspectorStyleMethods.get();
+        final prefix = triggerCharacter.substr(1);
+        final result:Array<{name:String, documentation:Null<String>}> = [];
+        for (name in methods.names) {
+            if (StringTools.startsWith(name, prefix)) {
+                result.push({name: name, documentation: methods.map.get(name).documentation});
+            }
+        }
+        return {start: start, prefix: prefix, methods: result};
+    }
+
     static inline function isAsciiAlphanumeric(c:Int):Bool {
         return (c >= '0'.code && c <= '9'.code) || (c >= 'a'.code && c <= 'z'.code) || (c >= 'A'.code && c <= 'Z'.code);
     }
@@ -343,12 +396,12 @@ class Inspector {
 @:action(namespace = inspector) class ToggleInspector implements glaze.Action {}
 
 /**
- * An editor of the inspector panel, with its parse error.
+ * An editor of the inspector panel (a Cityscape model), with its parse error.
  */
 private class InspectorEditor {
 
-    /** The input state for the editor. */
-    public final state:Entity<EditorState>;
+    /** The text of the editor. */
+    public final model:ITextModel;
 
     /** Error to display from parsing the input, or if serialization errors somehow occur. */
     public var error:Null<String> = null;
@@ -356,8 +409,37 @@ private class InspectorEditor {
     /** Whether the editor is currently being edited. */
     public var editing:Bool = false;
 
-    public function new(state:Entity<EditorState>) {
-        this.state = state;
+    /**
+     * True while the panel sets the text itself: gpui-kit's `set_value`
+     * emits no change event, so these edits do not reach `editJson` and
+     * `editRust`.
+     */
+    public var settingValue:Bool = false;
+
+    /** The editor showing the model, once on screen. */
+    public var editor:Null<CityscapeEditor> = null;
+
+    public function new(model:ITextModel) {
+        this.model = model;
+    }
+
+    /** The text of the editor (Rust `InputState::value`). */
+    public function value():String {
+        return model.getValue();
+    }
+
+    /**
+     * Replaces the text, without a change event, and scrolls the editor back
+     * to the start (Rust `InputState::set_value`).
+     */
+    public function setValue(value:String):Void {
+        settingValue = true;
+        model.setValue(value);
+        settingValue = false;
+        final editor = this.editor;
+        if (editor != null && editor.getEditor() != null) {
+            editor.setScrollPosition({scrollLeft: 0, scrollTop: 0}, cityscape.common.EditorCommon.ScrollType.Immediate);
+        }
     }
 
 }
@@ -365,12 +447,34 @@ private class InspectorEditor {
 /**
  * The inspector of a `Div` (an element whose state is a `DivInspectorState`):
  * its bounds and its base style, editable as Rust builder calls and as JSON.
+ *
+ * gpui-kit edits them with its code editor; Glaze uses Cityscape
+ * (`CityscapeEditor`), configured to look like gpui-kit's: the kit's mono
+ * font and size with rows of 1.5 times the size, the kit theme's colors
+ * (`cityscape.kit.KitTheme`), indent guides, no line numbers, the text where
+ * gpui-kit's editor puts it (after its folding gutter), the kit's frame and
+ * scrollbar. Rust and JSON are colored when the kit's highlighter is enabled
+ * (`glaze.kit.highlighter.Highlighter.enable`), like gpui-kit's editor.
  */
 class DivInspector extends Model implements Render {
+
+    /** Where the text starts in the editor frame: gpui-kit's left padding (6) and folding gutter (6 + 18). */
+    static inline final TEXT_LEFT:Float = 30.;
+
+    /** The vertical padding of gpui-kit's editor (`Size.Medium.inputPy`). */
+    static inline final PADDING_Y:Int = 8;
+
+    /** The rows of gpui-kit's code editor: 1.5 times the font size. */
+    static inline final LINE_HEIGHT:Float = 1.5;
+
+    static inline final MARKER_OWNER = 'inspector';
 
     var inspectorId:Null<InspectorElementId> = null;
 
     var inspectorState:Null<DivInspectorState> = null;
+
+    /** The Cityscape context of the two editors (languages, theme, providers). */
+    final context:Cityscape;
 
     final rustState:InspectorEditor;
 
@@ -382,47 +486,74 @@ class DivInspector extends Model implements Render {
     /** Part of the initial style that could not be converted to Rust code */
     var unconvertibleStyle:StyleRefinement = new StyleRefinement();
 
-    final subscriptions:Array<Subscription>;
+    /** Whether the bundled grammars were registered (once the highlighter is enabled). */
+    var grammarsRegistered:Bool = false;
+
+    /** The editors on screen, by key (`rust-editor`, `json-editor`). */
+    @:allow(tests) final editors:Map<String, CityscapeEditor> = new Map();
+
+    /** The options of the editors, and the font they were made for. */
+    var options:Null<IEditorOptions> = null;
+
+    var optionsFontKey:String = '';
 
     public function new(window:Window, cx:Context<DivInspector>) {
         super();
-        final lspProvider = new InspectorCompletionProvider();
+        context = new Cityscape();
+        context.languageService.registerLanguage({id: 'rust', extensions: ['.rs'], aliases: ['Rust']});
+        context.languageService.registerLanguage({id: 'json', extensions: ['.json'], aliases: ['JSON']});
+        context.registerCompletionItemProvider('rust', new InspectorCompletionProvider());
 
-        final jsonInputState = cx.newEntity((ecx:Context<EditorState>) -> new EditorState(window, ecx)
-            .language('json')
-            .lineNumber(false));
+        // gpui-kit's editors: JSON indented by 2 spaces (its default
+        // `TabSize`), Rust by 4. The models are filled later with
+        // `setValue`, which does not detect the indentation (Monaco detects
+        // it at creation only): the sizes are set, indent guides included
+        // (`indentSize`)
+        final jsonModel = new TextModel('', 'json', modelOptions(2), null, context);
+        final rustModel = new TextModel('', 'rust', modelOptions(4), null, context);
 
-        final rustInputState = cx.newEntity((ecx:Context<EditorState>) -> (cast new EditorState(window, ecx)
-            .language('rust')
-            .lineNumber(false)
-            .tabSize(new TabSize(4, false)) : EditorState));
-        rustInputState.update(cx, (state, scx) -> {
-            state.lsp().completionProvider = lspProvider;
-            scx.notify();
-            return null;
+        rustState = new InspectorEditor(rustModel);
+        jsonState = new InspectorEditor(jsonModel);
+        registerGrammars();
+        KitTheme.apply(context, Theme.global(cx.app), true);
+
+        // The edits of the user (the changes the panel makes itself are
+        // skipped, see `InspectorEditor.setValue`) go to `editJson` and
+        // `editRust` (Rust: the `InputEvent::Change` subscriptions)
+        final app = cx.app;
+        final entity = cx.weakEntity();
+        jsonModel.onDidChangeContent(_ -> {
+            if (jsonState.settingValue) {
+                return;
+            }
+            entity.tryUpdate(app, (this_, cx) -> this_.editJson(this_.jsonState.value(), window, cx));
         });
+        rustModel.onDidChangeContent(_ -> {
+            if (rustState.settingValue) {
+                return;
+            }
+            entity.tryUpdate(app, (this_, cx) -> this_.editRust(this_.rustState.value(), window, cx));
+        });
+    }
 
-        subscriptions = [
-            cx.subscribeIn((cast jsonInputState : Entity<InputBaseState>), InputEvent, window, (this_:DivInspector, state, event, window, cx) -> {
-                switch event {
-                    case Change:
-                        final newStyle = (state : InputBaseState).value();
-                        this_.editJson(newStyle, window, cx);
-                    case _:
-                }
-            }),
-            cx.subscribeIn((cast rustInputState : Entity<InputBaseState>), InputEvent, window, (this_:DivInspector, state, event, window, cx) -> {
-                switch event {
-                    case Change:
-                        final newStyle = (state : InputBaseState).value();
-                        this_.editRust(newStyle, window, cx);
-                    case _:
-                }
-            })
-        ];
+    /** Model options with `size` spaces per indentation level, no detection. */
+    static function modelOptions(size:Int):cityscape.common.Model.ITextModelCreationOptions {
+        final options = Reflect.copy(TextModel.DEFAULT_CREATION_OPTIONS);
+        options.tabSize = size;
+        options.indentSize = size;
+        options.insertSpaces = true;
+        options.detectIndentation = false;
+        return options;
+    }
 
-        rustState = new InspectorEditor(rustInputState);
-        jsonState = new InspectorEditor(jsonInputState);
+    /** The bundled Rust and JSON grammars, once the kit's highlighter is enabled. */
+    function registerGrammars():Void {
+        if (grammarsRegistered || !Highlighter.enabled) {
+            return;
+        }
+        final rust = KitGrammars.register(context, 'rust');
+        final json = KitGrammars.register(context, 'json');
+        grammarsRegistered = rust && json;
     }
 
     public function updateInspectedElement(inspectorId:InspectorElementId, state:DivInspectorState, window:Window, cx:Context<DivInspector>):Void {
@@ -471,19 +602,32 @@ class DivInspector extends Model implements Render {
         }
 
         final result = Inspector.rustToStyle(unconvertibleStyle.clone(), code);
-        rustState.state.update(cx, (state, scx) -> {
-            final set = state.diagnosticsMut();
-            if (set != null) {
-                set.clear();
-                set.extend(result.diagnostics);
+        // The parse errors as markers of the Rust editor (gpui-kit sets them
+        // as the diagnostics of its editor)
+        Cityscape.setModelMarkers(rustState.model, MARKER_OWNER, [
+            for (diagnostic in result.diagnostics) {
+                severity: markerSeverity(diagnostic.severity),
+                message: diagnostic.message,
+                startLineNumber: diagnostic.range.start.line + 1,
+                startColumn: diagnostic.range.start.character + 1,
+                endLineNumber: diagnostic.range.end.line + 1,
+                endColumn: diagnostic.range.end.character + 1
             }
-            scx.notify();
-            return null;
-        });
+        ]);
         jsonState.error = null;
         jsonState.editing = false;
         updateJsonFromStyle(result.style, window, cx);
         updateElementStyle(result.style, window, cx);
+        cx.notify();
+    }
+
+    static function markerSeverity(severity:DiagnosticSeverity):MarkerSeverity {
+        return switch severity {
+            case Error: MarkerSeverity.Error;
+            case Warning: MarkerSeverity.Warning;
+            case Info: MarkerSeverity.Info;
+            case Hint: MarkerSeverity.Hint;
+        }
     }
 
     function updateElementStyle(style:StyleRefinement, window:Window, cx:Context<DivInspector>):Void {
@@ -508,18 +652,15 @@ class DivInspector extends Model implements Render {
     }
 
     function updateJsonFromStyle(style:StyleRefinement, window:Window, cx:Context<DivInspector>):Void {
-        jsonState.state.update(cx, (state, scx) -> {
-            state.setValue(Inspector.styleToJson(style), window, cast scx);
-            return null;
-        });
+        jsonState.setValue(Inspector.styleToJson(style));
+        cx.notify();
     }
 
     function updateRustFromStyle(style:StyleRefinement, window:Window, cx:Context<DivInspector>):StyleRefinement {
-        return rustState.state.update(cx, (state, scx) -> {
-            final result = Inspector.styleToRust(style);
-            state.setValue(result.code, window, cast scx);
-            return result.style;
-        });
+        final result = Inspector.styleToRust(style);
+        rustState.setValue(result.code);
+        cx.notify();
+        return result.style;
     }
 
     /** Rust `Display` of a `Point<Pixels>` */
@@ -532,20 +673,97 @@ class DivInspector extends Model implements Render {
         return StyleJson.absoluteDisplay(Pixels(size.width)) + ' × ' + StyleJson.absoluteDisplay(Pixels(size.height));
     }
 
+    /** The options of both editors: gpui-kit's code editor look. */
+    static function editorOptions(theme:Theme):IEditorOptions {
+        return {
+            fontFamily: theme.monoFontFamily,
+            fontSize: theme.monoFontSize,
+            lineHeight: LINE_HEIGHT,
+            fontLigatures: true,
+            lineNumbers: 'off',
+            glyphMargin: false,
+            folding: false,
+            lineDecorationsWidth: TEXT_LEFT,
+            lineNumbersMinChars: 0,
+            padding: {top: PADDING_Y, bottom: PADDING_Y},
+            // gpui-kit's code editor scrolls past its last line by max(half
+            // the viewport, 3 lines), the viewport without its padding
+            // (element.rs `empty_bottom_height`), and its scrollbar measures
+            // the thumb without the padding (Cityscape additions)
+            scrollBeyondLastLine: true,
+            scrollBeyondLastLineGap: {viewportFraction: 0.5, minLines: 3},
+            scrollbarThumbExcludesPadding: true,
+            renderLineHighlight: 'none',
+            guides: {indentation: true, highlightActiveIndentation: false, bracketPairs: false},
+            matchBrackets: 'never',
+            occurrencesHighlight: 'off',
+            selectionHighlight: false,
+            stickyScroll: {enabled: false},
+            bracketPairColorization: {enabled: false},
+            overviewRulerLanes: 0,
+            overviewRulerBorder: false,
+            hideCursorInOverviewRuler: true,
+            cursorWidth: 1,
+            wordWrap: 'off',
+            renderWhitespace: 'none',
+            links: false,
+            colorDecorators: false
+        };
+    }
+
+    /**
+     * A Cityscape editor in gpui-kit's editor frame: the kit's editor
+     * background, the input border and radius, the full height of its
+     * column (Rust `Editor::new(state).h(relative(1.))`).
+     */
+    function editorFrame(key:String, model:ITextModel, theme:Theme, options:IEditorOptions):IntoElement {
+        return div()
+            .flex()
+            .sizeFull()
+            .h(relative(1.))
+            .relative()
+            .bg(KitTheme.editorBackground(theme))
+            .rounded(theme.radius)
+            .border1()
+            .borderColor(theme.input)
+            .child(
+                CityscapeEditor.component()
+                    .at(key)
+                    .onCreate(editor -> {
+                        editors.set(key, editor);
+                        (key == 'rust-editor' ? rustState : jsonState).editor = editor;
+                    })
+                    .model(model)
+                    .context(context)
+                    .options(options)
+                    .sizeFull()
+            );
+    }
+
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final theme = Theme.global(cx.app);
         final cx:Context<DivInspector> = cast cx;
+        registerGrammars();
+        KitTheme.apply(context, theme, true);
         final state = inspectorState;
         final root = vFlex().sizeFull().gapY4().textSm();
         if (state == null) {
             return root;
         }
+        // The same options object while the font does not change: a new
+        // one would make the editors apply their options again at each render
+        final fontKey = theme.monoFontFamily + '|' + theme.monoFontSize;
+        if (options == null || fontKey != optionsFontKey) {
+            options = editorOptions(theme);
+            optionsFontKey = fontKey;
+        }
+        final options = this.options;
         final rustEditor = vFlex()
             .flex1()
             .gapY1()
             .fontFamily(theme.monoFontFamily)
             .textSize(theme.monoFontSize)
-            .child(Editor.component(rustState.state).h(relative(1.)));
+            .child(editorFrame('rust-editor', rustState.model, theme, options));
         if (rustState.error != null) {
             rustEditor.child(Alert.error('rust-error', rustState.error).textXs());
         }
@@ -554,7 +772,7 @@ class DivInspector extends Model implements Render {
             .gapY1()
             .fontFamily(theme.monoFontFamily)
             .textSize(theme.monoFontSize)
-            .child(Editor.component(jsonState.state).h(relative(1.)));
+            .child(editorFrame('json-editor', jsonState.model, theme, options));
         if (jsonState.error != null) {
             jsonEditor.child(Alert.error('json-error', jsonState.error).textXs());
         }
@@ -607,58 +825,49 @@ class DivInspector extends Model implements Render {
     }
 
 }
-#end
 
 /**
  * Completes the style methods after a `.` in the Rust editor (Rust
- * `LspProvider`). Rust lists them in the iteration order of a `HashMap`
- * (random); the port lists them in table order.
+ * `LspProvider`, as a Cityscape completion provider): the items of
+ * `Inspector.styleMethodCompletions`, each replacing the dot and the typed
+ * prefix with `.name()`.
  */
-class InspectorCompletionProvider extends CompletionProviderBase {
+class InspectorCompletionProvider implements CompletionItemProvider {
 
-    /** LSP `CompletionItemKind::METHOD` */
-    static inline final METHOD = 2;
+    public var _debugDisplayName(default, null):Null<String> = 'inspector';
+
+    /** Rust `is_completion_trigger` returns true for every character: Monaco's quick suggestions ask while typing, the dot asks too. */
+    public var triggerCharacters(default, null):Null<Array<String>> = ['.'];
+
+    public var resolveCompletionItem(default, null):Null<(item:CompletionItem, token:CancellationToken, resolve:(item:Null<CompletionItem>) -> Void) -> Void> = null;
 
     public function new() {}
 
-    public function completions(rope:Rope, offset:Int, _:CompletionContext, _:Window, cx:App):Task<Array<CompletionItem>> {
-        var leftOffset = 0;
-        while (leftOffset < 100) {
-            final c = rope.charAt(offset - leftOffset > 0 ? offset - leftOffset : 0);
-            if (c == '.'.code) {
-                break;
-            }
-            if (c == null) {
-                break;
-            }
-            leftOffset++;
+    public function provideCompletionItems(model:ITextModel, position:Position, context:CompletionContext, token:CancellationToken,
+            resolve:(list:Null<CompletionList>) -> Void):Void {
+        final text = model.getValue();
+        final offset = model.getOffsetAt(position);
+        final completions = Inspector.styleMethodCompletions(text, offset);
+        if (completions == null) {
+            resolve({suggestions: []});
+            return;
         }
-        final start = offset - leftOffset > 0 ? offset - leftOffset : 0;
-        final triggerCharacter = rope.slice(start, offset).toString();
-        if (!StringTools.startsWith(triggerCharacter, '.')) {
-            return Task.ready([]);
-        }
-
-        final startPos = rope.offsetToPosition(start);
-        final endPos = rope.offsetToPosition(offset);
-
-        return cx.backgroundExecutor().spawn(() -> {
-            final methods = InspectorStyleMethods.get();
-            final prefix = triggerCharacter.substr(1);
-            final styles:Array<CompletionItem> = [];
-            for (name in methods.names) {
-                if (StringTools.startsWith(name, prefix)) {
-                    final method = methods.map.get(name);
-                    styles.push(new CompletionItem(name, METHOD, '()', method.documentation, null, prefix, null,
-                        CompletionTextEdit.Edit(new LspTextEdit(new LspRange(startPos, endPos), '.$name()'))));
+        final start = model.getPositionAt(completions.start);
+        final range = new CityscapeRange(start.lineNumber, start.column, position.lineNumber, position.column);
+        resolve({
+            suggestions: [
+                for (method in completions.methods) {
+                    label: method.name,
+                    kind: CompletionItemKind.Method,
+                    detail: '()',
+                    documentation: method.documentation,
+                    filterText: '.' + method.name,
+                    insertText: '.' + method.name + '()',
+                    range: range
                 }
-            }
-            return styles;
+            ]
         });
     }
 
-    public function isCompletionTrigger(_:Int, _:String, _:App):Bool {
-        return true;
-    }
-
 }
+#end

@@ -84,7 +84,7 @@ class InputTokens {
         if (self.imeMarkedRange != null) {
             return InlineTokenError.CompositionActive;
         }
-        if (self.modeKind.codeEditor() || self.masked || InputTokenPresentation.tokenIsSecret(self) || !self.maskPattern.isNone()) {
+        if (self.masked || InputTokenPresentation.tokenIsSecret(self) || !self.maskPattern.isNone()) {
             return InlineTokenError.UnsupportedMode;
         }
         return null;
@@ -133,7 +133,7 @@ class InputTokens {
      * describe it.
      */
     public static function installTokens(self:InputBaseState, content:InputContent):Void {
-        final supported = !self.modeKind.codeEditor() && self.maskPattern.isNone();
+        final supported = self.maskPattern.isNone();
         final textKept = self.text.equalsStr(content._text);
         self.inlineTokens = (supported && textKept && content._tokens.length > 0) ? new InlineTokenStore(content._tokens.copy()) : null;
     }

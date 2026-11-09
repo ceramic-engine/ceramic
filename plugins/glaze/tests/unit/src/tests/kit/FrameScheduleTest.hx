@@ -24,11 +24,11 @@ import glaze.Subscription;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.TextareaState;
 import glaze.kit.base.input.InputBaseState;
 import glaze.kit.base.input.InputState;
-import glaze.kit.input.Editor;
 import glaze.kit.input.Input;
+import glaze.kit.input.Textarea;
 import glaze.kit.theme.Theme;
 import glaze.kit.theme.ThemeMode;
 import testing.TestCase;
@@ -43,7 +43,8 @@ import glaze.Prelude.*;
  * harness: a page view `P` under gpui-kit's `Root` (not cached: it renders
  * in every frame, so each `P render` starts a frame), a cached sidebar view
  * `S` and cached field views `F1` (Input A), `F2` (Input B) and `F3`
- * (Editor C). The app draws a dirty window when its effects are flushed
+ * (Textarea C: gpui-kit's code editor until Glaze's code editor became
+ * Cityscape; the frames and renders logged do not depend on it). The app draws a dirty window when its effects are flushed
  * (GPUI's test mode). The expected logs are those of the real GPUI (the
  * reference harness logging every render).
  */
@@ -344,20 +345,20 @@ private class ScheduleField extends Model implements Render {
 
     final input:Null<Entity<InputState>>;
 
-    final editor:Null<Entity<EditorState>>;
+    final area:Null<Entity<TextareaState>>;
 
-    public function new(name:String, log:Array<String>, input:Null<Entity<InputState>>, editor:Null<Entity<EditorState>>) {
+    public function new(name:String, log:Array<String>, input:Null<Entity<InputState>>, area:Null<Entity<TextareaState>>) {
         super();
         this.name = name;
         this.log = log;
         this.input = input;
-        this.editor = editor;
+        this.area = area;
     }
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
         log.push('$name render');
         final field = div().sizeFull();
-        return input != null ? field.child(Input.component(input)) : field.child(Editor.component(editor).hFull());
+        return input != null ? field.child(Input.component(input)) : field.child(Textarea.component(area).hFull());
     }
 
 }
@@ -386,7 +387,7 @@ private class SchedulePage extends Model implements Render {
 
     public final b:Entity<InputState>;
 
-    public final c:Entity<EditorState>;
+    public final c:Entity<TextareaState>;
 
     public final sidebar:Entity<ScheduleSidebar>;
 
@@ -401,7 +402,7 @@ private class SchedulePage extends Model implements Render {
         this.log = log;
         a = cx.newEntity((ic:Context<InputState>) -> (new InputState(window, ic).defaultValue('Scroll follows') : InputState));
         b = cx.newEntity((ic:Context<InputState>) -> (new InputState(window, ic).defaultValue('Selected words stay') : InputState));
-        c = cx.newEntity((ec:Context<EditorState>) -> (new EditorState(window, ec).defaultValue('let x = 1;\n') : EditorState));
+        c = cx.newEntity((ec:Context<TextareaState>) -> (new TextareaState(window, ec).defaultValue('let x = 1;\n') : TextareaState));
         fields = [
             cx.newEntity((_:Context<ScheduleField>) -> new ScheduleField('F1', log, a, null)),
             cx.newEntity((_:Context<ScheduleField>) -> new ScheduleField('F2', log, b, null)),

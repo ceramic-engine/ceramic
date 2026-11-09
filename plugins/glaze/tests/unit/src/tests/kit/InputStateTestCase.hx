@@ -10,18 +10,12 @@ import glaze.Range;
 import glaze.Window;
 import glaze.kit.base.NumberStep;
 import glaze.kit.base.StepAction;
-import glaze.kit.base.input.EditorState;
-import glaze.kit.base.input.EditedText;
-import glaze.kit.base.input.FoldRange;
 import glaze.kit.base.input.HighlightStyleResolver;
 import glaze.kit.base.input.InputEdit;
-import glaze.kit.base.input.InputHighlighter.InputHighlighterBase;
 import glaze.kit.base.input.InputBaseState.TextEdit;
-import glaze.kit.base.input.LspHover;
 import glaze.kit.base.input.LspPosition;
 import glaze.kit.base.input.StyledRange;
 import glaze.kit.base.input.TabSize;
-import glaze.kit.base.input.TextDecoration;
 import glaze.kit.base.input.TextElement;
 import glaze.kit.base.input.WrappingIndent;
 import ropey.Rope;
@@ -38,8 +32,6 @@ import testing.VisualTestContext;
 import glaze.Prelude.*;
 
 using glaze.kit.base.input.InputMovement;
-using glaze.kit.base.input.InputDecorationsExt;
-using glaze.kit.base.input.InputLspExt;
 using glaze.kit.base.input.MaskPattern.MaskPatternTools;
 using glaze.kit.base.NumberStep.NumberStepTools;
 
@@ -107,13 +99,6 @@ class InputStateTestCase extends KitTestCase {
     function buildTextarea(?f:(TextareaState) -> InputBaseState):InputView {
         return buildWith((window, cx) -> {
             final state = new TextareaState(window, cx);
-            return f != null ? f(state) : state;
-        });
-    }
-
-    function buildEditor(?f:(EditorState) -> InputBaseState):InputView {
-        return buildWith((window, cx) -> {
-            final state = new EditorState(window, cx).language("sql");
             return f != null ? f(state) : state;
         });
     }

@@ -5,25 +5,21 @@ package glaze.kit.input;
 
 import glaze.AnyElement;
 import glaze.App;
-import glaze.Context;
 import glaze.Entity;
 import glaze.IntoElement;
 import glaze.Range;
 import glaze.WeakEntity;
 import glaze.Window;
-import glaze.kit.base.input.CompletionHighlighter;
-import glaze.kit.base.input.DiagnosticEntry;
-import glaze.kit.base.input.EditorState;
 import glaze.kit.base.input.InputBaseState;
-import glaze.kit.base.input.InputOverlayKind;
 import ropey.Rope;
 
-using glaze.kit.base.input.InputLspExt;
 using glaze.kit.base.input.InputSearchExt;
 
 /**
  * The overlays an input renders around its text: the search panel (placed
- * above a multi-line editor) and the floating popovers.
+ * above a multi-line input) and the floating ones (the touch selection).
+ * gpui-kit's code editor popovers (completion, code actions, hover,
+ * diagnostics) are not part of Glaze: its code editor is Cityscape.
  */
 class InputOverlays {
 
@@ -55,12 +51,7 @@ class InputOverlays {
      */
     @:allow(glaze.kit.input, tests)
     static function renderOverlays(state:Entity<InputBaseState>, window:Window, cx:App):InputOverlays {
-        OverlayMode.installActionHandler(state, cx);
-        final hasOverlay = {
-            final s = state.read(cx);
-            final snapshot = OverlayMode.lspSnapshot(s, cx);
-            s.searchSession.open || (snapshot != null && snapshot.hasOverlay());
-        };
+        final hasOverlay = state.read(cx).searchSession.open;
         if (!hasOverlay) {
             final registry = InputOverlayRegistry.get(cx);
             if (registry != null) {
@@ -193,238 +184,6 @@ class SearchSignature {
 
 }
 
-/**
- * Identifies one version of an overlay's content.
- *
- * Sync runs on every frame, so the check for "did this change" must not touch
- * the content itself: the completion list can hold hundreds of items, each
- * with its own documentation. The engine bumps a revision when it swaps the
- * content, and the popovers are keyed by cheap identity instead: a revision,
- * a reference, or a range.
- */
-@:allow(glaze.kit.input, tests)
-class OverlaySignature {
-
-    final open:Bool;
-
-    final revision:Int;
-
-    public function new(open:Bool = false, revision:Int = 0) {
-        this.open = open;
-        this.revision = revision;
-    }
-
-    public function equals(other:OverlaySignature):Bool {
-        return open == other.open && revision == other.revision;
-    }
-
-}
-
-/**
- * The popovers driven by language features: completion, code actions, hover
- * and diagnostics. They belong to a code editor, so they are built and synced
- * by `OverlayMode`, where the state's kind is concrete.
- */
-@:allow(glaze.kit.input, tests)
-class LspOverlays {
-
-    final completion:Entity<CompletionMenu>;
-
-    final codeActions:Entity<CodeActionMenu>;
-
-    var hover:Null<Entity<HoverPopover>> = null;
-
-    var diagnostic:Null<Entity<DiagnosticPopover>> = null;
-
-    var completionSignature:OverlaySignature = new OverlaySignature();
-
-    var codeActionSignature:OverlaySignature = new OverlaySignature();
-
-    var hoverSignature:Null<Range> = null;
-
-    var diagnosticSignature:Null<DiagnosticEntry> = null;
-
-    /**
-     * Highlighter last copied onto the completion menu.
-     *
-     * Compared by identity, so swapping the host's closure repaints an open
-     * menu without rebuilding its items.
-     */
-    var completionHighlight:Null<CompletionHighlighter> = null;
-
-    public function new(completion:Entity<CompletionMenu>, codeActions:Entity<CodeActionMenu>) {
-        this.completion = completion;
-        this.codeActions = codeActions;
-    }
-
-}
-
-/**
- * What the state read out of the engine for one sync pass.
- *
- * Deliberately free of content: only what is needed to decide whether a
- * popover is shown and whether it changed. The content is read from the state
- * again, on the frames where it actually did.
- */
-@:allow(glaze.kit.input, tests)
-class LspSnapshot {
-
-    final completion:OverlaySignature;
-
-    final completionStart:Null<Int>;
-
-    final codeAction:OverlaySignature;
-
-    final hover:Null<Range>;
-
-    final diagnostic:Null<DiagnosticEntry>;
-
-    final cursor:Int;
-
-    public function new(completion:OverlaySignature, completionStart:Null<Int>, codeAction:OverlaySignature, hover:Null<Range>, diagnostic:Null<DiagnosticEntry>, cursor:Int) {
-        this.completion = completion;
-        this.completionStart = completionStart;
-        this.codeAction = codeAction;
-        this.hover = hover;
-        this.diagnostic = diagnostic;
-        this.cursor = cursor;
-    }
-
-    function hasOverlay():Bool {
-        return completion.open || codeAction.open || hover != null || diagnostic != null;
-    }
-
-}
-
-/**
- * What the UI layer needs from each kind of input (Rust trait `OverlayMode`,
- * implemented by `InputMode` and `TextareaMode` with its defaults and by
- * `EditorMode`). The code-editor implementation is the only one that builds
- * language-feature popovers; the port picks it from the state's class.
- */
-@:allow(glaze.kit.input, tests)
-class OverlayMode {
-
-    static inline function isEditor(state:InputBaseState):Bool {
-        return Std.isOfType(state, EditorState);
-    }
-
-    /** Installs the routing that lets an open menu consume actions first. */
-    static function installActionHandler(state:Entity<InputBaseState>, cx:App):Void {
-        if (!isEditor(state.read(cx)))
-            return;
-        final id = state.entityId();
-        state.update(cx, (state, _) -> {
-            state.setOverlayActionHandler((kind, action, window, cx) -> {
-                final registry = InputOverlayRegistry.get(cx.app);
-                final entry = registry != null ? registry.hosts.get(id) : null;
-                final lsp = entry != null ? entry.host.lsp : null;
-                if (lsp == null)
-                    return false;
-                final completion = lsp.completion;
-                final codeActions = lsp.codeActions;
-                return switch kind {
-                    case Completion:
-                        completion.update(cx, (menu, cx) -> menu.handleAction(action, window, cx));
-                    case CodeAction:
-                        codeActions.update(cx, (menu, cx) -> menu.handleAction(action, window, cx));
-                }
-            });
-        });
-    }
-
-    /** Reads the language-feature state this mode shows, if any. */
-    static function lspSnapshot(state:InputBaseState, _:App):Null<LspSnapshot> {
-        if (!isEditor(state))
-            return null;
-        final completion = state.completionMenuState();
-        final codeActions = state.codeActionMenuState();
-        final hoverPopover = state.hoverPopover();
-        return new LspSnapshot(
-            new OverlaySignature(completion.open, completion.revision()),
-            completion.triggerStartOffset,
-            new OverlaySignature(codeActions.open, codeActions.revision()),
-            hoverPopover != null ? hoverPopover.symbolRange : null,
-            state.diagnosticPopover,
-            state.cursor()
-        );
-    }
-
-    static function buildLsp(state:Entity<InputBaseState>, window:Window, cx:App):Null<LspOverlays> {
-        if (!isEditor(state.read(cx)))
-            return null;
-        final editor:Entity<EditorState> = cast state;
-        return new LspOverlays(CompletionMenu.create(editor, window, cx), CodeActionMenu.create(editor, window, cx));
-    }
-
-    static function syncLsp(lsp:LspOverlays, state:Entity<InputBaseState>, snapshot:LspSnapshot, window:Window, cx:App):Void {
-        final editor:Entity<EditorState> = cast state;
-        final cursor = snapshot.cursor;
-
-        final highlight = (cast state.read(cx) : EditorState).lsp().completionHighlighter();
-        if (lsp.completionHighlight == null || !Reflect.compareMethods(lsp.completionHighlight, highlight)) {
-            lsp.completionHighlight = highlight;
-            lsp.completion.update(cx, (menu, cx) -> menu.setHighlight(highlight, cx));
-        }
-
-        if (!snapshot.completion.equals(lsp.completionSignature)) {
-            lsp.completionSignature = new OverlaySignature(snapshot.completion.open, snapshot.completion.revision);
-            final open = snapshot.completion.open;
-            final start = snapshot.completionStart;
-            // Read the items only now, on a frame where they changed.
-            final menuState = state.read(cx).completionMenuState();
-            final query = menuState.query;
-            final items = menuState.items.copy();
-            lsp.completion.update(cx, (menu, cx) -> {
-                if (open) {
-                    menu.updateQuery(start != null ? start : cursor, query);
-                    menu.show(cursor, items, window, cx);
-                }
-                else {
-                    menu.hide(cx);
-                }
-            });
-        }
-
-        if (!snapshot.codeAction.equals(lsp.codeActionSignature)) {
-            lsp.codeActionSignature = new OverlaySignature(snapshot.codeAction.open, snapshot.codeAction.revision);
-            final open = snapshot.codeAction.open;
-            final items = state.read(cx).codeActionMenuState().items.copy();
-            lsp.codeActions.update(cx, (menu, cx) -> {
-                if (open) {
-                    menu.show(cursor, items, window, cx);
-                }
-                else {
-                    menu.hide(cx);
-                }
-            });
-        }
-
-        // A hover popover is anchored to one symbol, so a new range means new
-        // content and the same range means the same content.
-        if (!sameRange(snapshot.hover, lsp.hoverSignature)) {
-            lsp.hoverSignature = snapshot.hover;
-            final popover = state.read(cx).hoverPopover();
-            lsp.hover = popover != null ? HoverPopover.create(editor, popover.symbolRange, popover.hover, cx) : null;
-        }
-
-        // The engine hands out the diagnostic by reference, so identity
-        // already answers "is this the same entry".
-        final diagnosticChanged = snapshot.diagnostic != lsp.diagnosticSignature;
-        if (diagnosticChanged) {
-            lsp.diagnosticSignature = snapshot.diagnostic;
-            lsp.diagnostic = snapshot.diagnostic != null ? DiagnosticPopover.create(snapshot.diagnostic, editor, cx) : null;
-        }
-    }
-
-    static function sameRange(a:Null<Range>, b:Null<Range>):Bool {
-        if (a == null || b == null)
-            return a == null && b == null;
-        return a.equals(b);
-    }
-
-}
-
 @:allow(glaze.kit.input, tests)
 class InputOverlayHost {
 
@@ -432,16 +191,11 @@ class InputOverlayHost {
 
     var searchSignature:SearchSignature = new SearchSignature();
 
-    /** The language-feature popovers. Only a code editor has them. */
-    final lsp:Null<LspOverlays>;
-
     public function new(state:Entity<InputBaseState>, window:Window, cx:App) {
         search = SearchPanel.create(state, window, cx);
-        lsp = OverlayMode.buildLsp(state, window, cx);
     }
 
     function sync(state:Entity<InputBaseState>, window:Window, cx:App):InputOverlays {
-        final snapshot = OverlayMode.lspSnapshot(state.read(cx), cx);
         final s = state.read(cx);
         final search = s.searchSession;
         final searchOpen = search.open;
@@ -481,26 +235,8 @@ class InputOverlayHost {
             }
         }
 
-        if (lsp != null && snapshot != null) {
-            OverlayMode.syncLsp(lsp, state, snapshot, window, cx);
-        }
-
         final overlays = new InputOverlays();
         if (searchOpen) overlays.search = (this.search : IntoElement).intoAnyElement();
-        if (lsp != null && snapshot != null) {
-            if (snapshot.completion.open) {
-                overlays.floating.push((lsp.completion : IntoElement).intoAnyElement());
-            }
-            if (snapshot.codeAction.open) {
-                overlays.floating.push((lsp.codeActions : IntoElement).intoAnyElement());
-            }
-            if (lsp.hover != null) {
-                overlays.floating.push((lsp.hover : IntoElement).intoAnyElement());
-            }
-            if (lsp.diagnostic != null) {
-                overlays.floating.push((lsp.diagnostic : IntoElement).intoAnyElement());
-            }
-        }
         return overlays;
     }
 

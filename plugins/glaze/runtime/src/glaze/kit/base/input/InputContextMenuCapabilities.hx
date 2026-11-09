@@ -15,51 +15,32 @@ class InputContextMenuCapabilities {
 
     final _disabled:Bool;
     final _readonly:Bool;
-    final _codeEditor:Bool;
     final _selection:Bool;
     final _masked:Bool;
-    final _goToDefinition:Bool;
-    final _codeActions:Bool;
 
-    public function new(disabled:Bool = false, readonly:Bool = false, codeEditor:Bool = false, selection:Bool = false, masked:Bool = false,
-            goToDefinition:Bool = false, codeActions:Bool = false) {
+    public function new(disabled:Bool = false, readonly:Bool = false, selection:Bool = false, masked:Bool = false) {
         _disabled = disabled;
         _readonly = readonly;
-        _codeEditor = codeEditor;
         _selection = selection;
         _masked = masked;
-        _goToDefinition = goToDefinition;
-        _codeActions = codeActions;
     }
 
     public function disabled(disabled:Bool):InputContextMenuCapabilities {
-        return new InputContextMenuCapabilities(disabled, _readonly, _codeEditor, _selection, _masked, _goToDefinition, _codeActions);
+        return new InputContextMenuCapabilities(disabled, _readonly, _selection, _masked);
     }
 
     public function readonly(readonly:Bool):InputContextMenuCapabilities {
-        return new InputContextMenuCapabilities(_disabled, readonly, _codeEditor, _selection, _masked, _goToDefinition, _codeActions);
-    }
-
-    public function codeEditor(codeEditor:Bool):InputContextMenuCapabilities {
-        return new InputContextMenuCapabilities(_disabled, _readonly, codeEditor, _selection, _masked, _goToDefinition, _codeActions);
+        return new InputContextMenuCapabilities(_disabled, readonly, _selection, _masked);
     }
 
     /** Set whether the input has a non-empty selection. */
     public function selection(selection:Bool):InputContextMenuCapabilities {
-        return new InputContextMenuCapabilities(_disabled, _readonly, _codeEditor, selection, _masked, _goToDefinition, _codeActions);
+        return new InputContextMenuCapabilities(_disabled, _readonly, selection, _masked);
     }
 
     /** Set whether the input renders its value masked. */
     public function masked(masked:Bool):InputContextMenuCapabilities {
-        return new InputContextMenuCapabilities(_disabled, _readonly, _codeEditor, _selection, masked, _goToDefinition, _codeActions);
-    }
-
-    public function goToDefinition(goToDefinition:Bool):InputContextMenuCapabilities {
-        return new InputContextMenuCapabilities(_disabled, _readonly, _codeEditor, _selection, _masked, goToDefinition, _codeActions);
-    }
-
-    public function codeActions(codeActions:Bool):InputContextMenuCapabilities {
-        return new InputContextMenuCapabilities(_disabled, _readonly, _codeEditor, _selection, _masked, _goToDefinition, codeActions);
+        return new InputContextMenuCapabilities(_disabled, _readonly, _selection, masked);
     }
 
     public inline function isDisabled():Bool {
@@ -73,15 +54,11 @@ class InputContextMenuCapabilities {
     /**
      * Returns true if the user is allowed to change the text.
      *
-     * The items that write to the input (Cut, Paste, Code Actions) belong to
-     * this, the reading ones (Copy, Go to Definition) do not.
+     * The items that write to the input (Cut, Paste) belong to this, the
+     * reading ones (Copy) do not.
      */
     public inline function isEditable():Bool {
         return !_disabled && !_readonly;
-    }
-
-    public inline function isCodeEditor():Bool {
-        return _codeEditor;
     }
 
     public inline function hasSelection():Bool {
@@ -102,19 +79,10 @@ class InputContextMenuCapabilities {
         return _selection && !_masked;
     }
 
-    public inline function hasDefinition():Bool {
-        return _goToDefinition;
-    }
-
-    public inline function hasCodeActions():Bool {
-        return _codeActions;
-    }
-
     /** Rust `PartialEq`. */
     public function equals(other:Null<InputContextMenuCapabilities>):Bool {
-        return other != null && other._disabled == _disabled && other._readonly == _readonly && other._codeEditor == _codeEditor
-            && other._selection == _selection && other._masked == _masked && other._goToDefinition == _goToDefinition
-            && other._codeActions == _codeActions;
+        return other != null && other._disabled == _disabled && other._readonly == _readonly && other._selection == _selection
+            && other._masked == _masked;
     }
 
 }

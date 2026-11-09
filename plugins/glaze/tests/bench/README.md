@@ -23,6 +23,12 @@ against `components-views`, `components-stateless` against
 `components-renderonce`, see `src/scenarios/Components.hx`). A scenario implements `Scenario` or extends
 `BaseScenario` (`src/Scenario.hx`, `src/BaseScenario.hx`).
 
+The code editor scenarios (`editor-type`, `editor-type-sync`, `editor-open`,
+`editor-scroll`) measured gpui-kit's code editor. They left with it: Glaze's
+code editor is Cityscape (plugin `cityscape`), whose bench
+(`plugins/cityscape/tests/bench`) has the equivalent view scenarios (opening,
+scrolling and typing in a `CityscapeEditor`).
+
 ## Running
 
 ```sh

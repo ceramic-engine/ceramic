@@ -1,11 +1,10 @@
-// Ported from gpui-kit 0.8.1: crates/component/src/highlighter/mod.rs (input_highlighter_factory)
+// Ported from gpui-kit 0.8.1: crates/component/src/highlighter/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic; the build features become a runtime
 // switch. See NOTICE.md.
 package glaze.kit.highlighter;
 
 import glaze.App;
-import glaze.kit.base.input.InputHighlighterFactory;
 
 /**
  * The code highlighter switch.
@@ -14,11 +13,8 @@ import glaze.kit.base.input.InputHighlighterFactory;
  * tree-sitter or syntect as Cargo features. The port has one highlighter,
  * TextMate grammars (`TextMateBackend`), and it is off until the application
  * calls `Highlighter.enable(cx)`, so a default build renders like gpui-kit
- * without the features (no colors in code editors and code blocks). Once
- * enabled:
+ * without the features (no colors in code blocks). Once enabled:
  *
- * - code editors created by the `Input` component get a highlighter for
- *   their language (`inputHighlighterFactory`);
  * - text views highlight their code blocks with the theme's
  *   `highlightTheme`;
  * - `SyntaxHighlighter.captureNames` (used by the diff) names highlights.
@@ -43,7 +39,7 @@ class Highlighter {
         reinstall(cx);
     }
 
-    /** Turns the highlighter off again (editors keep a highlighter they already have). */
+    /** Turns the highlighter off again. */
     public static function disable(?cx:App):Void {
         enabled = false;
         reinstall(cx);
@@ -56,18 +52,6 @@ class Highlighter {
             glaze.kit.Kit.ensureInit(cx);
             glaze.kit.text.TextView.installTextViewDefaults(glaze.kit.theme.Theme.global(cx), cx);
         }
-    }
-
-    /**
-     * The highlighter factory the `Input` component installs in code editors
-     * (Rust `input_highlighter_factory`). Without the highlighter it never
-     * creates one, like gpui-kit without tree-sitter or syntect; the switch
-     * is read when the editor asks, so an editor created before `enable`
-     * still gets a highlighter afterwards.
-     */
-    public static function inputHighlighterFactory():InputHighlighterFactory {
-        final factory = TextMateBackend.inputHighlighterFactory();
-        return language -> enabled ? factory(language) : null;
     }
 
     /**

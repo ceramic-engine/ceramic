@@ -126,16 +126,12 @@ class Tests {
         // gpui-kit (wave 6: input engine editor support)
         runner.add(new tests.kit.InputIndentTest());
         runner.add(new tests.kit.InputHighlightingTest());
-        runner.add(new tests.kit.InputDiagnosticsTest());
-        runner.add(new tests.kit.InputDecorationsTest());
         runner.add(new tests.kit.InputSearchTest());
-        runner.add(new tests.kit.InputFoldMapTest());
         runner.add(new tests.kit.InputTextWrapperTest());
         runner.add(new tests.kit.InputWrapWidthTest());
         runner.add(new tests.kit.InputTextElementTest());
         // gpui-kit (wave 6: input state, Input, Textarea)
         runner.add(new tests.kit.InputModeTest());
-        runner.add(new tests.kit.InputLspTest());
         runner.add(new tests.kit.InputStateTest());
         runner.add(new tests.kit.InputMoveNotifyTest());
         runner.add(new tests.kit.NumberInputKeyboardTest());
@@ -145,9 +141,6 @@ class Tests {
         // gpui-kit (wave 6: styled input components)
         runner.add(new tests.kit.InputComponentsTest());
         runner.add(new tests.kit.ComponentInputTest());
-        runner.add(new tests.kit.ComponentEditorTest());
-        runner.add(new tests.kit.ComponentEditorCompletionsTest());
-        runner.add(new tests.kit.ComponentEditorIntegrationTest());
         runner.add(new tests.kit.ComponentDiffParserTest());
         runner.add(new tests.kit.ComponentDiffDocumentTest());
         runner.add(new tests.kit.ComponentDiffStateTest());

@@ -20,21 +20,18 @@ class InputPresentation {
     final _loading:Bool;
     final _masked:Bool;
     final _multiLine:Bool;
-    final _codeEditor:Bool;
     final _textAlign:TextAlign;
     final _placeholder:String;
     final _maskPlaceholder:Null<String>;
 
     @:allow(glaze.kit.base.input)
-    function new(focusHandle:FocusHandle, disabled:Bool, readonly:Bool, loading:Bool, masked:Bool, multiLine:Bool, codeEditor:Bool,
-            textAlign:TextAlign, placeholder:String, maskPlaceholder:Null<String>) {
+    function new(focusHandle:FocusHandle, disabled:Bool, readonly:Bool, loading:Bool, masked:Bool, multiLine:Bool, textAlign:TextAlign, placeholder:String, maskPlaceholder:Null<String>) {
         _focusHandle = focusHandle;
         _disabled = disabled;
         _readonly = readonly;
         _loading = loading;
         _masked = masked;
         _multiLine = multiLine;
-        _codeEditor = codeEditor;
         _textAlign = textAlign;
         _placeholder = placeholder;
         _maskPlaceholder = maskPlaceholder;
@@ -71,10 +68,6 @@ class InputPresentation {
 
     public inline function isMultiLine():Bool {
         return _multiLine;
-    }
-
-    public inline function isCodeEditor():Bool {
-        return _codeEditor;
     }
 
     public inline function textAlign():TextAlign {

@@ -71,6 +71,19 @@ interface ScrollbarHandleImpl {
 }
 
 /**
+ * Optional, for a `ScrollbarHandleImpl` whose content has a vertical padding
+ * outside its scrolled text (Glaze addition): the vertical thumb is measured
+ * against the viewport and the content without it, like the scrollbar of the
+ * kit's editors. The track and the scroll range are unchanged.
+ */
+interface ScrollbarThumbPadding {
+
+    /** The vertical padding (top plus bottom) left out of the thumb, 0 for none. */
+    function thumbVerticalPadding():Float;
+
+}
+
+/**
  * Rust `impl ScrollbarHandle`: any `ScrollbarHandleImpl`, or a GPUI scroll
  * handle wrapped on the fly.
  */
@@ -1441,8 +1454,16 @@ class Scrollbar extends Element {
 
         final states:Array<AxisPrepaintState> = [];
         var hasBoth = _axis.isBoth();
-        final scrollSize = _scrollSize != null ? _scrollSize : scrollHandle.contentSize();
-        final scrollViewportSize = _scrollViewportSize != null ? _scrollViewportSize : hitbox.bounds.size;
+        var scrollSize = _scrollSize != null ? _scrollSize : scrollHandle.contentSize();
+        var scrollViewportSize = _scrollViewportSize != null ? _scrollViewportSize : hitbox.bounds.size;
+        final handleImpl:ScrollbarHandleImpl = scrollHandle;
+        if (Std.isOfType(handleImpl, ScrollbarThumbPadding) && _scrollSize == null && _scrollViewportSize == null) {
+            final padding = (cast handleImpl : ScrollbarThumbPadding).thumbVerticalPadding();
+            if (padding > 0) {
+                scrollSize = new Size(scrollSize.width, Math.max(0, scrollSize.height - padding));
+                scrollViewportSize = new Size(scrollViewportSize.width, Math.max(0, scrollViewportSize.height - padding));
+            }
+        }
         final hitboxBounds = hitbox.bounds;
 
         for (axis in _axis.all()) {

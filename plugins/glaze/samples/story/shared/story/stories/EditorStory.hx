@@ -1,42 +1,40 @@
-// Ported from gpui-kit 0.8.1: crates/story/src/stories/editor_story.rs
+// Adapted from gpui-kit 0.8.1: crates/story/src/stories/editor_story.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
-// Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Modified: the code editor of the story is Cityscape (plugin `cityscape`),
+// Glaze's code editor, instead of gpui-kit's. See NOTICE.md.
 package story.stories;
 
+#if plugin_cityscape
+
+import cityscape.Cityscape;
+import cityscape.CityscapeEditor;
+import cityscape.base.common.Cancellation.CancellationToken;
+import cityscape.common.Languages.CompletionContext;
+import cityscape.common.Languages.CompletionItem;
+import cityscape.common.Languages.CompletionItemProvider;
+import cityscape.common.Languages.CompletionList;
+import cityscape.common.Model.ITextModel;
+import cityscape.common.config.EditorOptions.IEditorOptions;
+import cityscape.common.core.Position;
+import cityscape.common.core.Range;
+import cityscape.common.languages.CompletionItemKind;
+import cityscape.common.model.TextModel;
+import cityscape.kit.KitGrammars;
+import cityscape.standalone.common.VSCodeDefaultThemes;
 import glaze.AnyView;
 import glaze.App;
 import glaze.Context;
 import glaze.Entity;
-import glaze.FontStyle;
-import glaze.FontWeight;
-import glaze.HighlightStyle;
 import glaze.IntoElement;
 import glaze.Model;
 import glaze.Pixels;
-import glaze.Range;
-import glaze.Task;
-import glaze.UnderlineStyle;
 import glaze.Window;
-import glaze.kit.base.input.CompletionContext;
-import glaze.kit.base.input.CompletionHighlighter;
-import glaze.kit.base.input.CompletionItem;
-import glaze.kit.base.input.CompletionProvider.CompletionProviderBase;
-import glaze.kit.base.input.Completions;
-import glaze.kit.base.input.EditorState;
-import glaze.kit.base.input.RangeDecoration;
-import glaze.kit.base.input.RangeDecorationCollection;
-import glaze.kit.base.input.RangeDecorationStyle;
-import glaze.kit.base.input.TabSize;
-import glaze.kit.base.input.TextDecoration;
-import glaze.kit.base.input.TextDecorationCollection;
 import glaze.kit.button.Button;
-import glaze.kit.input.Editor;
 import glaze.kit.label.Label;
 import glaze.kit.menu.PopupMenu.PopupMenuItem;
 import glaze.kit.tab.Tab;
 import glaze.kit.tab.TabBar;
 import glaze.kit.theme.Theme;
-import ropey.Rope;
 import story.Story;
 
 import glaze.Prelude.*;
@@ -44,73 +42,27 @@ import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
 using glaze.kit.base.StyledExt;
-using glaze.kit.base.input.InputDecorationsExt;
-using glaze.kit.base.input.InputIndentExt;
-using glaze.kit.base.input.InputLspExt;
 
-enum StoryCompletionHighlight {
-    Prefix;
-    Contains;
-    Characters;
-}
-
-class StoryCompletionHighlightTools {
-
-    public static function highlighter(self:StoryCompletionHighlight):CompletionHighlighter {
-        return switch self {
-            case Prefix: Completions.highlightPrefix;
-            case Contains: Completions.highlightContains;
-            case Characters: Completions.highlightCharacters;
-        }
-    }
-
-    public static function label(self:StoryCompletionHighlight):String {
-        return switch self {
-            case Prefix: 'Prefix';
-            case Contains: 'Contains';
-            case Characters: 'Characters';
-        }
-    }
-
-    /**
-     * Whether `label` should stay in the menu for this highlighter.
-     *
-     * An empty query keeps every word. Prefix checks the start of the label;
-     * the other two keep a word only when their highlighter finds a match.
-     */
-    public static function matches(self:StoryCompletionHighlight, query:String, label:String):Bool {
-        if (query == '') {
-            return true;
-        }
-
-        return switch self {
-            case Prefix: EditorStory.startsWithIgnoreCase(label, query);
-            case Contains: Completions.highlightContains(query, EditorStory.completionItem(label)).length > 0;
-            case Characters: Completions.highlightCharacters(query, EditorStory.completionItem(label)).length > 0;
-        }
-    }
-
-}
-
-/** A mutable cell shared by the story and its completion provider (Rust `Rc<Cell<_>>`). */
-private class HighlightCell {
-
-    public var value:StoryCompletionHighlight;
-
-    public function new(value:StoryCompletionHighlight) {
-        this.value = value;
-    }
-
-}
-
+/**
+ * The code editor story: gpui-kit's editor story with Glaze's code editor,
+ * Cityscape (`CityscapeEditor`, a port of Monaco). Three tabs:
+ *
+ * - Code: a Rust file (the bundled TextMate grammar) with folding;
+ * - Decorations: Cityscape's typed decoration styles (text color, weight,
+ *   italic, underline, and boxes behind a range: a fill and a frame) that
+ *   follow the edits;
+ * - Completions: a completion provider (Monaco's API) with words chosen so
+ *   that `fl` and `log` match different spans with Monaco's fuzzy filter.
+ *
+ * The editors follow the kit theme mode with VS Code's Dark+ and Light+
+ * themes. The Options menu sets read-only, the font family and the size.
+ */
 class EditorStory extends Model implements Story {
 
     static final EXAMPLE_CODE:String = story.Include.str('editor_preview.rs');
 
-    /** Words chosen so `fl` and `log` light up different spans under each highlighter. */
+    /** Words chosen so `fl` and `log` light up different spans. */
     static final COMPLETION_WORDS:Array<String> = ['flag', 'profile', 'file_loader', 'fallback', 'dialog_log', 'catalog'];
-
-    static final COMPLETION_HIGHLIGHTS:Array<StoryCompletionHighlight> = [Prefix, Contains, Characters];
 
     /** The font families to offer beside the theme's own monospace one. */
     static final FONT_FAMILIES:Array<String> = ['Menlo', 'Consolas', 'Monaco'];
@@ -118,23 +70,26 @@ class EditorStory extends Model implements Story {
     /** The font sizes to switch the editor between. */
     static final FONT_SIZES:Array<Pixels> = [px(11.), px(13.), px(16.), px(20.)];
 
-    final editorState:Entity<EditorState>;
-    final decorationsState:Entity<EditorState>;
-    final completionsState:Entity<EditorState>;
-    final decorations:TextDecorationCollection;
-    final rangeDecorations:RangeDecorationCollection;
+    static final DECORATION_TEXT = 'Decoration styles\nColor highlights important text.\nItalic adds emphasis.\nUnderline marks review text.\n\nFill: marks a tracked range.\n\nFrame: outlines a tracked range.';
+
+    /** The Cityscape context of the story's editors (languages, theme, providers). */
+    final context:Cityscape;
+
+    final codeModel:TextModel;
+    final decorationsModel:TextModel;
+    final completionsModel:TextModel;
     var activeTab:Int;
     var readonly:Bool;
     var fontFamily:Null<String>;
     var fontSize:Pixels;
-    final completionHighlight:HighlightCell;
+    var grammarRequested:Bool = false;
 
     public static function title():String {
         return 'Editor';
     }
 
     public static function description():String {
-        return 'Code editor with theme-aware syntax highlighting and folding.';
+        return 'Code editor (Cityscape) with syntax highlighting, folding, decorations and completions.';
     }
 
     public static function closable():Bool {
@@ -149,94 +104,25 @@ class EditorStory extends Model implements Story {
         return cx.newEntity((cx:Context<EditorStory>) -> new EditorStory(window, cx));
     }
 
-    @:allow(story.stories)
-    static function startsWithIgnoreCase(label:String, query:String):Bool {
-        final labelChars = new haxe.iterators.StringIteratorUnicode(label);
-        for (queryChar in new haxe.iterators.StringIteratorUnicode(query)) {
-            if (!labelChars.hasNext()) return false;
-            final labelChar = labelChars.next();
-            if (queryChar == labelChar) continue;
-            final q = String.fromCharCode(queryChar);
-            final l = String.fromCharCode(labelChar);
-            if (q.toLowerCase() != l.toLowerCase()) return false;
-        }
-        return true;
-    }
-
-    @:allow(story.stories)
-    static function completionItem(label:String):CompletionItem {
-        return new CompletionItem(label);
-    }
-
-    static function completionItems(mode:StoryCompletionHighlight, query:String):Array<CompletionItem> {
-        return [for (label in COMPLETION_WORDS) if (StoryCompletionHighlightTools.matches(mode, query, label)) completionItem(label)];
-    }
-
-    /** Rust `str::find` as a byte offset (0 when missing, like `unwrap_or_default`). */
-    static function find(text:String, needle:String):Int {
-        final ix = text.indexOf(needle);
-        return ix < 0 ? 0 : glaze.util.Utf8.indexToByteOffset(text, ix);
-    }
-
     function new(window:Window, cx:Context<EditorStory>) {
         super();
-        editorState = cx.newEntity((cx:Context<EditorState>) -> {
-            final state = new EditorState(window, cx)
-                .language('rust')
-                .folding(true);
-            state.tabSize(new TabSize(4, false));
-            return state.defaultValue(EXAMPLE_CODE);
+        context = new Cityscape();
+        context.languageService.registerLanguage({id: 'rust', extensions: ['.rs'], aliases: ['Rust']});
+        context.languageService.registerLanguage({id: 'plaintext', extensions: ['.txt'], aliases: ['Plain Text']});
+        context.languageConfigurationService.register('rust', {
+            comments: {lineComment: '//', blockComment: ['/*', '*/']},
+            brackets: [['{', '}'], ['[', ']'], ['(', ')']],
+            autoClosingPairs: [{open: '{', close: '}'}, {open: '[', close: ']'}, {open: '(', close: ')'}, {open: '"', close: '"', notIn: ['string']}],
         });
+        context.registerCompletionItemProvider('plaintext', new StoryCompletions());
+        VSCodeDefaultThemes.apply(context, Theme.global(cx.app).isDark());
 
-        // Rust swaps in a `syntect` highlighter on WASM here (no tree-sitter
-        // grammars there). The port uses its TextMate highlighter on every
-        // target, see `glaze.kit.highlighter.Highlighter`.
-
-        final decorationText = 'Decoration styles\nColor highlights important text.\nItalic adds emphasis.\nUnderline marks review text.\n\nFill: marks a tracked range.\n\nFrame: outlines a tracked range.';
-        decorationsState = cx.newEntity((cx:Context<EditorState>) -> new EditorState(window, cx)
-            .language('text')
-            .defaultValue(decorationText));
-
-        final marker = 'Decoration styles';
-        final colorRange = 'Color';
-        final italicRange = 'Italic';
-        final underlineRange = 'Underline';
-        final fillRange = 'marks a tracked range.';
-        final frameRange = 'outlines a tracked range.';
-        final markerStart = find(decorationText, marker);
-        final colorStart = find(decorationText, colorRange);
-        final italicStart = find(decorationText, italicRange);
-        final underlineStart = find(decorationText, underlineRange);
-        final fillStart = find(decorationText, fillRange);
-        final frameStart = find(decorationText, frameRange);
-        final len = glaze.util.Utf8.byteLength;
-        decorations = decorationsState.update(cx, (state, cx) -> {
-            final theme = Theme.global(cx.app);
-            return state.createDecorationsCollection([
-                new TextDecoration(new Range(markerStart, markerStart + len(marker)), new HighlightStyle(theme.danger, FontWeight.BOLD, null,
-                    theme.warning.opacity(0.2))),
-                new TextDecoration(new Range(colorStart, colorStart + len(colorRange)), new HighlightStyle(theme.success, FontWeight.BOLD,
-                    FontStyle.Italic)),
-                new TextDecoration(new Range(italicStart, italicStart + len(italicRange)), new HighlightStyle(theme.info, null, FontStyle.Italic)),
-                new TextDecoration(new Range(underlineStart, underlineStart + len(underlineRange)), new HighlightStyle(null, null, null, null,
-                    new UnderlineStyle(px(2.), theme.warning, true))),
-            ], cast cx);
-        });
-
-        // Geometry is a separate owner from text styling. Both follow edits,
-        // including newlines inserted before these ranges.
-        rangeDecorations = decorationsState.update(cx, (state, cx) -> state.createRangeDecorationsCollection([
-            new RangeDecoration(new Range(fillStart, fillStart + len(fillRange))).withStyle(RangeDecorationStyle.Fill),
-            new RangeDecoration(new Range(frameStart, frameStart + len(frameRange))),
-        ], cast cx));
-
-        completionHighlight = new HighlightCell(Prefix);
-        final providerHighlight = completionHighlight;
-        completionsState = cx.newEntity((cx:Context<EditorState>) -> {
-            final state = new EditorState(window, cx).language('text');
-            state.lsp().completionProvider = new StoryCompletions(providerHighlight);
-            return state;
-        });
+        codeModel = new TextModel(EXAMPLE_CODE, 'rust', TextModel.DEFAULT_CREATION_OPTIONS, null, context);
+        codeModel.updateOptions({tabSize: 4, insertSpaces: true});
+        decorationsModel = new TextModel(DECORATION_TEXT, 'plaintext', TextModel.DEFAULT_CREATION_OPTIONS, null, context);
+        completionsModel = new TextModel('', 'plaintext', TextModel.DEFAULT_CREATION_OPTIONS, null, context);
+        addDecorations();
+        requestGrammar(cx);
 
         activeTab = 0;
         readonly = false;
@@ -244,12 +130,51 @@ class EditorStory extends Model implements Story {
         fontSize = Theme.global(cx.app).monoFontSize;
     }
 
+    /**
+     * The Rust grammar bundled with Glaze. On the web its file is loaded
+     * first (`Highlighter.preload`), then the code is colored.
+     */
+    function requestGrammar(cx:Context<EditorStory>):Void {
+        if (KitGrammars.register(context, 'rust') || grammarRequested) {
+            return;
+        }
+        grammarRequested = true;
+        final story = cx.weakEntity();
+        final app = cx.app;
+        glaze.kit.highlighter.Highlighter.preload(['rust'], ok -> {
+            if (ok && KitGrammars.register(context, 'rust')) {
+                story.tryUpdate(app, (_, cx) -> cx.notify());
+            }
+        });
+    }
+
+    /**
+     * The typed decoration styles of Cityscape: what Monaco does with CSS
+     * classes. The ranges follow the edits, newlines included.
+     */
+    function addDecorations():Void {
+        final model = decorationsModel;
+        function range(needle:String):Range {
+            final start = model.getPositionAt(DECORATION_TEXT.indexOf(needle));
+            final end = model.getPositionAt(DECORATION_TEXT.indexOf(needle) + needle.length);
+            return new Range(start.lineNumber, start.column, end.lineNumber, end.column);
+        }
+        model.deltaDecorations([], [
+            {range: range('Decoration styles'), options: {description: 'title', inlineStyle: {color: '#e5534b', fontWeight: 'bold', background: '#c69026', borderRadius: 3}}},
+            {range: range('Color'), options: {description: 'color', inlineStyle: {color: '#57ab5a', fontWeight: 'bold', fontStyle: 'italic'}}},
+            {range: range('Italic'), options: {description: 'italic', inlineStyle: {color: '#539bf5', fontStyle: 'italic'}}},
+            {range: range('Underline'), options: {description: 'underline', inlineStyle: {underline: {color: '#c69026', thickness: 2, wavy: true}}}},
+            // Geometry behind the text: a fill and a frame
+            {range: range('marks a tracked range.'), options: {description: 'fill', style: {background: {id: 'editor.findMatchHighlightBackground'}, borderRadius: 3}}},
+            {range: range('outlines a tracked range.'), options: {description: 'frame', style: {border: {color: {id: 'editor.foreground'}, width: 1}, borderRadius: 3}}},
+        ]);
+    }
+
     function renderToolbar(cx:Context<EditorStory>):IntoElement {
         final story = cx.entity();
         final readonly = this.readonly;
         final family = this.fontFamily;
         final size = this.fontSize;
-        final highlight = completionHighlight.value;
 
         return storyToolbarGroup().dropdownChild(Button.component('editor-options').label('Options'), (menu, window, _) -> {
             menu = menu.item(PopupMenuItem.create('Readonly').checked(readonly).onClick((_, _, cx) -> story.update(cx, (this_, cx) -> {
@@ -274,15 +199,6 @@ class EditorStory extends Model implements Story {
                     cx.notify();
                 })));
             }
-
-            menu = menu.separator().label('Completion highlight');
-            for (mode in COMPLETION_HIGHLIGHTS) {
-                menu = menu.item(PopupMenuItem.create(StoryCompletionHighlightTools.label(mode))
-                    .checked(highlight == mode)
-                    .onClick((_, _, cx) -> story.update(cx, (this_, cx) -> {
-                        this_.setCompletionHighlight(mode, cx);
-                    })));
-            }
             return menu;
         });
     }
@@ -293,47 +209,33 @@ class EditorStory extends Model implements Story {
         return (f == Math.ffloor(f) ? Std.string(Std.int(f)) : Std.string(f)) + 'px';
     }
 
-    function setCompletionHighlight(mode:StoryCompletionHighlight, cx:Context<EditorStory>):Void {
-        completionHighlight.value = mode;
-        completionsState.update(cx, (state, cx) -> {
-            state.lsp().setCompletionHighlighter(StoryCompletionHighlightTools.highlighter(mode));
-            final menu = state.completionMenuState();
-            final open = menu.open;
-            final query = menu.query;
-            final start = menu.triggerStartOffset != null ? menu.triggerStartOffset : 0;
-            if (open) {
-                state.presentCompletionItems(start, query, completionItems(mode, query), cast cx);
-            } else {
-                cx.notify();
-            }
-        });
-        cx.notify();
-    }
-
-    function styledEditor(state:Entity<EditorState>):Editor {
-        final editor = Editor.component(state);
-        if (fontFamily != null) editor.fontFamily(fontFamily);
-        return editor
-            .textSize(fontSize)
-            .readonly(readonly)
+    function editor(key:String, model:ITextModel, theme:Theme, options:IEditorOptions):CityscapeEditor {
+        return CityscapeEditor.component()
+            .at(key)
+            .model(model)
+            .context(context)
+            .options(options)
+            .fontFamily(fontFamily != null ? fontFamily : theme.monoFontFamily)
+            .fontSize(fontSize)
+            .readOnly(readonly)
             .sizeFull();
     }
 
     public function render(_:Window, cx:Context<Dynamic>):IntoElement {
         final self:Context<EditorStory> = cast cx;
         final theme = Theme.global(cx.app);
+        VSCodeDefaultThemes.apply(context, theme.isDark());
         final content:IntoElement = switch activeTab {
-            case 0: styledEditor(editorState);
-            case 1: styledEditor(decorationsState);
+            case 0: editor('code', codeModel, theme, {lineNumbers: 'on', folding: true, padding: {top: 8}});
+            case 1: editor('decorations', decorationsModel, theme, {lineNumbers: 'on', wordWrap: 'on', padding: {top: 8}});
             case _: vFlex()
                     .sizeFull()
                     .gap2()
-                    .child(Label.component('Type fl or log to compare highlights.')
+                    .child(Label.component('Type fl or log to see the completions.')
                         .textSm()
                         .textColor(theme.mutedForeground))
-                    .child(styledEditor(completionsState)
-                        .flex1()
-                        .minH0());
+                    .child(div().flex1().minH0().border1().borderColor(theme.border).rounded(theme.radius).overflowHidden()
+                        .child(editor('completions', completionsModel, theme, {lineNumbers: 'off', padding: {top: 8}})));
         }
 
         return vFlex()
@@ -358,22 +260,82 @@ class EditorStory extends Model implements Story {
 
 }
 
-private class StoryCompletions extends CompletionProviderBase {
+/**
+ * The completions of the story (Monaco's completion provider API): every
+ * word of `COMPLETION_WORDS`, filtered and highlighted by Monaco's fuzzy
+ * matching as the user types.
+ */
+private class StoryCompletions implements CompletionItemProvider {
 
-    final highlight:HighlightCell;
+    public var _debugDisplayName(default, null):Null<String> = 'story';
+    public var triggerCharacters(default, null):Null<Array<String>> = null;
+    public var resolveCompletionItem(default, null):Null<(item:CompletionItem, token:CancellationToken, resolve:(item:Null<CompletionItem>) -> Void) -> Void> = null;
 
-    public function new(highlight:HighlightCell) {
-        this.highlight = highlight;
-    }
+    public function new() {}
 
-    public function completions(_text:Rope, _offset:Int, trigger:CompletionContext, _window:Window, _cx:App):Task<Array<CompletionItem>> {
-        final query = trigger.triggerCharacter != null ? trigger.triggerCharacter : '';
-        @:privateAccess final items = EditorStory.completionItems(highlight.value, query);
-        return Task.ready(items);
-    }
-
-    public function isCompletionTrigger(_offset:Int, _newText:String, _cx:App):Bool {
-        return true;
+    public function provideCompletionItems(model:ITextModel, position:Position, context:CompletionContext, token:CancellationToken,
+            resolve:(list:Null<CompletionList>) -> Void):Void {
+        final word = model.getWordUntilPosition(position);
+        final range = new Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn);
+        resolve({
+            suggestions: [
+                for (label in @:privateAccess EditorStory.COMPLETION_WORDS)
+                    {label: label, kind: CompletionItemKind.Text, insertText: label, range: range}
+            ]
+        });
     }
 
 }
+
+#else
+
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.theme.Theme;
+import story.Story;
+
+import glaze.Prelude.*;
+
+/**
+ * The code editor story without the `cityscape` plugin (a project that does
+ * not list it, like Glaze's golden tests): the page says so, the gallery
+ * keeps its entry.
+ */
+class EditorStory extends Model implements Story {
+
+    public static function title():String {
+        return 'Editor';
+    }
+
+    public static function description():String {
+        return 'Code editor (Cityscape) with syntax highlighting, folding, decorations and completions.';
+    }
+
+    public static function closable():Bool {
+        return false;
+    }
+
+    public static function newView(window:Window, cx:App):AnyView {
+        return view(window, cx);
+    }
+
+    public static function view(window:Window, cx:App):Entity<EditorStory> {
+        return cx.newEntity((_:Context<EditorStory>) -> new EditorStory());
+    }
+
+    function new() {
+        super();
+    }
+
+    public function render(_:Window, cx:Context<Dynamic>):IntoElement {
+        return div().textColor(Theme.global(cx.app).mutedForeground).child('Glaze\'s code editor is Cityscape: list the cityscape plugin in ceramic.yml to show it here.');
+    }
+
+}
+
+#end

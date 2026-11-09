@@ -11,7 +11,6 @@ import glaze.Hsla;
 import glaze.Range;
 import glaze.Rgba;
 import glaze.kit.base.input.DiagnosticSeverity;
-import glaze.kit.base.input.FoldRange;
 import glaze.kit.base.input.HighlightStyleResolver;
 import glaze.kit.base.input.InputEdit;
 import glaze.kit.base.input.StyledRange;
@@ -28,7 +27,6 @@ import glaze.kit.highlighter.SyntaxColors;
 import glaze.kit.highlighter.SyntaxHighlighter;
 import glaze.kit.highlighter.TextMateBackend;
 import glaze.kit.highlighter.TextMateBackend.Highlight;
-import glaze.kit.highlighter.TextMateBackend.TextMateInputHighlighter;
 import glaze.kit.highlighter.TextMateGrammars;
 import glaze.kit.text.TextView;
 import glaze.kit.theme.Theme;
@@ -142,9 +140,6 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         final names = registry.languages();
         names.sort(Reflect.compare);
         assertEquals("JSON,json,jsonc", names.join(','));
-        assertEquals("jsonc", registry.editingLanguageName("jsonc"));
-        assertEquals("JSON", registry.editingLanguageName("JSON"));
-        assertEquals("python", registry.editingLanguageName("pyi"));
     }
 
     // Theme types
@@ -258,23 +253,6 @@ class HighlighterTest #if !macro extends KitTestCase #end {
             new Highlight(6, 8, "string")
         ], new Range(0, 10), new Named());
         assertEquals("0..2,2..4,4..6,6..8,8..10", [for (run in runs) run.range.start + '..' + run.range.end].join(','));
-    }
-
-    function testAnEditShiftsLaterHighlightsAndDropsTouchedOnes() {
-        final highlights = [
-            new Highlight(0, 2, "keyword"),
-            new Highlight(4, 6, "string"),
-            new Highlight(8, 10, "number")
-        ];
-        final origin = new glaze.kit.base.input.RopePoint(0, 0);
-        TextMateBackend.shift(highlights, new InputEdit(5, 5, 8, origin, origin, origin));
-        assertEquals("(0..2, keyword),(11..13, number)", highlights.join(','));
-    }
-
-    function testBracesOutsideStringsAndCommentsFold() {
-        final folds = TextMateBackend.braceFoldRanges("fn a() {\n  let s = \"{\";\n  // }\n}\n");
-        assertEquals(1, folds.length);
-        assertTrue(folds[0].equals(new FoldRange(0, 3)));
     }
 
     // The scope rules of `semantic_name`, including what follows from their
@@ -415,13 +393,9 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         });
     }
 
-    function testInputFactoryAndCaptureNamesFollowTheSwitch() {
-        final factory = Highlighter.inputHighlighterFactory();
-        assertNull(factory("rust"));
+    function testCaptureNamesFollowTheSwitch() {
         assertEquals(0, new SyntaxHighlighter("rust").captureNames(Rope.fromStr("fn a() {}")).length);
         Highlighter.enable();
-        assertEquals("rust", factory("rust").language());
-        assertNull(factory("text"));
         final captures = new SyntaxHighlighter("rust").captureNames(Rope.fromStr("fn a() {}"));
         assertEquals("keyword", captures[0].name);
         assertEquals(0, captures[0].range.start);
@@ -457,12 +431,6 @@ class HighlighterTest #if !macro extends KitTestCase #end {
             final dark = TextMateBackend.highlightCode(c.token, text, HighlightTheme.defaultDark().resolver());
             lines += compareWithTruth(c.sample + ' (light)', text, light, c.light);
             compareWithTruth(c.sample + ' (dark)', text, dark, c.dark);
-            // The editor highlighter gives the same runs.
-            final highlighter = new TextMateInputHighlighter(c.token, TextMateBackend.findSyntax(c.token));
-            final rope = Rope.fromStr(text);
-            highlighter.update(null, rope, false, null, null);
-            final editor = highlighter.styles(new Range(0, rope.len()), HighlightTheme.defaultLight().resolver());
-            compareWithTruth(c.sample + ' (editor)', text, editor, c.light);
         }
         assertEquals(40, cases.length);
         assertTrue(lines > 2000, 'compared $lines lines');
@@ -535,122 +503,6 @@ class HighlighterTest #if !macro extends KitTestCase #end {
     }
 
     // The incremental editor highlighter
-
-    static function edit(rope:Rope, start:Int, end:Int, text:String):InputEdit {
-        final startPosition = rope.offsetToPoint(start);
-        final oldEndPosition = rope.offsetToPoint(end);
-        rope.remove(start, end);
-        rope.insert(start, text);
-        final newEnd = start + haxe.io.Bytes.ofString(text).length;
-        return new InputEdit(start, end, newEnd, startPosition, oldEndPosition, rope.offsetToPoint(newEnd));
-    }
-
-    function assertSameAsWholeDocument(label:String, highlighter:TextMateInputHighlighter, rope:Rope, language:String) {
-        final whole = TextMateBackend.parse(TextMateBackend.findSyntax(language), rope.toString());
-        final incremental = highlighter.highlightsIn(new Range(0, rope.len()));
-        assertEquals(whole.join(','), incremental.join(','), label);
-    }
-
-    function testEditsOnlyRetokenizeWhatChanged() {
-        final samples:haxe.DynamicAccess<String> = haxe.Json.parse(samplesJson());
-        final rope = Rope.fromStr(samples.get("rope.rs"));
-        final highlighter = new TextMateInputHighlighter("rust", TextMateBackend.findSyntax("rust"));
-        highlighter.update(null, rope, true, null, null);
-        assertEquals(rope.linesLen(), highlighter.lastTokenizedLines);
-        assertTrue(highlighter.foldRanges(rope).length > 0);
-
-        // Typing inside a line retokenizes that line only.
-        final at = rope.lineStartOffset(100) + 4;
-        highlighter.update(edit(rope, at, at, "x"), rope, true, null, null);
-        assertEquals(1, highlighter.lastTokenizedLines);
-        assertSameAsWholeDocument("typing", highlighter, rope, "rust");
-
-        // Opening a block comment changes the state of every following line.
-        final at2 = rope.lineStartOffset(200);
-        highlighter.update(edit(rope, at2, at2, "/*"), rope, true, null, null);
-        assertTrue(highlighter.lastTokenizedLines > 100);
-        assertSameAsWholeDocument("open comment", highlighter, rope, "rust");
-
-        // Closing it again: lines are retokenized until the state matches.
-        final at3 = rope.lineStartOffset(205);
-        highlighter.update(edit(rope, at3, at3, "*/\n"), rope, true, null, null);
-        assertSameAsWholeDocument("close comment", highlighter, rope, "rust");
-
-        // Removing lines, joining lines, replacing across lines.
-        highlighter.update(edit(rope, rope.lineStartOffset(10), rope.lineStartOffset(20), ""), rope, true, null, null);
-        assertSameAsWholeDocument("remove lines", highlighter, rope, "rust");
-        final join = rope.lineEndOffset(30);
-        highlighter.update(edit(rope, join, join + 1, ""), rope, true, null, null);
-        assertSameAsWholeDocument("join lines", highlighter, rope, "rust");
-        highlighter.update(edit(rope, rope.lineStartOffset(40) + 2, rope.lineStartOffset(43) + 5, "\"é😀\nfn x() {}\n"), rope, true, null,
-            null);
-        assertSameAsWholeDocument("replace", highlighter, rope, "rust");
-        // At the very end, and the whole text.
-        highlighter.update(edit(rope, rope.len(), rope.len(), "\n// end"), rope, true, null, null);
-        assertSameAsWholeDocument("append", highlighter, rope, "rust");
-        highlighter.update(edit(rope, 0, rope.len(), "let a = 1;"), rope, true, null, null);
-        assertSameAsWholeDocument("replace all", highlighter, rope, "rust");
-        highlighter.update(edit(rope, 0, rope.len(), ""), rope, true, null, null);
-        assertEquals(0, highlighter.highlightsIn(new Range(0, 0)).length);
-    }
-
-    function testRandomEditsMatchAWholeDocumentTokenization() {
-        final samples:haxe.DynamicAccess<String> = haxe.Json.parse(samplesJson());
-        var seed = 12345;
-        function next(max:Int):Int {
-            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-            return max <= 0 ? 0 : seed % max;
-        }
-        final inserts = ["\n", "\"", "/*", "*/", "{", "}", "'", "x", "é", "`", "# ", "<!--", "-->", "\n\n", "//"];
-        for (pair in [["markdown-README.md", "md"], ["embedded.html", "html"], ["demo.py", "python"], ["grammar.ts", "ts"]]) {
-            final rope = Rope.fromStr(samples.get(pair[0]));
-            final highlighter = new TextMateInputHighlighter(pair[1], TextMateBackend.findSyntax(pair[1]));
-            highlighter.update(null, rope, false, null, null);
-            for (step in 0...25) {
-                var start = rope.charIndexToOffset(next(rope.lenChars()));
-                var end = rope.charIndexToOffset(Std.int(Math.min(rope.lenChars(), rope.offsetToCharIndex(start) + next(30))));
-                highlighter.update(edit(rope, start, end, next(3) == 0 ? "" : inserts[next(inserts.length)]), rope, false, null, null);
-            }
-            assertSameAsWholeDocument(pair[0], highlighter, rope, pair[1]);
-        }
-    }
-
-    /** The folds kept from the changed lines only equal a scan of the whole text (Rust `brace_fold_ranges`) after every edit. */
-    function testRandomEditsKeepTheFoldsOfAWholeTextScan() {
-        final samples:haxe.DynamicAccess<String> = haxe.Json.parse(samplesJson());
-        var seed = 4242;
-        function next(max:Int):Int {
-            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-            return max <= 0 ? 0 : seed % max;
-        }
-        final inserts = ["\n", "{", "}", "{\n", "\n}", "}\n{", "\"", "'", "`", "\\", "//", "#", "\r\n", "\r", "{}", "\n\n\n", "x", "é😀", "{\"a\": {\n"];
-        var compared = 0;
-        var nonEmpty = 0;
-        for (pair in [["rope.rs", "rust"], ["grammar.ts", "ts"], ["demo.py", "python"], ["embedded.html", "html"]]) {
-            final rope = Rope.fromStr(samples.get(pair[0]));
-            final highlighter = new TextMateInputHighlighter(pair[1], TextMateBackend.findSyntax(pair[1]));
-            highlighter.update(null, rope, true, null, null);
-            for (step in 0...120) {
-                final start = rope.charIndexToOffset(next(rope.lenChars() + 1));
-                final end = rope.charIndexToOffset(Std.int(Math.min(rope.lenChars(), rope.offsetToCharIndex(start) + next(next(4) == 0 ? 400 : 6))));
-                highlighter.update(edit(rope, start, end, next(4) == 0 ? "" : inserts[next(inserts.length)]), rope, true, null, null);
-                final expected = TextMateBackend.braceFoldRanges(rope.toString());
-                final actual = highlighter.foldRanges(rope);
-                assertEquals([for (f in expected) '${f.startLine}-${f.endLine}'].join(','), [for (f in actual) '${f.startLine}-${f.endLine}'].join(','),
-                    '${pair[0]} step $step');
-                compared++;
-                if (expected.length > 0)
-                    nonEmpty++;
-            }
-            // Replacing everything, and emptying
-            highlighter.update(edit(rope, 0, rope.len(), "a {\n{\n}\n\n}\n"), rope, true, null, null);
-            assertEquals('0-4', [for (f in highlighter.foldRanges(rope)) '${f.startLine}-${f.endLine}'].join(','));
-            highlighter.update(edit(rope, 0, rope.len(), ""), rope, true, null, null);
-            assertEquals(0, highlighter.foldRanges(rope).length);
-        }
-        assertEquals(480, compared);
-        assertTrue(nonEmpty > 100, 'edits with folds: $nonEmpty');
-    }
 
     #end
 

@@ -20,13 +20,10 @@ import glaze.Task;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.base.input.CompletionContext;
-import glaze.kit.base.input.CompletionItem;
-import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.TextareaState;
 import glaze.kit.base.input.InputBaseState;
 import glaze.kit.base.input.InputState;
-import glaze.kit.base.input.LspHover;
-import glaze.kit.input.Editor;
+import glaze.kit.input.Textarea;
 import glaze.kit.input.Input;
 import glaze.kit.theme.Theme;
 import glaze.kit.theme.ThemeMode;
@@ -36,7 +33,6 @@ import testing.TestCase;
 
 import glaze.Prelude.*;
 
-using glaze.kit.base.input.InputLspExt;
 
 /**
  * Initial port deviation DEV-016 (see docs/DEVIATIONS.md): gpui-kit's input element
@@ -44,8 +40,9 @@ using glaze.kit.base.input.InputLspExt;
  *
  * Each test drives a page like the golden scene `kit-input-scroll-follow`
  * (`reference/src/kit_scenes13_input_scroll.rs`): a sidebar view S and a
- * scrolled column of field views (F1: Input A, F2: Input B, F3: Editor C
- * with a completion provider), every render of them counted, in a window
+ * scrolled column of field views (F1: Input A, F2: Input B, F3: Textarea C,
+ * gpui-kit's code editor with a completion provider until Glaze's code
+ * editor became Cityscape), every render of them counted, in a window
  * caching views (GPUI's `.cached(style)` alone, or the port's default view
  * caching) and in a reference window built the same way that renders every
  * view again after each step (`refresh`). Steps are applied to both pages in
@@ -237,38 +234,14 @@ class InputMoveNotifyTest extends TestCase {
         assertEquals(before + 3, page.renders(), 'the three resized inputs notified from their paint');
     }
 
-    /**
-     * A shown hover popover lays out from the editor's last painted
-     * position (in the frame of the scroll, it is still where the editor
-     * was), so the editor keeps notifying when it moved: the next frame,
-     * here caused by the sidebar alone, renders its field again and puts
-     * the popover at the moved editor.
-     */
-    function testMovedEditorWithHoverPopoverStillNotifies() {
-        final page = openPair(true);
-        each((p, cx) -> {
-            final c:Entity<InputBaseState> = cast p.c;
-            c.update(cx, (s, cx) -> s.presentHover(new Range(4, 5), new LspHover('**x**: a symbol'), cx));
-        });
-        // The frame of the scroll itself lays the popover out from the
-        // position of the previous paint, as in gpui-kit: not compared.
-        scroll(-24);
-        final f1 = page.fieldRenders[0], f2 = page.fieldRenders[1], f3 = page.fieldRenders[2];
-        notifySidebar();
-        assertSameFrames('notify S');
-        assertEquals(f1, page.fieldRenders[0], 'Input A moved without notifying');
-        assertEquals(f2, page.fieldRenders[1], 'Input B moved without notifying');
-        assertEquals(f3 + 1, page.fieldRenders[2], 'the editor showing a hover popover notified');
-    }
-
 /// What is anchored to the fields
 
     /**
-     * The caret and the IME bounds of A, the selection of B and the
-     * completion menu of C move with their field by the scrolled amount,
-     * and every frame equals the reference frame.
+     * The caret and the IME bounds of A, the selection of B and the caret of
+     * C move with their field by the scrolled amount, and every frame equals
+     * the reference frame.
      */
-    function testCaretSelectionCompletionAndImeFollowTheField() {
+    function testCaretSelectionAndImeFollowTheField() {
         final page = openPair(true);
         final a:Entity<InputBaseState> = cast page.a;
         final b:Entity<InputBaseState> = cast page.b;
@@ -314,25 +287,19 @@ class InputMoveNotifyTest extends TestCase {
             assertSameFrames('B: notify S');
         }
 
-        // C: completion menu
+        // C: caret after typing
         focus(p -> cast p.c);
         key('cmd-up');
         key('end');
         typeText(' fo');
-        assertTrue(c.read(app).completionMenuState().open, 'the completion menu of C is open');
-        var popup = page.popupY();
-        var menu = page.menuTop();
-        assertTrue(Math.isFinite(menu), 'the completion menu is drawn');
+        var caretC = ys(c.read(app).cursorLayout().bounds);
         for (dy in [-24., -24., 24.]) {
             scroll(dy);
             assertSameFrames('C: scroll $dy');
-            assertFloatEquals(popup + dy, page.popupY(), 0.01, 'the completion popup origin follows');
-            assertFloatEquals(menu + dy * 2, page.menuTop(), 0.01, 'the drawn completion menu follows');
-            popup += dy;
-            menu += dy * 2;
+            assertFloatEquals(caretC + dy, ys(c.read(app).cursorLayout().bounds), 0.01, 'the caret of C follows');
+            caretC += dy;
             notifySidebar();
             assertSameFrames('C: notify S');
-            assertFloatEquals(menu, page.menuTop(), 0.01, 'the completion menu stays at the field');
         }
     }
 
@@ -347,20 +314,20 @@ private class MoveField extends Model implements Render {
 
     final input:Null<Entity<InputState>>;
 
-    final editor:Null<Entity<EditorState>>;
+    final area:Null<Entity<TextareaState>>;
 
-    public function new(page:MovePage, index:Int, input:Null<Entity<InputState>>, editor:Null<Entity<EditorState>>) {
+    public function new(page:MovePage, index:Int, input:Null<Entity<InputState>>, area:Null<Entity<TextareaState>>) {
         super();
         this.page = page;
         this.index = index;
         this.input = input;
-        this.editor = editor;
+        this.area = area;
     }
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
         page.fieldRenders[index]++;
         final field = div().sizeFull();
-        return input != null ? field.child(Input.component(input)) : field.child(Editor.component(editor).hFull());
+        return input != null ? field.child(Input.component(input)) : field.child(Textarea.component(area).hFull());
     }
 
 }
@@ -405,7 +372,7 @@ private class MovePage extends Model implements Render {
 
     public final b:Entity<InputState>;
 
-    public final c:Entity<EditorState>;
+    public final c:Entity<TextareaState>;
 
     public final fieldRenders:Array<Int> = [0, 0, 0];
 
@@ -421,8 +388,7 @@ private class MovePage extends Model implements Render {
         this.explicit = explicit;
         a = cx.newEntity((ic:Context<InputState>) -> (new InputState(window, ic).defaultValue('Scroll follows') : InputState));
         b = cx.newEntity((ic:Context<InputState>) -> (new InputState(window, ic).defaultValue('Selected words stay') : InputState));
-        c = cx.newEntity((ec:Context<EditorState>) -> (new EditorState(window, ec).defaultValue('let x = 1;\n') : EditorState));
-        c.update(cx, (state, _) -> state.lsp().completionProvider = new MoveWords());
+        c = cx.newEntity((ec:Context<TextareaState>) -> (new TextareaState(window, ec).defaultValue('let x = 1;\n') : TextareaState));
         fields = [
             cx.newEntity((_:Context<MoveField>) -> new MoveField(this, 0, a, null)),
             cx.newEntity((_:Context<MoveField>) -> new MoveField(this, 1, b, null)),
@@ -451,27 +417,6 @@ private class MovePage extends Model implements Render {
         return result;
     }
 
-    /** The origin y of C's completion popup (`caret_popup_anchor`). */
-    public function popupY():Float {
-        final s:InputBaseState = cast c.read(window.app);
-        final g = s.prepaintCaretGeometry;
-        return g.cursorBounds().origin.y + g.scrollOffset().y + (g.lineHeight() : Float) + 4;
-    }
-
-    /** Top of the completion menu as drawn (the element of its shadow, the tallest one), in device pixels. */
-    public function menuTop():Float {
-        final scene = window.renderedScene();
-        var top = Math.POSITIVE_INFINITY;
-        var height = 0.;
-        for (shadow in scene.shadows) {
-            if (shadow.elementBoundsHeight > height) {
-                height = shadow.elementBoundsHeight;
-                top = shadow.elementBoundsY;
-            }
-        }
-        return top;
-    }
-
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
         final heights = [36., 36., 120.];
         final column = div().flex().flexCol().gap(px(16)).px(px(16)).child(div().h(px(100)));
@@ -490,39 +435,6 @@ private class MovePage extends Model implements Render {
             .flexRow()
             .child(div().w(px(120)).hFull().flexNone().child(sidebarElement))
             .child(div().id('page').flex1().hFull().overflowYScroll().trackScroll(scroll).child(column));
-    }
-
-}
-
-/** Completion words for C. */
-private class MoveWords extends glaze.kit.base.input.CompletionProvider.CompletionProviderBase {
-
-    static final WORDS:Array<Array<String>> = [["format", "fn"], ["for_each", "method"], ["fold", "method"]];
-
-    public function new() {}
-
-    static function isWordChar(c:Int):Bool {
-        return (c >= 'a'.code && c <= 'z'.code) || (c >= 'A'.code && c <= 'Z'.code) || (c >= '0'.code && c <= '9'.code) || c == '_'.code;
-    }
-
-    public function completions(text:Rope, offset:Int, _:CompletionContext, _:Window, _:App):Task<Array<CompletionItem>> {
-        final before = text.slice(0, offset).toString();
-        var start = before.length;
-        while (start > 0 && isWordChar(StringTools.fastCodeAt(before, start - 1)))
-            start--;
-        final word = before.substr(start);
-        final items = [for (w in WORDS) if (StringTools.startsWith(w[0], word)) new CompletionItem(w[0], null, w[1])];
-        return Task.ready(items);
-    }
-
-    public function isCompletionTrigger(_:Int, newText:String, _:App):Bool {
-        if (newText.length == 0)
-            return false;
-        for (i in 0...newText.length) {
-            if (!isWordChar(StringTools.fastCodeAt(newText, i)))
-                return false;
-        }
-        return true;
     }
 
 }

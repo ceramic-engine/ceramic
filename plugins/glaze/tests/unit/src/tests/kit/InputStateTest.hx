@@ -10,18 +10,12 @@ import glaze.Range;
 import glaze.Window;
 import glaze.kit.base.NumberStep;
 import glaze.kit.base.StepAction;
-import glaze.kit.base.input.EditorState;
-import glaze.kit.base.input.EditedText;
-import glaze.kit.base.input.FoldRange;
 import glaze.kit.base.input.HighlightStyleResolver;
 import glaze.kit.base.input.InputEdit;
-import glaze.kit.base.input.InputHighlighter.InputHighlighterBase;
 import glaze.kit.base.input.InputBaseState.TextEdit;
-import glaze.kit.base.input.LspHover;
 import glaze.kit.base.input.LspPosition;
 import glaze.kit.base.input.StyledRange;
 import glaze.kit.base.input.TabSize;
-import glaze.kit.base.input.TextDecoration;
 import glaze.kit.base.input.TextElement;
 import glaze.kit.base.input.WrappingIndent;
 import ropey.Rope;
@@ -39,8 +33,6 @@ import tests.kit.InputStateTestCase.InputView;
 import glaze.Prelude.*;
 
 using glaze.kit.base.input.InputMovement;
-using glaze.kit.base.input.InputDecorationsExt;
-using glaze.kit.base.input.InputLspExt;
 using glaze.kit.base.input.MaskPattern.MaskPatternTools;
 using glaze.kit.base.NumberStep.NumberStepTools;
 
@@ -690,7 +682,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     /**
-     * `replaceAll` on a multi-line (non-code-editor) input clears the
+     * `replaceAll` on a multi-line input clears the
      * selection to `0..0` and resets the scroll offset, but does not set a
      * deferred scroll offset (single-line only).
      */
@@ -725,22 +717,6 @@ class InputStateTest extends InputStateTestCase {
 
             state.redo(new Redo(), window, cx);
             assertEquals("second", state.value());
-        });
-    }
-
-    /**
-     * `replaceAll` on a code editor marks a pending update and resets LSP
-     * state, so diagnostics/completions refresh against the new text.
-     */
-    function testReplaceAllCodeEditor() {
-        final view = buildEditor();
-        view.update((state, window, cx) -> {
-            state.setValue("select 1", window, cx);
-            state._pendingUpdate = false;
-
-            state.replaceAll("select 2", window, cx);
-            assertEquals("select 2", state.value());
-            assertTrue(state._pendingUpdate, "replace_all on a code editor should request a pending update");
         });
     }
 
@@ -800,23 +776,6 @@ class InputStateTest extends InputStateTestCase {
             s.redo(new Redo(), window, cx);
             assertEquals("X bbb Y", s.value());
         });
-    }
-
-    /**
-     * A multi-edit change reaches the highlighter once, with every edit in
-     * application order and the text right after each.
-     */
-    function testReplaceTextInRangesDrivesTheHighlighterOnce() {
-        final updates:Array<Array<String>> = [];
-        final view = buildEditor();
-        view.update((s, window, cx) -> {
-            s.setValue("aaa bbb ccc", window, cx);
-            s.setHighlighterFactory(_ -> new RecordingHighlighter(updates), cx);
-            s.replaceTextInRanges([new TextEdit(range(0, 3), "X"), new TextEdit(range(8, 11), "Y")], window, cx);
-        });
-
-        assertEquals(1, updates.length);
-        assertEquals("aaa bbb Y|X bbb Y", updates[0].join("|"));
     }
 
     /** An IME composition (marking then commit) undoes as a single unit. */
@@ -1133,83 +1092,12 @@ class InputStateTest extends InputStateTestCase {
         });
     }
 
-    /**
-     * Unfolding at a position opens exactly the folds hiding it.
-     *
-     * A fold keeps its own first and last line visible, so a position on
-     * either of them opens nothing. Nested folds all open at once, sibling
-     * folds stay closed, and the opened ranges stay fold candidates.
-     */
-    function testUnfoldAt() {
-        final view = buildEditor();
-        view.update((state, window, cx) -> {
-            state.setValue("a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl", window, cx);
-            state.applyHighlighterFoldCandidates([new FoldRange(0, 5), new FoldRange(2, 4), new FoldRange(7, 10)], cx);
-            state.displayMap.setFolded(0, true);
-            state.displayMap.setFolded(2, true);
-            state.displayMap.setFolded(7, true);
-        });
-
-        // The outer fold's own first and last line stay visible, so neither
-        // position opens anything.
-        for (line in [0, 5]) {
-            view.update((state, _, cx) -> {
-                assertFalse(state.displayMap.isBufferLineHidden(line));
-                assertFalse((cast state : EditorState).unfoldAt(new LspPosition(line, 0), cx));
-                assertTrue(state.displayMap.isFoldedAt(0));
-                assertTrue(state.displayMap.isFoldedAt(2));
-                assertTrue(state.displayMap.isFoldedAt(7));
-            });
-        }
-
-        // Line 3 is hidden by both the outer and the nested fold, so both
-        // open; the sibling fold does not.
-        view.update((state, _, cx) -> {
-            assertTrue((cast state : EditorState).unfoldAt(new LspPosition(3, 0), cx));
-            assertFalse(state.displayMap.isBufferLineHidden(3));
-            assertFalse(state.displayMap.isFoldedAt(0));
-            assertFalse(state.displayMap.isFoldedAt(2));
-            assertTrue(state.displayMap.isFoldedAt(7));
-            // The opened ranges are still candidates for refolding.
-            assertTrue(state.displayMap.isFoldCandidate(0));
-            assertTrue(state.displayMap.isFoldCandidate(2));
-        });
-
-        // Nothing is hidden there any more, so a second call is a no-op.
-        view.update((state, _, cx) -> {
-            assertFalse((cast state : EditorState).unfoldAt(new LspPosition(3, 0), cx));
-        });
-    }
-
-    /** Losing focus hides the hover popover but keeps the decorations. */
-    function testBlurKeepsDecorations() {
-        final view = buildEditor();
-        view.update((state, window, cx) -> {
-            state.setValue("select 1", window, cx);
-            final collection = state.createDecorationsCollection([new TextDecoration(range(0, 6), new glaze.HighlightStyle(null, glaze.FontWeight.BOLD))], cx);
-            state.presentHover(range(0, 6), new LspHover("docs"), cx);
-            assertNotNull(state.hoverPopover());
-
-            @:privateAccess state.onBlur(window, cx);
-
-            assertNull(state.hoverPopover(), "blur should hide the hover popover");
-            var any = false;
-            for (layer in state.extras.decorationLayers()) {
-                if (layer.length > 0)
-                    any = true;
-            }
-            assertTrue(any, "blur must not discard decorations");
-            assertNotNull(collection);
-        });
-    }
-
     /** The mode marker is the only source of truth for the kind of input. */
     function testKindDoesNotFollowTheRowCount() {
         final view = buildTextarea(state -> state.autoGrow(1, 1));
         final state = view.state();
         assertTrue(state.isMultiLine());
         assertFalse(state.isSingleLine());
-        assertFalse(state.isCodeEditor());
     }
 
 
@@ -1261,7 +1149,7 @@ class InputStateTest extends InputStateTestCase {
             openWithState((window, cx) -> {
                 final font = window.textStyle().font();
                 input = cx.app.newEntity((cx:Context<InputBaseState>) -> {
-                    final state = new EditorState(window, cx).withSoftWrap(pair.softWrap).defaultValue(text);
+                    final state = new TextareaState(window, cx).withSoftWrap(pair.softWrap).defaultValue(text);
                     state.prewrap(font, 14., 120., cx);
                     return (state : InputBaseState);
                 });
@@ -1283,7 +1171,7 @@ class InputStateTest extends InputStateTestCase {
             final fontId = window.textSystem().resolveFont(font);
             final spaceWidth:Float = window.textSystem().layoutWidth(fontId, fontSize, ' '.code);
             cx.app.newEntity((cx:Context<InputBaseState>) -> {
-                final state = new EditorState(window, cx);
+                final state = new TextareaState(window, cx);
                 glaze.kit.base.input.InputIndentExt.tabSize(state, new TabSize(4, true));
                 state.defaultValue("\t\t");
                 for (pair in [{tab: 4, rows: 2}, {tab: 2, rows: 1}, {tab: 8, rows: 2}]) {
@@ -1309,7 +1197,7 @@ class InputStateTest extends InputStateTestCase {
             openWithState((window, cx) -> {
                 final font = window.textStyle().font();
                 input = cx.app.newEntity((cx:Context<InputBaseState>) -> {
-                    final state = new EditorState(window, cx).withWrappingIndent(indent).defaultValue(text);
+                    final state = new TextareaState(window, cx).withWrappingIndent(indent).defaultValue(text);
                     // Rust wraps at 200 px with the test platform's text system;
                     // with the port's fonts both indents need 3 rows there, so
                     // the comparison is made at 150 px (5 rows against 4).
@@ -1326,9 +1214,6 @@ class InputStateTest extends InputStateTestCase {
     function testSoftWrapIsEnabledByDefault() {
         final textarea = buildTextarea();
         assertTrue(textarea.state().softWrap);
-
-        final editor = buildEditor();
-        assertTrue(editor.state().softWrap);
     }
 
 
@@ -1382,13 +1267,6 @@ class InputStateTest extends InputStateTestCase {
         });
         assertEquals("updated🦀", view.state().value());
         subscription.dispose();
-    }
-
-    function testAccessibilitySetValuePreservesExactEditorText() {
-        app.update(cx -> glaze.kit.base.Base.init(cx));
-        final view = buildEditor(state -> state.language("rust"));
-        view.update((editor, window, cx) -> @:privateAccess editor.handleAccessibilitySetValue("(", window, cx));
-        assertEquals("(", view.state().value());
     }
 
     function testRevealingAPasswordKeepsTextAssistanceDisabled() {
@@ -1556,35 +1434,6 @@ class InputStateTest extends InputStateTestCase {
         assertEquals(30., (line.center().y : Float), 'line $line');
     }
 
-    function testNoopScrollNotifiesDiagnosticDismissal() {
-        app.update(cx -> glaze.kit.base.Base.init(cx));
-        var input:Entity<InputBaseState> = null;
-        openWithState((window, cx) -> {
-            input = cx.app.newEntity((cx:Context<InputBaseState>) -> (new EditorState(window, cx) : InputBaseState));
-        });
-        input.update(app, (state, cx) -> {
-            state.inputBounds = new glaze.Bounds(new glaze.Point(0, 0), new glaze.Size(100., 20.));
-            state.scrollSize = new glaze.Size(100., 20.);
-            state.presentDiagnostic(new glaze.kit.base.input.DiagnosticEntry(range(0, 0),
-                new glaze.kit.base.input.Diagnostic(new LspPosition(0, 0), new LspPosition(0, 0), "")), cx);
-        });
-        var notifications = 0;
-        final subscription = app.update(cx -> cx.observe(input, (_, _) -> notifications++));
-
-        final window = contexts[contexts.length - 1].window;
-        app.update(cx -> input.update(cx, (state, cx) -> {
-            state.onScrollWheel(new glaze.ScrollEvent(new glaze.Point(0, 0), Pixels(new glaze.Point(0., -40.))), window, cx);
-            assertTrue(state.scrollHandle.offset().equals(new glaze.Point(0, 0)));
-            assertNull(state.diagnosticPopover);
-        }));
-        assertEquals(1, notifications, "clearing a diagnostic must notify even when scrolling is clamped");
-        app.update(cx -> input.update(cx, (state, cx) -> {
-            state.onScrollWheel(new glaze.ScrollEvent(new glaze.Point(0, 0), Pixels(new glaze.Point(0., -40.))), window, cx);
-        }));
-        assertEquals(1, notifications, "an unchanged input must stay quiet");
-        subscription.dispose();
-    }
-
     function testInputScrollOffsetNotifiesOnlyOnChange() {
         app.update(cx -> glaze.kit.base.Base.init(cx));
         var input:Entity<InputBaseState> = null;
@@ -1620,26 +1469,6 @@ class InputStateTest extends InputStateTestCase {
             assertTrue(state.scrollHandle.offset().equals(new glaze.Point(-10., 0.)));
         });
         assertEquals(3, notifications, "a smaller scroll range must clamp and notify");
-        subscription.dispose();
-    }
-
-    function testSetLineNumberNotifiesOnlyOnChange() {
-        app.update(cx -> glaze.kit.base.Base.init(cx));
-        var input:Entity<InputBaseState> = null;
-        openWithState((window, cx) -> {
-            input = cx.app.newEntity((cx:Context<InputBaseState>) -> (new EditorState(window, cx) : InputBaseState));
-        });
-        final window = contexts[contexts.length - 1].window;
-        final shown = input.read(app).mode.lineNumber();
-        var notifications = 0;
-        final subscription = app.update(cx -> cx.observe(input, (_, _) -> notifications++));
-
-        app.update(cx -> input.update(cx, (state, cx) -> (cast state : EditorState).setLineNumber(shown, window, cx)));
-        assertEquals(0, notifications);
-
-        app.update(cx -> input.update(cx, (state, cx) -> (cast state : EditorState).setLineNumber(!shown, window, cx)));
-        assertEquals(1, notifications);
-        assertEquals(!shown, input.read(app).mode.lineNumber());
         subscription.dispose();
     }
 
@@ -1717,7 +1546,7 @@ class InputStateTest extends InputStateTestCase {
 
     function testContextMenuHandlerIsDeferredAndRespectsDisabled() {
         app.update(cx -> glaze.kit.base.Base.init(cx));
-        final view = buildEditor();
+        final view = buildTextarea();
         var calls = 0;
         var items = 0;
         final menuFocus = view.cx.update((_, cx) -> cx.focusHandle());
@@ -1749,7 +1578,7 @@ class InputStateTest extends InputStateTestCase {
 
     function testContextMenuHandlerCanReadItsInput() {
         app.update(cx -> glaze.kit.base.Base.init(cx));
-        final view = buildEditor();
+        final view = buildTextarea();
         var cursor:Null<Int> = null;
 
         view.update((state, window, cx) -> {
@@ -1765,7 +1594,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testReadonlyRejectsUserEditsOnly() {
-        final view = buildEditor();
+        final view = buildTextarea();
         view.update((state, window, cx) -> {
             state.setValue("hello", window, cx);
             state.setReadonly(true, cx);
@@ -1858,9 +1687,8 @@ class InputStateTest extends InputStateTestCase {
      * scroll target within the safe scroll range.
      */
     function testScrollToEobDoesNotOvershootSafeRange() {
-        final view = buildEditor();
+        final view = buildTextarea();
         view.update((state, window, cx) -> {
-            state.setScrollBeyondLastLine(1, window, cx);
             state.setCursorSurroundingLines(1, window, cx);
             state.setValue([for (i in 1...51) 'line $i'].join("\n"), window, cx);
         });
@@ -1880,81 +1708,29 @@ class InputStateTest extends InputStateTestCase {
         });
     }
 
-    function assertSearchRevealsWithPaddingAfterManualScroll(previous:Bool):Void {
-        final view = buildEditor();
-        final text = [for (row in 0...160) (row == 20 || row == 60 || row == 100) ? 'match on row $row' : 'line $row'].join("\n");
-        final first = text.indexOf("match");
-        final start = text.indexOf("match", first + 1);
-        view.update((state, window, cx) -> {
-            state.setCursorSurroundingLines(3, window, cx);
-            state.setValue(text, window, cx);
-            glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "match", true, cx);
-            if (previous) {
-                state.searchSession.matcher.next();
-                state.searchSession.matcher.next();
-            }
-        });
-        view.cx.runUntilParked();
-        view.update((state, _, cx) -> {
-            final lineHeight:Float = state.lastLayout.lineHeight;
-            final y = previous ? 0. : -lineHeight * 80.;
-            state.setScrollOffset(new glaze.Point(0., y), cx);
-        });
-        view.cx.runUntilParked();
-        final visible = view.state().visibleRowRange();
-        if (previous) {
-            assertTrue(visible.end <= 60, "target must be below the viewport");
-        }
-        else {
-            assertTrue(visible.start > 60, "target must be above the viewport");
-        }
-        view.update((state, _, cx) -> {
-            final range = previous ? glaze.kit.base.input.InputSearchExt.previousSearchMatch(state, cx) : glaze.kit.base.input.InputSearchExt.nextSearchMatch(state, cx);
-            assertRange(start, start + 5, range);
-            assertEquals("2/3", state.searchSession.matcher.label());
-        });
-        view.cx.runUntilParked();
-        final state = view.state();
-        final visible = state.visibleRowRange();
-        assertTrue(visible.start <= 60 && 60 < visible.end);
-        final lineHeight:Float = state.lastLayout.lineHeight;
-        final targetY = lineHeight * 60. + state.scrollHandle.offset().y;
-        // Three lines of edge clearance include the matched line itself.
-        assertTrue(targetY >= lineHeight * 2. - 0.1);
-        assertTrue(targetY + lineHeight * 3. <= state.lastBounds.size.height + 0.1, "search must preserve the configured surrounding-line padding");
-    }
-
-    function testNextSearchMatchRevealsWithPaddingAfterManualScroll() {
-        assertSearchRevealsWithPaddingAfterManualScroll(false);
-    }
-
-    function testPreviousSearchMatchRevealsWithPaddingAfterManualScroll() {
-        assertSearchRevealsWithPaddingAfterManualScroll(true);
-    }
-
-    /** Opens an editor inside a host listening for `Search`, focused, and presses the search shortcut once. */
-    function pressSearchShortcut(searchable:Bool):{editor:Entity<InputBaseState>, searchRequests:() -> Int} {
+    /** Opens a textarea inside a host listening for `Search`, focused, and presses the search shortcut once. */
+    function pressSearchShortcut(searchable:Bool):{input:Entity<InputBaseState>, searchRequests:() -> Int} {
         var searchRequests = 0;
-        var editor:Entity<InputBaseState> = null;
+        var input:Entity<InputBaseState> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<ScriptView>) -> {
             glaze.kit.base.theme.Theme.globalMut(cx.app);
             InputKeyBindings.init(cx.app);
-            editor = cx.app.newEntity((cx:Context<InputBaseState>) -> (new EditorState(window, cx).withSearchable(searchable) : InputBaseState));
-            final child = editor;
+            input = cx.app.newEntity((cx:Context<InputBaseState>) -> (new TextareaState(window, cx).withSearchable(searchable) : InputBaseState));
+            final child = input;
             return new ScriptView((_, _) -> div().sizeFull().onAction(Search, (_, _, _) -> searchRequests++).child(child));
         });
         contexts.push(opened.cx);
-        opened.cx.update((window, app) -> editor.update(app, (state, cx) -> state.focus(window, cx)));
+        opened.cx.update((window, app) -> input.update(app, (state, cx) -> state.focus(window, cx)));
         opened.cx.runUntilParked();
         opened.cx.simulateKeystrokes("cmd-f");
         opened.cx.runUntilParked();
-        return {editor: editor, searchRequests: () -> searchRequests};
+        return {input: input, searchRequests: () -> searchRequests};
     }
 
     function testSearchShortcutReachesTheHostWhenNotSearchable() {
         final pressed = pressSearchShortcut(false);
         assertEquals(1, pressed.searchRequests());
-        final state = pressed.editor.read(app);
+        final state = pressed.input.read(app);
         assertFalse(state.searchSession.open);
         assertFalse(state.searchSession.isActive());
     }
@@ -1962,13 +1738,13 @@ class InputStateTest extends InputStateTestCase {
     function testSearchShortcutOpensThePanelWhenSearchable() {
         final pressed = pressSearchShortcut(true);
         assertEquals(0, pressed.searchRequests());
-        final state = pressed.editor.read(app);
+        final state = pressed.input.read(app);
         assertTrue(state.searchSession.open);
         assertTrue(state.searchSession.isActive());
     }
 
     function testSetSearchQueryHighlightsWithoutThePanel() {
-        final view = buildEditor(state -> state.withSearchable(false));
+        final view = buildTextarea(state -> state.withSearchable(false));
         view.update((state, window, cx) -> {
             state.setValue("foo bar foo", window, cx);
             glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
@@ -1987,7 +1763,7 @@ class InputStateTest extends InputStateTestCase {
      * the matches again must see the edited text, not the text at close.
      */
     function testClosedSearchResyncsMatchesAfterEdits() {
-        final view = buildEditor(state -> state.withSearchable(false));
+        final view = buildTextarea(state -> state.withSearchable(false));
         view.update((state, window, cx) -> {
             state.setValue("foo bar foo", window, cx);
             glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
@@ -2000,62 +1776,6 @@ class InputStateTest extends InputStateTestCase {
             glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
             assertEquals(3, state.searchSession.matcher.len());
         });
-    }
-
-    function testSearchRevealsOffscreenWrappedMatch() {
-        final view = buildEditor();
-        inline function repeat(s:String, n:Int):String {
-            return [for (_ in 0...n) s].join("");
-        }
-        final text = 'match\n${repeat("line\n", 80)}\n${repeat("wrapped text ", 500)}match\n${repeat("line\n", 80)}';
-        view.update((state, window, cx) -> {
-            state.setCursorSurroundingLines(3, window, cx);
-            state.setValue(text, window, cx);
-            glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "match", true, cx);
-        });
-        view.cx.runUntilParked();
-        view.update((state, _, cx) -> assertNotNull(glaze.kit.base.input.InputSearchExt.nextSearchMatch(state, cx)));
-        view.cx.runUntilParked();
-        final state = view.state();
-        final range = state.searchSession.matcher.matchedRanges()[1];
-        final layout = state.lastLayout;
-        final position = state.lineAndPositionForOffset(range.end).position;
-        assertNotNull(position, "wrapped match must be laid out");
-        final y:Float = position.y + state.scrollHandle.offset().y;
-        final lineHeight:Float = layout.lineHeight;
-        assertTrue(y >= lineHeight * 2. - 0.1);
-        assertTrue(y + lineHeight * 3. <= state.lastBounds.size.height + 0.1, "wrapped match must retain surrounding display rows");
-    }
-
-}
-
-/** A highlighter recording the texts it is driven with. */
-private class RecordingHighlighter extends InputHighlighterBase {
-
-    final updates:Array<Array<String>>;
-
-    public function new(updates:Array<Array<String>>) {
-        this.updates = updates;
-    }
-
-    public function language():String {
-        return "recording";
-    }
-
-    public function update(edit:Null<InputEdit>, text:Rope, folding:Bool, window:Window, cx:Context<InputBaseState>):Void {
-        updates.push([text.toString()]);
-    }
-
-    override public function updateBatch(edits:Array<EditedText>, folding:Bool, window:Window, cx:Context<InputBaseState>):Void {
-        updates.push([for (edit in edits) edit.text.toString()]);
-    }
-
-    public function styles(range:Range, resolver:HighlightStyleResolver):Array<StyledRange> {
-        return [new StyledRange(range, new glaze.HighlightStyle())];
-    }
-
-    public function foldRanges(text:Rope):Array<FoldRange> {
-        return [];
     }
 
 }

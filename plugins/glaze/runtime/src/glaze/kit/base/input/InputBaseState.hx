@@ -90,9 +90,6 @@ typedef TextEdit = glaze.kit.base.input.InputIndentExt.RangeEdit;
 /** The handler of the right-click menu (Rust `Rc<dyn Fn(NativeMenu, InputContextMenuCapabilities, Point<Pixels>, &mut Window, &mut App)>`). */
 typedef ContextMenuHandler = (NativeMenu, InputContextMenuCapabilities, Point, Window, App) -> Void;
 
-/** The handler routing the actions of an overlay (Rust `overlay_action_handler`). */
-typedef OverlayActionHandler = (InputOverlayKind, Action, Window, Context<InputBaseState>) -> Bool;
-
 /**
  * Rust `impl Into<MaskPattern>`: a `MaskPattern`, or a pattern string
  * (`MaskPatternTools.create`).
@@ -159,27 +156,27 @@ private class PasteTarget {
 }
 
 /**
- * The shared text-editing engine behind `InputState`, `TextareaState` and
- * `EditorState`.
+ * The shared text-editing engine behind `InputState` and `TextareaState`.
  *
  * Rust makes it generic over a mode marker (`InputBaseState<M>`) that only
  * decides which methods exist. The port keeps one non-generic class holding
- * its `modeKind` (`InputMode.instance`, `TextareaMode.instance` or
- * `EditorMode.instance`): `M::f(self)` becomes `modeKind.f(this)`, and the
- * `impl InputBaseState<InputMode>` / `<TextareaMode>` / `<EditorMode>`
- * blocks are the subclasses `InputState`, `TextareaState` and `EditorState`.
+ * its `modeKind` (`InputMode.instance` or `TextareaMode.instance`), and the
+ * `impl InputBaseState<InputMode>` / `<TextareaMode>` blocks are the
+ * subclasses `InputState` and `TextareaState`. gpui-kit's code editor
+ * (`EditorMode`, `EditorState`) and its language features are not part of
+ * Glaze: its code editor is Cityscape (plugin `cityscape`).
  * The methods of `impl<M: MultiLineMode>` live here, guarded by the mode
  * where they would not exist in Rust (see `TextareaState` for the public
  * builders).
  *
  * The `impl InputBaseState` blocks written in other Rust files are static
  * extensions: `InputMovement`, `InputWordSelection`, `InputTouch`,
- * `InputTokens`, `InputTokenPresentation`, `InputSearchExt`,
- * `InputIndentExt`, `InputLspExt` and `InputDecorationsExt`.
+ * `InputTokens`, `InputTokenPresentation`, `InputSearchExt` and
+ * `InputIndentExt`.
  *
  * Names: the builders whose name is a field get a `with` prefix
  * (`withPlaceholder`, `withMasked`...), the getters that only return a field
- * (`text()`, `displayMap()`, `inputBounds()`, `diagnosticPopover()`,
+ * (`text()`, `displayMap()`, `inputBounds()`,
  * `prepaintCaretGeometry()`) are the fields themselves. The `Paste` action
  * handler is `pasteAction` (`paste` is the `EntityInputHandler` method).
  */
@@ -196,9 +193,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
     /** What decides the kind of this input (Rust's mode marker `M`). */
     public final modeKind:InputModeKind;
-
-    /** State only this mode needs. See `InputModeKind.newExtras`. */
-    public var extras:InputExtras;
 
     public var focusHandle:FocusHandle;
 
@@ -260,8 +254,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     public var softWrap:Bool = true;
 
     public var wrappingIndent:WrappingIndent = WrappingIndent.defaultValue();
-
-    public var scrollBeyondLastLine:Null<Int> = null;
 
     public var cursorSurroundingLines:Null<Int> = null;
 
@@ -406,9 +398,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
     @observe public var placeholder:String = "";
 
-    /** Diagnostic currently requested by pointer hover; applications render it. */
-    public var diagnosticPopover:Null<DiagnosticEntry> = null;
-
     var contextMenuHandler:Null<ContextMenuHandler> = null;
 
     var pendingContextMenu:Null<PendingContextMenu> = null;
@@ -416,19 +405,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     /** Whether the context menu that shows on right-click is enabled. */
     public var enableContextMenu:Bool = true;
 
-    /** A flag to indicate if we are currently inserting a completion item. */
-    public var completionInserting:Bool = false;
-
-    public var overlayActionHandler:Null<OverlayActionHandler> = null;
-
-    /**
-     * A flag to indicate if we have a pending update to the text.
-     *
-     * If true, will call some update (for example LSP, Syntax Highlight) before render.
-     */
-    public var _pendingUpdate:Bool = false;
-
-    /** A flag to indicate if we should ignore the next completion event. */
+    /** A flag to indicate a programmatic replacement (not typed by the user). */
     public var silentReplaceText:Bool = false;
 
     /** A flag to indicate if we should emit InputEvents. */
@@ -481,7 +458,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
         final textStyle = window.textStyle();
 
-        this.extras = modeKind.newExtras();
         this.focusHandle = focusHandle;
         this.text = Rope.fromStr("");
         this.displayMap = new DisplayMap(textStyle.font(), window.remSize(), null);
@@ -541,8 +517,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     }
 
     public function presentation():InputPresentation {
-        return new InputPresentation(focusHandle, disabled, readonly, loading, masked, isMultiLine(), isCodeEditor(), textAlign, placeholder,
-            maskPattern.placeholder());
+        return new InputPresentation(focusHandle, disabled, readonly, loading, masked, isMultiLine(), textAlign, placeholder, maskPattern.placeholder());
     }
 
     /**
@@ -565,11 +540,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         return !modeKind.multiLine();
     }
 
-    /** Whether this input is a source-code editor. */
-    public inline function isCodeEditor():Bool {
-        return modeKind.codeEditor();
-    }
-
     /**
      * Whether the user is allowed to copy the selection out.
      *
@@ -584,15 +554,11 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     }
 
     public function contextMenuCapabilities():InputContextMenuCapabilities {
-        final support = extras.contextMenuCapabilities();
         return new InputContextMenuCapabilities()
             .disabled(disabled)
             .readonly(readonly)
-            .codeEditor(isCodeEditor())
             .selection(!activeSelection().isEmpty())
-            .masked(masked)
-            .goToDefinition(support.goToDefinition)
-            .codeActions(support.codeActions);
+            .masked(masked);
     }
 
     public function setTextAlign(textAlign:TextAlign, cx:Context<InputBaseState>):Void {
@@ -659,35 +625,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         return this;
     }
 
-    /** Set highlighter language for the code editor mode. */
-    public function setHighlighter(newLanguage:String, cx:Context<InputBaseState>):Void {
-        if (mode.kind == CodeEditor) {
-            mode.language.setName(newLanguage);
-            mode._highlighter.value = null;
-        }
-        refresh(cx);
-    }
-
-    function resetHighlighter(cx:Context<InputBaseState>):Void {
-        if (mode.kind == CodeEditor) {
-            mode._highlighter.value = null;
-        }
-        cx.notify();
-    }
-
-    /** Install the parser/highlighter adapter used by code-editor mode. */
-    public function setHighlighterFactory(factory:InputHighlighterFactory, cx:Context<InputBaseState>):Void {
-        mode.setHighlighterFactory(factory);
-        _pendingUpdate = true;
-        tokenLayoutCache = null;
-        cx.notify();
-    }
-
-    /** Install a default adapter without replacing an application-provided one. */
-    public function ensureHighlighterFactory(factory:InputHighlighterFactory):Void {
-        mode.ensureHighlighterFactory(factory);
-    }
-
     public function setEditorStyle(style:InputEditorStyle):Void {
         editorStyle = style.clone();
         projectedEditorStyle = style;
@@ -732,21 +669,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         scrollbarRenderer = renderer;
     }
 
-    public function applyHighlighterFoldCandidates(candidates:Array<FoldRange>, cx:Context<InputBaseState>):Void {
-        if (mode.isFolding()) {
-            displayMap.setFoldCandidates(candidates);
-        }
-        cx.notify();
-    }
-
-    public inline function diagnostics():Null<DiagnosticSet> {
-        return mode.diagnostics();
-    }
-
-    public inline function diagnosticsMut():Null<DiagnosticSet> {
-        return mode.diagnosticsMut();
-    }
-
     /** Set placeholder. */
     public function setPlaceholder(placeholder:String, window:Window, cx:Context<InputBaseState>):Void {
         this.placeholder = placeholder;
@@ -772,7 +694,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             final pos = line.positionForIndex(localOffset, lastLayout, false);
             if (pos != null) {
                 final subLineIndex = Std.int((pos.y : Float) / (lineHeight : Float));
-                final adjustedPos = new Point(pos.x + lastLayout.lineNumberWidth, pos.y + yOffset);
+                final adjustedPos = new Point(pos.x, pos.y + yOffset);
                 return {line: vi, localRow: subLineIndex, position: adjustedPos};
             }
 
@@ -801,7 +723,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         emitEvents = true;
 
         resetSelection();
-        resetLspState();
         resetScrollToStart();
 
         undoManager.clear();
@@ -817,7 +738,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     public function replaceAll(text:String, window:Window, cx:Context<InputBaseState>):Void {
         replaceText(text, window, cx);
         resetSelection();
-        resetLspState();
         resetScrollToStart();
 
         cx.notify();
@@ -873,7 +793,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             this_.undoManager.setPendingIntent(EditIntent.Atomic);
             final range = new Range(0, this_.text.lenUtf16());
             this_.replaceTextInRangeSilent(range, text, window, cx);
-            this_.resetHighlighter(cx);
+            cx.notify();
         });
     }
 
@@ -889,13 +809,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
         else {
             activeSelectionMut().clear();
-        }
-    }
-
-    function resetLspState():Void {
-        if (isCodeEditor()) {
-            _pendingUpdate = true;
-            modeKind.resetLanguageFeatures(this);
         }
     }
 
@@ -921,10 +834,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
 
         this.disabled = disabled;
-        if (disabled) {
-            modeKind.hideContextMenu(this, cx);
-            modeKind.clearInlineCompletion(this, cx);
-        }
         cx.notify();
     }
 
@@ -947,8 +856,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
         this.readonly = readonly;
         if (readonly) {
-            modeKind.hideContextMenu(this, cx);
-            modeKind.clearInlineCompletion(this, cx);
             searchSession.replaceMode = false;
         }
         cx.notify();
@@ -1070,28 +977,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     }
 
     /**
-     * Empty rows reserved below the last line of content ("scroll beyond
-     * last line"), code-editor mode only.
-     *
-     * - `null` (default): half the viewport, floored at `BOTTOM_MARGIN_ROWS` line-heights.
-     * - `0`: no trailing space.
-     * - `n`: exactly `n` rows.
-     */
-    public function withScrollBeyondLastLine(rows:Null<Int>):InputBaseState {
-        scrollBeyondLastLine = rows;
-        return this;
-    }
-
-    /** Update `scrollBeyondLastLine` after construction. */
-    public function setScrollBeyondLastLine(rows:Null<Int>, window:Window, cx:Context<InputBaseState>):Void {
-        if (scrollBeyondLastLine == rows) {
-            return;
-        }
-        scrollBeyondLastLine = rows;
-        cx.notify();
-    }
-
-    /**
      * Minimum number of lines the cursor is kept clear of the viewport's
      * top/bottom edge before auto-scroll engages.
      */
@@ -1112,13 +997,8 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     /** Set the default value of the input field. */
     public function defaultValue(value:String):InputBaseState {
         text = Rope.fromStr(normalizeInput(value));
-        final diagnostics = mode.diagnosticsMut();
-        if (diagnostics != null) {
-            diagnostics.reset(text);
-        }
         // Note: We can't call display_map.set_text here because it needs cx.
         // The text will be set during prepare_if_need in element.rs
-        _pendingUpdate = true;
         return this;
     }
 
@@ -1167,12 +1047,8 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         });
     }
 
-    /**
-     * Refresh the input, so the next render re-runs syntax highlighting and
-     * the LSP providers, not just a redraw.
-     */
+    /** Refresh the input (a redraw). */
     public function refresh(cx:Context<InputBaseState>):Void {
-        _pendingUpdate = true;
         cx.notify();
     }
 
@@ -1301,10 +1177,9 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     }
 
     /**
-     * Get start of line byte offset for the given `offset`.
-     *
-     * When soft wrap is active, first press goes to visual line start,
-     * second press (already at visual start) goes to logical line start.
+     * Get start of line byte offset for the given `offset` (the logical
+     * line: gpui-kit's visual line start under soft wrap was for its code
+     * editor only).
      */
     public function startOfLineAt(offset:Int, lineEndAffinity:Bool):Int {
         if (isSingleLine()) {
@@ -1314,26 +1189,11 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         final row = text.offsetToPoint(offset).row;
         final logicalStart = text.lineStartOffset(row);
 
-        if (softWrap && isCodeEditor()) {
-            final wrapPoint = displayMap.offsetToWrapDisplayPointWithAffinity(offset, lineEndAffinity);
-            final line = displayMap.line(row);
-            if (line != null && wrapPoint.localRow < line.wrappedLines.length) {
-                final range = line.wrappedLines[wrapPoint.localRow];
-                final visualStart = logicalStart + range.start;
-                if (offset != visualStart) {
-                    return visualStart;
-                }
-            }
-        }
-
         return logicalStart;
     }
 
     /**
-     * Get end of line byte offset for the given `offset`.
-     *
-     * When soft wrap is active, first press goes to visual line end,
-     * second press (already at visual end) goes to logical line end.
+     * Get end of line byte offset for the given `offset` (the logical line).
      */
     public function endOfLineAt(offset:Int, lineEndAffinity:Bool):Int {
         if (isSingleLine()) {
@@ -1344,112 +1204,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         final logicalStart = text.lineStartOffset(row);
         final logicalEnd = text.lineEndOffset(row);
 
-        if (softWrap && isCodeEditor()) {
-            // Use the row the caret is drawn on: at a wrap boundary the raw offset would name
-            // the next row, and a second End press would keep walking down instead of falling
-            // through to the logical line end.
-            final wrapPoint = displayMap.offsetToWrapDisplayPointWithAffinity(offset, lineEndAffinity);
-            final line = displayMap.line(row);
-            if (line != null && wrapPoint.localRow < line.wrappedLines.length) {
-                final range = line.wrappedLines[wrapPoint.localRow];
-                final visualEnd = logicalStart + range.end;
-                if (offset != visualEnd) {
-                    return visualEnd;
-                }
-            }
-        }
-
         return logicalEnd;
-    }
-
-    /**
-     * Get indent string of next line.
-     *
-     * To get current and next line indent, to return more depth one.
-     */
-    public function indentOfNextLine():String {
-        return indentOfNextLineAt(cursor());
-    }
-
-    /** Get indent string of the next line, relative to the given `offset`. */
-    public function indentOfNextLineAt(offset:Int):String {
-        if (isSingleLine()) {
-            return "";
-        }
-
-        var currentIndent = new StringBuf();
-        var currentIndentLen = 0;
-        final nextIndent = new StringBuf();
-        var nextIndentLen = 0;
-        final lineEndAffinity = this.lineEndAffinityAt(offset);
-        final currentLineStartPos = startOfLineAt(offset, lineEndAffinity);
-        final nextLineStartPos = endOfLineAt(offset, lineEndAffinity);
-        final chars = text.sliceFrom(currentLineStartPos).chars();
-        while (true) {
-            final c = chars.next();
-            if (c == -1 || !Utf8.isWhitespace(c))
-                break;
-            if (c == '\n'.code || c == '\r'.code)
-                break;
-            currentIndent.addChar(c);
-            currentIndentLen += Utf8.codePointLength(c);
-        }
-
-        final chars = text.sliceFrom(nextLineStartPos).chars();
-        while (true) {
-            final c = chars.next();
-            if (c == -1 || !Utf8.isWhitespace(c))
-                break;
-            if (c == '\n'.code || c == '\r'.code)
-                break;
-            nextIndent.addChar(c);
-            nextIndentLen += Utf8.codePointLength(c);
-        }
-
-        if (nextIndentLen > currentIndentLen) {
-            return nextIndent.toString();
-        }
-
-        var current = currentIndent.toString();
-
-        // Smart indent: one extra level after lines ending with a trigger.
-        // Skipped inside strings and comments: the trigger is literal text.
-        final rules = mode.languageConfig();
-        if (rules != null) {
-            if (mode.isSmartIndent() && modeKind.editingSyntaxContext(this, offset) == SyntaxContext.Code) {
-                final lineBefore = text.slice(currentLineStartPos, offset).toString();
-                if (rules.opensIndent(StringTools.rtrim(lineBefore))) {
-                    final tab = mode.tabSize();
-                    if (tab.hardTabs) {
-                        current += "\t";
-                    }
-                    else {
-                        for (_ in 0...tab.tabSize) {
-                            current += " ";
-                        }
-                    }
-                }
-                else {
-                    final lineAfter = text.slice(offset, nextLineStartPos).toString();
-                    if (rules.closesIndent(lineAfter)) {
-                        final tab = mode.tabSize();
-                        if (StringTools.endsWith(current, "\t")) {
-                            current = current.substr(0, current.length - 1);
-                        }
-                        else {
-                            for (_ in 0...tab.tabSize) {
-                                if (!StringTools.endsWith(current, " ")) {
-                                    break;
-                                }
-                                current = current.substr(0, current.length - 1);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return current;
     }
 
     /**
@@ -1501,118 +1256,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         pauseBlinkCursor(cx);
     }
 
-    /**
-     * Decide pairing against the pre-edit text, before an opening quote can
-     * change its own syntax context. Ordinary characters never query syntax.
-     * Returns the length of the opener and the closer, or null.
-     */
-    function autoCloseTarget(range:Range, text:String):Null<{openLen:Int, closer:String}> {
-        if (silentReplaceText
-            || imeMarkedRange != null
-            || !selections.isSingle()
-            || !activeSelection().isEmpty()
-            || !range.isEmpty()
-            || range.start != cursor()
-            || charCount(text) != 1
-            || !mode.isAutoClose()) {
-            return null;
-        }
-        final rules = mode.languageConfig();
-        if (rules == null)
-            return null;
-        final next = this.text.charsAt(range.start).next();
-        if (next != -1 && !Utf8.isWhitespace(next) && !stringContainsChar(rules.autoCloseBefore, next)) {
-            return null;
-        }
-        for (pair in rules.closingPairs()) {
-            final open = pair.open;
-            final close = pair.close;
-            if (!StringTools.endsWith(open, text)) {
-                continue;
-            }
-            final prefix = open.substr(0, open.length - text.length);
-            if (!textBeforeMatches(range.start, prefix)) {
-                continue;
-            }
-            final start = range.start - Utf8.byteLength(prefix);
-            if (open == close) {
-                if (isEscapedAt(start))
-                    continue;
-                final before = this.text.charsAt(start).reversed().next();
-                if (before != -1 && (isAlphanumeric(before) || before == '_'.code))
-                    continue;
-            }
-            if (pair.notIn.indexOf(modeKind.editingSyntaxContext(this, start)) != -1) {
-                continue;
-            }
-            return {openLen: Utf8.byteLength(open), closer: close};
-        }
-        return null;
-    }
-
-    function textBeforeMatches(offset:Int, text:String):Bool {
-        final len = Utf8.byteLength(text);
-        return offset >= len && this.text.isCharBoundary(offset - len) && this.text.slice(offset - len, offset).equalsStr(text);
-    }
-
-    function textAfterMatches(offset:Int, text:String):Bool {
-        final len = Utf8.byteLength(text);
-        return offset + len <= this.text.len() && this.text.isCharBoundary(offset + len) && this.text.slice(offset, offset + len).equalsStr(text);
-    }
-
-    function isEscapedAt(offset:Int):Bool {
-        final chars = text.charsAt(offset).reversed();
-        var count = 0;
-        while (chars.next() == '\\'.code) {
-            count++;
-        }
-        return count % 2 == 1;
-    }
-
-    /**
-     * Cursor target when a typed closer should skip over an existing one.
-     *
-     * Returns the offset when `newText` is a single closer from the active
-     * `LanguageConfig` that already follows the collapsed cursor and is not
-     * escaped. The caller then moves the cursor without editing text or
-     * history. `null` means insert normally.
-     */
-    function skipOverTarget(newText:String):Null<Int> {
-        if (!mode.isAutoClose() || charCount(newText) != 1) {
-            return null;
-        }
-        final rules = mode.languageConfig();
-        if (rules == null)
-            return null;
-        final cursor = cursor();
-        final newTextLen = Utf8.byteLength(newText);
-        for (pair in rules.closingPairs()) {
-            final open = pair.open;
-            final close = pair.close;
-            final closeLen = Utf8.byteLength(close);
-            var index = 0;
-            for (c in new haxe.iterators.StringIteratorUnicode(close)) {
-                final rest = Utf8.substringFrom(close, index);
-                final head = Utf8.substring(close, 0, index);
-                final charIndex = index;
-                index += Utf8.codePointLength(c);
-                if (!StringTools.startsWith(rest, newText) || !textBeforeMatches(cursor, head) || !textAfterMatches(cursor, rest)) {
-                    continue;
-                }
-                final context = modeKind.editingSyntaxContext(this, cursor);
-                final generated = mode.autoClosedPairs().containsCloser(cursor, charIndex, closeLen);
-                if (!generated && pair.notIn.indexOf(context) != -1 && !(context == SyntaxContext.String && open == close)) {
-                    continue;
-                }
-                if (isEscapedAt(cursor - charIndex)) {
-                    continue;
-                }
-                return cursor + newTextLen;
-            }
-        }
-        return null;
-    }
-
     public function backspace(_:Backspace, window:Window, cx:Context<InputBaseState>):Void {
         // Nothing to delete at the start of the text. Propagate so an ancestor
         // (e.g. a command palette navigating back a level) can act on it.
@@ -1621,35 +1264,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         if (selections.isSingle() && activeSelection().isEmpty() && cursor() == 0) {
             cx.propagate();
             return;
-        }
-
-        // Pair deletion follows automatic closing rules, independently of
-        // structural brackets used by Enter.
-        if (mode.isAutoClose() && selections.isSingle() && activeSelection().isEmpty()) {
-            final off = cursor();
-            var deletion:Null<Range> = null;
-            final rules = mode.languageConfig();
-            if (rules != null) {
-                for (pair in rules.closingPairs()) {
-                    final open = pair.open;
-                    final close = pair.close;
-                    if (!textBeforeMatches(off, open) || !textAfterMatches(off, close)) {
-                        continue;
-                    }
-                    final start = off - Utf8.byteLength(open);
-                    final generated = mode.autoClosedPairs().contains(new Range(start, off), new Range(off, off + Utf8.byteLength(close)));
-                    if (isEscapedAt(start) || (!generated && pair.notIn.indexOf(modeKind.editingSyntaxContext(this, start)) != -1)) {
-                        continue;
-                    }
-                    deletion = new Range(start, off + Utf8.byteLength(close));
-                    break;
-                }
-            }
-            if (deletion != null) {
-                final utf16 = rangeToUtf16(deletion);
-                replaceTextInRangeSilent(utf16, "", window, cx);
-                return;
-            }
         }
 
         deleteSelections(false, EditIntent.Backspace, (s, offset) -> new Range(s.previousBoundary(offset), offset), window, cx);
@@ -1688,15 +1302,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     }
 
     public function enter(action:glaze.kit.base.input.InputActions.Enter, window:Window, cx:Context<InputBaseState>):Void {
-        if (modeKind.handleContextMenuAction(this, action, window, cx)) {
-            return;
-        }
-
-        // Clear inline completion on enter (user chose not to accept it)
-        if (modeKind.hasInlineCompletion(this)) {
-            modeKind.clearInlineCompletion(this, cx);
-        }
-
         // In multi-line mode with `submitOnEnter` enabled, a plain `Enter`
         // (without Shift) is treated as submit: propagate the action and emit
         // PressEnter without inserting a newline. `Shift+Enter` still inserts
@@ -1705,86 +1310,20 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
         if (insertNewline) {
             if (!selections.isSingle()) {
-                // Insert a newline (with per-line indent) at every cursor.
+                // Insert a newline at every cursor.
                 selections.mergeOverlapping();
                 final selections = CursorSelection.copyAll(this.selections.iter());
                 final edits:Array<TextEdit> = [];
                 for (sel in selections) {
-                    final indent = isCodeEditor() ? indentOfNextLineAt(sel.cursorOffset()) : "";
-                    edits.push(new TextEdit(new Range(sel.start, sel.end), "\n" + indent));
+                    edits.push(new TextEdit(new Range(sel.start, sel.end), "\n"));
                 }
                 stableSortEdits(edits);
                 replaceTextInRanges(edits, window, cx);
                 pauseBlinkCursor(cx);
             }
             else {
-                // Bracket split: Enter between `{|}` produces `{\n  \n}`
-                // with the cursor on the middle line. Controlled by smart_indent,
-                // independently of automatic closing.
-                // Skipped inside strings and comments: splitting there would
-                // restructure literal text.
-                var split = false;
-                if (isCodeEditor() && activeSelection().isEmpty()) {
-                    final rules = mode.languageConfig();
-                    if (rules != null) {
-                        if (mode.isSmartIndent() && modeKind.editingSyntaxContext(this, cursor()) == SyntaxContext.Code) {
-                            final off = cursor();
-                            var isPair = false;
-                            for (p in rules.brackets) {
-                                if (p.open.length > 0 && p.close.length > 0 && p.open != p.close && textBeforeMatches(off, p.open)
-                                    && textAfterMatches(off, p.close)) {
-                                    isPair = true;
-                                    break;
-                                }
-                            }
-                            if (isPair) {
-                                // Base indent: leading whitespace only.
-                                final lineEndAffinity = this.lineEndAffinityAt(off);
-                                final lineStart = startOfLineAt(off, lineEndAffinity);
-                                final indentBuf = new StringBuf();
-                                final chars = text.sliceFrom(lineStart).chars();
-                                while (true) {
-                                    final c = chars.next();
-                                    if (c == -1 || !Utf8.isWhitespace(c) || c == '\n'.code || c == '\r'.code) {
-                                        break;
-                                    }
-                                    indentBuf.addChar(c);
-                                }
-                                final indent = indentBuf.toString();
-                                // Extra level only with smart indent enabled.
-                                var inner = indent;
-                                if (mode.isSmartIndent()) {
-                                    final tab = mode.tabSize();
-                                    if (tab.hardTabs) {
-                                        inner += "\t";
-                                    }
-                                    else {
-                                        for (_ in 0...tab.tabSize) {
-                                            inner += " ";
-                                        }
-                                    }
-                                }
-                                final newLineText = '\n$inner\n$indent';
-                                replaceTextInRangeSilent(null, newLineText, window, cx);
-                                setCursorTo(off + 1 + Utf8.byteLength(inner));
-                                this.updatePreferredColumn();
-                                final cursors = CursorSelection.copyAll(selections.iter());
-                                undoManager.recordSelections(CursorSelection.copyAll(cursors), cursors);
-                                pauseBlinkCursor(cx);
-                                split = true;
-                            }
-                        }
-                    }
-                }
-                if (!split) {
-                    // Get current line indent
-                    final indent = isCodeEditor() ? indentOfNextLine() : "";
-
-                    // Add newline and indent
-                    final newLineText = "\n" + indent;
-                    replaceTextInRangeSilent(null, newLineText, window, cx);
-                    pauseBlinkCursor(cx);
-                }
+                replaceTextInRangeSilent(null, "\n", window, cx);
+                pauseBlinkCursor(cx);
             }
         }
         else {
@@ -1804,13 +1343,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     }
 
     public function escape(action:glaze.kit.base.input.InputActions.Escape, window:Window, cx:Context<InputBaseState>):Void {
-        if (modeKind.handleContextMenuAction(this, action, window, cx)) {
-            return;
-        }
-
-        // Escape also dismisses a request whose popup has not arrived yet.
-        modeKind.hideContextMenu(this, cx);
-
         // Collapse extra cursors back to the active one first.
         if (!selections.isSingle()) {
             undoManager.breakTransactionCoalescing();
@@ -1818,13 +1350,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             cx.notify();
             return;
         }
-
-        // Clear inline completion on escape
-        if (modeKind.hasInlineCompletion(this)) {
-            modeKind.clearInlineCompletion(this, cx);
-            return; // Consume the escape, don't propagate
-        }
-        modeKind.clearInlineCompletion(this, cx);
 
         // The handles and the edit menu are the topmost surface to dismiss.
         if (InputTouch.touchSelection(this) != null) {
@@ -1857,10 +1382,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
         if (!activeSelection().contains(offset)) {
             this.moveTo(offset, null, cx);
-        }
-
-        if (isCodeEditor()) {
-            modeKind.onHoverDefinition(this, offset, window, cx);
         }
 
         final handler = contextMenuHandler;
@@ -2042,8 +1563,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         // selection (Root) so it does not start a drag from here.
         GlobalState.suppressTextSelection(cx.app);
 
-        // Clear inline completion on any mouse interaction
-        modeKind.clearInlineCompletion(this, cx);
         // A tap on the touch selection asks for its menu back. Any other press
         // places the caret or starts a new drag, and the handles and the menu
         // no longer belong to what is selected.
@@ -2066,10 +1585,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         final offset = resolved.offset;
         final lineEndAffinity = resolved.lineEndAffinity;
         final columnsPastLineEnd = resolved.columnsPastLineEnd;
-
-        if (modeKind.onClick(this, event, offset, window, cx)) {
-            return;
-        }
 
         // Triple click to select line
         if (event.button == MouseButton.Left && event.clickCount >= 3) {
@@ -2143,53 +1658,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         autoScroll.stop();
     }
 
-    public function onMouseMove(event:MouseMoveEvent, window:Window, cx:Context<InputBaseState>):Void {
-        // Check if mouse is within bounds
-        final withinBounds = lastBounds != null && lastBounds.contains(event.position);
-
-        if (!withinBounds) {
-            // Clear hover when mouse leaves the input
-            modeKind.clearHoverState(this, cx);
-            return;
-        }
-
-        // Show diagnostic popover on mouse move
-        final offset = indexForMousePosition(event.position).offset;
-        modeKind.onMouseMove(this, offset, event, window, cx);
-
-        if (isCodeEditor()) {
-            // Keep the current popover while the pointer stays on the same
-            // diagnostic, so moving over a squiggle neither repaints nor
-            // rebuilds the popover.
-            final set = mode.diagnostics();
-            final diagnostic = set != null ? set.forOffset(offset) : null;
-            if (diagnostic != null) {
-                if (!sameDiagnostic(diagnosticPopover, diagnostic)) {
-                    diagnosticPopover = diagnostic;
-                    cx.notify();
-                }
-            }
-            else {
-                if (diagnosticPopover != null) {
-                    diagnosticPopover = null;
-                    cx.notify();
-                }
-            }
-        }
-    }
-
-    /** Rust `PartialEq` of `DiagnosticEntry` (its range and diagnostic). */
-    static function sameDiagnostic(a:Null<DiagnosticEntry>, b:DiagnosticEntry):Bool {
-        if (a == null)
-            return false;
-        if (a == b)
-            return true;
-        final da = a.diagnostic;
-        final db = b.diagnostic;
-        return a.range.equals(b.range) && (da == db || (da.message == db.message && da.severity == db.severity && da.range == db.range
-            && da.source == db.source && da.code == db.code));
-    }
-
     public function onScrollWheel(event:ScrollEvent, window:Window, cx:Context<InputBaseState>):Void {
         final lineHeight:Float = lastLayout != null ? lastLayout.lineHeight : window.lineHeight();
         final delta = ScrollDelta.ScrollDeltaTools.pixelDelta(event.delta, lineHeight);
@@ -2230,10 +1698,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             cx.stopPropagation();
         }
 
-        if (diagnosticPopover != null) {
-            diagnosticPopover = null;
-            cx.notify();
-        }
         // The handles follow the text; the menu would sit over whatever
         // scrolls underneath it, so it steps aside until the finger lifts.
         this.editMenuOnScroll(event.touchPhase, cx);
@@ -2337,7 +1801,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             final localOffset = saturatingSub(offset, lastLayout.visibleLineByteOffsets[vi]);
             final pos = line.positionForIndex(localOffset, lastLayout, false);
             if (pos != null) {
-                final boundsWidth = (bounds.size.width : Float) - (lastLayout.lineNumberWidth : Float);
+                final boundsWidth = (bounds.size.width : Float);
                 final colOffsetX = pos.x;
                 if (colOffsetX - safetyMargin < -scrollX) {
                     // If the position is out of the visible area, scroll to make it visible
@@ -2349,15 +1813,10 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             }
         }
 
-        // Scroll the row into view. Use the same edge clearance helper as
-        // `TextElement.layoutCursors` so both scroll-into-view paths agree.
-        final edgeHeight:Float = if (padding == ScrollPadding.SurroundingLines && isCodeEditor()) {
-            TextElement.cursorSurroundingPadding(mode.isAutoGrow(), cursorSurroundingLines,
-                TextElement.viewportVisibleLines(bounds.size.height, lineHeight), lineHeight);
-        }
-        else {
-            0.;
-        }
+        // Scroll the row into view. gpui-kit keeps surrounding lines clear
+        // (`ScrollPadding.SurroundingLines`) only in its code editor, which
+        // Glaze does not have: inputs and textareas reveal the row itself.
+        final edgeHeight:Float = 0.;
         scrollY = TextElement.revealRow(scrollY, rowOffsetY, lineHeight, bounds.size.height, edgeHeight);
 
         // Avoid necessary scroll, when it was already in the correct position.
@@ -2623,7 +2082,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             this.replayTokens(range, Utf8.byteLength(text), change.tokenDelta, undo);
         }
         restoreSelections(replay.selections);
-        mode.restoreAutoClosedPairs(replay.autoClosedPairs != null ? replay.autoClosedPairs : AutoClosedPairs.empty());
         if (tokenAware) {
             // Token replay bypasses IME normalization; a stale marked range
             // would otherwise describe text that no longer exists.
@@ -2800,8 +2258,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         undoManager.breakTransactionCoalescing();
         selectedWordRange = null;
         pauseBlinkCursor(cx);
-        modeKind.hideContextMenu(this, cx);
-        modeKind.clearInlineCompletion(this, cx);
         final id = selections.generateId();
         final selection = new CursorSelection(id, start, end);
         selection.columnAnchor = this.preferredColumnFor(end);
@@ -2839,7 +2295,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
 
         final lineHeight = lastLayout.lineHeight;
-        final lineNumberWidth = lastLayout.lineNumberWidth;
 
         // The position is relative to the bounds of the text input
         //
@@ -2847,7 +2302,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         //
         // - included the input padding.
         // - included the scroll offset.
-        final innerPosition = position.sub(bounds.origin).sub(new Point(lineNumberWidth, 0.));
+        final innerPosition = position.sub(bounds.origin);
 
         var yOffset:Float = lastLayout.visibleTop;
         // Position relative to the last line walked, kept for a pointer that ends up
@@ -2961,8 +2416,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
      * the text rather than from a visual position.
      */
     public function selectToWithAffinity(offset:Int, lineEndAffinity:Bool, cx:Context<InputBaseState>):Void {
-        modeKind.clearInlineCompletion(this, cx);
-
         cursorLineEndAffinity = lineEndAffinity;
         final offset = cursorBoundary(offset, Bias.Left);
         final wordRange = selectedWordRange;
@@ -2992,7 +2445,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             cx:Context<InputBaseState>):Void {
         pauseBlinkCursor(cx);
         undoManager.breakTransactionCoalescing();
-        modeKind.clearInlineCompletion(this, cx);
 
         var activeAffinity = false;
         final newSelections:Array<CursorSelection> = [];
@@ -3048,38 +2500,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     }
 
     /**
-     * If offset falls on a hidden (folded) line, clamp backward to the end of
-     * the fold header line (last visible position before the fold).
-     */
-    function clampOffsetToVisibleBackward(offset:Int):Int {
-        final line = text.offsetToPoint(offset).row;
-        if (displayMap.isBufferLineHidden(line)) {
-            for (fold in displayMap.foldedRanges()) {
-                if (line > fold.startLine && line <= fold.endLine) {
-                    return text.lineEndOffset(fold.startLine);
-                }
-            }
-        }
-        return offset;
-    }
-
-    /**
-     * If offset falls on a hidden (folded) line, clamp forward to the start of
-     * the fold end line (first visible position after the fold).
-     */
-    function clampOffsetToVisibleForward(offset:Int):Int {
-        final line = text.offsetToPoint(offset).row;
-        if (displayMap.isBufferLineHidden(line)) {
-            for (fold in displayMap.foldedRanges()) {
-                if (line > fold.startLine && line <= fold.endLine) {
-                    return text.lineStartOffset(fold.endLine);
-                }
-            }
-        }
-        return offset;
-    }
-
-    /**
      * Clip a cursor/selection offset without splitting a CRLF newline. This does
      * not alter the rope or its byte/UTF-16 conversion used for exact source APIs.
      */
@@ -3094,13 +2514,11 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     }
 
     public function previousBoundary(offset:Int):Int {
-        final offset = cursorBoundary(saturatingSub(offset, 1), Bias.Left);
-        return clampOffsetToVisibleBackward(offset);
+        return cursorBoundary(saturatingSub(offset, 1), Bias.Left);
     }
 
     public function nextBoundary(offset:Int):Int {
-        final offset = cursorBoundary(offset + 1, Bias.Right);
-        return clampOffsetToVisibleForward(offset);
+        return cursorBoundary(offset + 1, Bias.Right);
     }
 
     /**
@@ -3108,7 +2526,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
      * focused and the blink cursor is visible.
      */
     public function showCursor(window:Window, cx:App):Bool {
-        return (focusHandle.isFocused(window) || modeKind.isContextMenuOpen(this, cx))
+        return focusHandle.isFocused(window)
             && !disabled
             && blinkCursor.read(cx).visible()
             && window.isWindowActive();
@@ -3123,19 +2541,11 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
     function onBlur(window:Window, cx:Context<InputBaseState>):Void {
         revealedViewport = null;
-        if (modeKind.isContextMenuOpen(this, cx.app)) {
-            return;
-        }
-
-        modeKind.hideContextMenu(this, cx);
         undoManager.breakTransactionCoalescing();
 
         // NOTE: Do not cancel select, when blur.
         // Because maybe user want to copy the selected text by AppMenuBar (will take focus handle).
 
-        modeKind.clearHoverState(this, cx);
-        diagnosticPopover = null;
-        modeKind.clearInlineCompletion(this, cx);
         this.dismissTouchSelection(cx);
         blinkCursor.update(cx, (cursor, cx) -> {
             cursor.stop(cx);
@@ -3403,11 +2813,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             return;
         }
 
-        // Every edit invalidates provider responses for the previous document,
-        // including deletion and indentation which do not trigger completion.
-        modeKind.hideContextMenu(this, cx);
-        modeKind.clearInlineCompletion(this, cx);
-
         // Sort descending by start so applying front-of-vec first edits the
         // highest offsets first, leaving lower offsets unchanged.
         var sorted:Array<TextEdit> = [for (edit in edits) new TextEdit(this.normalizeTokenRange(edit.range), edit.text)];
@@ -3444,66 +2849,26 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             undoManager.beginTransaction();
         }
 
-        final autoClosedPairsBefore = mode.autoClosedPairs().clone();
         var recorded = false;
-        // Several edits reach the highlighter as one batch, so it reparses
-        // once for the change instead of once per edit.
-        final highlighterEdits:Array<EditedText> = [];
         for (edit in sorted) {
             final range = edit.range;
             final newText = edit.text;
-            final newTextLen = Utf8.byteLength(newText);
             final oldText = text.clone();
-            mode.adjustAutoClosedPair(range, newTextLen);
             text.replace(range, newText);
 
-            modeKind.adjustAnnotations(this, range, newTextLen);
             if (pushHistory(oldText, range, newText, requestedIntent, selectionBefore, null)) {
                 recorded = true;
             }
 
             // Incremental, single-range updates must run per edit.
-            displayMap.adjustFoldsForEdit(oldText, range, newText);
             displayMap.onTextChanged(text, range, Rope.fromStr(newText), cx.app);
-
-            if (group) {
-                if (isCodeEditor()) {
-                    final inputEdit = LayoutMode.replacementInputEdit(oldText, text, range, newText);
-                    highlighterEdits.push(new EditedText(inputEdit, text.clone()));
-                }
-            }
-            else {
-                mode.updateHighlighter(new glaze.kit.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
-
-                updateFoldCandidatesIncremental(range, newText);
-            }
         }
 
         if (group) {
-            mode.updateHighlighterBatch(highlighterEdits, modeKind, window, cx);
-
-            // Fold candidates are read from the reparsed document, so each
-            // edit is located where it ended up once every edit was applied.
-            // `sorted` runs from the highest offset down.
-            var shift = 0;
-            var i = sorted.length - 1;
-            while (i >= 0) {
-                final edit = sorted[i];
-                final start = edit.range.start + shift;
-                updateFoldCandidatesIncremental(new Range(start, start), edit.text);
-                shift += Utf8.byteLength(edit.text) - edit.range.len();
-                i--;
-            }
-
             undoManager.commitTransaction();
         }
 
         // One observable update per batch instead of one per edit.
-        final diagnostics = mode.diagnosticsMut();
-        if (diagnostics != null) {
-            diagnostics.reset(text);
-        }
-        modeKind.refreshLanguageFeatures(this, window, cx);
         this.updateSearch(cx.app);
 
         // Compute the resulting cursors.
@@ -3546,7 +2911,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         // Record the cursor snapshots for undo/redo restore.
         final selectionsAfter = CursorSelection.copyAll(selections.iter());
         if (recorded) {
-            undoManager.recordAutoClosedPairs(autoClosedPairsBefore, mode.autoClosedPairs().clone());
             undoManager.recordSelections(selectionsBefore, selectionsAfter);
         }
 
@@ -3587,53 +2951,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
     static inline function compareTuple(a0:Int, a1:Int, b0:Int, b1:Int):Int {
         return a0 != b0 ? (a0 < b0 ? -1 : 1) : (a1 != b1 ? (a1 < b1 ? -1 : 1) : 0);
-    }
-
-    /**
-     * Update fold candidates from the syntax tree (full extraction).
-     * Used only on initial load or language changes.
-     */
-    function updateFoldCandidates():Void {
-        if (!mode.isFolding()) {
-            return;
-        }
-
-        final highlighterCell = mode.highlighter();
-        if (highlighterCell == null) {
-            return;
-        }
-
-        final highlighter = highlighterCell.value;
-        if (highlighter == null) {
-            return;
-        }
-
-        final foldRanges = highlighter.foldRanges(text);
-        displayMap.setFoldCandidates(foldRanges);
-    }
-
-    /**
-     * Incrementally update fold candidates after a text edit.
-     * Only traverses the edited region of the syntax tree instead of the full tree.
-     */
-    function updateFoldCandidatesIncremental(editRange:Range, newText:String):Void {
-        if (!mode.isFolding()) {
-            return;
-        }
-
-        final highlighterCell = mode.highlighter();
-        if (highlighterCell == null) {
-            return;
-        }
-
-        final highlighter = highlighterCell.value;
-        if (highlighter == null) {
-            return;
-        }
-
-        // The new byte range in the updated text after the edit
-        final newEnd = editRange.start + Utf8.byteLength(newText);
-        displayMap.updateFoldCandidatesForEdit((range, text) -> highlighter.foldRangesForEdit(range, text), new Range(editRange.start, newEnd), text);
     }
 
     // EntityInputHandler
@@ -3695,26 +3012,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
         range = this.normalizeTokenRange(range);
 
-        // Skip-over as a pure cursor move: a typed closer that already follows
-        // the cursor moves past it without touching text or history, so Undo
-        // never exposes a transient duplicate. Only for interactive single
-        // keystrokes (current selection, no IME mark, not silent replays).
-        if (range.isEmpty()
-            && range.start == cursor()
-            && imeMarkedRange == null
-            && !silentReplaceText
-            && isCodeEditor()
-            && selections.isSingle()
-            && activeSelection().isEmpty()) {
-            final target = skipOverTarget(newText);
-            if (target != null) {
-                setCursorTo(target);
-                this.updatePreferredColumn();
-                cx.notify();
-                return;
-            }
-        }
-
         if (isMultiLine()) {
             final multiCursor = rangeUtf16 == null && imeMarkedRange == null && !selections.isSingle();
             if (multiCursor) {
@@ -3737,35 +3034,16 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
                 if (requestedIntent != null) {
                     undoManager.setPendingIntent(requestedIntent);
                 }
-                final autoClose = autoCloseTarget(range, newText);
-                if (autoClose != null) {
-                    // One edit keeps the pair atomic even at undo coalescing limits.
-                    final replacement = newText + autoClose.closer;
-                    replaceTextInRanges([new TextEdit(range, replacement)], window, cx);
-                    final cursor = range.start + newTextLen;
-                    mode.trackAutoClosedPair(new Range(cursor - autoClose.openLen, cursor), new Range(cursor, cursor + Utf8.byteLength(autoClose.closer)));
-                    undoManager.recordAutoClosedPairsAfter(mode.autoClosedPairs().clone());
-                    setCursorTo(cursor);
-                    this.updatePreferredColumn();
-                    undoManager.recordSelections([selectionBefore], CursorSelection.copyAll(selections.iter()));
-                }
-                else {
-                    replaceTextInRanges([new TextEdit(range, newText)], window, cx);
-                }
+                replaceTextInRanges([new TextEdit(range, newText)], window, cx);
             }
             if (endsComposition) {
                 undoManager.commitTransaction();
-            }
-
-            if (!silentReplaceText) {
-                modeKind.onTextTyped(this, range, newText, window, cx);
             }
             return;
         }
 
         // Single-line path
         final oldText = text.clone();
-        mode.adjustAutoClosedPair(range, newTextLen);
         text.replace(range, newText);
 
         var newOffset = range.start + newTextLen;
@@ -3801,14 +3079,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
 
         if (maskChanged) {
-            // Masking rewrites the whole document, so ranges recorded against
-            // the old text no longer point at anything.
-            modeKind.resetAnnotations(this);
-        }
-        else {
-            modeKind.adjustAnnotations(this, range, newTextLen);
-        }
-        if (maskChanged) {
             // A segment-based history entry no longer matches the masked
             // document, record a whole-document change instead, so that
             // undo/redo can restore the text exactly.
@@ -3818,18 +3088,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         else {
             pushHistory(oldText, range, newText, requestedIntent, selectionBefore, null);
         }
-        final diagnostics = mode.diagnosticsMut();
-        if (diagnostics != null) {
-            diagnostics.reset(text);
-        }
-        // Adjust folds before updating wrap map: remove overlapping folds and shift others
-        displayMap.adjustFoldsForEdit(oldText, range, newText);
         displayMap.onTextChanged(text, range, Rope.fromStr(newText), cx.app);
-
-        mode.updateHighlighter(new glaze.kit.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
-
-        updateFoldCandidatesIncremental(range, newText);
-        modeKind.refreshLanguageFeatures(this, window, cx);
         setCursorTo(newOffset);
         imeMarkedRange = null;
         // A commit ends the IME composition: macOS delivers `insertText:` for
@@ -3846,9 +3105,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         this.dismissTouchSelection(cx);
         if (isMultiLine()) {
             mode.updateAutoGrow(displayMap);
-        }
-        if (!silentReplaceText) {
-            modeKind.onTextTyped(this, range, newText, window, cx);
         }
         // Initial port deviation DEV-009: only when the value changed, not for an
         // edit that left it as it was (a newline dropped by a single-line
@@ -3880,8 +3136,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         // Collapse any extra cursors so we never leave stale secondary cursors behind.
         selections.removeAllButActive();
 
-        modeKind.resetLanguageFeatures(this);
-
         // See the same NOTE in `replaceTextInRange`.
         final newText = replayingHistory ? newText : normalizeInput(newText);
         final newTextLen = Utf8.byteLength(newText);
@@ -3897,9 +3151,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
         range = this.normalizeTokenRange(range);
 
-        final autoClosedPairsBefore = mode.autoClosedPairs().clone();
         final oldText = text.clone();
-        mode.adjustAutoClosedPair(range, newTextLen);
         text.replace(range, newText);
 
         if (isSingleLine()) {
@@ -3914,19 +3166,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             }
         }
 
-        modeKind.adjustAnnotations(this, range, newTextLen);
-        final diagnostics = mode.diagnosticsMut();
-        if (diagnostics != null) {
-            diagnostics.reset(text);
-        }
-        // Adjust folds before updating wrap map: remove overlapping folds and shift others
-        displayMap.adjustFoldsForEdit(oldText, range, newText);
         displayMap.onTextChanged(text, range, Rope.fromStr(newText), cx.app);
-
-        mode.updateHighlighter(new glaze.kit.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
-
-        updateFoldCandidatesIncremental(range, newText);
-        modeKind.refreshLanguageFeatures(this, window, cx);
         if (newText.length == 0) {
             // Cancel selection, when cancel IME input.
             setCursorTo(range.start);
@@ -3949,7 +3189,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
         if (pushHistory(oldText, range, newText, requestedIntent, selectionBefore, activeSelection().copy())) {
             undoManager.recordSelections([selectionBefore], [activeSelection().copy()]);
-            undoManager.recordAutoClosedPairs(autoClosedPairsBefore, mode.autoClosedPairs().clone());
         }
         if (newText.length == 0) {
             undoManager.commitTransaction();
@@ -3963,12 +3202,10 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         if (lastLayout == null)
             return null;
         final lineHeight = lastLayout.lineHeight;
-        final lineNumberWidth = lastLayout.lineNumberWidth;
         final range = rangeFromUtf16(rangeUtf16);
 
         var startOrigin:Null<Point> = null;
         var endOrigin:Null<Point> = null;
-        final lineNumberOrigin = new Point(lineNumberWidth, 0.);
         var yOffset:Float = lastLayout.visibleTop;
 
         for (vi in 0...lastLayout.lines.length) {
@@ -4001,15 +3238,15 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             final origin = lineAndPositionForOffset(offset).position;
             if (origin == null)
                 return null;
-            startOrigin = origin.sub(lineNumberOrigin);
+            startOrigin = origin;
         }
         // Ensure at same line.
         final endX = endOrigin != null ? endOrigin.x : startOrigin.x;
         final endOrigin = new Point(endX, startOrigin.y);
 
-        return Bounds.fromCorners(bounds.origin.add(lineNumberOrigin).add(startOrigin),
+        return Bounds.fromCorners(bounds.origin.add(startOrigin),
             // + line_height for show IME panel under the cursor line.
-            bounds.origin.add(lineNumberOrigin).add(new Point(endOrigin.x, endOrigin.y + lineHeight)));
+            bounds.origin.add(new Point(endOrigin.x, endOrigin.y + lineHeight)));
     }
 
     public function characterIndexForPoint(point:Point, window:Window, cx:Context<Dynamic>):Null<Int> {
@@ -4043,13 +3280,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         // layout and paint, and both happen after this call in the same frame.
         editorStyle = projectedEditorStyle.resolved(BaseTheme.global(cx.app).tokens);
         final entity:Entity<InputBaseState> = cx.entity();
-        if (_pendingUpdate) {
-            mode.updateHighlighter(new glaze.kit.base.input.LayoutMode.HighlighterUpdate(new Range(0, 0), text, text, "", false), modeKind, window, cx);
-
-            updateFoldCandidates();
-            modeKind.refreshLanguageFeatures(this, window, cx);
-            _pendingUpdate = false;
-        }
 
         // The listeners only call this state: made once (GPUI's `cx.listener`
         // makes them each frame)
@@ -4118,7 +3348,6 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             .onMouseDown(MouseButton.Right, listeners.onMouseDown)
             .onMouseUp(MouseButton.Left, listeners.onMouseUp)
             .onMouseUp(MouseButton.Right, listeners.onMouseUp)
-            .onMouseMove(listeners.onMouseMove)
             .onScroll(listeners.onScrollWheel);
         if (isMultiLine() && !disabled) {
             element.onModifiersChanged(listeners.modifiersChanged);
@@ -4152,8 +3381,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             element.child(new EditorScrollbar(entity));
         }
 
-        // Actions only one mode handles are registered by that mode.
-        return glaze.kit.base.Observe.testSupport(modeKind.registerActions(element, entity, window)).trackFocus(focusHandle);
+        return glaze.kit.base.Observe.testSupport(element).trackFocus(focusHandle);
     }
 
     // Helpers
@@ -4325,7 +3553,6 @@ private class InputRenderListeners {
     public final onActionReplace:(Dynamic, Window, App) -> Void;
     public final onMouseDown:(Dynamic, Window, App) -> Void;
     public final onMouseUp:(Dynamic, Window, App) -> Void;
-    public final onMouseMove:(Dynamic, Window, App) -> Void;
     public final onScrollWheel:(Dynamic, Window, App) -> Void;
     public final activateToken:(ActivateToken, Window, App) -> Void;
     public final modifiersChanged:(glaze.ModifiersChangedEvent, Window, App) -> Void;
@@ -4426,7 +3653,6 @@ private class InputRenderListeners {
         onActionReplace = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onActionReplace(event, window, cx));
         onMouseDown = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onMouseDown(event, window, cx));
         onMouseUp = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onMouseUp(event, window, cx));
-        onMouseMove = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onMouseMove(event, window, cx));
         onScrollWheel = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onScrollWheel(event, window, cx));
         activateToken = (_, window, cx) -> {
             final state = entity.read(cx);

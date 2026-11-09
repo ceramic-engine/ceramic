@@ -18,13 +18,13 @@ import glaze.kit.base.input.InputBaseState.IntoMaskPattern;
  *
  * This is the shared editing engine in its multi-line kind (Rust
  * `InputBaseState<TextareaMode>`). Code-editor facilities such as
- * languages, diagnostics, folding, and LSP do not exist on this type: those
- * methods live on `EditorState`.
+ * languages, diagnostics, folding, and LSP belong to gpui-kit's code
+ * editor (`EditorState`), which is not part of Glaze: its code editor is
+ * Cityscape (plugin `cityscape`).
  *
- * The methods Rust shares between the two multi-line modes (`impl<M:
+ * The methods Rust shares between the multi-line modes (`impl<M:
  * MultiLineMode>`: scroll bounce, search, soft wrap, wrapping indent) are
- * `MultiLineInputs`, static functions both `TextareaState` and
- * `EditorState` forward to.
+ * `MultiLineInputs`, static functions `TextareaState` forwards to.
  */
 @:access(glaze.kit.base.input.LayoutMode)
 class TextareaState extends InputBaseState {
@@ -180,10 +180,6 @@ class TextareaState extends InputBaseState {
 
     override public function withShowWhitespaces(show:Bool):TextareaState {
         return cast super.withShowWhitespaces(show);
-    }
-
-    override public function withScrollBeyondLastLine(rows:Null<Int>):TextareaState {
-        return cast super.withScrollBeyondLastLine(rows);
     }
 
     override public function withCursorSurroundingLines(lines:Null<Int>):TextareaState {

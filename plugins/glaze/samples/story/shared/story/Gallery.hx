@@ -128,6 +128,8 @@ class Gallery extends Model implements Render {
         add(StoryMeta.optional(story.stories.DiffStory));
         add(StoryMeta.optional(story.stories.DockStory));
         add(StoryMeta.optional(story.stories.DropdownButtonStory));
+        // Cityscape, Glaze's code editor (plugin `cityscape`, listed by the
+        // story app); a placeholder page without the plugin
         add(StoryMeta.optional(story.stories.EditorStory));
         add(StoryMeta.optional(story.stories.EmptyStory));
         add(StoryMeta.optional(story.stories.FormStory));

@@ -31,8 +31,6 @@ class LastLayout {
 
     public var wrappingIndent:WrappingIndent;
 
-    public var lineNumberWidth:Pixels;
-
     /**
      * Width of one space in the editor font.
      *
@@ -49,7 +47,7 @@ class LastLayout {
 
     public function new(visibleRange:Range, visibleBufferLines:Array<Int>, visibleLineByteOffsets:Array<Int>, visibleTop:Pixels,
             visibleRangeOffset:Range, lines:Array<InputLineLayout>, lineHeight:Pixels, wrapWidth:Null<Pixels>, wrappingIndent:WrappingIndent,
-            lineNumberWidth:Pixels, spaceWidth:Pixels, cursorBounds:Null<Bounds>, textAlign:TextAlign, contentWidth:Pixels) {
+            spaceWidth:Pixels, cursorBounds:Null<Bounds>, textAlign:TextAlign, contentWidth:Pixels) {
         this.visibleRange = visibleRange;
         this.visibleBufferLines = visibleBufferLines;
         this.visibleLineByteOffsets = visibleLineByteOffsets;
@@ -59,7 +57,6 @@ class LastLayout {
         this.lineHeight = lineHeight;
         this.wrapWidth = wrapWidth;
         this.wrappingIndent = wrappingIndent;
-        this.lineNumberWidth = lineNumberWidth;
         this.spaceWidth = spaceWidth;
         this.cursorBounds = cursorBounds;
         this.textAlign = textAlign;
@@ -69,7 +66,7 @@ class LastLayout {
     /** A shallow copy (Rust `Clone`: the lines are shared, like their `Rc`). */
     public function clone():LastLayout {
         return new LastLayout(visibleRange, visibleBufferLines.copy(), visibleLineByteOffsets.copy(), visibleTop, visibleRangeOffset, lines, lineHeight,
-            wrapWidth, wrappingIndent, lineNumberWidth, spaceWidth, cursorBounds, textAlign, contentWidth);
+            wrapWidth, wrappingIndent, spaceWidth, cursorBounds, textAlign, contentWidth);
     }
 
     /** The layout of the buffer line `row`, when it is visible. */

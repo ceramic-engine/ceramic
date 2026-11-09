@@ -21,13 +21,10 @@ import glaze.kit.base.Scrollbar;
 import glaze.kit.base.input.CursorId;
 import glaze.kit.base.input.CursorSelection;
 import glaze.kit.base.input.EditorScrollbarContext;
-import glaze.kit.base.input.EditorState;
-import glaze.kit.base.input.FoldRange;
 import glaze.kit.base.input.InputActions.Redo;
 import glaze.kit.base.input.InputActions.Undo;
 import glaze.kit.base.input.InputBaseState;
 import glaze.kit.base.input.InputState;
-import glaze.kit.base.input.RangeDecoration;
 import glaze.kit.base.input.TextareaState;
 import testing.InteractionScript.ScriptView;
 import testing.VisualTestContext;
@@ -42,17 +39,14 @@ import glaze.Size;
 import glaze.TextRun;
 import glaze.TextStyle;
 import glaze.UnderlineStyle;
-import glaze.kit.base.input.ColorSwatch;
 import glaze.kit.base.input.EditorScrollbarSnapshot.EditorScrollbarLayout;
 import glaze.kit.base.input.StyledRange;
-import glaze.kit.base.input.TextDecoration;
 import glaze.kit.base.input.TextElement;
 import glaze.util.Utf8;
 import ropey.Rope;
 
 import glaze.Prelude.*;
 
-using glaze.kit.base.input.InputDecorationsExt;
 using StringTools;
 
 /**
@@ -84,15 +78,18 @@ class InputTextElementTest extends KitTestCase {
         return cast entity;
     }
 
-    /** Rust `decoration_editor`: a 240x140 window with a folding editor holding `text`. */
-    function decorationEditor(text:String, wrap:Bool):{editor:Entity<EditorState>, cx:VisualTestContext} {
+    /**
+     * A 240x140 window with a textarea holding `text` (Rust `decoration_editor`,
+     * with a textarea in place of gpui-kit's code editor).
+     */
+    function textareaView(text:String, wrap:Bool):{input:Entity<TextareaState>, cx:VisualTestContext} {
         app.update(cx -> Base.init(cx));
-        var editor:Entity<EditorState> = null;
+        var input:Entity<TextareaState> = null;
         final cx = openView(240., 140., (window, cx) -> {
-            editor = cx.newEntity(cx -> new EditorState(window, cx).withSoftWrap(wrap).folding(true).defaultValue(text));
-            return (_, _) -> div().sizeFull().child(editor);
+            input = cx.newEntity(cx -> new TextareaState(window, cx).withSoftWrap(wrap).defaultValue(text));
+            return (_, _) -> div().sizeFull().child(input);
         });
-        return {editor: editor, cx: cx};
+        return {input: input, cx: cx};
     }
 
     static function lines(from:Int, to:Int):String {
@@ -123,23 +120,6 @@ class InputTextElementTest extends KitTestCase {
         return [for (run in runs) run.len];
     }
 
-    function testLineNumberColumnStaysAtThreeDigitsThenGrowsUpToSeven() {
-        assertEquals(3, TextElement.lineNumberLen(1));
-        assertEquals(3, TextElement.lineNumberLen(9));
-        assertEquals(3, TextElement.lineNumberLen(10));
-        assertEquals(3, TextElement.lineNumberLen(999));
-        assertEquals(4, TextElement.lineNumberLen(1000));
-        assertEquals(6, TextElement.lineNumberLen(999999));
-        assertEquals(7, TextElement.lineNumberLen(9999999));
-        assertEquals(7, TextElement.lineNumberLen(10000000));
-    }
-
-    function testDisplayedLineNumberStaysWithinSevenDigits() {
-        assertEquals(42, TextElement.displayedLineNumber(42));
-        assertEquals(9999999, TextElement.displayedLineNumber(9999999));
-        assertEquals(9999999, TextElement.displayedLineNumber(10000000));
-    }
-
     function testFrameOutlineIsContinuousAcrossDifferentLineWidths() {
         final corners = [corners(2., 0., 20., 10.), corners(0., 10., 12., 20.)];
 
@@ -156,110 +136,17 @@ class InputTextElementTest extends KitTestCase {
         ], TextElement.frameOutlinePoints(corners));
     }
 
-    function testFrameOutlineKeepsHorizontalSpaceBetweenTheStrokeAndText() {
-        final corners = [corners(2., 0., 20., 10.)];
-
-        final padded = TextElement.padFrameCorners(corners, 1.);
-        assertEquals(1, padded.length);
-        assertPoints([new Point(1., 0.), new Point(21., 0.), new Point(21., 10.), new Point(1., 10.)],
-            [padded[0].topLeft, padded[0].topRight, padded[0].bottomRight, padded[0].bottomLeft]);
-
-        final points = TextElement.frameOutlinePoints(corners);
-        assertTrue(points[0].equals(points[points.length - 1]));
-    }
-
-    function testFrameOutlineStrokeIsAlignedToPhysicalPixelsAtEachScaleFactor() {
-        final points = [new Point(0.2, 1.8), new Point(10.7, 20.3)];
-
-        for (entry in [
-            {scale: 1., width: 1., points: [new Point(0.5, 1.5), new Point(10.5, 20.5)]},
-            {scale: 1.5, width: 2. / 3., points: [new Point(1. / 3., 5. / 3.), new Point(11., 61. / 3.)]},
-            {scale: 2., width: 1., points: [new Point(0., 2.), new Point(10.5, 20.5)]},
-        ]) {
-            final snapped = TextElement.snapFrameOutline(points, 1., entry.scale);
-            assertFloatEquals(entry.width, snapped.strokeWidth);
-            assertPoints(entry.points, snapped.points);
-        }
-    }
-
-    function testFrameOutlineKeepsItsVerticalEdgesInsideTheContentMask() {
-        final points = [
-            new Point(9.5, 2.5),
-            new Point(20.5, 2.5),
-            new Point(20.5, 10.5),
-            new Point(9.5, 10.5),
-            new Point(9.5, 2.5),
-        ];
-        final mask = new Bounds(new Point(10., 0.), new Size(10., 20.));
-
-        assertPoints([
-            new Point(10.5, 2.5),
-            new Point(19.5, 2.5),
-            new Point(19.5, 10.5),
-            new Point(10.5, 10.5),
-            new Point(10.5, 2.5),
-        ], TextElement.clampFrameToContentMask(points, 1., mask));
-    }
-
-    function testPlainTextDecorationsIncludeUnstyledGaps() {
-        final decoration = new HighlightStyle();
-        decoration.backgroundColor = red();
-        final styles = TextElement.composeDecorations([], [new StyledRange(new Range(2, 5), decoration)], new Range(0, 10));
-
-        assertEquals('0..2,2..5,5..10', [for (s in styles) '${s.range.start}..${s.range.end}'].join(','));
-        assertTrue(styles[0].style.equals(new HighlightStyle()));
-        assertTrue(red().equals(styles[1].style.backgroundColor));
-        assertTrue(styles[2].style.equals(new HighlightStyle()));
-    }
-
-    function testFirstDecorationCollectionHasPrecedence() {
-        final redStyle = new HighlightStyle();
-        redStyle.backgroundColor = red();
-        final blueStyle = new HighlightStyle();
-        blueStyle.backgroundColor = blue();
-        final first = [new TextDecoration(new Range(0, 4), redStyle)];
-        final second = [new TextDecoration(new Range(0, 4), blueStyle)];
-
-        final styles = TextElement.composeDecorationCollections([], [first, second], new Range(0, 4));
-
-        assertEquals(1, styles.length);
-        assertTrue(red().equals(styles[0].style.backgroundColor));
-    }
-
-    function testDecorationsOverrideSyntaxHighlights() {
-        final syntax = [new StyledRange(new Range(0, 8), HighlightStyle.ofColor(blue()))];
-        final decoration = new HighlightStyle();
-        decoration.color = red();
-        decoration.fontStyle = FontStyle.Italic;
-
-        final styles = TextElement.composeDecorations(syntax, [new StyledRange(new Range(2, 6), decoration)], new Range(0, 8));
-
-        assertTrue(styles[1].range.equals(new Range(2, 6)));
-        assertTrue(red().equals(styles[1].style.color));
-        assertEquals(FontStyle.Italic, styles[1].style.fontStyle);
-    }
-
     function testEditorScrollbarLayoutUsesCurrentScrollSize() {
         final inputBounds = new Bounds(new Point(10., 20.), new Size(300., 80.));
         final paddings = new Edges(2., 3., 5., 7.);
 
-        final layout = EditorScrollbarLayout.create(inputBounds, 40., new Size(1000., 200.), paddings);
+        // Rust's first case lays the track out right of a 40 px code editor
+        // gutter, which inputs do not have.
+        final layout = EditorScrollbarLayout.create(inputBounds, new Size(500., 120.), paddings);
 
-        assertBounds(new Bounds(new Point(51., 18.), new Size(262., 87.)), layout.bounds);
-        assertTrue(layout.scrollSize.equals(new Size(972., 200.)));
-        assertTrue(layout.scrollViewportSize.equals(new Size(262., 80.)));
-
-        final layoutWithoutGutter = EditorScrollbarLayout.create(inputBounds, 0., new Size(500., 120.), paddings);
-
-        assertBounds(new Bounds(new Point(10., 18.), new Size(303., 87.)), layoutWithoutGutter.bounds);
-        assertTrue(layoutWithoutGutter.scrollSize.equals(new Size(513., 120.)));
-        assertTrue(layoutWithoutGutter.scrollViewportSize.equals(new Size(303., 80.)));
-    }
-
-    function testEditorGutterCoversTheCompleteFixedColumn() {
-        final inputBounds = new Bounds(new Point(10., 20.), new Size(300., 80.));
-
-        assertBounds(new Bounds(new Point(3., 18.), new Size(55., 103.)), TextElement.editorGutterBounds(inputBounds, 48., 16., new Edges(2., 3., 5., 7.)));
+        assertBounds(new Bounds(new Point(10., 18.), new Size(303., 87.)), layout.bounds);
+        assertTrue(layout.scrollSize.equals(new Size(513., 120.)));
+        assertTrue(layout.scrollViewportSize.equals(new Size(303., 80.)));
     }
 
     function testVerticalScrollOffsetIsClampedToCurrentViewport() {
@@ -382,81 +269,6 @@ class InputTextElementTest extends KitTestCase {
         assertNull(TextElement.alignRunsToCharBoundaries(text, runs([3, 3])));
     }
 
-    function testClipStylesToRanges() {
-        final style = new HighlightStyle();
-        final styles = [
-            new StyledRange(new Range(0, 4), style),
-            new StyledRange(new Range(4, 10), style),
-            new StyledRange(new Range(12, 20), style)
-        ];
-        function ranges(styles:Array<StyledRange>):String {
-            return [for (s in styles) '${s.range.start}..${s.range.end}'].join(',');
-        }
-
-        // Ranges with a gap (a folded region) drop the gap coverage and split
-        // styles that span a range edge.
-        assertEquals('2..4,4..6,14..18', ranges(TextElement.clipStylesToRanges(styles, [new Range(2, 6), new Range(14, 18)])));
-
-        // Styles fully inside the ranges are unchanged.
-        assertEquals('0..4,4..10,12..20', ranges(TextElement.clipStylesToRanges(styles, [new Range(0, 20)])));
-
-        // A single style spanning several ranges splits into one piece per range.
-        assertEquals('5..10,20..25',
-            ranges(TextElement.clipStylesToRanges([new StyledRange(new Range(0, 30), style)], [new Range(5, 10), new Range(20, 25)])));
-
-        assertEquals(0, TextElement.clipStylesToRanges(styles, []).length);
-    }
-
-    function testSplitRunsByBgSegments() {
-        final runs = [runOfLen(5, blue()), runOfLen(7, blue()), runOfLen(24, blue())];
-
-        final bgSegments = [new ColorSwatch(new Range(8, 12), red()), new ColorSwatch(new Range(12, 18), blue())];
-        final result = TextElement.splitRunsByBgSegments(5, runs, bgSegments);
-        assertEquals('3,2,2,5,1,23', lens(result).join(','));
-        assertTrue(blue().equals(result[0].color));
-        assertTrue(black().equals(result[1].color));
-        assertTrue(black().equals(result[2].color));
-        assertTrue(black().equals(result[3].color));
-        assertTrue(black().equals(result[4].color));
-        assertTrue(blue().equals(result[5].color));
-    }
-
-    function testEmptyBottomHeightOutsideCodeEditor() {
-        // Single-line / plain-text / auto-grow modes never reserve empty
-        // bottom space, regardless of any override.
-        for (overrideRows in ([null, 0, 3, 99] : Array<Null<Int>>)) {
-            assertEquals(0., TextElement.emptyBottomHeight(false, overrideRows, 800., 20.));
-        }
-    }
-
-    function testEmptyBottomHeightCodeEditorDefault() {
-        // `null`: roughly half the viewport, floored at
-        // `BOTTOM_MARGIN_ROWS * lineHeight` so the empty area never
-        // collapses to "less than a few lines" on tiny viewports.
-        final lineHeight = 20.;
-
-        // Viewport much taller than the floor: half-viewport wins.
-        assertEquals(400., TextElement.emptyBottomHeight(true, null, 800., lineHeight));
-
-        // Viewport shorter than 2 x floor: floor wins.
-        final floor = TextElement.BOTTOM_MARGIN_ROWS * lineHeight;
-        assertEquals(floor, TextElement.emptyBottomHeight(true, null, 40., lineHeight));
-    }
-
-    function testEmptyBottomHeightExplicitRowCount() {
-        // `n`: exactly `n` line-heights. Caller fully controls
-        // the trailing empty space; viewport size doesn't amplify it.
-        final lineHeight = 20.;
-
-        for (rows in [0, 1, 3, 8, 64]) {
-            final expected = rows * lineHeight;
-            assertEquals(expected, TextElement.emptyBottomHeight(true, rows, 800., lineHeight));
-            // Tiny viewport: still exactly `n x lineHeight`, no floor
-            // applied when caller supplied an explicit count.
-            assertEquals(expected, TextElement.emptyBottomHeight(true, rows, 20., lineHeight));
-        }
-    }
-
     function testRowRevealContainsTheWholeRowAndHasAStableOffset() {
         final lineHeight = 20.;
         final rowTop = 1000.;
@@ -575,19 +387,19 @@ class InputTextElementTest extends KitTestCase {
     }
 
     function testScrollBounceKeepsTheScrollbarViewportFixed() {
-        final opened = decorationEditor(lines(0, 60), false);
-        final editor = opened.editor;
+        final opened = textareaView(lines(0, 60), false);
+        final input = opened.input;
         final cx = opened.cx;
         cx.update((window, app) -> {
             window.draw();
-            final viewport = editor.read(app).editorScrollbarSnapshot.layout.bounds;
-            final textOrigin = editor.read(app).lastBounds.origin;
-            editor.update(app, (state, cx) -> {
+            final viewport = input.read(app).editorScrollbarSnapshot.layout.bounds;
+            final textOrigin = input.read(app).lastBounds.origin;
+            input.update(app, (state, cx) -> {
                 state.setScrollBounce(true, cast cx);
                 state.onScrollWheel(new ScrollEvent(new Point(), Pixels(new Point(0., 60.)), null, Started), window, cast cx);
             });
             window.draw();
-            final state = editor.read(app);
+            final state = input.read(app);
             final stretch = state.overscroll.offset();
             assertTrue(stretch > 0.);
             assertBounds(viewport, state.editorScrollbarSnapshot.layout.bounds);
@@ -597,17 +409,17 @@ class InputTextElementTest extends KitTestCase {
     }
 
     /**
-     * A scrollbar supplied through `setScrollbarRenderer` gets the editor's own
+     * A scrollbar supplied through `setScrollbarRenderer` gets the input's own
      * scroll range through the standard ScrollbarHandle contract, so a
      * scrollbar can drag to the same end as wheel scrolling.
      */
     function testScrollbarRendererReceivesTheEditorsScrollRange() {
-        final opened = decorationEditor(lines(0, 60), true);
-        final editor = opened.editor;
+        final opened = textareaView(lines(0, 60), true);
+        final input = opened.input;
         final cx = opened.cx;
         var presented:Null<EditorScrollbarContext> = null;
         cx.update((window, app) -> {
-            editor.update(app, (state, cx) -> {
+            input.update(app, (state, cx) -> {
                 state.setScrollBounce(false, cast cx);
                 state.setEditorPaddings(new Edges(10., 0., 10., 0.));
                 state.setScrollbarRenderer((context, _, _) -> {
@@ -616,7 +428,7 @@ class InputTextElementTest extends KitTestCase {
                 });
             });
             window.draw();
-            editor.update(app, (state, cx) -> {
+            input.update(app, (state, cx) -> {
                 state.onScrollWheel(new ScrollEvent(new Point(), Pixels(new Point(0., -10000.)), null, Moved), window, cast cx);
             });
             window.draw();
@@ -643,7 +455,7 @@ class InputTextElementTest extends KitTestCase {
         draw(cx);
         cx.simulateMouseUp(end, Left);
 
-        assertTrue(wheelEnd.equals(editor.read(app).scrollOffset()), 'expected $wheelEnd, got ${editor.read(app).scrollOffset()}');
+        assertTrue(wheelEnd.equals(input.read(app).scrollOffset()), 'expected $wheelEnd, got ${input.read(app).scrollOffset()}');
         assertFloatEquals(-wheelEnd.y, context.contentSize().height - track.size.height);
     }
 
@@ -705,48 +517,30 @@ class InputTextElementTest extends KitTestCase {
         });
     }
 
-    function testSetScrollOffsetPastTheEndIsClampedInACodeEditor() {
-        final opened = decorationEditor(lines(1, 41), false);
-        final editor = opened.editor;
-        opened.cx.update((window, app) -> {
-            window.draw();
-            editor.update(app, (state, cx) -> state.setScrollOffset(new Point(0., -10000.), cast cx));
-            window.draw();
-
-            final state = editor.read(app);
-            final painted = state.editorScrollbarSnapshot.cursorScrollOffset;
-            // The furthest offset includes the room below the last line.
-            final furthest = state.inputBounds.size.height - state.scrollSize.height;
-            assertTrue(-furthest > state.inputBounds.size.height);
-            assertFloatEquals(furthest, painted.y);
-            return null;
-        });
-    }
-
     function testSelectionPathsFollowTheInputAndItsMenuFocus() {
-        final opened = decorationEditor('alpha beta', false);
-        final editor = opened.editor;
+        final opened = textareaView('alpha beta', false);
+        final input = opened.input;
         opened.cx.update((window, app) -> {
             final menuFocus = app.focusHandle();
             final otherFocus = app.focusHandle();
-            editor.update(app, (state, cx) -> {
+            input.update(app, (state, cx) -> {
                 state.setSelectedRange(new Range(0, 5), cast cx);
                 state.focus(window, cast cx);
             });
 
             function selectionPaths():Int {
                 window.draw();
-                final state = editor.read(app);
+                final state = input.read(app);
                 final layout = state.lastLayout.clone();
                 final bounds = state.inputBounds;
-                return new TextElement(base(editor)).layoutSelections(layout, bounds, window, app).length;
+                return new TextElement(base(input)).layoutSelections(layout, bounds, window, app).length;
             }
             final focusedPaths = selectionPaths();
             assertTrue(focusedPaths > 0);
 
-            editor.update(app, (state, cx) -> state.setSelectionFocus(menuFocus, cast cx));
+            input.update(app, (state, cx) -> state.setSelectionFocus(menuFocus, cast cx));
             menuFocus.focus(window, app);
-            assertFalse(editor.read(app).focusHandle.isFocused(window));
+            assertFalse(input.read(app).focusHandle.isFocused(window));
             assertEquals(focusedPaths, selectionPaths());
             // The opening frame can still use the input's old focus. Check
             // another frame with the menu already focused as well.
@@ -754,12 +548,12 @@ class InputTextElementTest extends KitTestCase {
 
             otherFocus.focus(window, app);
             assertEquals(0, selectionPaths());
-            assertTrue(new Range(0, 5).equals(editor.read(app).selectedRange()));
+            assertTrue(new Range(0, 5).equals(input.read(app).selectedRange()));
 
             menuFocus.focus(window, app);
-            editor.update(app, (state, cx) -> state.setSelectionFocus(null, cast cx));
+            input.update(app, (state, cx) -> state.setSelectionFocus(null, cast cx));
             assertEquals(0, selectionPaths());
-            editor.update(app, (state, cx) -> state.focus(window, cast cx));
+            input.update(app, (state, cx) -> state.focus(window, cast cx));
             assertEquals(focusedPaths, selectionPaths());
 
             // Not ported: "retaining the input must not keep a removed menu
@@ -771,21 +565,21 @@ class InputTextElementTest extends KitTestCase {
     }
 
     function testHorizontalScrollIsClampedBeforeTextAndCaretLayout() {
-        final opened = decorationEditor('short text', false);
-        final editor = opened.editor;
+        final opened = textareaView('short text', false);
+        final input = opened.input;
         opened.cx.update((window, app) -> {
             window.draw();
-            final state = editor.read(app);
+            final state = input.read(app);
             final layout = state.lastLayout.clone();
             final inputBounds = state.inputBounds;
             final scrollSize = inputBounds.size;
-            final element = new TextElement(base(editor));
+            final element = new TextElement(base(input));
             final baseline = element.layoutCursors(layout, inputBounds, scrollSize, window, app).cursorInfos;
 
             // Both a stale offset after deletion and a deferred scroll target must
             // be limited before either text or carets are positioned this frame.
             for (deferred in ([null, new Point(-80., 0.)] : Array<Null<Point>>)) {
-                editor.update(app, (state, _) -> {
+                input.update(app, (state, _) -> {
                     state.scrollHandle.setOffset(new Point(-40., 0.));
                     state.deferredScrollOffset = deferred;
                 });
@@ -797,7 +591,7 @@ class InputTextElementTest extends KitTestCase {
                 for (i in 0...baseline.length) {
                     assertEquals(baseline[i].bounds.origin.x, result.cursorInfos[i].bounds.origin.x);
                 }
-                editor.update(app, (state, cx) -> {
+                input.update(app, (state, cx) -> {
                     state.scrollSize = scrollSize;
                     state.updateScrollOffset(offset, cast cx);
                     assertEquals(offset.x, state.scrollHandle.offset().x);
@@ -811,18 +605,18 @@ class InputTextElementTest extends KitTestCase {
      * Scroll to the far right and assert the caret at `end` lands inside the
      * viewport, so the line ending there can be revealed completely.
      */
-    function assertHorizontalScrollReachesLineEnd(editor:Entity<EditorState>, end:Int, window:Window, app:App, ?pos:haxe.PosInfos) {
-        final state = editor.read(app);
+    function assertHorizontalScrollReachesLineEnd(input:Entity<TextareaState>, end:Int, window:Window, app:App, ?pos:haxe.PosInfos) {
+        final state = input.read(app);
         final layout = state.lastLayout.clone();
         final inputBounds = state.inputBounds;
         final scrollSize = state.scrollSize;
 
-        editor.update(app, (state, cx) -> {
+        input.update(app, (state, cx) -> {
             state.setSelectedRange(new Range(end, end), cast cx);
             state.deferredScrollOffset = new Point(-1000000., 0.);
         });
 
-        final element = new TextElement(base(editor));
+        final element = new TextElement(base(input));
         final result = element.layoutCursors(layout, inputBounds, scrollSize, window, app);
         assertTrue(result.cursorInfos.length > 0, 'a caret', pos);
         final caret = result.cursorInfos[0].bounds;
@@ -831,16 +625,16 @@ class InputTextElementTest extends KitTestCase {
     }
 
     function testHorizontalScrollExtentExcludesPlaceholder() {
-        final opened = decorationEditor('', false);
-        final editor = opened.editor;
+        final opened = textareaView('', false);
+        final input = opened.input;
         opened.cx.update((window, app) -> {
             window.draw();
-            final emptyWidth = editor.read(app).scrollSize.width;
+            final emptyWidth = input.read(app).scrollSize.width;
 
             for (placeholder in [''.lpad('W', 300), 'Short hint']) {
-                editor.update(app, (state, cx) -> state.setPlaceholder(placeholder, window, cast cx));
+                input.update(app, (state, cx) -> state.setPlaceholder(placeholder, window, cast cx));
                 window.draw();
-                assertEquals(emptyWidth, editor.read(app).scrollSize.width, 'placeholder must not create horizontal scrollable content');
+                assertEquals(emptyWidth, input.read(app).scrollSize.width, 'placeholder must not create horizontal scrollable content');
             }
             return null;
         });
@@ -851,46 +645,46 @@ class InputTextElementTest extends KitTestCase {
         final narrow = 'e' + ''.lpad('́', 200);
         final wide = ''.lpad('W', 300);
         final text = '$narrow\n$wide';
-        final opened = decorationEditor(text, false);
-        final editor = opened.editor;
+        final opened = textareaView(text, false);
+        final input = opened.input;
         opened.cx.update((window, app) -> {
             window.draw();
-            assertHorizontalScrollReachesLineEnd(editor, Utf8.byteLength(text), window, app);
+            assertHorizontalScrollReachesLineEnd(input, Utf8.byteLength(text), window, app);
 
             // Editing the wider line invalidates the cached measurement.
             final wider = ''.lpad('W', 400);
             final edited = '$narrow\n$wider';
-            editor.update(app, (state, cx) -> state.setValue(edited, window, cast cx));
+            input.update(app, (state, cx) -> state.setValue(edited, window, cast cx));
             window.draw();
-            assertHorizontalScrollReachesLineEnd(editor, Utf8.byteLength(edited), window, app);
+            assertHorizontalScrollReachesLineEnd(input, Utf8.byteLength(edited), window, app);
 
             // A larger font must widen the extent instead of reusing the old
             // measurement.
-            final before = editor.read(app).scrollSize.width;
+            final before = input.read(app).scrollSize.width;
             window.setRemSize(24.);
             window.draw();
-            final after = editor.read(app).scrollSize.width;
+            final after = input.read(app).scrollSize.width;
             assertTrue(after > before, 'growing the font should widen the scroll extent: $after > $before');
-            assertHorizontalScrollReachesLineEnd(editor, Utf8.byteLength(edited), window, app);
+            assertHorizontalScrollReachesLineEnd(input, Utf8.byteLength(edited), window, app);
             return null;
         });
     }
 
     function testAlignedHorizontalScrollClampsDeferredTargets() {
-        final opened = decorationEditor([for (_ in 0...80) 'wide text '].join(''), false);
-        final editor = opened.editor;
+        final opened = textareaView([for (_ in 0...80) 'wide text '].join(''), false);
+        final input = opened.input;
         opened.cx.update((window, app) -> {
             window.draw();
-            final layout = editor.read(app).lastLayout.clone();
-            final inputBounds = editor.read(app).inputBounds;
-            final element = new TextElement(base(editor));
+            final layout = input.read(app).lastLayout.clone();
+            final inputBounds = input.read(app).inputBounds;
+            final element = new TextElement(base(input));
 
             for (alignment in [TextAlign.Left, TextAlign.Right, TextAlign.Center]) {
                 layout.textAlign = alignment;
                 for (overflow in [0., 120.]) {
                     final scrollSize = new Size(inputBounds.size.width + overflow, inputBounds.size.height);
                     final minimum = alignment == Left ? -overflow : -overflow - TextElement.CURSOR_WIDTH;
-                    editor.update(app, (state, _) -> {
+                    input.update(app, (state, _) -> {
                         state.textAlign = alignment;
                         state.lastSelectedRange = state.activeSelection().copy();
                         state.deferredScrollOffset = new Point(minimum, 0.);
@@ -898,7 +692,7 @@ class InputTextElementTest extends KitTestCase {
                     final expected = element.layoutCursors(layout, inputBounds, scrollSize, window, app).cursorInfos;
 
                     for (target in [minimum - 100., 100.]) {
-                        editor.update(app, (state, _) -> {
+                        input.update(app, (state, _) -> {
                             state.deferredScrollOffset = new Point(target, 0.);
                         });
                         final result = element.layoutCursors(layout, inputBounds, scrollSize, window, app);
@@ -913,7 +707,7 @@ class InputTextElementTest extends KitTestCase {
                         if (alignment == Right) {
                             assertTrue(carets[0].bounds.right() <= inputBounds.right());
                         }
-                        editor.update(app, (state, cx) -> {
+                        input.update(app, (state, cx) -> {
                             state.scrollSize = scrollSize;
                             state.updateScrollOffset(offset, cast cx);
                             assertEquals(expectedOffset, state.scrollHandle.offset().x);
@@ -926,24 +720,24 @@ class InputTextElementTest extends KitTestCase {
     }
 
     function testDeferredHorizontalScrollMovesEveryCaret() {
-        final opened = decorationEditor([for (_ in 0...80) 'wide text '].join(''), false);
-        final editor = opened.editor;
+        final opened = textareaView([for (_ in 0...80) 'wide text '].join(''), false);
+        final input = opened.input;
         opened.cx.update((window, app) -> {
             window.draw();
-            final layout = editor.read(app).lastLayout.clone();
-            final inputBounds = editor.read(app).inputBounds;
+            final layout = input.read(app).lastLayout.clone();
+            final inputBounds = input.read(app).inputBounds;
             final scrollSize = new Size(inputBounds.size.width + 120., inputBounds.size.height);
-            final element = new TextElement(base(editor));
+            final element = new TextElement(base(input));
 
             for (offsets in [[0, 2, 4], [0, 4, 2], [4, 0, 2]]) {
-                editor.update(app, (state, _) -> {
+                input.update(app, (state, _) -> {
                     state.selections.replaceAll([for (id in 0...offsets.length) new CursorSelection(new CursorId(id), offsets[id], offsets[id])]);
                     state.lastSelectedRange = state.activeSelection().copy();
                     state.scrollHandle.setOffset(new Point(0., 0.));
                     state.deferredScrollOffset = null;
                 });
                 final baseline = element.layoutCursors(layout, inputBounds, scrollSize, window, app).cursorInfos;
-                editor.update(app, (state, _) -> {
+                input.update(app, (state, _) -> {
                     state.deferredScrollOffset = new Point(-60., 0.);
                 });
                 final result = element.layoutCursors(layout, inputBounds, scrollSize, window, app);
@@ -953,231 +747,6 @@ class InputTextElementTest extends KitTestCase {
                     assertFloatEquals(baseline[i].bounds.left() - 60., result.cursorInfos[i].bounds.left());
                 }
             }
-            return null;
-        });
-    }
-
-    function testEditorLineNumberGutterResizesWithDocumentLines() {
-        final opened = decorationEditor([for (_ in 0...8) 'x\n'].join(''), false);
-        final editor = opened.editor;
-        opened.cx.update((window, app) -> {
-            window.draw();
-            final narrow = editor.read(app).lastLayout.lineNumberWidth;
-
-            final longerText = [for (_ in 0...99) 'x\n'].join('');
-            editor.update(app, (state, cx) -> state.setValue(longerText, window, cast cx));
-            window.draw();
-            final middle = editor.read(app).lastLayout.lineNumberWidth;
-            assertEquals(narrow, middle, 'one to three digits must share a width');
-
-            final longestText = [for (_ in 0...999) 'x\n'].join('');
-            editor.update(app, (state, cx) -> state.setValue(longestText, window, cast cx));
-            window.draw();
-            final wide = editor.read(app).lastLayout.lineNumberWidth;
-
-            assertTrue(wide > narrow, 'more line-number digits must widen the gutter');
-            return null;
-        });
-    }
-
-    static function cornersCount(corners:Null<Array<CornersOf<Point>>>):Int {
-        return corners == null ? 0 : corners.length;
-    }
-
-    function testGeometricDecorationsClipScrolledViewportAndCullOffscreenRanges() {
-        final text = [for (_ in 0...100) 'abcdefghij\n'].join('');
-        final textLen = Utf8.byteLength(text);
-        final opened = decorationEditor(text, false);
-        final editor = opened.editor;
-        opened.cx.update((window, app) -> {
-            editor.update(app, (state, cx) -> {
-                state.createRangeDecorationsCollection([
-                    new RangeDecoration(new Range(0, textLen)).withStyle(Fill),
-                    new RangeDecoration(new Range(0, textLen)),
-                    new RangeDecoration(new Range(0, 3)),
-                    new RangeDecoration(new Range(textLen - 3, textLen)),
-                ], cast cx);
-            });
-            window.draw();
-            editor.update(app, (state, cx) -> {
-                final height = state.lastLayout.lineHeight;
-                state.setScrollOffset(new Point(0., -height * 40.), cast cx);
-            });
-            // Deferred scroll is committed by prepaint and reflected next frame.
-            window.draw();
-            window.draw();
-            final state = editor.read(app);
-            final layout = state.lastLayout;
-            assertTrue(layout.visibleRangeOffset.start > 0);
-            assertTrue(layout.visibleRangeOffset.end < textLen);
-            final all = TextElement.layoutRangeCorners(new Range(0, textLen), layout);
-            final clipped = TextElement.layoutRangeCorners(layout.visibleRangeOffset, layout);
-            assertNotNull(all);
-            assertEquals(all.length, clipped.length);
-            for (i in 0...all.length) {
-                assertTrue(all[i].equals(clipped[i], (a, b) -> a.equals(b)));
-            }
-            assertTrue(all.length > 0);
-            assertNull(TextElement.layoutRangeCorners(new Range(0, 3), layout));
-            // Also execute the production path building seam, not just the corner helper.
-            final paths = new TextElement(base(editor)).layoutRangeDecorations(layout, state.inputBounds, window, state.inputBounds, app);
-            assertEquals(1, paths.fills.length);
-            assertEquals(1, paths.frames.length);
-            return null;
-        });
-    }
-
-    function testGeometricDecorationsUseShapedWrapBoundariesAndNewlineCells() {
-        final text = '    héllo world héllo world héllo world héllo world\n\nlast';
-        final textLen = Utf8.byteLength(text);
-        final opened = decorationEditor(text, true);
-        final editor = opened.editor;
-        opened.cx.update((window, app) -> {
-            window.draw();
-            final state = editor.read(app);
-            final layout = state.lastLayout;
-            final first = layout.lines[0];
-            assertTrue(first.wrappedLines.length > 1);
-            assertTrue(first.wrapIndent > 0.);
-            final boundary = first.wrappedLines[0].len;
-            final firstRow = TextElement.layoutRangeCorners(new Range(0, boundary), layout);
-            assertEquals(1, cornersCount(firstRow), 'a wrap end must not open the next visual row');
-            assertFloatEquals(first.wrappedLines[0].width, firstRow[0].topRight.x);
-            final rest = TextElement.layoutRangeCorners(new Range(boundary, first.len()), layout);
-            assertEquals(first.wrappedLines.length - 1, cornersCount(rest));
-            assertFloatEquals(layout.visibleTop + layout.lineHeight, rest[0].topLeft.y);
-            for (index in 0...rest.length) {
-                final corners = rest[index];
-                assertFloatEquals(first.wrapIndent + first.wrappedLines[index + 1].width, corners.topRight.x);
-                assertFloatEquals(layout.lineHeight, corners.bottomLeft.y - corners.topLeft.y);
-            }
-            final blankOffset = Utf8.byteLength(text.substr(0, text.indexOf('\n\n'))) + 1;
-            final blank = TextElement.layoutRangeCorners(new Range(blankOffset, blankOffset + 1), layout);
-            assertEquals(1, cornersCount(blank));
-            assertFloatEquals(layout.spaceWidth, blank[0].topRight.x - blank[0].topLeft.x);
-            // A later-line decoration cannot paint the first row via saturating_sub.
-            final lastOffset = Utf8.byteLength(text.substr(0, text.lastIndexOf('last')));
-            final last = TextElement.layoutRangeCorners(new Range(lastOffset, textLen), layout);
-            assertEquals(1, cornersCount(last));
-            assertTrue(last[0].topLeft.y > rest[rest.length - 1].topLeft.y);
-            return null;
-        });
-    }
-
-    function testGeometricDecorationsIncludeCrlfBoundaries() {
-        final text = 'one\r\ntwo\r\nthree';
-        final opened = decorationEditor(text, false);
-        final editor = opened.editor;
-        opened.cx.update((window, app) -> {
-            editor.update(app, (state, cx) -> {
-                state.createRangeDecorationsCollection([
-                    new RangeDecoration(new Range(0, 8)),
-                    new RangeDecoration(new Range(3, 5)),
-                    new RangeDecoration(new Range(4, 5)),
-                    new RangeDecoration(new Range(5, 8)),
-                    new RangeDecoration(new Range(9, 10)),
-                ], cast cx);
-            });
-            window.draw();
-            final state = editor.read(app);
-            final layout = state.lastLayout;
-            // Shaping retains '\r'; only '\n' needs an additional newline cell.
-            assertEquals('one\r'.length, layout.lines[0].len());
-            assertEquals('0,5,10', layout.visibleLineByteOffsets.join(','));
-            final spanning = TextElement.layoutRangeCorners(new Range(0, 8), layout);
-            assertEquals(2, cornersCount(spanning));
-            for (range in [new Range(3, 5), new Range(4, 5), new Range(9, 10)]) {
-                final corners = TextElement.layoutRangeCorners(range, layout);
-                assertEquals(1, cornersCount(corners));
-                assertTrue(corners[0].topRight.x > corners[0].topLeft.x);
-            }
-            final paths = new TextElement(base(editor)).layoutRangeDecorations(layout, state.inputBounds, window, state.inputBounds, app);
-            assertEquals(0, paths.fills.length);
-            assertEquals(5, paths.frames.length);
-            return null;
-        });
-    }
-
-    function testGeometricDecorationsProjectFoldsWithoutChangingTrackedRanges() {
-        final text = 'top\nhidden one\nhidden two\nend\nlast';
-        final opened = decorationEditor(text, false);
-        final editor = opened.editor;
-        opened.cx.update((window, app) -> {
-            final hidden = new Range(4, text.indexOf('end'));
-            final collection = editor.update(app, (state, cx) -> {
-                state.applyHighlighterFoldCandidates([new FoldRange(0, 3)], cast cx);
-                state.displayMap.setFolded(0, true);
-                return state.createRangeDecorationsCollection([new RangeDecoration(hidden)], cast cx);
-            });
-            window.draw();
-            {
-                final state = editor.read(app);
-                final layout = state.lastLayout;
-                assertEquals('0,3,4', layout.visibleBufferLines.join(','));
-                assertNull(TextElement.layoutRangeCorners(hidden, layout));
-                final paths = new TextElement(base(editor)).layoutRangeDecorations(layout, state.inputBounds, window, state.inputBounds, app);
-                assertEquals(0, paths.frames.length);
-                final spanning = TextElement.layoutRangeCorners(new Range(0, text.length), layout);
-                assertEquals(3, cornersCount(spanning));
-                assertFloatEquals(spanning[0].bottomLeft.y, spanning[1].topLeft.y);
-            }
-            assertEquals('${hidden.start}..${hidden.end}', [for (r in collection.getRanges(app)) '${r.start}..${r.end}'].join(','));
-            editor.update(app, (state, cx) -> {
-                state.displayMap.setFolded(0, false);
-                cx.notify();
-            });
-            window.draw();
-            final state = editor.read(app);
-            final layout = state.lastLayout;
-            final revealed = TextElement.layoutRangeCorners(hidden, layout);
-            assertEquals(2, cornersCount(revealed));
-            assertEquals('${hidden.start}..${hidden.end}', [for (r in collection.getRanges(app)) '${r.start}..${r.end}'].join(','));
-            return null;
-        });
-    }
-
-    function testGeometricDecorationsTrackEditsHistoryReplacementAndOwnerLifetime() {
-        final opened = decorationEditor('abc def', false);
-        final editor = opened.editor;
-        function ranges(collection:glaze.kit.base.input.RangeDecorationCollection):String {
-            return [for (r in collection.getRanges(app)) '${r.start}..${r.end}'].join(',');
-        }
-        opened.cx.update((window, app) -> {
-            final collections = editor.update(app, (state, cx) -> [
-                state.createRangeDecorationsCollection([new RangeDecoration(new Range(4, 7))], cast cx),
-                state.createRangeDecorationsCollection([new RangeDecoration(new Range(0, 3))], cast cx),
-            ]);
-            final first = collections[0];
-            final second = collections[1];
-            editor.update(app, (state, cx) -> {
-                state.setSelectedRange(new Range(0, 0), cast cx);
-                state.replaceTextInRange(null, '\n', window, cast cx);
-            });
-            assertEquals('5..8', ranges(first));
-            editor.update(app, (state, cx) -> state.undo(new Undo(), window, cast cx));
-            assertEquals('4..7', ranges(first));
-            editor.update(app, (state, cx) -> state.redo(new Redo(), window, cast cx));
-            assertEquals('5..8', ranges(first));
-            first.clear(app);
-            assertEquals('1..4', ranges(second));
-            first.append([new RangeDecoration(new Range(5, 8))], app);
-            editor.update(app, (state, cx) -> state.replaceAll('formatted', window, cast cx));
-            assertEquals('0..9', ranges(first));
-            editor.update(app, (state, cx) -> state.undo(new Undo(), window, cast cx));
-            // Annotations are transformed, not snapshotted in undo history.
-            assertEquals('0..8', ranges(first));
-            editor.update(app, (state, cx) -> state.setValue('new', window, cast cx));
-            assertEquals('0..3', ranges(first));
-            // Rust clones the handle before disposing it: the clone shares the
-            // collection id, which the port's single handle stands for.
-            final clone = first;
-            first.dispose(app);
-            clone.append([new RangeDecoration(new Range(0, 1))], app);
-            assertEquals('', ranges(clone));
-            assertEquals('0..3', ranges(second));
-            editor.update(app, (state, cx) -> state.setValue('', window, cast cx));
-            assertEquals('', ranges(second));
-            window.draw();
             return null;
         });
     }

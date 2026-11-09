@@ -34,10 +34,6 @@ private class UndoTransaction {
     /** The cursors as they stood after it, restored on redo. */
     public var selectionsAfter:Null<Array<CursorSelection>> = null;
 
-    public var autoClosedPairsBefore:Null<AutoClosedPairs> = null;
-
-    public var autoClosedPairsAfter:Null<AutoClosedPairs> = null;
-
     public function new(intent:EditIntent, lastBatchLen:Int, recordedChanges:Int, changes:Array<Change>) {
         this.intent = intent;
         this.lastBatchLen = lastBatchLen;
@@ -68,10 +64,6 @@ private class PendingTransaction {
     public var selectionsBefore:Null<Array<CursorSelection>> = null;
 
     public var selectionsAfter:Null<Array<CursorSelection>> = null;
-
-    public var autoClosedPairsBefore:Null<AutoClosedPairs> = null;
-
-    public var autoClosedPairsAfter:Null<AutoClosedPairs> = null;
 
     public function new(intent:EditIntent) {
         this.intent = intent;
@@ -196,17 +188,6 @@ class UndoManager {
         if (pending.selectionsAfter != null) {
             recordSelectionsAfter(pending.selectionsAfter);
         }
-        // These snapshots were recorded with the edits. Commit them even when
-        // replay has just enabled ignoring to flush an open IME transaction.
-        if (undoTransactions.length > 0) {
-            final transaction = undoTransactions[undoTransactions.length - 1];
-            if (pending.autoClosedPairsBefore != null && transaction.autoClosedPairsBefore == null) {
-                transaction.autoClosedPairsBefore = pending.autoClosedPairsBefore;
-            }
-            if (pending.autoClosedPairsAfter != null) {
-                transaction.autoClosedPairsAfter = pending.autoClosedPairsAfter;
-            }
-        }
     }
 
     /**
@@ -266,32 +247,6 @@ class UndoManager {
         }
         recordSelectionsBefore(before);
         recordSelectionsAfter(after);
-    }
-
-    public function recordAutoClosedPairs(before:AutoClosedPairs, after:AutoClosedPairs):Void {
-        if (ignoring) {
-            return;
-        }
-        if (pending != null) {
-            if (pending.autoClosedPairsBefore == null) pending.autoClosedPairsBefore = before;
-        }
-        else if (undoTransactions.length > 0) {
-            final transaction = undoTransactions[undoTransactions.length - 1];
-            if (transaction.autoClosedPairsBefore == null) transaction.autoClosedPairsBefore = before;
-        }
-        recordAutoClosedPairsAfter(after);
-    }
-
-    public function recordAutoClosedPairsAfter(after:AutoClosedPairs):Void {
-        if (ignoring) {
-            return;
-        }
-        if (pending != null) {
-            pending.autoClosedPairsAfter = after;
-        }
-        else if (undoTransactions.length > 0) {
-            undoTransactions[undoTransactions.length - 1].autoClosedPairsAfter = after;
-        }
     }
 
     function recordSelectionsBefore(before:Array<CursorSelection>):Void {
@@ -364,7 +319,7 @@ class UndoManager {
         }
         final changes = [for (change in transaction.changes) change.clone()];
         changes.reverse();
-        final replay = new Replay(changes, copySelections(transaction.selectionsBefore), clonePairs(transaction.autoClosedPairsBefore));
+        final replay = new Replay(changes, copySelections(transaction.selectionsBefore));
         redoTransactions.push(transaction);
         coalescingBoundary = true;
         return replay;
@@ -376,8 +331,7 @@ class UndoManager {
         if (transaction == null) {
             return null;
         }
-        final replay = new Replay([for (change in transaction.changes) change.clone()], copySelections(transaction.selectionsAfter),
-            clonePairs(transaction.autoClosedPairsAfter));
+        final replay = new Replay([for (change in transaction.changes) change.clone()], copySelections(transaction.selectionsAfter));
         undoTransactions.push(transaction);
         coalescingBoundary = true;
         return replay;
@@ -395,10 +349,6 @@ class UndoManager {
 
     static inline function copySelections(selections:Null<Array<CursorSelection>>):Null<Array<CursorSelection>> {
         return selections != null ? CursorSelection.copyAll(selections) : null;
-    }
-
-    static inline function clonePairs(pairs:Null<AutoClosedPairs>):Null<AutoClosedPairs> {
-        return pairs != null ? pairs.clone() : null;
     }
 
     /**
