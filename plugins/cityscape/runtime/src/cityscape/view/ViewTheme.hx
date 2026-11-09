@@ -77,6 +77,18 @@ class ViewTheme implements IDisposable {
         return new Rgba(rgba.r / 255, rgba.g / 255, rgba.b / 255, rgba.a).toHsla();
     }
 
+    final _remap:Map<String, String> = new Map();
+
+    /**
+     * Paints this view's `key` with the theme color `to` instead (what the
+     * CSS of Monaco's widgets does to the editors they embed, like the
+     * `peekViewEditor.background` of the peek view's editor).
+     */
+    public function remapColor(key:String, to:String):Void {
+        _remap.set(key, to);
+        _invalidate();
+    }
+
     /**
      * The color of a theme key (with the registry default), or null when
      * there is none.
@@ -85,7 +97,8 @@ class ViewTheme implements IDisposable {
         if (_cache.exists(key)) {
             return _cache.get(key);
         }
-        final color = toHsla(editorTheme.getColor(key));
+        final mapped = _remap.get(key);
+        final color = toHsla(editorTheme.getColor(mapped != null ? mapped : key));
         _cache.set(key, color);
         return color;
     }

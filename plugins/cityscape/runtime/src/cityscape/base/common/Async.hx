@@ -4,6 +4,7 @@
 package cityscape.base.common;
 
 import cityscape.base.common.Lifecycle.IDisposable;
+import cityscape.base.common.Promise;
 
 /**
  * Module functions of async.ts. Timers go through Ceramic (`ceramic.Timer`),
@@ -17,7 +18,56 @@ class Async {
      * `setTimeout(fn, delay)` (milliseconds); the returned function cancels it.
      */
     public static function setTimeout(fn:() -> Void, delay:Float):() -> Void {
+        // Parameter hints (step 7, cs7-rest-snip): the virtual clock of the tests
+        final schedule = _testSetTimeout;
+        if (schedule != null) {
+            return schedule(fn, delay);
+        }
         return ceramic.Timer.delay(null, delay / 1000.0, fn);
+    }
+
+    /**
+     * Replaces `setTimeout` while set (tests only: the virtual clock of
+     * `testing.TimeTravelScheduler`, vscode's `runWithFakedTimers`). Not
+     * editor state: a test sets it and clears it before it returns.
+     */
+    @:noCompletion public static var _testSetTimeout:Null<(fn:() -> Void, delay:Float) -> (() -> Void)> = null;
+
+    /**
+     * Monaco's `createCancelablePromise`: the promise of `callback`,
+     * rejected with a `CancellationError` when cancelled before it settles
+     * (the token given to `callback` is cancelled too).
+     */
+    public static function createCancelablePromise<T>(callback:(token:cityscape.base.common.Cancellation.CancellationToken) -> Promise<T>):CancelablePromise<T> {
+        final source = new cityscape.base.common.Cancellation.CancellationTokenSource();
+        final thenable = callback(source.token);
+        var isCancelled = false;
+        final promise = new Promise<T>((resolve, reject) -> {
+            var subscription:Null<IDisposable> = null;
+            subscription = source.token.onCancellationRequested(() -> {
+                isCancelled = true;
+                if (subscription != null) {
+                    subscription.dispose();
+                }
+                reject(new CancellationError());
+            });
+            thenable.done(value -> {
+                if (subscription != null) {
+                    subscription.dispose();
+                }
+                source.dispose();
+                if (!isCancelled) {
+                    resolve(value);
+                }
+            }, err -> {
+                if (subscription != null) {
+                    subscription.dispose();
+                }
+                source.dispose();
+                reject(err);
+            });
+        });
+        return new CancelablePromise<T>(promise, source);
     }
 
 }
@@ -252,6 +302,30 @@ class Delayer implements IDisposable {
 
     public function dispose():Void {
         cancel();
+    }
+
+}
+
+// Parameter hints (step 7, cs7-rest-snip)
+
+/**
+ * A promise that can be cancelled (Monaco's `CancelablePromise`, made by
+ * `Async.createCancelablePromise`): `promise` is the promise, `cancel`
+ * cancels the work.
+ */
+class CancelablePromise<T> {
+
+    public final promise:Promise<T>;
+    final source:cityscape.base.common.Cancellation.CancellationTokenSource;
+
+    public function new(promise:Promise<T>, source:cityscape.base.common.Cancellation.CancellationTokenSource) {
+        this.promise = promise;
+        this.source = source;
+    }
+
+    public function cancel():Void {
+        source.cancel();
+        source.dispose();
     }
 
 }

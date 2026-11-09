@@ -60,6 +60,14 @@ class EditorLanguageFeatureOptionsRegistration {
         register(cast new EditorIntOption(EditorOption.suggestFontSize, 'suggestFontSize', 0, 0, 1000));
         register(cast new EditorIntOption(EditorOption.suggestLineHeight, 'suggestLineHeight', 0, 0, 1000));
         register(cast new EditorStringEnumOption(EditorOption.suggestSelection, 'suggestSelection', 'first', ['first', 'recentlyUsed', 'recentlyUsedByPrefix']));
+        // peek view (cs7-rest)
+        register(cast new EditorStringEnumOption(EditorOption.peekWidgetDefaultFocus, 'peekWidgetDefaultFocus', 'tree', ['tree', 'editor']));
+        // Color decorators (step 7, cs7-rest-links)
+        cityscape.common.config.EditorColorDecoratorsOptions.EditorColorDecoratorsOptionsRegistration.registerSimple(register);
+        // Inlay hints and code lens (step 7, cs7-rest-inlay)
+        cityscape.common.config.EditorInlayHintsCodeLensOptions.EditorInlayHintsCodeLensOptionsRegistration.registerSimple(register);
+        register(cast new cityscape.common.config.EditorParameterHintsOptions.EditorParameterHints()); // parameterHints (step 7, cs7-rest-snip)
+        cityscape.common.config.EditorInlineSuggestOptions.EditorInlineSuggestOptionsRegistration.registerSimple(register); // inline completions (cs7-rest-inline)
     }
 
 }

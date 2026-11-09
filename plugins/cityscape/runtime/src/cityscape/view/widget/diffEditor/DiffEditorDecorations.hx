@@ -184,8 +184,15 @@ class DiffEditorStyles {
         register('char-insert', {background: {id: 'diffEditor.insertedTextBackground'}, border: border('diffEditor.insertedTextBorder'), join: false});
         register('line-delete', {background: {id: hasColor('diffEditor.removedLineBackground') ? 'diffEditor.removedLineBackground' : 'diffEditor.removedTextBackground'}, border: border('diffEditor.removedTextBorder'), join: false});
         register('char-delete', {background: {id: 'diffEditor.removedTextBackground'}, border: border('diffEditor.removedTextBorder'), join: false});
-        register('gutter-insert', {background: {id: hasColor('diffEditorGutter.insertedLineBackground') ? 'diffEditorGutter.insertedLineBackground' : (hasColor('diffEditor.insertedLineBackground') ? 'diffEditor.insertedLineBackground' : 'diffEditor.insertedTextBackground')}});
-        register('gutter-delete', {background: {id: hasColor('diffEditorGutter.removedLineBackground') ? 'diffEditorGutter.removedLineBackground' : (hasColor('diffEditor.removedLineBackground') ? 'diffEditor.removedLineBackground' : 'diffEditor.removedTextBackground')}});
+        // style.css gives the gutter classes `background-color:
+        // var(--vscode-diffEditorGutter-insertedLineBackground,
+        // var(--vscode-diffEditor-insertedLineBackground),
+        // var(--vscode-diffEditor-insertedTextBackground))`: CSS takes
+        // everything after the first comma as one fallback, two colors, which
+        // is invalid, so the gutter is transparent unless the theme sets the
+        // `diffEditorGutter` color (checked against Monaco 0.52.2 in Chromium)
+        register('gutter-insert', hasColor('diffEditorGutter.insertedLineBackground') ? {background: {id: 'diffEditorGutter.insertedLineBackground'}} : {});
+        register('gutter-delete', hasColor('diffEditorGutter.removedLineBackground') ? {background: {id: 'diffEditorGutter.removedLineBackground'}} : {});
         register('diff-unchanged-lines', {background: {id: 'diffEditor.unchangedCodeBackground'}});
     }
 

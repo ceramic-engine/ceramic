@@ -36,6 +36,19 @@ class EditorAll {
         cityscape.contrib.gotoError.view.GotoError.GotoErrorRegistration.register(r);
         cityscape.contrib.gotoSymbol.view.GoToCommands.GoToSymbolRegistration.register(r);
         cityscape.contrib.wordOperations.view.WordOperations.WordOperationsRegistration.register(r);
+        // Links and colors (step 7, cs7-rest-links)
+        cityscape.contrib.links.view.Links.LinksRegistration.register(r);
+        cityscape.contrib.colorPicker.view.ColorContributions.ColorPickerRegistration.register(r);
+        // Inlay hints and code lens (step 7, cs7-rest-inlay)
+        cityscape.contrib.inlayHints.view.InlayHintsController.InlayHintsRegistration.register(r);
+        cityscape.contrib.codelens.view.CodeLensController.CodeLensRegistration.register(r);
+        // Parameter hints (step 7, cs7-rest-snip)
+        cityscape.contrib.parameterHints.view.ParameterHints.ParameterHintsRegistration.register(r);
+        // Inline completions (step 7, cs7-rest-inline)
+        cityscape.contrib.inlineCompletions.view.controller.Commands.InlineCompletionsRegistration.register(r);
+        // Semantic tokens and rename (step 7, cs7-rest-sem)
+        cityscape.contrib.semanticTokens.view.ViewportSemanticTokens.ViewportSemanticTokensContribution.register(r);
+        cityscape.contrib.rename.view.Rename.RenameRegistration.register(r);
     }
 
 }

@@ -115,11 +115,26 @@ enum abstract SuggestState(Int) from Int to Int {
  * Decides when to ask the providers for completions and filters them as
  * the user types (Monaco's `SuggestModel`).
  *
- * Inline completions are not ported: the checks of Monaco that suppress
- * quick suggestions while an inline suggestion shows always allow them.
  * Telemetry and the log of invalid items are not ported.
  */
 class SuggestModel implements IDisposable {
+
+    // Inline completions (step 7, cs7-rest-inline): Monaco's module functions
+    // `canShowQuickSuggest` and `canShowSuggestOnTriggerCharacters` (the same
+    // check), reading the context keys of the inline completions.
+    static function canShowQuickSuggest(editor:ICodeEditor):Bool {
+        final contextKeyService = editor.contextKeyService;
+        final visible:Null<Bool> = contextKeyService.getContextKeyValue('inlineSuggestionVisible');
+        if (visible != true) {
+            // Allow if there is no inline suggestion.
+            return true;
+        }
+        final suppressSuggestions:Null<Bool> = contextKeyService.getContextKeyValue('inlineSuggestionSuppressSuggestions');
+        if (suppressSuggestions != null) {
+            return !suppressSuggestions;
+        }
+        return !editor.getOption(EditorOption.inlineSuggest).suppressSuggestions;
+    }
 
     final _editor:ICodeEditor;
 
@@ -240,6 +255,10 @@ class SuggestModel implements IDisposable {
         }
 
         final checkTriggerCharacter = (text:Null<String>) -> {
+
+            if (!canShowQuickSuggest(this._editor)) { // canShowSuggestOnTriggerCharacters (cs7-rest-inline)
+                return;
+            }
 
             if (SuggestLineContext.shouldAutoTrigger(this._editor)) {
                 // don't trigger by trigger characters when this is a case for quick suggest
@@ -424,6 +443,11 @@ class SuggestModel implements IDisposable {
                 if (QuickSuggestionsOptions.valueFor(config, tokenType) != 'on') {
                     return;
                 }
+            }
+
+            if (!canShowQuickSuggest(this._editor)) {
+                // do not trigger quick suggestions if inline suggestions are shown (cs7-rest-inline)
+                return;
             }
 
             if (!this._editor.context.languageFeaturesService.completionProvider.has(model)) {

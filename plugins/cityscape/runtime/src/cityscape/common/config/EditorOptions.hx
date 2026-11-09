@@ -292,10 +292,19 @@ typedef IEditorOptions = {
      */
     @:optional var comments:cityscape.common.config.EditorCommentsOptions.IEditorCommentsOptions;
     /**
+     * Configuration options for inline suggestions (step 7, cs7-rest-inline).
+     */
+    @:optional var inlineSuggest:cityscape.common.config.EditorInlineSuggestOptions.IInlineSuggestOptions;
+    /**
      * Controls whether the definition link opens element in the peek widget.
      * Defaults to false.
      */
     @:optional var definitionLinkOpensInPeek:Bool;
+    /**
+     * Controls whether to focus the inline editor or the tree in the peek
+     * widget: `'tree'` (the default) or `'editor'`.
+     */
+    @:optional var peekWidgetDefaultFocus:String;
     /**
      * Enable highlighting of matching brackets: `'never'`, `'near'` or `'always'`.
      * Defaults to 'always'.
@@ -391,6 +400,21 @@ typedef IEditorOptions = {
      * Enable inline color decorators and color picker rendering.
      */
     @:optional var colorDecorators:Bool;
+    /**
+     * Controls what is the condition to spawn a color picker from a color
+     * dectorator: `'clickAndHover'` (the default), `'click'` or `'hover'`.
+     */
+    @:optional var colorDecoratorsActivatedOn:String;
+    /**
+     * Controls the max number of color decorators that can be rendered in
+     * an editor at once (500 by default).
+     */
+    @:optional var colorDecoratorsLimit:Int;
+    /**
+     * Controls whether to use default color decorations or not using the
+     * default document color provider (false by default).
+     */
+    @:optional var defaultColorDecorators:Bool;
     /**
      * The font family
      */
@@ -500,6 +524,28 @@ typedef IEditorOptions = {
      * Control the behavior and rendering of the code action lightbulb.
      */
     @:optional var lightbulb:cityscape.common.config.EditorLanguageFeatureOptions.IEditorLightbulbOptions;
+    // Inlay hints and code lens (step 7, cs7-rest-inlay)
+    /**
+     * Show code lens
+     * Defaults to true.
+     */
+    @:optional var codeLens:Bool;
+    /**
+     * Code lens font family. Defaults to editor font family.
+     */
+    @:optional var codeLensFontFamily:String;
+    /**
+     * Code lens font size. Default to 90% of the editor font size
+     */
+    @:optional var codeLensFontSize:Int;
+    /**
+     * Control the behavior and rendering of the inline hints.
+     */
+    @:optional var inlayHints:cityscape.common.config.EditorInlayHintsCodeLensOptions.IEditorInlayHintsOptions;
+    /**
+     * Parameter hint options.
+     */
+    @:optional var parameterHints:cityscape.common.config.EditorParameterHintsOptions.IEditorParameterHintOptions;
     /**
      * Inserting and deleting whitespace follows tab stops.
      */
@@ -566,6 +612,16 @@ typedef IEditorOptions = {
      * `'on'` or `'off'`. Defaults to 'editable'.
      */
     @:optional var renderValidationDecorations:String;
+    // Semantic tokens (step 7, cs7-rest-sem)
+    /**
+     * Monaco's global editor option `'semanticHighlighting.enabled'`
+     * (`IGlobalEditorOptions`, written to the configuration as
+     * `editor.semanticHighlighting.enabled`), as `{enabled: value}`: `true`
+     * (semantic highlighting for all themes), `false` (for none) or
+     * `'configuredByTheme'` (the theme's `semanticHighlighting`, the
+     * default). Not an editor option: the setting is global to the context.
+     */
+    @:optional var semanticHighlighting:{enabled:Any};
 }
 
 /**
@@ -2293,11 +2349,11 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final autoSurround:EditorOption<String> = new EditorOption<String>(14);
     public static inline final bracketPairColorization:EditorOption<InternalBracketPairColorizationOptions> = new EditorOption<InternalBracketPairColorizationOptions>(15);
     public static inline final guides:EditorOption<InternalGuidesOptions> = new EditorOption<InternalGuidesOptions>(16);
-    public static inline final codeLens:EditorOption<Any> = new EditorOption<Any>(17);
-    public static inline final codeLensFontFamily:EditorOption<Any> = new EditorOption<Any>(18);
-    public static inline final codeLensFontSize:EditorOption<Any> = new EditorOption<Any>(19);
+    public static inline final codeLens:EditorOption<Bool> = new EditorOption<Bool>(17);
+    public static inline final codeLensFontFamily:EditorOption<String> = new EditorOption<String>(18);
+    public static inline final codeLensFontSize:EditorOption<Int> = new EditorOption<Int>(19);
     public static inline final colorDecorators:EditorOption<Bool> = new EditorOption<Bool>(20);
-    public static inline final colorDecoratorsLimit:EditorOption<Any> = new EditorOption<Any>(21);
+    public static inline final colorDecoratorsLimit:EditorOption<Int> = new EditorOption<Int>(21);
     public static inline final columnSelection:EditorOption<Bool> = new EditorOption<Bool>(22);
     public static inline final comments:EditorOption<cityscape.common.config.EditorCommentsOptions.EditorCommentsOptions> = new EditorOption<cityscape.common.config.EditorCommentsOptions.EditorCommentsOptions>(23);
     public static inline final contextmenu:EditorOption<Bool> = new EditorOption<Bool>(24);
@@ -2338,7 +2394,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final hideCursorInOverviewRuler:EditorOption<Bool> = new EditorOption<Bool>(59);
     public static inline final hover:EditorOption<EditorHoverOptions> = new EditorOption<EditorHoverOptions>(60);
     public static inline final inDiffEditor:EditorOption<Any> = new EditorOption<Any>(61);
-    public static inline final inlineSuggest:EditorOption<Any> = new EditorOption<Any>(62);
+    public static inline final inlineSuggest:EditorOption<cityscape.common.config.EditorInlineSuggestOptions.InternalInlineSuggestOptions> = new EditorOption<cityscape.common.config.EditorInlineSuggestOptions.InternalInlineSuggestOptions>(62);
     public static inline final inlineEdit:EditorOption<Any> = new EditorOption<Any>(63);
     public static inline final letterSpacing:EditorOption<Float> = new EditorOption<Float>(64);
     public static inline final lightbulb:EditorOption<cityscape.common.config.EditorLanguageFeatureOptions.EditorLightbulbOptions> = new EditorOption<cityscape.common.config.EditorLanguageFeatureOptions.EditorLightbulbOptions>(65);
@@ -2362,8 +2418,8 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final overviewRulerLanes:EditorOption<Int> = new EditorOption<Int>(83);
     public static inline final padding:EditorOption<InternalEditorPaddingOptions> = new EditorOption<InternalEditorPaddingOptions>(84);
     public static inline final pasteAs:EditorOption<Any> = new EditorOption<Any>(85);
-    public static inline final parameterHints:EditorOption<Any> = new EditorOption<Any>(86);
-    public static inline final peekWidgetDefaultFocus:EditorOption<Any> = new EditorOption<Any>(87);
+    public static inline final peekWidgetDefaultFocus:EditorOption<String> = new EditorOption<String>(87);
+    public static inline final parameterHints:EditorOption<cityscape.common.config.EditorParameterHintsOptions.InternalParameterHintOptions> = new EditorOption<cityscape.common.config.EditorParameterHintsOptions.InternalParameterHintOptions>(86);
     public static inline final placeholder:EditorOption<Any> = new EditorOption<Any>(88);
     public static inline final definitionLinkOpensInPeek:EditorOption<Bool> = new EditorOption<Bool>(89);
     public static inline final quickSuggestions:EditorOption<InternalQuickSuggestionsOptions> = new EditorOption<InternalQuickSuggestionsOptions>(90);
@@ -2418,14 +2474,14 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final wrappingIndent:EditorOption<WrappingIndent> = new EditorOption<WrappingIndent>(139);
     public static inline final wrappingStrategy:EditorOption<String> = new EditorOption<String>(140);
     public static inline final showDeprecated:EditorOption<Any> = new EditorOption<Any>(141);
-    public static inline final inlayHints:EditorOption<Any> = new EditorOption<Any>(142);
+    public static inline final inlayHints:EditorOption<cityscape.common.config.EditorInlayHintsCodeLensOptions.EditorInlayHintsOptions> = new EditorOption<cityscape.common.config.EditorInlayHintsCodeLensOptions.EditorInlayHintsOptions>(142);
     public static inline final editorClassName:EditorOption<Any> = new EditorOption<Any>(143);
     public static inline final pixelRatio:EditorOption<Float> = new EditorOption<Float>(144);
     public static inline final tabFocusMode:EditorOption<Any> = new EditorOption<Any>(145);
     public static inline final layoutInfo:EditorOption<cityscape.common.config.EditorViewOptions.EditorLayoutInfo> = new EditorOption<cityscape.common.config.EditorViewOptions.EditorLayoutInfo>(146);
     public static inline final wrappingInfo:EditorOption<cityscape.common.config.EditorViewOptions.EditorWrappingInfo> = new EditorOption<cityscape.common.config.EditorViewOptions.EditorWrappingInfo>(147);
-    public static inline final defaultColorDecorators:EditorOption<Any> = new EditorOption<Any>(148);
-    public static inline final colorDecoratorsActivatedOn:EditorOption<Any> = new EditorOption<Any>(149);
+    public static inline final defaultColorDecorators:EditorOption<Bool> = new EditorOption<Bool>(148);
+    public static inline final colorDecoratorsActivatedOn:EditorOption<String> = new EditorOption<String>(149);
     public static inline final inlineCompletionsAccessibilityVerbose:EditorOption<Any> = new EditorOption<Any>(150);
 
     /**

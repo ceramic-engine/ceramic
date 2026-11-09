@@ -21,7 +21,8 @@ import textmate.RawGrammar.RawValue;
  * `editor.background`, `caret` is `editorCursor.foreground`...), then
  * `colors` is copied over them. The TextMate rules are carried in
  * `tokenColors` for the TextMate tokenizer; `rules` (Monaco's token theme)
- * stays empty and the built-in base theme is inherited.
+ * stays empty and the built-in base theme is inherited. `semanticTokenColors`
+ * and `semanticHighlighting` are carried for the semantic tokens.
  */
 class VSCodeTheme {
 
@@ -122,6 +123,16 @@ class VSCodeTheme {
         };
         if (tokenColors != null) {
             result.tokenColors = tokenColors;
+        }
+        // Semantic tokens (step 7, cs7-rest-sem): `semanticTokenColors` and
+        // `semanticHighlighting` of a VS Code theme
+        final semanticTokenColors:Any = RawValue.field(theme, 'semanticTokenColors');
+        if (RawValue.isObject(semanticTokenColors)) {
+            result.semanticTokenColors = semanticTokenColors;
+        }
+        final semanticHighlighting:Dynamic = RawValue.field(theme, 'semanticHighlighting');
+        if (Std.isOfType(semanticHighlighting, Bool) && (semanticHighlighting : Bool)) {
+            result.semanticHighlighting = true;
         }
         return result;
     }

@@ -85,7 +85,46 @@ cityscape.nls.loadJson(Assets.text('editor-fr.json'));
 
 Keys the focused editor does not handle go on to the key bindings of its ancestors, so app shortcuts keep working around an editor.
 
+Semantic tokens (`context.registerDocumentSemanticTokensProvider`, `registerDocumentRangeSemanticTokensProvider`) color the identifiers over the TextMate tokens when `editor.semanticHighlighting.enabled` is on (`semanticHighlighting: {enabled: true}` in the options, or a VS Code theme with `"semanticHighlighting": true`); a VS Code theme styles them with its `semanticTokenColors`, else through its TextMate rules like VS Code. Rename (F2) asks the rename providers (`context.registerRenameProvider`) and shows Monaco's rename input at the symbol.
+
 Models are tokenized in the background with one time budget per frame for all the models of the context (`cityscape.backgroundScheduler.budgetMs`), the visible lines first.
+
+## Symbol navigation
+
+Go to definition (F12), declaration, type definition, implementation (Cmd+F12) and references (Shift+F12) use the providers of the context, with Monaco's `gotoLocation` option: several results open the references peek view (Alt+F12, Shift+F12 to peek), a popup under the line with a preview editor and the list of the locations. Locations in other models open through the handlers a host registers:
+
+```haxe
+cityscape.codeEditorService.registerCodeEditorOpenHandler((input, source, sideBySide, resolve) -> {
+    final editor = openTabFor(input.resource); // the host shows the file
+    editor.setSelection(input.options.selection);
+    resolve(editor);
+});
+// "Symbol 1 of 3, F12 for next", shown until disposed
+cityscape.onStatusMessage = message -> {
+    statusBar.show(message);
+    return Lifecycle.toDisposable(() -> statusBar.clear());
+};
+## Links and colors
+
+Links in the text (http, https and file links, and those of `registerLinkProvider`) are underlined and open on Cmd+click (Ctrl+click elsewhere), through `cityscape.openLink` when the host sets it, else with the platform (`http`, `https`, `mailto`) or as commands (`command:`). Colors (`registerColorProvider`, or the CSS like colors of the text with `defaultColorDecorators: true`) get a swatch that opens a color picker:
+
+```haxe
+cityscape.openLink = (uri, fromUserGesture) -> {
+    openInMyBrowserTab(uri.toString());
+    return true; // handled
+};
+CityscapeEditor.component().model(model).options({defaultColorDecorators: true, colorDecoratorsActivatedOn: 'click'})
+```
+Inlay hints and code lenses come from providers, like Monaco's: `context.registerInlayHintsProvider('mylang', provider)` shows the hints (type and parameter hints, with tooltips, a location to go to on Cmd+click, a command or text edits) as injected text (`inlayHints` option: `enabled`, `padding`), and `context.registerCodeLensProvider('mylang', provider)` shows the lenses above their lines, a click running their command (`codeLens`, `codeLensFontSize`, `codeLensFontFamily` options). `context.codeLensCache.saveState()` keeps the lines of the lenses in the context's `storageService` for the next session.
+## Snippets and parameter hints
+
+Snippets use Monaco's syntax (tab stops, placeholders, choices, variables, transforms) and its controller; Tab and Shift+Tab move between the tab stops, Escape leaves the snippet:
+
+```haxe
+SnippetController2.get(editor.getEditor()).insert("for (i in ${1:0}...${2:count}) {\n\t$0\n}");
+```
+
+The file and workspace variables (`TM_FILEPATH`, `WORKSPACE_NAME`...) read `cityscape.labelService` and `cityscape.workspaceContextService` (Monaco's standalone services by default; a host can set its own); `CLIPBOARD` reads `cityscape.readClipboardText`. The parameter hints show the answer of the signature help providers (`cityscape.registerSignatureHelpProvider`) when a trigger character is typed or with Cmd+Shift+Space (`parameterHints: {enabled, cycle}` options, Up and Down for the overloads).
 
 ## The diff editor
 
@@ -102,6 +141,14 @@ CityscapeDiffEditor.component()
 ```
 
 The diff is computed off the frame (a background thread on the native targets, the next frame on the web) and again 200 ms after an edit. `getOriginalEditor()` and `getModifiedEditor()` give the two `CityscapeEditor`s; `goToDiff('next')`, `revealFirstDiff()`, `updateOptions`, `saveViewState`... are Monaco's. The diff algorithms alone are `cityscape.common.diff.LinesDiffComputers.getDefault()` (and `getLegacy()`).
+
+## Inline completions
+
+Inline completions (ghost text) follow `monaco.languages.registerInlineCompletionsProvider`: the suggestion shows after the cursor, its next lines below the line, Tab accepts it, Escape hides it, Alt+] and Alt+[ cycle through the suggestions, Cmd+Right (Ctrl+Right) accepts the next word. The `inlineSuggest` option (`enabled`, `mode`, `suppressSuggestions`, `keepOnBlur`) is Monaco's.
+
+```haxe
+cityscape.registerInlineCompletionsProvider('haxe', myProvider); // provideInlineCompletions(model, position, context, token, resolve)
+```
 
 ## Layout
 

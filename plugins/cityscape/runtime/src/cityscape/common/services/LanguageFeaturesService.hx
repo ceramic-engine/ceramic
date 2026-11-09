@@ -70,4 +70,9 @@ class LanguageFeaturesService {
 
     public final selectionRangeProvider:LanguageFeatureRegistry<SelectionRangeProvider> = new LanguageFeatureRegistry<SelectionRangeProvider>();
 
+
+    // Inline completions (step 7, cs7-rest-inline): Monaco's `inlineCompletionsProvider` registry.
+
+    public final inlineCompletionsProvider:LanguageFeatureRegistry<cityscape.common.Languages.InlineCompletionsProvider> = new LanguageFeatureRegistry<cityscape.common.Languages.InlineCompletionsProvider>();
+
 }

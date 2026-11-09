@@ -161,6 +161,40 @@ class DiffEditorTest extends TestCase {
         draw();
     }
 
+    /**
+     * style.css gives the gutter of the changed lines (`gutter-insert`,
+     * `gutter-delete`, the margin of the inline view's deleted lines)
+     * `var(--vscode-diffEditorGutter-..., var(--vscode-diffEditor-...LineBackground), var(--vscode-diffEditor-...TextBackground))`:
+     * CSS takes everything after the first comma as one fallback, two
+     * colors, which is invalid, so Monaco 0.52.2 leaves the gutter
+     * transparent unless the theme sets the `diffEditorGutter` colors
+     * (checked in Chromium: the original line number column of an inserted
+     * line is empty in the inline view). Regression: it was painted red.
+     */
+    function testGutterIsTransparentWithoutGutterColors() {
+        final original = createTextModel(['a', 'b', 'c'].join('\n'));
+        final modified = createTextModel(['a', 'x', 'b'].join('\n'));
+        final diffEditor = open(original, modified, {renderSideBySide: false});
+        final context = widgetOf(diffEditor.getModifiedEditor()).context;
+        for (name in ['gutter-insert', 'gutter-delete']) {
+            final style = context.decorationStyles.get(name);
+            assertNotNull(style, name);
+            assertEquals(null, style.background, name + ' has no background');
+        }
+        // with the gutter colors of the theme, the gutter takes them
+        context.themeService.defineTheme('gutter-colors', {base: 'vs-dark', inherit: true, rules: [], colors: {
+            'diffEditorGutter.insertedLineBackground': '#00ff0033',
+            'diffEditorGutter.removedLineBackground': '#ff000033'
+        }});
+        context.themeService.setTheme('gutter-colors');
+        draw();
+        final insert = context.decorationStyles.get('gutter-insert');
+        final delete = context.decorationStyles.get('gutter-delete');
+        assertEquals('diffEditorGutter.insertedLineBackground', (insert.background : Dynamic).id);
+        assertEquals('diffEditorGutter.removedLineBackground', (delete.background : Dynamic).id);
+        draw();
+    }
+
     function testNarrowDiffEditorUsesTheInlineView() {
         final original = createTextModel(['a', 'b'].join('\n'));
         final modified = createTextModel(['a', 'B'].join('\n'));

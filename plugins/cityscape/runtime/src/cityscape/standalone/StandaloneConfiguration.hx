@@ -108,7 +108,14 @@ class StandaloneConfiguration {
         'largeFileOptimizations',
         'wordBasedSuggestions',
         'stablePeek',
-        'maxTokenizationLineLength'
+        'maxTokenizationLineLength',
+        // Semantic tokens (step 7, cs7-rest-sem): Monaco's global editor
+        // option `'semanticHighlighting.enabled'` (`true`, `false` or
+        // `'configuredByTheme'`), and its object form
+        // `semanticHighlighting: {enabled: ...}` (a Haxe structure cannot
+        // have a dotted field)
+        'semanticHighlighting.enabled',
+        'semanticHighlighting'
     ];
 
     /**

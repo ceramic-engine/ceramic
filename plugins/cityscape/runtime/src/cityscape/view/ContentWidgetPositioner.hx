@@ -113,6 +113,48 @@ class ContentWidgetPositioner extends Element implements ParentElement {
         this.above = above;
     }
 
+    // Parameter hints (step 7, cs7-rest-snip): a list of preferences
+    var preferenceList:Null<Array<ContentWidgetPositionPreference>> = null;
+
+    /**
+     * Places the widget like a content widget of Monaco with these
+     * preferences (`IContentWidgetPosition.preference`, `ABOVE` or
+     * `BELOW`) instead of the hover's rule: `_prepareRenderWidget`'s
+     * first pass takes the first side where the widget fits
+     * (`_layoutBoxInPage`: 22 pixels from the top or the bottom of the
+     * window), its second pass the first preference.
+     */
+    public function preferences(list:Array<ContentWidgetPositionPreference>):ContentWidgetPositioner {
+        preferenceList = list;
+        return this;
+    }
+
+    /**
+     * `_prepareRenderWidget` with `_layoutBoxInPage` for a widget of
+     * `height` (the side only; `place` gives the box).
+     */
+    public static function preferredSide(preferences:Array<ContentWidgetPositionPreference>, widgetHeight:Float, primary:Bounds, windowHeight:Float):ContentWidgetPositionPreference {
+        // Leave some clearance to the top/bottom
+        final TOP_PADDING = 22;
+        final BOTTOM_PADDING = 22;
+        final absoluteAboveTop = primary.origin.y - widgetHeight;
+        final absoluteBelowTop = primary.origin.y + primary.size.height;
+        final fitsAbove = (absoluteAboveTop >= TOP_PADDING);
+        final fitsBelow = (absoluteBelowTop + widgetHeight <= windowHeight - BOTTOM_PADDING);
+        // Do two passes, first for perfect fit, second picks first option
+        for (pass in 1...3) {
+            for (pref in preferences) {
+                if (pref == ABOVE && (pass == 2 || fitsAbove)) {
+                    return ABOVE;
+                }
+                if (pref == BELOW && (pass == 2 || fitsBelow)) {
+                    return BELOW;
+                }
+            }
+        }
+        return BELOW;
+    }
+
     /**
      * Called with the placement before the children prepaint.
      */
@@ -230,7 +272,7 @@ class ContentWidgetPositioner extends Element implements ParentElement {
         }
         final size = new Size(maxX - minX, maxY - minY);
         final windowSize = window.viewportSize();
-        final preference = findPositionPreference(size.height, anchors.primary, windowSize.height, above);
+        final preference = preferenceList != null ? preferredSide(preferenceList, size.height, anchors.primary, windowSize.height) : findPositionPreference(size.height, anchors.primary, windowSize.height, above);
         final placed = place(anchors, size, windowSize, preference);
         if (onPlacementCallback != null) {
             onPlacementCallback(new ContentWidgetPlacement(placed, preference));

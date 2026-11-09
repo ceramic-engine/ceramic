@@ -336,6 +336,13 @@ class MouseTarget {
      */
     public var viewZoneOffsetY:Float = 0;
 
+    /**
+     * Text targets (`CONTENT_TEXT`): Monaco's `detail.injectedText`, the
+     * injected text under the mouse (an inlay hint, a color swatch), or
+     * null.
+     */
+    public var injectedText:Null<cityscape.common.ModelLineProjectionData.InjectedText> = null;
+
     public function toString():String {
         return 'MouseTarget(' + type + ', ' + (range != null ? range.toString() : 'null') + ')';
     }
@@ -798,6 +805,12 @@ interface ICodeEditor extends IEditor {
      * Does not account for horizontal scrolling.
      */
     function getVisibleRanges():Array<Range>;
+
+    /**
+     * Returns the ranges that are currently visible plus a viewport above
+     * and below (inlay hints, step 7, cs7-rest-inlay).
+     */
+    function getVisibleRangesPlusViewportAboveBelow():Array<Range>;
 
     /**
      * Get the vertical position (top offset) for the line's top w.r.t. to the first line.

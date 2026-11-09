@@ -39,6 +39,25 @@ typedef IStandaloneThemeData = {
      * not read them.
      */
     @:optional var tokenColors:Array<Dynamic>;
+
+    // Semantic tokens (step 7, cs7-rest-sem)
+
+    /**
+     * Cityscape addition (not in Monaco): the semantic token rules of a VS
+     * Code theme (its `semanticTokenColors`: selectors such as `variable`,
+     * `*.readonly`, `type.defaultLibrary:haxe` to a color string or
+     * `{foreground?, fontStyle?, bold?, italic?, underline?,
+     * strikethrough?}`).
+     */
+    @:optional var semanticTokenColors:Dynamic;
+
+    /**
+     * Cityscape addition (not in Monaco, whose standalone themes never
+     * enable it): whether semantic highlighting is on with this theme when
+     * `editor.semanticHighlighting.enabled` is `'configuredByTheme'` (the
+     * `semanticHighlighting` of a VS Code theme).
+     */
+    @:optional var semanticHighlighting:Bool;
 }
 
 interface IStandaloneTheme extends IColorTheme {

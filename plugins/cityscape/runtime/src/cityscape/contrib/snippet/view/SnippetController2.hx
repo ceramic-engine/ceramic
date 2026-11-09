@@ -406,16 +406,21 @@ class SnippetRegistration {
 
     public static function register(r:EditorExtensionsRegistry):Void {
         if (r.context.decorationStyles.get('snippet-placeholder') == null) {
-            // snippetSession.css: the placeholders in the theme colors
+            // snippetSession.css: the placeholders in the theme colors, a
+            // 1 pixel outline (drawn inside the box here) and a minimum
+            // width of 2 pixels (4 with the outline) for empty tab stops
             r.context.registerDecorationStyle('snippet-placeholder', {
                 background: {id: 'editor.snippetTabstopHighlightBackground'},
-                border: {color: {id: 'editor.snippetTabstopHighlightBorder'}}
+                border: {color: {id: 'editor.snippetTabstopHighlightBorder'}},
+                minWidth: 4
             });
         }
         if (r.context.decorationStyles.get('finish-snippet-placeholder') == null) {
+            // the final tab stop: no minimum width, its outline alone (2 pixels wide when empty)
             r.context.registerDecorationStyle('finish-snippet-placeholder', {
                 background: {id: 'editor.snippetFinalTabstopHighlightBackground'},
-                border: {color: {id: 'editor.snippetFinalTabstopHighlightBorder'}}
+                border: {color: {id: 'editor.snippetFinalTabstopHighlightBorder'}},
+                minWidth: 2
             });
         }
 

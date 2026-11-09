@@ -110,6 +110,20 @@ class EditorWidgets {
     }
 
     /**
+     * Sets the mouse cursor over the editor's text (null: the I-beam), like
+     * the CSS `cursor` of Monaco's decorations (`pointer` on a link under
+     * Cmd, on a clickable inlay hint part, on a color swatch).
+     */
+    public static function setMouseCursor(editor:ICodeEditor, cursor:Null<glaze.CursorStyle>):Void {
+        final view = viewOf(editor);
+        if (view == null || view.mouseCursor == cursor) {
+            return;
+        }
+        view.mouseCursor = cursor;
+        editor.render();
+    }
+
+    /**
      * A color of the VS Code theme of the editor's context (null when the
      * theme has none).
      */

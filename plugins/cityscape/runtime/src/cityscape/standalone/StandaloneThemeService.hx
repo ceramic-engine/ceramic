@@ -4,6 +4,7 @@
 package cityscape.standalone;
 
 import cityscape.base.common.Color;
+import cityscape.base.common.Color.ColorFormatCSS;
 import cityscape.base.common.Event;
 import cityscape.base.common.JsValues;
 import cityscape.base.common.Lifecycle;
@@ -75,6 +76,7 @@ class StandaloneTheme implements IStandaloneTheme {
         if (this.themeData.inherit) {
             this.colors = null;
             this._tokenTheme = null;
+            this._tokenColorIds = null;
         }
     }
 
@@ -249,30 +251,164 @@ class StandaloneTheme implements IStandaloneTheme {
     }
 
     public function getTokenStyleMetadata(type:String, modifiers:Array<String>, modelLanguage:String):Null<ITokenStyle> {
+        // Semantic tokens (step 7, cs7-rest-sem): a VS Code theme (with
+        // `tokenColors`) styles semantic tokens like VS Code (its
+        // `semanticTokenColors`, then the TextMate rules of the scopes the
+        // token classification registry probes); the colors are ids of the
+        // token color map in use (`_setTokenColorMap`).
+        final data = this._getColorThemeData();
+        if (this.themeData.tokenColors != null) {
+            return data.getTokenStyleMetadata(type, modifiers, modelLanguage, color -> this._tokenColorId(color));
+        }
         // use theme rules match
         final style = this.tokenTheme._match([type].concat(modifiers).join('.'));
         final metadata = style.metadata;
-        final foreground:Int = TokenMetadata.getForeground(metadata);
+        var foreground:Int = TokenMetadata.getForeground(metadata);
         final fontStyle:Int = TokenMetadata.getFontStyle(metadata);
+        // Cityscape: the token theme's color id, as an id of the color map
+        // in use (the same id unless the TextMate service gives the map)
+        final tokenThemeColors = this.tokenTheme.getColorMap();
+        if (foreground > 0 && foreground < tokenThemeColors.length) {
+            foreground = this._tokenColorId(tokenThemeColors[foreground]);
+        }
+        var italic:Null<Bool> = (fontStyle & FontStyle.Italic) != 0;
+        var bold:Null<Bool> = (fontStyle & FontStyle.Bold) != 0;
+        var underline:Null<Bool> = (fontStyle & FontStyle.Underline) != 0;
+        var strikethrough:Null<Bool> = (fontStyle & FontStyle.Strikethrough) != 0;
+        if (data.semanticTokenRules.length > 0) {
+            // Cityscape: the theme's `semanticTokenColors` win over the rules
+            final parsed = cityscape.platform.theme.common.TokenClassificationRegistry.parseClassifierString(type, modelLanguage);
+            final semantic = data.getTokenStyle(parsed.type, modifiers, parsed.language, false);
+            if (semantic.foreground != null) {
+                foreground = this._tokenColorId(semantic.foreground);
+            }
+            if (semantic.italic != null) {
+                italic = semantic.italic;
+            }
+            if (semantic.bold != null) {
+                bold = semantic.bold;
+            }
+            if (semantic.underline != null) {
+                underline = semantic.underline;
+            }
+            if (semantic.strikethrough != null) {
+                strikethrough = semantic.strikethrough;
+            }
+        }
         return {
             foreground: foreground,
-            italic: (fontStyle & FontStyle.Italic) != 0,
-            bold: (fontStyle & FontStyle.Bold) != 0,
-            underline: (fontStyle & FontStyle.Underline) != 0,
-            strikethrough: (fontStyle & FontStyle.Strikethrough) != 0
+            italic: italic,
+            bold: bold,
+            underline: underline,
+            strikethrough: strikethrough
         };
     }
 
     public var tokenColorMap(get, never):Array<String>;
 
     function get_tokenColorMap():Array<String> {
-        return [];
+        // Monaco's standalone theme returns []; Cityscape gives the colors
+        // `getTokenStyleMetadata` refers to
+        this._ensureTokenColorIds();
+        return [for (color in this._tokenColors) color != null ? ColorFormatCSS.formatHexA(color, true) : null];
     }
 
     public var semanticHighlighting(get, never):Bool;
 
     function get_semanticHighlighting():Bool {
-        return false;
+        // Monaco's standalone themes: false; a VS Code theme can enable it
+        return this.themeData.semanticHighlighting == true;
+    }
+
+    // Semantic tokens (step 7, cs7-rest-sem)
+
+    var _colorThemeData:Null<cityscape.workbench.services.themes.common.ColorThemeData> = null;
+    var _tokenColorIds:Null<Map<String, Int>> = null;
+    var _tokenColors:Array<Color> = [];
+
+    function _getColorThemeData():cityscape.workbench.services.themes.common.ColorThemeData {
+        if (this._colorThemeData == null) {
+            this._colorThemeData = new cityscape.workbench.services.themes.common.ColorThemeData(this.themeData.tokenColors, this.themeData.semanticTokenColors);
+        }
+        return this._colorThemeData;
+    }
+
+    /**
+     * Cityscape addition: the token color map in use becomes the one the
+     * color ids of `getTokenStyleMetadata` refer to. Returns it with the
+     * colors semantic tokens may take added at its end (the TextMate rules'
+     * and the `semanticTokenColors`' of a VS Code theme, the token theme's
+     * of a Monaco theme), which the theme service then gives to the
+     * tokenization registry (the same array when nothing is added, or when
+     * `extend` is false: a color map override is used as it is).
+     */
+    public function _setTokenColorMap(colorMap:Array<Color>, extend:Bool = true):Array<Color> {
+        final ids = new Map<String, Int>();
+        var colors = colorMap;
+        for (i in 1...colors.length) {
+            final color = colors[i];
+            if (color == null) {
+                continue;
+            }
+            final key = cityscape.workbench.services.themes.common.ColorThemeData.TokenColorIndex.normalizeColor(ColorFormatCSS.formatHexA(color, true));
+            if (key != null && !ids.exists(key)) {
+                ids.set(key, i);
+            }
+        }
+        function add(hex:Null<String>):Void {
+            if (!extend) {
+                return;
+            }
+            final key = cityscape.workbench.services.themes.common.ColorThemeData.TokenColorIndex.normalizeColor(hex);
+            if (key == null || ids.exists(key)) {
+                return;
+            }
+            if (colors == colorMap) {
+                // copied on the first color added
+                colors = colorMap.copy();
+            }
+            if (colors.length == 0) {
+                colors.push(null);
+            }
+            ids.set(key, colors.length);
+            colors.push(Color.fromHex(key));
+        }
+        if (this.themeData.tokenColors != null) {
+            this._getColorThemeData().forEachTokenColor(add);
+        }
+        else {
+            final tokenThemeColors = this.tokenTheme.getColorMap();
+            for (i in 1...tokenThemeColors.length) {
+                final color = tokenThemeColors[i];
+                if (color != null) {
+                    add(ColorFormatCSS.formatHexA(color, true));
+                }
+            }
+            this._getColorThemeData().forEachTokenColor(add);
+        }
+        this._tokenColorIds = ids;
+        this._tokenColors = colors;
+        return colors;
+    }
+
+    function _ensureTokenColorIds():Void {
+        if (this._tokenColorIds == null) {
+            // not the current theme of a service: the token theme's map
+            this._setTokenColorMap(this.tokenTheme.getColorMap());
+        }
+    }
+
+    function _tokenColorId(color:Null<Color>):Int {
+        if (color == null) {
+            return 0;
+        }
+        this._ensureTokenColorIds();
+        final key = cityscape.workbench.services.themes.common.ColorThemeData.TokenColorIndex.normalizeColor(ColorFormatCSS.formatHexA(color, true));
+        if (key == null) {
+            return 0;
+        }
+        final id = this._tokenColorIds.get(key);
+        return id != null ? id : 0;
     }
 
 }
@@ -431,6 +567,12 @@ class StandaloneThemeService extends Disposable implements IStandaloneThemeServi
         }
         if (colorMap == null) {
             colorMap = this._theme.tokenTheme.getColorMap();
+        }
+        // Semantic tokens (step 7, cs7-rest-sem): the theme's semantic token
+        // colors are ids of this map, extended with the colors they may take
+        final theme = Std.downcast(this._theme, StandaloneTheme);
+        if (theme != null) {
+            colorMap = theme._setTokenColorMap(colorMap, this._colorMapOverride == null);
         }
 
         this._tokenizationRegistry.setColorMap(colorMap);

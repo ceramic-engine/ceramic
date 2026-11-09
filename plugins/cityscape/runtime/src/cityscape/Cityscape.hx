@@ -623,6 +623,150 @@ class Cityscape {
 
     //#endregion
 
+    //#region cs7-rest: peek view and symbol navigation
+
+    /**
+     * Shows a message in the host's status bar, until the returned
+     * disposable is disposed (Monaco's `INotificationService.status`, used
+     * by the symbol navigation: "Symbol 1 of 3, F12 for next"). Null: no
+     * message.
+     */
+    public var onStatusMessage:Null<(message:String) -> IDisposable> = null;
+
+    //#endregion
+    // Links (step 7, cs7-rest-links)
+
+    /**
+     * Opens the links of the editors (Cmd+click on a detected link, `Open
+     * Link`), before Cityscape does: returns true when it opened `uri`
+     * (Monaco's contributed openers of its `IOpenerService`).
+     * `fromUserGesture` is true for a click. Null, or false returned:
+     * Cityscape opens `http:`, `https:` and `mailto:` links with the
+     * platform (Ceramic's `openUrl`), runs `command:` links, and opens other
+     * resources with `codeEditorService.openCodeEditor`.
+     */
+    public var openLink:Null<(uri:Uri, fromUserGesture:Bool) -> Bool> = null;
+
+    var _openerService:Null<cityscape.view.services.OpenerService> = null;
+
+    /**
+     * Opens links (Monaco's `IOpenerService`), created on first use.
+     */
+    public var openerService(get, never):cityscape.view.services.OpenerService;
+    function get_openerService():cityscape.view.services.OpenerService {
+        if (_openerService == null) {
+            _openerService = new cityscape.view.services.OpenerService(this);
+        }
+        return _openerService;
+    }
+
+    // Inlay hints and code lens (step 7, cs7-rest-inlay)
+
+    var _inlayHintsCache:Null<cityscape.contrib.inlayHints.view.InlayHintsController.InlayHintsCache> = null;
+
+    /**
+     * The inlay hints of the models, shown at once when an editor shows a
+     * model again (Monaco's `IInlayHintsCache` service).
+     */
+    public var inlayHintsCache(get, never):cityscape.contrib.inlayHints.view.InlayHintsController.InlayHintsCache;
+    function get_inlayHintsCache():cityscape.contrib.inlayHints.view.InlayHintsController.InlayHintsCache {
+        if (_inlayHintsCache == null) {
+            _inlayHintsCache = new cityscape.contrib.inlayHints.view.InlayHintsController.InlayHintsCache();
+        }
+        return _inlayHintsCache;
+    }
+
+    var _codeLensCache:Null<cityscape.contrib.codelens.view.CodeLensCache> = null;
+
+    /**
+     * The code lenses of the models, shown at once when an editor shows a
+     * model again (Monaco's `ICodeLensCache` service, in the
+     * `storageService` of the context: `codeLensCache.saveState()` stores
+     * it, Monaco does so when the window closes).
+     */
+    public var codeLensCache(get, never):cityscape.contrib.codelens.view.CodeLensCache;
+    function get_codeLensCache():cityscape.contrib.codelens.view.CodeLensCache {
+        if (_codeLensCache == null) {
+            _codeLensCache = new cityscape.contrib.codelens.view.CodeLensCache(storageService);
+        }
+        return _codeLensCache;
+    }
+
+    // Snippets (step 7, cs7-rest-snip)
+
+    /**
+     * The labels of resources for the file variables of snippets
+     * (`TM_FILEPATH`, `TM_DIRECTORY`, `RELATIVE_FILEPATH`; Monaco's
+     * `ILabelService`). Monaco's standalone one by default: the file system
+     * path of `file` URIs, the path of the others.
+     */
+    public var labelService:cityscape.platform.label.common.Label.ILabelService = new cityscape.standalone.StandaloneServices.StandaloneUriLabelService();
+
+    /**
+     * The workspace of the `WORKSPACE_NAME` and `WORKSPACE_FOLDER` variables
+     * of snippets (Monaco's `IWorkspaceContextService`). Monaco's standalone
+     * one by default: one folder, `inmemory://model/`.
+     */
+    public var workspaceContextService:cityscape.platform.workspace.common.Workspace.IWorkspaceContextService = new cityscape.standalone.StandaloneServices.StandaloneWorkspaceContextService();
+
+    //#region inline completions (step 7, cs7-rest-inline)
+
+    /**
+     * Registers an inline completions provider
+     * (`monaco.languages.registerInlineCompletionsProvider`).
+     */
+    public function registerInlineCompletionsProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.InlineCompletionsProvider):IDisposable {
+        return languageFeaturesService.inlineCompletionsProvider.register(languageSelector, provider);
+    }
+
+    //#endregion
+
+    // Semantic tokens and rename (step 7, cs7-rest-sem)
+
+    var _semanticTokensStylingService:Null<cityscape.common.services.SemanticTokensStylingService> = null;
+
+    /**
+     * The styling of the semantic tokens of each provider in the current
+     * theme (Monaco's `ISemanticTokensStylingService`), created on first use.
+     */
+    public var semanticTokensStylingService(get, never):cityscape.common.services.SemanticTokensStylingService;
+    function get_semanticTokensStylingService():cityscape.common.services.SemanticTokensStylingService {
+        if (_semanticTokensStylingService == null) {
+            final themeService = this.themeService;
+            _semanticTokensStylingService = new cityscape.common.services.SemanticTokensStylingService(
+                cityscape.contrib.semanticTokens.view.DocumentSemanticTokens.DocumentSemanticTokensFeature.themeSourceOf(themeService),
+                listener -> themeService.onDidColorThemeChange(_ -> listener()),
+                languageService.languageIdCodec
+            );
+        }
+        return _semanticTokensStylingService;
+    }
+
+    var _documentSemanticTokensFeature:Null<cityscape.contrib.semanticTokens.view.DocumentSemanticTokens.DocumentSemanticTokensFeature> = null;
+
+    /**
+     * The semantic coloring of the models of this context by the document
+     * semantic tokens providers (Monaco's editor feature
+     * `DocumentSemanticTokensFeature`), created with the editor extensions
+     * (when the first editor of the context is created) or on first use.
+     * Semantic tokens color a model while `editor.semanticHighlighting.enabled`
+     * (`configurationService`) is true, or is `'configuredByTheme'` (the
+     * default) and the theme has `semanticHighlighting`.
+     */
+    public var documentSemanticTokensFeature(get, never):cityscape.contrib.semanticTokens.view.DocumentSemanticTokens.DocumentSemanticTokensFeature;
+    function get_documentSemanticTokensFeature():cityscape.contrib.semanticTokens.view.DocumentSemanticTokens.DocumentSemanticTokensFeature {
+        if (_documentSemanticTokensFeature == null) {
+            _documentSemanticTokensFeature = new cityscape.contrib.semanticTokens.view.DocumentSemanticTokens.DocumentSemanticTokensFeature(
+                semanticTokensStylingService,
+                modelService,
+                cityscape.contrib.semanticTokens.view.DocumentSemanticTokens.DocumentSemanticTokensFeature.themeSourceOf(themeService),
+                configurationService,
+                languageFeaturesService
+            );
+        }
+        return _documentSemanticTokensFeature;
+    }
+
     /**
      * Gives a typed style to a decoration class name (`className`,
      * `inlineClassName`, `glyphMarginClassName`, `linesDecorationsClassName`,

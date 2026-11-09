@@ -211,6 +211,36 @@ class Tests {
         runner.add(new tests.diffing.FixturesTest());
         runner.add(new tests.view.DiffEditorTest());
 
+        // Symbol navigation and the references peek view (step 7, cs7-rest)
+        runner.add(new tests.contrib.gotoSymbol.GoToCommandsTest());
+        runner.add(new tests.view.PeekViewTest());
+        // Links and colors (step 7, cs7-rest-links)
+        runner.add(new tests.modes.LinkComputerTest());
+        runner.add(new tests.contrib.links.LinksTest());
+        runner.add(new tests.contrib.colorPicker.ColorPickerTest());
+        // Inlay hints and code lens (step 7, cs7-rest-inlay)
+        runner.add(new tests.contrib.inlayHints.InlayHintsTest());
+        runner.add(new tests.contrib.codelens.CodeLensTest());
+        runner.add(new tests.view.HorizontalSpacingTest());
+        // Snippets and parameter hints (step 7, cs7-rest-snip)
+        runner.add(new tests.contrib.snippet.SnippetVariablesTest());
+        runner.add(new tests.contrib.snippet.SnippetSessionTest());
+        runner.add(new tests.contrib.snippet.SnippetController2Test());
+        runner.add(new tests.contrib.snippet.SnippetController2OldTest());
+        runner.add(new tests.contrib.parameterHints.ParameterHintsModelTest());
+        runner.add(new tests.contrib.parameterHints.ParameterHintsEditorTest());
+        // Inline completions (step 7, cs7-rest-inline)
+        runner.add(new tests.contrib.inlineCompletions.InlineCompletionsModelTest());
+        runner.add(new tests.contrib.inlineCompletions.InlineCompletionsProviderTest());
+        runner.add(new tests.contrib.inlineCompletions.SuggestWidgetModelTest());
+        runner.add(new tests.contrib.inlineCompletions.InlineCompletionsEditorTest());
+        // Semantic tokens and rename (step 7, cs7-rest-sem)
+        runner.add(new tests.services.SemanticTokensProviderStylingTest());
+        runner.add(new tests.services.SemanticTokensDtoTest());
+        runner.add(new tests.contrib.semanticTokens.GetSemanticTokensTest());
+        runner.add(new tests.contrib.semanticTokens.DocumentSemanticTokensTest());
+        runner.add(new tests.contrib.semanticTokens.SemanticTokensTest());
+        runner.add(new tests.contrib.rename.RenameTest());
         // Last: reads what the tests above rendered
         runner.add(new tests.view.RenderCacheCheckTest());
 

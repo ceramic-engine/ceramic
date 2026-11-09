@@ -457,3 +457,52 @@ class StandaloneKeybindingService extends AbstractKeybindingService {
     }
 
 }
+
+// Snippets (step 7, cs7-rest-snip): the label and workspace services of the
+// snippet variables
+
+/**
+ * Monaco's `StandaloneUriLabelService`: the file system path of a `file`
+ * URI, the path of the others.
+ */
+class StandaloneUriLabelService implements cityscape.platform.label.common.Label.ILabelService {
+
+    public function new() {}
+
+    public function getUriLabel(resource:Uri, ?options:cityscape.platform.label.common.Label.UriLabelOptions):String {
+        if (resource.scheme == 'file') {
+            return resource.fsPath;
+        }
+        return resource.path;
+    }
+
+    public function getUriBasenameLabel(resource:Uri):String {
+        return cityscape.base.common.Resources.basename(resource);
+    }
+
+}
+
+/**
+ * Monaco's `StandaloneWorkspaceContextService`: a workspace of one folder,
+ * `inmemory://model/` (so `WORKSPACE_NAME` is empty and `WORKSPACE_FOLDER`
+ * is `/` in snippets, like Monaco).
+ */
+class StandaloneWorkspaceContextService implements cityscape.platform.workspace.common.Workspace.IWorkspaceContextService {
+
+    public static inline final SCHEME = 'inmemory';
+
+    /** Monaco's `STANDALONE_EDITOR_WORKSPACE_ID` */
+    public static inline final STANDALONE_EDITOR_WORKSPACE_ID = '4064f6ec-cb38-4ad0-af64-ee6467e63c82';
+
+    final workspace:cityscape.platform.workspace.common.Workspace.IWorkspace;
+
+    public function new() {
+        final resource = Uri.from({scheme: StandaloneWorkspaceContextService.SCHEME, authority: 'model', path: '/'});
+        this.workspace = {id: STANDALONE_EDITOR_WORKSPACE_ID, folders: [{uri: resource, name: '', index: 0}]};
+    }
+
+    public function getWorkspace():cityscape.platform.workspace.common.Workspace.IWorkspace {
+        return this.workspace;
+    }
+
+}

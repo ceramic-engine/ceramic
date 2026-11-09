@@ -185,6 +185,12 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
         }));
         ownDisposables.add(w.onDidUpdateDiff(() -> _onDidUpdateDiff.fire()));
         ownDisposables.add(w.modified.onDidScrollChange((_) -> revision++));
+        // the styles of the diff classes follow a theme change at once (the
+        // editors repaint with them; this component may not render again)
+        ownDisposables.add(ctx.themeService.onDidColorThemeChange(_ -> {
+            updateStyles();
+            revision++;
+        }));
         updateStyles();
         appliedModel = model;
         if (model != null) {
@@ -742,13 +748,15 @@ private class DiffPainters implements IDiffEditorPainters {
         };
     }
 
+    /**
+     * The background of `gutter-delete` and `.inline-deleted-margin-view-zone`:
+     * `diffEditorGutter.removedLineBackground` only. style.css falls back to
+     * `var(--vscode-diffEditor-removedLineBackground), var(--vscode-diffEditor-removedTextBackground)`,
+     * two colors in one fallback, which CSS rejects: without the gutter
+     * color of the theme, Monaco's gutter stays transparent (null here).
+     */
     function gutterDeleteColor():Null<Hsla> {
-        final gutter = color('diffEditorGutter.removedLineBackground');
-        if (gutter != null) {
-            return gutter;
-        }
-        final line = color('diffEditor.removedLineBackground');
-        return line != null ? line : color('diffEditor.removedTextBackground');
+        return color('diffEditorGutter.removedLineBackground');
     }
 
     public function gutterDelete():ViewZonePainter {

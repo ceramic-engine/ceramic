@@ -58,8 +58,12 @@ class EditorOptionsTruthTest extends TestCase {
         // bracket pair colorization and guides (bracketPairColorization, guides), 1 of the comment
         // contribution (comments, EditorCommentsOptions), 6 of the language features
         // (EditorLanguageFeatureOptions: acceptSuggestionOnCommitCharacter, lightbulb,
-        // snippetSuggestions, suggestFontSize, suggestLineHeight, suggestSelection)
-        assertEquals(104, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
+        // snippetSuggestions, suggestFontSize, suggestLineHeight, suggestSelection), and the 10 of step 7:
+        // peekWidgetDefaultFocus (peek view), colorDecoratorsActivatedOn, colorDecoratorsLimit,
+        // defaultColorDecorators (EditorColorDecoratorsOptions), codeLens, codeLensFontFamily,
+        // codeLensFontSize, inlayHints (EditorInlayHintsCodeLensOptions), parameterHints
+        // (EditorParameterHintsOptions), inlineSuggest (EditorInlineSuggestOptions)
+        assertEquals(114, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
     }
 
     function testDefaults() {

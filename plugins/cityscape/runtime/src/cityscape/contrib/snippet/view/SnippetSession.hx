@@ -555,13 +555,19 @@ class SnippetSession {
         return selection;
     }
 
-    static function variableResolver(editor:ICodeEditor, model:ITextModel, selection:Selection, idx:Int, selectionCount:Int, clipboardText:Null<String>, overtypingCapturer:Null<OvertypingCapturer>, languageConfigurationService:ILanguageConfigurationService):VariableResolver {
+    /**
+     * The resolver of the variables of a snippet inserted at `selection`
+     * (`modelBasedVariableResolver` is shared by the cursors, like Monaco's).
+     */
+    static function variableResolver(editor:ICodeEditor, model:ITextModel, modelBasedVariableResolver:ModelBasedVariableResolver, selection:Selection, idx:Int, selectionCount:Int, clipboardText:Null<String>, overtypingCapturer:Null<OvertypingCapturer>, languageConfigurationService:ILanguageConfigurationService):VariableResolver {
+        final readClipboardText = () -> clipboardText;
         return new CompositeSnippetVariableResolver([
-            new ModelBasedVariableResolver(model),
-            new ClipboardBasedVariableResolver(() -> clipboardText, idx, selectionCount, editor.getOption(EditorOption.multiCursorPaste) == 'spread'),
+            modelBasedVariableResolver,
+            new ClipboardBasedVariableResolver(readClipboardText, idx, selectionCount, editor.getOption(EditorOption.multiCursorPaste) == 'spread'),
             new SelectionBasedVariableResolver(model, selection, idx, overtypingCapturer),
             new CommentBasedVariableResolver(model, selection, languageConfigurationService),
-            new TimeBasedVariableResolver(),
+            new TimeBasedVariableResolver(editor.context.nls),
+            new WorkspaceBasedVariableResolver(editor.context.workspaceContextService),
             new RandomBasedVariableResolver(),
         ]);
     }
@@ -574,6 +580,8 @@ class SnippetSession {
             return {edits: edits, snippets: snippets};
         }
         final model = editor.getModel();
+
+        final modelBasedVariableResolver = new ModelBasedVariableResolver(editor.context.labelService, model);
 
         // know what text the overwrite[Before|After] extensions
         // of the primary curser have selected because only when
@@ -626,7 +634,7 @@ class SnippetSession {
                 snippet
             );
 
-            snippet.resolveVariables(variableResolver(editor, model, selection, idx, indexedSelections.length, clipboardText, overtypingCapturer, languageConfigurationService));
+            snippet.resolveVariables(variableResolver(editor, model, modelBasedVariableResolver, selection, idx, indexedSelections.length, clipboardText, overtypingCapturer, languageConfigurationService));
 
             // store snippets with the index of their originating selection.
             // that ensures the primiary cursor stays primary despite not being
@@ -654,7 +662,7 @@ class SnippetSession {
         final snippet = new TextmateSnippet();
 
         // snippet variables resolver
-        final resolver = variableResolver(editor, model, editor.getSelection(), 0, editor.getSelections().length, clipboardText, overtypingCapturer, languageConfigurationService);
+        final resolver = variableResolver(editor, model, new ModelBasedVariableResolver(editor.context.labelService, model), editor.getSelection(), 0, editor.getSelections().length, clipboardText, overtypingCapturer, languageConfigurationService);
 
         //
         snippetEdits = snippetEdits.copy();

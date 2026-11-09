@@ -112,6 +112,20 @@ typedef IDecorationStyle = {
      */
     @:optional var paddingTop:Float;
     @:optional var paddingBottom:Float;
+    /**
+     * Horizontal padding of the box, in pixels: like CSS padding on an
+     * inline element, the box grows by it and the text after it moves
+     * (the inlay hints' `padding: 0 3px`). Inline styles and injected text
+     * only (step 7, cs7-rest-inlay).
+     */
+    @:optional var paddingLeft:Float;
+    @:optional var paddingRight:Float;
+    /**
+     * The width of the range in pixels, whatever its text (CSS
+     * `display: inline-block; width`, the spacers of the inlay hints).
+     * Inline styles and injected text only (step 7, cs7-rest-inlay).
+     */
+    @:optional var width:Float;
     @:optional var border:IDecorationBorder;
     /**
      * Join contiguous ranges with the same style into one box per line:
@@ -120,6 +134,14 @@ typedef IDecorationStyle = {
      * boxes with a background.
      */
     @:optional var join:Bool;
+    // Snippets (step 7, cs7-rest-snip)
+    /**
+     * The minimum width of the box, in pixels (CSS `min-width`): a box of
+     * a `className` decoration with an empty range is painted this wide,
+     * centered on its position (the snippet placeholders of Monaco, whose
+     * empty tab stops show as a thin box).
+     */
+    @:optional var minWidth:Float;
 }
 
 /**

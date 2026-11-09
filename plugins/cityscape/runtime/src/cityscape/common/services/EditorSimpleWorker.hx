@@ -82,4 +82,29 @@ class EditorSimpleWorker {
         return null;
     }
 
+
+    // Links and colors (step 7, cs7-rest-links)
+
+    /**
+     * Monaco's `$computeLinks`: the links of the default link computer
+     * (http, https and file links in the text).
+     */
+    public static function computeLinks(model:ITextModel):Null<Array<cityscape.common.Languages.ILink>> {
+        if (model == null) {
+            return null;
+        }
+        return cityscape.common.languages.LinkComputer.LinkComputerUtils.computeLinks(new cityscape.common.languages.LinkComputer.TextModelLinkComputerTarget(model));
+    }
+
+    /**
+     * Monaco's `$computeDefaultDocumentColors`: the CSS like colors of the
+     * text (`#rgb`, `#rrggbb`, `rgb()`, `rgba()`, `hsl()`, `hsla()`).
+     */
+    public static function computeDefaultDocumentColors(model:ITextModel):Null<Array<cityscape.common.Languages.IColorInformation>> {
+        if (model == null) {
+            return null;
+        }
+        return cityscape.common.languages.DefaultDocumentColorsComputer.computeDefaultDocumentColors(new cityscape.common.languages.DefaultDocumentColorsComputer.TextModelDocumentColorComputerTarget(model));
+    }
+
 }

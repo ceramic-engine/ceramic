@@ -54,6 +54,13 @@ class MainScene extends Scene {
 
     var diffView:Null<Entity<DiffVisualView>> = null;
 
+    // Step 7 scenes (cs7-rest): `peek` and the other features of the rest of Monaco
+    var restView:Null<Entity<Dynamic>> = null;
+
+    var restUpdate:Null<(window:Window, cx:App) -> Bool> = null;
+
+    var restReady:Bool = false;
+
     override function create() {
 
         out = Platform.getEnv('CITYSCAPE_VISUAL_OUT');
@@ -90,6 +97,53 @@ class MainScene extends Scene {
                 // The diff editor, side by side and inline (DiffVisualView.hx)
                 diffView = cx.newEntity((viewCx:Context<DiffVisualView>) -> new DiffVisualView(viewCx));
                 return diffView;
+            }
+            if (scene == 'peek') {
+                // The references peek view (RestPeekVisualView.hx)
+                final v = cx.newEntity((viewCx:Context<RestPeekVisualView>) -> new RestPeekVisualView(viewCx));
+                restView = cast v;
+                restUpdate = (window, cx) -> (v.read(cx) : RestPeekVisualView).update(window, cx);
+                return v;
+            }
+            if (scene == 'links') {
+                // Links and color swatches with the color picker (RestLinksColorsVisualView.hx)
+                final dark = Platform.getEnv('CITYSCAPE_VISUAL_THEME') != 'light';
+                final v = cx.newEntity((viewCx:Context<RestLinksColorsVisualView>) -> new RestLinksColorsVisualView(viewCx, dark));
+                restView = cast v;
+                restUpdate = (window, cx) -> (v.read(cx) : RestLinksColorsVisualView).update(window, cx);
+                return v;
+            }
+            if (scene == 'snippet') {
+                // A snippet session and the parameter hints (RestSnippetHintsVisualView.hx)
+                final dark = Platform.getEnv('CITYSCAPE_VISUAL_THEME') != 'light';
+                final v = cx.newEntity((viewCx:Context<RestSnippetHintsVisualView>) -> new RestSnippetHintsVisualView(viewCx, dark));
+                restView = cast v;
+                restUpdate = (window, cx) -> (v.read(cx) : RestSnippetHintsVisualView).update(window, cx);
+                return v;
+            }
+            if (scene == 'semantic') {
+                // Semantic tokens and the rename input (RestSemanticRenameVisualView.hx)
+                final dark = Platform.getEnv('CITYSCAPE_VISUAL_THEME') != 'light';
+                final v = cx.newEntity((viewCx:Context<RestSemanticRenameVisualView>) -> new RestSemanticRenameVisualView(viewCx, dark));
+                restView = cast v;
+                restUpdate = (window, cx) -> (v.read(cx) : RestSemanticRenameVisualView).update(window, cx);
+                return v;
+            }
+            if (scene == 'inlay') {
+                // Inlay hints and code lenses (RestInlayCodeLensVisualView.hx)
+                final dark = Platform.getEnv('CITYSCAPE_VISUAL_THEME') != 'light';
+                final v = cx.newEntity((viewCx:Context<RestInlayCodeLensVisualView>) -> new RestInlayCodeLensVisualView(viewCx, dark));
+                restView = cast v;
+                restUpdate = (window, cx) -> (v.read(cx) : RestInlayCodeLensVisualView).update(window, cx);
+                return v;
+            }
+            if (scene == 'inline') {
+                // Inline completions (ghost text) (RestInlineCompletionsVisualView.hx)
+                final dark = Platform.getEnv('CITYSCAPE_VISUAL_THEME') != 'light';
+                final v = cx.newEntity((viewCx:Context<RestInlineCompletionsVisualView>) -> new RestInlineCompletionsVisualView(viewCx, dark));
+                restView = cast v;
+                restUpdate = (window, cx) -> (v.read(cx) : RestInlineCompletionsVisualView).update(window, cx);
+                return v;
             }
             if (scene == 'find') {
                 // The find widget open over one editor (FindVisualView.hx)
@@ -133,6 +187,9 @@ class MainScene extends Scene {
             final v:LanguageVisualView = languageView;
             languageReady = v.update(ui.window, Glaze.app);
         }
+        if (restUpdate != null && ui.window != null && !restReady) {
+            restReady = restUpdate(ui.window, Glaze.app);
+        }
         if (findView != null && ui.window != null) {
             final v:FindVisualView = findView;
             v.openFind(ui.window, Glaze.app);
@@ -148,7 +205,7 @@ class MainScene extends Scene {
             return;
         }
         frames++;
-        if (frames < SETTLE_FRAMES || (columnsView != null && !columnsChecked) || (editingView != null && !editingReady) || (languageView != null && !languageReady)) {
+        if (frames < SETTLE_FRAMES || (columnsView != null && !columnsChecked) || (editingView != null && !editingReady) || (languageView != null && !languageReady) || (restUpdate != null && !restReady)) {
             return;
         }
         captured = true;

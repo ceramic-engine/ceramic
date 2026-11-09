@@ -25,6 +25,13 @@ import cityscape.common.core.Position;
 import cityscape.common.core.Range;
 import cityscape.common.core.WordHelper.IWordAtPosition;
 import cityscape.contrib.gotoSymbol.view.ReferencesModel;
+import cityscape.contrib.gotoSymbol.view.SymbolNavigation;
+import cityscape.contrib.gotoSymbol.view.peek.ReferencesController;
+import cityscape.contrib.peekView.view.PeekView;
+import cityscape.base.common.JsValues;
+import cityscape.common.EditorCommon.ScrollType;
+import cityscape.base.common.Promise;
+import cityscape.platform.contextkey.common.ContextKey;
 import cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent;
 import cityscape.platform.keybinding.common.KeybindingsRegistry.KeybindingWeight;
 import cityscape.view.EditorBrowser;
@@ -63,123 +70,205 @@ class SymbolNavigation {
 }
 
 /**
- * Goes to the definition of the symbol at the cursor (Monaco's
- * `DefinitionAction` and `GoToDefinitionAction`,
- * `editor.action.revealDefinition`, F12).
- *
- * The peek view is not ported: when there are several definitions, the
- * editor goes to the first one whatever the `gotoLocation` option (Monaco's
- * `'goto'`), and the locations are not kept for "go to next symbol". The
- * "no definition found" message is given to `onNoResult` of the context
- * (Monaco shows it next to the cursor). The location is opened through
- * `context.codeEditorService.openCodeEditor`: in the same editor when it
- * is in its model, else by the handlers a host registers.
+ * Where a symbol navigation starts (Monaco's `SymbolNavigationAnchor`).
  */
-class DefinitionAction extends EditorAction {
+class SymbolNavigationAnchor {
 
-    public static inline final ID = 'editor.action.revealDefinition';
+    public static function is(thing:Any):Bool {
+        if (thing == null || !JsValues.isObject(thing)) {
+            return false;
+        }
+        if (Std.isOfType(thing, SymbolNavigationAnchor)) {
+            return true;
+        }
+        return Position.isIPosition(JsValues.field(thing, 'position')) && JsValues.field(thing, 'model') != null;
+    }
 
-    final configuration:SymbolNavigationActionConfig;
+    public final model:ITextModel;
+    public final position:Position;
+
+    public function new(model:ITextModel, position:Position) {
+        this.model = model;
+        this.position = position;
+    }
+
+}
+
+/**
+ * What Monaco keeps in the statics of `SymbolNavigationAction` (the symbol
+ * navigation commands by id, the alternative commands running), one per
+ * context here, with the symbol navigation service.
+ */
+class SymbolNavigationCommands {
+
+    public final all:Map<String, SymbolNavigationAction> = new Map();
+    public final activeAlternativeCommands:Map<String, Bool> = new Map();
+    public final symbolNavigationService:SymbolNavigationService;
+
+    public function new(r:EditorExtensionsRegistry) {
+        this.symbolNavigationService = new SymbolNavigationService(r);
+    }
+
+}
+
+/**
+ * The commands that go to (or peek) the locations of the symbol at the
+ * cursor (Monaco's `SymbolNavigationAction`): with one location the editor
+ * goes to it; with several, the `gotoLocation` option decides between the
+ * peek view (`'peek'`), the first one with the peek view (`'gotoAndPeek'`)
+ * or the first one with F12 for the next ones (`'goto'`).
+ *
+ * The "no definition found" messages go to `onNoResult` of the context
+ * (Monaco shows them next to the cursor). The locations open through
+ * `context.codeEditorService.openCodeEditor`: in the same editor when it is
+ * in its model, else by the handlers a host registers (also for the side
+ * by side commands, given `sideBySide`).
+ */
+abstract class SymbolNavigationAction extends EditorAction {
+
+    public final configuration:SymbolNavigationActionConfig;
     final r:EditorExtensionsRegistry;
+    final commands:Null<SymbolNavigationCommands>;
 
-    public function new(r:EditorExtensionsRegistry, ?configuration:SymbolNavigationActionConfig, ?id:String) {
-        final kbOpts:Array<ICommandKeybindingsOptions> = [{
-            kbExpr: EditorContextKeys.editorTextFocus,
-            primary: KeyCode.F12,
-            weight: KeybindingWeight.EditorContrib
-        }];
-        #if js
-        // IsWebContext
-        kbOpts.push({
-            kbExpr: EditorContextKeys.editorTextFocus,
-            primary: KeyMod.CtrlCmd | KeyCode.F12,
-            weight: KeybindingWeight.EditorContrib
-        });
-        #end
-        super({
-            id: id != null ? id : ID,
-            label: r.localize('actions.goToDecl.label', "Go to Definition"),
-            alias: 'Go to Definition',
-            precondition: EditorContextKeys.hasDefinitionProvider,
-            kbOpts: id != null ? null : kbOpts,
-            contextMenuOpts: id != null ? null : {
-                group: 'navigation',
-                order: 1.1
-            }
-        });
+    public function new(r:EditorExtensionsRegistry, commands:Null<SymbolNavigationCommands>, configuration:SymbolNavigationActionConfig, opts:IActionOptions) {
+        super(opts);
         this.r = r;
-        this.configuration = configuration != null ? configuration : {openToSide: false, openInPeek: false, muteMessage: false};
+        this.commands = commands;
+        this.configuration = configuration;
+        if (commands != null && opts.id.length > 0) {
+            commands.all.set(opts.id, this);
+        }
     }
 
     public function run(accessor:Null<Cityscape>, editor:ICodeEditor, args:Any):Void {
-        runOn(editor, null);
+        runEditorCommandWith(editor, args, null, null);
+    }
+
+    override public function runEditorCommand(accessor:Null<Cityscape>, editor:ICodeEditor, args:Any):Void {
+        runEditorCommandWith(editor, args, null, null);
     }
 
     /**
-     * Monaco's `SymbolNavigationAction.runEditorCommand`: `callback` is
-     * called once the navigation is done (with the editor showing the
-     * definition, or null).
+     * Monaco's `runEditorCommand(accessor, editor, arg, range)`: `arg` may be
+     * a `SymbolNavigationAnchor`; `callback` is called once the navigation is
+     * done (Monaco's promise).
      */
-    public function runOn(editor:ICodeEditor, ?callback:(target:Null<ICodeEditor>) -> Void):Void {
+    public function runEditorCommandWith(editor:ICodeEditor, arg:Any, range:Null<Range>, ?callback:() -> Void):Void {
         if (!editor.hasModel()) {
-            if (callback != null) callback(null);
+            if (callback != null) callback();
             return;
         }
+        final context = editor.context;
+        final languageFeaturesService = context.languageFeaturesService;
 
         final model = editor.getModel();
         final position = editor.getPosition();
-        final versionId = model.getVersionId();
+        final anchor:SymbolNavigationAnchor = SymbolNavigationAnchor.is(arg) && Std.isOfType(arg, SymbolNavigationAnchor) ? cast arg : new SymbolNavigationAnchor(model, position);
 
-        final cts = new CancellationTokenSource();
         // EditorStateCancellationTokenSource (Value | Position)
+        final cts = new CancellationTokenSource();
+        final versionId = model.getVersionId();
         final listener = editor.onDidChangeCursorPosition(_ -> {
             if (!editor.getPosition().equals(position)) {
                 cts.cancel();
             }
         });
         final contentListener = editor.onDidChangeModelContent(_ -> cts.cancel());
-
-        GoToSymbol.getDefinitionsAtPosition(editor.context.languageFeaturesService.definitionProvider, model, position, false, cts.token).done(links -> {
+        function finish():Void {
             listener.dispose();
             contentListener.dispose();
-            if (links == null || cts.token.isCancellationRequested || model.getVersionId() != versionId) {
-                if (callback != null) callback(null);
+            cts.dispose();
+        }
+
+        this._getLocationModel(context, anchor.model, anchor.position, cts.token).done(references -> {
+            finish();
+            if (references == null || cts.token.isCancellationRequested || model.getVersionId() != versionId) {
+                if (callback != null) callback();
                 return;
             }
-            final references = new ReferencesModel(links, r.localize('def.title', 'Definitions'));
+
+            var altAction:Null<SymbolNavigationAction> = null;
+            if (references.referenceAt(model.uri, position) != null && commands != null) {
+                final altActionId = this._getAlternativeCommand(editor);
+                if (!commands.activeAlternativeCommands.exists(altActionId) && commands.all.exists(altActionId)) {
+                    altAction = commands.all.get(altActionId);
+                }
+            }
+
             final referenceCount = references.references.length;
+
             if (referenceCount == 0) {
                 // no result -> show message
                 if (!this.configuration.muteMessage) {
                     final info = model.getWordAtPosition(position);
-                    final message = info != null && info.word.length > 0
-                        ? r.localize('noResultWord', "No definition found for '{0}'", [info.word])
-                        : r.localize('generic.noResults', "No definition found");
-                    final f = editor.context.onNoResult;
+                    final f = context.onNoResult;
                     if (f != null) {
-                        f(editor, message, position);
+                        f(editor, this._getNoResultFoundMessage(info), position);
                     }
                 }
                 references.dispose();
-                if (callback != null) callback(null);
+                if (callback != null) callback();
             }
-            else {
-                // normal results handling: go to the first
-                final next = references.firstReference();
-                _openReference(editor, next, this.configuration.openToSide, true, target -> {
-                    references.dispose();
-                    if (callback != null) callback(target);
+            else if (referenceCount == 1 && altAction != null) {
+                // already at the only result, run alternative
+                references.dispose();
+                final id = this.id;
+                commands.activeAlternativeCommands.set(id, true);
+                altAction.runEditorCommandWith(editor, arg, range, () -> {
+                    commands.activeAlternativeCommands.remove(id);
+                    if (callback != null) callback();
                 });
             }
+            else {
+                // normal results handling
+                this._onResult(editor, references, range, callback);
+            }
+
         }, err -> {
-            listener.dispose();
-            contentListener.dispose();
+            finish();
+            // report an error
             Errors.onUnexpectedError(err);
-            if (callback != null) callback(null);
+            if (callback != null) callback();
         });
     }
 
-    static function _openReference(editor:ICodeEditor, reference:OneReference, sideBySide:Bool, highlight:Bool, callback:(target:Null<ICodeEditor>) -> Void):Void {
+    abstract function _getLocationModel(context:Cityscape, model:ITextModel, position:Position, token:CancellationToken):Promise<ReferencesModel>;
+
+    abstract function _getNoResultFoundMessage(info:Null<IWordAtPosition>):String;
+
+    abstract function _getAlternativeCommand(editor:ICodeEditor):String;
+
+    abstract function _getGoToPreference(editor:ICodeEditor):GoToLocationValues;
+
+    function _onResult(editor:ICodeEditor, model:ReferencesModel, range:Null<Range>, callback:Null<() -> Void>):Void {
+
+        final gotoLocation = this._getGoToPreference(editor);
+        if (!editor.isSimpleWidget && !PeekViewEditors.isEmbedded(editor) && (this.configuration.openInPeek || (gotoLocation == 'peek' && model.references.length > 1))) {
+            this._openInPeek(editor, model, range);
+            if (callback != null) callback();
+        }
+        else {
+            final next = model.firstReference();
+            final peek = model.references.length > 1 && gotoLocation == 'gotoAndPeek';
+            _openReference(editor, next, this.configuration.openToSide, !peek, targetEditor -> {
+                if (peek && targetEditor != null) {
+                    this._openInPeek(targetEditor, model, range);
+                }
+                else {
+                    model.dispose();
+                }
+
+                // keep remaining locations around when using
+                // 'goto'-mode
+                if (gotoLocation == 'goto' && commands != null) {
+                    commands.symbolNavigationService.put(next);
+                }
+                if (callback != null) callback();
+            });
+        }
+    }
+
+    public static function _openReference(editor:ICodeEditor, reference:OneReference, sideBySide:Bool, highlight:Bool, callback:(target:Null<ICodeEditor>) -> Void):Void {
         // range is the target-selection-range when we have one
         // and the fallback is the 'full' range
         var range:Null<IRange> = reference.link.targetSelectionRange;
@@ -215,7 +304,450 @@ class DefinitionAction extends EditorAction {
         });
     }
 
+    function _openInPeek(target:ICodeEditor, model:ReferencesModel, range:Null<Range>):Void {
+        final controller = ReferencesController.get(target);
+        if (controller != null && target.hasModel()) {
+            controller.toggleWidget(range != null ? range : target.getSelection(), Promise.resolve(model), this.configuration.openInPeek);
+        }
+        else {
+            model.dispose();
+        }
+    }
+
 }
+
+//#region --- DEFINITION
+
+/**
+ * The definitions of the symbol (Monaco's `DefinitionAction`), and
+ * `editor.action.revealDefinition` (F12) when created with
+ * `DefinitionAction.goTo`.
+ */
+class DefinitionAction extends SymbolNavigationAction {
+
+    /** `GoToDefinitionAction.id` */
+    public static inline final ID = 'editor.action.revealDefinition';
+
+    /**
+     * `GoToDefinitionAction`: `editor.action.revealDefinition`.
+     */
+    public static function goTo(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):DefinitionAction {
+        final kbOpts:Array<ICommandKeybindingsOptions> = [{
+            kbExpr: EditorContextKeys.editorTextFocus,
+            primary: KeyCode.F12,
+            weight: KeybindingWeight.EditorContrib
+        }];
+        #if js
+        // IsWebContext
+        kbOpts.push({
+            kbExpr: EditorContextKeys.editorTextFocus,
+            primary: KeyMod.CtrlCmd | KeyCode.F12,
+            weight: KeybindingWeight.EditorContrib
+        });
+        #end
+        return new DefinitionAction(r, commands, {openToSide: false, openInPeek: false, muteMessage: false}, {
+            id: ID,
+            label: r.localize('actions.goToDecl.label', "Go to Definition"),
+            alias: 'Go to Definition',
+            precondition: EditorContextKeys.hasDefinitionProvider,
+            kbOpts: kbOpts,
+            contextMenuOpts: {group: 'navigation', order: 1.1}
+        });
+    }
+
+    /**
+     * `OpenDefinitionToSideAction`: `editor.action.revealDefinitionAside`.
+     */
+    public static function toSide(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):DefinitionAction {
+        final kbOpts:Array<ICommandKeybindingsOptions> = [{
+            kbExpr: EditorContextKeys.editorTextFocus,
+            primary: KeyCodes.KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.F12),
+            weight: KeybindingWeight.EditorContrib
+        }];
+        #if js
+        kbOpts.push({
+            kbExpr: EditorContextKeys.editorTextFocus,
+            primary: KeyCodes.KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.F12),
+            weight: KeybindingWeight.EditorContrib
+        });
+        #end
+        return new DefinitionAction(r, commands, {openToSide: true, openInPeek: false, muteMessage: false}, {
+            id: 'editor.action.revealDefinitionAside',
+            label: r.localize('actions.goToDeclToSide.label', "Open Definition to the Side"),
+            alias: 'Open Definition to the Side',
+            precondition: ContextKeyExpr.and(EditorContextKeys.hasDefinitionProvider, EditorContextKeys.isInEmbeddedEditor.toNegated()),
+            kbOpts: kbOpts
+        });
+    }
+
+    /**
+     * `PeekDefinitionAction`: `editor.action.peekDefinition` (Alt+F12).
+     */
+    public static function peek(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):DefinitionAction {
+        return new DefinitionAction(r, commands, {openToSide: false, openInPeek: true, muteMessage: false}, {
+            id: 'editor.action.peekDefinition',
+            label: r.localize('actions.previewDecl.label', "Peek Definition"),
+            alias: 'Peek Definition',
+            precondition: ContextKeyExpr.and(EditorContextKeys.hasDefinitionProvider, PeekContext.notInPeekEditor, EditorContextKeys.isInEmbeddedEditor.toNegated()),
+            kbOpts: {
+                kbExpr: EditorContextKeys.editorTextFocus,
+                primary: KeyMod.Alt | KeyCode.F12,
+                linux: {primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.F10},
+                weight: KeybindingWeight.EditorContrib
+            },
+            contextMenuOpts: {menuId: 'EditorContextPeek', group: 'peek', order: 2}
+        });
+    }
+
+    /**
+     * A definition action without id nor keybinding (`id: ''`, what
+     * goToDefinitionAtPosition.ts runs on Cmd+click), or Monaco's
+     * `DefinitionAction` subclasses with their options.
+     */
+    public function new(r:EditorExtensionsRegistry, ?commands:SymbolNavigationCommands, ?configuration:SymbolNavigationActionConfig, ?opts:IActionOptions) {
+        super(r, commands, configuration != null ? configuration : {openToSide: false, openInPeek: false, muteMessage: false}, opts != null ? opts : {
+            id: '',
+            label: '',
+            alias: '',
+            precondition: null
+        });
+    }
+
+    /**
+     * Runs the action on an editor: `callback` is called once the navigation
+     * is done (with the editor showing the definition when it went to one).
+     */
+    public function runOn(editor:ICodeEditor, ?callback:(target:Null<ICodeEditor>) -> Void):Void {
+        runEditorCommandWith(editor, null, null, () -> {
+            if (callback != null) callback(editor.context.codeEditorService.getActiveCodeEditor());
+        });
+    }
+
+    function _getLocationModel(context:Cityscape, model:ITextModel, position:Position, token:CancellationToken):Promise<ReferencesModel> {
+        return GoToSymbol.getDefinitionsAtPosition(context.languageFeaturesService.definitionProvider, model, position, false, token)
+            .then(links -> new ReferencesModel(links != null ? links : [], r.localize('def.title', 'Definitions')));
+    }
+
+    function _getNoResultFoundMessage(info:Null<IWordAtPosition>):String {
+        return info != null && info.word.length > 0
+            ? r.localize('noResultWord', "No definition found for '{0}'", [info.word])
+            : r.localize('generic.noResults', "No definition found");
+    }
+
+    function _getAlternativeCommand(editor:ICodeEditor):String {
+        return editor.getOption(EditorOption.gotoLocation).alternativeDefinitionCommand;
+    }
+
+    function _getGoToPreference(editor:ICodeEditor):GoToLocationValues {
+        return editor.getOption(EditorOption.gotoLocation).multipleDefinitions;
+    }
+
+}
+
+//#endregion
+
+//#region --- DECLARATION
+
+class DeclarationAction extends SymbolNavigationAction {
+
+    /**
+     * `GoToDeclarationAction`: `editor.action.revealDeclaration`.
+     */
+    public static function goTo(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):DeclarationAction {
+        return new DeclarationAction(r, commands, {openToSide: false, openInPeek: false, muteMessage: false}, {
+            id: 'editor.action.revealDeclaration',
+            label: r.localize('actions.goToDeclaration.label', "Go to Declaration"),
+            alias: 'Go to Declaration',
+            precondition: ContextKeyExpr.and(EditorContextKeys.hasDeclarationProvider, EditorContextKeys.isInEmbeddedEditor.toNegated()),
+            contextMenuOpts: {group: 'navigation', order: 1.3}
+        });
+    }
+
+    /**
+     * `PeekDeclarationAction`: `editor.action.peekDeclaration`.
+     */
+    public static function peek(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):DeclarationAction {
+        return new DeclarationAction(r, commands, {openToSide: false, openInPeek: true, muteMessage: false}, {
+            id: 'editor.action.peekDeclaration',
+            label: r.localize('actions.peekDecl.label', "Peek Declaration"),
+            alias: 'Peek Declaration',
+            precondition: ContextKeyExpr.and(EditorContextKeys.hasDeclarationProvider, PeekContext.notInPeekEditor, EditorContextKeys.isInEmbeddedEditor.toNegated()),
+            contextMenuOpts: {menuId: 'EditorContextPeek', group: 'peek', order: 3}
+        });
+    }
+
+    public function new(r:EditorExtensionsRegistry, commands:Null<SymbolNavigationCommands>, configuration:SymbolNavigationActionConfig, opts:IActionOptions) {
+        super(r, commands, configuration, opts);
+    }
+
+    function _getLocationModel(context:Cityscape, model:ITextModel, position:Position, token:CancellationToken):Promise<ReferencesModel> {
+        return GoToSymbol.getDeclarationsAtPosition(context.languageFeaturesService.declarationProvider, model, position, false, token)
+            .then(links -> new ReferencesModel(links != null ? links : [], r.localize('decl.title', 'Declarations')));
+    }
+
+    function _getNoResultFoundMessage(info:Null<IWordAtPosition>):String {
+        return info != null && info.word.length > 0
+            ? r.localize('decl.noResultWord', "No declaration found for '{0}'", [info.word])
+            : r.localize('decl.generic.noResults', "No declaration found");
+    }
+
+    function _getAlternativeCommand(editor:ICodeEditor):String {
+        return editor.getOption(EditorOption.gotoLocation).alternativeDeclarationCommand;
+    }
+
+    function _getGoToPreference(editor:ICodeEditor):GoToLocationValues {
+        return editor.getOption(EditorOption.gotoLocation).multipleDeclarations;
+    }
+
+}
+
+//#endregion
+
+//#region --- TYPE DEFINITION
+
+class TypeDefinitionAction extends SymbolNavigationAction {
+
+    /**
+     * `GoToTypeDefinitionAction`: `editor.action.goToTypeDefinition`.
+     */
+    public static function goTo(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):TypeDefinitionAction {
+        return new TypeDefinitionAction(r, commands, {openToSide: false, openInPeek: false, muteMessage: false}, {
+            id: 'editor.action.goToTypeDefinition',
+            label: r.localize('actions.goToTypeDefinition.label', "Go to Type Definition"),
+            alias: 'Go to Type Definition',
+            precondition: EditorContextKeys.hasTypeDefinitionProvider,
+            kbOpts: {
+                kbExpr: EditorContextKeys.editorTextFocus,
+                primary: 0,
+                weight: KeybindingWeight.EditorContrib
+            },
+            contextMenuOpts: {group: 'navigation', order: 1.4}
+        });
+    }
+
+    /**
+     * `PeekTypeDefinitionAction`: `editor.action.peekTypeDefinition`.
+     */
+    public static function peek(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):TypeDefinitionAction {
+        return new TypeDefinitionAction(r, commands, {openToSide: false, openInPeek: true, muteMessage: false}, {
+            id: 'editor.action.peekTypeDefinition',
+            label: r.localize('actions.peekTypeDefinition.label', "Peek Type Definition"),
+            alias: 'Peek Type Definition',
+            precondition: ContextKeyExpr.and(EditorContextKeys.hasTypeDefinitionProvider, PeekContext.notInPeekEditor, EditorContextKeys.isInEmbeddedEditor.toNegated()),
+            contextMenuOpts: {menuId: 'EditorContextPeek', group: 'peek', order: 4}
+        });
+    }
+
+    public function new(r:EditorExtensionsRegistry, commands:Null<SymbolNavigationCommands>, configuration:SymbolNavigationActionConfig, opts:IActionOptions) {
+        super(r, commands, configuration, opts);
+    }
+
+    function _getLocationModel(context:Cityscape, model:ITextModel, position:Position, token:CancellationToken):Promise<ReferencesModel> {
+        return GoToSymbol.getTypeDefinitionsAtPosition(context.languageFeaturesService.typeDefinitionProvider, model, position, false, token)
+            .then(links -> new ReferencesModel(links != null ? links : [], r.localize('typedef.title', 'Type Definitions')));
+    }
+
+    function _getNoResultFoundMessage(info:Null<IWordAtPosition>):String {
+        return info != null && info.word.length > 0
+            ? r.localize('goToTypeDefinition.noResultWord', "No type definition found for '{0}'", [info.word])
+            : r.localize('goToTypeDefinition.generic.noResults', "No type definition found");
+    }
+
+    function _getAlternativeCommand(editor:ICodeEditor):String {
+        return editor.getOption(EditorOption.gotoLocation).alternativeTypeDefinitionCommand;
+    }
+
+    function _getGoToPreference(editor:ICodeEditor):GoToLocationValues {
+        return editor.getOption(EditorOption.gotoLocation).multipleTypeDefinitions;
+    }
+
+}
+
+//#endregion
+
+//#region --- IMPLEMENTATION
+
+class ImplementationAction extends SymbolNavigationAction {
+
+    /**
+     * `GoToImplementationAction`: `editor.action.goToImplementation` (Cmd+F12).
+     */
+    public static function goTo(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):ImplementationAction {
+        return new ImplementationAction(r, commands, {openToSide: false, openInPeek: false, muteMessage: false}, {
+            id: 'editor.action.goToImplementation',
+            label: r.localize('actions.goToImplementation.label', "Go to Implementations"),
+            alias: 'Go to Implementations',
+            precondition: EditorContextKeys.hasImplementationProvider,
+            kbOpts: {
+                kbExpr: EditorContextKeys.editorTextFocus,
+                primary: KeyMod.CtrlCmd | KeyCode.F12,
+                weight: KeybindingWeight.EditorContrib
+            },
+            contextMenuOpts: {group: 'navigation', order: 1.45}
+        });
+    }
+
+    /**
+     * `PeekImplementationAction`: `editor.action.peekImplementation`
+     * (Cmd+Shift+F12).
+     */
+    public static function peek(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):ImplementationAction {
+        return new ImplementationAction(r, commands, {openToSide: false, openInPeek: true, muteMessage: false}, {
+            id: 'editor.action.peekImplementation',
+            label: r.localize('actions.peekImplementation.label', "Peek Implementations"),
+            alias: 'Peek Implementations',
+            precondition: ContextKeyExpr.and(EditorContextKeys.hasImplementationProvider, PeekContext.notInPeekEditor, EditorContextKeys.isInEmbeddedEditor.toNegated()),
+            kbOpts: {
+                kbExpr: EditorContextKeys.editorTextFocus,
+                primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.F12,
+                weight: KeybindingWeight.EditorContrib
+            },
+            contextMenuOpts: {menuId: 'EditorContextPeek', group: 'peek', order: 5}
+        });
+    }
+
+    public function new(r:EditorExtensionsRegistry, commands:Null<SymbolNavigationCommands>, configuration:SymbolNavigationActionConfig, opts:IActionOptions) {
+        super(r, commands, configuration, opts);
+    }
+
+    function _getLocationModel(context:Cityscape, model:ITextModel, position:Position, token:CancellationToken):Promise<ReferencesModel> {
+        return GoToSymbol.getImplementationsAtPosition(context.languageFeaturesService.implementationProvider, model, position, false, token)
+            .then(links -> new ReferencesModel(links != null ? links : [], r.localize('impl.title', 'Implementations')));
+    }
+
+    function _getNoResultFoundMessage(info:Null<IWordAtPosition>):String {
+        return info != null && info.word.length > 0
+            ? r.localize('goToImplementation.noResultWord', "No implementation found for '{0}'", [info.word])
+            : r.localize('goToImplementation.generic.noResults', "No implementation found");
+    }
+
+    function _getAlternativeCommand(editor:ICodeEditor):String {
+        return editor.getOption(EditorOption.gotoLocation).alternativeImplementationCommand;
+    }
+
+    function _getGoToPreference(editor:ICodeEditor):GoToLocationValues {
+        return editor.getOption(EditorOption.gotoLocation).multipleImplementations;
+    }
+
+}
+
+//#endregion
+
+//#region --- REFERENCES
+
+class ReferencesAction extends SymbolNavigationAction {
+
+    /**
+     * `GoToReferencesAction`: `editor.action.goToReferences` (Shift+F12).
+     */
+    public static function goTo(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):ReferencesAction {
+        return new ReferencesAction(r, commands, true, {openToSide: false, openInPeek: false, muteMessage: false}, {
+            id: 'editor.action.goToReferences',
+            label: r.localize('goToReferences.label', "Go to References"),
+            alias: 'Go to References',
+            precondition: ContextKeyExpr.and(EditorContextKeys.hasReferenceProvider, PeekContext.notInPeekEditor, EditorContextKeys.isInEmbeddedEditor.toNegated()),
+            kbOpts: {
+                kbExpr: EditorContextKeys.editorTextFocus,
+                primary: KeyMod.Shift | KeyCode.F12,
+                weight: KeybindingWeight.EditorContrib
+            },
+            contextMenuOpts: {group: 'navigation', order: 1.45}
+        });
+    }
+
+    /**
+     * `PeekReferencesAction`: `editor.action.referenceSearch.trigger`.
+     */
+    public static function peek(r:EditorExtensionsRegistry, commands:SymbolNavigationCommands):ReferencesAction {
+        return new ReferencesAction(r, commands, false, {openToSide: false, openInPeek: true, muteMessage: false}, {
+            id: 'editor.action.referenceSearch.trigger',
+            label: r.localize('references.action.label', "Peek References"),
+            alias: 'Peek References',
+            precondition: ContextKeyExpr.and(EditorContextKeys.hasReferenceProvider, PeekContext.notInPeekEditor, EditorContextKeys.isInEmbeddedEditor.toNegated()),
+            contextMenuOpts: {menuId: 'EditorContextPeek', group: 'peek', order: 6}
+        });
+    }
+
+    /**
+     * `getReferencesAtPosition`'s `compact` (true for "Go to References").
+     */
+    final compact:Bool;
+
+    public function new(r:EditorExtensionsRegistry, commands:Null<SymbolNavigationCommands>, compact:Bool, configuration:SymbolNavigationActionConfig, opts:IActionOptions) {
+        super(r, commands, configuration, opts);
+        this.compact = compact;
+    }
+
+    function _getLocationModel(context:Cityscape, model:ITextModel, position:Position, token:CancellationToken):Promise<ReferencesModel> {
+        return GoToSymbol.getReferencesAtPosition(context.languageFeaturesService.referenceProvider, model, position, compact, false, token)
+            .then(links -> new ReferencesModel(links != null ? links : [], r.localize('ref.title', 'References')));
+    }
+
+    function _getNoResultFoundMessage(info:Null<IWordAtPosition>):String {
+        return info != null
+            ? r.localize('references.no', "No references found for '{0}'", [info.word])
+            : r.localize('references.noGeneric', "No references found");
+    }
+
+    function _getAlternativeCommand(editor:ICodeEditor):String {
+        return editor.getOption(EditorOption.gotoLocation).alternativeReferenceCommand;
+    }
+
+    function _getGoToPreference(editor:ICodeEditor):GoToLocationValues {
+        return editor.getOption(EditorOption.gotoLocation).multipleReferences;
+    }
+
+}
+
+//#endregion
+
+//#region --- GENERIC goto symbols command
+
+/**
+ * `editor.action.goToLocation` over given locations (Monaco's
+ * `GenericGoToLocationAction`, behind the `editor.action.goToLocations`
+ * and `editor.action.peekLocations` commands).
+ */
+class GenericGoToLocationAction extends SymbolNavigationAction {
+
+    final _references:Array<LocationLink>;
+    final _gotoMultipleBehaviour:Null<GoToLocationValues>;
+    final _noResultsMessage:Null<String>;
+
+    public function new(r:EditorExtensionsRegistry, commands:Null<SymbolNavigationCommands>, config:SymbolNavigationActionConfig, references:Array<LocationLink>, gotoMultipleBehaviour:Null<GoToLocationValues>, ?noResultsMessage:String) {
+        super(r, commands, config, {
+            id: 'editor.action.goToLocation',
+            label: r.localize('label.generic', "Go to Any Symbol"),
+            alias: 'Go to Any Symbol',
+            precondition: ContextKeyExpr.and(PeekContext.notInPeekEditor, EditorContextKeys.isInEmbeddedEditor.toNegated())
+        });
+        this._references = references;
+        this._gotoMultipleBehaviour = gotoMultipleBehaviour;
+        this._noResultsMessage = noResultsMessage;
+    }
+
+    function _getLocationModel(context:Cityscape, model:ITextModel, position:Position, token:CancellationToken):Promise<ReferencesModel> {
+        return Promise.resolve(new ReferencesModel(this._references, r.localize('generic.title', 'Locations')));
+    }
+
+    function _getNoResultFoundMessage(info:Null<IWordAtPosition>):String {
+        if (_noResultsMessage != null && _noResultsMessage.length > 0) {
+            return _noResultsMessage;
+        }
+        return info != null ? r.localize('generic.noResult', "No results for '{0}'", [info.word]) : '';
+    }
+
+    function _getGoToPreference(editor:ICodeEditor):GoToLocationValues {
+        return this._gotoMultipleBehaviour != null ? this._gotoMultipleBehaviour : editor.getOption(EditorOption.gotoLocation).multipleReferences;
+    }
+
+    function _getAlternativeCommand(editor:ICodeEditor):String {
+        return '';
+    }
+
+}
+
+//#endregion
 
 /**
  * `'ctrlKey'`, `'shiftKey'`, `'altKey'` or `'metaKey'`.
@@ -436,8 +968,7 @@ class ClickLinkGesture extends Disposable {
  * Underlines the symbol under the mouse while Cmd (Ctrl) is held when it
  * has a definition, with a preview of the definition in its hover, and goes
  * to it on Cmd+click (Monaco's `GotoDefinitionAtPositionEditorContribution`).
- * The definition opens in place (`definitionLinkOpensInPeek` is accepted:
- * the peek view is not ported).
+ * With `definitionLinkOpensInPeek`, the definition opens in the peek view.
  */
 class GotoDefinitionAtPosition implements IEditorContribution {
 
@@ -733,7 +1264,8 @@ class GotoDefinitionAtPosition implements IEditorContribution {
 
     function gotoDefinition(position:Position, openToSide:Bool, done:() -> Void):Void {
         this.editor.setPosition(position);
-        final action = new DefinitionAction(r, {openToSide: openToSide, openInPeek: false, muteMessage: true}, '');
+        final canPeek = !openToSide && this.editor.getOption(EditorOption.definitionLinkOpensInPeek) && !PeekViewEditors.isEmbedded(this.editor);
+        final action = new DefinitionAction(r, null, {openToSide: openToSide, openInPeek: canPeek, muteMessage: true});
         action.runOn(this.editor, _ -> done());
     }
 
@@ -748,11 +1280,9 @@ class GotoDefinitionAtPosition implements IEditorContribution {
 }
 
 /**
- * The registration of goToCommands.ts and goToDefinitionAtPosition.ts
- * (their module level code, for the definition). The declaration, type
- * definition, implementation and references commands are not ported yet
- * (their providers are, with `GoToSymbol`).
- * TODO(step 7): the other symbol navigation commands and the peek view.
+ * The registration of goToCommands.ts, symbolNavigation.ts,
+ * peek/referencesController.ts and goToDefinitionAtPosition.ts (their module
+ * level code).
  */
 class GoToSymbolRegistration {
 
@@ -770,7 +1300,106 @@ class GoToSymbolRegistration {
                 border: {color: {id: 'editor.symbolHighlightBorder'}}
             });
         }
-        r.registerEditorAction(new DefinitionAction(r));
+
+        final commands = new SymbolNavigationCommands(r);
+        final context = r.context;
+
+        // goToCommands.ts
+        r.registerEditorAction(DefinitionAction.goTo(r, commands));
+        context.commandsRegistry.registerCommandAlias('editor.action.goToDeclaration', DefinitionAction.ID);
+        r.registerEditorAction(DefinitionAction.toSide(r, commands));
+        context.commandsRegistry.registerCommandAlias('editor.action.openDeclarationToTheSide', 'editor.action.revealDefinitionAside');
+        r.registerEditorAction(DefinitionAction.peek(r, commands));
+        context.commandsRegistry.registerCommandAlias('editor.action.previewDeclaration', 'editor.action.peekDefinition');
+        r.registerEditorAction(DeclarationAction.goTo(r, commands));
+        r.registerEditorAction(DeclarationAction.peek(r, commands));
+        r.registerEditorAction(TypeDefinitionAction.goTo(r, commands));
+        r.registerEditorAction(TypeDefinitionAction.peek(r, commands));
+        r.registerEditorAction(ImplementationAction.goTo(r, commands));
+        r.registerEditorAction(ImplementationAction.peek(r, commands));
+        r.registerEditorAction(ReferencesAction.goTo(r, commands));
+        r.registerEditorAction(ReferencesAction.peek(r, commands));
+
+        // editor.action.goToLocations (uri, position, locations, multiple?, noResultsMessage?, openInPeek?)
+        context.commandsRegistry.registerCommand({
+            id: 'editor.action.goToLocations',
+            metadata: {description: 'Go to locations from a position in a file'},
+            handler: (accessor, args) -> {
+                final resource:Null<Uri> = args.length > 0 && Std.isOfType(args[0], Uri) ? cast args[0] : null;
+                final position:Null<IPosition> = args.length > 1 && Position.isIPosition(args[1]) ? args[1] : null;
+                final references:Null<Array<LocationLink>> = args.length > 2 && Std.isOfType(args[2], Array) ? args[2] : null;
+                if (resource == null || position == null || references == null) {
+                    return;
+                }
+                final multiple:Null<String> = args.length > 3 && JsValues.isString(args[3]) ? args[3] : null;
+                final noResultsMessage:Null<String> = args.length > 4 && JsValues.isString(args[4]) ? args[4] : null;
+                final openInPeek = args.length > 5 && args[5] == true;
+                context.codeEditorService.openCodeEditor({resource: resource}, context.codeEditorService.getFocusedCodeEditor(), false, editor -> {
+                    if (editor == null) {
+                        return;
+                    }
+                    editor.setPosition(position);
+                    editor.revealPositionInCenterIfOutsideViewport(position, ScrollType.Smooth);
+                    final command = new GenericGoToLocationAction(r, commands, {
+                        muteMessage: noResultsMessage == null || noResultsMessage.length == 0,
+                        openInPeek: openInPeek,
+                        openToSide: false
+                    }, references, multiple, noResultsMessage);
+                    command.runEditorCommandWith(editor, null, null);
+                });
+            }
+        });
+
+        // editor.action.peekLocations (uri, position, locations, multiple?)
+        context.commandsRegistry.registerCommand({
+            id: 'editor.action.peekLocations',
+            metadata: {description: 'Peek locations from a position in a file'},
+            handler: (accessor, args) -> {
+                context.commandService.executeCommand('editor.action.goToLocations', [
+                    args.length > 0 ? args[0] : null,
+                    args.length > 1 ? args[1] : null,
+                    args.length > 2 ? args[2] : null,
+                    args.length > 3 ? args[3] : null,
+                    null,
+                    true
+                ]);
+            }
+        });
+
+        // editor.action.findReferences (uri, position)
+        context.commandsRegistry.registerCommand({
+            id: 'editor.action.findReferences',
+            handler: (accessor, args) -> {
+                final resource:Null<Uri> = args.length > 0 && Std.isOfType(args[0], Uri) ? cast args[0] : null;
+                final position:Null<IPosition> = args.length > 1 && Position.isIPosition(args[1]) ? args[1] : null;
+                if (resource == null || position == null) {
+                    return;
+                }
+                context.codeEditorService.openCodeEditor({resource: resource}, context.codeEditorService.getFocusedCodeEditor(), false, control -> {
+                    if (control == null || !control.hasModel()) {
+                        return;
+                    }
+                    final controller = ReferencesController.get(control);
+                    if (controller == null) {
+                        return;
+                    }
+                    final references = GoToSymbol.getReferencesAtPosition(context.languageFeaturesService.referenceProvider, control.getModel(), Position.lift(position), false, false, CancellationTokens.None)
+                        .then(links -> new ReferencesModel(links != null ? links : [], r.localize('ref.title', 'References')));
+                    final range = new Range(position.lineNumber, position.column, position.lineNumber, position.column);
+                    controller.toggleWidget(range, references, false);
+                });
+            }
+        });
+
+        // use NEW command
+        context.commandsRegistry.registerCommandAlias('editor.action.showReferences', 'editor.action.peekLocations');
+
+        // symbolNavigation.ts
+        SymbolNavigationRegistration.register(r, commands.symbolNavigationService);
+
+        // peek/referencesController.ts
+        ReferencesControllerRegistration.register(r);
+
         r.registerEditorContribution(GotoDefinitionAtPosition.ID, editor -> new GotoDefinitionAtPosition(editor, r), EditorContributionInstantiation.BeforeFirstInteraction);
     }
 

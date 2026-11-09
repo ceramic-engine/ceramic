@@ -26,8 +26,9 @@ class ColorRegistryTest extends TestCase {
         // listColors, menuColors, minimapColors, miscColors, quickpickColors,
         // searchColors and editorColorRegistry, all with distinct ids, and
         // the 3 of the folding contribution (foldingDecorations.ts) and the
-        // 3 of the diff editor (registrations.contribution.ts)
-        assertEquals(297 + 3 + 3, colors.length);
+        // 3 of the diff editor (registrations.contribution.ts), the 15 of
+        // the peek view (peekView.ts)
+        assertEquals(297 + 3 + 3 + 15, colors.length);
         final ids = new Map<String, Bool>();
         for (c in colors) {
             ids.set(c.id, true);

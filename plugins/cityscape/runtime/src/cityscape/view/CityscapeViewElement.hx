@@ -65,7 +65,7 @@ class CityscapeViewElement extends Element {
         final v = view.read(cx);
         v.layoutTo(bounds, window.scaleFactor(), window);
         final hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
-        window.setCursorStyle(CursorStyle.IBeam, hitbox);
+        window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : CursorStyle.IBeam, hitbox);
     }
 
     static final NO_RADII = new Corners(0, 0, 0, 0);
@@ -215,6 +215,20 @@ class CityscapeViewElement extends Element {
                     }
                 }
             }
+            // Snippets (step 7): an empty range whose box has a minimum width (snippet tab stops)
+            if (boxStyles != null && range.isEmpty() && opts.showIfCollapsed != true && range.startLineNumber >= startLine && range.startLineNumber <= endLine) {
+                for (st in boxStyles) {
+                    if (st.minWidth == null) {
+                        continue;
+                    }
+                    final box = v.resolver.resolveBox(st);
+                    if (box != null && box.minWidth > 0) {
+                        final line = lines[range.startLineNumber - startLine];
+                        final x = line.columnToX(range.startColumn);
+                        paintBox(window, state, box, contentX + x - box.minWidth / 2, lineTop(range.startLineNumber), box.minWidth, lineHeight, line, true, true);
+                    }
+                }
+            }
             if (boxStyles != null && (!range.isEmpty() || opts.showIfCollapsed == true)) {
                 final boxes = styles.boxBoxes;
                 final underlineColors = styles.boxUnderlineColors;
@@ -271,8 +285,9 @@ class CityscapeViewElement extends Element {
                         q++;
                     }
                 }
-                final x1 = line.layout.xForIndex(line.offsets.utf16ToByte(line.runs.partStarts[p]));
-                final x2 = line.layout.xForIndex(line.offsets.utf16ToByte(line.runs.partEnds[q - 1]));
+                // the box bounds include the horizontal padding of the parts (inlay hints, cs7-rest-inlay)
+                final x1 = line.partBoxStarts != null ? line.partBoxStarts[p] : line.layout.xForIndex(line.offsets.utf16ToByte(line.runs.partStarts[p]));
+                final x2 = line.partBoxEnds != null ? line.partBoxEnds[q - 1] : line.layout.xForIndex(line.offsets.utf16ToByte(line.runs.partEnds[q - 1]));
                 paintBox(window, state, box, contentX + x1, y, x2 - x1, lineHeight, line, true, true);
                 p = q;
             }

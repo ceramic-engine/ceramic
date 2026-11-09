@@ -3,19 +3,55 @@
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.contrib.snippet.view;
 
+import cityscape.Nls;
+import cityscape.base.common.Path;
+import cityscape.base.common.Resources;
 import cityscape.base.common.Strings;
 import cityscape.common.Model.ITextModel;
 import cityscape.common.core.Selection;
 import cityscape.common.languages.LanguageConfigurationRegistry.ILanguageConfigurationService;
 import cityscape.contrib.snippet.view.SnippetParser;
 import cityscape.contrib.suggest.view.SuggestOvertypingCapturer;
+import cityscape.platform.label.common.Label.ILabelService;
+import cityscape.platform.workspace.common.Workspace;
 
 /*
- * The variables of snippets. Not ported: the workspace variables
- * (`WORKSPACE_NAME`, `WORKSPACE_FOLDER`: no workspace service), and the
- * label service of the file variables (`TM_DIRECTORY`, `TM_FILEPATH` and
- * `RELATIVE_FILEPATH` give the file system path of the model's uri).
+ * The variables of snippets. The services Monaco injects are the context's
+ * (`Cityscape.labelService`, `Cityscape.workspaceContextService`, Monaco's
+ * standalone ones by default). Paths are posix paths (Monaco uses the
+ * win32 path functions for file paths on Windows).
  */
+
+/**
+ * The names of the variables snippets know (Monaco's frozen object
+ * `KnownSnippetVariableNames`).
+ */
+class KnownSnippetVariableNames {
+
+    static var _names:Null<Map<String, Bool>> = null;
+
+    public static function has(name:String):Bool {
+        if (_names == null) {
+            final names = new Map<String, Bool>();
+            for (n in [
+                'CURRENT_YEAR', 'CURRENT_YEAR_SHORT', 'CURRENT_MONTH', 'CURRENT_DATE', 'CURRENT_HOUR', 'CURRENT_MINUTE',
+                'CURRENT_SECOND', 'CURRENT_DAY_NAME', 'CURRENT_DAY_NAME_SHORT', 'CURRENT_MONTH_NAME',
+                'CURRENT_MONTH_NAME_SHORT', 'CURRENT_SECONDS_UNIX', 'CURRENT_TIMEZONE_OFFSET', 'SELECTION', 'CLIPBOARD',
+                'TM_SELECTED_TEXT', 'TM_CURRENT_LINE', 'TM_CURRENT_WORD', 'TM_LINE_INDEX', 'TM_LINE_NUMBER',
+                'TM_FILENAME', 'TM_FILENAME_BASE', 'TM_DIRECTORY', 'TM_FILEPATH',
+                'CURSOR_INDEX', // 0-offset
+                'CURSOR_NUMBER', // 1-offset
+                'RELATIVE_FILEPATH', 'BLOCK_COMMENT_START', 'BLOCK_COMMENT_END', 'LINE_COMMENT', 'WORKSPACE_NAME',
+                'WORKSPACE_FOLDER', 'RANDOM', 'RANDOM_HEX', 'UUID'
+            ]) {
+                names.set(n, true);
+            }
+            _names = names;
+        }
+        return _names.exists(name);
+    }
+
+}
 
 class CompositeSnippetVariableResolver implements VariableResolver {
 
@@ -153,61 +189,45 @@ class SelectionBasedVariableResolver implements VariableResolver {
 
 class ModelBasedVariableResolver implements VariableResolver {
 
+    final _labelService:ILabelService;
     final _model:ITextModel;
 
-    public function new(model:ITextModel) {
+    public function new(labelService:ILabelService, model:ITextModel) {
+        this._labelService = labelService;
         this._model = model;
-    }
-
-    static function basename(path:String):String {
-        var end = path.length;
-        while (end > 1 && StringTools.fastCodeAt(path, end - 1) == '/'.code) {
-            end--;
-        }
-        final idx = path.lastIndexOf('/', end - 1);
-        return path.substring(idx + 1, end);
-    }
-
-    static function dirname(path:String):String {
-        final idx = path.lastIndexOf('/');
-        if (idx < 0) {
-            return '.';
-        }
-        return idx == 0 ? '/' : path.substring(0, idx);
     }
 
     public function resolve(variable:Variable):Null<String> {
 
         final name = variable.name;
-        final fsPath = this._model.uri.fsPath;
 
         if (name == 'TM_FILENAME') {
-            return basename(fsPath);
+            return Path.basename(this._model.uri.fsPath);
 
         }
         else if (name == 'TM_FILENAME_BASE') {
-            final name = basename(fsPath);
+            final name = Path.basename(this._model.uri.fsPath);
             final idx = name.lastIndexOf('.');
             if (idx <= 0) {
                 return name;
             }
             else {
-                return name.substr(0, idx);
+                return name.substring(0, idx);
             }
 
         }
         else if (name == 'TM_DIRECTORY') {
-            if (dirname(fsPath) == '.') {
+            if (Path.dirname(this._model.uri.fsPath) == '.') {
                 return '';
             }
-            return dirname(fsPath);
+            return this._labelService.getUriLabel(Resources.dirname(this._model.uri));
 
         }
         else if (name == 'TM_FILEPATH') {
-            return fsPath;
+            return this._labelService.getUriLabel(this._model.uri);
         }
         else if (name == 'RELATIVE_FILEPATH') {
-            return fsPath;
+            return this._labelService.getUriLabel(this._model.uri, {relative: true, noPrefix: true});
         }
 
         return null;
@@ -242,7 +262,7 @@ class ClipboardBasedVariableResolver implements VariableResolver {
         // text whenever there the line count equals the cursor count
         // and when enabled
         if (this._spread) {
-            final lines = [for (s in Strings.splitLines(clipboardText)) if (StringTools.trim(s).length > 0) s];
+            final lines = [for (s in Strings.splitLines(clipboardText)) if (!Strings.isFalsyOrWhitespace(s)) s];
             if (lines.length == this._selectionCount) {
                 return lines[this._selectionIdx];
             }
@@ -288,15 +308,28 @@ class CommentBasedVariableResolver implements VariableResolver {
 
 class TimeBasedVariableResolver implements VariableResolver {
 
-    static final dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    static final dayNamesShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    static final monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    static final monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final dayNames:Array<String>;
+    final dayNamesShort:Array<String>;
+    final monthNames:Array<String>;
+    final monthNamesShort:Array<String>;
 
     final _date = Date.now();
 
-    public function new() {}
+    /**
+     * `nls`: the translations of the day and month names (the context's,
+     * `editor.context.nls`; English without).
+     */
+    public function new(?nls:Nls) {
+        inline function localize(key:String, message:String):String {
+            return nls != null ? nls.localize(key, message) : message;
+        }
+        this.dayNames = [localize('Sunday', "Sunday"), localize('Monday', "Monday"), localize('Tuesday', "Tuesday"), localize('Wednesday', "Wednesday"), localize('Thursday', "Thursday"), localize('Friday', "Friday"), localize('Saturday', "Saturday")];
+        this.dayNamesShort = [localize('SundayShort', "Sun"), localize('MondayShort', "Mon"), localize('TuesdayShort', "Tue"), localize('WednesdayShort', "Wed"), localize('ThursdayShort', "Thu"), localize('FridayShort', "Fri"), localize('SaturdayShort', "Sat")];
+        this.monthNames = [localize('January', "January"), localize('February', "February"), localize('March', "March"), localize('April', "April"), localize('May', "May"), localize('June', "June"), localize('July', "July"), localize('August', "August"), localize('September', "September"), localize('October', "October"), localize('November', "November"), localize('December', "December")];
+        this.monthNamesShort = [localize('JanuaryShort', "Jan"), localize('FebruaryShort', "Feb"), localize('MarchShort', "Mar"), localize('AprilShort', "Apr"), localize('MayShort', "May"), localize('JuneShort', "Jun"), localize('JulyShort', "Jul"), localize('AugustShort', "Aug"), localize('SeptemberShort', "Sep"), localize('OctoberShort', "Oct"), localize('NovemberShort', "Nov"), localize('DecemberShort', "Dec")];
+    }
 
+    /** `String(n).padStart(2, '0')` */
     static function pad2(n:Int):String {
         return n < 10 ? '0' + n : Std.string(n);
     }
@@ -342,19 +375,84 @@ class TimeBasedVariableResolver implements VariableResolver {
             return Std.string(Math.floor(this._date.getTime() / 1000));
         }
         else if (name == 'CURRENT_TIMEZONE_OFFSET') {
-            // minutes behind UTC, like JavaScript's getTimezoneOffset
-            final rawTimeOffset = Math.round((Date.fromString(DateTools.format(this._date, '%Y-%m-%d %H:%M:%S')).getTime() - utcAsLocal(this._date).getTime()) / 60000);
+            final rawTimeOffset = getTimezoneOffset(this._date);
             final sign = rawTimeOffset > 0 ? '-' : '+';
             final hours = Std.int(Math.abs(rawTimeOffset / 60));
+            final hoursString = (hours < 10 ? '0' + hours : Std.string(hours));
             final minutes = Std.int(Math.abs(rawTimeOffset) - hours * 60);
-            return sign + pad2(hours) + ':' + pad2(minutes);
+            final minutesString = (minutes < 10 ? '0' + minutes : Std.string(minutes));
+            return sign + hoursString + ':' + minutesString;
         }
 
         return null;
     }
 
-    static function utcAsLocal(date:Date):Date {
-        return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+    /**
+     * JavaScript's `Date.getTimezoneOffset`: the minutes from local time to
+     * UTC (positive west of Greenwich).
+     */
+    public static function getTimezoneOffset(date:Date):Int {
+        #if js
+        return (untyped date).getTimezoneOffset();
+        #else
+        final local = new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds());
+        final utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+        return Math.round((utc.getTime() - local.getTime()) / 60000);
+        #end
+    }
+}
+
+class WorkspaceBasedVariableResolver implements VariableResolver {
+
+    final _workspaceService:Null<IWorkspaceContextService>;
+
+    public function new(workspaceService:Null<IWorkspaceContextService>) {
+        this._workspaceService = workspaceService;
+    }
+
+    public function resolve(variable:Variable):Null<String> {
+        if (this._workspaceService == null) {
+            return null;
+        }
+
+        final workspaceIdentifier = WorkspaceUtils.toWorkspaceIdentifier(this._workspaceService.getWorkspace());
+        if (WorkspaceUtils.isEmptyWorkspaceIdentifier(workspaceIdentifier)) {
+            return null;
+        }
+
+        if (variable.name == 'WORKSPACE_NAME') {
+            return this._resolveWorkspaceName(workspaceIdentifier);
+        }
+        else if (variable.name == 'WORKSPACE_FOLDER') {
+            return this._resoveWorkspacePath(workspaceIdentifier);
+        }
+
+        return null;
+    }
+
+    function _resolveWorkspaceName(workspaceIdentifier:IAnyWorkspaceIdentifier):Null<String> {
+        if (WorkspaceUtils.isSingleFolderWorkspaceIdentifier(workspaceIdentifier)) {
+            return Path.basename(workspaceIdentifier.uri.path);
+        }
+
+        var filename = Path.basename(workspaceIdentifier.configPath.path);
+        if (StringTools.endsWith(filename, WorkspaceUtils.WORKSPACE_EXTENSION)) {
+            filename = filename.substr(0, filename.length - WorkspaceUtils.WORKSPACE_EXTENSION.length - 1);
+        }
+        return filename;
+    }
+
+    function _resoveWorkspacePath(workspaceIdentifier:IAnyWorkspaceIdentifier):Null<String> {
+        if (WorkspaceUtils.isSingleFolderWorkspaceIdentifier(workspaceIdentifier)) {
+            return Resources.normalizeDriveLetter(workspaceIdentifier.uri.fsPath);
+        }
+
+        final filename = Path.basename(workspaceIdentifier.configPath.path);
+        var folderpath = workspaceIdentifier.configPath.fsPath;
+        if (StringTools.endsWith(folderpath, filename)) {
+            folderpath = folderpath.substr(0, folderpath.length - filename.length - 1);
+        }
+        return (folderpath.length > 0 ? Resources.normalizeDriveLetter(folderpath) : '/');
     }
 }
 

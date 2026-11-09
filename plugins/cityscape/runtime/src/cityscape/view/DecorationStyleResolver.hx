@@ -20,6 +20,8 @@ class ResolvedBox {
     public var paddingTop:Float = 0;
     public var paddingBottom:Float = 0;
     public var join:Bool = true;
+    /** `minWidth` of the style (snippets, step 7) */
+    public var minWidth:Float = 0;
 
     public function new() {}
 
@@ -33,7 +35,8 @@ class ResolvedBox {
             && borderRadius == other.borderRadius
             && paddingTop == other.paddingTop
             && paddingBottom == other.paddingBottom
-            && join == other.join;
+            && join == other.join
+            && minWidth == other.minWidth;
     }
 
     public static function colorEquals(a:Null<Hsla>, b:Null<Hsla>):Bool {
@@ -62,6 +65,14 @@ class ResolvedPartStyle {
     public var letterSpacing:Float = 0;
     public var fontFeatures:Null<String> = null;
     public var box:Null<ResolvedBox> = null;
+    /**
+     * Horizontal padding and fixed width of the part (`paddingLeft`,
+     * `paddingRight`, `width`, -1 when not set): the view moves the glyphs
+     * after the shaping (inlay hints, step 7, cs7-rest-inlay).
+     */
+    public var paddingLeft:Float = 0;
+    public var paddingRight:Float = 0;
+    public var width:Float = -1;
 
     /**
      * The font key of the part: parts with the same key are shaped with one
@@ -371,6 +382,16 @@ class DecorationStyleResolver {
         if (style.fontFeatures != null) {
             result.fontFeatures = style.fontFeatures;
         }
+        // Horizontal spacing (inlay hints, step 7, cs7-rest-inlay)
+        if (style.paddingLeft != null) {
+            result.paddingLeft = style.paddingLeft;
+        }
+        if (style.paddingRight != null) {
+            result.paddingRight = style.paddingRight;
+        }
+        if (style.width != null) {
+            result.width = style.width;
+        }
         final box = resolveBox(style, result.box);
         if (box != null) {
             result.box = box;
@@ -382,7 +403,7 @@ class DecorationStyleResolver {
      * `base`, or `base` when the style has none.
      */
     public function resolveBox(style:IDecorationStyle, ?base:ResolvedBox):Null<ResolvedBox> {
-        if (style.background == null && style.border == null && style.borderRadius == null && style.paddingTop == null && style.paddingBottom == null) {
+        if (style.background == null && style.border == null && style.borderRadius == null && style.paddingTop == null && style.paddingBottom == null && style.minWidth == null) {
             return base;
         }
         final box = new ResolvedBox();
@@ -394,6 +415,7 @@ class DecorationStyleResolver {
             box.paddingTop = base.paddingTop;
             box.paddingBottom = base.paddingBottom;
             box.join = base.join;
+            box.minWidth = base.minWidth;
         }
         final background = resolveColor(style.background);
         if (background != null) {
@@ -415,6 +437,9 @@ class DecorationStyleResolver {
         }
         if (style.join != null) {
             box.join = style.join;
+        }
+        if (style.minWidth != null) {
+            box.minWidth = style.minWidth;
         }
         return box;
     }

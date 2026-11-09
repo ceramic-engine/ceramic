@@ -41,6 +41,7 @@ class ColorRegistry {
         EditorColorRegistry.registerColors();
         // Colors of the editor contributions (registered when Monaco loads them)
         cityscape.contrib.folding.view.FoldingDecorations.FoldingColors.registerColors();
+        cityscape.contrib.peekView.view.PeekView.PeekViewColors.registerColors();
     }
 
 }

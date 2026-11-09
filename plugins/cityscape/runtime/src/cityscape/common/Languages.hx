@@ -1344,3 +1344,180 @@ interface DocumentRangeSemanticTokensProvider {
 }
 
 //#endregion
+
+//#region inline completions (step 7, cs7-rest-inline)
+
+/**
+ * How an inline completion was triggered.
+ */
+enum abstract InlineCompletionTriggerKind(Int) from Int to Int {
+    /**
+     * Completion was triggered automatically while editing.
+     * It is sufficient to return a single completion item in this case.
+     */
+    var Automatic = 0;
+
+    /**
+     * Completion was triggered explicitly by a user gesture.
+     * Return multiple completion items to enable cycling through them.
+     */
+    var Explicit = 1;
+}
+
+typedef InlineCompletionContext = {
+    /**
+     * How the completion was triggered.
+     */
+    final triggerKind:InlineCompletionTriggerKind;
+    final selectedSuggestionInfo:Null<SelectedSuggestionInfo>;
+    /**
+     * @experimental
+     * @internal
+     */
+    @:optional final userPrompt:Null<String>;
+}
+
+class SelectedSuggestionInfo {
+
+    public final range:IRange;
+    public final text:String;
+    public final completionKind:cityscape.common.languages.CompletionItemKind;
+    public final isSnippetText:Bool;
+
+    public function new(range:IRange, text:String, completionKind:cityscape.common.languages.CompletionItemKind, isSnippetText:Bool) {
+        this.range = range;
+        this.text = text;
+        this.completionKind = completionKind;
+        this.isSnippetText = isSnippetText;
+    }
+
+    public function equals(other:SelectedSuggestionInfo):Bool {
+        return Range.lift(this.range).equalsRange(other.range)
+            && this.text == other.text
+            && this.completionKind == other.completionKind
+            && this.isSnippetText == other.isSnippetText;
+    }
+
+}
+
+/**
+ * Monaco's `{ snippet: string }` form of `InlineCompletion.insertText`.
+ */
+typedef InlineCompletionSnippet = {
+    var snippet:String;
+}
+
+typedef InlineCompletion = {
+    /**
+     * The text to insert (a string, or an `InlineCompletionSnippet`).
+     * If the text contains a line break, the range must end at the end of a line.
+     * If existing text should be replaced, the existing text must be a prefix of the text to insert.
+     *
+     * The text can also be a snippet. In that case, a preview with default parameters is shown.
+     * When accepting the suggestion, the full snippet is inserted.
+     */
+    final insertText:EitherType<String, InlineCompletionSnippet>;
+
+    /**
+     * A text that is used to decide if this inline completion should be shown.
+     * An inline completion is shown if the text to replace is a subword of the filter text.
+     */
+    @:optional final filterText:Null<String>;
+
+    /**
+     * An optional array of additional text edits that are applied when
+     * selecting this completion. Edits must not overlap with the main edit
+     * nor with themselves.
+     */
+    @:optional final additionalTextEdits:Null<Array<cityscape.common.core.EditOperation.ISingleEditOperation>>;
+
+    /**
+     * The range to replace.
+     * Must begin and end on the same line.
+     */
+    @:optional final range:Null<IRange>;
+
+    @:optional final command:Null<Command>;
+
+    /**
+     * If set to `true`, unopened closing brackets are removed and unclosed opening brackets are closed.
+     * Defaults to `false`.
+     */
+    @:optional final completeBracketPairs:Null<Bool>;
+}
+
+/**
+ * A list of inline completions. Monaco's generic `InlineCompletions<TItem>`:
+ * a provider can give items with more fields (structural typing) and read
+ * them back in its handlers.
+ */
+typedef InlineCompletions = {
+    final items:Array<InlineCompletion>;
+    /**
+     * A list of commands associated with the inline completions of this list.
+     */
+    @:optional final commands:Null<Array<Command>>;
+
+    @:optional final suppressSuggestions:Null<Bool>;
+
+    /**
+     * When set and the user types a suggestion without derivating from it, the inline suggestion is not updated.
+     */
+    @:optional final enableForwardStability:Null<Bool>;
+}
+
+typedef InlineCompletionProviderGroupId = String;
+
+/**
+ * How a partial acceptance was triggered.
+ */
+enum abstract PartialAcceptTriggerKind(Int) from Int to Int {
+    var Word = 0;
+    var Line = 1;
+    var Suggest = 2;
+}
+
+typedef PartialAcceptInfo = {
+    var kind:PartialAcceptTriggerKind;
+}
+
+/**
+ * Monaco's `InlineCompletionsProvider`. `provideInlineCompletions` gives
+ * its result to `resolve` (at once or later); the optional members are
+ * nullable function fields.
+ */
+interface InlineCompletionsProvider {
+
+    function provideInlineCompletions(model:ITextModel, position:Position, context:InlineCompletionContext, token:CancellationToken, resolve:(completions:Null<InlineCompletions>) -> Void):Void;
+
+    /**
+     * Will be called when an item is shown.
+     * `updatedInsertText` is useful to understand bracket completion.
+     */
+    var handleItemDidShow(default, null):Null<(completions:InlineCompletions, item:InlineCompletion, updatedInsertText:String) -> Void>;
+
+    /**
+     * Will be called when an item is partially accepted.
+     */
+    var handlePartialAccept(default, null):Null<(completions:InlineCompletions, item:InlineCompletion, acceptedCharacters:Int, info:PartialAcceptInfo) -> Void>;
+
+    /**
+     * Will be called when a completions list is no longer in use and can be garbage-collected.
+     */
+    function freeInlineCompletions(completions:InlineCompletions):Void;
+
+    /**
+     * Only used for `yieldsToGroupIds`.
+     * Multiple providers can have the same group id.
+     */
+    var groupId(default, null):Null<InlineCompletionProviderGroupId>;
+
+    /**
+     * Returns a list of preferred provider `groupId`s.
+     * The current provider is only requested for completions if no provider with a preferred group id returned a result.
+     */
+    var yieldsToGroupIds(default, null):Null<Array<InlineCompletionProviderGroupId>>;
+
+}
+
+//#endregion

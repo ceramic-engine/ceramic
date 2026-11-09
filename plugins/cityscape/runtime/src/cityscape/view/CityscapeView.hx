@@ -101,6 +101,14 @@ class RenderedViewLine {
     public var modelLineNumber:Int = -1;
     public var isFirstViewLine:Bool = false;
 
+    /**
+     * The x bounds of the boxes of the parts (the backgrounds), when a part
+     * has a horizontal padding or a fixed width; null otherwise (the boxes
+     * are the x of the part's text). Inlay hints, step 7, cs7-rest-inlay.
+     */
+    public var partBoxStarts:Null<Array<Float>> = null;
+    public var partBoxEnds:Null<Array<Float>> = null;
+
     public function new(input:RenderLineInput, runs:ViewLineRuns, output:RenderLineOutput, layout:LineLayout, offsets:LineOffsetMap, partStyles:Array<ResolvedPartStyle>, decorationRuns:Array<DecorationRun>, minColumn:Int, maxColumn:Int, fontGeneration:Int, themeVersion:Int) {
         this.input = input;
         this.runs = runs;
@@ -194,6 +202,69 @@ class RenderedViewLine {
             return clusterX;
         }
         return clusterX + (nextX - clusterX) * containing / graphemes;
+    }
+
+    /**
+     * Applies the horizontal padding and the fixed widths of the parts
+     * (`ResolvedPartStyle.paddingLeft`, `paddingRight`, `width`) to the
+     * shaped layout of a line by moving its glyphs, like CSS inline padding
+     * and inline-block widths (the inlay hints' padding and spacers), and
+     * sets the box bounds of the parts. Nothing changes when no part has
+     * spacing. Inlay hints, step 7, cs7-rest-inlay.
+     */
+    public function applyHorizontalSpacing():Void {
+        final count = partStyles.length;
+        var any = false;
+        for (style in partStyles) {
+            if (style.paddingLeft != 0 || style.paddingRight != 0 || style.width >= 0) {
+                any = true;
+                break;
+            }
+        }
+        if (!any) {
+            return;
+        }
+        final starts:Array<Float> = [];
+        final ends:Array<Float> = [];
+        final glyphShifts:Array<Float> = [];
+        final startBytes:Array<Int> = [];
+        final endBytes:Array<Int> = [];
+        var total = 0.0;
+        for (i in 0...count) {
+            final style = partStyles[i];
+            final startByte = offsets.utf16ToByte(runs.partStarts[i]);
+            final endByte = offsets.utf16ToByte(runs.partEnds[i]);
+            final x1:Float = layout.xForIndex(startByte);
+            final x2:Float = layout.xForIndex(endByte);
+            final extra = style.width >= 0 ? style.width - (x2 - x1) : 0.0;
+            starts.push(x1 + total);
+            glyphShifts.push(total + style.paddingLeft);
+            total += style.paddingLeft + style.paddingRight + extra;
+            ends.push(x2 + total);
+            startBytes.push(startByte);
+            endBytes.push(endByte);
+        }
+        var p = 0;
+        for (run in layout.runs) {
+            for (glyph in run.glyphs) {
+                final index = glyph.index;
+                if (p >= count || index < startBytes[p]) {
+                    p = 0;
+                }
+                while (p < count && index >= endBytes[p]) {
+                    p++;
+                }
+                if (p < count && index >= startBytes[p]) {
+                    final shift = glyphShifts[p];
+                    if (shift != 0) {
+                        glyph.position = new glaze.Point(glyph.position.x + shift, glyph.position.y);
+                    }
+                }
+            }
+        }
+        layout.width = layout.width + total;
+        partBoxStarts = starts;
+        partBoxEnds = ends;
     }
 
     /**
@@ -310,6 +381,14 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * prepaint.
      */
     public var elementBounds(default, null):Bounds = new Bounds(new Point(0, 0), new Size(0, 0));
+
+    /**
+     * The mouse cursor over the text instead of the I-beam (null: the
+     * I-beam): what Monaco's CSS `cursor` of a decoration does (a link under
+     * Cmd, a clickable inlay hint part, a color swatch). Set it with
+     * `EditorWidgets.setMouseCursor`.
+     */
+    public var mouseCursor:Null<glaze.CursorStyle> = null;
 
     /**
      * The widest rendered line so far (Monaco's `setMaxLineWidth`).
@@ -662,7 +741,10 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         }
         final viewPosition = new Position(lineNumber, contentX >= line.layout.width ? viewModel.getLineMaxColumn(lineNumber) : line.xToColumn(contentX));
         final position = converter.convertViewPositionToModelPosition(viewPosition);
-        return new MouseTarget(MouseTargetType.CONTENT_TEXT, position, mouseColumn, Range.fromPositions(position, position));
+        final target = new MouseTarget(MouseTargetType.CONTENT_TEXT, position, mouseColumn, Range.fromPositions(position, position));
+        // HitTestContext.doHitTest: the injected text at the hit position
+        target.injectedText = viewModel.getInjectedTextAt(viewPosition);
+        return target;
     }
 
     /**
@@ -861,7 +943,8 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     final baseFontFeatures:Array<Null<String>> = [];
     final baseFonts:Array<Font> = [];
 
-    function baseFont(weight:Null<Float>, italic:Bool, features:Null<String>):Font {
+    // public for the additional lines of the ghost text (inline completions, cs7-rest-inline)
+    public function baseFont(weight:Null<Float>, italic:Bool, features:Null<String>):Font {
         final info = fontInfo();
         // the resolved fonts change with the fonts added (`resolveEditorFont`)
         final generation = app.textSystem().fontGeneration;
@@ -1042,6 +1125,8 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         if (cache == null && cached == null) {
             renderCacheKeys.push(viewLineNumber);
         }
+        // Inlay hints (step 7, cs7-rest-inlay): horizontal padding and spacers
+        rendered.applyHorizontalSpacing();
         renderCache.set(viewLineNumber, rendered);
         if (layout.width > maxLineWidth) {
             maxLineWidth = layout.width;
