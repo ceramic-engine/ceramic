@@ -102,11 +102,16 @@ private class ModelData {
     public final model:ITextModel;
     public final viewModel:ViewModel;
     public final listenersToRemove:Array<IDisposable>;
+    /**
+     * The view zones of the view model (Monaco's `View._viewZones`).
+     */
+    public final viewZones:cityscape.view.viewParts.viewZones.ViewZones;
 
-    public function new(model:ITextModel, viewModel:ViewModel, listenersToRemove:Array<IDisposable>) {
+    public function new(model:ITextModel, viewModel:ViewModel, listenersToRemove:Array<IDisposable>, viewZones:cityscape.view.viewParts.viewZones.ViewZones) {
         this.model = model;
         this.viewModel = viewModel;
         this.listenersToRemove = listenersToRemove;
+        this.viewZones = viewZones;
     }
 }
 
@@ -786,6 +791,33 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
         if (this._modelData != null) {
             this._modelData.viewModel.setHiddenAreas([for (r in ranges) Range.lift(r)], source);
         }
+    }
+
+    public function changeViewZones(callback:(accessor:IViewZoneChangeAccessor) -> Void):Void {
+        if (this._modelData == null) {
+            return;
+        }
+        // Monaco's `View.change`: the view model fires `ViewZonesChanged`
+        // (and the editor `onDidChangeViewZones`) when the zones changed
+        this._modelData.viewZones.changeViewZones(callback);
+        if (_view != null) {
+            _view.render(false);
+        }
+    }
+
+    public function getWhitespaces():Array<cityscape.common.ViewModel.IEditorWhitespace> {
+        if (this._modelData == null) {
+            return [];
+        }
+        return this._modelData.viewModel.viewLayout.getWhitespaces();
+    }
+
+    /**
+     * The view zones of the current view model (painted by the view), null
+     * without a model.
+     */
+    public function getViewZones():Null<cityscape.view.viewParts.viewZones.ViewZones> {
+        return this._modelData != null ? this._modelData.viewZones : null;
     }
 
     public function getVisibleColumnFromPosition(rawPosition:IPosition):Int {
@@ -1751,7 +1783,10 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
             }
         }));
 
-        this._modelData = new ModelData(model, viewModel, listenersToRemove);
+        final viewZones = new cityscape.view.viewParts.viewZones.ViewZones(viewModel, this._configuration);
+        viewModel.addViewEventHandler(viewZones);
+
+        this._modelData = new ModelData(model, viewModel, listenersToRemove, viewZones);
 
         // The markers of the model are rendered while an editor shows it
         this._context.markerDecorationsService.ensureModel(model);
@@ -1781,6 +1816,8 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
             _view.onWillDetachModel(this._modelData.viewModel);
         }
         Lifecycle.dispose(cast this._modelData.listenersToRemove);
+        this._modelData.viewModel.removeViewEventHandler(this._modelData.viewZones);
+        this._modelData.viewZones.dispose();
         this._modelData.viewModel.dispose();
         this._modelData = null;
 

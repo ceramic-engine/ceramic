@@ -140,6 +140,14 @@ class CityscapeViewElement extends Element {
         final contentBounds = new Bounds(new Point(originX + layoutInfo.contentLeft, originY), new Size(Math.max(0, bounds.size.width - layoutInfo.contentLeft), bounds.size.height));
         window.pushContentMask(new ContentMask(contentBounds));
 
+        // View zones (Monaco's ViewZones view part), painted by their zones
+        final viewZones = v.widget.getViewZones();
+        final zoneWhitespaces = viewZones != null ? viewLayout.getWhitespaceViewportData() : null;
+        if (viewZones != null && zoneWhitespaces.length > 0) {
+            viewZones.paintZones(window, cx, zoneWhitespaces, contentBounds.origin.x, contentBounds.size.width, originY - scrollTop, false);
+            viewZones.notifyTops(zoneWhitespaces, scrollTop);
+        }
+
         // Current line highlight (Monaco's currentLineHighlight)
         final renderLineHighlight = options.get(EditorOption.renderLineHighlight);
         final showHighlight = renderLineHighlight != 'none' && renderLineHighlight != 'gutter' && (focused || !options.get(EditorOption.renderLineHighlightOnlyWhenFocus));
@@ -406,6 +414,9 @@ class CityscapeViewElement extends Element {
             if (gutterBackground != null) {
                 fillRect(window, originX, originY, gutterWidth, bounds.size.height, gutterBackground);
             }
+            if (viewZones != null && zoneWhitespaces.length > 0) {
+                viewZones.paintZones(window, cx, zoneWhitespaces, originX, gutterWidth, originY - scrollTop, true);
+            }
             // margin decorations (`marginClassName`, `marginStyle`, whole margin width)
             for (d in decorations) {
                 final opts = d.options;
@@ -436,6 +447,14 @@ class CityscapeViewElement extends Element {
                             if (box != null) {
                                 paintBox(window, box, originX + layoutInfo.decorationsLeft, y, Math.max(2, layoutInfo.decorationsWidth - 16), lineHeight, null, false, false);
                             }
+                        }
+                    }
+                    // The `insert-sign` / `delete-sign` codicons of the diff editor
+                    final linesClass = opts.linesDecorationsClassName;
+                    if (linesClass != null && linesClass.indexOf('codicon-diff-') != -1) {
+                        final signColor = theme.getColor('editor.foreground');
+                        if (signColor != null) {
+                            Codicons.paintDiffSign(window, cx, originX + layoutInfo.decorationsLeft, y, lineHeight, linesClass.indexOf('codicon-diff-insert') != -1, signColor.opacity(0.7));
                         }
                     }
                 }

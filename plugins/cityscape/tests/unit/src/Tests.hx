@@ -201,6 +201,14 @@ class Tests {
         runner.add(new tests.contrib.codeAction.CodeActionTest());
         runner.add(new tests.contrib.codeAction.CodeActionKeybindingResolverTest());
 
+        // Diff computation and diff editor (step 7, cs7-diff)
+        runner.add(new tests.diff.DiffComputerTest());
+        runner.add(new tests.diffing.DefaultLinesDiffComputerTest.MyersTest());
+        runner.add(new tests.diffing.DefaultLinesDiffComputerTest.LineRangeMappingTest());
+        runner.add(new tests.diffing.DefaultLinesDiffComputerTest.LinesSliceCharSequenceTest());
+        runner.add(new tests.diffing.FixturesTest());
+        runner.add(new tests.view.DiffEditorTest());
+
     }
 
 }

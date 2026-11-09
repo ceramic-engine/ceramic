@@ -21,6 +21,108 @@ import cityscape.platform.contextkey.common.ContextKey;
 import cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent;
 
 /**
+ * Paints a view zone (Cityscape's replacement for Monaco's `domNode` and
+ * `marginDomNode`): `bounds` is the zone's area in window coordinates (the
+ * content area for `paint`, the margin for `paintMargin`), clipped to it.
+ */
+typedef ViewZonePainter = (window:glaze.Window, cx:glaze.App, bounds:glaze.Bounds) -> Void;
+
+/**
+ * A view zone is a full horizontal rectangle that 'pushes' text down.
+ * The editor reserves space for view zones when rendering.
+ *
+ * Monaco's `domNode` and `marginDomNode` are `paint` and `paintMargin`
+ * here (both optional: a zone without a painter is empty space).
+ */
+typedef IViewZone = {
+    /**
+     * The line number after which this zone should appear.
+     * Use 0 to place a view zone before the first line number.
+     */
+    var afterLineNumber:Int;
+    /**
+     * The column after which this zone should appear.
+     * If not set, the maxLineColumn of `afterLineNumber` will be used.
+     * This is relevant for wrapped lines.
+     */
+    @:optional var afterColumn:Null<Int>;
+    /**
+     * If the `afterColumn` has multiple view columns, the affinity specifies which one to use. Defaults to `none`.
+     */
+    @:optional var afterColumnAffinity:Null<PositionAffinity>;
+    /**
+     * Render the zone even when its line is hidden.
+     */
+    @:optional var showInHiddenAreas:Null<Bool>;
+    /**
+     * Tiebreaker that is used when multiple view zones want to be after the same line.
+     * Defaults to `afterColumn` otherwise 10000;
+     */
+    @:optional var ordinal:Null<Int>;
+    /**
+     * Suppress mouse down events.
+     * If set, a mouse down on the zone does not move the cursor nor take the focus.
+     * Defaults to false
+     */
+    @:optional var suppressMouseDown:Null<Bool>;
+    /**
+     * The height in lines of the view zone.
+     * If specified, `heightInPx` will be used instead of this.
+     * If neither `heightInPx` nor `heightInLines` is specified, a default of `heightInLines` = 1 will be chosen.
+     */
+    @:optional var heightInLines:Null<Float>;
+    /**
+     * The height in px of the view zone.
+     * If this is set, the editor will give preference to it rather than `heightInLines` above.
+     * If neither `heightInPx` nor `heightInLines` is specified, a default of `heightInLines` = 1 will be chosen.
+     */
+    @:optional var heightInPx:Null<Float>;
+    /**
+     * The minimum width in px of the view zone.
+     * If this is set, the editor will ensure that the scroll width is >= than this value.
+     */
+    @:optional var minWidthInPx:Null<Float>;
+    /**
+     * Paints the zone in the content area (Monaco's `domNode`).
+     */
+    @:optional var paint:Null<ViewZonePainter>;
+    /**
+     * Paints the zone in the margin area (Monaco's `marginDomNode`).
+     */
+    @:optional var paintMargin:Null<ViewZonePainter>;
+    /**
+     * Callback which gives the relative top of the view zone as it appears (taking scrolling into account).
+     */
+    @:optional var onDomNodeTop:Null<(top:Float) -> Void>;
+    /**
+     * Callback which gives the height in pixels of the view zone.
+     */
+    @:optional var onComputedHeight:Null<(height:Float) -> Void>;
+}
+
+/**
+ * An accessor that allows for zones to be added or removed.
+ */
+interface IViewZoneChangeAccessor {
+    /**
+     * Create a new view zone.
+     * @param zone Zone to create
+     * @return A unique identifier to the view zone.
+     */
+    function addZone(zone:IViewZone):String;
+    /**
+     * Remove a zone
+     * @param id A unique identifier to the view zone, as returned by the `addZone` call.
+     */
+    function removeZone(id:String):Void;
+    /**
+     * Change a zone's position.
+     * The editor will rescan the `afterLineNumber` and `afterColumn` properties of a view zone.
+     */
+    function layoutZone(id:String):Void;
+}
+
+/**
  * A positioning preference for rendering overlay widgets.
  */
 enum abstract OverlayWidgetPositionPreference(Int) from Int to Int {
@@ -158,6 +260,14 @@ enum abstract MouseTargetType(Int) from Int to Int {
  * Target hit with the mouse in the editor (Monaco's `IMouseTarget` union,
  * flattened: the `detail` fields of each kind are fields here).
  */
+typedef IMouseTargetViewZoneData = {
+    final viewZoneId:String;
+    final positionBefore:Null<Position>;
+    final positionAfter:Null<Position>;
+    final position:Position;
+    final afterLineNumber:Int;
+}
+
 class MouseTarget {
 
     /**
@@ -213,6 +323,18 @@ class MouseTarget {
         this.isAfterLines = isAfterLines;
         this.horizontalDistanceToText = horizontalDistanceToText;
     }
+
+    /**
+     * View zone targets (`CONTENT_VIEW_ZONE`, `GUTTER_VIEW_ZONE`): Monaco's
+     * `detail`, the zone and the positions around it (model positions).
+     */
+    public var viewZoneData:Null<IMouseTargetViewZoneData> = null;
+
+    /**
+     * View zone targets: the y of the mouse from the top of the zone
+     * (Cityscape addition, Monaco's DOM event gives the element).
+     */
+    public var viewZoneOffsetY:Float = 0;
 
     public function toString():String {
         return 'MouseTarget(' + type + ', ' + (range != null ? range.toString() : 'null') + ')';
@@ -480,6 +602,11 @@ interface ICodeEditor extends IEditor {
      * @event
      */
     var onDidChangeHiddenAreas(get, never):VoidEvent;
+    /**
+     * An event emitted when the view zones of the editor change.
+     * @event
+     */
+    var onDidChangeViewZones(get, never):VoidEvent;
 
     /**
      * Saves current view state of the editor in a serializable object.
@@ -693,6 +820,16 @@ interface ICodeEditor extends IEditor {
      * @internal
      */
     function setHiddenAreas(ranges:Array<IRange>, ?source:Any):Void;
+
+    /**
+     * Change the view zones. View zones are lost when a new model is attached to the editor.
+     */
+    function changeViewZones(callback:(accessor:IViewZoneChangeAccessor) -> Void):Void;
+
+    /**
+     * The whitespaces of the view zones (Monaco's `getWhitespaces`, @internal).
+     */
+    function getWhitespaces():Array<cityscape.common.ViewModel.IEditorWhitespace>;
 
     /**
      * Add an overlay widget. Widgets must have unique ids, otherwise they will be overwritten.

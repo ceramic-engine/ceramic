@@ -52,6 +52,8 @@ class MainScene extends Scene {
 
     var languageReady:Bool = false;
 
+    var diffView:Null<Entity<DiffVisualView>> = null;
+
     override function create() {
 
         out = Platform.getEnv('CITYSCAPE_VISUAL_OUT');
@@ -83,6 +85,11 @@ class MainScene extends Scene {
                 final dark = Platform.getEnv('CITYSCAPE_VISUAL_THEME') != 'light';
                 languageView = cx.newEntity((viewCx:Context<LanguageVisualView>) -> new LanguageVisualView(viewCx, scene, dark));
                 return languageView;
+            }
+            if (scene == 'diff') {
+                // The diff editor, side by side and inline (DiffVisualView.hx)
+                diffView = cx.newEntity((viewCx:Context<DiffVisualView>) -> new DiffVisualView(viewCx));
+                return diffView;
             }
             if (scene == 'find') {
                 // The find widget open over one editor (FindVisualView.hx)

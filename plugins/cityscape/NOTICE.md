@@ -18,13 +18,14 @@ This project contains Haxe translations ("ports") of third party code. The origi
 - License: MIT, see [LICENSES/MIT-vscode.txt](LICENSES/MIT-vscode.txt)
 - Ported into: `runtime/src/cityscape/**` (from `src/vs/editor/**`, and the parts of `src/vs/base/**` and `src/vs/platform/**` it uses), and the tests of `tests/unit` ported from vscode's tests (`src/vs/editor/test/**`). Files that are new code (not ports) say so in their header.
 - Reference data: the files of `tests/unit/data/monaco` are outputs of the real Monaco (the monaco-editor 0.52.2 build vendored in loreline-monaco), written by the scripts of glaze-golden's `reference/cityscape/`. `textmate-tokens.json` also holds VS Code's Dark+ and Light+ themes (Copyright (c) Microsoft Corporation, MIT, as vscode-textmate's tests ship them) and the texts of Glaze's highlighter samples (`plugins/glaze/tests/unit/data/highlight/samples`, see their NOTICE.md); the grammars it was made with are Glaze's (`plugins/glaze/assets/glaze/grammars`, see their NOTICE.md).
+- Test data: `tests/unit/data/vscode/diffing` is vscode's `src/vs/editor/test/node/diffing/fixtures` folder (the texts diffed and the expected results of vscode's diff algorithms, `*.expected.diff.json`), unmodified, and its README (`README.vscode.md`).
 
 ## Codicons (vscode-codicons)
 
 - Project: vscode-codicons, <https://github.com/microsoft/vscode-codicons>, the icon font Monaco ships (`codicon.ttf` of monaco-editor 0.52.2)
 - Copyright (c) Microsoft Corporation
 - License: Creative Commons Attribution 4.0 International (CC BY 4.0), <https://creativecommons.org/licenses/by/4.0/>
-- Used in: `runtime/src/cityscape/view/Codicons.hx`, the outlines of the `chevron-down` (U+EAB4) and `chevron-right` (U+EAB6) glyphs, written as SVG paths (the glyph points of the font, flipped to SVG's y axis). Modified: converted from the font's glyph outlines to SVG paths; the shapes are unchanged.
+- Used in: `runtime/src/cityscape/view/Codicons.hx`, the outlines of the `chevron-down` (U+EAB4), `chevron-right` (U+EAB6), `add` (U+EA60), `remove` (U+EB3B) and `unfold` (U+EB73) glyphs, written as SVG paths (the glyph points of the font, flipped to SVG's y axis). Modified: converted from the font's glyph outlines to SVG paths; the shapes are unchanged.
 
 ## Lucide
 

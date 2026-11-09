@@ -19,6 +19,70 @@ class Arrays {
     }
 
     /**
+     * Calls `f` with each pair of adjacent items, the first pair being
+     * `(null, arr[0])` and the last `(arr[arr.length - 1], null)`.
+     */
+    public static function forEachAdjacent<T>(arr:Array<T>, f:(item1:Null<T>, item2:Null<T>) -> Void):Void {
+        for (i in 0...arr.length + 1) {
+            f(i == 0 ? null : arr[i - 1], i == arr.length ? null : arr[i]);
+        }
+    }
+
+    /**
+     * Calls `f` with each item and its neighbors (null at the ends).
+     */
+    public static function forEachWithNeighbors<T>(arr:Array<T>, f:(before:Null<T>, element:T, after:Null<T>) -> Void):Void {
+        for (i in 0...arr.length) {
+            f(i == 0 ? null : arr[i - 1], arr[i], i + 1 == arr.length ? null : arr[i + 1]);
+        }
+    }
+
+    /**
+     * Groups adjacent items for which `shouldBeGrouped` holds (Monaco's
+     * generator, returning the groups as an array).
+     */
+    public static function groupAdjacentBy<T>(items:Array<T>, shouldBeGrouped:(item1:T, item2:T) -> Bool):Array<Array<T>> {
+        final result:Array<Array<T>> = [];
+        var currentGroup:Null<Array<T>> = null;
+        var hasLast = false;
+        var last:Null<T> = null;
+        for (item in items) {
+            if (hasLast && shouldBeGrouped(last, item)) {
+                currentGroup.push(item);
+            }
+            else {
+                if (currentGroup != null) {
+                    result.push(currentGroup);
+                }
+                currentGroup = [item];
+            }
+            last = item;
+            hasLast = true;
+        }
+        if (currentGroup != null) {
+            result.push(currentGroup);
+        }
+        return result;
+    }
+
+    /**
+     * Monaco's `compareBy(selector, numberComparator)`.
+     */
+    public static function compareByNumber<T>(selector:(item:T) -> Float):(a:T, b:T) -> Int {
+        return (a, b) -> {
+            final d = selector(a) - selector(b);
+            d < 0 ? -1 : (d > 0 ? 1 : 0);
+        };
+    }
+
+    /**
+     * Monaco's `reverseOrder(comparator)`.
+     */
+    public static function reverseOrder<T>(comparator:(a:T, b:T) -> Int):(a:T, b:T) -> Int {
+        return (a, b) -> -comparator(a, b);
+    }
+
+    /**
      * Returns whether two arrays have the same length and equal items.
      */
     public static function equals<T>(one:Null<Array<T>>, other:Null<Array<T>>, ?itemEquals:(a:T, b:T) -> Bool):Bool {
@@ -212,6 +276,32 @@ class Arrays {
             }
         }
         return i;
+    }
+
+}
+
+/**
+ * Monaco's `MonotonousArray` (arraysFind.ts): successive `findLastMonotonous`
+ * calls with weaker predicates continue from the last index.
+ */
+class MonotonousArray<T> {
+
+    final _array:Array<T>;
+
+    var _findLastMonotonousLastIdx:Int = 0;
+
+    public function new(array:Array<T>) {
+        this._array = array;
+    }
+
+    /**
+     * The predicate must be monotonous, i.e. `arr.map(predicate)` must be like `[true, ..., true, false, ..., false]`!
+     * For subsequent calls, current predicate must be weaker than (or equal to) the previous predicate, i.e. more entries must be `true`.
+     */
+    public function findLastMonotonous(predicate:(item:T) -> Bool):Null<T> {
+        final idx = Arrays.findLastIdxMonotonous(this._array, predicate, this._findLastMonotonousLastIdx);
+        this._findLastMonotonousLastIdx = idx + 1;
+        return idx == -1 ? null : this._array[idx];
     }
 
 }

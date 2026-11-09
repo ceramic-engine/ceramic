@@ -87,6 +87,22 @@ Keys the focused editor does not handle go on to the key bindings of its ancesto
 
 Models are tokenized in the background with one time budget per frame for all the models of the context (`cityscape.backgroundScheduler.budgetMs`), the visible lines first.
 
+## The diff editor
+
+`CityscapeDiffEditor` is Monaco's diff editor (`monaco.editor.createDiffEditor`) as a Glaze component: the original and the modified texts side by side, or inline (`renderSideBySide: false`, also used when it is narrower than `renderSideBySideInlineBreakpoint`), with the changed lines and characters, the aligned lines, the overview ruler of the changes and Monaco's diff options:
+
+```haxe
+CityscapeDiffEditor.component()
+    .model({original: originalModel, modified: modifiedModel})
+    .options({ignoreTrimWhitespace: false, hideUnchangedRegions: {enabled: true}})
+    .onCreate(diffEditor -> {
+        diffEditor.onDidUpdateDiff(() -> trace(diffEditor.getLineChanges()));
+    })
+    .flex1()
+```
+
+The diff is computed off the frame (a background thread on the native targets, the next frame on the web) and again 200 ms after an edit. `getOriginalEditor()` and `getModifiedEditor()` give the two `CityscapeEditor`s; `goToDiff('next')`, `revealFirstDiff()`, `updateOptions`, `saveViewState`... are Monaco's. The diff algorithms alone are `cityscape.common.diff.LinesDiffComputers.getDefault()` (and `getLegacy()`).
+
 ## Layout
 
 - `runtime/src/cityscape`: the port, organized like `src/vs/editor` (`common/core`, `common/config`, `common/...`; `browser` becomes `view`), with the parts of `src/vs/base` and `src/vs/platform` it needs under `base/` and `platform/`.

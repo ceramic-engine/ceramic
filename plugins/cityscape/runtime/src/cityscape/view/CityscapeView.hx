@@ -490,6 +490,57 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * the targets of the editor's mouse events): the margin parts, the text,
      * or the empty content after a line or after the lines.
      */
+    /**
+     * Monaco's `HitTestContext.getZoneAtCoord` and `_hitTestViewZone`: the
+     * view zone at a vertical offset, with the positions before and after
+     * it (in model coordinates), or null.
+     */
+    function hitTestViewZone(mouseVerticalOffset:Float, isInContentArea:Bool, mouseColumn:Int):Null<MouseTarget> {
+        final viewModel = this.viewModel;
+        final viewZoneWhitespace = viewModel.viewLayout.getWhitespaceAtVerticalOffset(mouseVerticalOffset);
+        if (viewZoneWhitespace == null) {
+            return null;
+        }
+        final converter = viewModel.coordinatesConverter;
+        final viewZoneMiddle = viewZoneWhitespace.verticalOffset + viewZoneWhitespace.height / 2;
+        final lineCount = viewModel.getLineCount();
+        var positionBefore:Null<Position> = null;
+        var position:Null<Position>;
+        var positionAfter:Null<Position> = null;
+
+        if (viewZoneWhitespace.afterLineNumber != lineCount) {
+            // There are more lines after this view zone
+            positionAfter = converter.convertViewPositionToModelPosition(new Position(viewZoneWhitespace.afterLineNumber + 1, 1));
+        }
+        if (viewZoneWhitespace.afterLineNumber > 0) {
+            // There are more lines above this view zone
+            positionBefore = converter.convertViewPositionToModelPosition(new Position(viewZoneWhitespace.afterLineNumber, viewModel.getLineMaxColumn(viewZoneWhitespace.afterLineNumber)));
+        }
+
+        if (positionAfter == null) {
+            position = positionBefore;
+        }
+        else if (positionBefore == null) {
+            position = positionAfter;
+        }
+        else if (mouseVerticalOffset < viewZoneMiddle) {
+            position = positionBefore;
+        }
+        else {
+            position = positionAfter;
+        }
+        final target = new MouseTarget(isInContentArea ? MouseTargetType.CONTENT_VIEW_ZONE : MouseTargetType.GUTTER_VIEW_ZONE, position, mouseColumn, position != null ? Range.fromPositions(position, position) : null);
+        target.viewZoneOffsetY = mouseVerticalOffset - viewZoneWhitespace.verticalOffset;
+        target.viewZoneData = {
+            viewZoneId: viewZoneWhitespace.id,
+            afterLineNumber: viewZoneWhitespace.afterLineNumber,
+            positionBefore: positionBefore,
+            positionAfter: positionAfter,
+            position: position
+        };
+        return target;
+    }
+
     public function mouseTargetAt(point:Point):MouseTarget {
         final viewModel = this.viewModel;
         if (viewModel == null) {
@@ -504,6 +555,11 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final mouseColumn = mouseColumnAt(point);
         if (relativeX < 0 || relativeY < 0 || relativeX > elementBounds.size.width || relativeY > elementBounds.size.height) {
             return new MouseTarget(MouseTargetType.OUTSIDE_EDITOR, null, mouseColumn, null);
+        }
+        // _hitTestViewZone
+        final zoneTarget = hitTestViewZone(verticalOffset, relativeX >= layoutInfo.contentLeft, mouseColumn);
+        if (zoneTarget != null) {
+            return zoneTarget;
         }
         if (relativeX < layoutInfo.contentLeft) {
             // _hitTestMargin: the full line range at the mouse

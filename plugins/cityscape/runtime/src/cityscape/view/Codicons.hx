@@ -34,6 +34,21 @@ class Codicons {
     public static inline final FOLDING_COLLAPSED_PATH = 'M189 150 L107 69 L119 57 L206 145 L206 156 L119 244 L107 232 Z';
 
     /**
+     * `codicon-diff-insert` (`add`, U+EA60).
+     */
+    public static inline final DIFF_INSERT_PATH = 'M263 131V150H150V262H131V150H19V131H131V19H150V131Z';
+
+    /**
+     * `codicon-diff-remove` (`remove`, U+EB3B).
+     */
+    public static inline final DIFF_REMOVE_PATH = 'M281 150H19V131H281Z';
+
+    /**
+     * `codicon-unfold` (U+EB73).
+     */
+    public static inline final UNFOLD_PATH = 'M141 122V47L122 66L109 52L143 19H157L191 53L178 66L159 47V122ZM141 178V253L122 234L109 247L143 281H157L191 247L178 234L159 253V178ZM257 75 263 94 194 149 263 206 257 225H179V206H235L179 161H123L65 206H122V225H43L38 206L107 151L38 94L43 75H122V94H65L121 139H177L235 94H179V75Z';
+
+    /**
      * The ascent Blink gives the codicon font, as a fraction of the font
      * size (19.5 px at 19.6 px): the baseline of a codicon line box.
      */
@@ -68,6 +83,39 @@ class Codicons {
         }
         catch (e:Dynamic) {
             // no SVG renderer: nothing drawn
+        }
+    }
+
+    /**
+     * Paints the codicon `path` (one of the `*_PATH` outlines, cached by
+     * `key`) with its em square `size` pixels wide, its left edge at `left`
+     * and its baseline at `baseline`.
+     */
+    public static function paintIcon(window:Window, cx:App, key:String, path:String, left:Float, baseline:Float, size:Float, color:Hsla):Void {
+        final scale = window.scaleFactor();
+        final snappedBaseline = Math.round(baseline * scale) / scale;
+        final data = svgData(key, path);
+        try {
+            window.paintSvg(new Bounds(new Point(left, snappedBaseline - size), new Size(size, size)), key, data, null, color, cx);
+        }
+        catch (e:Dynamic) {
+            // no SVG renderer: nothing drawn
+        }
+    }
+
+    /**
+     * The `insert-sign` / `delete-sign` of the diff editor (style.css:
+     * `font-size: 11px`, `display: flex; align-items: center` in the line
+     * decorations, `opacity: 0.7`).
+     */
+    public static function paintDiffSign(window:Window, cx:App, decorationsLeft:Float, lineTop:Float, lineHeight:Float, insert:Bool, color:Hsla):Void {
+        final size = 11.0;
+        final baseline = lineTop + (lineHeight - size) / 2 + size * ASCENT;
+        if (insert) {
+            paintIcon(window, cx, 'cityscape/codicon-diff-insert.svg', DIFF_INSERT_PATH, decorationsLeft, baseline, size, color);
+        }
+        else {
+            paintIcon(window, cx, 'cityscape/codicon-diff-remove.svg', DIFF_REMOVE_PATH, decorationsLeft, baseline, size, color);
         }
     }
 

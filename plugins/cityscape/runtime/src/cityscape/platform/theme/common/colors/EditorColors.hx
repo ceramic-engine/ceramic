@@ -95,6 +95,10 @@ class EditorColors {
     public static inline final diffUnchangedRegionBackground:ColorIdentifier = 'diffEditor.unchangedRegionBackground';
     public static inline final diffUnchangedRegionForeground:ColorIdentifier = 'diffEditor.unchangedRegionForeground';
     public static inline final diffUnchangedTextBackground:ColorIdentifier = 'diffEditor.unchangedCodeBackground';
+    // Registered by browser/widget/diffEditor/registrations.contribution.ts in Monaco
+    public static inline final diffMoveBorder:ColorIdentifier = 'diffEditor.move.border';
+    public static inline final diffMoveBorderActive:ColorIdentifier = 'diffEditor.moveActive.border';
+    public static inline final diffEditorUnchangedRegionShadow:ColorIdentifier = 'diffEditor.unchangedRegionShadow';
     // ----- widget
     public static inline final widgetShadow:ColorIdentifier = 'widget.shadow';
     public static inline final widgetBorder:ColorIdentifier = 'widget.border';
@@ -420,6 +424,19 @@ class EditorColors {
         ColorUtils.registerColor(diffUnchangedTextBackground,
             { dark: '#74747429', light: '#b8b8b829', hcDark: null, hcLight: null },
             'The background color of unchanged code in the diff editor.');
+
+        // ----- diff editor (browser/widget/diffEditor/registrations.contribution.ts)
+        ColorUtils.registerColor(diffMoveBorder,
+            '#8b8b8b9c',
+            'The border color for text that got moved in the diff editor.');
+
+        ColorUtils.registerColor(diffMoveBorderActive,
+            '#FFA500',
+            'The active border color for text that got moved in the diff editor.');
+
+        ColorUtils.registerColor(diffEditorUnchangedRegionShadow,
+            { dark: '#000000', light: '#737373BF', hcDark: '#000000', hcLight: '#737373BF' },
+            'The color of the shadow around unchanged region widgets.');
 
         // ----- widget
         ColorUtils.registerColor(widgetShadow,
