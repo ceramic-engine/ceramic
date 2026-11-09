@@ -65,37 +65,39 @@ private class PureOnigScanner implements OnigScanner {
 
     public function findNextMatchSync(string:OnigString, startPosition:Int, options:Int):Null<IOnigMatch> {
         final s = (cast string : PureOnigString).onigString;
-        final m = if (options == 0) {
-            scanner.findNextMatchSync(s, startPosition);
-        }
-        else {
-            final opts:Array<oniguruma.FindOption> = [];
-            if (options & FindOption.NotBeginString != 0)
-                opts.push(oniguruma.FindOption.NotBeginString);
-            if (options & FindOption.NotEndString != 0)
-                opts.push(oniguruma.FindOption.NotEndString);
-            if (options & FindOption.NotBeginPosition != 0)
-                opts.push(oniguruma.FindOption.NotBeginPosition);
-            if (options & FindOption.DebugCall != 0)
-                opts.push(oniguruma.FindOption.DebugCall);
-            scanner.findNextMatchSync(s, startPosition, opts);
-        }
-        if (m == null) {
-            return null;
-        }
+        final opts:Array<oniguruma.FindOption> = options == 0 ? null : findOptions(options);
         #if js
         // Same fields on plain JavaScript objects
-        return cast m;
+        return cast scanner.findNextMatchSync(s, startPosition, opts);
         #else
-        final src = m.captureIndices;
-        final captures = new Array<IOnigCaptureIndex>();
-        captures.resize(src.length);
-        for (i in 0...src.length) {
-            final c = src[i];
-            captures[i] = new IOnigCaptureIndex(c.start, c.end, c.length);
+        // The captures read from the scanner, without its OnigMatch
+        final index = scanner.findNextMatchIndex(s, startPosition, opts);
+        if (index < 0) {
+            return null;
         }
-        return new IOnigMatch(m.index, captures);
+        final count = scanner.captureCount;
+        final captures = new Array<IOnigCaptureIndex>();
+        captures.resize(count);
+        for (i in 0...count) {
+            final start = scanner.captureStart(i);
+            final end = scanner.captureEnd(i);
+            captures[i] = new IOnigCaptureIndex(start, end, end - start);
+        }
+        return new IOnigMatch(index, captures);
         #end
+    }
+
+    static function findOptions(options:Int):Array<oniguruma.FindOption> {
+        final opts:Array<oniguruma.FindOption> = [];
+        if (options & FindOption.NotBeginString != 0)
+            opts.push(oniguruma.FindOption.NotBeginString);
+        if (options & FindOption.NotEndString != 0)
+            opts.push(oniguruma.FindOption.NotEndString);
+        if (options & FindOption.NotBeginPosition != 0)
+            opts.push(oniguruma.FindOption.NotBeginPosition);
+        if (options & FindOption.DebugCall != 0)
+            opts.push(oniguruma.FindOption.DebugCall);
+        return opts;
     }
 
     public function dispose():Void {
