@@ -557,7 +557,20 @@ private class JsToPcre {
                 return;
             }
             if (c == '\\'.code) {
+                final classEscape = isClassEscapeAt(pos);
                 translateEscape(true);
+                if (classEscape && pos + 1 < len && StringTools.fastCodeAt(src, pos) == '-'.code && StringTools.fastCodeAt(src, pos + 1) != ']'.code) {
+                    // `[\w-?]`: a hyphen after a class escape is a literal in
+                    // JavaScript (Annex B), a range in PCRE once `\w` is expanded
+                    pos++;
+                    out.add('\\-');
+                }
+                continue;
+            }
+            if (c == '-'.code && isClassEscapeAt(pos + 1)) {
+                // `[a-\d]`: a hyphen before a class escape is a literal too
+                pos++;
+                out.add('\\-');
                 continue;
             }
             if (c == '['.code) {
@@ -570,6 +583,19 @@ private class JsToPcre {
             out.addChar(c);
         }
         throw 'RegExp: missing terminating ] for character class';
+    }
+
+    /**
+     * Whether a class escape (`\d`, `\D`, `\w`, `\W`, `\s`, `\S`) starts at `p`.
+     */
+    function isClassEscapeAt(p:Int):Bool {
+        if (p + 1 >= src.length || StringTools.fastCodeAt(src, p) != '\\'.code) {
+            return false;
+        }
+        return switch StringTools.fastCodeAt(src, p + 1) {
+            case 'd'.code | 'D'.code | 'w'.code | 'W'.code | 's'.code | 'S'.code: true;
+            case _: false;
+        }
     }
 
 }

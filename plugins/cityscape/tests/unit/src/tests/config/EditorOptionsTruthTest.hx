@@ -89,10 +89,14 @@ class EditorOptionsTruthTest extends TestCase {
         assertTrue(cases.length > 1000);
     }
 
-    function testLorelineMonacoOptions() {
-        final loreline:Any = Reflect.field(data(), 'loreline');
-        final options:IEditorOptions = Reflect.field(loreline, 'options');
-        final expected:Any = Reflect.field(loreline, 'validated');
+    /**
+     * A full set of options as a host application gives them (fonts,
+     * wrapping, suggestions, scrollbar, goto location).
+     */
+    function testHostOptionSet() {
+        final hostOptionSet:Any = Reflect.field(data(), 'hostOptionSet');
+        final options:IEditorOptions = Reflect.field(hostOptionSet, 'options');
+        final expected:Any = Reflect.field(hostOptionSet, 'validated');
         final validated = EditorOptionsUtil.validateOptions(options);
         for (name in Reflect.fields(expected)) {
             final o = option(name);

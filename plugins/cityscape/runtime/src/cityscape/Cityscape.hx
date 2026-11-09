@@ -1,5 +1,14 @@
 package cityscape;
 
+import cityscape.common.Languages.ITokenizationSupport;
+import cityscape.common.TokenizationRegistry;
+import cityscape.common.languages.LanguageConfigurationRegistry.LanguageConfigurationService;
+import cityscape.common.languages.ModesRegistry.EditorModesRegistry;
+import cityscape.common.services.BackgroundScheduler;
+import cityscape.common.services.LanguageService;
+import cityscape.standalone.StandaloneThemeService;
+import cityscape.textmate.TextMateService;
+
 #if (!plugin_glaze && !display)
 #error "Cityscape needs Glaze: list both glaze and cityscape in the plugins of the project's ceramic.yml"
 #end
@@ -11,9 +20,8 @@ package cityscape;
  * state in statics: services are fields of a context, and several contexts
  * can live side by side to keep two uses apart.
  *
- * TODO(steps 1 and 3): the services are added here as they are ported
- * (model service, language registry, theme service, undo/redo, commands and
- * keybindings).
+ * TODO(step 3): the other services are added here as they are ported
+ * (model service, undo/redo, commands and keybindings).
  */
 class Cityscape {
 
@@ -36,8 +44,67 @@ class Cityscape {
         return _defaultContext;
     }
 
+    /**
+     * The registered languages (Monaco's global `ModesRegistry`).
+     */
+    public final modesRegistry:EditorModesRegistry;
+
+    /**
+     * The tokenizers of the languages and the token color map (Monaco's
+     * global `TokenizationRegistry`).
+     */
+    public final tokenizationRegistry:TokenizationRegistry<ITokenizationSupport>;
+
+    /**
+     * The language service (Monaco's `ILanguageService`).
+     */
+    public final languageService:LanguageService;
+
+    /**
+     * The language configurations: brackets, comments, auto closing pairs,
+     * indentation and on enter rules (Monaco's
+     * `ILanguageConfigurationService`).
+     */
+    public final languageConfigurationService:LanguageConfigurationService;
+
+    /**
+     * Runs the background work of the models (background tokenization) with
+     * one time budget per frame shared by all of them (Monaco uses idle
+     * callbacks).
+     */
+    public final backgroundScheduler:BackgroundScheduler;
+
+    var _textMate:Null<TextMateService> = null;
+
+    /**
+     * The TextMate grammars and token theme of the context, created on first use.
+     */
+    public var textMate(get, never):TextMateService;
+    function get_textMate():TextMateService {
+        if (_textMate == null) {
+            final textMate = new TextMateService(this);
+            _textMate = textMate;
+            // The token colors follow the theme of the theme service
+            themeService.tokenColorMapProvider = theme -> textMate.colorMapForTheme(theme);
+            themeService.refreshColorMap();
+        }
+        return _textMate;
+    }
+
+    /**
+     * The themes (Monaco's standalone theme service: `defineTheme`,
+     * `setTheme`, theme colors, token color map).
+     */
+    public final themeService:StandaloneThemeService;
+
     public function new() {
         this.undoRedoService = new cityscape.platform.undoRedo.common.UndoRedoService();
+        backgroundScheduler = new BackgroundScheduler();
+        modesRegistry = new EditorModesRegistry();
+        tokenizationRegistry = new TokenizationRegistry<ITokenizationSupport>();
+        languageService = new LanguageService(modesRegistry, tokenizationRegistry);
+        languageConfigurationService = new LanguageConfigurationService(languageService);
+        themeService = new StandaloneThemeService(tokenizationRegistry);
     }
 
 }

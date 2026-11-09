@@ -28,5 +28,15 @@ Scenarios:
 - `model-read-lines`: `getLineContent` on every line of a 10 000 line model
   fragmented by 2000 random edits.
 
-The view scenarios (scrolling, tokenization, allocations per frame) come with
-the view.
+- `tokenize-js-full`, `tokenize-10k-full`: TextMate tokenization of the
+  whole document each frame (Glaze's JavaScript grammar and VS Code's Dark+
+  theme on `data/runner-app.js`, a frozen copy of Ceramic's runner/app.js,
+  541 lines, and on 10 000 lines repeating it; pure Haxe Oniguruma). The
+  10 000 line one takes seconds per frame: run it with
+  `CITYSCAPE_BENCH_FRAMES=5`.
+- `tokenize-js-edit`, `tokenize-10k-edit`: one character typed or removed
+  per frame in the longest line of the middle of the document, then
+  tokenization until the last line again (only what the state store
+  invalidated).
+
+The view scenarios (scrolling, allocations per frame) come with the view.

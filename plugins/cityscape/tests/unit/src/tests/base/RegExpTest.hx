@@ -200,4 +200,16 @@ class RegExpTest extends TestCase {
         assertDeepEquals(words, ['foo', 'bar', '-1.5', 'b\u{E9}b\u{E9}']);
     }
 
+
+    /**
+     * A hyphen next to a class escape inside a class is a literal in
+     * JavaScript (Annex B): `[\w-?]` is not a range (the word pattern of
+     * vscode's 'issue #61296' test). Expected values from node.
+     */
+    function testHyphenNextToClassEscapeInClass() {
+        assertDeepEquals(all('[\\w-?]+', '', '..a-?b!'), [[2, 'a-?b']]);
+        assertDeepEquals(all('[a-\\d]+', '', 'xx-a5-b'), [[2, '-a5-']]);
+        assertDeepEquals(all('[\\s-x]+', '', 'ab -x c'), [[2, ' -x ']]);
+    }
+
 }

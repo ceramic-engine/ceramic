@@ -62,6 +62,35 @@ class Tests {
         runner.add(new tests.model.pieceTreeTextBuffer.PieceTreeTextBufferTest.SnapshotTest());
         runner.add(new tests.model.pieceTreeTextBuffer.PieceTreeTextBufferTest.ChunkBasedSearchTest());
         runner.add(new tests.model.pieceTreeTextBuffer.ChangeBufferTest());
+        runner.add(new tests.model.TextModelTokensTest());
+        runner.add(new tests.model.ModelModesTest());
+        runner.add(new tests.model.ModelModesTest.ModelModes2Test());
+        runner.add(new tests.model.TokensStoreTest());
+        runner.add(new tests.model.TokensStoreModelTest());
+        runner.add(new tests.model.TextModelWithTokensTest());
+        runner.add(new tests.model.TextModelWithTokensBracketsTest());
+        runner.add(new tests.model.ModelLinesTokensTest());
+        runner.add(new tests.model.ModelWordsLanguagesTest());
+        runner.add(new tests.textmate.TextMateTruthTest());
+        runner.add(new tests.textmate.TextMateServiceTest());
+        runner.add(new tests.base.ColorTest());
+        runner.add(new tests.modes.supports.TokenizationTest());
+        runner.add(new tests.theme.ColorRegistryTest());
+        runner.add(new tests.standalone.StandaloneThemeServiceTest());
+        runner.add(new tests.standalone.VSCodeThemeTest());
+        runner.add(new tests.modes.LanguageConfigurationTest());
+        runner.add(new tests.modes.supports.CharacterPairTest());
+        runner.add(new tests.modes.supports.ElectricCharacterTest());
+        runner.add(new tests.modes.supports.OnEnterTest());
+        runner.add(new tests.modes.supports.RichEditBracketsTest());
+        runner.add(new tests.model.bracketPairColorizer.LengthTest());
+        runner.add(new tests.model.bracketPairColorizer.SmallImmutableSetTest());
+        runner.add(new tests.model.bracketPairColorizer.BracketsTest());
+        runner.add(new tests.model.bracketPairColorizer.Concat23TreesTest());
+        runner.add(new tests.model.bracketPairColorizer.BeforeEditPositionMapperTest());
+        runner.add(new tests.model.bracketPairColorizer.CombineTextEditInfosTest());
+        runner.add(new tests.model.bracketPairColorizer.TokenizerTest());
+        runner.add(new tests.model.bracketPairColorizer.GetBracketPairsInRangeTest());
 
     }
 

@@ -406,10 +406,9 @@ class EditorModelModelLineSeparatorsTest extends TestCase {
 /**
  * suite('Editor Model - Words')
  *
- * Not ported: test('getWordAtPosition at embedded language boundaries'): needs registered languages and a tokenization support
- * (the OuterMode/InnerMode helpers of the suite, not ported either).
- * Not ported: test('issue #61296: VS code freezes when editing CSS file with emoji'): needs a registered language with a
- * word pattern from a language configuration.
+ * The tests 'getWordAtPosition at embedded language boundaries' and 'issue
+ * #61296: VS code freezes when editing CSS file with emoji' (languages,
+ * tokenization and language configuration) are in `ModelWordsLanguagesTest`.
  */
 class EditorModelWordsTest extends TestCase {
 

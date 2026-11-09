@@ -87,13 +87,10 @@ class BenchRunner {
         #end
     }
 
-    static macro function benchDir():haxe.macro.Expr {
-        final dir = haxe.io.Path.directory(sys.FileSystem.absolutePath(haxe.macro.Context.resolvePath('BenchRunner.hx')));
-        return macro $v{haxe.io.Path.normalize(haxe.io.Path.join([dir, '..']))};
-    }
-
     static function defaultResultsDir():String {
-        return benchDir() + '/results';
+        // The macro lives in a macro-only module: a macro function here would
+        // make the macro context type this module and every scenario with it
+        return testing.BenchData.benchDir() + '/results';
     }
 
     static function write(dir:String, name:String, content:String):Void {

@@ -44,6 +44,17 @@ Cityscape is a port of Monaco (vscode `src/vs/editor`, commit a7d9e2c32d573e29e6
 - JavaScript semantics on untyped values (`typeof`, `Boolean(x)`, `parseInt(x, 10)`, `parseFloat(x)`, `String(x)`) go through `cityscape.base.common.JsValues`, never Haxe's `Std.parseInt` (it accepts `0x` and differs between targets).
 - Sorting: JavaScript's `Array.prototype.sort` is stable, Haxe's `Array.sort` is not guaranteed to be: use `haxe.ds.ArraySort.sort` where Monaco sorts with ties.
 
+## Binary tokens
+
+- `Uint32Array` is `haxe.io.UInt32Array` (a typed array on js, bytes on hxcpp). Read an element as `(tokens[i] : Int)` before comparing or computing; metadata with the highest background bit set is a negative `Int` (same bits). Monaco's `Uint32Array | ArrayBuffer` storage of line tokens is always the `UInt32Array` here.
+- Tuples returned by TypeScript functions become small classes (`EolCount` for `countEOL`), or typedefs when they are built once.
+
+## Pitfalls
+
+- An `enum abstract` imported into a module brings its values into scope: `StandardTokenType` has a value `String`, so `Std.isOfType(x, String)` in a module importing it tests against the number 2. Write `std.String` there.
+- On hxcpp, call `StringTools.fastCodeAt` on a typed local, not directly on the field of a structure (`final text:String = change.text;` first): the dynamic field access breaks the inlined `cca` call ("Null Function Pointer").
+- A `macro` function in a module that also holds runtime code makes the macro context type that module and everything it references: keep macros in macro-only modules (`testing.MonacoTruth`, the bench's `testing.BenchData`).
+
 ## Text and positions
 
 - Text is stored as Haxe `String`. Line numbers and columns start at 1; columns, offsets and lengths are in UTF-16 code units, exactly like Monaco and LSP, on every target: `String.length` and `charCodeAt` count UTF-16 units on js, hxcpp (checked by `HaxeStringTest`, including astral characters as surrogate pairs) and C#.

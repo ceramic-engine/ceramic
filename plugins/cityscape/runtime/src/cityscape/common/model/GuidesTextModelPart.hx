@@ -3,18 +3,19 @@
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.common.model;
 
+import cityscape.base.common.CharCode;
 import cityscape.base.common.Errors.BugIndicatingError;
+import cityscape.base.common.Strings;
 import cityscape.common.TextModelGuides;
-import cityscape.common.core.Position.IPosition;
+import cityscape.common.core.CursorColumns;
+import cityscape.common.core.Position;
+import cityscape.common.core.Range;
 
 /**
- * The indent guides of a text model.
+ * The indent guides and bracket pair guides of a text model.
  *
- * Monaco reads `foldingRules.offSide` from the language configuration
- * service; until the language configuration is ported, it comes from
- * `isOffSide` (false by default). TODO(step 1, cs1-tokens): wire `isOffSide`
- * to the language configuration (`foldingRules.offSide` of the model's
- * language) and port `getLinesBracketGuides` with the bracket pairs part.
+ * `foldingRules.offSide` comes from the language configuration service of
+ * the model's context (`isOffSide`, which can be replaced in tests).
  */
 class GuidesTextModelPart extends TextModelPart implements IGuidesTextModelPart {
 
@@ -23,11 +24,15 @@ class GuidesTextModelPart extends TextModelPart implements IGuidesTextModelPart 
     /**
      * Whether the language uses the off side rule (`foldingRules.offSide`).
      */
-    public var isOffSide:(languageId:String) -> Bool = (languageId:String) -> false;
+    public var isOffSide:(languageId:String) -> Bool;
 
     public function new(textModel:TextModel) {
         super();
         this.textModel = textModel;
+        this.isOffSide = (languageId:String) -> {
+            final foldingRules = textModel.context.languageConfigurationService.getLanguageConfiguration(languageId).foldingRules;
+            return foldingRules != null && foldingRules.offSide == true;
+        };
     }
 
     function _computeIndentLevel(lineIndex:Int):Int {
@@ -255,17 +260,204 @@ class GuidesTextModelPart extends TextModelPart implements IGuidesTextModelPart 
         return {startLineNumber: startLineNumber, endLineNumber: endLineNumber, indent: indent};
     }
 
-    /**
-     * TODO(step 1, cs1-tokens): bracket guides need the bracket pairs part
-     * (`getBracketPairsInRangeWithMinIndentation`); until then every line
-     * has no bracket guide.
-     */
     public function getLinesBracketGuides(startLineNumber:Int, endLineNumber:Int, activePosition:Null<IPosition>, options:BracketGuideOptions):Array<Array<IndentGuide>> {
         final result:Array<Array<IndentGuide>> = [];
         for (lineNumber in startLineNumber...endLineNumber + 1) {
             result.push([]);
         }
+
+        // If requested, this could be made configurable.
+        final includeSingleLinePairs = true;
+
+        final bracketPairs = this.textModel.bracketPairs.getBracketPairsInRangeWithMinIndentation(
+            new Range(
+                startLineNumber,
+                1,
+                endLineNumber,
+                this.textModel.getLineMaxColumn(endLineNumber)
+            )
+        ).toArray();
+
+        var activeBracketPairRange:Null<Range> = null;
+        if (activePosition != null && bracketPairs.length > 0) {
+            final bracketsContainingActivePosition = (
+                startLineNumber <= activePosition.lineNumber && activePosition.lineNumber <= endLineNumber
+                    // We don't need to query the brackets again if the cursor is in the viewport
+                    ? [for (bp in bracketPairs) (bp : cityscape.common.TextModelBracketPairs.BracketPairInfo)]
+                    : this.textModel.bracketPairs.getBracketPairsInRange(Range.fromPositions(activePosition)).toArray()
+            ).filter(bp -> Range.strictContainsPosition(bp.range, activePosition));
+
+            var i = bracketsContainingActivePosition.length - 1;
+            while (i >= 0) {
+                final bp = bracketsContainingActivePosition[i];
+                if (includeSingleLinePairs || bp.range.startLineNumber != bp.range.endLineNumber) {
+                    activeBracketPairRange = bp.range;
+                    break;
+                }
+                i--;
+            }
+        }
+
+        final independentColorPoolPerBracketType = this.textModel.getOptions().bracketPairColorizationOptions.independentColorPoolPerBracketType;
+        final colorProvider = new BracketPairGuidesClassNames();
+
+        for (pair in bracketPairs) {
+            if (pair.closingBracketRange == null) {
+                continue;
+            }
+
+            final isActive = activeBracketPairRange != null && pair.range.equalsRange(activeBracketPairRange);
+
+            if (!isActive && !options.includeInactive) {
+                continue;
+            }
+
+            final className =
+                colorProvider.getInlineClassName(pair.nestingLevel, pair.nestingLevelOfEqualBracketType, independentColorPoolPerBracketType) +
+                (options.highlightActive && isActive
+                    ? ' ' + colorProvider.activeClassName
+                    : '');
+
+            final start = pair.openingBracketRange.getStartPosition();
+            final end = pair.closingBracketRange.getStartPosition();
+
+            final horizontalGuides = options.horizontalGuides == HorizontalGuidesState.Enabled || (options.horizontalGuides == HorizontalGuidesState.EnabledForActive && isActive);
+
+            if (pair.range.startLineNumber == pair.range.endLineNumber) {
+                if (includeSingleLinePairs && horizontalGuides) {
+                    result[pair.range.startLineNumber - startLineNumber].push(
+                        new IndentGuide(
+                            -1,
+                            pair.openingBracketRange.getEndPosition().column,
+                            className,
+                            new IndentGuideHorizontalLine(false, end.column),
+                            -1,
+                            -1
+                        )
+                    );
+                }
+                continue;
+            }
+
+            final endVisibleColumn = this.getVisibleColumnFromPosition(end);
+            final startVisibleColumn = this.getVisibleColumnFromPosition(pair.openingBracketRange.getStartPosition());
+            final guideVisibleColumn = Std.int(Math.min(Math.min(startVisibleColumn, endVisibleColumn), pair.minVisibleColumnIndentation + 1));
+
+            var renderHorizontalEndLineAtTheBottom = false;
+
+            final firstNonWsIndex = Strings.firstNonWhitespaceIndex(this.textModel.getLineContent(pair.closingBracketRange.startLineNumber));
+            final hasTextBeforeClosingBracket = firstNonWsIndex < pair.closingBracketRange.startColumn - 1;
+            if (hasTextBeforeClosingBracket) {
+                renderHorizontalEndLineAtTheBottom = true;
+            }
+
+            final visibleGuideStartLineNumber = Std.int(Math.max(start.lineNumber, startLineNumber));
+            final visibleGuideEndLineNumber = Std.int(Math.min(end.lineNumber, endLineNumber));
+
+            final offset = renderHorizontalEndLineAtTheBottom ? 1 : 0;
+
+            for (l in visibleGuideStartLineNumber...(visibleGuideEndLineNumber + offset)) {
+                result[l - startLineNumber].push(
+                    new IndentGuide(
+                        guideVisibleColumn,
+                        -1,
+                        className,
+                        null,
+                        l == start.lineNumber ? start.column : -1,
+                        l == end.lineNumber ? end.column : -1
+                    )
+                );
+            }
+
+            if (horizontalGuides) {
+                if (start.lineNumber >= startLineNumber && startVisibleColumn > guideVisibleColumn) {
+                    result[start.lineNumber - startLineNumber].push(
+                        new IndentGuide(
+                            guideVisibleColumn,
+                            -1,
+                            className,
+                            new IndentGuideHorizontalLine(false, start.column),
+                            -1,
+                            -1
+                        )
+                    );
+                }
+
+                if (end.lineNumber <= endLineNumber && endVisibleColumn > guideVisibleColumn) {
+                    result[end.lineNumber - startLineNumber].push(
+                        new IndentGuide(
+                            guideVisibleColumn,
+                            -1,
+                            className,
+                            new IndentGuideHorizontalLine(!renderHorizontalEndLineAtTheBottom, end.column),
+                            -1,
+                            -1
+                        )
+                    );
+                }
+            }
+        }
+
+        for (guides in result) {
+            haxe.ds.ArraySort.sort(guides, (a, b) -> a.visibleColumn - b.visibleColumn);
+        }
+
         return result;
+    }
+
+    function getVisibleColumnFromPosition(position:Position):Int {
+        return visibleColumnFromColumn(
+            this.textModel.getLineContent(position.lineNumber),
+            position.column,
+            this.textModel.getOptions().tabSize
+        ) + 1;
+    }
+
+    /**
+     * `CursorColumns.visibleColumnFromColumn`, which needs the grapheme
+     * iterator of strings.ts (not ported yet): here the visible columns are
+     * counted per code point (a grapheme of several code points, like a
+     * combining mark after a letter, counts once per code point), with
+     * Monaco's tab stops and wide characters (`isFullWidthCharacter`,
+     * `isEmojiImprecise`).
+     * TODO(step 2): use `CursorColumns.visibleColumnFromColumn` once it is ported.
+     */
+    static function visibleColumnFromColumn(lineContent:String, column:Int, tabSize:Int):Int {
+        final textLen = Std.int(Math.min(column - 1, lineContent.length));
+        var result = 0;
+        var offset = 0;
+        while (offset < textLen) {
+            final codePoint = Strings.getNextCodePoint(lineContent, textLen, offset);
+            offset += codePoint >= 0x10000 ? 2 : 1;
+            if (codePoint == CharCode.Tab) {
+                result = CursorColumns.nextRenderTabStop(result, tabSize);
+            }
+            else if (isFullWidthCharacter(codePoint) || isEmojiImprecise(codePoint)) {
+                result += 2;
+            }
+            else {
+                result += 1;
+            }
+        }
+        return result;
+    }
+
+    static function isFullWidthCharacter(charCode:Int):Bool {
+        return (
+            (charCode >= 0x2E80 && charCode <= 0xD7AF)
+            || (charCode >= 0xF900 && charCode <= 0xFAFF)
+            || (charCode >= 0xFF01 && charCode <= 0xFF5E)
+        );
+    }
+
+    static function isEmojiImprecise(x:Int):Bool {
+        return (
+            (x >= 0x1F1E6 && x <= 0x1F1FF) || (x == 8986) || (x == 8987) || (x == 9200)
+            || (x == 9203) || (x >= 9728 && x <= 10175) || (x == 11088) || (x == 11093)
+            || (x >= 127744 && x <= 128591) || (x >= 128640 && x <= 128764)
+            || (x >= 128992 && x <= 129008) || (x >= 129280 && x <= 129535)
+            || (x >= 129648 && x <= 129782)
+        );
     }
 
     public function getLinesIndentGuides(startLineNumber:Int, endLineNumber:Int):Array<Int> {

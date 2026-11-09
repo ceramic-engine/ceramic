@@ -20,6 +20,10 @@ class Scenarios {
             new scenarios.ModelEdit(),
             new scenarios.ModelType(),
             new scenarios.ModelReadLines(),
+            new scenarios.Tokenize('tokenize-js-full', 0, false),
+            new scenarios.Tokenize('tokenize-js-edit', 0, true),
+            new scenarios.Tokenize('tokenize-10k-full', 10000, false),
+            new scenarios.Tokenize('tokenize-10k-edit', 10000, true),
             #end
         ];
     }

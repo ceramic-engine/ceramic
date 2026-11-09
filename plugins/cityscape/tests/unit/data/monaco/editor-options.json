@@ -10695,7 +10695,7 @@
    "output": 3
   }
  ],
- "loreline": {
+ "hostOptionSet": {
   "options": {
    "minimap": {
     "enabled": false

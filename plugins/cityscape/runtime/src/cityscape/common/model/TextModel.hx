@@ -27,7 +27,9 @@ import cityscape.common.core.TextModelDefaults;
 import cityscape.common.core.WordHelper.IWordAtPosition;
 import cityscape.common.languages.Language.ILanguageSelection;
 import cityscape.common.model.IntervalTree;
-import cityscape.common.model.PlaceholderTextModelParts;
+import cityscape.common.model.Tokens.AttachedViews;
+import cityscape.common.model.bracketPairsTextModelPart.BracketPairsImpl.BracketPairsTextModelPart;
+import cityscape.common.model.bracketPairsTextModelPart.ColorizedBracketPairsDecorationProvider;
 import cityscape.common.model.TextModelSearch;
 import cityscape.common.model.pieceTreeTextBuffer.PieceTreeTextBuffer;
 import cityscape.common.model.pieceTreeTextBuffer.PieceTreeTextBufferBuilder;
@@ -94,39 +96,6 @@ class TextModelSnapshot implements ITextSnapshot {
 }
 
 /**
- * The views attached to a model (Monaco's `AttachedViews` of
- * `model/tokens.ts`).
- *
- * TODO(step 1, cs1-tokens): the visible lines of the attached views drive
- * the background tokenization; this stand-in only keeps the views.
- */
-class AttachedViews {
-
-    final _views:Array<AttachedViewImpl> = [];
-
-    public function new() {}
-
-    public function attachView():IAttachedView {
-        final view = new AttachedViewImpl();
-        this._views.push(view);
-        return view;
-    }
-
-    public function detachView(view:IAttachedView):Void {
-        this._views.remove(cast view);
-    }
-
-}
-
-private class AttachedViewImpl implements IAttachedView {
-
-    public function new() {}
-
-    public function setVisibleLines(visibleLines:Array<{startLineNumber:Int, endLineNumber:Int}>, stabilized:Bool):Void {}
-
-}
-
-/**
  * Monaco's `IDecorationsTreesHost`.
  */
 interface IDecorationsTreesHost {
@@ -142,11 +111,6 @@ interface IDecorationsTreesHost {
  * `IInstantiationService`); here they come from the `Cityscape` context
  * given to the constructor (`Cityscape.defaultContext` when none).
  *
- * TODO(step 1, cs1-tokens): the tokenization and bracket pairs parts are
- * stand-ins (`PlaceholderTextModelParts`), the decoration provider of the
- * colorized bracket pairs is missing, and the language service
- * (`requestRichLanguageFeatures`) and language configuration events are not
- * wired yet.
  */
 class TextModel extends Disposable implements ITextModel implements IDecorationsTreesHost {
 
@@ -356,11 +320,13 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
 
     //#endregion
 
-    final _tokenizationTextModelPart:PlaceholderTokenizationTextModelPart;
+    final _tokenizationTextModelPart:TokenizationTextModelPart;
 
     public final tokenization:ITokenizationTextModelPart;
 
-    final _bracketPairs:PlaceholderBracketPairsTextModelPart;
+    final _bracketPairs:BracketPairsTextModelPart;
+
+    final _decorationProvider:ColorizedBracketPairsDecorationProvider;
 
     public final bracketPairs:IBracketPairsTextModelPart;
 
@@ -429,11 +395,12 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
             this._languageSelectionListener.value = selection.onDidChange(_ -> this._setLanguage(selection.languageId));
         }
 
-        this._bracketPairs = this._register(new PlaceholderBracketPairsTextModelPart());
+        this._bracketPairs = this._register(new BracketPairsTextModelPart(this, this.context.languageConfigurationService));
         this.bracketPairs = this._bracketPairs;
         this._guidesTextModelPart = this._register(new GuidesTextModelPart(this));
         this.guides = this._guidesTextModelPart;
-        this._tokenizationTextModelPart = new PlaceholderTokenizationTextModelPart(this, languageId);
+        this._decorationProvider = this._register(new ColorizedBracketPairsDecorationProvider(this));
+        this._tokenizationTextModelPart = new TokenizationTextModelPart(this, this._bracketPairs, languageId, this._attachedViews, this.context);
         this.tokenization = this._tokenizationTextModelPart;
         this.onDidChangeLanguage = this._tokenizationTextModelPart.onDidChangeLanguage;
         this.onDidChangeLanguageConfiguration = this._tokenizationTextModelPart.onDidChangeLanguageConfiguration;
@@ -476,6 +443,19 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
         this._isUndoing = false;
         this._isRedoing = false;
         this._trimAutoWhitespaceLines = null;
+
+        this._register(this._decorationProvider.onDidChange(() -> {
+            this._onDidChangeDecorations.beginDeferredEmit();
+            this._onDidChangeDecorations.fire();
+            this._onDidChangeDecorations.endDeferredEmit();
+        }));
+
+        this.context.languageService.requestRichLanguageFeatures(languageId);
+
+        this._register(this.context.languageConfigurationService.onDidChange(e -> {
+            this._bracketPairs.handleLanguageConfigurationServiceChange(e);
+            this._tokenizationTextModelPart.handleLanguageConfigurationServiceChange(e);
+        }));
     }
 
     override public function dispose():Void {
@@ -755,6 +735,7 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
         this._options = newOpts;
 
         this._bracketPairs.handleDidChangeOptions(e);
+        this._decorationProvider.handleDidChangeOptions(e);
         this._onDidChangeOptions.fire(e);
     }
 
@@ -1877,7 +1858,7 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
         final range = new Range(startLineNumber, 1, endLineNumber, endColumn);
 
         final decorations = this._getDecorationsInRange(range, ownerId, filterOutValidation, onlyMarginDecorations);
-        // TODO(step 1, cs1-tokens): `this._decorationProvider.getDecorationsInRange(range, ownerId, filterOutValidation)` (colorized bracket pairs)
+        Arrays.pushMany(decorations, this._decorationProvider.getDecorationsInRange(range, ownerId, filterOutValidation));
         return decorations;
     }
 
@@ -1885,7 +1866,7 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
         final validatedRange = this.validateRange(range);
 
         final decorations = this._getDecorationsInRange(validatedRange, ownerId != null ? ownerId : 0, filterOutValidation == true, onlyMarginDecorations == true);
-        // TODO(step 1, cs1-tokens): `this._decorationProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation, onlyMinimapDecorations)` (colorized bracket pairs)
+        Arrays.pushMany(decorations, this._decorationProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation, onlyMinimapDecorations));
         return decorations;
     }
 
@@ -1906,8 +1887,8 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
     }
 
     public function getAllDecorations(?ownerId:Int, ?filterOutValidation:Bool):Array<IModelDecoration> {
-        final result = this._decorationsTree.getAll(this, ownerId != null ? ownerId : 0, filterOutValidation == true, false, false);
-        // TODO(step 1, cs1-tokens): `this._decorationProvider.getAllDecorations(ownerId, filterOutValidation)` (colorized bracket pairs)
+        var result = this._decorationsTree.getAll(this, ownerId != null ? ownerId : 0, filterOutValidation == true, false, false);
+        result = result.concat(this._decorationProvider.getAllDecorations(ownerId, filterOutValidation));
         return result;
     }
 
@@ -2110,7 +2091,7 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
 
     function _setLanguage(languageId:String, ?source:String):Void {
         this._tokenizationTextModelPart.setLanguageId(languageId, source);
-        // TODO(step 1, cs1-tokens): `this._languageService.requestRichLanguageFeatures(languageId)`
+        this.context.languageService.requestRichLanguageFeatures(languageId);
     }
 
     public function getLanguageIdAtPosition(lineNumber:Int, column:Int):String {
