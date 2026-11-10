@@ -107,11 +107,6 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
 
     @:noCompletion
     override function measureNode(knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App):Size {
-        final text = pendingText;
-        final runs = pendingRuns;
-        final textStyle = pendingStyle;
-        final fontSize:Pixels = pendingFontSize;
-        final lineHeight:Pixels = pendingLineHeight;
         // The available width as a value (a `Null<Float>` boxes it on hxcpp)
         var hasAvailableWidth = false;
         var availableWidthValue = 0.0;
@@ -121,8 +116,26 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
                 availableWidthValue = x;
             case _:
         }
+        final knownWidth:Null<Float> = knownDimensions.width;
+        return measureWidth(knownWidth != null, knownWidth != null ? (knownWidth:Float) : 0.0, hasAvailableWidth, availableWidthValue, window, cx);
+    }
+
+    /** `measureNode()` with the arguments of the last measure as values (no objects per measure) */
+    @:noCompletion
+    override function measureValues(window:Window, cx:App):Size {
+        final hasAvailableWidth = measuredAvailableWidthKind == TaffyLayoutEngine.MeasuredNode.AVAILABLE_DEFINITE;
+        return measureWidth(measuredHasKnownWidth, measuredKnownWidth, hasAvailableWidth, hasAvailableWidth ? measuredAvailableWidth : 0.0, window, cx);
+    }
+
+    /** The measure, from the known and available widths (a text reads no height) */
+    function measureWidth(hasKnownWidth:Bool, knownWidth:Float, hasAvailableWidth:Bool, availableWidthValue:Float, window:Window, cx:App):Size {
+        final text = pendingText;
+        final runs = pendingRuns;
+        final textStyle = pendingStyle;
+        final fontSize:Pixels = pendingFontSize;
+        final lineHeight:Pixels = pendingLineHeight;
         final wrapWidth:Null<Float> = if (textStyle.whiteSpace == Normal) {
-            knownDimensions.width != null ? knownDimensions.width
+            hasKnownWidth ? sameBox(this.wrapWidth, knownWidth)
                 : (hasAvailableWidth ? sameBox(this.wrapWidth, availableWidthValue) : null);
         }
         else {
@@ -133,8 +146,8 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
         var truncationAffix = '';
         var truncateFrom:TruncateFrom = End;
         if (textStyle.textOverflow != null) {
-            truncateWidth = if (knownDimensions.width != null) {
-                knownDimensions.width;
+            truncateWidth = if (hasKnownWidth) {
+                sameBox(this.truncateWidth, knownWidth);
             }
             else if (hasAvailableWidth) {
                 textStyle.lineClamp >= 0 ? availableWidthValue * textStyle.lineClamp : availableWidthValue;

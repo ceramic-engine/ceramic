@@ -6,9 +6,18 @@ package glaze;
 import haxe.ds.IntMap;
 
 /**
- * Caches line layouts for the current and the previous frame: a layout
- * used during a frame is kept for the next one, and dropped if the next
- * frame doesn't use it (`finishFrame()`).
+ * Caches line layouts for the current and the previous frames: a layout
+ * used during a frame is kept for the next two, and dropped if neither
+ * uses it (`finishFrame()`).
+ *
+ * Difference with GPUI (cache policy only, the layouts are the same): Rust
+ * keeps the current and the previous frame, so a line that is not shown for
+ * one frame is shaped again when it comes back (a list filtered back and
+ * forth). Here a third generation (`olderFrame`) keeps the layouts unused
+ * during the previous frame for one more frame: a lookup missing in the
+ * current and previous frames finds them there and moves them back to the
+ * current frame. Shaping is deterministic, so a kept layout is the one the
+ * shaping would make again.
  *
  * Like Rust (which hashes a borrowed key), an entry is found by an integer
  * hash of the text, the font size, the runs and the wrap width, then
@@ -17,6 +26,9 @@ import haxe.ds.IntMap;
  * the text.
  */
 class LineLayoutCache {
+
+    /** Layouts used two frames ago and not since (see the class comment) */
+    var olderFrame:FrameCache = new FrameCache();
 
     var previousFrame:FrameCache = new FrameCache();
 
@@ -66,12 +78,14 @@ class LineLayoutCache {
         }
 
         final previous = previousFrame;
+        final older = olderFrame;
         final current = currentFrame;
 
         for (i in start.linesIndex...end.linesIndex) {
             final entry = previous.usedLines[i];
-            if (entry.owner == previous) {
-                previous.remove(previous.lines, entry);
+            final owner = entry.owner;
+            if (owner == previous || owner == older) {
+                owner.remove(owner.lines, entry);
                 current.insert(current.lines, entry);
             }
             current.usedLines.push(entry);
@@ -79,8 +93,9 @@ class LineLayoutCache {
 
         for (i in start.wrappedLinesIndex...end.wrappedLinesIndex) {
             final entry = previous.usedWrappedLines[i];
-            if (entry.owner == previous) {
-                previous.remove(previous.wrappedLines, entry);
+            final owner = entry.owner;
+            if (owner == previous || owner == older) {
+                owner.remove(owner.wrappedLines, entry);
                 current.insert(current.wrappedLines, entry);
             }
             current.usedWrappedLines.push(entry);
@@ -88,8 +103,9 @@ class LineLayoutCache {
 
         for (i in start.linesByHashIndex...end.linesByHashIndex) {
             final entry = previous.usedLinesByHash[i];
-            if (entry.owner == previous) {
-                previous.remove(previous.linesByHash, entry);
+            final owner = entry.owner;
+            if (owner == previous || owner == older) {
+                owner.remove(owner.linesByHash, entry);
                 current.insert(current.linesByHash, entry);
             }
             current.usedLinesByHash.push(entry);
@@ -97,8 +113,9 @@ class LineLayoutCache {
 
         for (i in start.wrappedLinesByHashIndex...end.wrappedLinesByHashIndex) {
             final entry = previous.usedWrappedLinesByHash[i];
-            if (entry.owner == previous) {
-                previous.remove(previous.wrappedLinesByHash, entry);
+            final owner = entry.owner;
+            if (owner == previous || owner == older) {
+                owner.remove(owner.wrappedLinesByHash, entry);
                 current.insert(current.wrappedLinesByHash, entry);
             }
             current.usedWrappedLinesByHash.push(entry);
@@ -119,9 +136,10 @@ class LineLayoutCache {
 
     public function finishFrame():Void {
         clearIfFontGenerationChanged();
-        final prev = previousFrame;
+        final older = olderFrame;
+        olderFrame = previousFrame;
         previousFrame = currentFrame;
-        currentFrame = prev;
+        currentFrame = older;
         currentFrame.clear();
     }
 
@@ -194,8 +212,12 @@ class LineLayoutCache {
             return cached.wrapped;
         }
 
-        final previous = previousFrame;
-        final entry = previous.findText(previous.wrappedLines, hash, text, fontSize, runs, wrapWidth, null);
+        var previous = previousFrame;
+        var entry = previous.findText(previous.wrappedLines, hash, text, fontSize, runs, wrapWidth, null);
+        if (entry == null) {
+            previous = olderFrame;
+            entry = previous.findText(previous.wrappedLines, hash, text, fontSize, runs, wrapWidth, null);
+        }
         if (entry != null) {
             previous.remove(previous.wrappedLines, entry);
             current.insert(current.wrappedLines, entry);
@@ -228,8 +250,12 @@ class LineLayoutCache {
             return cached.layout;
         }
 
-        final previous = previousFrame;
-        final entry = previous.findText(previous.lines, hash, text, fontSize, runs, null, forceWidth);
+        var previous = previousFrame;
+        var entry = previous.findText(previous.lines, hash, text, fontSize, runs, null, forceWidth);
+        if (entry == null) {
+            previous = olderFrame;
+            entry = previous.findText(previous.lines, hash, text, fontSize, runs, null, forceWidth);
+        }
         if (entry != null) {
             previous.remove(previous.lines, entry);
             current.insert(current.lines, entry);
@@ -265,7 +291,10 @@ class LineLayoutCache {
         if (current != null)
             return current.layout;
         final previous = previousFrame.findHashed(previousFrame.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
-        return previous != null ? previous.layout : null;
+        if (previous != null)
+            return previous.layout;
+        final older = olderFrame.findHashed(olderFrame.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
+        return older != null ? older.layout : null;
     }
 
     /**
@@ -282,8 +311,12 @@ class LineLayoutCache {
             return cached.layout;
         }
 
-        final previous = previousFrame;
-        final entry = previous.findHashed(previous.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
+        var previous = previousFrame;
+        var entry = previous.findHashed(previous.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
+        if (entry == null) {
+            previous = olderFrame;
+            entry = previous.findHashed(previous.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
+        }
         if (entry != null) {
             previous.remove(previous.linesByHash, entry);
             current.insert(current.linesByHash, entry);
@@ -313,6 +346,7 @@ class LineLayoutCache {
 
         currentFrame = new FrameCache();
         previousFrame = new FrameCache();
+        olderFrame = new FrameCache();
         cachedFontGeneration = generation;
         return generation;
     }

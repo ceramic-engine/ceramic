@@ -33,16 +33,129 @@ typedef MeasureFn = (knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<
  */
 @:noCompletion
 class MeasuredNode {
-    /** The arguments of the last call to `measureNode`, null before the first one */
-    @:allow(glaze) var measuredKnown:Null<SizeOf<Null<Float>>> = null;
-    @:allow(glaze) var measuredAvailable:Null<SizeOf<AvailableSpace>> = null;
+
+    /** Kinds of the available space of the last measure */
+    @:allow(glaze) static inline final AVAILABLE_DEFINITE:Int = 0;
+    @:allow(glaze) static inline final AVAILABLE_MIN_CONTENT:Int = 1;
+    @:allow(glaze) static inline final AVAILABLE_MAX_CONTENT:Int = 2;
+
+    /**
+     * The arguments of the last measure, as values in logical pixels (no
+     * `SizeOf` and `AvailableSpace` objects per measured leaf):
+     * `measuredSet` is false before the first one
+     */
+    @:allow(glaze) var measuredSet:Bool = false;
+    @:allow(glaze) var measuredHasKnownWidth:Bool = false;
+    @:allow(glaze) var measuredKnownWidth:Float = 0.0;
+    @:allow(glaze) var measuredHasKnownHeight:Bool = false;
+    @:allow(glaze) var measuredKnownHeight:Float = 0.0;
+    @:allow(glaze) var measuredAvailableWidthKind:Int = AVAILABLE_MAX_CONTENT;
+    @:allow(glaze) var measuredAvailableWidth:Float = 0.0;
+    @:allow(glaze) var measuredAvailableHeightKind:Int = AVAILABLE_MAX_CONTENT;
+    @:allow(glaze) var measuredAvailableHeight:Float = 0.0;
 
     function new() {}
+
+    /** Takes the arguments of the last measure of `other` */
+    @:allow(glaze)
+    inline function copyMeasuredFrom(other:MeasuredNode):Void {
+        measuredSet = other.measuredSet;
+        measuredHasKnownWidth = other.measuredHasKnownWidth;
+        measuredKnownWidth = other.measuredKnownWidth;
+        measuredHasKnownHeight = other.measuredHasKnownHeight;
+        measuredKnownHeight = other.measuredKnownHeight;
+        measuredAvailableWidthKind = other.measuredAvailableWidthKind;
+        measuredAvailableWidth = other.measuredAvailableWidth;
+        measuredAvailableHeightKind = other.measuredAvailableHeightKind;
+        measuredAvailableHeight = other.measuredAvailableHeight;
+    }
+
+    /**
+     * The size of the node for the arguments of the last measure (the
+     * `measured*` values). By default, `measureNode()` with these arguments
+     * as objects (shared while they are the same); an element state can read
+     * the values directly instead (`TextLayout`).
+     */
+    @:allow(glaze)
+    function measureValues(window:Window, cx:App):Size {
+        return measureNode(knownObject(this), availableObject(this), window, cx);
+    }
 
     /** The size of the node (what a `MeasureFn` returns) */
     @:allow(glaze)
     function measureNode(knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App):Size {
         throw 'abstract';
+    }
+
+    static final NONE_KNOWN = new SizeOf<Null<Float>>(null, null);
+
+    /** The known dimensions given to the last measure with some (immutable, reused while unchanged) */
+    static var lastKnown:Null<SizeOf<Null<Float>>> = null;
+    static var lastKnownHasWidth:Bool = false;
+    static var lastKnownHasHeight:Bool = false;
+    static var lastKnownWidth:Float = 0.0;
+    static var lastKnownHeight:Float = 0.0;
+
+    /** The available space given to the last measure (immutable values reused while unchanged) */
+    static var lastAvailable:Null<SizeOf<AvailableSpace>> = null;
+    static var lastAvailableWidth:AvailableSpace = AvailableSpace.MaxContent;
+    static var lastAvailableHeight:AvailableSpace = AvailableSpace.MaxContent;
+
+    /** The same value, zero signs included */
+    static inline function sameFloat(a:Float, b:Float):Bool {
+        return a == b && (b != 0.0 || 1.0 / a == 1.0 / b);
+    }
+
+    /** The known dimensions of the last measure of `node` as an object */
+    static function knownObject(node:MeasuredNode):SizeOf<Null<Float>> {
+        final hasWidth = node.measuredHasKnownWidth;
+        final hasHeight = node.measuredHasKnownHeight;
+        if (!hasWidth && !hasHeight) {
+            return NONE_KNOWN;
+        }
+        final width = hasWidth ? node.measuredKnownWidth : 0.0;
+        final height = hasHeight ? node.measuredKnownHeight : 0.0;
+        final last = lastKnown;
+        if (last != null && hasWidth == lastKnownHasWidth && hasHeight == lastKnownHasHeight
+            && (!hasWidth || sameFloat(width, lastKnownWidth)) && (!hasHeight || sameFloat(height, lastKnownHeight))) {
+            return last;
+        }
+        final known = new SizeOf<Null<Float>>(hasWidth ? width : null, hasHeight ? height : null);
+        lastKnown = known;
+        lastKnownHasWidth = hasWidth;
+        lastKnownHasHeight = hasHeight;
+        lastKnownWidth = width;
+        lastKnownHeight = height;
+        return known;
+    }
+
+    /** `previous` when it is the same available space, a new one otherwise */
+    static function availableValue(kind:Int, value:Float, previous:AvailableSpace):AvailableSpace {
+        return switch kind {
+            case AVAILABLE_MIN_CONTENT: AvailableSpace.MinContent;
+            case AVAILABLE_MAX_CONTENT: AvailableSpace.MaxContent;
+            case _:
+                switch previous {
+                    case Definite(last) if (sameFloat(last, value)):
+                        previous;
+                    case _:
+                        AvailableSpace.Definite(value);
+                }
+        }
+    }
+
+    /** The available space of the last measure of `node` as an object */
+    static function availableObject(node:MeasuredNode):SizeOf<AvailableSpace> {
+        final width = availableValue(node.measuredAvailableWidthKind, node.measuredAvailableWidth, lastAvailableWidth);
+        final height = availableValue(node.measuredAvailableHeightKind, node.measuredAvailableHeight, lastAvailableHeight);
+        var available = lastAvailable;
+        if (available == null || available.width != width || available.height != height) {
+            available = new SizeOf<AvailableSpace>(width, height);
+            lastAvailable = available;
+        }
+        lastAvailableWidth = width;
+        lastAvailableHeight = height;
+        return available;
     }
 }
 
@@ -315,11 +428,10 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
             // The new element measures like the one it replaces did last:
             // its state (text lines...) is the one its prepaint expects
             final context = data.context;
-            measure.measuredKnown = context.measuredKnown;
-            measure.measuredAvailable = context.measuredAvailable;
+            measure.copyMeasuredFrom(context);
             data.context = measure;
-            if (measure.measuredKnown != null) {
-                measure.measureNode(measure.measuredKnown, measure.measuredAvailable, measureWindow, measureCx);
+            if (measure.measuredSet) {
+                measure.measureValues(measureWindow, measureCx);
             }
         }
         // A retained nested view detached its root when it retained it again
@@ -538,44 +650,6 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         return output;
     }
 
-    static final NONE_KNOWN = new SizeOf<Null<Float>>(null, null);
-
-    /** The known dimensions given to the last measured leaf with some (reused while unchanged) */
-    var lastKnown:Null<SizeOf<Null<Float>>> = null;
-    var lastKnownHasWidth:Bool = false;
-    var lastKnownHasHeight:Bool = false;
-    var lastKnownWidth:Float = 0.0;
-    var lastKnownHeight:Float = 0.0;
-
-    /** The available space given to the last measured leaf (immutable values reused while unchanged) */
-    var lastAvailable:Null<SizeOf<AvailableSpace>> = null;
-    var lastAvailableWidth:AvailableSpace = AvailableSpace.MaxContent;
-    var lastAvailableHeight:AvailableSpace = AvailableSpace.MaxContent;
-
-    /**
-     * The port's available space of a taffy one in logical pixels: `previous`
-     * when it is the same `Definite` value (same bits), a new one otherwise.
-     */
-    /** The same value, zero signs included */
-    static inline function sameFloat(a:Float, b:Float):Bool {
-        return a == b && (b != 0.0 || 1.0 / a == 1.0 / b);
-    }
-
-    static function untransformAvailable(ev:taffy.style.AvailableSpace, scaleFactor:Float, previous:AvailableSpace):AvailableSpace {
-        return switch ev {
-            case taffy.style.AvailableSpace.MinContent: AvailableSpace.MinContent;
-            case taffy.style.AvailableSpace.MaxContent: AvailableSpace.MaxContent;
-            case definite:
-                final value:Float = definite.definiteValue() / scaleFactor;
-                switch previous {
-                    case Definite(last) if (sameFloat(last, value)):
-                        previous;
-                    case _:
-                        AvailableSpace.Definite(value);
-                }
-        }
-    }
-
     @:noCompletion
     public function measureLeafSize(knownWidth:OptionalFloat, knownHeight:OptionalFloat, availableWidth:taffy.style.AvailableSpace, availableHeight:taffy.style.AvailableSpace):Void {
         final nodeContext = measureNodeContext;
@@ -586,42 +660,39 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         }
         final scaleFactor = measureScaleFactor;
 
-        // Immutable values: none known shares one object, and the available
-        // space of the last measure is reused when it is the same
-        var known = NONE_KNOWN;
-        if (knownWidth.isSome() || knownHeight.isSome()) {
-            final hasWidth = knownWidth.isSome();
-            final hasHeight = knownHeight.isSome();
-            final width = hasWidth ? knownWidth.unwrap() / scaleFactor : 0.0;
-            final height = hasHeight ? knownHeight.unwrap() / scaleFactor : 0.0;
-            final last = lastKnown;
-            if (last != null && hasWidth == lastKnownHasWidth && hasHeight == lastKnownHasHeight
-                && (!hasWidth || sameFloat(width, lastKnownWidth)) && (!hasHeight || sameFloat(height, lastKnownHeight))) {
-                known = last;
-            }
-            else {
-                known = new SizeOf<Null<Float>>(hasWidth ? width : null, hasHeight ? height : null);
-                lastKnown = known;
-                lastKnownHasWidth = hasWidth;
-                lastKnownHasHeight = hasHeight;
-                lastKnownWidth = width;
-                lastKnownHeight = height;
-            }
+        // The arguments in logical pixels, as values on the node (no objects
+        // per measured leaf: see `MeasuredNode.measureValues`)
+        nodeContext.measuredSet = true;
+        final hasWidth = knownWidth.isSome();
+        nodeContext.measuredHasKnownWidth = hasWidth;
+        nodeContext.measuredKnownWidth = hasWidth ? knownWidth.unwrap() / scaleFactor : 0.0;
+        final hasHeight = knownHeight.isSome();
+        nodeContext.measuredHasKnownHeight = hasHeight;
+        nodeContext.measuredKnownHeight = hasHeight ? knownHeight.unwrap() / scaleFactor : 0.0;
+        switch availableWidth {
+            case taffy.style.AvailableSpace.MinContent:
+                nodeContext.measuredAvailableWidthKind = MeasuredNode.AVAILABLE_MIN_CONTENT;
+                nodeContext.measuredAvailableWidth = 0.0;
+            case taffy.style.AvailableSpace.MaxContent:
+                nodeContext.measuredAvailableWidthKind = MeasuredNode.AVAILABLE_MAX_CONTENT;
+                nodeContext.measuredAvailableWidth = 0.0;
+            case definite:
+                nodeContext.measuredAvailableWidthKind = MeasuredNode.AVAILABLE_DEFINITE;
+                nodeContext.measuredAvailableWidth = definite.definiteValue() / scaleFactor;
+        }
+        switch availableHeight {
+            case taffy.style.AvailableSpace.MinContent:
+                nodeContext.measuredAvailableHeightKind = MeasuredNode.AVAILABLE_MIN_CONTENT;
+                nodeContext.measuredAvailableHeight = 0.0;
+            case taffy.style.AvailableSpace.MaxContent:
+                nodeContext.measuredAvailableHeightKind = MeasuredNode.AVAILABLE_MAX_CONTENT;
+                nodeContext.measuredAvailableHeight = 0.0;
+            case definite:
+                nodeContext.measuredAvailableHeightKind = MeasuredNode.AVAILABLE_DEFINITE;
+                nodeContext.measuredAvailableHeight = definite.definiteValue() / scaleFactor;
         }
 
-        final width = untransformAvailable(availableWidth, scaleFactor, lastAvailableWidth);
-        final height = untransformAvailable(availableHeight, scaleFactor, lastAvailableHeight);
-        var available = lastAvailable;
-        if (available == null || available.width != width || available.height != height) {
-            available = new SizeOf<AvailableSpace>(width, height);
-            lastAvailable = available;
-        }
-        lastAvailableWidth = width;
-        lastAvailableHeight = height;
-
-        nodeContext.measuredKnown = known;
-        nodeContext.measuredAvailable = available;
-        final measured = nodeContext.measureNode(known, available, measureWindow, measureCx);
+        final measured = nodeContext.measureValues(measureWindow, measureCx);
         // Set after the measure (which may measure other leaves)
         lastMeasuredWidth = ceilToDevicePixel(Math.max(measured.width, 0.0), scaleFactor);
         lastMeasuredHeight = ceilToDevicePixel(Math.max(measured.height, 0.0), scaleFactor);

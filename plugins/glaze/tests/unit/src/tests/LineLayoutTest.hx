@@ -777,4 +777,61 @@ class LineLayoutTest extends TestCase {
         atlas.destroy();
     }
 
+
+/// Cache generations (port: a third generation, see `LineLayoutCache`)
+
+    function testCacheKeepsLinesUnusedForOneFrame() {
+        final platform = new CountingTextSystem();
+        final cache = new LineLayoutCache(platform);
+        final runs = [new glaze.FontRun(5, 0)];
+        final first = cache.layoutLine('hello', 16, runs, null);
+        final wrapped = cache.layoutWrappedLine('hello', 16, runs, 40.0);
+        assertEquals(1, platform.shaped);
+        cache.finishFrame();
+        // Unused for one frame (a filtered list hides the row)
+        cache.finishFrame();
+        // Back: the same layouts, not shaped again (GPUI shapes it again)
+        assertTrue(cache.layoutLine('hello', 16, runs, null) == first);
+        assertTrue(cache.layoutWrappedLine('hello', 16, runs, 40.0) == wrapped);
+        assertEquals(1, platform.shaped);
+        // Moved back to the current frame: kept by the next one
+        cache.finishFrame();
+        assertTrue(cache.layoutLine('hello', 16, runs, null) == first);
+        assertEquals(1, platform.shaped);
+        // Unused for two frames: dropped
+        cache.finishFrame();
+        cache.finishFrame();
+        cache.finishFrame();
+        assertTrue(cache.layoutLine('hello', 16, runs, null) != first);
+        assertEquals(2, platform.shaped);
+    }
+
+    function testCacheByHashKeepsLinesUnusedForOneFrame() {
+        final platform = new CountingTextSystem();
+        final cache = new LineLayoutCache(platform);
+        final runs = [new glaze.FontRun(5, 0)];
+        final first = cache.layoutLineByHash(1234, 5, 16, runs, null, () -> 'hello');
+        cache.finishFrame();
+        cache.finishFrame();
+        assertTrue(cache.tryLayoutLineByHash(1234, 5, 16, runs, null) == first);
+        assertTrue(cache.layoutLineByHash(1234, 5, 16, runs, null, () -> 'hello') == first);
+        assertEquals(1, platform.shaped);
+        cache.finishFrame();
+        cache.finishFrame();
+        cache.finishFrame();
+        assertTrue(cache.tryLayoutLineByHash(1234, 5, 16, runs, null) == null);
+    }
+
+}
+
+/** `NoopTextSystem` counting its line shapings */
+private class CountingTextSystem extends NoopTextSystem {
+
+    public var shaped:Int = 0;
+
+    override public function layoutLine(text:String, fontSize:glaze.Pixels, runs:Array<glaze.FontRun>):LineLayout {
+        shaped++;
+        return super.layoutLine(text, fontSize, runs);
+    }
+
 }
