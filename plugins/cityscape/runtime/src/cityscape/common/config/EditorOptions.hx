@@ -1991,6 +1991,30 @@ typedef IEditorScrollbarOptions = {
      * Defaults to false.
      */
     @:optional var ignoreHorizontalScrollbarInContentHeight:Bool;
+    /**
+     * Cityscape addition (not in Monaco): the color of the vertical
+     * scrollbar's track, a CSS color (`#rgb`, `#rrggbb`, `#rrggbbaa`,
+     * `rgb()`, `rgba()` or `'transparent'`). The track is opaque by default:
+     * it is filled with `editor.background`, so the whole line backgrounds
+     * (current line highlight, whole line decorations, selections) and the
+     * text stop where the scrollbar starts (and where the overview ruler
+     * starts with `overviewRulerPosition: 'beside'`). `'transparent'` gives
+     * Monaco's scrollbar, over the text. The overview ruler and the thumb are
+     * drawn over the track.
+     */
+    @:optional var trackColor:String;
+    /**
+     * Cityscape addition (not in Monaco): the color of the vertical
+     * scrollbar's thumb (a CSS color, the same when hovered or dragged).
+     * Defaults to the kit's thumb colors.
+     */
+    @:optional var thumbColor:String;
+    /**
+     * Cityscape addition (not in Monaco): the corner radius of the vertical
+     * scrollbar's thumb, in pixels (at most half its width). Defaults to the
+     * kit's.
+     */
+    @:optional var thumbRadius:Float;
 }
 
 typedef InternalEditorScrollbarOptions = {
@@ -2008,6 +2032,12 @@ typedef InternalEditorScrollbarOptions = {
     final verticalSliderSize:Int;
     final scrollByPage:Bool;
     final ignoreHorizontalScrollbarInContentHeight:Bool;
+    /** Cityscape addition: the track color as given, null for the default (`editor.background`). */
+    final trackColor:Null<String>;
+    /** Cityscape addition: the thumb color as given, null for the kit's. */
+    final thumbColor:Null<String>;
+    /** Cityscape addition: the thumb corner radius (0 to 1000), null for the kit's. */
+    final thumbRadius:Null<Float>;
 }
 
 private function _scrollbarVisibilityFromString(visibility:Any, defaultValue:ScrollbarVisibility):ScrollbarVisibility {
@@ -2039,6 +2069,9 @@ class EditorScrollbar extends BaseEditorOption<InternalEditorScrollbarOptions> {
             alwaysConsumeMouseWheel: true,
             scrollByPage: false,
             ignoreHorizontalScrollbarInContentHeight: false,
+            trackColor: null,
+            thumbColor: null,
+            thumbRadius: null,
         };
         super(EditorOption.scrollbar, 'scrollbar', defaults);
     }
@@ -2065,7 +2098,32 @@ class EditorScrollbar extends BaseEditorOption<InternalEditorScrollbarOptions> {
             verticalSliderSize: EditorIntOption.clampedInt(JsValues.field(input, 'verticalSliderSize'), verticalScrollbarSize, 0, 1000),
             scrollByPage: EditorOptions.boolean(JsValues.field(input, 'scrollByPage'), this.defaultValue.scrollByPage),
             ignoreHorizontalScrollbarInContentHeight: EditorOptions.boolean(JsValues.field(input, 'ignoreHorizontalScrollbarInContentHeight'), this.defaultValue.ignoreHorizontalScrollbarInContentHeight),
+            trackColor: _color(JsValues.field(input, 'trackColor')),
+            thumbColor: _color(JsValues.field(input, 'thumbColor')),
+            thumbRadius: _radius(JsValues.field(input, 'thumbRadius')),
         };
+    }
+
+    /**
+     * A color of the Cityscape additions: a non empty string, else null
+     * (the default). A string that is not a color the view can read is
+     * also the default, when painting.
+     */
+    static function _color(value:Any):Null<String> {
+        if (!JsValues.isString(value)) {
+            return null;
+        }
+        final color = StringTools.trim((value : String));
+        return color.length > 0 ? color : null;
+    }
+
+    /** A radius of the Cityscape additions: a number clamped to 0..1000, else null. */
+    static function _radius(value:Any):Null<Float> {
+        if (!JsValues.isNumber(value)) {
+            return null;
+        }
+        final radius:Float = value;
+        return Math.isNaN(radius) ? null : EditorFloatOption.clamp(radius, 0, 1000);
     }
 
 }

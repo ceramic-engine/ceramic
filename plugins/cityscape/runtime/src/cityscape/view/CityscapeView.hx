@@ -1321,6 +1321,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * The state the element keeps from one frame to the next.
      */
     @:allow(cityscape.view.CityscapeViewElement)
+    @:allow(cityscape.CityscapeEditor)
     final paintState:CityscapeViewElement.PaintState = new CityscapeViewElement.PaintState();
 
     //#endregion

@@ -410,14 +410,26 @@ class CityscapeEditor extends Component implements Styled {
      * The kit scrollbar sized to the layout's band: the kit look (a 6 pixel
      * thumb 4 pixels from the edge, 8 pixels when hovered or dragged) in its
      * own 16 pixel band, else thumbs no wider than `verticalSliderSize`,
-     * centered when the band is too narrow for the kit's inset.
+     * centered when the band is too narrow for the kit's inset. The
+     * Cityscape options `scrollbar.thumbColor` and `scrollbar.thumbRadius`
+     * give the thumb's color and corner radius in every state.
      */
-    static function styledScrollbar(scrollbar:Scrollbar, widget:CodeEditorWidget):Scrollbar {
+    static function styledScrollbar(scrollbar:Scrollbar, widget:CodeEditorWidget, view:cityscape.view.CityscapeView):Scrollbar {
+        final options = widget.getOption(EditorOption.scrollbar);
+        final thumbColor:Null<glaze.Hsla> = options.thumbColor != null ? view.paintState.parsedColor(options.thumbColor) : null;
+        final thumbRadius:Null<Float> = options.thumbRadius;
+        if (thumbColor != null || thumbRadius != null) {
+            scrollbar.styles(s -> s
+                .thumb(t -> thumbLook(t, thumbColor, thumbRadius))
+                .thumbHover(t -> thumbLook(t, thumbColor, thumbRadius))
+                .thumbActive(t -> thumbLook(t, thumbColor, thumbRadius))
+            );
+        }
         final width = verticalScrollbarWidth(widget);
         if (width == Scrollbar.width()) {
             return scrollbar;
         }
-        final slider:Float = widget.getOption(EditorOption.scrollbar).verticalSliderSize;
+        final slider:Float = options.verticalSliderSize;
         inline function thumbWidth(kitWidth:Float):Float {
             return Math.max(0, Math.min(kitWidth, slider));
         }
@@ -432,6 +444,16 @@ class CityscapeEditor extends Component implements Styled {
             .thumbHover(t -> t.width(active).inset(inset(KIT_THUMB_INSET, active)))
             .thumbActive(t -> t.width(active).inset(inset(KIT_THUMB_INSET, active)))
         );
+    }
+
+    static function thumbLook(thumb:glaze.kit.base.Scrollbar.ScrollbarThumbStyle, color:Null<glaze.Hsla>, radius:Null<Float>):glaze.kit.base.Scrollbar.ScrollbarThumbStyle {
+        if (color != null) {
+            thumb.bg(color);
+        }
+        if (radius != null) {
+            thumb.radius(radius);
+        }
+        return thumb;
     }
 
     /** The kit scrollbar's thumb sizes (`glaze.kit.base.Scrollbar`) */
@@ -565,7 +587,7 @@ class CityscapeEditor extends Component implements Styled {
         if (scrollbarWidth > 0) {
             root.child(
                 div().absolute().top0().right0().bottom0().w(px(scrollbarWidth))
-                    .child(styledScrollbar(Scrollbar.vertical(view.scrollHandle), widget))
+                    .child(styledScrollbar(Scrollbar.vertical(view.scrollHandle), widget, view))
             );
         }
         for (overlay in widget.getOverlayWidgets()) {

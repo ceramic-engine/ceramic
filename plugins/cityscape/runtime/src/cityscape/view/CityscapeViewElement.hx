@@ -503,6 +503,17 @@ class CityscapeViewElement extends Element {
             }
         }
 
+        // The track of the vertical scrollbar (Cityscape's `scrollbar.trackColor`,
+        // `editor.background` by default): opaque over the text and the whole
+        // line backgrounds, under the shadows, the overview ruler and the thumb
+        final trackWidth = scrollbarTrackWidth(options);
+        if (trackWidth > 0) {
+            final trackColor = scrollbarTrackColor(state, options, background != null ? background : DEFAULT_BACKGROUND);
+            if (trackColor.a > 0) {
+                fillRect(window, originX + bounds.size.width - trackWidth, originY, trackWidth, bounds.size.height, trackColor);
+            }
+        }
+
         // The shadows of Monaco's scrollable element (`scrollbar.useShadows`,
         // scrollbars.css): 3 px at the top of the text area when it is
         // scrolled down, at its left when it is scrolled right, above the
@@ -650,6 +661,41 @@ class CityscapeViewElement extends Element {
         }
 
         v.trimRenderCache(startLine, endLine);
+    }
+
+    /**
+     * The width of the scrollbar track at the right of the editor (the
+     * Cityscape option `scrollbar.trackColor`): the vertical scrollbar's
+     * band of the layout (`verticalScrollbarWidth`), and the overview ruler
+     * with the gap when it is beside the scrollbar
+     * (`overviewRulerPosition: 'beside'`, like loreline-monaco's style
+     * sheet, which gives the moved ruler the track's background).
+     */
+    public static function scrollbarTrackWidth(options:cityscape.common.config.EditorOptions.IComputedEditorOptions):Float {
+        final layoutInfo = options.get(EditorOption.layoutInfo);
+        final scrollbarWidth = layoutInfo.verticalScrollbarWidth;
+        if (scrollbarWidth <= 0) {
+            return 0;
+        }
+        final rulerRight = cityscape.common.config.EditorViewOptions.OverviewRulerPlacement.right(options);
+        final ruler = layoutInfo.overviewRuler;
+        if (rulerRight > 0 && ruler.width > 0 && options.get(EditorOption.overviewRulerLanes) > 0) {
+            return Math.max(scrollbarWidth, rulerRight + ruler.right + ruler.width);
+        }
+        return scrollbarWidth;
+    }
+
+    /**
+     * The color of the scrollbar track: `scrollbar.trackColor` when it is
+     * a color, else `background` (the editor's).
+     */
+    public static function scrollbarTrackColor(state:PaintState, options:cityscape.common.config.EditorOptions.IComputedEditorOptions, background:Hsla):Hsla {
+        final value = options.get(EditorOption.scrollbar).trackColor;
+        if (value == null) {
+            return background;
+        }
+        final color = state.parsedColor(value);
+        return color != null ? color : background;
     }
 
     /**
