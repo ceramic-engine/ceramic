@@ -1208,6 +1208,7 @@ class ComponentModalsTest extends TestCase {
     }
 
     function testCachedContentDoesNotDuplicateAutomaticLayers() {
+        countsRenders();
         final renders = new Counter();
         final cx = plainWindow(renders);
         cx.update((window, cx) -> {

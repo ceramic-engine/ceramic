@@ -227,6 +227,7 @@ class ScrollRedrawTest extends TestCase {
      * reused while it is not notified, even if a handle it shows moved.
      */
     function testCachedWithStyleKeepsGpuiBehaviour() {
+        countsRenders();
         final handle = new glaze.ScrollHandle();
         final page = view((_, _) -> div().id('page').sizeFull().overflowYScroll().trackScroll(handle).flex().flexCol()
             .children([for (i in 0...40) div().h(px(24)).bg(hsla(i / 40, 0.5, 0.8, 1)).child('Row $i')]));

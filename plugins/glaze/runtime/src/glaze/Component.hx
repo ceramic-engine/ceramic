@@ -90,7 +90,42 @@ abstract class Component implements RenderOnce implements tracker.Owner {
      */
     @:noCompletion public var __key:Null<ElementId> = null;
 
+    /**
+     * The window that last rendered this component, and the view drawing
+     * it there: the host of a persistent component, the enclosing view (or
+     * persistent component) of a stateless one. Set at each render, read by
+     * `invalidate()`.
+     */
+    @:noCompletion public var __window:Null<Window> = null;
+
+    @:noCompletion public var __viewId:Int = -1;
+
     public function new() {}
+
+    /**
+     * Tells Glaze that the rendering of this component is stale because data
+     * it reads changed without tracker seeing it: a plain field, an external
+     * buffer, a native resource. Observable fields (`@observe`, `@prop`,
+     * models) never need it.
+     *
+     * A persistent component renders again, like after a change of an
+     * observable it read (its ancestors render with it, its clean siblings
+     * and descendants stay cached). A stateless component has no cache of
+     * its own: the view or persistent component it is rendered in renders
+     * again. Calls made before the next frame are merged into one render.
+     *
+     * Nothing happens when the component was never rendered, after it left
+     * the tree (`destroy()`), or when called while the view it belongs to
+     * renders (that render is the one being drawn). Called during another
+     * part of a draw, the view renders on the next frame, like a tracked
+     * change made there.
+     */
+    public function invalidate():Void {
+        final window = __window;
+        if (window != null) {
+            window.invalidateRenderedView(__viewId);
+        }
+    }
 
     /**
      * Render this component into an element tree.

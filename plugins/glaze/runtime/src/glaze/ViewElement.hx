@@ -51,6 +51,11 @@ class ViewElementState {
     public var prepaintFrame:Int = -1;
     public var paintFrame:Int = -1;
 
+    #if glaze_verify_cache
+    /** The answers of the hover tests of its last prepaint and paint (`glaze_verify_cache`) */
+    public var hoverLog:Null<String> = null;
+    #end
+
     public function new() {}
 
     public function groupHitboxesEqual(current:Array<Int>):Bool {
@@ -120,8 +125,15 @@ class ViewElementState {
  * A view is dirty when it was notified since the last frame (`cx.notify()`,
  * or a tracker reaction to an observed field it read), when one of its
  * descendant views is, and during a frame following `window.refresh()`.
+ * With default caching, it is also dirty when an entity it accessed while
+ * drawn (a model it read or updated, not a view) was notified: GPUI renders
+ * such a view again in its next frame, as it renders every uncached view.
  * A reused view keeps its tracker bindings, its element states and its line
  * layouts.
+ *
+ * Define `glaze_verify_cache` (debug): a view that would be reused renders
+ * for real instead and its drawing is compared with its cached one (see
+ * `Window.verifyCache`).
  */
 class ViewElement extends Element {
 
@@ -172,6 +184,27 @@ class ViewElement extends Element {
 
     /** The layout nodes requested by the last render (see `ViewElementState.layoutNodes`) */
     var layoutNodes:Null<Array<Int>> = null;
+
+    #if glaze_verify_cache
+    /** `glaze_verify_cache`: the reuse this view would have made in this frame */
+    var verification:Null<CacheVerification> = null;
+
+    /** The hover tests made by its prepaint (see `Window.hoverLogMark`) */
+    var hoverPrepaintStart:Int = 0;
+    var hoverPrepaintEnd:Int = 0;
+
+    /** The class of the view, or of the component drawn by a component host */
+    function viewName():String {
+        final view = this.view;
+        if (view == null) {
+            return 'view';
+        }
+        if (Std.isOfType(view, ComponentBuilder.ComponentHost)) {
+            return Type.getClassName(Type.getClass((cast view : ComponentBuilder.ComponentHost).instance));
+        }
+        return Type.getClassName(Type.getClass(view));
+    }
+    #end
 
     function new() {
         #if glaze_count_allocations glaze.util.AllocationCounters.viewElements++; #end
@@ -303,6 +336,9 @@ class ViewElement extends Element {
         else {
             final component = this.glazeComponent;
             this.glazeComponent = null;
+            // `invalidate()` of a stateless component notifies the view it renders in
+            component.__window = window;
+            component.__viewId = window.renderedViewId();
             return (component.render(window, cx) : AnyElement);
         }
     }
@@ -357,6 +393,7 @@ class ViewElement extends Element {
         if (cachedStyle != null && !window.viewCachingDisabled) {
         #end
             mode = MODE_CACHED_STYLE;
+            followAccessedEntities(window, false);
             final rootStyle = new Style();
             rootStyle.refine(cachedStyle);
             layoutId = window.requestLayout(rootStyle, null, cx);
@@ -369,21 +406,32 @@ class ViewElement extends Element {
             if (!window.refreshing && !window.drawingClean && !window.isViewDirty(entityId)) {
                 final state:Null<ViewElementState> = window.peekElementState(stateId, STATE_TYPE);
                 final previousFrame = window.layoutFrame() - 1;
-                if (state != null
+                var reusable = state != null
                     && state.layoutId != -1
                     && state.layoutFrame == previousFrame
                     && state.prepaintFrame == previousFrame
                     && state.paintFrame == previousFrame
                     && state.remSize == window.remSize()
                     && state.layoutTextStyle != null
-                    && state.layoutTextStyle.equals(layoutTextStyle)
-                    && window.retainLayout(state.layoutId, state.layoutFrame)) {
+                    && state.layoutTextStyle.equals(layoutTextStyle);
+                #if glaze_verify_cache
+                if (reusable && Window.verifyCache) {
+                    // Rendered for real instead, compared in paint with
+                    // what the reuse would have drawn
+                    verification = CacheVerification.of(verification, state);
+                    reusable = false;
+                }
+                #end
+                if (reusable && window.retainLayout(state.layoutId, state.layoutFrame)) {
                     mode = MODE_RETAINED_LAYOUT;
                     layoutId = state.layoutId;
                     // Keep the element states the view accessed while rendering
                     layoutAccessedStart = window.accessedElementStatesIndex();
                     window.reuseAccessedElementStates(state.layoutAccessedStart, state.layoutAccessedEnd);
                     layoutAccessedEnd = window.accessedElementStatesIndex();
+                    // Its tracker keeps `defaultCaching` from its last render
+                    // (a view retained is drawn with default caching, outside
+                    // of any view cached with a style)
                     return layoutId;
                 }
             }
@@ -393,7 +441,20 @@ class ViewElement extends Element {
         layoutAccessedStart = window.accessedElementStatesIndex();
         layoutId = renderAndRequestLayout(window, cx);
         layoutAccessedEnd = window.accessedElementStatesIndex();
+        followAccessedEntities(window, stateId != null);
         return layoutId;
+    }
+
+    /**
+     * Tells the view's tracker whether the view is cached by default in this
+     * frame (outside of a view cached with a style): a notify of an entity it
+     * accessed then renders it again (`Window.markViewsThatAccessed`).
+     */
+    inline function followAccessedEntities(window:Window, defaultCached:Bool):Void {
+        final tracker = window.viewTracker(entityId);
+        if (tracker != null) {
+            tracker.defaultCaching = defaultCached && window.viewDependencies.cachedStyleDepth == 0;
+        }
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
@@ -419,6 +480,18 @@ class ViewElement extends Element {
                     }
                     final state:ViewElementState = box.value;
                     this.state = state;
+                    #if glaze_verify_cache
+                    if (verification != null && verification.pending) {
+                        // The reuse of `prepaintRetainedLayout` needs the same context
+                        verification.compare = state.bounds != null
+                            && state.bounds.equals(bounds)
+                            && state.contentMask.equals(window.contentMask())
+                            && state.textStyle.equals(window.sharedCurrentTextStyle())
+                            && state.prepaintOpacity == window.prepaintOpacity
+                            && state.groupHitboxesEqual(window.prepaintGroupHitboxes)
+                            && state.imageCache == window.currentImageCache();
+                    }
+                    #end
                     prepaintRendered(state, window, cx);
                     recordKey(state, bounds, window);
                     state.layoutId = layoutId;
@@ -446,6 +519,9 @@ class ViewElement extends Element {
      * Prepaints the rendered element, recording its prepaint range in `state`.
      */
     function prepaintRendered(state:ViewElementState, window:Window, cx:App):Void {
+        #if glaze_verify_cache
+        hoverPrepaintStart = window.hoverLogMark();
+        #end
         window.prepaintIndexInto(state.prepaintStart);
         window.beginRenderedView(view, false);
         try {
@@ -458,6 +534,9 @@ class ViewElement extends Element {
         window.endRenderedView();
         window.prepaintIndexInto(state.prepaintEnd);
         state.prepaintFrame = window.layoutFrame();
+        #if glaze_verify_cache
+        hoverPrepaintEnd = window.hoverLogMark();
+        #end
     }
 
     function recordKey(state:ViewElementState, bounds:Bounds, window:Window):Void {
@@ -555,10 +634,22 @@ class ViewElement extends Element {
             && existing.imageCache == window.currentImageCache()
             && !window.isViewDirty(entityId)
             && !window.refreshing) {
+            #if glaze_verify_cache
+            if (Window.verifyCache) {
+                // Rendered for real instead, compared in paint with what
+                // the reuse would have drawn
+                verification = CacheVerification.of(verification, existing);
+                verification.compare = true;
+            }
+            else {
+            #end
             state = existing;
             reusePrepaint(existing, window);
             rendered = null;
             return;
+            #if glaze_verify_cache
+            }
+            #end
         }
 
         final state:ViewElementState = existing != null ? existing : new ViewElementState();
@@ -566,6 +657,9 @@ class ViewElement extends Element {
         this.state = state;
         final refreshing = window.refreshing;
         window.refreshing = true;
+        #if glaze_verify_cache
+        hoverPrepaintStart = window.hoverLogMark();
+        #end
         window.prepaintIndexInto(state.prepaintStart);
         window.beginRenderedView(view, true);
         window.viewDependencies.cachedStyleDepth++;
@@ -583,6 +677,9 @@ class ViewElement extends Element {
         window.viewDependencies.cachedStyleDepth--;
         window.endRenderedView();
         window.prepaintIndexInto(state.prepaintEnd);
+        #if glaze_verify_cache
+        hoverPrepaintEnd = window.hoverLogMark();
+        #end
         window.refreshing = refreshing;
         recordKey(state, bounds, window);
         state.prepaintFrame = window.layoutFrame();
@@ -601,8 +698,15 @@ class ViewElement extends Element {
         if (state == null) {
             // Not cached
             paintRendered(window, cx);
+            #if glaze_verify_cache
+            window.cacheVerificationUnverifiable();
+            #end
         }
         else if (rendered != null) {
+            #if glaze_verify_cache
+            final verifyMark = window.cacheVerificationMark();
+            final hoverPaintStart = window.hoverLogMark();
+            #end
             window.paintIndexInto(state.paintStart);
             if (mode == MODE_CACHED_STYLE) {
                 final refreshing = window.refreshing;
@@ -624,6 +728,25 @@ class ViewElement extends Element {
             }
             window.paintIndexInto(state.paintEnd);
             state.paintFrame = window.layoutFrame();
+            #if glaze_verify_cache
+            // What the hover tests answered while it drew: hover changes
+            // without an event are not invalidations (GPUI's rule)
+            final hover = window.hoverLogSegment(hoverPrepaintStart, hoverPrepaintEnd) + '|' + window.hoverLogSegment(hoverPaintStart, window.hoverLogMark());
+            final hoverChanged = state.hoverLog != hover;
+            state.hoverLog = hover;
+            final verification = this.verification;
+            if (verification != null && verification.compare && !hoverChanged && state.paintOpacity == window.currentElementOpacity()) {
+                window.verifyCachedRendering(verification, state, verifyMark, viewName(), stateId);
+            }
+            else {
+                // Rendered for real (dirty, moved, uncached): the views
+                // around it cannot be compared in this frame
+                window.cacheVerificationUnverifiable();
+            }
+            if (verification != null) {
+                verification.reset();
+            }
+            #end
             state.paintOpacity = window.currentElementOpacity();
         }
         else {

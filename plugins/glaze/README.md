@@ -103,6 +103,40 @@ Lifecycle of a persistent component: its constructor runs once; `init(window, cx
 
 Element listeners take short callbacks: `.onClick(() -> ...)` or `.onClick(event -> ...)`.
 
+**Data that tracker does not see.** Glaze keeps the rendering of a component and draws it again only when a prop or an observable it read changes. When a rendering also depends on something else (a plain field, a buffer filled by other code, a native resource), call `invalidate()` once that data changed:
+
+```haxe
+class LogPanel extends Component {
+
+    // Filled outside of tracker: a plain array, not observable
+    final lines:Array<String> = [];
+
+    override function init(window:Window, cx:App) {
+        Timer.interval(this, 0.5, () -> {
+            lines.push(Log.readPending());
+            invalidate();
+        });
+    }
+
+    function render(window:Window, cx:App):IntoElement {
+        return div().flex().flexCol().children([for (line in lines) div().child(line)]);
+    }
+
+}
+```
+
+A persistent component renders again, with its ancestors, like after a change of an observable; its siblings and the persistent components inside it stay cached. A props only component has no cache of its own: `invalidate()` renders the view or persistent component it is drawn in. Several calls before the next frame give one render; a call after the component left the tree, or from its own `render`, does nothing. Prefer observable data (`@observe` fields, models) when you can: `invalidate()` is for what cannot be observed.
+
+**Checking the cache in development.** A missing `invalidate()` shows as a part of the interface that does not update. Build your app with the define `glaze_verify_cache` to find them:
+
+```yaml
+app:
+    defines:
+        - glaze_verify_cache
+```
+
+Every view or persistent component that Glaze would take from its cache then renders for real, and what it draws (shapes, text, hitboxes, cursors) is compared with what the cache holds. A difference logs a warning naming the class and its element id path, for example `LogPanel (element view-1.view-3) rendered differently from its cached rendering without being invalidated: invalidate() probably missing, or a read the tracker does not see`. The fresh rendering is the one displayed. Hover changes are not reported: like GPUI, a cached view keeps its hover until the mouse moves over it. The check renders every cached view on every frame, so keep it for development and tests (`Window.verifyCache = false` turns it off at runtime, `Window.onCacheVerificationFailure` receives the messages); without the define it costs nothing. Glaze's own test suites run with it.
+
 ## Using the kit
 
 `glaze.kit` is gpui-kit's component library: buttons, inputs, selects, menus, dialogs, tabs, tables, trees, charts, markdown views, a dock system, and more. Wrap your interface in the kit's window root, which carries the theme, dialogs, sheets, notifications, tooltips and text selection:

@@ -871,6 +871,7 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
      * inside it must not blink, and the panel must stay cached.
      */
     function testSelectionInsideACachedViewSurvivesReplayedFrames() {
+        countsRenders();
         final source = paragraphs(20, ix -> 'Paragraph $ix with enough text to select');
         final renders = {value: 0};
         final samples:Array<Bool> = [];

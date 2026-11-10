@@ -113,6 +113,7 @@ class ViewCacheTest extends TestCase {
 /// Default caching
 
     function testCleanViewsAreReused() {
+        countsRenders();
         final counter = app.newEntity(_ -> new CacheCounter());
         final children = [for (i in 0...3) view((window, cx) -> {
             final value = i == 1 ? counter.read(cx).count : 0;
@@ -224,6 +225,7 @@ class ViewCacheTest extends TestCase {
     }
 
     function testUncachedViewsRenderEveryFrame() {
+        countsRenders();
         final child = view((_, _) -> div().size(px(10)).bg(red()));
         final other = view((_, _) -> div().size(px(10)).bg(blue()));
         final root = view((_, _) -> div().flex().child(child.uncached()).child((other : AnyView)));
@@ -237,6 +239,7 @@ class ViewCacheTest extends TestCase {
     }
 
     function testReusedViewsKeepTheirTrackerBindingsAndElementStates() {
+        countsRenders();
         final counter = app.newEntity(_ -> new CacheCounter());
         var state:Entity<glaze.Window.StateModel<Int>> = null;
         final child = view((window, cx) -> {
@@ -279,6 +282,7 @@ class ViewCacheTest extends TestCase {
      * states (an animation restarted) the next time it moved.
      */
     function testMovedViewKeepsItsElementStatesOnceReused() {
+        countsRenders();
         final counter = app.newEntity(_ -> new CacheCounter());
         var state:Entity<glaze.Window.StateModel<Int>> = null;
         final child = view((window, cx) -> {
@@ -313,6 +317,7 @@ class ViewCacheTest extends TestCase {
     }
 
     function testReusedHitboxesAndListenersStillWork() {
+        countsRenders();
         final log:Array<String> = [];
         final child = view((_, _) -> div().id('button').w(px(40)).h(px(20)).bg(red())
             .onClick((e, _, _) -> log.push('click'))
@@ -338,6 +343,7 @@ class ViewCacheTest extends TestCase {
     }
 
     function testLayoutShiftRendersShiftedViewsAgain() {
+        countsRenders();
         final counter = app.newEntity(_ -> new CacheCounter());
         final grower = view((_, cx) -> div().h(px(10 + counter.read(cx).count)).w(px(20)).bg(red()));
         final below = [for (i in 0...3) view((_, _) -> div().h(px(10)).w(px(20 + i)).bg(blue()).child('text $i'))];
@@ -440,6 +446,7 @@ class ViewCacheTest extends TestCase {
 /// GPUI's `.cached(style)`
 
     function testCachedWithStyleFollowsGpui() {
+        countsRenders();
         final counter = app.newEntity(_ -> new CacheCounter());
         final inner = view((_, cx) -> div().size(px(5)).bg(red()));
         final cachedChild = view((_, cx) -> div().sizeFull().bg(hsla(counter.read(cx).count / 10, 0.5, 0.5, 1)).child(inner.cached(glaze.StyleBuilder.build(s -> s.sizeFull()))));
@@ -466,6 +473,7 @@ class ViewCacheTest extends TestCase {
      * GPUI's `test_nested_deferred_draws_with_reused_views` (elements/deferred.rs).
      */
     function testNestedDeferredDrawsWithReusedViews() {
+        countsRenders();
         final panel = view((_, _) -> div().keyContext('Panel').sizeFull().child(
             deferred(
                 anchored().position(point(px(10), px(10))).child(
@@ -513,6 +521,7 @@ class ViewCacheTest extends TestCase {
      * (`test/golden/gpui/view-cache.json`).
      */
     function testViewCacheBehaviourMatchesGpui() {
+        countsRenders();
         final behaviourDispatcher = new TestDispatcher();
         final behaviourApp = testing.InteractionScript.testApp(behaviourDispatcher);
         flushImmediate();
@@ -588,6 +597,7 @@ class ViewCacheTest extends TestCase {
     }
 
     function testEquivalenceOfRandomSteps() {
+        countsRenders();
         for (seed in [12345, 777, 4242]) {
             randomSteps(seed, 400);
             for (window in windows) window.destroy();

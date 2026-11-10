@@ -26,3 +26,7 @@ app:
         # Counts of live listeners, disposables, timers and views for the
         # leak tests (cityscape.base.common.DebugCounters)
         - cityscape_debug_counters
+        # Debug check of Glaze's view cache: every view that would be reused
+        # from the cache renders for real and is compared with its cached
+        # rendering; a difference fails the test (testing.TestRunner)
+        - glaze_verify_cache

@@ -223,6 +223,7 @@ class FrameScheduleTest extends TestCase {
      * input does not draw an extra frame of the blurred and focused fields.
      */
     function testFocusChangeDrawsNoExtraFrame() {
+        countsRenders();
         init();
         open();
         final a:Entity<InputBaseState> = cast page.a;

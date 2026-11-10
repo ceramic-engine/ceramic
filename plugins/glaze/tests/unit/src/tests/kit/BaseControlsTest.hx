@@ -656,6 +656,7 @@ class BaseControlsTest extends TestCase {
      * again for it (Rust's `retained` test, with the port's view caching).
      */
     function testDrawingASliderAgainLeavesItsReadersRetained() {
+        countsRenders();
         final renders = [0];
         final state = app.newEntity((_:Context<SliderState>) -> new SliderState());
         final bar = app.newEntity((_:Context<ScriptView>) -> new ScriptView((_, _) -> div().w(px(120.)).h(px(24.)).child(SliderIndicator.component(state).sizeFull())));

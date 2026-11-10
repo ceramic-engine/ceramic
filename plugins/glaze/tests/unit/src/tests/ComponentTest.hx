@@ -158,6 +158,7 @@ class ComponentTest extends TestCase {
 /// Persistent
 
     function testPersistentComponentIsCreatedOnceAndReused() {
+        countsRenders();
         final parent = view((_, _) -> div().child(Counter.component().label('a')));
         openWindow(parent);
         frame();
@@ -209,6 +210,7 @@ class ComponentTest extends TestCase {
     }
 
     function testPersistentIdentityByKeyInALoop() {
+        countsRenders();
         final list = app.newEntity(_ -> new Items(['a', 'b', 'c']));
         final parent = view((_, cx) -> div().children([for (item in list.read(cx).items) Counter.component().at(item).label(item)]));
         openWindow(parent);
@@ -237,6 +239,7 @@ class ComponentTest extends TestCase {
     }
 
     function testDataPropChangeRendersTheComponent() {
+        countsRenders();
         final model = app.newEntity(_ -> new Items(['a']));
         final parent = view((_, cx) -> div().child(Counter.component().label(model.read(cx).items[0])));
         openWindow(parent);
@@ -264,6 +267,7 @@ class ComponentTest extends TestCase {
     }
 
     function testFunctionPropIsNotObservableButStaysUpToDate() {
+        countsRenders();
         final calls:Array<String> = [];
         final model = app.newEntity(_ -> new Items(['v1']));
         final parent = view((_, cx) -> {
@@ -285,6 +289,7 @@ class ComponentTest extends TestCase {
     }
 
     function testUnobservedDataProp() {
+        countsRenders();
         final model = app.newEntity(_ -> new Items(['a']));
         final parent = view((_, cx) -> div().child(Counter.component().label('a').hint(model.read(cx).items[0])));
         openWindow(parent);
@@ -398,6 +403,7 @@ class ComponentTest extends TestCase {
     }
 
     function testPersistMetaMakesAPropsOnlyComponentPersistent() {
+        countsRenders();
         final parent = view((_, _) -> div().child(Box.component()));
         openWindow(parent);
         frame();

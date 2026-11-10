@@ -58,4 +58,15 @@ class PathSprite extends MonochromeSprite {
         vertexCount = other.vertexCount;
     }
 
+    override function sameDrawing(other:Primitive):Bool {
+        if (!super.sameDrawing(other)) return false;
+        final o:PathSprite = cast other;
+        return (background == null ? o.background == null : o.background != null && background.equals(o.background))
+            && spriteX == o.spriteX
+            && spriteY == o.spriteY
+            && spriteWidth == o.spriteWidth
+            && spriteHeight == o.spriteHeight
+            && vertexCount == o.vertexCount;
+    }
+
 }

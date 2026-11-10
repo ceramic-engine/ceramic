@@ -81,4 +81,21 @@ class Primitive {
         contentMaskHeight = other.contentMaskHeight;
     }
 
+    /**
+     * Whether `other` draws the same as this primitive (every field but the
+     * draw order and the insertion index): `glaze_verify_cache`.
+     */
+    public function sameDrawing(other:Primitive):Bool {
+        final o = other;
+        return o.kind() == kind()
+            && boundsX == o.boundsX
+            && boundsY == o.boundsY
+            && boundsWidth == o.boundsWidth
+            && boundsHeight == o.boundsHeight
+            && contentMaskX == o.contentMaskX
+            && contentMaskY == o.contentMaskY
+            && contentMaskWidth == o.contentMaskWidth
+            && contentMaskHeight == o.contentMaskHeight;
+    }
+
 }

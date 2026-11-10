@@ -133,6 +133,7 @@ class ComponentAsRenderOnceTest extends TestCase {
     }
 
     function testPersistentComponentThroughARenderOnceValue() {
+        countsRenders();
         final parent = view((_, _) -> {
             final item:RenderOnce = Persisted.component().label('a');
             return div().child(item);

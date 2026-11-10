@@ -153,4 +153,39 @@ class Quad extends Primitive {
         borderWidthLeft = other.borderWidthLeft;
     }
 
+    override function sameDrawing(other:Primitive):Bool {
+        if (!super.sameDrawing(other)) return false;
+        final o:Quad = cast other;
+        return borderStyle == o.borderStyle
+            && backgroundTag == o.backgroundTag
+            && backgroundColorSpace == o.backgroundColorSpace
+            && backgroundSolidH == o.backgroundSolidH
+            && backgroundSolidS == o.backgroundSolidS
+            && backgroundSolidL == o.backgroundSolidL
+            && backgroundSolidA == o.backgroundSolidA
+            && backgroundGradientAngleOrPatternHeight == o.backgroundGradientAngleOrPatternHeight
+            && backgroundColor0H == o.backgroundColor0H
+            && backgroundColor0S == o.backgroundColor0S
+            && backgroundColor0L == o.backgroundColor0L
+            && backgroundColor0A == o.backgroundColor0A
+            && backgroundColor0Percentage == o.backgroundColor0Percentage
+            && backgroundColor1H == o.backgroundColor1H
+            && backgroundColor1S == o.backgroundColor1S
+            && backgroundColor1L == o.backgroundColor1L
+            && backgroundColor1A == o.backgroundColor1A
+            && backgroundColor1Percentage == o.backgroundColor1Percentage
+            && borderColorH == o.borderColorH
+            && borderColorS == o.borderColorS
+            && borderColorL == o.borderColorL
+            && borderColorA == o.borderColorA
+            && cornerRadiusTopLeft == o.cornerRadiusTopLeft
+            && cornerRadiusTopRight == o.cornerRadiusTopRight
+            && cornerRadiusBottomRight == o.cornerRadiusBottomRight
+            && cornerRadiusBottomLeft == o.cornerRadiusBottomLeft
+            && borderWidthTop == o.borderWidthTop
+            && borderWidthRight == o.borderWidthRight
+            && borderWidthBottom == o.borderWidthBottom
+            && borderWidthLeft == o.borderWidthLeft;
+    }
+
 }

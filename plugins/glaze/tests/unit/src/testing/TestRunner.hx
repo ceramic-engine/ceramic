@@ -15,12 +15,42 @@ using StringTools;
  *
  * An optional filter can be given with the `GLAZE_TEST_FILTER` environment
  * variable (matched against `ClassName.methodName`).
+ *
+ * With the define `glaze_verify_cache` (on in this suite), a cached view
+ * whose real rendering differs from its cached one during a test fails that
+ * test with the message of the check (`Window.verifyCache`, set again before
+ * each test: a test counting renders turns it off).
  */
 class TestRunner {
 
     var cases:Array<TestCase> = [];
 
-    public function new() {}
+    /** The differences found by the cache check (`glaze_verify_cache`) */
+    final cacheMessages:Array<String> = [];
+
+    public function new() {
+        #if glaze_verify_cache
+        glaze.Window.onCacheVerificationFailure = message -> cacheMessages.push(message);
+        #end
+    }
+
+    /**
+     * Before each test: the cache check on (unless the environment variable
+     * `GLAZE_VERIFY_CACHE` is `0`), the messages of this test only.
+     */
+    function beginCacheCheck():Int {
+        #if glaze_verify_cache
+        glaze.Window.verifyCache = env('GLAZE_VERIFY_CACHE') != '0';
+        #end
+        return cacheMessages.length;
+    }
+
+    /** After each test: a difference found by the cache check fails it */
+    function endCacheCheck(testCase:TestCase, start:Int):Void {
+        for (i in start...cacheMessages.length) {
+            testCase.failures.push('cache check: ' + cacheMessages[i]);
+        }
+    }
 
     public function add(testCase:TestCase):Void {
         cases.push(testCase);
@@ -49,6 +79,9 @@ class TestRunner {
 
     function report():Bool {
         print('');
+        #if glaze_verify_cache
+        print('cache check: ${glaze.Window.cacheVerifications} cached renderings compared, ${glaze.Window.cacheVerificationFailures} different');
+        #end
         print('$numTests tests, $numAssertions assertions, $numFailed failed');
         return numFailed == 0;
     }
@@ -84,6 +117,7 @@ class TestRunner {
             testCase.failures = [];
             testCase.assertions = 0;
             var completed = false;
+            final cacheCheck = beginCacheCheck();
             function complete(?timedOut:Bool):Void {
                 if (completed)
                     return;
@@ -96,6 +130,7 @@ class TestRunner {
                 catch (e:Dynamic) {
                     testCase.failures.push('uncaught exception in teardown: $e');
                 }
+                endCacheCheck(testCase, cacheCheck);
                 numAssertions += testCase.assertions;
                 if (testCase.failures.length > 0) {
                     numFailed++;
@@ -140,6 +175,7 @@ class TestRunner {
                 numTests++;
                 testCase.failures = [];
                 testCase.assertions = 0;
+                final cacheCheck = beginCacheCheck();
 
                 try {
                     testCase.setup();
@@ -149,6 +185,7 @@ class TestRunner {
                 catch (e:Dynamic) {
                     testCase.failures.push('uncaught exception: $e' + CallStack.toString(CallStack.exceptionStack()));
                 }
+                endCacheCheck(testCase, cacheCheck);
 
                 numAssertions += testCase.assertions;
 

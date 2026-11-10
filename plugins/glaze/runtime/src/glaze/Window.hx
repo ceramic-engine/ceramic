@@ -1239,6 +1239,18 @@ class Window implements WindowInvalidator {
         }
     }
 
+    /**
+     * `App.notify` of an entity this window has not registered yet, while it
+     * draws: recorded like a notify during a draw (the views that accessed
+     * it render in the next frame, which is not scheduled).
+     */
+    @:allow(glaze)
+    function entityNotifiedWhileDrawing(entityId:Int):Void {
+        if (drawing) {
+            addPendingDirtyView(entityId);
+        }
+    }
+
     function markViewDirty(viewId:Int):Void {
         final tree = renderedFrame.dispatchTree;
         var nodeId = tree.viewNodeId(viewId);
@@ -1256,6 +1268,25 @@ class Window implements WindowInvalidator {
                 dirtyViews.set(nodeViewId, true);
             }
             nodeId = node.parent;
+        }
+    }
+
+    /**
+     * Marks dirty the views cached by default that accessed the given entity,
+     * not a view, while they were last drawn (read it, updated it). In GPUI
+     * those views are not cached: they render again in the next frame and
+     * show what the entity's notify announced. Views cached with a style and
+     * the views inside them keep GPUI's rule (only their own notify, or a
+     * descendant's, renders them).
+     */
+    function markViewsThatAccessed(entityId:Int):Void {
+        final ids = trackerIds;
+        for (i in 0...ids.length) {
+            final viewId = ids[i];
+            final tracker = trackers.get(viewId);
+            if (tracker.defaultCaching && tracker.accessed.contains(entityId)) {
+                markViewDirty(viewId);
+            }
         }
     }
 
@@ -1454,8 +1485,13 @@ class Window implements WindowInvalidator {
     function drawFrame():Void {
         // Rust `invalidate_entities`
         final pendingIds = pendingDirtyViewIds;
+        final tree = renderedFrame.dispatchTree;
         for (i in 0...pendingIds.length) {
-            markViewDirty(pendingIds[i]);
+            final entityId = pendingIds[i];
+            if (tree.viewNodeId(entityId) == -1) {
+                markViewsThatAccessed(entityId);
+            }
+            markViewDirty(entityId);
         }
         pendingIds.resize(0);
         pendingDirtyViews.clear();
@@ -1463,6 +1499,9 @@ class Window implements WindowInvalidator {
         viewDependencies.invalidateChanged(renderedFrame.dispatchTree, this);
 
         dirty = false;
+        #if glaze_verify_cache
+        clearHoverLog();
+        #end
         renderedViews.clear();
         renderedViewCount = 0;
         reusedViewCount = 0;
@@ -1877,6 +1916,32 @@ class Window implements WindowInvalidator {
             throw 'No view is being rendered';
         }
         return renderedEntityStack[renderedEntityStack.length - 1].entityId;
+    }
+
+    /**
+     * The entity id of the view being drawn, `-1` outside of any view.
+     */
+    @:allow(glaze)
+    inline function renderedViewId():Int {
+        final stack = renderedEntityStack;
+        return stack.length > 0 ? stack[stack.length - 1].entityId : -1;
+    }
+
+    /**
+     * `Component.invalidate()`: the given view, drawn by this window, renders
+     * again as if an observable field it read had changed (its tracker is
+     * invalidated, the path of a tracked change). Ignored while the view
+     * renders (that render is the one being drawn), and when the view or
+     * this window is gone.
+     */
+    @:allow(glaze)
+    function invalidateRenderedView(viewId:Int):Void {
+        if (destroyed || viewId == -1)
+            return;
+        final tracker = trackers.get(viewId);
+        if (tracker == null || tracker.rendering)
+            return;
+        tracker.invalidate();
     }
 
     /**
@@ -3345,6 +3410,118 @@ class Window implements WindowInvalidator {
 /// View caching: debugging
 
     /**
+     * Debug check of the view cache, compiled in with the define
+     * `glaze_verify_cache` (off by default; this switch has no effect
+     * without it). A view or persistent component that would be reused from
+     * the cache renders for real instead, and what it draws (its scene
+     * primitives, hitboxes and cursor styles) is compared with what the
+     * reuse would have drawn, the ranges of the last frame. A difference
+     * means its rendering changed while nothing invalidated it: it is
+     * reported with `onCacheVerificationFailure`. The real rendering is the
+     * one displayed. Tests set it to `false` around code that counts renders.
+     */
+    public static var verifyCache:Bool = #if glaze_verify_cache true #else false #end;
+
+    /**
+     * Number of renderings found different from their cached rendering
+     * since the start (`glaze_verify_cache`).
+     */
+    public static var cacheVerificationFailures:Int = 0;
+
+    /**
+     * Number of cached renderings compared since the start
+     * (`glaze_verify_cache`).
+     */
+    public static var cacheVerifications:Int = 0;
+
+    /**
+     * Called with the message of each rendering found different from its
+     * cached rendering (`glaze_verify_cache`). Logs a warning by default.
+     */
+    public static var onCacheVerificationFailure:(message:String) -> Void = defaultOnCacheVerificationFailure;
+
+    static function defaultOnCacheVerificationFailure(message:String):Void {
+        ceramic.Shortcuts.log.warning(message);
+    }
+
+    /**
+     * Bumped by every view drawn for real that is not compared, and by every
+     * difference reported: a view comparing its rendering skips it when a
+     * view inside it bumped it (its rendering changed for that reason).
+     */
+    var cacheVerificationCounter:Int = 0;
+
+    @:allow(glaze)
+    inline function cacheVerificationMark():Int {
+        return cacheVerificationCounter;
+    }
+
+    @:allow(glaze)
+    inline function cacheVerificationUnverifiable():Void {
+        cacheVerificationCounter++;
+    }
+
+    /**
+     * Compares what a view drew for real in this frame (the ranges of
+     * `state`) with what reusing its cache would have drawn (the ranges of
+     * the last frame kept in `verification`), when no view inside it was
+     * drawn for real since `mark`.
+     */
+    @:allow(glaze)
+    function verifyCachedRendering(verification:CacheVerification, state:ViewElement.ViewElementState, mark:Int, name:String, path:Null<GlobalElementId>):Void {
+        if (cacheVerificationCounter != mark) {
+            cacheVerificationCounter++;
+            return;
+        }
+        cacheVerifications++;
+        final difference = cachedRenderingDifference(verification, state);
+        if (difference != null) {
+            cacheVerificationCounter++;
+            cacheVerificationFailures++;
+            final where = path != null ? ' (element ${path.toString()})' : '';
+            onCacheVerificationFailure('$name$where rendered differently from its cached rendering without being invalidated: invalidate() probably missing, or a read the tracker does not see ($difference)');
+        }
+    }
+
+    /**
+     * The first difference between the ranges of the last frame kept in
+     * `verification` and those of this frame in `state`, `null` when they
+     * draw the same.
+     */
+    function cachedRenderingDifference(verification:CacheVerification, state:ViewElement.ViewElementState):Null<String> {
+        final old = renderedFrame;
+        final next = nextFrame;
+
+        final oldHitboxes = verification.prepaintEnd.hitboxesIndex - verification.prepaintStart.hitboxesIndex;
+        final newHitboxes = state.prepaintEnd.hitboxesIndex - state.prepaintStart.hitboxesIndex;
+        if (oldHitboxes != newHitboxes) {
+            return 'hitboxes: $oldHitboxes cached, $newHitboxes rendered';
+        }
+        for (i in 0...newHitboxes) {
+            final a = old.hitboxes[verification.prepaintStart.hitboxesIndex + i];
+            final b = next.hitboxes[state.prepaintStart.hitboxesIndex + i];
+            if (!a.bounds.equals(b.bounds) || !a.contentMask.equals(b.contentMask) || a.behavior != b.behavior) {
+                return 'hitbox $i: ${a.bounds} cached, ${b.bounds} rendered';
+            }
+        }
+
+        final oldCursors = verification.paintEnd.cursorStylesIndex - verification.paintStart.cursorStylesIndex;
+        final newCursors = state.paintEnd.cursorStylesIndex - state.paintStart.cursorStylesIndex;
+        if (oldCursors != newCursors) {
+            return 'cursor styles: $oldCursors cached, $newCursors rendered';
+        }
+        for (i in 0...newCursors) {
+            final a = old.cursorStyles[verification.paintStart.cursorStylesIndex + i];
+            final b = next.cursorStyles[state.paintStart.cursorStylesIndex + i];
+            if (a.style != b.style || (a.hitboxId == -1) != (b.hitboxId == -1)) {
+                return 'cursor style $i: ${a.style} cached, ${b.style} rendered';
+            }
+        }
+
+        return next.scene.rangeDifference(state.paintStart.sceneIndex, state.paintEnd.sceneIndex, old.scene, verification.paintStart.sceneIndex, verification.paintEnd.sceneIndex);
+    }
+
+    /**
      * Number of layout runs (a layout root computed by taffy) since the
      * window was opened, for tests and benchmarks.
      */
@@ -3502,12 +3679,12 @@ class Window implements WindowInvalidator {
     public function isHitboxIdHovered(hitboxId:Int):Bool {
         // If this hitbox has captured the pointer, it's always considered hovered
         if (_capturedHitbox == hitboxId) {
-            return true;
+            return logHover(true);
         }
         if (lastInputWasKeyboard()) {
-            return false;
+            return logHover(false);
         }
-        return hitboxHitTest(hitboxId);
+        return logHover(hitboxHitTest(hitboxId));
     }
 
     /**
@@ -3516,10 +3693,49 @@ class Window implements WindowInvalidator {
      */
     public function isHitboxIdHoveredIgnoringLastInput(hitboxId:Int):Bool {
         if (_capturedHitbox == hitboxId) {
-            return true;
+            return logHover(true);
         }
-        return hitboxHitTest(hitboxId);
+        return logHover(hitboxHitTest(hitboxId));
     }
+
+    /**
+     * `glaze_verify_cache`: the answers of the hover tests made while the
+     * window draws, in order. A view whose drawing got other answers than
+     * in the frame it was cached from is not compared: GPUI leaves the hover
+     * of a cached view as it was until a mouse move notifies the view.
+     */
+    #if glaze_verify_cache
+    final hoverLog:Array<Bool> = [];
+    #end
+
+    inline function logHover(hovered:Bool):Bool {
+        #if glaze_verify_cache
+        if (drawing) {
+            hoverLog.push(hovered);
+        }
+        #end
+        return hovered;
+    }
+
+    #if glaze_verify_cache
+    @:allow(glaze)
+    inline function hoverLogMark():Int {
+        return hoverLog.length;
+    }
+
+    @:allow(glaze)
+    function hoverLogSegment(start:Int, end:Int):String {
+        final buf = new StringBuf();
+        for (i in start...end) {
+            buf.add(hoverLog[i] ? '1' : '0');
+        }
+        return buf.toString();
+    }
+
+    function clearHoverLog():Void {
+        hoverLog.resize(0);
+    }
+    #end
 
     function hitboxHitTest(hitboxId:Int):Bool {
         final hitTest = mouseHitTest;

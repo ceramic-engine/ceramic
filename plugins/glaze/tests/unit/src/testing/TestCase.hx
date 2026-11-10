@@ -23,6 +23,18 @@ class TestCase {
 
     public function teardown():Void {}
 
+    /**
+     * Called first by a test that counts renders or checks what the view
+     * cache reuses: turns off the cache check of `glaze_verify_cache` for
+     * this test (the check renders every cached view for real, and reports
+     * the staleness some of these tests leave on purpose).
+     */
+    function countsRenders():Void {
+        #if glaze_verify_cache
+        glaze.Window.verifyCache = false;
+        #end
+    }
+
     function fail(message:String, ?pos:PosInfos):Void {
         failures.push('${pos.fileName}:${pos.lineNumber}: $message');
     }

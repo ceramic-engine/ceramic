@@ -50,4 +50,15 @@ class Underline extends Primitive {
         wavy = other.wavy;
     }
 
+    override function sameDrawing(other:Primitive):Bool {
+        if (!super.sameDrawing(other)) return false;
+        final o:Underline = cast other;
+        return colorH == o.colorH
+            && colorS == o.colorS
+            && colorL == o.colorL
+            && colorA == o.colorA
+            && thickness == o.thickness
+            && wavy == o.wavy;
+    }
+
 }

@@ -52,4 +52,15 @@ class PolychromeSprite extends SpritePrimitive {
         cornerRadiusBottomLeft = other.cornerRadiusBottomLeft;
     }
 
+    override function sameDrawing(other:Primitive):Bool {
+        if (!super.sameDrawing(other)) return false;
+        final o:PolychromeSprite = cast other;
+        return grayscale == o.grayscale
+            && opacity == o.opacity
+            && cornerRadiusTopLeft == o.cornerRadiusTopLeft
+            && cornerRadiusTopRight == o.cornerRadiusTopRight
+            && cornerRadiusBottomRight == o.cornerRadiusBottomRight
+            && cornerRadiusBottomLeft == o.cornerRadiusBottomLeft;
+    }
+
 }

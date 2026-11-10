@@ -37,4 +37,14 @@ class SpritePrimitive extends Primitive {
         tileHeight = other.tileHeight;
     }
 
+    override function sameDrawing(other:Primitive):Bool {
+        if (!super.sameDrawing(other)) return false;
+        final o:SpritePrimitive = cast other;
+        return textureIndex == o.textureIndex
+            && tileX == o.tileX
+            && tileY == o.tileY
+            && tileWidth == o.tileWidth
+            && tileHeight == o.tileHeight;
+    }
+
 }

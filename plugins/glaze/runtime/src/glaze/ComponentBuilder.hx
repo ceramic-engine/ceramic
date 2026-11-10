@@ -90,6 +90,9 @@ class ComponentHost extends Model implements Render {
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         ensureInit(window, cx.app);
+        final instance = this.instance;
+        instance.__window = window;
+        instance.__viewId = entityId;
         return instance.render(window, cx.app);
     }
 

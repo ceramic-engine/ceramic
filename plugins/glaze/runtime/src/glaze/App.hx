@@ -563,6 +563,16 @@ class App {
         if (effect || !live) {
             pushEffect(Notify(entityId));
         }
+        if (!live) {
+            // Accessed by no window's last draw, but maybe by the draw in
+            // progress (the first frame showing it): that window renders the
+            // views that read it in its next frame, like GPUI renders its
+            // uncached views on every frame
+            final window = @:privateAccess Window.accessRecorder;
+            if (window != null) {
+                window.entityNotifiedWhileDrawing(entityId);
+            }
+        }
     }
 
 /// Window invalidators

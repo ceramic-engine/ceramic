@@ -76,4 +76,19 @@ class MonochromeSprite extends SpritePrimitive {
         transformTy = other.transformTy;
     }
 
+    override function sameDrawing(other:Primitive):Bool {
+        if (!super.sameDrawing(other)) return false;
+        final o:MonochromeSprite = cast other;
+        return colorH == o.colorH
+            && colorS == o.colorS
+            && colorL == o.colorL
+            && colorA == o.colorA
+            && transformM00 == o.transformM00
+            && transformM01 == o.transformM01
+            && transformM10 == o.transformM10
+            && transformM11 == o.transformM11
+            && transformTx == o.transformTx
+            && transformTy == o.transformTy;
+    }
+
 }

@@ -86,6 +86,10 @@ app:
         # The truths come from GPUI's raw coverage: thin font smoothing
         # (FontSmoothingTest sets Dense explicitly)
         - glaze_font_smoothing: thin
+        # Debug check of the view cache: every view that would be reused from
+        # the cache renders for real and is compared with its cached rendering
+        # (Window.verifyCache); CacheVerificationTest reads the result
+        - glaze_verify_cache
         #- some_define
         #- some_define: 'some value'
 

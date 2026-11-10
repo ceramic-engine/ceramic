@@ -194,6 +194,44 @@ class Scene {
     }
 
     /**
+     * The first difference between the paint operations `start...end` of
+     * this scene and `otherStart...otherEnd` of `other` (layers and
+     * primitives, draw orders aside), `null` when they draw the same. For
+     * `glaze_verify_cache`.
+     */
+    public function rangeDifference(start:Int, end:Int, other:Scene, otherStart:Int, otherEnd:Int):Null<String> {
+
+        if (end - start != otherEnd - otherStart) {
+            return 'paint operations: ${otherEnd - otherStart} cached, ${end - start} rendered';
+        }
+        for (i in 0...end - start) {
+            final index = start + i;
+            final otherIndex = otherStart + i;
+            final kind = opKinds[index];
+            if (kind != other.opKinds[otherIndex]) {
+                return 'paint operation $i: not the same kind';
+            }
+            switch kind {
+                case OP_START_LAYER:
+                    for (k in 0...4) {
+                        if (opLayerBounds[index * 4 + k] != other.opLayerBounds[otherIndex * 4 + k]) {
+                            return 'paint operation $i: layer bounds differ';
+                        }
+                    }
+                case OP_PRIMITIVE:
+                    final primitive = opPrimitives[index];
+                    final cached = other.opPrimitives[otherIndex];
+                    if (!primitive.sameDrawing(cached)) {
+                        return 'paint operation $i: ${primitive.kind()} at ${primitive.boundsX},${primitive.boundsY} ${primitive.boundsWidth}x${primitive.boundsHeight} differs from the cached ${cached.kind()} at ${cached.boundsX},${cached.boundsY} ${cached.boundsWidth}x${cached.boundsHeight}';
+                    }
+                case _:
+            }
+        }
+        return null;
+
+    }
+
+    /**
      * Computes the draw order of a primitive and returns true if it must be
      * kept, false if it is fully clipped by its content mask.
      */

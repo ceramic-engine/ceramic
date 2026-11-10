@@ -143,38 +143,47 @@ class ResizableIdleTest extends TestCase {
     }
 
     function testAPanelAtExactlyTheMinimumGoesIdle() {
+        countsRenders();
         check([100., null], null, null, '100,300', 'false,false');
     }
 
     function testAPanelAboveTheMinimumGoesIdle() {
+        countsRenders();
         check([100.5, null], null, null, '100.5,299.5', 'false,false');
     }
 
     function testAPanelClampedToTheMinimumGoesIdle() {
+        countsRenders();
         check([99.99, null], null, null, '100,300', 'false,false');
     }
 
     function testAPanelClampedToItsMaximumGoesIdle() {
+        countsRenders();
         check([300., null], 200., null, '200,200', 'false,false');
     }
 
     function testTwoPanelsAtTheMinimumGoIdle() {
+        countsRenders();
         check([100., 100., null], null, null, '100,100,200', 'false,false,false');
     }
 
     function testAPanelDraggedToTheMinimumGoesIdle() {
+        countsRenders();
         check([150., null], null, 50., '100,300', 'false,false');
     }
 
     function testAFlexiblePanelLaidOutAtTheMinimumGoesIdle() {
+        countsRenders();
         check([300., null], null, null, '300,100', 'false,false');
     }
 
     function testAPanelAwayFromTheMinimumGoesIdle() {
+        countsRenders();
         check([150., null], null, null, '150,250', 'false,false');
     }
 
     function testAFlexiblePanelAdoptsItsLaidOutSize() {
+        countsRenders();
         // The stored sizes are the f32 results of gpui-kit's arithmetic
         // (240.00002 in Rust's output)
         check([240., null], null, null, '240,160', 'false,false', '240.00002,160');

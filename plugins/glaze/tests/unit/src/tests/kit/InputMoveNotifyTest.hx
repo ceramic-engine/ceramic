@@ -188,6 +188,7 @@ class InputMoveNotifyTest extends TestCase {
      * of the scroll, so the fields rendered again.
      */
     function testMovedInputsDoNotDirtyTheirCachedViews() {
+        countsRenders();
         final page = openPair(true);
         focus(p -> cast p.a);
         for (dy in [-24., -24., 24.]) {
@@ -208,6 +209,7 @@ class InputMoveNotifyTest extends TestCase {
      * and their fields.
      */
     function testMovedInputsStayCleanWithDefaultViewCaching() {
+        countsRenders();
         final page = openPair(false);
         focus(p -> cast p.a);
         for (dy in [-24., -24., 24.]) {

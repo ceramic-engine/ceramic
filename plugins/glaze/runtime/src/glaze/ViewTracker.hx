@@ -82,6 +82,14 @@ class ViewTracker extends Autorun {
     @:allow(glaze)
     var viewId:Int = -1;
 
+    /**
+     * Whether the view was last drawn with the default view caching, outside
+     * of a view cached with a style (set by `ViewElement`): a notify of an
+     * entity it accessed then renders it again (`Window.markViewsThatAccessed`).
+     */
+    @:allow(glaze)
+    var defaultCaching:Bool = false;
+
     var writeReported:Bool = false;
 
     var savedCurrent:Null<Autorun> = null;

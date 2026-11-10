@@ -102,4 +102,27 @@ class Shadow extends Primitive {
         inset = other.inset;
     }
 
+    override function sameDrawing(other:Primitive):Bool {
+        if (!super.sameDrawing(other)) return false;
+        final o:Shadow = cast other;
+        return blurRadius == o.blurRadius
+            && cornerRadiusTopLeft == o.cornerRadiusTopLeft
+            && cornerRadiusTopRight == o.cornerRadiusTopRight
+            && cornerRadiusBottomRight == o.cornerRadiusBottomRight
+            && cornerRadiusBottomLeft == o.cornerRadiusBottomLeft
+            && colorH == o.colorH
+            && colorS == o.colorS
+            && colorL == o.colorL
+            && colorA == o.colorA
+            && elementBoundsX == o.elementBoundsX
+            && elementBoundsY == o.elementBoundsY
+            && elementBoundsWidth == o.elementBoundsWidth
+            && elementBoundsHeight == o.elementBoundsHeight
+            && elementCornerRadiusTopLeft == o.elementCornerRadiusTopLeft
+            && elementCornerRadiusTopRight == o.elementCornerRadiusTopRight
+            && elementCornerRadiusBottomRight == o.elementCornerRadiusBottomRight
+            && elementCornerRadiusBottomLeft == o.elementCornerRadiusBottomLeft
+            && inset == o.inset;
+    }
+
 }
