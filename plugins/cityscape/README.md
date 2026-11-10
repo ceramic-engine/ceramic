@@ -87,7 +87,7 @@ model.deltaDecorations([], [
 cityscape.registerDecorationStyle('my-class', {color: '#e06c75', fontWeight: 'bold'});
 ```
 
-Without a `fontFamily`, the editor uses JetBrains Mono, the monospace font bundled with Glaze, on every target; give `fontFamily` (`'Menlo, monospace'`) to use system fonts. Emoji are drawn with the color emoji font on every target, even when a font of the list has a text glyph for them (the Cityscape option `preferColorEmoji`, true by default; `false` follows the font list like Chromium, where Menlo's `☕` is a text glyph).
+Without a `fontFamily`, the editor uses JetBrains Mono, the monospace font bundled with Glaze, on every target; give `fontFamily` (`'Menlo, monospace'`) to use system fonts. Emoji are drawn with the color emoji font on every target, even when a font of the list has a text glyph for them (the Cityscape option `preferColorEmoji`, true by default; `false` follows the font list like Chromium, where Menlo's `☕` is a text glyph). The overview ruler (the marks of markers, find results and cursors) lies under the vertical scrollbar like Monaco's; the Cityscape option `overviewRulerPosition: 'beside'` puts it in its own column left of the scrollbar (`overviewRulerGap` pixels apart), the layout unchanged.
 
 The `onCreate` callback gives the `CityscapeEditor`, with Monaco's editor methods and events (`getValue`, `setValue`, `getSelection`, `setSelections`, `revealLineInCenter`, `executeEdits`, `deltaDecorations`, `createDecorationsCollection`, `saveViewState`, `onDidChangeModelContent`, `onDidChangeCursorPosition`...). Commands, actions and keybindings use Monaco's API:
 

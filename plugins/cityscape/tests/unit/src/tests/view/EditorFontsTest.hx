@@ -123,6 +123,86 @@ class EditorFontsTest extends TestCase {
         assertEquals('Menlo, monospace', explicit.getOption(EditorOption.fontInfo).fontFamily);
     }
 
+    function glyphIds(font:glaze.Font, text:String):Array<Int> {
+        final ts = app.textSystem();
+        final layout = ts.platformTextSystem.layoutLine(text, 14, [new glaze.FontRun(glaze.util.Utf8.byteLength(text), ts.resolveFont(font))]);
+        return [for (run in layout.runs) for (g in run.glyphs) (g.id : Int)];
+    }
+
+    /**
+     * `fontLigatures` reaches the shaper: the bundled JetBrains Mono joins
+     * `//` through `calt` with ligatures on (`true`, Monaco's `'"liga" on,
+     * "calt" on'`) or `'"liga" off, "calt" on'` (loreline-monaco's default
+     * string, kept as given by Monaco's validation), and not with Monaco's
+     * default (`'"liga" off, "calt" off'`).
+     */
+    function testLigaturesReachTheShaper() {
+        final measurements = new EditorFontMeasurements(app.textSystem());
+        final ligatures = new EditorFontLigatures();
+        assertEquals('"liga" on, "calt" on', ligatures.validate(true));
+        assertEquals('"liga" off, "calt" on', ligatures.validate('"liga" off, "calt" on'));
+        assertEquals('"liga" off, "calt" off', ligatures.validate(false));
+        final on = EditorFontMeasurements.parseFontFeatureSettings(ligatures.validate(true));
+        final calt = EditorFontMeasurements.parseFontFeatureSettings(ligatures.validate('"liga" off, "calt" on'));
+        final off = EditorFontMeasurements.parseFontFeatureSettings(ligatures.validate(false));
+        final slash = glyphIds(measurements.resolveEditorFont('JetBrains Mono', 400, false, off), '/')[0];
+        assertFalse(glyphIds(measurements.resolveEditorFont('JetBrains Mono', 400, false, on), '//').join(',') == slash + ',' + slash, 'ligatures on');
+        assertFalse(glyphIds(measurements.resolveEditorFont('JetBrains Mono', 400, false, calt), '//').join(',') == slash + ',' + slash, 'calt on');
+        assertEquals(slash + ',' + slash, glyphIds(measurements.resolveEditorFont('JetBrains Mono', 400, false, off), '//').join(','));
+    }
+
+    /**
+     * Cityscape's `overviewRulerPosition: 'beside'`: the overview ruler in
+     * its own column left of the vertical scrollbar, `overviewRulerGap`
+     * apart. loreline-monaco moves Monaco's ruler with its style sheet
+     * (`right: scrollbarSize + 2px`, the `verticalScrollbarSize` it gives):
+     * in its J2 captures (1000 x 700) the cursor mark covers x 980 to 990,
+     * the scrollbar 990 to 1000, and the layout (content width, wrapping
+     * column) is Monaco's.
+     */
+    function testOverviewRulerBesideTheScrollbar() {
+        final text = [for (i in 0...30) 'line $i with some words to wrap at the end of the viewport, line $i with some words'].join('\n');
+        final scrollbar = {verticalScrollbarSize: 10, verticalSliderSize: 8, horizontalScrollbarSize: 10, horizontalSliderSize: 8};
+        inline function rulerRight(e:CityscapeEditor):Float {
+            return cityscape.common.config.EditorViewOptions.OverviewRulerPlacement.right(e.getOptions());
+        }
+        final overlay = open(text, {fontSize: 14, wordWrap: 'on', scrollbar: scrollbar});
+        final overlayLayout = overlay.getLayoutInfo();
+        assertEquals(0.0, rulerRight(overlay));
+        assertEquals(0.0, overlayLayout.overviewRuler.right);
+        assertEquals(10.0, overlayLayout.overviewRuler.width);
+        assertEquals('overlay', overlay.getOption(EditorOption.overviewRulerPosition));
+        assertEquals(0.0, overlay.getOption(EditorOption.overviewRulerGap));
+        final overlayView:cityscape.view.CityscapeView = overlay.getView();
+        final y = overlayView.elementBounds.origin.y + 5;
+        assertTrue(overlayView.mouseTargetAt(point(overlayView.elementBounds.origin.x + 985, y)).type != cityscape.view.EditorBrowser.MouseTargetType.SCROLLBAR, 'text under x 985 by default');
+        window.destroy();
+        window = null;
+
+        final beside = open(text, {fontSize: 14, wordWrap: 'on', scrollbar: scrollbar, overviewRulerPosition: 'beside'});
+        final layout = beside.getLayoutInfo();
+        assertEquals(10.0, rulerRight(beside));
+        // Monaco's layout, its ruler field included
+        assertEquals(0.0, layout.overviewRuler.right);
+        assertEquals(10.0, layout.overviewRuler.width);
+        assertEquals(overlayLayout.contentWidth, layout.contentWidth);
+        assertEquals(overlayLayout.wrappingColumn, layout.wrappingColumn);
+        assertEquals(overlayLayout.viewportColumn, layout.viewportColumn);
+        final view:cityscape.view.CityscapeView = beside.getView();
+        final target = view.mouseTargetAt(point(view.elementBounds.origin.x + 985, y));
+        assertEquals(cityscape.view.EditorBrowser.MouseTargetType.SCROLLBAR, target.type);
+        assertEquals(1, target.position.lineNumber);
+        assertTrue(view.mouseTargetAt(point(view.elementBounds.origin.x + 975, y)).type != cityscape.view.EditorBrowser.MouseTargetType.SCROLLBAR);
+        // the gap, validated
+        beside.updateOptions({overviewRulerGap: 4});
+        assertEquals(14.0, rulerRight(beside));
+        beside.updateOptions({overviewRulerGap: -3});
+        assertEquals(10.0, rulerRight(beside));
+        beside.updateOptions({overviewRulerPosition: 'left'});
+        assertEquals('overlay', beside.getOption(EditorOption.overviewRulerPosition));
+        assertEquals(0.0, rulerRight(beside));
+    }
+
     function testItalicFontsSynthesizeTheirStyle() {
         final measurements = new EditorFontMeasurements(app.textSystem());
         final italic = measurements.resolveEditorFont('Menlo, monospace', 400, true, new glaze.FontFeatures());

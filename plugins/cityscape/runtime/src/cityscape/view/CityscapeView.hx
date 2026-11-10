@@ -690,6 +690,19 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         if (relativeX < 0 || relativeY < 0 || relativeX > elementBounds.size.width || relativeY > elementBounds.size.height) {
             return new MouseTarget(MouseTargetType.OUTSIDE_EDITOR, null, mouseColumn, null);
         }
+        // The overview ruler beside the scrollbar (Cityscape's
+        // `overviewRulerPosition: 'beside'`): like Monaco's ruler, a child of
+        // the scrollable element, `_hitTestScrollbar` (the kit scrollbar
+        // takes its own column)
+        final rulerRight = cityscape.common.config.EditorViewOptions.OverviewRulerPlacement.right(configuration.options);
+        if (rulerRight > 0) {
+            final rulerLeft = elementBounds.size.width - rulerRight - layoutInfo.overviewRuler.width;
+            if (relativeX >= rulerLeft && relativeX < rulerLeft + layoutInfo.overviewRuler.width) {
+                final possibleLineNumber = layout.getLineNumberAtVerticalOffset(verticalOffset);
+                final position = converter.convertViewPositionToModelPosition(new Position(possibleLineNumber, viewModel.getLineMaxColumn(possibleLineNumber)));
+                return new MouseTarget(MouseTargetType.SCROLLBAR, position, mouseColumn, Range.fromPositions(position, position));
+            }
+        }
         // _hitTestViewZone
         final zoneTarget = hitTestViewZone(verticalOffset, relativeX >= layoutInfo.contentLeft, mouseColumn);
         if (zoneTarget != null) {

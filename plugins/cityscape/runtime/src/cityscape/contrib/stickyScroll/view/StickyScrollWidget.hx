@@ -534,7 +534,9 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
             return div();
         }
         final layoutInfo:EditorLayoutInfo = this._editor.getLayoutInfo();
-        final width = layoutInfo.width - layoutInfo.verticalScrollbarWidth;
+        // Monaco: up to the vertical scrollbar; with the Cityscape option
+        // `overviewRulerPosition: 'beside'`, up to the overview ruler's column
+        final width = layoutInfo.width - Math.max(layoutInfo.verticalScrollbarWidth, cityscape.common.config.EditorViewOptions.OverviewRulerPlacement.right(this._editor.getOptions()) + layoutInfo.overviewRuler.width);
         return div().absolute().top0().left0().w(px(width)).h(px(Math.max(0, this.height)))
             .onMouseDown(MouseButton.Left, (event, window, cx) -> this._dispatchMouseDown(event.position, MouseButton.Left, event.modifiers, cx))
             .onMouseDown(MouseButton.Right, (event, window, cx) -> this._dispatchMouseDown(event.position, MouseButton.Right, event.modifiers, cx))

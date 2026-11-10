@@ -52,8 +52,9 @@ class EditorOptionsTruthTest extends TestCase {
             }
         }
         // Monaco's ids, then the Cityscape additions (scrollBeyondLastLineGap,
-        // scrollbarThumbExcludesPadding, preferColorEmoji: DEVIATIONS.md)
-        assertEquals(max + 1 + 3, EditorOption.COUNT);
+        // scrollbarThumbExcludesPadding, preferColorEmoji, overviewRulerPosition,
+        // overviewRulerGap: DEVIATIONS.md)
+        assertEquals(max + 1 + 5, EditorOption.COUNT);
         // 60 options of step 0, 19 of the view (EditorViewOptions), 11 of the cursor (EditorCursorOptions),
         // 4 of the folding contribution (foldingHighlight, foldingImportsByDefault, foldingMaximumRegions,
         // unfoldOnClickAfterEndOfLine), 1 of the find contribution (find, EditorFindOptions), 2 of the
@@ -65,8 +66,8 @@ class EditorOptionsTruthTest extends TestCase {
         // defaultColorDecorators (EditorColorDecoratorsOptions), codeLens, codeLensFontFamily,
         // codeLensFontSize, inlayHints (EditorInlayHintsCodeLensOptions), parameterHints
         // (EditorParameterHintsOptions), inlineSuggest (EditorInlineSuggestOptions),
-        // 2 of the drag and drop contribution (dragAndDrop, mouseStyle), plus the 3 Cityscape additions
-        assertEquals(116 + 3, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
+        // 2 of the drag and drop contribution (dragAndDrop, mouseStyle), plus the 5 Cityscape additions
+        assertEquals(116 + 5, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
     }
 
     function testDefaults() {

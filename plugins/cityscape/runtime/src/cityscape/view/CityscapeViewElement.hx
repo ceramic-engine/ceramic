@@ -629,12 +629,20 @@ class CityscapeViewElement extends Element {
             window.popContentMask();
         }
 
-        // --- overview ruler (marks of decorations and cursors, under the kit scrollbar)
+        // --- overview ruler (marks of decorations and cursors, under the kit
+        // scrollbar, or beside it with `overviewRulerPosition: 'beside'`)
         final rulerWidth = layoutInfo.verticalScrollbarWidth;
         if (rulerWidth > 0 && options.get(EditorOption.overviewRulerLanes) > 0) {
-            final rulerX = originX + bounds.size.width - rulerWidth;
+            final rulerX = originX + bounds.size.width - cityscape.common.config.EditorViewOptions.OverviewRulerPlacement.right(options) - rulerWidth;
             final rulerHeight = bounds.size.height;
             final scrollHeight = Math.max(1, viewLayout.getScrollHeight());
+            // decorationsOverviewRuler.ts: the canvas is filled with
+            // `editorOverviewRuler.background` when the theme defines it (no
+            // minimap here), else left transparent
+            final rulerBackground = theme.getColor('editorOverviewRuler.background');
+            if (rulerBackground != null) {
+                fillRect(window, rulerX, originY, rulerWidth, rulerHeight, rulerBackground);
+            }
             final border = theme.getColor('editorOverviewRuler.border');
             if (border != null && options.get(EditorOption.overviewRulerBorder)) {
                 fillRect(window, rulerX, originY, 1, rulerHeight, border);

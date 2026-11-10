@@ -470,3 +470,26 @@ class EditorViewOptions {
     }
 
 }
+
+/**
+ * Where the decorations overview ruler is drawn (Cityscape's
+ * `overviewRulerPosition` and `overviewRulerGap`, see DEVIATIONS.md). Like
+ * loreline-monaco's style sheet, which moves Monaco's ruler with
+ * `right: scrollbarSize + 2px`, only the ruler moves: `layoutInfo` (and its
+ * `overviewRuler`) stays Monaco's.
+ */
+class OverviewRulerPlacement {
+
+    /**
+     * The distance from the editor's right edge to the ruler's right edge:
+     * 0 for Monaco's ruler under the vertical scrollbar (`'overlay'`), the
+     * scrollbar width and the gap for `'beside'`.
+     */
+    public static function right(options:IComputedEditorOptions):Float {
+        if (options.get(EditorOption.overviewRulerPosition) != 'beside') {
+            return 0;
+        }
+        return options.get(EditorOption.layoutInfo).verticalScrollbarWidth + options.get(EditorOption.overviewRulerGap);
+    }
+
+}

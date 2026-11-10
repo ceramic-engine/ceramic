@@ -189,6 +189,23 @@ typedef IEditorOptions = {
      */
     @:optional var preferColorEmoji:Bool;
     /**
+     * Cityscape addition (not in Monaco): where the decorations overview
+     * ruler goes. `'overlay'` (the default) is Monaco's: the ruler lies
+     * under the vertical scrollbar, in the same column. `'beside'` puts it
+     * in its own column, left of the scrollbar (`overviewRulerGap` pixels
+     * apart), so the marks and the scrollbar thumb do not overlap, like
+     * loreline-monaco does with its style sheet. The text area keeps
+     * Monaco's layout (the content width and the wrapping column do not
+     * change): the ruler is drawn over the right of the text area.
+     */
+    @:optional var overviewRulerPosition:String;
+    /**
+     * Cityscape addition (not in Monaco): with `overviewRulerPosition:
+     * 'beside'`, the space between the overview ruler and the vertical
+     * scrollbar, in pixels. Defaults to 0.
+     */
+    @:optional var overviewRulerGap:Float;
+    /**
      * Enable that scrolling can go beyond the last column by a number of columns.
      * Defaults to 5.
      */
@@ -2586,13 +2603,17 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final scrollbarThumbExcludesPadding:EditorOption<Bool> = new EditorOption<Bool>(152);
     /** Cityscape addition. */
     public static inline final preferColorEmoji:EditorOption<Bool> = new EditorOption<Bool>(153);
+    /** Cityscape addition. */
+    public static inline final overviewRulerPosition:EditorOption<String> = new EditorOption<String>(154);
+    /** Cityscape addition. */
+    public static inline final overviewRulerGap:EditorOption<Float> = new EditorOption<Float>(155);
 
     /**
      * The number of option ids (Monaco's 151 and the Cityscape additions,
-     * `scrollBeyondLastLineGap`, `scrollbarThumbExcludesPadding` and
-     * `preferColorEmoji`).
+     * `scrollBeyondLastLineGap`, `scrollbarThumbExcludesPadding`,
+     * `preferColorEmoji`, `overviewRulerPosition` and `overviewRulerGap`).
      */
-    public static inline final COUNT:Int = 154;
+    public static inline final COUNT:Int = 156;
 
 }
 
@@ -3319,6 +3340,8 @@ class EditorOptions {
         register(new EditorScrollBeyondLastLineGap());
         register(new EditorBooleanOption(EditorOption.scrollbarThumbExcludesPadding, 'scrollbarThumbExcludesPadding', false));
         register(new EditorBooleanOption(EditorOption.preferColorEmoji, 'preferColorEmoji', true));
+        register(new EditorStringEnumOption(EditorOption.overviewRulerPosition, 'overviewRulerPosition', 'overlay', ['overlay', 'beside']));
+        register(new EditorFloatOption(EditorOption.overviewRulerGap, 'overviewRulerGap', 0, x -> EditorFloatOption.clamp(x, 0, 1000)));
         _selectionHighlight = register(new EditorBooleanOption(EditorOption.selectionHighlight, 'selectionHighlight', true));
         _showFoldingControls = register(new EditorStringEnumOption(EditorOption.showFoldingControls, 'showFoldingControls', 'mouseover', ['always', 'never', 'mouseover']));
         _smoothScrolling = register(new EditorBooleanOption(EditorOption.smoothScrolling, 'smoothScrolling', false));
