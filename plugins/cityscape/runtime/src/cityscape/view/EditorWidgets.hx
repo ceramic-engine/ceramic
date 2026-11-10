@@ -51,6 +51,18 @@ class EditorWidgets {
     }
 
     /**
+     * The page of the content widgets of an editor (`ContentWidgetAnchors.page`):
+     * null (the window, Monaco's page) by default, the editor's bounds with
+     * the Cityscape option `overflowWidgetsBounds: 'editor'`.
+     */
+    public static function overflowPage(editor:ICodeEditor):Null<Bounds> {
+        if (editor.getOption(cityscape.common.config.EditorOptions.EditorOption.overflowWidgetsBounds) != 'editor') {
+            return null;
+        }
+        return editorBounds(editor);
+    }
+
+    /**
      * The window bounds of the line box of `start` (to `end` when given, on
      * the same line): what a popup anchors on. Null when the editor has no
      * view or the position is not rendered.

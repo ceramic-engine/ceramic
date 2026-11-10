@@ -292,6 +292,7 @@ class SuggestWidget implements IDisposable {
             _currentSuggestionDetails = null;
 
             _focusedItem = item;
+            _detailsRenders = 0;
 
             _reveal(index);
 
@@ -600,6 +601,7 @@ class SuggestWidget implements IDisposable {
     }
 
     public function toggleDetails():Void {
+        _detailsRenders = 0;
         if (_isDetailsVisible()) {
             // hide details widget
             _ctxSuggestWidgetDetailsVisible.set(false);
@@ -720,10 +722,11 @@ class SuggestWidget implements IDisposable {
     }
 
     /**
-     * Runs the pending `_layout` calls with the window's size (Monaco's
-     * `document.body` client area); called by the view when it renders.
+     * Runs the pending `_layout` calls in `page` (Monaco's `document.body`
+     * client area: the window, or the editor with `overflowWidgetsBounds:
+     * 'editor'`); called by the view when it renders.
      */
-    public function flushLayout(windowSize:Size):Void {
+    public function flushLayout(page:Bounds):Void {
         final requests = _layoutRequests;
         if (requests == 0 || _state == SuggestWidgetState.Hidden) {
             return;
@@ -731,10 +734,10 @@ class SuggestWidget implements IDisposable {
         _layoutRequests = 0;
         if ((requests & LAYOUT_PERSISTED) != 0) {
             // `this._persistedSize.restore()`: nothing is ever persisted
-            _layout(null, windowSize);
+            _layout(null, page);
         }
         if ((requests & LAYOUT_CURRENT) != 0) {
-            _layout(_size, windowSize);
+            _layout(_size, page);
         }
         if (focusedIndex >= 0) {
             _reveal(focusedIndex);
@@ -748,9 +751,12 @@ class SuggestWidget implements IDisposable {
     /**
      * suggestWidget.ts `_layout`: the size of the widget and its side
      * (`ABOVE` when the list does not fit below the cursor, inside the
-     * window less `verticalPadding`), its height capped to the room there.
+     * page less `verticalPadding`), its height capped to the room there.
+     * `page` is the window (Monaco's body), or the editor with
+     * `overflowWidgetsBounds: 'editor'`.
      */
-    function _layout(size:Null<Size>, bodyBox:Size):Void {
+    function _layout(size:Null<Size>, page:Bounds):Void {
+        final bodyBox = page.size;
         if (!editor.hasModel()) {
             return;
         }
@@ -794,9 +800,11 @@ class SuggestWidget implements IDisposable {
             if (cursorBox == null) {
                 return;
             }
-            final cursorBottom = editorBox.origin.y + cursorBox.top + cursorBox.height;
+            // in the page (the window's origin, or the editor's)
+            final editorTop = editorBox.origin.y - page.origin.y;
+            final cursorBottom = editorTop + cursorBox.top + cursorBox.height;
             final maxHeightBelow = Math.min(bodyBox.height - cursorBottom - info.verticalPadding, fullHeight);
-            final availableSpaceAbove = editorBox.origin.y + cursorBox.top - info.verticalPadding;
+            final availableSpaceAbove = editorTop + cursorBox.top - info.verticalPadding;
             final maxHeightAbove = Math.min(availableSpaceAbove, fullHeight);
             var maxHeight = Math.min(Math.max(maxHeightAbove, maxHeightBelow) + info.borderHeight, fullHeight);
 
@@ -858,6 +866,20 @@ class SuggestWidget implements IDisposable {
         // `lockPreference` is only used while resizing with the sashes (not ported)
         preference = value;
     }
+
+    /**
+     * Renders the widget again (the view found that the details' side
+     * depends on their new height).
+     */
+    public function requestRender():Void {
+        // at most twice for an item (no endless back and forth between two sides)
+        if (_state != SuggestWidgetState.Hidden && _detailsRenders < 2) {
+            _detailsRenders++;
+            _changed();
+        }
+    }
+
+    var _detailsRenders:Int = 0;
 
     /**
      * Called by the view once the list and the details are placed.
@@ -1011,8 +1033,10 @@ class SuggestWidgetView extends Model implements Render {
 
         // Monaco's `_layout` (pending since the last change), then the size
         // and the side it found
-        final windowSize = window.viewportSize();
-        widget.flushLayout(windowSize);
+        // the window (Monaco's page), or the editor (`overflowWidgetsBounds: 'editor'`)
+        final overflowPage = EditorWidgets.overflowPage(editor);
+        final page = overflowPage != null ? overflowPage : new Bounds(new Point(0, 0), window.viewportSize());
+        widget.flushLayout(page);
         final size = widget.getSize();
         final preference = widget.preference;
         if (size == null || preference == null) {
@@ -1127,7 +1151,8 @@ class SuggestWidgetView extends Model implements Render {
             primary: anchor,
             secondary: null,
             editor: editorBounds,
-            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth
+            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth,
+            page: overflowPage
         };
         // `SuggestContentWidget.beforeRender`: the size the box is found for
         final placementSize = new Size(size.width + 2 * info.borderWidth + info.horizontalPadding, size.height + 2 * info.borderWidth);
@@ -1147,12 +1172,13 @@ class SuggestWidgetView extends Model implements Render {
         if (widget._isDetailsVisible() && widget.isShowingList() && focusedItem != null && SuggestWidget.canExpandCompletionItem(focusedItem.item)) {
             final completion = focusedItem.item.completion;
             final detailsLineHeight:Float = suggestLineHeight;
+            final app:App = cx.app;
             // where the list will be (the positioner finds the same box)
-            final side = ContentWidgetPositioner.preferredSide([preference], placementSize.height, anchor, windowSize.height);
-            final predicted = new Bounds(ContentWidgetPositioner.place(anchors, placementSize, windowSize, side).origin, outerSize);
+            final side = ContentWidgetPositioner.preferredSide([preference], placementSize.height, anchor, page);
+            final predicted = new Bounds(ContentWidgetPositioner.place(anchors, placementSize, page, side).origin, outerSize);
             final previous = widget.detailsBounds;
             final estimatedHeight = previous != null ? previous.size.height - info.borderHeight : 0.0;
-            final layout = SuggestDetailsPlacement.compute(predicted, new Size(SuggestDetailsPlacement.DEFAULT_WIDTH, estimatedHeight), windowSize, info, detailsLineHeight);
+            final layout = SuggestDetailsPlacement.compute(predicted, new Size(SuggestDetailsPlacement.DEFAULT_WIDTH, estimatedHeight), page, info, detailsLineHeight);
             final details = div()
                 .id('cityscape-suggest-details')
                 .flex()
@@ -1185,8 +1211,15 @@ class SuggestWidgetView extends Model implements Render {
             }
             final preferAlignAtTop = preference == ContentWidgetPositionPreference.BELOW;
             positioner.attach(details, (listBounds, detailsSize) -> {
-                final placement = SuggestDetailsPlacement.compute(listBounds, new Size(layout.width, detailsSize.height - info.borderHeight), windowSize, info, detailsLineHeight, layout.kind);
-                final origin = placement.topLeft(listBounds, detailsSize.height - info.borderHeight, preferAlignAtTop, info);
+                final measuredHeight = detailsSize.height - info.borderHeight;
+                if (SuggestDetailsPlacement.compute(listBounds, new Size(SuggestDetailsPlacement.DEFAULT_WIDTH, measuredHeight), page, info, detailsLineHeight).kind != layout.kind) {
+                    // the side was chosen on the height of the last frame
+                    // (Monaco knows the height of the details before
+                    // placing them): render again with this one
+                    app.defer(_ -> widget.requestRender());
+                }
+                final placement = SuggestDetailsPlacement.compute(listBounds, new Size(layout.width, measuredHeight), page, info, detailsLineHeight, layout.kind);
+                final origin = ContentWidgetPositioner.keepInPage(placement.topLeft(listBounds, detailsSize.height - info.borderHeight, preferAlignAtTop, info), detailsSize, overflowPage);
                 placedDetails = new Bounds(origin, detailsSize);
                 widget.setDrawnBounds(placedList, placedDetails);
                 return origin;
@@ -1243,13 +1276,19 @@ class SuggestDetailsPlacement {
      * The placements of `_placeAtAnchor` for details of `size` (content
      * box) and the one taken (`kind` forces one, -1 picks it).
      */
-    public static function compute(anchorBox:Bounds, size:Size, bodyBox:Size, info:SuggestWidget.SuggestWidgetLayoutInfo, lineHeight:Float, kind:Int = -1):SuggestDetailsPlacement {
+    public static function compute(anchorBox:Bounds, size:Size, page:Bounds, info:SuggestWidget.SuggestWidgetLayoutInfo, lineHeight:Float, kind:Int = -1):SuggestDetailsPlacement {
         final borderWidth = info.borderWidth;
         final borderHeight = info.borderHeight;
         final horizontalPadding = info.horizontalPadding;
         final verticalPadding = info.verticalPadding;
-        final anchorTop = anchorBox.origin.y;
-        final anchorLeft = anchorBox.origin.x;
+        // computed in the page (the window, or the editor with
+        // `overflowWidgetsBounds: 'editor'`), the tops and lefts given back
+        // in the window
+        final bodyBox = page.size;
+        final pageX = page.origin.x;
+        final pageY = page.origin.y;
+        final anchorTop = anchorBox.origin.y - pageY;
+        final anchorLeft = anchorBox.origin.x - pageX;
         final anchorWidth = anchorBox.size.width;
         final anchorHeight = anchorBox.size.height;
 
@@ -1259,19 +1298,19 @@ class SuggestDetailsPlacement {
         // EAST
         final eastWidth = bodyBox.width - (anchorLeft + anchorWidth + borderWidth + horizontalPadding);
         final eastMaxSizeTop = new Size(eastWidth, bodyBox.height - anchorTop - borderHeight - verticalPadding);
-        final east = new SuggestDetailsPlacement(EAST, defaultTop, -borderWidth + anchorLeft + anchorWidth, eastMaxSizeTop,
+        final east = new SuggestDetailsPlacement(EAST, pageY + defaultTop, pageX - borderWidth + anchorLeft + anchorWidth, eastMaxSizeTop,
             new Size(eastWidth, anchorTop + anchorHeight - borderHeight - verticalPadding), new Size(Math.min(eastWidth, defaultMinSize.width), defaultMinSize.height), size.width);
         final eastFit = eastWidth - size.width;
 
         // WEST
         final westWidth = anchorLeft - borderWidth - horizontalPadding;
-        final west = new SuggestDetailsPlacement(WEST, defaultTop, Math.max(horizontalPadding, anchorLeft - size.width - borderWidth), new Size(westWidth, bodyBox.height - anchorTop - borderHeight - verticalPadding),
+        final west = new SuggestDetailsPlacement(WEST, pageY + defaultTop, pageX + Math.max(horizontalPadding, anchorLeft - size.width - borderWidth), new Size(westWidth, bodyBox.height - anchorTop - borderHeight - verticalPadding),
             new Size(westWidth, anchorTop + anchorHeight - borderHeight - verticalPadding), new Size(Math.min(westWidth, defaultMinSize.width), defaultMinSize.height), size.width);
         final westFit = westWidth - size.width;
 
         // SOUTH
         final southMaxSizeBottom = new Size(anchorWidth - borderHeight, bodyBox.height - anchorTop - anchorHeight - verticalPadding);
-        final south = new SuggestDetailsPlacement(SOUTH, -borderWidth + anchorTop + anchorHeight, anchorLeft, southMaxSizeBottom, southMaxSizeBottom,
+        final south = new SuggestDetailsPlacement(SOUTH, pageY - borderWidth + anchorTop + anchorHeight, pageX + anchorLeft, southMaxSizeBottom, southMaxSizeBottom,
             new Size(southMaxSizeBottom.width, defaultMinSize.height), size.width);
         final southFit = southMaxSizeBottom.height - size.height;
 

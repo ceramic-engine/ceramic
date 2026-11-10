@@ -526,8 +526,10 @@ class RenameWidgetView extends Model implements Render {
         // candidates below, else above
         final lineHeight = fontInfo.lineHeight;
         final candidateViewHeight = lineHeight + CANDIDATE_PADDING * 2;
-        final nPxAvailableAbove = primary.origin.y;
-        final nPxAvailableBelow = window.viewportSize().height - nPxAvailableAbove;
+        // in the window, or in the editor with `overflowWidgetsBounds: 'editor'`
+        final page = EditorWidgets.overflowPage(editor);
+        final nPxAvailableAbove = page != null ? primary.origin.y - page.origin.y : primary.origin.y;
+        final nPxAvailableBelow = (page != null ? page.size.height : window.viewportSize().height) - nPxAvailableAbove;
         final preferences:Array<ContentWidgetPositionPreference> = nPxAvailableBelow > candidateViewHeight * 6 ? [BELOW, ABOVE] : [ABOVE, BELOW];
 
         // the input: `size` characters of the editor's font
@@ -590,7 +592,8 @@ class RenameWidgetView extends Model implements Render {
             primary: primary,
             secondary: null,
             editor: editorBounds,
-            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth
+            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth,
+            page: page
         }, false)
             .preferences(preferences)
             .onPlacement(placement -> {

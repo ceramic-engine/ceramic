@@ -484,7 +484,9 @@ class ParameterHintsView extends Model implements Render {
         final fontInfo = editor.getOption(EditorOption.fontInfo);
         final fontSize:Float = fontInfo.fontSize;
         final lineHeight:Float = fontInfo.lineHeight;
-        final maxHeight = widget.maxHeight;
+        // `overflowWidgetsBounds: 'editor'`: no higher than the room in the editor
+        final page = EditorWidgets.overflowPage(editor);
+        final maxHeight = page != null ? Math.min(widget.maxHeight, ContentWidgetPositioner.maxHeightInPageWithPreferences(primary, page)) : widget.maxHeight;
 
         final content = ParameterHintsWidget.content(hints);
 
@@ -585,7 +587,7 @@ class ParameterHintsView extends Model implements Render {
             .id('cityscape-parameter-hints-wrapper')
             .flex()
             .flexRow()
-            .maxW(px(MAX_WIDTH))
+            .maxW(px(page != null ? Math.min(MAX_WIDTH, Math.max(0, page.size.width - ContentWidgetPositioner.LEFT_PADDING - ContentWidgetPositioner.RIGHT_PADDING)) : MAX_WIDTH))
             .maxH(px(maxHeight - 2));
 
         if (content.multiple) {
@@ -658,7 +660,8 @@ class ParameterHintsView extends Model implements Render {
             primary: primary,
             secondary: null,
             editor: editorBounds,
-            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth
+            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth,
+            page: page
         }, true)
             .preferences([ContentWidgetPositionPreference.ABOVE, ContentWidgetPositionPreference.BELOW])
             .onPlacement(placement -> widget.setPlacement(placement))

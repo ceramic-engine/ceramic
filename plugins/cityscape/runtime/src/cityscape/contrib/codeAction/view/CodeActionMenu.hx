@@ -154,6 +154,11 @@ class CodeActionWidget implements IOverlayWidget implements IDisposable {
     var delegate:Null<ActionListDelegate> = null;
     var anchor:Null<Bounds> = null;
     var menu:Null<Entity<PopupMenu>> = null;
+
+    /**
+     * The window bounds of the menu as last placed (null before).
+     */
+    public var menuBounds(default, null):Null<Bounds> = null;
     var subscription:Null<Subscription> = null;
     var selected:Bool = false;
 
@@ -208,6 +213,7 @@ class CodeActionWidget implements IOverlayWidget implements IDisposable {
         items = null;
         this.delegate = null;
         menu = null;
+        menuBounds = null;
         if (subscription != null) {
             subscription.dispose();
             subscription = null;
@@ -254,6 +260,8 @@ class CodeActionWidget implements IOverlayWidget implements IDisposable {
         if (items == null || anchor == null) {
             return null;
         }
+        // `overflowWidgetsBounds: 'editor'`: placed and capped inside the editor
+        final page = EditorWidgets.overflowPage(editor);
         var menu = this.menu;
         if (menu == null) {
             final view = EditorWidgets.viewOf(editor);
@@ -284,6 +292,13 @@ class CodeActionWidget implements IOverlayWidget implements IDisposable {
                     }
                     menu.item(entry);
                 }
+                if (page != null) {
+                    // the kit's cap (half the window, at most 450 pixels) with
+                    // the editor for the window, and the room on the larger
+                    // side (less the menu's border and padding)
+                    final room = cityscape.view.ContentWidgetPositioner.maxHeightInPageWithPreferences(anchor, page) - 10;
+                    menu.scrollable(true).maxH(px(Math.max(0, Math.min(Math.min(450, page.size.height * 0.5), room))));
+                }
                 return menu.minW(160);
             });
             this.menu = menu;
@@ -297,7 +312,20 @@ class CodeActionWidget implements IOverlayWidget implements IDisposable {
                 }
             });
         }
-        return EditorWidgets.popup(anchor, Placement.Bottom, menu);
+        if (page != null) {
+            final positioner = new cityscape.view.ContentWidgetPositioner({
+                primary: anchor,
+                secondary: null,
+                editor: EditorWidgets.editorBounds(editor),
+                typicalFullwidthCharacterWidth: 0,
+                page: page
+            }, false)
+                .preferences([cityscape.view.ContentWidgetPositioner.ContentWidgetPositionPreference.BELOW, cityscape.view.ContentWidgetPositioner.ContentWidgetPositionPreference.ABOVE])
+                .onPlacement(placement -> menuBounds = placement.bounds)
+                .child(menu);
+            return deferred(positioner).withPriority(glaze.kit.base.Popup.POPUP_PRIORITY).intoAnyElement();
+        }
+        return EditorWidgets.popup(anchor, Placement.Bottom, menu, resolved -> menuBounds = resolved.bounds);
     }
 
 }

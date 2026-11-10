@@ -384,7 +384,9 @@ class ColorPickerView extends Model implements Render {
             primary: primary,
             secondary: secondary,
             editor: editorBounds,
-            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth
+            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth,
+            // `overflowWidgetsBounds: 'editor'`: kept inside the editor
+            page: EditorWidgets.overflowPage(editor)
         }, above)
             .onPlacement(placement -> widget.setBounds(placement.bounds))
             .child(surface);

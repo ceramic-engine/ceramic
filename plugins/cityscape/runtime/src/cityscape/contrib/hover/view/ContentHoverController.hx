@@ -883,6 +883,12 @@ class ContentHoverView extends Model implements Render {
         final link = EditorWidgets.color(editor, 'textLink.foreground', theme.link);
         final fontInfo = editor.getOption(EditorOption.fontInfo);
         final max = maxDimensions(editor);
+        // `overflowWidgetsBounds: 'editor'`: no larger than the room in the editor
+        final page = EditorWidgets.overflowPage(editor);
+        if (page != null) {
+            max.width = Math.min(max.width, Math.max(0, page.size.width - ContentWidgetPositioner.LEFT_PADDING - ContentWidgetPositioner.RIGHT_PADDING));
+            max.height = Math.min(max.height, ContentWidgetPositioner.maxHeightInPage(primary, page));
+        }
 
         final parts = rendered.renderParts(window, app);
         // `.monaco-hover-content`: 2 pixels of padding on the right and at
@@ -1003,7 +1009,8 @@ class ContentHoverView extends Model implements Render {
             primary: primary,
             secondary: secondary,
             editor: editorBounds,
-            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth
+            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth,
+            page: page
         }, above)
             .onPlacement(placement -> {
                 final b = placement.bounds;

@@ -206,6 +206,16 @@ typedef IEditorOptions = {
      */
     @:optional var overviewRulerGap:Float;
     /**
+     * Cityscape addition (not in Monaco): the area the widgets anchored in
+     * the text (suggestions and their details, hover, parameter hints,
+     * rename input, color picker, quick fix menu) are placed in.
+     * `'window'` (the default) is Monaco's: they may leave the editor and
+     * use the whole window to choose their side and their height.
+     * `'editor'`: the editor's bounds stand for the window, and they never
+     * extend outside the editor.
+     */
+    @:optional var overflowWidgetsBounds:String;
+    /**
      * Enable that scrolling can go beyond the last column by a number of columns.
      * Defaults to 5.
      */
@@ -2670,13 +2680,16 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final overviewRulerPosition:EditorOption<String> = new EditorOption<String>(154);
     /** Cityscape addition. */
     public static inline final overviewRulerGap:EditorOption<Float> = new EditorOption<Float>(155);
+    /** Cityscape addition. */
+    public static inline final overflowWidgetsBounds:EditorOption<String> = new EditorOption<String>(156);
 
     /**
      * The number of option ids (Monaco's 151 and the Cityscape additions,
      * `scrollBeyondLastLineGap`, `scrollbarThumbExcludesPadding`,
-     * `preferColorEmoji`, `overviewRulerPosition` and `overviewRulerGap`).
+     * `preferColorEmoji`, `overviewRulerPosition`, `overviewRulerGap` and
+     * `overflowWidgetsBounds`).
      */
-    public static inline final COUNT:Int = 156;
+    public static inline final COUNT:Int = 157;
 
 }
 
@@ -3407,6 +3420,7 @@ class EditorOptions {
         register(new EditorBooleanOption(EditorOption.preferColorEmoji, 'preferColorEmoji', true));
         register(new EditorStringEnumOption(EditorOption.overviewRulerPosition, 'overviewRulerPosition', 'overlay', ['overlay', 'beside']));
         register(new EditorFloatOption(EditorOption.overviewRulerGap, 'overviewRulerGap', 0, x -> EditorFloatOption.clamp(x, 0, 1000)));
+        register(new EditorStringEnumOption(EditorOption.overflowWidgetsBounds, 'overflowWidgetsBounds', 'window', ['window', 'editor']));
         _selectionHighlight = register(new EditorBooleanOption(EditorOption.selectionHighlight, 'selectionHighlight', true));
         _showFoldingControls = register(new EditorStringEnumOption(EditorOption.showFoldingControls, 'showFoldingControls', 'mouseover', ['always', 'never', 'mouseover']));
         _smoothScrolling = register(new EditorBooleanOption(EditorOption.smoothScrolling, 'smoothScrolling', false));

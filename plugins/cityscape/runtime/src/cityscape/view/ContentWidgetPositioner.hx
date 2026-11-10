@@ -65,6 +65,13 @@ typedef ContentWidgetAnchors = {
     /** The window bounds of the editor (Monaco's view DOM node). */
     var editor:Bounds;
     var typicalFullwidthCharacterWidth:Float;
+    /**
+     * The area the widget is placed in (Monaco's page): null for the
+     * window, the editor's bounds with the Cityscape option
+     * `overflowWidgetsBounds: 'editor'` (see `EditorWidgets.overflowPage`),
+     * the widget then never leaving them.
+     */
+    @:optional var page:Null<Bounds>;
 }
 
 /**
@@ -83,6 +90,10 @@ typedef ContentWidgetAnchors = {
  *   primary one (`_reduceAnchorCoordinates`), then kept 15 pixels from the
  *   window's sides and within a widget's width of the editor
  *   (`_layoutHorizontalSegmentInPage`).
+ *
+ * The window is Monaco's page; with `anchors.page` (the editor, Cityscape's
+ * `overflowWidgetsBounds: 'editor'`) that area takes its place in every
+ * rule, the boxes are kept inside it and what is still larger is clipped.
  *
  * Children are laid out like the kit's `Positioner` (out of the flow, at
  * their natural size) and blocked from the mouse behind them.
@@ -141,14 +152,15 @@ class ContentWidgetPositioner extends Element implements ParentElement {
      * `_prepareRenderWidget` with `_layoutBoxInPage` for a widget of
      * `height` (the side only; `place` gives the box).
      */
-    public static function preferredSide(preferences:Array<ContentWidgetPositionPreference>, widgetHeight:Float, primary:Bounds, windowHeight:Float):ContentWidgetPositionPreference {
+    public static function preferredSide(preferences:Array<ContentWidgetPositionPreference>, widgetHeight:Float, primary:Bounds, page:Bounds):ContentWidgetPositionPreference {
         // Leave some clearance to the top/bottom
         final TOP_PADDING = 22;
         final BOTTOM_PADDING = 22;
-        final absoluteAboveTop = primary.origin.y - widgetHeight;
-        final absoluteBelowTop = primary.origin.y + primary.size.height;
+        // positions in the page (the window, or the editor)
+        final absoluteAboveTop = primary.origin.y - page.origin.y - widgetHeight;
+        final absoluteBelowTop = primary.origin.y - page.origin.y + primary.size.height;
         final fitsAbove = (absoluteAboveTop >= TOP_PADDING);
-        final fitsBelow = (absoluteBelowTop + widgetHeight <= windowHeight - BOTTOM_PADDING);
+        final fitsBelow = (absoluteBelowTop + widgetHeight <= page.size.height - BOTTOM_PADDING);
         // Do two passes, first for perfect fit, second picks first option
         for (pass in 1...3) {
             for (pref in preferences) {
@@ -209,28 +221,36 @@ class ContentWidgetPositioner extends Element implements ParentElement {
     }
 
     /**
-     * `_availableVerticalSpaceAbove`: from the top of the window (Monaco's
-     * page) to the line, less `TOP_HEIGHT`.
+     * The page of a content widget: `anchors.page`, else the window.
      */
-    public static function availableVerticalSpaceAbove(primary:Bounds):Float {
-        return primary.origin.y - TOP_HEIGHT;
+    public static function pageOf(anchors:ContentWidgetAnchors, windowSize:Size):Bounds {
+        final page = anchors.page;
+        return page != null ? page : new Bounds(new Point(0, 0), windowSize);
+    }
+
+    /**
+     * `_availableVerticalSpaceAbove`: from the top of the page (the window,
+     * or the editor) to the line, less `TOP_HEIGHT`.
+     */
+    public static function availableVerticalSpaceAbove(primary:Bounds, page:Bounds):Float {
+        return primary.origin.y - page.origin.y - TOP_HEIGHT;
     }
 
     /**
      * `_availableVerticalSpaceBelow`: from the bottom of the line to the
-     * bottom of the window, less `BOTTOM_HEIGHT`.
+     * bottom of the page, less `BOTTOM_HEIGHT`.
      */
-    public static function availableVerticalSpaceBelow(primary:Bounds, windowHeight:Float):Float {
-        final mouseBottom = primary.origin.y + primary.size.height;
-        return windowHeight - mouseBottom - BOTTOM_HEIGHT;
+    public static function availableVerticalSpaceBelow(primary:Bounds, page:Bounds):Float {
+        final mouseBottom = primary.origin.y - page.origin.y + primary.size.height;
+        return page.size.height - mouseBottom - BOTTOM_HEIGHT;
     }
 
     /**
      * `_findPositionPreference`.
      */
-    public static function findPositionPreference(widgetHeight:Float, primary:Bounds, windowHeight:Float, above:Bool):ContentWidgetPositionPreference {
-        final maxHeightBelow = Math.min(availableVerticalSpaceBelow(primary, windowHeight), widgetHeight);
-        final maxHeightAbove = Math.min(availableVerticalSpaceAbove(primary), widgetHeight);
+    public static function findPositionPreference(widgetHeight:Float, primary:Bounds, page:Bounds, above:Bool):ContentWidgetPositionPreference {
+        final maxHeightBelow = Math.min(availableVerticalSpaceBelow(primary, page), widgetHeight);
+        final maxHeightAbove = Math.min(availableVerticalSpaceAbove(primary, page), widgetHeight);
         final maxHeight = Math.min(Math.max(maxHeightAbove, maxHeightBelow), widgetHeight);
         final height = Math.min(widgetHeight, maxHeight);
         if (above) {
@@ -243,7 +263,7 @@ class ContentWidgetPositioner extends Element implements ParentElement {
      * The window bounds of a widget of `size` (`_reduceAnchorCoordinates`,
      * `_layoutBoxInPage`, `_layoutHorizontalSegmentInPage`, then the side).
      */
-    public static function place(anchors:ContentWidgetAnchors, size:Size, windowSize:Size, preference:ContentWidgetPositionPreference):Bounds {
+    public static function place(anchors:ContentWidgetAnchors, size:Size, page:Bounds, preference:ContentWidgetPositionPreference):Bounds {
         final width = size.width;
         final height = size.height;
         final primary = anchors.primary;
@@ -263,8 +283,8 @@ class ContentWidgetPositioner extends Element implements ParentElement {
 
         // _layoutHorizontalSegmentInPage
         final editor = anchors.editor;
-        final minLimit = Math.max(LEFT_PADDING, editor.origin.x - width);
-        final maxLimit = Math.min(editor.origin.x + editor.size.width + width, windowSize.width - RIGHT_PADDING);
+        final minLimit = Math.max(page.origin.x + LEFT_PADDING, editor.origin.x - width);
+        final maxLimit = Math.min(editor.origin.x + editor.size.width + width, page.origin.x + page.size.width - RIGHT_PADDING);
         var absoluteLeft = left;
         if (absoluteLeft + width > maxLimit) {
             absoluteLeft -= absoluteLeft - (maxLimit - width);
@@ -274,8 +294,37 @@ class ContentWidgetPositioner extends Element implements ParentElement {
         }
 
         // _layoutBoxInPage: aboveTop, belowTop
-        final top = preference == BELOW ? primary.origin.y + primary.size.height : primary.origin.y - height;
+        var top = preference == BELOW ? primary.origin.y + primary.size.height : primary.origin.y - height;
+
+        // `overflowWidgetsBounds: 'editor'`: kept inside the editor (over
+        // the line when the room on its side is too small; what is still
+        // too large is clipped when painted)
+        if (anchors.page != null) {
+            final page = anchors.page;
+            absoluteLeft = Math.max(page.origin.x, Math.min(absoluteLeft, page.origin.x + page.size.width - width));
+            top = Math.max(page.origin.y, Math.min(top, page.origin.y + page.size.height - height));
+        }
         return new Bounds(new Point(absoluteLeft, top), size);
+    }
+
+    /**
+     * The highest a widget placed by `findPositionPreference` can be inside
+     * the page: the room on the larger side (used to cap the widgets with
+     * `overflowWidgetsBounds: 'editor'`).
+     */
+    public static function maxHeightInPage(primary:Bounds, page:Bounds):Float {
+        return Math.max(0, Math.max(availableVerticalSpaceAbove(primary, page), availableVerticalSpaceBelow(primary, page)));
+    }
+
+    /**
+     * The highest a widget placed by `preferences` (`_layoutBoxInPage`, 22
+     * pixels of clearance) can be inside the page: the room on the larger
+     * side.
+     */
+    public static function maxHeightInPageWithPreferences(primary:Bounds, page:Bounds):Float {
+        final above = primary.origin.y - page.origin.y - 22;
+        final below = page.origin.y + page.size.height - (primary.origin.y + primary.size.height) - 22;
+        return Math.max(0, Math.max(above, below));
     }
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
@@ -315,15 +364,30 @@ class ContentWidgetPositioner extends Element implements ParentElement {
             maxY = Math.max(maxY, childBounds.origin.y + childBounds.size.height);
         }
         final size = new Size(maxX - minX, maxY - minY);
-        final windowSize = window.viewportSize();
+        final page = pageOf(anchors, window.viewportSize());
         final placementSize = beforeRenderSize != null ? beforeRenderSize : size;
-        final preference = preferenceList != null ? preferredSide(preferenceList, placementSize.height, anchors.primary, windowSize.height) : findPositionPreference(placementSize.height, anchors.primary, windowSize.height, above);
-        final box = place(anchors, placementSize, windowSize, preference);
+        final preference = preferenceList != null ? preferredSide(preferenceList, placementSize.height, anchors.primary, page) : findPositionPreference(placementSize.height, anchors.primary, page, above);
+        final box = place(anchors, placementSize, page, preference);
         final placed = beforeRenderSize != null ? new Bounds(box.origin, size) : box;
         if (onPlacementCallback != null) {
             onPlacementCallback(new ContentWidgetPlacement(placed, preference));
         }
-        window.insertHitbox(placed, HitboxBehavior.BlockMouse);
+        // `overflowWidgetsBounds: 'editor'`: nothing shows or takes the
+        // mouse outside the editor
+        final page = anchors.page;
+        if (page == null) {
+            prepaintChildren(placed, bounds, window, cx);
+        }
+        else {
+            window.withContentMask(new glaze.ContentMask(page), window -> {
+                prepaintChildren(placed, bounds, window, cx);
+                return null;
+            });
+        }
+    }
+
+    function prepaintChildren(placed:Bounds, bounds:Bounds, window:Window, cx:App):Void {
+        window.insertHitbox(clip(placed), HitboxBehavior.BlockMouse);
         final offset = new Point(glaze.util.MathUtil.round(placed.origin.x - bounds.origin.x), glaze.util.MathUtil.round(placed.origin.y - bounds.origin.y));
         window.withElementOffset(offset, window -> {
             for (child in childElements) {
@@ -333,8 +397,9 @@ class ContentWidgetPositioner extends Element implements ParentElement {
         });
         for (i in 0...attachedElements.length) {
             final childBounds = window.layoutBounds(attachedLayoutIds[i]);
-            final origin = attachedPlacers[i](placed, childBounds.size);
-            window.insertHitbox(new Bounds(origin, childBounds.size), HitboxBehavior.BlockMouse);
+            // kept inside the editor like the widget (`overflowWidgetsBounds: 'editor'`)
+            final origin = keepInPage(attachedPlacers[i](placed, childBounds.size), childBounds.size, anchors.page);
+            window.insertHitbox(clip(new Bounds(origin, childBounds.size)), HitboxBehavior.BlockMouse);
             final childOffset = new Point(glaze.util.MathUtil.round(origin.x - childBounds.origin.x), glaze.util.MathUtil.round(origin.y - childBounds.origin.y));
             final child = attachedElements[i];
             window.withElementOffset(childOffset, window -> {
@@ -344,7 +409,49 @@ class ContentWidgetPositioner extends Element implements ParentElement {
         }
     }
 
+    /**
+     * `origin` moved so that a box of `size` stays inside `page` (as far as
+     * it can: its top left corner wins), unchanged without page.
+     */
+    public static function keepInPage(origin:Point, size:Size, page:Null<Bounds>):Point {
+        if (page == null) {
+            return origin;
+        }
+        return new Point(
+            Math.max(page.origin.x, Math.min(origin.x, page.origin.x + page.size.width - size.width)),
+            Math.max(page.origin.y, Math.min(origin.y, page.origin.y + page.size.height - size.height))
+        );
+    }
+
+    /**
+     * The part of `b` inside the page when it is the editor's.
+     */
+    function clip(b:Bounds):Bounds {
+        final page = anchors.page;
+        if (page == null) {
+            return b;
+        }
+        final left = Math.max(b.origin.x, page.origin.x);
+        final top = Math.max(b.origin.y, page.origin.y);
+        final right = Math.min(b.origin.x + b.size.width, page.origin.x + page.size.width);
+        final bottom = Math.min(b.origin.y + b.size.height, page.origin.y + page.size.height);
+        return new Bounds(new Point(left, top), new Size(Math.max(0, right - left), Math.max(0, bottom - top)));
+    }
+
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
+        final page = anchors.page;
+        if (page == null) {
+            paintChildren(window, cx);
+        }
+        else {
+            window.withContentMask(new glaze.ContentMask(page), window -> {
+                paintChildren(window, cx);
+                return null;
+            });
+        }
+    }
+
+    function paintChildren(window:Window, cx:App):Void {
         for (child in childElements) {
             child.paint(window, cx);
         }
