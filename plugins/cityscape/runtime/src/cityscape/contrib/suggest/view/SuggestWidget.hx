@@ -17,10 +17,12 @@ import cityscape.contrib.suggest.view.CompletionModel;
 import cityscape.contrib.suggest.view.Suggest;
 import cityscape.platform.contextkey.common.ContextKey.IContextKey;
 import cityscape.view.Codicons;
+import cityscape.view.ContentWidgetPositioner;
 import cityscape.view.EditorBrowser;
 import cityscape.view.EditorWidgets;
 import cityscape.view.SymbolIcons;
 import glaze.App;
+import glaze.Bounds;
 import glaze.Context;
 import glaze.Empty;
 import glaze.Entity;
@@ -30,11 +32,12 @@ import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.Model;
 import glaze.MouseButton;
+import glaze.Point;
 import glaze.Render;
+import glaze.Size;
 import glaze.StyledText;
 import glaze.Window;
 import glaze.kit.Icon;
-import glaze.kit.base.Geometry.Placement;
 import glaze.kit.theme.Theme;
 
 import glaze.Prelude.*;
@@ -53,6 +56,20 @@ private enum abstract SuggestWidgetState(Int) {
  * A focused or selected item of the suggest widget (Monaco's
  * `ISelectedSuggestion`).
  */
+/**
+ * suggestWidget.ts `getLayoutInfo()`.
+ */
+typedef SuggestWidgetLayoutInfo = {
+    var itemHeight:Float;
+    var statusBarHeight:Float;
+    var borderWidth:Float;
+    var borderHeight:Float;
+    var typicalHalfwidthCharacterWidth:Float;
+    var verticalPadding:Float;
+    var horizontalPadding:Float;
+    var defaultSize:Size;
+}
+
 typedef ISelectedSuggestion = {
     var item:CompletionItem;
     var index:Int;
@@ -66,8 +83,17 @@ typedef ISelectedSuggestion = {
  * widget (DOM) are replaced by a list kept here (`items`, `focusedIndex`,
  * `firstVisibleIndex`) and drawn by `SuggestWidgetView` with the Glaze kit,
  * in the colors of the theme (`editorSuggestWidget.*`, else the kit's).
- * Not ported: the resizing sash and the persisted size, the status bar, the
- * explain mode details, the aria announcements.
+ * Its size and side are Monaco's (`_layout`, `_resize`, the content widget's
+ * `ABOVE` or `BELOW` preference placed by `ContentWidgetPositioner`, the
+ * details placed by `SuggestDetailsOverlay._placeAtAnchor`): below the
+ * cursor when the list fits between the line and the bottom of the window
+ * (less 22 pixels), else above, its height capped to the room on that side,
+ * the list scrolling beyond. The layout runs at the next render after
+ * Monaco's calls (it needs the window).
+ * Not ported: the resizing sash and the persisted size (never stored, so
+ * `restore()` is always undefined), the status bar (its height is 0, the
+ * default `suggest.showStatusBar: false`), the explain mode details, the aria
+ * announcements, the high contrast border width (2).
  */
 class SuggestWidget implements IDisposable {
 
@@ -79,6 +105,12 @@ class SuggestWidget implements IDisposable {
      */
     public static inline final MAX_VISIBLE_ITEMS = 12;
 
+    // _layout requests (Monaco calls `_layout` at these points, the port at
+    // the next render, in this order): from the persisted size (`_show`,
+    // `forceRenderingAbove`), from the current size (after `showSuggestions`)
+    static inline final LAYOUT_PERSISTED = 1;
+    static inline final LAYOUT_CURRENT = 2;
+
     final editor:ICodeEditor;
 
     var _state:SuggestWidgetState = SuggestWidgetState.Hidden;
@@ -89,6 +121,29 @@ class SuggestWidget implements IDisposable {
     var _ignoreFocusEvents:Bool = false;
     var _completionModel:Null<CompletionModel> = null;
     var _detailsVisible:Bool = false;
+
+    // Monaco's `element.size` (the content box of the widget, without its
+    // border), `element.maxSize`, `_cappedHeight`, `_forceRenderingAbove`
+    // and the content widget's `_preference`
+    var _size:Null<Size> = null;
+    var _maxSize:Null<Size> = null;
+    var _minSize:Null<Size> = null;
+    var _cappedHeight:Null<{wanted:Float, capped:Float}> = null;
+    var _forceRenderingAbove:Bool = false;
+    var _layoutRequests:Int = 0;
+
+    /**
+     * The side of the widget (Monaco's `SuggestContentWidget._preference`),
+     * null before the first layout.
+     */
+    public var preference(default, null):Null<ContentWidgetPositionPreference> = null;
+
+    /**
+     * The window bounds of the list and of the details, as last drawn
+     * (null when they do not show).
+     */
+    public var listBounds(default, null):Null<Bounds> = null;
+    public var detailsBounds(default, null):Null<Bounds> = null;
 
     /** The items of the list (Monaco's list elements). */
     public var items(default, null):Array<CompletionItem> = [];
@@ -259,8 +314,8 @@ class SuggestWidget implements IDisposable {
         if (index < firstVisibleIndex) {
             firstVisibleIndex = index;
         }
-        else if (index >= firstVisibleIndex + MAX_VISIBLE_ITEMS) {
-            firstVisibleIndex = index - MAX_VISIBLE_ITEMS + 1;
+        else if (index >= firstVisibleIndex + visibleRowCount()) {
+            firstVisibleIndex = index - visibleRowCount() + 1;
         }
     }
 
@@ -268,7 +323,7 @@ class SuggestWidget implements IDisposable {
      * Scrolls the list by `delta` rows (the mouse wheel over the list).
      */
     public function scrollBy(delta:Int):Void {
-        final max = Std.int(Math.max(0, items.length - MAX_VISIBLE_ITEMS));
+        final max = Std.int(Math.max(0, items.length - visibleRowCount()));
         final next = Std.int(Math.max(0, Math.min(max, firstVisibleIndex + delta)));
         if (next != firstVisibleIndex) {
             firstVisibleIndex = next;
@@ -294,6 +349,10 @@ class SuggestWidget implements IDisposable {
                 focusedIndex = -1;
                 firstVisibleIndex = 0;
                 _focusedItem = null;
+                _cappedHeight = null;
+                _layoutRequests = 0;
+                listBounds = null;
+                detailsBounds = null;
             case SuggestWidgetState.Loading:
                 message = editor.context.nls.localize('suggestWidget.loading', LOADING_MESSAGE);
                 _show();
@@ -310,6 +369,7 @@ class SuggestWidget implements IDisposable {
     }
 
     function _show():Void {
+        _requestLayout(LAYOUT_PERSISTED);
         _ctxSuggestWidgetVisible.set(true);
 
         _showTimeout.cancelAndSet(() -> {
@@ -374,8 +434,11 @@ class SuggestWidget implements IDisposable {
         firstVisibleIndex = 0;
         _ignoreFocusEvents = false;
         _setState(isFrozen ? SuggestWidgetState.Frozen : SuggestWidgetState.Open);
-        firstVisibleIndex = Std.int(Math.max(0, Math.min(selectionIndex, items.length - MAX_VISIBLE_ITEMS)));
+        firstVisibleIndex = Std.int(Math.max(0, Math.min(selectionIndex, items.length - visibleRowCount())));
         _setFocus(noFocus ? -1 : selectionIndex);
+
+        // Monaco: `_layout(this.element.size)` at this or the next animation frame
+        _requestLayout(LAYOUT_CURRENT);
     }
 
     public function focusSelected():Void {
@@ -414,12 +477,12 @@ class SuggestWidget implements IDisposable {
                 return !_isAuto;
             default:
                 // Monaco's focusNextPage: to the last visible row, then one page on
-                final lastVisible = Std.int(Math.min(items.length - 1, firstVisibleIndex + MAX_VISIBLE_ITEMS - 1));
+                final lastVisible = Std.int(Math.min(items.length - 1, firstVisibleIndex + visibleRowCount() - 1));
                 if (focusedIndex != lastVisible) {
                     _setFocus(lastVisible);
                 }
                 else {
-                    _setFocus(Std.int(Math.min(items.length - 1, lastVisible + MAX_VISIBLE_ITEMS - 1)));
+                    _setFocus(Std.int(Math.min(items.length - 1, lastVisible + visibleRowCount() - 1)));
                 }
                 return true;
         }
@@ -464,7 +527,7 @@ class SuggestWidget implements IDisposable {
                     _setFocus(firstVisible);
                 }
                 else {
-                    _setFocus(Std.int(Math.max(0, firstVisible - MAX_VISIBLE_ITEMS + 1)));
+                    _setFocus(Std.int(Math.max(0, firstVisible - visibleRowCount() + 1)));
                 }
                 return true;
         }
@@ -595,9 +658,214 @@ class SuggestWidget implements IDisposable {
         editor.context.storageService.store('expandSuggestionDocs', value, cityscape.platform.storage.common.Storage.StorageScope.PROFILE, cityscape.platform.storage.common.Storage.StorageTarget.USER);
     }
 
-    public function forceRenderingAbove():Void {}
+    public function forceRenderingAbove():Void {
+        if (!_forceRenderingAbove) {
+            _forceRenderingAbove = true;
+            _requestLayout(LAYOUT_PERSISTED);
+            _changed();
+        }
+    }
 
-    public function stopForceRenderingAbove():Void {}
+    public function stopForceRenderingAbove():Void {
+        _forceRenderingAbove = false;
+    }
+
+    function _requestLayout(kind:Int):Void {
+        _layoutRequests |= kind;
+    }
+
+    /**
+     * The rows the list shows entirely (its height over the item height, 12
+     * by default), at least 1: the step of the keyboard pages and the limit
+     * of the scroll (the port scrolls by whole rows).
+     */
+    public function visibleRowCount():Int {
+        final size = _size;
+        if (size == null || !isShowingList()) {
+            return MAX_VISIBLE_ITEMS;
+        }
+        final info = getLayoutInfo();
+        return Std.int(Math.max(1, Math.floor((size.height - info.statusBarHeight) / info.itemHeight)));
+    }
+
+    /**
+     * Monaco's `element.size`: the content box of the widget (without its
+     * border), null before the first layout.
+     */
+    public function getSize():Null<Size> {
+        return _size;
+    }
+
+    /**
+     * suggestWidget.ts `getLayoutInfo()`.
+     */
+    public function getLayoutInfo():SuggestWidgetLayoutInfo {
+        final fontInfo = editor.getOption(EditorOption.fontInfo);
+        final suggestLineHeight:Float = editor.getOption(EditorOption.suggestLineHeight);
+        final itemHeight = Math.max(8, Math.min(1000, suggestLineHeight > 0 ? suggestLineHeight : fontInfo.lineHeight));
+        // the status bar is not ported (`suggest.showStatusBar` is false by default)
+        final statusBarHeight = 0.0;
+        final borderWidth = 1.0;
+        final borderHeight = 2 * borderWidth;
+        return {
+            itemHeight: itemHeight,
+            statusBarHeight: statusBarHeight,
+            borderWidth: borderWidth,
+            borderHeight: borderHeight,
+            typicalHalfwidthCharacterWidth: fontInfo.typicalHalfwidthCharacterWidth,
+            verticalPadding: 22,
+            horizontalPadding: 14,
+            defaultSize: new Size(430, statusBarHeight + 12 * itemHeight + borderHeight)
+        };
+    }
+
+    /**
+     * Runs the pending `_layout` calls with the window's size (Monaco's
+     * `document.body` client area); called by the view when it renders.
+     */
+    public function flushLayout(windowSize:Size):Void {
+        final requests = _layoutRequests;
+        if (requests == 0 || _state == SuggestWidgetState.Hidden) {
+            return;
+        }
+        _layoutRequests = 0;
+        if ((requests & LAYOUT_PERSISTED) != 0) {
+            // `this._persistedSize.restore()`: nothing is ever persisted
+            _layout(null, windowSize);
+        }
+        if ((requests & LAYOUT_CURRENT) != 0) {
+            _layout(_size, windowSize);
+        }
+        if (focusedIndex >= 0) {
+            _reveal(focusedIndex);
+        }
+        final max = Std.int(Math.max(0, items.length - visibleRowCount()));
+        if (firstVisibleIndex > max) {
+            firstVisibleIndex = max;
+        }
+    }
+
+    /**
+     * suggestWidget.ts `_layout`: the size of the widget and its side
+     * (`ABOVE` when the list does not fit below the cursor, inside the
+     * window less `verticalPadding`), its height capped to the room there.
+     */
+    function _layout(size:Null<Size>, bodyBox:Size):Void {
+        if (!editor.hasModel()) {
+            return;
+        }
+        final editorBox = EditorWidgets.editorBounds(editor);
+        if (editorBox == null) {
+            // happens when running tests
+            return;
+        }
+
+        final info = getLayoutInfo();
+
+        if (size == null) {
+            size = info.defaultSize;
+        }
+
+        var height = size.height;
+        var width = size.width;
+
+        if (_state == SuggestWidgetState.Empty || _state == SuggestWidgetState.Loading) {
+            // showing a message only
+            height = info.itemHeight + info.borderHeight;
+            width = info.defaultSize.width / 2;
+            _minSize = _maxSize = new Size(width, height);
+            _setPreference(ContentWidgetPositionPreference.BELOW);
+
+        }
+        else {
+            // showing items
+
+            // width math
+            final maxWidth = bodyBox.width - info.borderHeight - 2 * info.horizontalPadding;
+            if (width > maxWidth) {
+                width = maxWidth;
+            }
+
+            // height math
+            final fullHeight = info.statusBarHeight + items.length * info.itemHeight + info.borderHeight;
+            final minHeight = info.itemHeight + info.statusBarHeight;
+            final cursorPosition = editor.getPosition();
+            final cursorBox = cursorPosition != null ? editor.getScrolledVisiblePosition(cursorPosition) : null;
+            if (cursorBox == null) {
+                return;
+            }
+            final cursorBottom = editorBox.origin.y + cursorBox.top + cursorBox.height;
+            final maxHeightBelow = Math.min(bodyBox.height - cursorBottom - info.verticalPadding, fullHeight);
+            final availableSpaceAbove = editorBox.origin.y + cursorBox.top - info.verticalPadding;
+            final maxHeightAbove = Math.min(availableSpaceAbove, fullHeight);
+            var maxHeight = Math.min(Math.max(maxHeightAbove, maxHeightBelow) + info.borderHeight, fullHeight);
+
+            final capped = _cappedHeight;
+            if (capped != null && height == capped.capped) {
+                // Restore the old (wanted) height when the current
+                // height is capped to fit
+                height = capped.wanted;
+            }
+
+            if (height < minHeight) {
+                height = minHeight;
+            }
+            if (height > maxHeight) {
+                height = maxHeight;
+            }
+
+            final forceRenderingAboveRequiredSpace = 150;
+            if (height > maxHeightBelow || (_forceRenderingAbove && availableSpaceAbove > forceRenderingAboveRequiredSpace)) {
+                _setPreference(ContentWidgetPositionPreference.ABOVE);
+                maxHeight = maxHeightAbove;
+            }
+            else {
+                _setPreference(ContentWidgetPositionPreference.BELOW);
+                maxHeight = maxHeightBelow;
+            }
+            _maxSize = new Size(maxWidth, maxHeight);
+            _minSize = new Size(220, minHeight);
+
+            // Know when the height was capped to fit and remember
+            // the wanted height for later. This is required when going
+            // left to widen suggestions.
+            _cappedHeight = height == fullHeight
+                ? {wanted: capped != null ? capped.wanted : size.height, capped: height}
+                : null;
+        }
+        _resize(width, height);
+    }
+
+    /**
+     * suggestWidget.ts `_resize` with `ResizableHTMLElement.layout` (the
+     * size clamped to the maximum, then to the minimum).
+     */
+    function _resize(width:Float, height:Float):Void {
+        final maxSize = _maxSize;
+        final minSize = _minSize;
+        if (maxSize != null) {
+            width = Math.min(maxSize.width, width);
+            height = Math.min(maxSize.height, height);
+        }
+        if (minSize != null && maxSize != null) {
+            height = Math.max(minSize.height, Math.min(maxSize.height, height));
+            width = Math.max(minSize.width, Math.min(maxSize.width, width));
+        }
+        _size = new Size(width, height);
+    }
+
+    function _setPreference(value:ContentWidgetPositionPreference):Void {
+        // `lockPreference` is only used while resizing with the sashes (not ported)
+        preference = value;
+    }
+
+    /**
+     * Called by the view once the list and the details are placed.
+     */
+    public function setDrawnBounds(list:Null<Bounds>, details:Null<Bounds>):Void {
+        listBounds = list;
+        detailsBounds = details;
+    }
 
 }
 
@@ -736,16 +1004,33 @@ class SuggestWidgetView extends Model implements Render {
         final fontFamily = EditorWidgets.editorFontFamily(editor);
 
         final anchor = EditorWidgets.positionBounds(editor, position);
-        if (anchor == null) {
+        final editorBounds = EditorWidgets.editorBounds(editor);
+        if (anchor == null || editorBounds == null) {
             return new Empty();
         }
 
-        final listWidth = 430.0;
+        // Monaco's `_layout` (pending since the last change), then the size
+        // and the side it found
+        final windowSize = window.viewportSize();
+        widget.flushLayout(windowSize);
+        final size = widget.getSize();
+        final preference = widget.preference;
+        if (size == null || preference == null) {
+            return new Empty();
+        }
+        final info = widget.getLayoutInfo();
+        final itemHeight = info.itemHeight;
+        // the content box of Monaco's widget plus its border
+        final outerSize = new Size(size.width + info.borderHeight, size.height + info.borderHeight);
+        final listHeight = size.height - info.statusBarHeight;
+
         final list = div()
             .id('cityscape-suggest-list')
             .flex()
             .flexCol()
-            .w(px(listWidth))
+            .w(px(outerSize.width))
+            .h(px(outerSize.height))
+            .flexNone()
             .bg(background)
             .border1()
             .borderColor(border)
@@ -756,17 +1041,21 @@ class SuggestWidgetView extends Model implements Render {
             .textSize(px(suggestFontSize))
             .textColor(foreground)
             .onScrollWheel((event, window, cx) -> {
-                final delta = glaze.ScrollDelta.ScrollDeltaTools.pixelDelta(event.delta, suggestLineHeight);
+                final delta = glaze.ScrollDelta.ScrollDeltaTools.pixelDelta(event.delta, itemHeight);
                 widget.scrollBy(delta.y < 0 ? 1 : (delta.y > 0 ? -1 : 0));
                 cx.stopPropagation();
             });
 
         if (widget.message != null) {
-            list.child(div().px2().h(px(suggestLineHeight)).flex().itemsCenter().textColor(mutedForeground).child(widget.message));
+            // `.suggest-widget.message { flex-direction: row; align-items: center }`
+            list.flexRow().itemsCenter();
+            list.child(div().px2().h(px(itemHeight)).flex().itemsCenter().textColor(mutedForeground).child(widget.message));
         }
         else {
+            // the rows in the height of the list, the last one cut when it
+            // does not fit entirely
             final start = widget.firstVisibleIndex;
-            final end = Std.int(Math.min(widget.items.length, start + SuggestWidget.MAX_VISIBLE_ITEMS));
+            final end = Std.int(Math.min(widget.items.length, start + Math.ceil(listHeight / itemHeight)));
             for (index in start...end) {
                 final item = widget.items[index];
                 final focused = index == widget.focusedIndex;
@@ -791,7 +1080,7 @@ class SuggestWidgetView extends Model implements Render {
                     .itemsCenter()
                     .gap(px(4))
                     .px(px(4))
-                    .h(px(suggestLineHeight))
+                    .h(px(itemHeight))
                     .flexNone()
                     .whitespaceNowrap()
                     .overflowHidden()
@@ -834,19 +1123,45 @@ class SuggestWidgetView extends Model implements Render {
             }
         }
 
-        final content = div().flex().flexRow().itemsStart().gap(px(2)).child(list);
+        final anchors:ContentWidgetAnchors = {
+            primary: anchor,
+            secondary: null,
+            editor: editorBounds,
+            typicalFullwidthCharacterWidth: fontInfo.typicalFullwidthCharacterWidth
+        };
+        // `SuggestContentWidget.beforeRender`: the size the box is found for
+        final placementSize = new Size(size.width + 2 * info.borderWidth + info.horizontalPadding, size.height + 2 * info.borderWidth);
+        var placedList:Null<Bounds> = null;
+        var placedDetails:Null<Bounds> = null;
+        final positioner = new ContentWidgetPositioner(anchors, false)
+            .preferences([preference])
+            .beforeRender(placementSize)
+            .onPlacement(placement -> {
+                placedList = placement.bounds;
+                widget.setDrawnBounds(placedList, null);
+            })
+            .child(list);
 
-        // The details of the focused item (Monaco's details widget), next to the list
+        // The details of the focused item (Monaco's details overlay), next to the list
         final focusedItem = widget.getFocusedItem();
-        if (widget._isDetailsVisible() && focusedItem != null && SuggestWidget.canExpandCompletionItem(focusedItem.item)) {
+        if (widget._isDetailsVisible() && widget.isShowingList() && focusedItem != null && SuggestWidget.canExpandCompletionItem(focusedItem.item)) {
             final completion = focusedItem.item.completion;
+            final detailsLineHeight:Float = suggestLineHeight;
+            // where the list will be (the positioner finds the same box)
+            final side = ContentWidgetPositioner.preferredSide([preference], placementSize.height, anchor, windowSize.height);
+            final predicted = new Bounds(ContentWidgetPositioner.place(anchors, placementSize, windowSize, side).origin, outerSize);
+            final previous = widget.detailsBounds;
+            final estimatedHeight = previous != null ? previous.size.height - info.borderHeight : 0.0;
+            final layout = SuggestDetailsPlacement.compute(predicted, new Size(SuggestDetailsPlacement.DEFAULT_WIDTH, estimatedHeight), windowSize, info, detailsLineHeight);
             final details = div()
                 .id('cityscape-suggest-details')
                 .flex()
                 .flexCol()
                 .gap(px(4))
-                .w(px(360))
-                .maxH(px(suggestLineHeight * SuggestWidget.MAX_VISIBLE_ITEMS))
+                .w(px(layout.width + info.borderHeight))
+                .minH(px(layout.minHeight + info.borderHeight))
+                .maxH(px(layout.maxHeight + info.borderHeight))
+                .flexNone()
                 .p(px(6))
                 .bg(background)
                 .border1()
@@ -868,10 +1183,142 @@ class SuggestWidgetView extends Model implements Render {
                     details.child(cityscape.contrib.hover.view.MarkdownRenderer.render(editor, 'cityscape-suggest-doc', (doc : IMarkdownString), cx.app));
                 }
             }
-            content.child(details);
+            final preferAlignAtTop = preference == ContentWidgetPositionPreference.BELOW;
+            positioner.attach(details, (listBounds, detailsSize) -> {
+                final placement = SuggestDetailsPlacement.compute(listBounds, new Size(layout.width, detailsSize.height - info.borderHeight), windowSize, info, detailsLineHeight, layout.kind);
+                final origin = placement.topLeft(listBounds, detailsSize.height - info.borderHeight, preferAlignAtTop, info);
+                placedDetails = new Bounds(origin, detailsSize);
+                widget.setDrawnBounds(placedList, placedDetails);
+                return origin;
+            });
         }
 
-        return EditorWidgets.popup(anchor, Placement.Bottom, content);
+        // above the parameter hints (suggest.css: z-index 40, theirs 39)
+        return deferred(positioner).withPriority(glaze.kit.base.Popup.POPUP_PRIORITY).intoAnyElement();
+    }
+
+}
+
+/**
+ * suggestWidgetDetails.ts `SuggestDetailsOverlay._placeAtAnchor`: where the
+ * details go next to the list (`anchorBox`, the window bounds of the list
+ * with its border): east, else west, else south (the first that fits, else
+ * the least bad), their maximum sizes, and their top, on the top of the list
+ * (`alignAtTop`) or their bottom on its bottom.
+ */
+class SuggestDetailsPlacement {
+
+    /** suggestWidgetDetails.ts `_size = new dom.Dimension(330, 0)` */
+    public static inline final DEFAULT_WIDTH = 330;
+
+    public static inline final EAST = 0;
+    public static inline final WEST = 1;
+    public static inline final SOUTH = 2;
+
+    public final kind:Int;
+    public final top:Float;
+    public final left:Float;
+    public final maxSizeTop:Size;
+    public final maxSizeBottom:Size;
+    public final minSize:Size;
+    /** The width of the details (content box): `min(maxSize.width, size.width)`, at least the minimum. */
+    public final width:Float;
+    /** The highest the details can be (`max(maxSizeTop, maxSizeBottom)`). */
+    public final maxHeight:Float;
+    public final minHeight:Float;
+
+    function new(kind:Int, top:Float, left:Float, maxSizeTop:Size, maxSizeBottom:Size, minSize:Size, sizeWidth:Float) {
+        this.kind = kind;
+        this.top = top;
+        this.left = left;
+        this.maxSizeTop = maxSizeTop;
+        this.maxSizeBottom = maxSizeBottom;
+        this.minSize = minSize;
+        this.maxHeight = Math.max(maxSizeTop.height, maxSizeBottom.height);
+        this.minHeight = minSize.height;
+        this.width = Math.max(minSize.width, Math.min(Math.max(maxSizeTop.width, maxSizeBottom.width), sizeWidth));
+    }
+
+    /**
+     * The placements of `_placeAtAnchor` for details of `size` (content
+     * box) and the one taken (`kind` forces one, -1 picks it).
+     */
+    public static function compute(anchorBox:Bounds, size:Size, bodyBox:Size, info:SuggestWidget.SuggestWidgetLayoutInfo, lineHeight:Float, kind:Int = -1):SuggestDetailsPlacement {
+        final borderWidth = info.borderWidth;
+        final borderHeight = info.borderHeight;
+        final horizontalPadding = info.horizontalPadding;
+        final verticalPadding = info.verticalPadding;
+        final anchorTop = anchorBox.origin.y;
+        final anchorLeft = anchorBox.origin.x;
+        final anchorWidth = anchorBox.size.width;
+        final anchorHeight = anchorBox.size.height;
+
+        final defaultMinSize = new Size(220, 2 * lineHeight);
+        final defaultTop = anchorTop;
+
+        // EAST
+        final eastWidth = bodyBox.width - (anchorLeft + anchorWidth + borderWidth + horizontalPadding);
+        final eastMaxSizeTop = new Size(eastWidth, bodyBox.height - anchorTop - borderHeight - verticalPadding);
+        final east = new SuggestDetailsPlacement(EAST, defaultTop, -borderWidth + anchorLeft + anchorWidth, eastMaxSizeTop,
+            new Size(eastWidth, anchorTop + anchorHeight - borderHeight - verticalPadding), new Size(Math.min(eastWidth, defaultMinSize.width), defaultMinSize.height), size.width);
+        final eastFit = eastWidth - size.width;
+
+        // WEST
+        final westWidth = anchorLeft - borderWidth - horizontalPadding;
+        final west = new SuggestDetailsPlacement(WEST, defaultTop, Math.max(horizontalPadding, anchorLeft - size.width - borderWidth), new Size(westWidth, bodyBox.height - anchorTop - borderHeight - verticalPadding),
+            new Size(westWidth, anchorTop + anchorHeight - borderHeight - verticalPadding), new Size(Math.min(westWidth, defaultMinSize.width), defaultMinSize.height), size.width);
+        final westFit = westWidth - size.width;
+
+        // SOUTH
+        final southMaxSizeBottom = new Size(anchorWidth - borderHeight, bodyBox.height - anchorTop - anchorHeight - verticalPadding);
+        final south = new SuggestDetailsPlacement(SOUTH, -borderWidth + anchorTop + anchorHeight, anchorLeft, southMaxSizeBottom, southMaxSizeBottom,
+            new Size(southMaxSizeBottom.width, defaultMinSize.height), size.width);
+        final southFit = southMaxSizeBottom.height - size.height;
+
+        if (kind == EAST) return east;
+        if (kind == WEST) return west;
+        if (kind == SOUTH) return south;
+
+        // take first placement that fits or the first with "least bad" fit
+        if (eastFit >= 0) return east;
+        if (westFit >= 0) return west;
+        if (southFit >= 0) return south;
+        // a stable sort on the fit, descending
+        var best = east;
+        var bestFit = eastFit;
+        if (westFit > bestFit) {
+            best = west;
+            bestFit = westFit;
+        }
+        if (southFit > bestFit) {
+            best = south;
+        }
+        return best;
+    }
+
+    /**
+     * The window position of details of `height` (content box): the top
+     * of the placement, or their bottom on the list's bottom when they are
+     * not aligned at the top and higher than the list.
+     */
+    public function topLeft(anchorBox:Bounds, height:Float, preferAlignAtTop:Bool, info:SuggestWidget.SuggestWidgetLayoutInfo):Point {
+        // top/bottom placement
+        final bottom = anchorBox.origin.y + anchorBox.size.height - info.borderHeight;
+        var alignAtTop:Bool;
+        if (height > maxHeight) {
+            height = maxHeight;
+        }
+        if (preferAlignAtTop) {
+            alignAtTop = height <= maxSizeTop.height;
+        }
+        else {
+            alignAtTop = !(height <= maxSizeBottom.height);
+        }
+        var y = top;
+        if (!alignAtTop && height > anchorBox.size.height) {
+            y = bottom - height;
+        }
+        return new Point(left, y);
     }
 
 }

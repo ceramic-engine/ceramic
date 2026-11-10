@@ -104,6 +104,14 @@ class ContentWidgetPositioner extends Element implements ParentElement {
     final childElements:Array<AnyElement> = [];
     final childLayoutIds:Array<LayoutId> = [];
 
+    // Elements laid out with the widget but placed by a callback against it
+    // (the suggest widget's details next to its list)
+    final attachedElements:Array<AnyElement> = [];
+    final attachedPlacers:Array<(widget:Bounds, size:Size) -> Point> = [];
+    final attachedLayoutIds:Array<LayoutId> = [];
+
+    var beforeRenderSize:Null<Size> = null;
+
     /**
      * `above`: the `hover.above` option (Monaco's preference when there is
      * room on both sides).
@@ -153,6 +161,32 @@ class ContentWidgetPositioner extends Element implements ParentElement {
             }
         }
         return BELOW;
+    }
+
+    /**
+     * The size the widget is placed with (Monaco's `IContentWidget.beforeRender`
+     * result, `_cachedDomNodeOffsetWidth/Height`) instead of its laid out
+     * size. The widget is still drawn at its laid out size, from the top
+     * left corner of the box found for this size.
+     */
+    public function beforeRender(size:Size):ContentWidgetPositioner {
+        beforeRenderSize = size;
+        return this;
+    }
+
+    /**
+     * Adds an element laid out with the widget (at its natural size, out of
+     * the flow) but placed by `place`, which gets the window bounds of the
+     * widget once placed and the laid out size of the element and returns
+     * the window position of the element (an overlay widget anchored on a
+     * content widget, like the suggest widget's details).
+     */
+    public function attach(child:IntoElement, place:(widget:Bounds, size:Size) -> Point):ContentWidgetPositioner {
+        if (child != null) {
+            attachedElements.push(child);
+            attachedPlacers.push(place);
+        }
+        return this;
     }
 
     /**
@@ -249,10 +283,20 @@ class ContentWidgetPositioner extends Element implements ParentElement {
         for (child in childElements) {
             childLayoutIds.push(child.requestLayout(window, cx));
         }
+        attachedLayoutIds.resize(0);
+        for (child in attachedElements) {
+            attachedLayoutIds.push(child.requestLayout(window, cx));
+        }
         final style = new Style();
         style.position = Position.Absolute;
         style.display = Display.Flex;
-        return window.requestLayout(style, childLayoutIds, cx);
+        if (attachedLayoutIds.length == 0) {
+            return window.requestLayout(style, childLayoutIds, cx);
+        }
+        // each element at its natural height (no stretch to the tallest)
+        style.alignItems = glaze.AlignItems.FlexStart;
+        style.optionMask |= glaze.StyleRefinement.ALIGN_ITEMS;
+        return window.requestLayout(style, childLayoutIds.concat(attachedLayoutIds), cx);
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
@@ -272,8 +316,10 @@ class ContentWidgetPositioner extends Element implements ParentElement {
         }
         final size = new Size(maxX - minX, maxY - minY);
         final windowSize = window.viewportSize();
-        final preference = preferenceList != null ? preferredSide(preferenceList, size.height, anchors.primary, windowSize.height) : findPositionPreference(size.height, anchors.primary, windowSize.height, above);
-        final placed = place(anchors, size, windowSize, preference);
+        final placementSize = beforeRenderSize != null ? beforeRenderSize : size;
+        final preference = preferenceList != null ? preferredSide(preferenceList, placementSize.height, anchors.primary, windowSize.height) : findPositionPreference(placementSize.height, anchors.primary, windowSize.height, above);
+        final box = place(anchors, placementSize, windowSize, preference);
+        final placed = beforeRenderSize != null ? new Bounds(box.origin, size) : box;
         if (onPlacementCallback != null) {
             onPlacementCallback(new ContentWidgetPlacement(placed, preference));
         }
@@ -285,10 +331,24 @@ class ContentWidgetPositioner extends Element implements ParentElement {
             }
             return null;
         });
+        for (i in 0...attachedElements.length) {
+            final childBounds = window.layoutBounds(attachedLayoutIds[i]);
+            final origin = attachedPlacers[i](placed, childBounds.size);
+            window.insertHitbox(new Bounds(origin, childBounds.size), HitboxBehavior.BlockMouse);
+            final childOffset = new Point(glaze.util.MathUtil.round(origin.x - childBounds.origin.x), glaze.util.MathUtil.round(origin.y - childBounds.origin.y));
+            final child = attachedElements[i];
+            window.withElementOffset(childOffset, window -> {
+                child.prepaint(window, cx);
+                return null;
+            });
+        }
     }
 
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         for (child in childElements) {
+            child.paint(window, cx);
+        }
+        for (child in attachedElements) {
             child.paint(window, cx);
         }
     }
