@@ -33,4 +33,13 @@ class Scenarios {
         ];
     }
 
+    /**
+     * Scenarios run only when `GLAZE_BENCH_SCENARIOS` names them (long ones):
+     * the `sparse-*` family (`src/scenarios/Sparse.hx`, 1000 to 3000 live
+     * rows with one sparse change per frame).
+     */
+    public static function onDemand():Array<Scenario> {
+        return scenarios.Sparse.all();
+    }
+
 }

@@ -214,7 +214,7 @@ class BenchRunner {
         soakLiveSeconds = envFloat('GLAZE_BENCH_SOAK_LIVE_SECONDS', 60);
         soakWarmupSeconds = envFloat('GLAZE_BENCH_SOAK_WARMUP_SECONDS', 180);
         timestamp = DateTools.format(Date.now(), '%Y%m%d-%H%M%S');
-        scenarios = select(Scenarios.all());
+        scenarios = select(Scenarios.all(), Scenarios.onDemand());
     }
 
     /**
@@ -1142,24 +1142,34 @@ class BenchRunner {
         #end
     }
 
-    function select(all:Array<Scenario>):Array<Scenario> {
+    /**
+     * The scenarios named by `GLAZE_BENCH_SCENARIOS` (all of `all` when it is
+     * not set), in the order given. A name ending with `*` selects every
+     * scenario starting with what precedes it. `onDemand` scenarios run only
+     * when named.
+     */
+    function select(all:Array<Scenario>, onDemand:Array<Scenario>):Array<Scenario> {
         final list = env('GLAZE_BENCH_SCENARIOS');
         if (list == null || StringTools.trim(list) == '') {
             return all;
         }
+        final known = all.concat(onDemand);
         final names = [for (name in list.split(',')) StringTools.trim(name)].filter(name -> name != '');
         final selected:Array<Scenario> = [];
         for (name in names) {
             var found = false;
-            for (scenario in all) {
-                if (scenario.name == name) {
-                    selected.push(scenario);
+            final prefix = StringTools.endsWith(name, '*') ? name.substr(0, name.length - 1) : null;
+            for (scenario in known) {
+                if (prefix != null ? StringTools.startsWith(scenario.name, prefix) : scenario.name == name) {
+                    if (selected.indexOf(scenario) == -1)
+                        selected.push(scenario);
                     found = true;
-                    break;
+                    if (prefix == null)
+                        break;
                 }
             }
             if (!found) {
-                print('warning: unknown scenario "$name" (registered: ' + [for (s in all) s.name].join(', ') + ')');
+                print('warning: unknown scenario "$name" (registered: ' + [for (s in known) s.name].join(', ') + ')');
             }
         }
         return selected;

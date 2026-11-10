@@ -23,6 +23,22 @@ against `components-views`, `components-stateless` against
 `components-renderonce`, see `src/scenarios/Components.hx`). A scenario implements `Scenario` or extends
 `BaseScenario` (`src/Scenario.hx`, `src/BaseScenario.hx`).
 
+The `sparse-*` scenarios (`src/scenarios/Sparse.hx`) reproduce a large live
+UI with sparse state changes: 1000, 2000 or 3000 rows (the `-N` suffix), all
+live in a scroll container, each with a kit `Badge` around an icon, a title,
+a label and a small kit `Button`. The letter says how the rows are built and
+what changes each frame: `a` plain elements of one view (one tracked model),
+`b` one entity view per row (mode `full`: GPUI's pattern, `.cached(style)`
+rows without default caching; mode `cached`: the same views under the default
+caching), `c` persistent `glaze.Component` rows, each changing one row's
+label; `d` and `db` an equal write (components, views); `e`, `ea`, `eb` a
+hover moving between two rows; `f`, `fa`, `fb` a keystroke in a kit `Input`
+above the list; `g`, `ga`, `gb` a filter alternating between all rows and
+half of them (the creation and teardown frames are also printed apart);
+`h`, `ha`, `hb` a revision counter read by every row. They are long and run
+only when named. In `GLAZE_BENCH_SCENARIOS`, a name ending with `*` selects
+every scenario starting with the rest (`sparse-*`, `sparse-c-*`).
+
 The code editor scenarios (`editor-type`, `editor-type-sync`, `editor-open`,
 `editor-scroll`) measured gpui-kit's code editor. They left with it: Glaze's
 code editor is Cityscape (plugin `cityscape`), whose bench
