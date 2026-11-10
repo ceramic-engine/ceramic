@@ -693,6 +693,9 @@ class DivInspector extends Model implements Render {
             scrollBeyondLastLine: true,
             scrollBeyondLastLineGap: {viewportFraction: 0.5, minLines: 3},
             scrollbarThumbExcludesPadding: true,
+            // gpui-kit's scrollbar lies over the text: no track (Cityscape's
+            // opaque track by default)
+            scrollbar: {trackColor: 'transparent'},
             renderLineHighlight: 'none',
             guides: {indentation: true, highlightActiveIndentation: false, bracketPairs: false},
             matchBrackets: 'never',
