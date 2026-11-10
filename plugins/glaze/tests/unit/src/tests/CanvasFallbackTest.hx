@@ -820,6 +820,71 @@ class CanvasFallbackTest extends TestCase {
         assertTrue(l.runs[0].glyphs[0].isEmoji);
     }
 
+    /**
+     * Glaze additions for the fonts that ask for them. `Font.preferColorEmoji`:
+     * an emoji the primary font maps as text (Inter's `©`) is drawn in
+     * color by the browser, not with U+FE0E. `Font.wholeRunShaping` without
+     * it: the font list first, a grapheme a listed font maps as text keeps
+     * that glyph even with an emoji presentation request (`©` and U+FE0F),
+     * a missing one goes to the browser as before.
+     */
+    function testPreferColorEmojiAndFontListOnTheWeb() {
+        final p = platform(EmojiAndCjk);
+        function line(font:Font, text:String):LineLayout {
+            return p.layoutLine(text, 16, [new FontRun(Utf8.byteLength(text), p.fontId(font))]);
+        }
+        final color = Font.of('Inter');
+        color.preferColorEmoji = true;
+        final c = line(color, 'a\u00A9b');
+        assertTrue(CanvasFallbackText.isCanvasFontId(c.runs[1].fontId), 'copyright sign from the canvas');
+        assertTrue(c.runs[1].glyphs[0].isEmoji);
+        final t = line(color, 'a\u00A9\uFE0Eb');
+        for (run in t.runs)
+            assertFalse(CanvasFallbackText.isCanvasFontId(run.fontId), 'text presentation stays native');
+        // GPUI's rules: Inter's glyph
+        for (run in line(Font.of('Inter'), 'a\u00A9b').runs)
+            assertFalse(CanvasFallbackText.isCanvasFontId(run.fontId));
+
+        final browser = Font.of('Inter');
+        browser.wholeRunShaping = true;
+        final kept = line(browser, '\u00A9\uFE0F');
+        for (run in kept.runs)
+            assertFalse(CanvasFallbackText.isCanvasFontId(run.fontId), 'a listed font maps it: kept');
+        // GPUI's rules force the emoji presentation
+        assertTrue(CanvasFallbackText.isCanvasFontId(line(Font.of('Inter'), '\u00A9\uFE0F').runs[0].fontId));
+        final missing = line(browser, 'a\u{1F600}');
+        assertTrue(CanvasFallbackText.isCanvasFontId(missing.runs[1].fontId), 'a missing emoji from the canvas');
+        assertTrue(missing.runs[1].glyphs[0].isEmoji);
+    }
+
+    /**
+     * `Font.wholeRunShaping` on the web: consecutive canvas graphemes are
+     * measured as one run by the browser, so the kerning between them
+     * applies (Chromium kerns `って` in Hiragino Sans); GPUI measures each
+     * grapheme alone.
+     */
+    function testWholeRunFontsMeasureCanvasRunsWhole() {
+        final canvas = new KerningCanvas();
+        final p = platform(EmojiAndCjk, canvas);
+        function xs(font:Font, text:String):Array<Float> {
+            final l = p.layoutLine(text, 16, [new FontRun(Utf8.byteLength(text), p.fontId(font))]);
+            return [for (g in flat(l)) g.position.x];
+        }
+        final plain = xs(Font.of('Inter'), 'a\u3063\u3066\u3063b');
+        final whole = Font.of('Inter');
+        whole.wholeRunShaping = true;
+        final kerned = xs(whole, 'a\u3063\u3066\u3063b');
+        // the first canvas grapheme starts at the same place
+        assertEquals(plain[1], kerned[1]);
+        // 12 px each alone; the pair って is kerned by 3 px in a run
+        assertEquals(ttf.shape.Shaper.f32(plain[1] + 12), plain[2]);
+        assertEquals(ttf.shape.Shaper.f32(kerned[1] + 9), kerned[2]);
+        // てっ is not a kerning pair
+        assertEquals(ttf.shape.Shaper.f32(kerned[2] + 12), kerned[3]);
+        assertEquals(ttf.shape.Shaper.f32(plain[4] - 3), kerned[4]);
+        assertTrue(canvas.measured.indexOf('\u3063\u3066') != -1, 'the run measured whole');
+    }
+
     function testLayoutAcrossCanvasFontRunsUsesNativeFonts() {
         final p = platform(EmojiAndCjk);
         final inter = p.fontId(Font.of('Inter'));
@@ -906,6 +971,34 @@ class FakeCanvas implements CanvasTextBackend {
             bytes.set(p * 4 + 3, 200);
         }
         return bytes;
+    }
+
+}
+
+/**
+ * A fake canvas whose text advances are 0.75 em per character, less
+ * 0.1875 em for each `って` pair (a kerning pair of the run).
+ */
+class KerningCanvas extends FakeCanvas {
+
+    public final measured:Array<String> = [];
+
+    override public function measureText(text:String, cssFont:String, result:Array<Float>):Void {
+        super.measureText(text, cssFont, result);
+        measured.push(text);
+        final re = ~/([0-9.]+)px/;
+        re.match(cssFont);
+        final s = Std.parseFloat(re.matched(1));
+        var count = 0;
+        var pairs = 0;
+        var previous = -1;
+        for (c in new haxe.iterators.StringIteratorUnicode(text)) {
+            count++;
+            if (previous == 0x3063 && c == 0x3066)
+                pairs++;
+            previous = c;
+        }
+        result[0] = s * 0.75 * count - s * 0.1875 * pairs;
     }
 
 }

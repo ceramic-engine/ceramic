@@ -109,6 +109,8 @@ class CanvasFallbackText {
     public function clearMeasurements():Void {
         measurements.clear();
         measurementCount = 0;
+        runMeasurements.clear();
+        runMeasurementCount = 0;
     }
 
     /** Records the descriptor of a resolved native font (Rust `font_id`) */
@@ -199,41 +201,146 @@ class CanvasFallbackText {
      * layout with canvas glyphs (Rust `apply_fallback`). The primary font's
      * baseline and line spacing stay: browser ink extents affect raster
      * bounds, not the surrounding line metrics.
+     *
+     * Glaze additions, for the fonts that ask for them (never in GPUI's
+     * rules): with `Font.preferColorEmoji` every emoji (`Extended_Pictographic`,
+     * not followed by U+FE0E) is drawn in color by the browser unless a
+     * color font gave it; a font shaped by whole runs (`Font.wholeRunShaping`)
+     * without `preferColorEmoji` follows its font list like the native text
+     * system (a grapheme a listed font maps as text keeps that glyph, emoji
+     * presentation does not force the emoji font), and its consecutive
+     * canvas graphemes are measured as one run by the browser, so the
+     * kerning between them applies (`って` in Hiragino Sans).
      */
     public function applyFallback(text:String, fontRuns:Array<FontRun>, layout:LineLayout):Void {
         final fontSize:Float = layout.fontSize;
         if (backend == null || policy == Disabled || Utf8.isAscii(text) || !Math.isFinite(fontSize) || fontSize <= 0)
             return;
-        final replacements:Array<Replacement> = [];
+        final pending = pendingReplacements;
+        pending.resize(0);
+        // The run of canvas graphemes of a whole run font being measured
+        var runFontId:Int = -1;
+        var runEnd:Int = -1;
+        var runGlyphEnd:Int = -1;
+        var runText:String = '';
+        var runStart:Float = 0;
         for (candidate in RunReplacements.collectCandidates(text, fontRuns, layout)) {
             if (!policy.allows(candidate.isEmoji))
                 continue;
             final glyphs = candidate.glyphs;
             if (glyphs == null)
                 continue;
-            if (!glyphs.contiguous || !(glyphs.missing || (candidate.color && !glyphs.nativeColor)))
+            final nativeId:Int = candidate.fontId;
+            final preferColor = native.prefersColorEmoji(nativeId);
+            final wholeRuns = native.isWholeRunFont(nativeId);
+            var color = candidate.color;
+            if (preferColor && !color && candidate.isEmoji && isColorEmojiGrapheme(candidate.text))
+                color = true;
+            if (!glyphs.contiguous)
                 continue;
+            if (wholeRuns && !preferColor) {
+                // the font list first: only what no listed font maps
+                if (!glyphs.missing)
+                    continue;
+            }
+            else if (!(glyphs.missing || (color && !glyphs.nativeColor))) {
+                continue;
+            }
             final oldWidth = f32(glyphs.endX - glyphs.position.x);
             if (oldWidth < 0)
                 continue;
             try {
-                final fallback = fallbackGlyph(candidate.fontId, candidate.text, candidate.color, f32(fontSize));
-                replacements.push(new Replacement(
-                    glyphs.rangeStart,
-                    glyphs.rangeEnd,
-                    fallback.fontId,
-                    new ShapedGlyph(fallback.glyphId, glyphs.position, candidate.sourceStart, candidate.color),
-                    f32(fallback.advance - oldWidth)
-                ));
+                final fallback = fallbackGlyph(candidate.fontId, candidate.text, color, f32(fontSize));
+                if (wholeRuns && !color) {
+                    if (runFontId == nativeId && runEnd == candidate.sourceStart && runGlyphEnd == glyphs.rangeStart && pending.length > 0) {
+                        // Kerning with the previous grapheme of the run: the
+                        // run measured whole, this grapheme starts where the
+                        // run ends less its own advance (the pair adjusts the
+                        // advance of the first glyph)
+                        runText += candidate.text;
+                        final start = f32(runAdvance(nativeId, runText, f32(fontSize)) - fallback.advance);
+                        final previous = pending[pending.length - 1];
+                        previous.advance = f32(start - runStart);
+                        runStart = start;
+                    }
+                    else {
+                        runText = candidate.text;
+                        runStart = 0;
+                    }
+                    runFontId = nativeId;
+                    runEnd = candidate.sourceEnd;
+                    runGlyphEnd = glyphs.rangeEnd;
+                }
+                else {
+                    runFontId = -1;
+                }
+                pending.push(new PendingReplacement(glyphs.rangeStart, glyphs.rangeEnd, fallback.fontId,
+                    new ShapedGlyph(fallback.glyphId, glyphs.position, candidate.sourceStart, color), fallback.advance, oldWidth));
             }
             catch (e:Dynamic) {
                 ceramic.Shortcuts.log.warning('Canvas font fallback failed: $e');
             }
         }
-        if (replacements.length == 0)
+        if (pending.length == 0)
             return;
+        final replacements:Array<Replacement> = [];
+        for (r in pending)
+            replacements.push(new Replacement(r.rangeStart, r.rangeEnd, r.fontId, r.glyph, f32(r.advance - r.oldWidth)));
+        pending.resize(0);
         replacements.sort((a, b) -> a.glyphRangeStart - b.glyphRangeStart);
         RunReplacements.applyReplacements(layout, replacements);
+    }
+
+    final pendingReplacements:Array<PendingReplacement> = [];
+
+    /**
+     * Whether a grapheme is an emoji that `Font.preferColorEmoji` draws in
+     * color (its first code point `Extended_Pictographic`, the second one
+     * not U+FE0E).
+     */
+    static function isColorEmojiGrapheme(grapheme:String):Bool {
+        var first = -1;
+        var second = -1;
+        for (c in new haxe.iterators.StringIteratorUnicode(grapheme)) {
+            if (first == -1) {
+                first = c;
+            }
+            else {
+                second = c;
+                break;
+            }
+        }
+        return CeramicTextSystem.isColorEmoji(first, second);
+    }
+
+    final runMeasurements:Map<String, Float> = new Map();
+
+    var runMeasurementCount:Int = 0;
+
+    /**
+     * The advance of `text` measured as one run by the browser with the
+     * text (not color) canvas font of a native font, at `fontSize` (like
+     * `fallbackGlyph`, measured at `fontSize * layoutScale`).
+     */
+    function runAdvance(nativeId:FontId, text:String, fontSize:Float):Float {
+        final fontId = canvasFontId(nativeId);
+        final scale = layoutScale;
+        final key = (fontId:Int) + ':' + fontSize + ':' + scale + ':' + text;
+        final cached = runMeasurements.get(key);
+        if (cached != null)
+            return cached;
+        final font = canvasFont(fontId);
+        if (font == null || backend == null)
+            throw 'Canvas text rendering is unavailable';
+        final metrics = CanvasText.measure(backend, text, font.cssFont(f32(fontSize * scale), false));
+        final advance = scale == 1.0 ? metrics.advance : f32(metrics.advance / scale);
+        if (runMeasurementCount >= MAX_MEASUREMENTS) {
+            runMeasurements.clear();
+            runMeasurementCount = 0;
+        }
+        runMeasurements.set(key, advance);
+        runMeasurementCount++;
+        return advance;
     }
 
     /** Font size at which glyphs are measured in font units: the units per em of the native font */
@@ -455,6 +562,35 @@ class CanvasFont {
 
     static inline function f32(value:Float):Float {
         return Shaper.f32(value);
+    }
+
+}
+
+/**
+ * A replacement of `applyFallback` whose advance may still change (the
+ * kerning with the next grapheme of a whole run).
+ */
+private class PendingReplacement {
+
+    public final rangeStart:Int;
+
+    public final rangeEnd:Int;
+
+    public final fontId:FontId;
+
+    public final glyph:ShapedGlyph;
+
+    public var advance:Float;
+
+    public final oldWidth:Float;
+
+    public function new(rangeStart:Int, rangeEnd:Int, fontId:FontId, glyph:ShapedGlyph, advance:Float, oldWidth:Float) {
+        this.rangeStart = rangeStart;
+        this.rangeEnd = rangeEnd;
+        this.fontId = fontId;
+        this.glyph = glyph;
+        this.advance = advance;
+        this.oldWidth = oldWidth;
     }
 
 }

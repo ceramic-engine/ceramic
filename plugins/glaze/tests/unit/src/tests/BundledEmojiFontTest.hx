@@ -133,6 +133,50 @@ class BundledEmojiFontTest #if !macro extends TestCase #end {
             assertEquals(face().glyphForChar(c), whole.glyphForChar(c));
     }
 
+    /**
+     * `Font.preferColorEmoji` (Glaze addition, used by Cityscape): every
+     * emoji (`Extended_Pictographic`, not followed by U+FE0E) goes to the
+     * color font even where the primary font maps it as text (Inter's `©`
+     * and `❤`); the other characters, and the text presentation, keep the
+     * primary font. Without the flag, GPUI's rules keep Inter's glyphs.
+     */
+    function testPreferColorEmojiDrawsEveryEmojiInColor() {
+        final p = platform();
+        final inter = Font.of('Inter');
+        final color = Font.of('Inter');
+        color.preferColorEmoji = true;
+        assertTrue(p.fontId(inter) != p.fontId(color));
+        assertTrue(color.clone().preferColorEmoji);
+        assertFalse(inter.equals(color));
+        assertTrue(inter.key() != color.key());
+        function line(font:Font, text:String):LineLayout {
+            return p.layoutLine(text, 16, [new FontRun(Utf8.byteLength(text), p.fontId(font))]);
+        }
+        final text = 'a\u00A9b\u2764c';
+        // GPUI's rules: Inter's text glyphs
+        final plain = line(inter, text);
+        assertEquals('Inter', p.ttfFont(glyphAt(plain, 1).fontId).familyName);
+        assertFalse(glyphAt(plain, 1).glyph.isEmoji);
+        assertEquals('Inter', p.ttfFont(glyphAt(plain, 4).fontId).familyName);
+        // preferColorEmoji: the bundled color font
+        final colored = line(color, text);
+        assertBundledEmoji(p, colored, 1, false);
+        assertBundledEmoji(p, colored, 4);
+        assertEquals('Inter', p.ttfFont(glyphAt(colored, 0).fontId).familyName);
+        assertEquals('Inter', p.ttfFont(glyphAt(colored, 3).fontId).familyName);
+        // text presentation (U+FE0E) and characters that are not emoji: Inter
+        final asText = line(color, 'a\u00A9\uFE0Eb\u2192');
+        assertEquals('Inter', p.ttfFont(glyphAt(asText, 1).fontId).familyName);
+        assertFalse(glyphAt(asText, 1).glyph.isEmoji);
+        assertEquals('Inter', p.ttfFont(glyphAt(asText, 6).fontId).familyName);
+        assertTrue(CeramicTextSystem.isColorEmoji(0x2615, -1));
+        assertTrue(CeramicTextSystem.isColorEmoji(0x2602, 0xFE0F));
+        assertFalse(CeramicTextSystem.isColorEmoji(0x2602, 0xFE0E));
+        assertFalse(CeramicTextSystem.isColorEmoji('1'.code, 0xFE0F));
+        assertFalse(CeramicTextSystem.isColorEmoji(0x2192, -1));
+        assertFalse(CeramicTextSystem.isColorEmoji(0x1F1EB, -1));
+    }
+
     function testEmojiResolveToTheBundledFont() {
         final p = platform();
         final text = 'Go 🚀 ok';

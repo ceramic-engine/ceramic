@@ -359,11 +359,15 @@ class CeramicTextSystem implements PlatformTextSystem {
             fontId = syntheticObliqueId(fontId);
             if (font.wholeRunShaping)
                 fontId = wholeRunId(fontId);
+            if (font.preferColorEmoji)
+                fontId = colorEmojiId(fontId);
             canvas.recordDescriptor(fontId, font, face.weight, Italic);
             return fontId;
         }
         if (font.wholeRunShaping)
             fontId = wholeRunId(fontId);
+        if (font.preferColorEmoji)
+            fontId = colorEmojiId(fontId);
         canvas.recordDescriptor(fontId, font, face.weight, face.italic ? Italic : Normal);
         return fontId;
     }
@@ -387,6 +391,89 @@ class CeramicTextSystem implements PlatformTextSystem {
         loadedFonts.push(loaded);
         wholeRunIds.set(fontId, id);
         return id;
+    }
+
+    /** The color emoji font id of a loaded font id */
+    final colorEmojiIds:Map<Int, Int> = new Map();
+
+    /**
+     * The font id of a loaded font that prefers color emoji
+     * (`Font.preferColorEmoji`): same face, features, fallbacks, oblique and
+     * whole run shaping.
+     */
+    function colorEmojiId(fontId:Int):Int {
+        final existing = colorEmojiIds.get(fontId);
+        if (existing != null)
+            return existing;
+        final base = loadedFonts[fontId];
+        final loaded = new LoadedFont(base.face, base.features, base.isKnownEmojiFont, base.userFallbackChain);
+        loaded.obliqueSkew = base.obliqueSkew;
+        loaded.wholeRuns = base.wholeRuns;
+        loaded.preferColorEmoji = true;
+        final id = loadedFonts.length;
+        loadedFonts.push(loaded);
+        colorEmojiIds.set(fontId, id);
+        return id;
+    }
+
+    /** Whether a font id is shaped by whole runs (`Font.wholeRunShaping`) */
+    @:allow(glaze.platform)
+    function isWholeRunFont(fontId:Int):Bool {
+        return fontId >= 0 && fontId < loadedFonts.length && loadedFonts[fontId].wholeRuns;
+    }
+
+    /** Whether a font id prefers color emoji (`Font.preferColorEmoji`) */
+    @:allow(glaze.platform)
+    function prefersColorEmoji(fontId:Int):Bool {
+        return fontId >= 0 && fontId < loadedFonts.length && loadedFonts[fontId].preferColorEmoji;
+    }
+
+    /**
+     * Whether a character is an emoji that `Font.preferColorEmoji` draws in
+     * color: Unicode's `Extended_Pictographic`, unless `next` (the code point
+     * after it) is variation selector 15 (U+FE0E, text presentation).
+     */
+    public static function isColorEmoji(c:Int, next:Int):Bool {
+        if (c < 0xA9 || next == 0xFE0E)
+            return false;
+        return unicode_segmentation.Tables.emojiCategory(c) == unicode_segmentation.EmojiCat.EC_Extended_Pictographic;
+    }
+
+    /** The color font of each emoji code point (`colorEmojiFontId`), -1 for none */
+    final colorEmojiFonts:Map<Int, Int> = new Map();
+
+    var colorEmojiFontsGeneration:Int = -1;
+
+    /**
+     * The font id of the first face with color glyphs that maps `c` (the
+     * added faces, then the system fallback faces), or -1.
+     */
+    function colorEmojiFontId(c:Int):Int {
+        if (colorEmojiFontsGeneration != fallbackGeneration) {
+            colorEmojiFonts.clear();
+            colorEmojiFontsGeneration = fallbackGeneration;
+        }
+        final cached = colorEmojiFonts.get(c);
+        if (cached != null)
+            return cached;
+        var result = -1;
+        for (f in faces) {
+            if (f.hasColorGlyphs && f.glyphForChar(c) != 0) {
+                result = fontIdForFace(f);
+                break;
+            }
+        }
+        final system = systemFallback;
+        if (result == -1 && system != null) {
+            for (f in system.faces) {
+                if (f.hasColorGlyphs && f.glyphForChar(c) != 0) {
+                    result = fontIdForFace(f);
+                    break;
+                }
+            }
+        }
+        colorEmojiFonts.set(c, result);
+        return result;
     }
 
     /**
@@ -959,16 +1046,17 @@ class CeramicTextSystem implements PlatformTextSystem {
      * Loads the system fallback fonts needed by the characters of a line
      * that no face covers yet (before shaping, so the shaper can use them).
      */
-    function ensureSystemCoverage(d:Utf8Text):Void {
+    function ensureSystemCoverage(d:Utf8Text, colorEmoji:Bool):Void {
         final system = systemFallback;
         if (system == null)
             return;
         for (k in 0...d.count) {
             final c = d.codePoints[k];
-            // Emoji sequences want a color font (same rules as the shaper)
+            // Emoji sequences want a color font (same rules as the shaper,
+            // and every emoji with `Font.preferColorEmoji`)
             final next = k + 1 < d.count ? d.codePoints[k + 1] : -1;
             if (next == 0xFE0F || (next >= 0x1F3FB && next <= 0x1F3FF) || (c >= 0x1F1E6 && c <= 0x1F1FF)
-                || (c > 0x7F && next != 0xFE0E && isEmojiPresentation(c))) {
+                || (c > 0x7F && next != 0xFE0E && isEmojiPresentation(c)) || (colorEmoji && isColorEmoji(c, next))) {
                 final key = c | COLOR_COVERAGE;
                 if (!coverageChecked.exists(key)) {
                     coverageChecked.set(key, true);
@@ -1029,8 +1117,9 @@ class CeramicTextSystem implements PlatformTextSystem {
 
     function layoutLineNoSeparators(text:String, fontSize:Pixels, fontRuns:Array<FontRun>):LineLayout {
         final d = decoded.reset(text);
+        final colorEmoji = anyColorEmojiRun(fontRuns);
         if (systemFallback != null)
-            ensureSystemCoverage(d);
+            ensureSystemCoverage(d, colorEmoji);
         spanStarts.resize(0);
         spanEnds.resize(0);
         spanFontIds.resize(0);
@@ -1045,14 +1134,17 @@ class CeramicTextSystem implements PlatformTextSystem {
             }
             final loaded = loadedFonts[run.fontId];
             if (systemFallback != null) {
-                computeSystemRunSpans(d, offs, runEnd, run.fontId, loaded.userFallbackChain);
+                computeSystemRunSpans(d, offs, runEnd, run.fontId, loaded.userFallbackChain, loaded.preferColorEmoji);
+            }
+            else if (loaded.preferColorEmoji) {
+                computeRunSpans(d, offs, runEnd, run.fontId, loaded.userFallbackChain, true);
             }
             else if (loaded.userFallbackChain.length == 0) {
                 if (runEnd > offs)
                     pushSpan(offs, runEnd, run.fontId);
             }
             else {
-                computeRunSpans(d, offs, runEnd, run.fontId, loaded.userFallbackChain);
+                computeRunSpans(d, offs, runEnd, run.fontId, loaded.userFallbackChain, false);
             }
             offs = runEnd;
         }
@@ -1157,6 +1249,16 @@ class CeramicTextSystem implements PlatformTextSystem {
 
     static inline final TAB_WIDTH:Int = 4;
 
+    /** Whether a run of a line uses a font that prefers color emoji */
+    function anyColorEmojiRun(fontRuns:Array<FontRun>):Bool {
+        for (run in fontRuns) {
+            final id:Int = run.fontId;
+            if (id >= 0 && id < loadedFonts.length && loadedFonts[id].preferColorEmoji)
+                return true;
+        }
+        return false;
+    }
+
     /** Whether every run of a line uses a font shaped by whole runs */
     function allWholeRuns(fontRuns:Array<FontRun>):Bool {
         var any = false;
@@ -1191,7 +1293,7 @@ class CeramicTextSystem implements PlatformTextSystem {
      * fallback) that covers them (Rust `compute_run_spans`). Graphemes are
      * approximated by code points followed by their continuation characters.
      */
-    function computeRunSpans(d:Utf8Text, runOffset:Int, runEnd:Int, primary:Int, fallbackChain:Array<Int>):Void {
+    function computeRunSpans(d:Utf8Text, runOffset:Int, runEnd:Int, primary:Int, fallbackChain:Array<Int>, colorEmoji:Bool):Void {
         if (runEnd <= runOffset)
             return;
         var spanStart = runOffset;
@@ -1201,11 +1303,24 @@ class CeramicTextSystem implements PlatformTextSystem {
         while (k < d.count && d.byteOffsets[k] < runEnd) {
             final abs = d.byteOffsets[k];
             final ch = d.codePoints[k];
+            final next = k + 1 < d.count && d.byteOffsets[k + 1] < runEnd ? d.codePoints[k + 1] : -1;
             k++;
             // Skip the rest of the grapheme
             while (k < d.count && d.byteOffsets[k] < runEnd && ttf.Utf8.isContinuation(d.codePoints[k]))
                 k++;
-            final nextSlot = pickCoveringSlot(ch, spanSlot, primary, fallbackChain);
+            // `Font.preferColorEmoji`: an emoji goes to a color font
+            final colorId = colorEmoji && isColorEmoji(ch, next) ? colorEmojiFontId(ch) : -1;
+            if (colorId != -1) {
+                if (colorId == spanFontId && spanSlot == COLOR_SLOT)
+                    continue;
+                if (abs > spanStart)
+                    pushSpan(spanStart, abs, spanFontId);
+                spanStart = abs;
+                spanSlot = COLOR_SLOT;
+                spanFontId = colorId;
+                continue;
+            }
+            final nextSlot = pickCoveringSlot(ch, spanSlot == COLOR_SLOT ? -1 : spanSlot, primary, fallbackChain);
             if (nextSlot == spanSlot) {
                 continue;
             }
@@ -1230,7 +1345,10 @@ class CeramicTextSystem implements PlatformTextSystem {
      * the per script fallbacks of cosmic-text and of a browser), instead of
      * the first system face loaded that maps it.
      */
-    function computeSystemRunSpans(d:Utf8Text, runOffset:Int, runEnd:Int, primary:Int, fallbackChain:Array<Int>):Void {
+    /** `computeRunSpans`'s slot of a span on a color emoji font */
+    static inline final COLOR_SLOT = -2;
+
+    function computeSystemRunSpans(d:Utf8Text, runOffset:Int, runEnd:Int, primary:Int, fallbackChain:Array<Int>, colorEmoji:Bool):Void {
         if (runEnd <= runOffset)
             return;
         final system = systemFallback;
@@ -1240,11 +1358,17 @@ class CeramicTextSystem implements PlatformTextSystem {
         while (k < d.count && d.byteOffsets[k] < runEnd) {
             final abs = d.byteOffsets[k];
             final ch = d.codePoints[k];
+            final next = k + 1 < d.count && d.byteOffsets[k + 1] < runEnd ? d.codePoints[k + 1] : -1;
             k++;
             while (k < d.count && d.byteOffsets[k] < runEnd && ttf.Utf8.isContinuation(d.codePoints[k]))
                 k++;
             var fontId = primary;
-            if (ch > 0x7F && !covers(primary, ch)) {
+            // `Font.preferColorEmoji`: an emoji goes to a color font
+            final colorId = colorEmoji && isColorEmoji(ch, next) ? colorEmojiFontId(ch) : -1;
+            if (colorId != -1) {
+                fontId = colorId;
+            }
+            else if (ch > 0x7F && !covers(primary, ch)) {
                 // the user fallback of the span when it maps the character
                 // (Rust `pick_covering_slot`), else the first one that does
                 if (spanFontId != primary && fallbackChain.indexOf(spanFontId) != -1 && covers(spanFontId, ch)) {
@@ -1438,6 +1562,9 @@ private class LoadedFont {
 
     /** Shaped by whole runs, not word by word (`Font.wholeRunShaping`) */
     public var wholeRuns:Bool = false;
+
+    /** Emoji drawn with a color font (`Font.preferColorEmoji`) */
+    public var preferColorEmoji:Bool = false;
 
     public function new(face:ttf.Font, features:Features, isKnownEmojiFont:Bool, userFallbackChain:Array<Int>) {
         this.face = face;

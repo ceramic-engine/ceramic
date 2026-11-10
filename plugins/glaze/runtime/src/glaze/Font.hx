@@ -61,6 +61,24 @@ class Font {
         return wholeRunShaping = value;
     }
 
+    /**
+     * Whether every emoji is drawn with a color emoji font (Glaze addition):
+     * a character of Unicode's `Extended_Pictographic` set (`☕`, `☂`,
+     * `❤`, `©`...) not followed by variation selector 15 (U+FE0E, text
+     * presentation) goes to a font with color glyphs that maps it (the
+     * bundled or system emoji font, the browser's emoji font on the web),
+     * even when this font or one of its fallbacks has a text glyph for it.
+     * The other characters keep the usual fallbacks. False by default, like
+     * GPUI, where emoji presentation decides and a text font that maps the
+     * character keeps it.
+     */
+    public var preferColorEmoji(default, set):Bool = false;
+
+    inline function set_preferColorEmoji(value:Bool):Bool {
+        _key = null;
+        return preferColorEmoji = value;
+    }
+
     /** `key()`, computed on first use */
     var _key:Null<String> = null;
 
@@ -130,6 +148,8 @@ class Font {
             result.synthesizeStyle = true;
         if (wholeRunShaping)
             result.wholeRunShaping = true;
+        if (preferColorEmoji)
+            result.preferColorEmoji = true;
         return result;
     }
 
@@ -152,6 +172,8 @@ class Font {
                 key += '\x00s';
             if (wholeRunShaping)
                 key += '\x00w';
+            if (preferColorEmoji)
+                key += '\x00e';
             _key = key;
         }
         return key;
@@ -161,7 +183,7 @@ class Font {
         return other != null && family == other.family && features.equals(other.features)
             && (fallbacks == null ? other.fallbacks == null : fallbacks.equals(other.fallbacks))
             && (weight:Float) == (other.weight:Float) && style == other.style && synthesizeStyle == other.synthesizeStyle
-            && wholeRunShaping == other.wholeRunShaping;
+            && wholeRunShaping == other.wholeRunShaping && preferColorEmoji == other.preferColorEmoji;
     }
 
     public function toString():String {
