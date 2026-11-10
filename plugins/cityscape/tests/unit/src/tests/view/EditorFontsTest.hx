@@ -203,6 +203,164 @@ class EditorFontsTest extends TestCase {
         assertEquals(0.0, rulerRight(beside));
     }
 
+    /**
+     * The quads of the overview ruler's canvas (device pixels at scale 2),
+     * in paint order.
+     */
+    function rulerQuads(left:Float, right:Float):Array<glaze.scene.Quad> {
+        return [for (q in window.renderedScene().quads) if (q.boundsX >= left * 2 && q.boundsX + q.boundsWidth <= right * 2) q];
+    }
+
+    function assertQuad(q:glaze.scene.Quad, x:Float, y:Float, w:Float, h:Float, color:glaze.Hsla, ?label:String):Void {
+        final at = label != null ? label + ': ' : '';
+        assertFloatEquals(x, q.boundsX, 0.001, at + 'x');
+        assertFloatEquals(y, q.boundsY, 0.001, at + 'y');
+        assertFloatEquals(w, q.boundsWidth, 0.001, at + 'width');
+        assertFloatEquals(h, q.boundsHeight, 0.001, at + 'height');
+        assertFloatEquals(color.h, q.backgroundSolidH, 0.0001, at + 'hue');
+        assertFloatEquals(color.s, q.backgroundSolidS, 0.0001, at + 'saturation');
+        assertFloatEquals(color.l, q.backgroundSolidL, 0.0001, at + 'lightness');
+        assertFloatEquals(color.a, q.backgroundSolidA, 0.0001, at + 'alpha');
+    }
+
+    /**
+     * decorationsOverviewRuler.ts `_render`, in canvas pixels (20 x 1400 at
+     * pixel ratio 2): the cursor mark is `editorCursor.foreground` at 0.7 of
+     * its alpha (`transparent(0.7)`), 2 CSS px high centered on the top of
+     * its line (clamped in the canvas), over the lanes (from the canvas'
+     * second column); the border (`editorOverviewRuler.border`) is stroked
+     * last, on top of the marks, along the left and top edges: a 1 pixel
+     * line half outside the canvas, so half of its alpha on the first
+     * column (and on the first row from the second column). In the J2
+     * captures of loreline-monaco (Writer, converted to sRGB) the mark is
+     * #00BCFF at 0.7 over #191D2D (8, 141, 192) and the border column is
+     * #7f7f7f4d at half its alpha (41, 44, 58). With several cursors, the
+     * primary and secondary multi cursor colors, sorted by position.
+     */
+    function testOverviewRulerPaintsLikeMonaco() {
+        final text = [for (i in 0...200) 'line $i'].join('\n');
+        final e = open(text, {fontSize: 14, overviewRulerPosition: 'beside', stickyScroll: {enabled: false}, scrollbar: {verticalScrollbarSize: 10}});
+        final v:cityscape.view.CityscapeView = e.getView();
+        final theme = v.theme;
+        final cursor = theme.getColor('editorCursor.foreground').opacity(0.7);
+        final border = theme.getColor('editorOverviewRuler.border').opacity(0.5);
+        var quads = rulerQuads(980, 990);
+        assertEquals(3, quads.length);
+        // the cursor mark of line 1: y center 0 clamped to 2, rows 0 to 4
+        assertQuad(quads[0], 1961, 0, 19, 4, cursor, 'cursor');
+        // then the border on top
+        assertQuad(quads[1], 1960, 0, 1, 1400, border, 'left border');
+        assertQuad(quads[2], 1961, 0, 19, 1, border, 'top border');
+        assertTrue(quads[2].order > quads[0].order, 'the border over the cursor mark');
+
+        // a cursor further down: its line's top times the height ratio
+        e.setPosition(new cityscape.common.core.Position(100, 1));
+        app.update(_ -> window.draw());
+        final lineHeight:Float = e.getOption(EditorOption.lineHeight);
+        final scrollHeight = v.viewModel.viewLayout.getScrollHeight();
+        final yCenter = Std.int(99 * lineHeight * 1400 / scrollHeight);
+        quads = rulerQuads(980, 990);
+        assertEquals(3, quads.length);
+        assertQuad(quads[0], 1961, yCenter - 2, 19, 4, cursor, 'cursor at line 100');
+
+        // decorations by lane (the standalone editor's 2 lanes,
+        // `_initLanes(1, 20, 2)`: left 9, right 10 pixels), at least 6 CSS px
+        // high (centered), under the cursor mark and the border
+        final ids = e.deltaDecorations([], [
+            {range: new cityscape.common.core.Range(50, 1, 50, 1), options: {description: 'left', overviewRuler: {color: '#ff0000', position: cityscape.common.Model.OverviewRulerLane.Left}}},
+            {range: new cityscape.common.core.Range(50, 1, 50, 1), options: {description: 'right', overviewRuler: {color: '#0000ff', position: cityscape.common.Model.OverviewRulerLane.Right}}},
+            {range: new cityscape.common.core.Range(100, 1, 100, 1), options: {description: 'full', overviewRuler: {color: '#00ff00', position: cityscape.common.Model.OverviewRulerLane.Full}}}
+        ]);
+        app.update(_ -> window.draw());
+        final ratio = 1400 / scrollHeight;
+        final decorationCenter = Std.int((Std.int(49 * lineHeight * ratio) + Std.int(50 * lineHeight * ratio)) / 2);
+        final fullCenter = Std.int((Std.int(99 * lineHeight * ratio) + Std.int(100 * lineHeight * ratio)) / 2);
+        quads = rulerQuads(980, 990);
+        assertEquals(6, quads.length);
+        final left = [for (q in quads) if (q.boundsX == 1961 && q.boundsWidth == 9) q];
+        final right = [for (q in quads) if (q.boundsX == 1970 && q.boundsWidth == 10) q];
+        final full = [for (q in quads) if (q.boundsWidth == 19 && q.boundsHeight == 12) q];
+        assertEquals(1, left.length);
+        assertEquals(1, right.length);
+        assertEquals(1, full.length);
+        assertQuad(left[0], 1961, decorationCenter - 6, 9, 12, rgb(0xff0000).toHsla(), 'left lane');
+        assertQuad(right[0], 1970, decorationCenter - 6, 10, 12, rgb(0x0000ff).toHsla(), 'right lane');
+        assertQuad(full[0], 1961, fullCenter - 6, 19, 12, rgb(0x00ff00).toHsla(), 'full lane');
+        final mark = [for (q in quads) if (q.boundsHeight == 4) q][0];
+        assertTrue(mark.order > full[0].order, 'the cursor mark over the decoration');
+        e.deltaDecorations(ids, []);
+
+        // several cursors: primary and secondary colors, sorted by position
+        context.themeService.defineTheme('rulerTest', {base: 'vs', inherit: true, rules: [], colors: {
+            'editorMultiCursor.primary.foreground': '#ff0000',
+            'editorMultiCursor.secondary.foreground': '#00ff00'
+        }});
+        context.themeService.setTheme('rulerTest');
+        e.setSelections([new cityscape.common.core.Selection(100, 1, 100, 1), new cityscape.common.core.Selection(1, 1, 1, 1)]);
+        app.update(_ -> window.draw());
+        quads = rulerQuads(980, 990);
+        assertEquals(4, quads.length);
+        final primary = theme.getColor('editorMultiCursor.primary.foreground');
+        final secondary = theme.getColor('editorMultiCursor.secondary.foreground');
+        assertEquals('#ff0000', primary.toRgb().toHexString().substr(0, 7).toLowerCase());
+        assertEquals('#00ff00', secondary.toRgb().toHexString().substr(0, 7).toLowerCase());
+        // (marks that do not overlap may share a draw order in the scene)
+        final marks = quads.slice(0, 2);
+        marks.sort((a, b) -> Std.int(a.boundsY - b.boundsY));
+        assertQuad(marks[0], 1961, 0, 19, 4, secondary.opacity(0.7), 'secondary cursor');
+        assertQuad(marks[1], 1961, yCenter - 2, 19, 4, primary.opacity(0.7), 'primary cursor');
+        assertQuad(quads[2], 1960, 0, 1, 1400, border, 'border on top');
+        assertQuad(quads[3], 1961, 0, 19, 1, border, 'border on top');
+
+        // hideCursorInOverviewRuler, overviewRulerBorder: false
+        e.updateOptions({hideCursorInOverviewRuler: true, overviewRulerBorder: false});
+        app.update(_ -> window.draw());
+        assertEquals(0, rulerQuads(980, 990).length);
+    }
+
+    /**
+     * Monaco's mouse cursors: the text cursor (I-beam) over the text
+     * (viewLines.css `cursor: text`), the arrow over the overview ruler's
+     * canvas and the scrollbar (the editor's default), in both ruler
+     * positions; without a ruler (`overviewRulerLanes: 0`, the Glaze
+     * inspector's editors) its column is text again.
+     */
+    function testArrowCursorOverTheRulerAndTheScrollbar() {
+        final text = [for (i in 0...200) 'line $i'].join('\n');
+        inline function cursorAt(x:Float):glaze.CursorStyle {
+            window.dispatchEvent(new glaze.MouseMoveEvent(point(x, 300)), app);
+            app.update(_ -> window.draw());
+            return window.cursorStyle();
+        }
+        open(text, {fontSize: 14, scrollbar: {verticalScrollbarSize: 10}});
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(500));
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(985));
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(995), 'overlay: ruler under the scrollbar');
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(500));
+        window.destroy();
+        window = null;
+
+        open(text, {fontSize: 14, overviewRulerPosition: 'beside', scrollbar: {verticalScrollbarSize: 10}});
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(500));
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(975));
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(985), 'beside: the ruler');
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(995), 'beside: the scrollbar');
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(500));
+        window.destroy();
+        window = null;
+
+        // a short text (no scrollbar): the ruler keeps the arrow
+        open('short', {fontSize: 14, scrollbar: {verticalScrollbarSize: 10}});
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(995), 'overlay ruler without scrollbar');
+        window.destroy();
+        window = null;
+
+        // no ruler
+        open(text, {fontSize: 14, overviewRulerLanes: 0, overviewRulerPosition: 'beside', scrollbar: {verticalScrollbarSize: 10}});
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(985), 'no ruler: text');
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(995), 'no ruler: the scrollbar');
+    }
+
     function testItalicFontsSynthesizeTheirStyle() {
         final measurements = new EditorFontMeasurements(app.textSystem());
         final italic = measurements.resolveEditorFont('Menlo, monospace', 400, true, new glaze.FontFeatures());

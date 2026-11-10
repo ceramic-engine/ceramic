@@ -52,6 +52,13 @@ class CityscapeViewElement extends Element {
     /** The hitbox of the text area, inserted in prepaint, its cursor set in paint. */
     var hitbox:Null<glaze.Hitbox> = null;
 
+    /**
+     * The hitbox of the overview ruler (null when it is off): Monaco's
+     * ruler canvas has the editor's default (arrow) mouse cursor, the
+     * text cursor (I-beam) is the view lines' own (`cursor: text`).
+     */
+    var rulerHitbox:Null<glaze.Hitbox> = null;
+
     public function new(view:Entity<CityscapeView>) {
         this.view = view;
     }
@@ -68,6 +75,8 @@ class CityscapeViewElement extends Element {
         final v = view.read(cx);
         v.layoutTo(bounds, window.scaleFactor(), window);
         hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
+        final rulerBounds = overviewRulerBounds(v, bounds);
+        rulerHitbox = rulerBounds != null ? window.insertHitbox(rulerBounds, HitboxBehavior.Normal) : null;
     }
 
     static final NO_RADII = new Corners(0, 0, 0, 0);
@@ -111,6 +120,10 @@ class CityscapeViewElement extends Element {
             // (the drag and drop of the selection sets `default` and `copy`)
             final mouseStyle:String = v.configuration.options.get(EditorOption.mouseStyle);
             window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : (mouseStyle == 'default' ? CursorStyle.Arrow : (mouseStyle == 'copy' ? CursorStyle.DragCopy : CursorStyle.IBeam)), hitbox);
+        }
+        final rulerHitbox = this.rulerHitbox;
+        if (rulerHitbox != null) {
+            window.setCursorStyle(CursorStyle.Arrow, rulerHitbox);
         }
         final viewModel = v.viewModel;
         final theme = v.theme;
@@ -631,53 +644,185 @@ class CityscapeViewElement extends Element {
 
         // --- overview ruler (marks of decorations and cursors, under the kit
         // scrollbar, or beside it with `overviewRulerPosition: 'beside'`)
-        final rulerWidth = layoutInfo.verticalScrollbarWidth;
-        if (rulerWidth > 0 && options.get(EditorOption.overviewRulerLanes) > 0) {
-            final rulerX = originX + bounds.size.width - cityscape.common.config.EditorViewOptions.OverviewRulerPlacement.right(options) - rulerWidth;
-            final rulerHeight = bounds.size.height;
-            final scrollHeight = Math.max(1, viewLayout.getScrollHeight());
-            // decorationsOverviewRuler.ts: the canvas is filled with
-            // `editorOverviewRuler.background` when the theme defines it (no
-            // minimap here), else left transparent
-            final rulerBackground = theme.getColor('editorOverviewRuler.background');
-            if (rulerBackground != null) {
-                fillRect(window, rulerX, originY, rulerWidth, rulerHeight, rulerBackground);
-            }
-            final border = theme.getColor('editorOverviewRuler.border');
-            if (border != null && options.get(EditorOption.overviewRulerBorder)) {
-                fillRect(window, rulerX, originY, 1, rulerHeight, border);
-            }
-            final groups = state.overviewRulerGroups(viewModel, theme, v.paintGeneration);
-            for (g in 0...groups.length) {
-                final group = groups[g];
-                final color = state.overviewRulerColors[g];
-                final data = group.data;
-                var k = 0;
-                while (k + 2 < data.length + 0) {
-                    final lane = Std.int(data[k]);
-                    final from = viewLayout.getVerticalOffsetForLineNumber(Std.int(data[k + 1])) / scrollHeight * rulerHeight;
-                    final to = (viewLayout.getVerticalOffsetForLineNumber(Std.int(data[k + 2])) + lineHeight) / scrollHeight * rulerHeight;
-                    final laneWidth = rulerWidth / 3;
-                    final laneX = (lane & 1) != 0 ? 0 : ((lane & 2) != 0 ? laneWidth : laneWidth * 2);
-                    final laneW = lane == 7 ? rulerWidth : laneWidth;
-                    if (color != null) {
-                        fillRect(window, rulerX + (lane == 7 ? 0 : laneX), originY + from, laneW, Math.max(2, to - from), color);
-                    }
-                    k += 3;
-                }
-            }
-            if (!options.get(EditorOption.hideCursorInOverviewRuler)) {
-                final cursorColor = state.overviewCursorColor(theme.getColor('editorCursor.foreground'));
-                for (i in 0...selections.length) {
-                    final s = selections[i];
-                    final y = viewLayout.getVerticalOffsetForLineNumber(s.positionLineNumber) / scrollHeight * rulerHeight;
-                    fillRect(window, rulerX, originY + y, rulerWidth, 2, cursorColor);
-                }
-            }
+        final rulerBounds = overviewRulerBounds(v, bounds);
+        if (rulerBounds != null) {
+            paintOverviewRuler(window, v, state, selections, rulerBounds.origin.x, rulerBounds.origin.y, rulerBounds.size.width, rulerBounds.size.height, lineHeight);
         }
 
         v.trimRenderCache(startLine, endLine);
     }
+
+    /**
+     * Where the overview ruler is painted in the element of `bounds`
+     * (`layoutInfo.overviewRuler`, moved left of the scrollbar with
+     * `overviewRulerPosition: 'beside'`), null when it is off
+     * (`overviewRulerLanes: 0` or no vertical scrollbar width).
+     */
+    public static function overviewRulerBounds(v:CityscapeView, bounds:Bounds):Null<Bounds> {
+        final options = v.configuration.options;
+        final position = options.get(EditorOption.layoutInfo).overviewRuler;
+        if (position.width <= 0 || position.height <= 0 || options.get(EditorOption.overviewRulerLanes) <= 0) {
+            return null;
+        }
+        final x = bounds.origin.x + bounds.size.width - cityscape.common.config.EditorViewOptions.OverviewRulerPlacement.right(options) - position.right - position.width;
+        return v.paintState.rulerBoundsOf(x, bounds.origin.y + position.top, position.width, position.height);
+    }
+
+    /**
+     * decorationsOverviewRuler.ts `_render`: the ruler's canvas of
+     * `floor(width * pixelRatio)` by `floor(height * pixelRatio)` pixels
+     * at `x, y`, painted in canvas pixels like Monaco: the background,
+     * the decorations by lane (merged, at least 6 CSS px high), the cursors
+     * (`editorCursor.foreground`, or the multi cursor colors, at 0.7 of
+     * their alpha, 2 CSS px high, centered on the top of their line) and
+     * the border on top. Monaco strokes the border with a 1 pixel line along
+     * the canvas' left and top edges (`moveTo(0, 0)`, `lineTo(0, height)`,
+     * `moveTo(1, 0)`, `lineTo(width, 0)`): half of the line is outside the
+     * canvas, so the canvas antialiasing covers half of its first column
+     * (and of its first row from the second column): painted here as one
+     * pixel at half the border's alpha.
+     */
+    static function paintOverviewRuler(window:Window, v:CityscapeView, state:PaintState, selections:Array<Selection>, x:Float, y:Float, width:Float, height:Float, lineHeight:Float):Void {
+        final options = v.configuration.options;
+        final theme = v.theme;
+        final viewModel = v.viewModel;
+        final viewLayout = viewModel.viewLayout;
+        final pixelRatio:Float = options.get(EditorOption.pixelRatio);
+        final canvasWidth = Std.int(width * pixelRatio);
+        final canvasHeight = Std.int(height * pixelRatio);
+        if (canvasWidth <= 0 || canvasHeight <= 0) {
+            return;
+        }
+        // a canvas pixel in CSS px
+        final px = width / canvasWidth;
+        final py = height / canvasHeight;
+        final outerHeight = viewLayout.getScrollHeight();
+        final heightRatio = canvasHeight / outerHeight;
+        final minDecorationHeight = Std.int(MIN_DECORATION_HEIGHT * pixelRatio);
+        final halfMinDecorationHeight = Std.int(minDecorationHeight / 2);
+        state.initLanes(canvasWidth, options.get(EditorOption.overviewRulerLanes));
+        final laneX = state.laneX;
+        final laneW = state.laneW;
+        inline function canvasRect(cx:Int, cy:Int, cw:Int, ch:Int, color:Hsla):Void {
+            fillRect(window, x + cx * px, y + cy * py, cw * px, ch * py, color);
+        }
+
+        // `editorOverviewRuler.background` when the theme defines it (no
+        // minimap here), else the canvas stays transparent
+        final backgroundColor = theme.getColor('editorOverviewRuler.background');
+        if (backgroundColor != null) {
+            canvasRect(0, 0, canvasWidth, canvasHeight, backgroundColor);
+        }
+
+        final groups = state.overviewRulerGroups(viewModel, theme, v.paintGeneration);
+        for (g in 0...groups.length) {
+            final color = state.overviewRulerColors[g];
+            final data = groups[g].data;
+            final len = Std.int(data.length / 3);
+            if (color == null || len == 0) {
+                continue;
+            }
+            var prevLane = 0;
+            var prevY1 = 0;
+            var prevY2 = 0;
+            for (i in 0...len) {
+                final lane = Std.int(data[3 * i]);
+                final startLineNumber = Std.int(data[3 * i + 1]);
+                final endLineNumber = Std.int(data[3 * i + 2]);
+                var y1 = Std.int(viewLayout.getVerticalOffsetForLineNumber(startLineNumber) * heightRatio);
+                var y2 = Std.int((viewLayout.getVerticalOffsetForLineNumber(endLineNumber) + lineHeight) * heightRatio);
+                final h = y2 - y1;
+                if (h < minDecorationHeight) {
+                    var yCenter = Std.int((y1 + y2) / 2);
+                    if (yCenter < halfMinDecorationHeight) {
+                        yCenter = halfMinDecorationHeight;
+                    } else if (yCenter + halfMinDecorationHeight > canvasHeight) {
+                        yCenter = canvasHeight - halfMinDecorationHeight;
+                    }
+                    y1 = yCenter - halfMinDecorationHeight;
+                    y2 = yCenter + halfMinDecorationHeight;
+                }
+                if (y1 > prevY2 + 1 || lane != prevLane) {
+                    // flush prev
+                    if (i != 0) {
+                        canvasRect(laneX[prevLane], prevY1, laneW[prevLane], prevY2 - prevY1, color);
+                    }
+                    prevLane = lane;
+                    prevY1 = y1;
+                    prevY2 = y2;
+                } else {
+                    // merge into prev
+                    if (y2 > prevY2) {
+                        prevY2 = y2;
+                    }
+                }
+            }
+            canvasRect(laneX[prevLane], prevY1, laneW[prevLane], prevY2 - prevY1, color);
+        }
+
+        // Draw cursors
+        if (!options.get(EditorOption.hideCursorInOverviewRuler)) {
+            final cursorHeight = Std.int(2 * pixelRatio);
+            final halfCursorHeight = Std.int(cursorHeight / 2);
+            final cursorX = laneX[7];
+            final cursorW = laneW[7];
+            final single = state.overviewRulerColor(PaintState.RULER_CURSOR_SINGLE, theme.getColor('editorCursor.foreground'), 0.7);
+            final primary = state.overviewRulerColor(PaintState.RULER_CURSOR_PRIMARY, theme.getColor('editorMultiCursor.primary.foreground'), 0.7);
+            final secondary = state.overviewRulerColor(PaintState.RULER_CURSOR_SECONDARY, theme.getColor('editorMultiCursor.secondary.foreground'), 0.7);
+            state.updateCursorMarks(selections);
+            final lines = state.cursorMarkLines;
+            final slots = state.cursorMarkSlots;
+            var prevY1 = -100;
+            var prevY2 = -100;
+            var prevColor:Null<Hsla> = null;
+            for (i in 0...lines.length) {
+                final slot = slots[i];
+                final color = slot == PaintState.RULER_CURSOR_SINGLE ? single : (slot == PaintState.RULER_CURSOR_PRIMARY ? primary : secondary);
+                if (color == null) {
+                    continue;
+                }
+                var yCenter = Std.int(viewLayout.getVerticalOffsetForLineNumber(lines[i]) * heightRatio);
+                if (yCenter < halfCursorHeight) {
+                    yCenter = halfCursorHeight;
+                } else if (yCenter + halfCursorHeight > canvasHeight) {
+                    yCenter = canvasHeight - halfCursorHeight;
+                }
+                final y1 = yCenter - halfCursorHeight;
+                final y2 = y1 + cursorHeight;
+                // Monaco compares the colors' strings: equal colors of two
+                // slots are one color
+                if (y1 > prevY2 + 1 || prevColor == null || !color.equals(prevColor)) {
+                    // flush prev
+                    if (i != 0 && prevColor != null) {
+                        canvasRect(cursorX, prevY1, cursorW, prevY2 - prevY1, prevColor);
+                    }
+                    prevY1 = y1;
+                    prevY2 = y2;
+                } else {
+                    // merge into prev
+                    if (y2 > prevY2) {
+                        prevY2 = y2;
+                    }
+                }
+                prevColor = color;
+            }
+            if (prevColor != null) {
+                canvasRect(cursorX, prevY1, cursorW, prevY2 - prevY1, prevColor);
+            }
+        }
+
+        // The border, on top of the marks
+        if (options.get(EditorOption.overviewRulerBorder)) {
+            final border = state.overviewRulerColor(PaintState.RULER_BORDER, theme.getColor('editorOverviewRuler.border'), 0.5);
+            if (border != null) {
+                canvasRect(0, 0, 1, canvasHeight, border);
+                canvasRect(1, 0, canvasWidth - 1, 1, border);
+            }
+        }
+    }
+
+    /** decorationsOverviewRuler.ts `Constants.MIN_DECORATION_HEIGHT`. */
+    static inline final MIN_DECORATION_HEIGHT = 6;
 
     static final DEFAULT_BACKGROUND = new Hsla(0, 0, 0.12, 1);
 
@@ -819,6 +964,13 @@ class PaintState {
         window.paintInsetShadows(cornerShadowBounds, NO_CORNERS, left ? leftShadow : topShadow);
     }
 
+    var rulerBounds:Null<Bounds> = null;
+
+    /** The bounds of the overview ruler, the same object while they do not change. */
+    public function rulerBoundsOf(x:Float, y:Float, w:Float, h:Float):Bounds {
+        return rulerBounds = boundsOf(rulerBounds, x, y, w, h);
+    }
+
     public final lines:Array<RenderedViewLine> = [];
 
     public final selectionStarts:Array<Float> = [];
@@ -931,16 +1083,123 @@ class PaintState {
         return overviewGroups;
     }
 
-    var cursorMarkSource:Null<Hsla> = null;
-    var cursorMarkColor:Null<Hsla> = null;
+    // The colors of the ruler (decorationsOverviewRuler.ts `Settings`):
+    // `transparent(0.7)` of the cursor colors, the border at half its alpha
+    // (see `paintOverviewRuler`), each kept while its source is the same
+    final rulerColorSources:Array<Null<Hsla>> = [null, null, null, null];
+    final rulerColorValues:Array<Null<Hsla>> = [null, null, null, null];
 
-    /** `color.opacity(0.6)` (null for null), kept while `color` is the same. */
-    public function overviewCursorColor(color:Null<Hsla>):Null<Hsla> {
-        if (color != cursorMarkSource) {
-            cursorMarkSource = color;
-            cursorMarkColor = color != null ? color.opacity(0.6) : null;
+    /**
+     * The color of slot `slot` (`RULER_CURSOR_SINGLE`, `_PRIMARY`,
+     * `_SECONDARY`, `RULER_BORDER`) from `color`: `color.opacity(factor)`,
+     * null for null, kept while `color` is the same.
+     */
+    public function overviewRulerColor(slot:Int, color:Null<Hsla>, factor:Float):Null<Hsla> {
+        if (color != rulerColorSources[slot] || (color != null && rulerColorValues[slot] == null)) {
+            rulerColorSources[slot] = color;
+            rulerColorValues[slot] = color != null ? color.opacity(factor) : null;
         }
-        return cursorMarkColor;
+        return rulerColorValues[slot];
+    }
+
+    public static inline final RULER_CURSOR_SINGLE = 0;
+    public static inline final RULER_CURSOR_PRIMARY = 1;
+    public static inline final RULER_CURSOR_SECONDARY = 2;
+    public static inline final RULER_BORDER = 3;
+
+    // decorationsOverviewRuler.ts `_initLanes`: the lanes' left and width in
+    // canvas pixels, by `OverviewRulerLane` (0 to 7)
+    var lanesCanvasWidth:Int = -1;
+    var lanesCount:Int = -1;
+    public final laneX:Array<Int> = [0, 0, 0, 0, 0, 0, 0, 0];
+    public final laneW:Array<Int> = [0, 0, 0, 0, 0, 0, 0, 0];
+
+    public function initLanes(canvasWidth:Int, laneCount:Int):Void {
+        if (canvasWidth == lanesCanvasWidth && laneCount == lanesCount) {
+            return;
+        }
+        lanesCanvasWidth = canvasWidth;
+        lanesCount = laneCount;
+        final canvasLeftOffset = 1;
+        final remainingWidth = canvasWidth - canvasLeftOffset;
+        final x = laneX;
+        final w = laneW;
+        x[0] = 0;
+        w[0] = 0;
+        if (laneCount >= 3) {
+            final leftWidth = Math.floor(remainingWidth / 3);
+            final rightWidth = Math.floor(remainingWidth / 3);
+            final centerWidth = remainingWidth - leftWidth - rightWidth;
+            final leftOffset = canvasLeftOffset;
+            final centerOffset = leftOffset + leftWidth;
+            final rightOffset = leftOffset + leftWidth + centerWidth;
+            x[1] = leftOffset; w[1] = leftWidth; // Left
+            x[2] = centerOffset; w[2] = centerWidth; // Center
+            x[3] = leftOffset; w[3] = leftWidth + centerWidth; // Left | Center
+            x[4] = rightOffset; w[4] = rightWidth; // Right
+            x[5] = leftOffset; w[5] = leftWidth + centerWidth + rightWidth; // Left | Right
+            x[6] = centerOffset; w[6] = centerWidth + rightWidth; // Center | Right
+            x[7] = leftOffset; w[7] = leftWidth + centerWidth + rightWidth; // Left | Center | Right
+        } else if (laneCount == 2) {
+            final leftWidth = Math.floor(remainingWidth / 2);
+            final rightWidth = remainingWidth - leftWidth;
+            final leftOffset = canvasLeftOffset;
+            final rightOffset = leftOffset + leftWidth;
+            x[1] = leftOffset; w[1] = leftWidth;
+            x[2] = leftOffset; w[2] = leftWidth;
+            x[3] = leftOffset; w[3] = leftWidth;
+            x[4] = rightOffset; w[4] = rightWidth;
+            x[5] = leftOffset; w[5] = leftWidth + rightWidth;
+            x[6] = leftOffset; w[6] = leftWidth + rightWidth;
+            x[7] = leftOffset; w[7] = leftWidth + rightWidth;
+        } else {
+            for (i in 1...8) {
+                x[i] = canvasLeftOffset;
+                w[i] = remainingWidth;
+            }
+        }
+    }
+
+    // decorationsOverviewRuler.ts `_cursorPositions`: the view line of each
+    // cursor and its color slot (single, or primary for the first selection
+    // and secondary for the others), sorted by position
+    var cursorMarksOf:Null<Array<Selection>> = null;
+    public final cursorMarkLines:Array<Int> = [];
+    public final cursorMarkSlots:Array<Int> = [];
+    final cursorMarkColumns:Array<Int> = [];
+
+    public function updateCursorMarks(selections:Array<Selection>):Void {
+        if (selections == cursorMarksOf) {
+            return;
+        }
+        cursorMarksOf = selections;
+        final lines = cursorMarkLines;
+        final slots = cursorMarkSlots;
+        final columns = cursorMarkColumns;
+        lines.resize(0);
+        slots.resize(0);
+        columns.resize(0);
+        final len = selections.length;
+        for (i in 0...len) {
+            final s = selections[i];
+            final line = s.positionLineNumber;
+            final column = s.positionColumn;
+            final slot = len > 1 ? (i == 0 ? RULER_CURSOR_PRIMARY : RULER_CURSOR_SECONDARY) : RULER_CURSOR_SINGLE;
+            // insertion (stable, like Array.sort) by `Position.compare`
+            var k = lines.length;
+            lines.push(line);
+            slots.push(slot);
+            columns.push(column);
+            while (k > 0 && (lines[k - 1] > line || (lines[k - 1] == line && columns[k - 1] > column))) {
+                lines[k] = lines[k - 1];
+                slots[k] = slots[k - 1];
+                columns[k] = columns[k - 1];
+                k--;
+            }
+            lines[k] = line;
+            slots[k] = slot;
+            columns[k] = column;
+        }
     }
 
     // Line numbers
