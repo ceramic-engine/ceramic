@@ -186,6 +186,8 @@ In this plugin's `samples/`: `basic` (a small interactive view), `kit` (a tour o
 cd tests/unit && ceramic headless run node --setup --assets
 ```
 
+The layout is incremental: a view that renders again keeps the layout of the nodes that did not change, and a changed node whose size and position do not change leaves the rest of the tree as it is. Define `glaze_verify_layout` to check it while developing: after each layout, the tree is laid out again from scratch and any difference is logged as an error (slow, for tests only).
+
 ## License
 
 Apache License 2.0, see [LICENSE](LICENSE). Ported projects, fonts and icons keep their own licenses, listed in [NOTICE.md](NOTICE.md). The few differences with the original GPUI and gpui-kit introduced during the initial port are listed in [docs/DEVIATIONS.md](docs/DEVIATIONS.md); Glaze now evolves on its own.

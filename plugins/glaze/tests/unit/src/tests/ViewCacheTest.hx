@@ -443,6 +443,73 @@ class ViewCacheTest extends TestCase {
         assertSameFrames(cached, reference, 'notified and scrolled');
     }
 
+    /**
+     * Incremental layout (port only): a row that renders again keeps the
+     * layout nodes that did not change; when its box keeps its size, the
+     * list is not laid out again (`TaffyLayoutEngine`). The frames are the
+     * same as without any cache.
+     */
+    function testChangedViewsAreLaidOutIncrementally() {
+        final labels = [for (i in 0...12) app.newEntity(_ -> new CardModel('Row $i'))];
+        final rows = [for (i in 0...12) view((_, cx) -> {
+            final model = labels[i].read(cx);
+            final row = div().flex().gap1().px1().child(div().size(px(6)).bg(blue())).child(model.title);
+            // Even rows have a fixed size, odd rows grow with their text
+            return i % 2 == 0 ? row.w(px(180)).h(px(16)) : row.w(px(180));
+        })];
+        final root = view((_, _) -> div().sizeFull().child(div().flex().flexCol().gap1().p2()
+            .child('Header')
+            .children([for (row in rows) (row : AnyView)])));
+        final cached = openWindow(root, true);
+        final reference = openWindow(root, false);
+        frame();
+        assertSameFrames(cached, reference, 'first frame');
+
+        // A fixed size row: its box does not change, the list is not laid out again
+        var before = cached.layoutChangeCounts();
+        labels[4].read(app).title = 'Row four, longer';
+        frame();
+        assertSameFrames(cached, reference, 'fixed size row');
+        var after = cached.layoutChangeCounts();
+        assertTrue(after.checked > before.checked, 'changes are checked');
+        assertTrue(after.matched > before.matched, 'the row keeps its box');
+
+        // A row growing with its text (wraps): the list is laid out again
+        labels[5].read(app).title = 'Row five, with a label long enough to wrap on two lines at least';
+        frame();
+        assertSameFrames(cached, reference, 'growing row');
+
+        // Back to a short label, and several rows at once
+        labels[5].read(app).title = 'Row 5';
+        labels[0].read(app).title = 'Zero';
+        labels[11].read(app).title = 'Eleven';
+        frame();
+        assertSameFrames(cached, reference, 'several rows');
+
+        // Same text again (a notification without a change): nothing differs
+        before = cached.layoutChangeCounts();
+        rows[7].update(app, (_, cx) -> cx.notify());
+        frame();
+        assertSameFrames(cached, reference, 'notified row');
+        after = cached.layoutChangeCounts();
+        assertTrue(after.matched > before.matched, 'the notified row keeps its box');
+
+        // Nodes no longer used are freed: the tree does not grow over frames
+        var counts:Array<Int> = [];
+        for (cycle in 0...6) {
+            labels[cycle % 3].read(app).title = 'Cycle $cycle';
+            labels[5].read(app).title = cycle % 2 == 0 ? 'Row five, with a label long enough to wrap on two lines at least' : 'Row 5';
+            frame();
+            labels[cycle % 3].read(app).title = 'Row ${cycle % 3}';
+            frame();
+            assertSameFrames(cached, reference, 'cycle $cycle');
+            counts.push(cached.layoutNodeCount());
+        }
+        for (i in 2...counts.length) {
+            assertEquals(counts[i - 2], counts[i], 'layout nodes after cycle $i');
+        }
+    }
+
 /// GPUI's `.cached(style)`
 
     function testCachedWithStyleFollowsGpui() {

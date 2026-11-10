@@ -119,7 +119,10 @@ class ViewElementState {
  *   nodes (same layout, nothing laid out again), or if they don't match,
  *   its new layout subtree replaces the retained one.
  *   Nested views are reused independently of their parent: a dirty view
- *   renders again, its clean descendants are reused.
+ *   renders again, its clean descendants are reused. A dirty view adopts
+ *   the layout nodes it requested during the previous frame where their
+ *   style did not change, so that only what changed is laid out again
+ *   (see `TaffyLayoutEngine`, incremental layout).
  * - `.uncached()`: the view renders every frame.
  *
  * A view is dirty when it was notified since the last frame (`cx.notify()`,
@@ -356,9 +359,9 @@ class ViewElement extends Element {
      * Renders the view and requests the layout of its element, in the view's
      * tracker capture.
      */
-    function renderAndRequestLayout(window:Window, cx:App, ?adopt:Array<Int>):LayoutId {
+    function renderAndRequestLayout(window:Window, cx:App, ?adopt:Array<Int>, checked:Bool = false):LayoutId {
         window.beginRenderedView(view, true);
-        window.beginViewLayoutNodes(adopt);
+        window.beginViewLayoutNodes(adopt, checked);
         var layoutId:LayoutId = 0;
         try {
             rendered = renderView(window, cx);
@@ -438,8 +441,18 @@ class ViewElement extends Element {
         }
 
         mode = MODE_RENDERED;
+        // A view that renders because it changed adopts the layout nodes it
+        // requested during the previous frame where they did not change
+        // (incremental layout, see `TaffyLayoutEngine.beginViewNodes`)
+        var adopt:Null<Array<Int>> = null;
+        if (stateId != null && !window.refreshing) {
+            final state:Null<ViewElementState> = window.peekElementState(stateId, STATE_TYPE);
+            if (state != null && state.layoutId != -1 && state.layoutFrame == window.layoutFrame() - 1) {
+                adopt = state.layoutNodes;
+            }
+        }
         layoutAccessedStart = window.accessedElementStatesIndex();
-        layoutId = renderAndRequestLayout(window, cx);
+        layoutId = renderAndRequestLayout(window, cx, adopt, adopt != null);
         layoutAccessedEnd = window.accessedElementStatesIndex();
         followAccessedEntities(window, stateId != null);
         return layoutId;

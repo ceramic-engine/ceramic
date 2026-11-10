@@ -188,6 +188,11 @@ private class ViewNodes {
     public var index:Int = 0;
     /** Whether a request did not match `adopt` (the next nodes are created) */
     public var failed:Bool = false;
+    /**
+     * Whether the view renders because it changed (see `beginViewNodes()`):
+     * a node is adopted only with the same style, and its children may differ
+     */
+    public var checked:Bool = false;
     public function new() {}
 }
 
@@ -211,6 +216,21 @@ private class ViewNodes {
  * the retained subtree when they match (`beginViewNodes()`), so nothing has
  * to be laid out again; otherwise its new subtree replaces the retained one
  * (`replaceRetained()`).
+ *
+ * Incremental layout (not in GPUI, where the whole tree is laid out every
+ * frame; the layout is the same): a view that renders because it changed
+ * also adopts the nodes it requested last time when they have the same
+ * style and as many children (`beginViewNodes()` with `checked`), keeping
+ * their layout cache. Where an adopted node's child changed (a new node in
+ * its place), the new child is laid out for every input the old one was
+ * laid out for (`TaffyTree.matchesRelayout`, from the old node's cache): if
+ * every result is the same, the parent's cached layout stays valid and
+ * nothing above the child is laid out again; otherwise the parent is laid
+ * out again, checked the same way against its own previous results, up to
+ * the first ancestor whose results do not change (`processChanges()`).
+ * Retaining a subtree marks its root only (`retain()`); a node is alive
+ * while its root, or an ancestor, was created, adopted or retained during
+ * the frame (`finishFrame()`).
  */
 class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implements taffy.compute.Leaf.LeafMeasurer {
 
@@ -262,6 +282,34 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
 
     final retainStack:Array<Int> = [];
 
+    /**
+     * Changes recorded while adopting nodes (see `processChanges()`): the
+     * adopted parent, the node in its children, and the node it replaced
+     * (or -1 when the reference is `changeSnapshots`, a copy of the node's
+     * own cache before it was cleared)
+     */
+    final changeParents:Array<Int> = [];
+    final changeNodes:Array<Int> = [];
+    final changeOlds:Array<Int> = [];
+    final changeSnapshots:Array<Null<taffy.tree.Cache>> = [];
+
+    /** Depth of each change's parent, and the changes by depth (scratch of `processChanges()`) */
+    final changeDepths:Array<Int> = [];
+    final changeBuckets:Array<Array<Int>> = [];
+
+    /** The scale factor of the layouts of the previous frame (nodes are adopted only at the same one) */
+    var previousScaleFactor:Float = -1.0;
+
+    /** The scale factor of the layouts of the current frame */
+    var frameScaleFactor:Float = -1.0;
+
+    /** Nodes detached from an adopted parent during the frame (freed by `finishFrame()` unless used) */
+    final detachedNodes:Array<Int> = [];
+
+    /** Marks of the children of the node being adopted (`markCounter`), to find the children it lost */
+    final childMarks:Array<Int> = [];
+    var markCounter:Int = 0;
+
     /** Node requests of the views rendering, innermost last (see `beginViewNodes()`) */
     final viewNodesStack:Array<ViewNodes> = [];
 
@@ -299,6 +347,11 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         liveNodes.resize(0);
         previousLiveNodes.resize(0);
         viewNodesStack.resize(0);
+        changeParents.resize(0);
+        changeNodes.resize(0);
+        changeOlds.resize(0);
+        changeSnapshots.resize(0);
+        detachedNodes.resize(0);
         frame++;
     }
 
@@ -308,15 +361,28 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
      * Nodes of this frame stay alive (and retainable) during the next frame.
      */
     public function finishFrame():Void {
-        final nodes = @:privateAccess tree.nodes;
-        final freeIds = @:privateAccess tree.freeIds;
-        for (id in previousLiveNodes) {
-            if (nodeFrames[id] != frame && nodes[id] != null) {
-                nodes[id] = null;
-                freeIds.push(id);
-                @:privateAccess tree.nodeCount--;
+        // Changes not laid out during the frame: their parents' caches can't be trusted
+        if (changeParents.length > 0) {
+            final nodes = @:privateAccess tree.nodes;
+            for (parent in changeParents) {
+                if (nodes[parent] != null) {
+                    tree.markDirty(parent);
+                }
             }
+            changeParents.resize(0);
+            changeNodes.resize(0);
+            changeOlds.resize(0);
+            changeSnapshots.resize(0);
         }
+        // Frees the nodes of the previous frame, and the nodes detached
+        // during this one, that nothing created, adopted or retained during
+        // this frame holds (parents are exact: every attach sets them)
+        // Detached nodes first: their children recorded during the previous
+        // frame are then looked at with their parent gone
+        freeUnused(detachedNodes);
+        freeUnused(previousLiveNodes);
+        detachedNodes.resize(0);
+        previousScaleFactor = frameScaleFactor;
         final previous = previousLiveNodes;
         previousLiveNodes = liveNodes;
         liveNodes = previous;
@@ -324,6 +390,70 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         // Advancing the frame also invalidates the per node caches
         frame++;
         rootAvailableSpaces.clear();
+    }
+
+    /**
+     * Frees each node of `candidates` (and its subtree) that is not alive:
+     * neither it nor an ancestor was created, adopted or retained during
+     * this frame.
+     */
+    function freeUnused(candidates:Array<Int>):Void {
+        final nodes = @:privateAccess tree.nodes;
+        final freeIds = @:privateAccess tree.freeIds;
+        final current = frame;
+        final previousFrame = frame - 1;
+        final stack = retainStack;
+        // Parents are recorded after their children: the last first, so that
+        // a node's parent is freed before the node is looked at; then again
+        // until nothing changes, for the nodes recorded in another order
+        var freed = true;
+        while (freed) {
+            freed = false;
+            var index = candidates.length - 1;
+            while (index >= 0) {
+                final id = candidates[index];
+                index--;
+                final data = nodes[id];
+                if (data == null || nodeFrames[id] == current) {
+                    continue;
+                }
+                // A node with a parent is alive through it, or garbage under
+                // an unused top that is a candidate too (a node loses its
+                // parent only by being detached, which makes it a candidate,
+                // or when its parent is freed): only the unused tops are freed
+                final parent = data.parent;
+                if (parent != -1 && nodes[parent] != null) {
+                    continue;
+                }
+                freed = true;
+                stack.push(id);
+                while (stack.length > 0) {
+                    final nodeId = Stacks.popInt(stack);
+                    final nodeData = nodes[nodeId];
+                    for (child in nodeData.children) {
+                        final childFrame = nodeFrames[child];
+                        if (childFrame == previousFrame) {
+                            // A candidate itself (its parent is gone when it is looked at)
+                            continue;
+                        }
+                        final childData = nodes[child];
+                        if (childData != null && childData.parent == nodeId) {
+                            if (childFrame == current) {
+                                // Used during this frame but not attached anywhere: kept, detached
+                                childData.parent = -1;
+                            }
+                            else {
+                                // Inside a subtree retained by its root only
+                                stack.push(child);
+                            }
+                        }
+                    }
+                    nodes[nodeId] = null;
+                    freeIds.push(nodeId);
+                    @:privateAccess tree.nodeCount--;
+                }
+            }
+        }
     }
 
     /**
@@ -359,13 +489,24 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
      * a clean view that renders again only because it moved (scrolling)
      * costs no layout at all, like GPUI where its elements are part of the
      * single layout of the frame.
+     *
+     * With `checked` (a view that renders because it changed: `adopt` is
+     * what it requested during the previous frame), the requests match by
+     * position: a node is adopted when its style is the same (`toTaffy` of
+     * the new style, `Style.layoutEquals`) and it has as many children; its
+     * children are replaced by the requested ones, and each child that
+     * changed is recorded for `processChanges()`. A measured leaf is never
+     * adopted (its content may have changed): a new one takes its place. A
+     * node with another number of children ends the matching (the next
+     * nodes are created).
      */
-    public function beginViewNodes(adopt:Null<Array<Int>>):Void {
+    public function beginViewNodes(adopt:Null<Array<Int>>, checked:Bool = false):Void {
         final viewNodes = viewNodesPool.length > 0 ? viewNodesPool.pop() : new ViewNodes();
         viewNodes.nodes = [];
         viewNodes.adopt = adopt;
         viewNodes.index = 0;
         viewNodes.failed = adopt == null;
+        viewNodes.checked = checked;
         viewNodesStack.push(viewNodes);
     }
 
@@ -393,7 +534,7 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
             return -1;
         }
         final viewNodes = viewNodesStack[viewNodesStack.length - 1];
-        if (viewNodes.failed) {
+        if (viewNodes.failed || viewNodes.checked) {
             return -1;
         }
         final adopt = viewNodes.adopt;
@@ -403,7 +544,9 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         }
         final id = adopt[viewNodes.index];
         final data = @:privateAccess tree.nodes[id];
-        var matches = data != null && nodeFrames[id] == frame && data.hasContext == (measure != null);
+        // The view's root was retained during this frame, so its nodes are
+        // alive (retaining marks the root only)
+        var matches = data != null && data.hasContext == (measure != null);
         if (matches) {
             final current = data.children;
             final count = children != null ? children.length : 0;
@@ -444,6 +587,117 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
     }
 
     /**
+     * The next node to adopt for a request of the innermost view rendering
+     * because it changed (`beginViewNodes()` with `checked`), or -1 to
+     * create one: the node of the same position with the same style and as
+     * many children. Its children become `children`; each one that is not
+     * the node it had there is recorded for `processChanges()`.
+     */
+    function adoptChecked(style:taffy.style.Style, children:Null<Array<LayoutId>>, owned:Bool, scaleFactor:Float):Int {
+        if (viewNodesStack.length == 0) {
+            return -1;
+        }
+        final viewNodes = viewNodesStack[viewNodesStack.length - 1];
+        if (viewNodes.failed || !viewNodes.checked) {
+            return -1;
+        }
+        if (scaleFactor != previousScaleFactor) {
+            // Measured sizes depend on the scale factor, which taffy's caches do not record
+            viewNodes.failed = true;
+            return -1;
+        }
+        final adopt = viewNodes.adopt;
+        if (viewNodes.index >= adopt.length) {
+            viewNodes.failed = true;
+            return -1;
+        }
+        final nodes = @:privateAccess tree.nodes;
+        final id = adopt[viewNodes.index];
+        final data = nodes[id];
+        final count = children != null ? children.length : 0;
+        // Alive since the previous frame (frees happen between frames), not
+        // taken yet during this one, and of the same kind
+        if (data == null || nodeFrames[id] == frame || data.hasContext || data.children.length != count) {
+            viewNodes.failed = true;
+            return -1;
+        }
+        viewNodes.index++;
+        if (!data.style.layoutEquals(style)) {
+            // Another node takes its place (its parent sees the change)
+            return -1;
+        }
+        final current = data.children;
+        var same = true;
+        for (i in 0...count) {
+            if (current[i] != (children[i]:Int)) {
+                same = false;
+                break;
+            }
+        }
+        if (same) {
+            for (child in current) {
+                nodes[child].parent = id;
+            }
+        }
+        else {
+            final mark = ++markCounter;
+            for (i in 0...count) {
+                final child:Int = children[i];
+                nodes[child].parent = id;
+                childMarks[child] = mark;
+                final old = current[i];
+                if (old != child) {
+                    changeParents.push(id);
+                    changeNodes.push(child);
+                    changeOlds.push(old);
+                    changeSnapshots.push(null);
+                }
+            }
+            // The children it lost are detached (freed unless used elsewhere)
+            for (oldChild in current) {
+                final old:Int = oldChild;
+                final oldData = nodes[old];
+                if (oldData != null && oldData.parent == id && (old >= childMarks.length || childMarks[old] != mark)) {
+                    oldData.parent = -1;
+                    detachedNodes.push(old);
+                }
+            }
+            final list:Array<NodeId> = cast children;
+            data.children = owned ? list : list.copy();
+        }
+        nodeFrames[id] = frame;
+        liveNodes.push(id);
+        viewNodes.nodes.push(id);
+        return id;
+    }
+
+    /**
+     * A measured leaf requested by a view rendering because it changed: the
+     * node of the same position is not adopted, but must be a measured leaf
+     * for the next requests to keep matching by position.
+     */
+    function skipChecked():Void {
+        if (viewNodesStack.length == 0) {
+            return;
+        }
+        final viewNodes = viewNodesStack[viewNodesStack.length - 1];
+        if (viewNodes.failed || !viewNodes.checked) {
+            return;
+        }
+        final adopt = viewNodes.adopt;
+        if (viewNodes.index >= adopt.length) {
+            viewNodes.failed = true;
+            return;
+        }
+        final data = @:privateAccess tree.nodes[adopt[viewNodes.index]];
+        if (data == null || !data.hasContext) {
+            viewNodes.failed = true;
+            return;
+        }
+        viewNodes.index++;
+    }
+
+    /**
      * Keeps the subtree of `id`, recorded during frame `recordedFrame`, for
      * the current frame and detaches it from its previous parent. Returns
      * false (and does nothing) if that subtree can't be retained anymore.
@@ -458,20 +712,10 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
             return false;
         }
         root.parent = -1;
-        if (nodeFrames[id] == frame) {
-            return true;
-        }
-        final stack = retainStack;
-        stack.push(id);
-        while (stack.length > 0) {
-            final nodeId = Stacks.popInt(stack);
-            if (nodeFrames[nodeId] != frame) {
-                nodeFrames[nodeId] = frame;
-                liveNodes.push(nodeId);
-                for (child in nodes[nodeId].children) {
-                    stack.push(child);
-                }
-            }
+        // The root only: its subtree is alive through it (see `finishFrame()`)
+        if (nodeFrames[id] != frame) {
+            nodeFrames[id] = frame;
+            liveNodes.push(id);
         }
         return true;
     }
@@ -545,6 +789,10 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
             return adopted;
         }
         final taffyStyle = toTaffy(style, remSize, scaleFactor);
+        final checked = adoptChecked(taffyStyle, children, owned, scaleFactor);
+        if (checked != -1) {
+            return checked;
+        }
         if (children == null || children.length == 0) {
             return created(tree.newLeaf(taffyStyle));
         }
@@ -565,6 +813,7 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         if (adopted != -1) {
             return adopted;
         }
+        skipChecked();
         final taffyStyle = toTaffy(style, remSize, scaleFactor);
         return created(tree.newLeafWithContext(taffyStyle, measure));
     }
@@ -608,6 +857,7 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         }
 
         final scaleFactor = window.scaleFactor();
+        frameScaleFactor = scaleFactor;
 
         inline function transform(v:AvailableSpace):taffy.style.AvailableSpace {
             return switch v {
@@ -621,8 +871,189 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
 
         measureWindow = window;
         measureCx = cx;
+        // Inputs are recorded for the incremental layout of changed views,
+        // which only happens with view caching (a little work per result)
+        tree.recordInputs = window.viewCaching && !window.viewCachingDisabled;
+        processChanges();
         runLayout(id, available);
+        #if glaze_verify_layout
+        verifyLayout(id, available);
+        #end
     }
+
+    /** Number of changed children checked by `processChanges()` and how many matched, for tests and benchmarks */
+    public var changesChecked(default, null):Int = 0;
+    public var changesMatched(default, null):Int = 0;
+
+    /**
+     * The early cutoff of incremental layout (see the class comment): for
+     * each recorded change, deepest parents first, the new child is laid out
+     * for the inputs of the node it replaced; when a result differs, its
+     * parent's cache is cleared and the parent itself is checked the same
+     * way against a copy of that cache, one level up. A parent whose cache
+     * is already empty (new, or cleared) is laid out again anyway.
+     */
+    function processChanges():Void {
+        final count = changeParents.length;
+        if (count == 0) {
+            return;
+        }
+        final nodes = @:privateAccess tree.nodes;
+        final window = measureWindow;
+        measureScaleFactor = window != null ? window.scaleFactor() : 1.0;
+
+        // Changes by depth of their parent, deepest last
+        final buckets = changeBuckets;
+        for (bucket in buckets) {
+            bucket.resize(0);
+        }
+        var maxDepth = 0;
+        for (k in 0...count) {
+            final depth = depthOf(changeParents[k]);
+            changeDepths[k] = depth;
+            while (buckets.length <= depth) {
+                buckets.push([]);
+            }
+            buckets[depth].push(k);
+            if (depth > maxDepth) {
+                maxDepth = depth;
+            }
+        }
+
+        var depth = maxDepth;
+        while (depth >= 0) {
+            final bucket = buckets[depth];
+            var b = 0;
+            while (b < bucket.length) {
+                final k = bucket[b];
+                b++;
+                final parent = changeParents[k];
+                final parentData = nodes[parent];
+                if (parentData == null || parentData.isEmpty()) {
+                    continue;
+                }
+                final node = changeNodes[k];
+                final nodeData = nodes[node];
+                final old = changeOlds[k];
+                var matches = false;
+                if (nodeData != null) {
+                    changesChecked++;
+                    if (old != -1) {
+                        final oldData = nodes[old];
+                        matches = oldData != null
+                            && nodeFrames[old] != frame
+                            && oldData.style.layoutEquals(nodeData.style)
+                            && tree.matchesRelayout(node, oldData.cache, this);
+                        if (matches) {
+                            // The parent placed the old node: the new one gets its place
+                            nodeData.unroundedLayout = oldData.unroundedLayout;
+                        }
+                    }
+                    else {
+                        matches = tree.matchesRelayout(node, changeSnapshots[k], this);
+                    }
+                    if (matches) {
+                        changesMatched++;
+                    }
+                }
+                if (!matches) {
+                    // The parent may lay out differently: check it one level up
+                    final grandParent = parentData.parent;
+                    if (grandParent == -1 || depth == 0 || nodes[grandParent] == null || nodes[grandParent].isEmpty()) {
+                        parentData.cache.clear();
+                    }
+                    else {
+                        final snapshot = parentData.cache.snapshot();
+                        parentData.cache.clear();
+                        final index = changeParents.length;
+                        changeParents.push(grandParent);
+                        changeNodes.push(parent);
+                        changeOlds.push(-1);
+                        changeSnapshots.push(snapshot);
+                        changeDepths[index] = depth - 1;
+                        buckets[depth - 1].push(index);
+                    }
+                }
+            }
+            depth--;
+        }
+
+        changeParents.resize(0);
+        changeNodes.resize(0);
+        changeOlds.resize(0);
+        changeSnapshots.resize(0);
+    }
+
+    /** Number of ancestors of a node */
+    function depthOf(id:Int):Int {
+        final nodes = @:privateAccess tree.nodes;
+        var depth = 0;
+        var current = nodes[id].parent;
+        while (current != -1 && nodes[current] != null) {
+            depth++;
+            current = nodes[current].parent;
+        }
+        return depth;
+    }
+
+    #if glaze_verify_layout
+    /**
+     * Checks the incremental layout (define `glaze_verify_layout`): the
+     * subtree of `root` is laid out again with every cache cleared, and each
+     * node must get exactly the layout it has; a difference is logged as an
+     * error, and the fresh layout is kept.
+     */
+    function verifyLayout(root:LayoutId, available:taffy.geometry.SizeAvail):Void {
+        final nodes = @:privateAccess tree.nodes;
+        final ids:Array<Int> = [];
+        final layouts:Array<taffy.tree.Layout> = [];
+        final stack = [(root:Int)];
+        while (stack.length > 0) {
+            final id = stack.pop();
+            final data = nodes[id];
+            ids.push(id);
+            layouts.push(data.unroundedLayout);
+            data.cache.clear();
+            for (child in data.children) {
+                stack.push(child);
+            }
+        }
+        runLayout(root, available);
+        for (i in 0...ids.length) {
+            final a = layouts[i];
+            final b = nodes[ids[i]].unroundedLayout;
+            if (!sameLayout(a, b)) {
+                verifyLayoutErrors++;
+                ceramic.Shortcuts.log.error('glaze_verify_layout: node ${ids[i]} (root $root) has layout ${layoutString(a)} instead of ${layoutString(b)}');
+            }
+        }
+    }
+
+    /** Number of differences found by `glaze_verify_layout` */
+    public static var verifyLayoutErrors:Int = 0;
+
+    static function sameLayout(a:taffy.tree.Layout, b:taffy.tree.Layout):Bool {
+        inline function same(x:Float, y:Float):Bool {
+            return x == y ? (x != 0.0 || 1.0 / x == 1.0 / y) : (x != x && y != y);
+        }
+        inline function sameRect(x:taffy.geometry.Rect, y:taffy.geometry.Rect):Bool {
+            return same(x.left, y.left) && same(x.right, y.right) && same(x.top, y.top) && same(x.bottom, y.bottom);
+        }
+        return a == b || (a.order == b.order
+            && same(a.location.x, b.location.x) && same(a.location.y, b.location.y)
+            && same(a.size.width, b.size.width) && same(a.size.height, b.size.height)
+            && sameRect(a.scrollableOverflowRect, b.scrollableOverflowRect)
+            && same(a.scrollbarSize.width, b.scrollbarSize.width) && same(a.scrollbarSize.height, b.scrollbarSize.height)
+            && sameRect(a.border, b.border) && sameRect(a.padding, b.padding) && sameRect(a.margin, b.margin));
+    }
+
+    static function layoutString(layout:taffy.tree.Layout):String {
+        inline function rect(r:taffy.geometry.Rect):String {
+            return '[${r.left} ${r.right} ${r.top} ${r.bottom}]';
+        }
+        return '(order ${layout.order}, ${layout.location.x}, ${layout.location.y}, ${layout.size.width} x ${layout.size.height}, overflow ${rect(layout.scrollableOverflowRect)}, scrollbar ${layout.scrollbarSize.width} x ${layout.scrollbarSize.height}, border ${rect(layout.border)}, padding ${rect(layout.padding)}, margin ${rect(layout.margin)})';
+    }
+    #end
 
     /** Number of layout runs (a root laid out by taffy) since the engine was created, for tests and benchmarks */
     public var runCount(default, null):Int = 0;

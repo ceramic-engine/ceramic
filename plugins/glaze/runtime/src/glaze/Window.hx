@@ -3530,6 +3530,22 @@ class Window implements WindowInvalidator {
     }
 
     /**
+     * Number of changed layout nodes checked by the incremental layout, and
+     * how many of them laid out like the nodes they replaced (so that their
+     * parents were not laid out again), since the window was opened, for
+     * tests and benchmarks (see `TaffyLayoutEngine`).
+     */
+    @:noCompletion
+    public function layoutNodeCount():Int {
+        return layoutEngine.nodeCount();
+    }
+
+    @:noCompletion
+    public function layoutChangeCounts():{checked:Int, matched:Int} {
+        return {checked: layoutEngine.changesChecked, matched: layoutEngine.changesMatched};
+    }
+
+    /**
      * A text summary of the last frame besides its scene (hitboxes, mouse
      * listeners, cursor styles, tooltips, deferred draws, input handlers,
      * dispatch nodes with their contexts, focus and view ids, tab order),
@@ -3603,8 +3619,8 @@ class Window implements WindowInvalidator {
      * `TaffyLayoutEngine.beginViewNodes`).
      */
     @:allow(glaze)
-    inline function beginViewLayoutNodes(adopt:Null<Array<Int>>):Void {
-        layoutEngine.beginViewNodes(adopt);
+    inline function beginViewLayoutNodes(adopt:Null<Array<Int>>, checked:Bool = false):Void {
+        layoutEngine.beginViewNodes(adopt, checked);
     }
 
     /**
