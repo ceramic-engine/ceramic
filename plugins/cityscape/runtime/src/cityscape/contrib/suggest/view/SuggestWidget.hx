@@ -16,6 +16,7 @@ import cityscape.common.core.Position;
 import cityscape.contrib.suggest.view.CompletionModel;
 import cityscape.contrib.suggest.view.Suggest;
 import cityscape.platform.contextkey.common.ContextKey.IContextKey;
+import cityscape.view.Codicons;
 import cityscape.view.EditorBrowser;
 import cityscape.view.EditorWidgets;
 import cityscape.view.SymbolIcons;
@@ -664,34 +665,30 @@ class SuggestWidgetView extends Model implements Render {
         this.editor = editor;
     }
 
-    static function codiconColor(editor:ICodeEditor, codicon:String, foreground:Hsla):Hsla {
-        final dark = EditorWidgets.isDark(editor);
-        final key = switch codicon {
-            case 'symbol-method': 'symbolIcon.methodForeground';
-            case 'symbol-function': 'symbolIcon.functionForeground';
-            case 'symbol-constructor': 'symbolIcon.constructorForeground';
-            case 'symbol-field': 'symbolIcon.fieldForeground';
-            case 'symbol-variable': 'symbolIcon.variableForeground';
-            case 'symbol-class': 'symbolIcon.classForeground';
-            case 'symbol-interface': 'symbolIcon.interfaceForeground';
-            case 'symbol-enum': 'symbolIcon.enumeratorForeground';
-            case 'symbol-enum-member': 'symbolIcon.enumeratorMemberForeground';
-            case 'symbol-event': 'symbolIcon.eventForeground';
-            case _: null;
-        };
+    /**
+     * The color of a kind codicon: its `symbolIcon.*Foreground` color
+     * (symbolIcons.css), `editorSuggestWidget.selectedIconForeground` in the
+     * focused row, else the color of the row.
+     */
+    static function codiconColor(editor:ICodeEditor, codicon:String, foreground:Hsla, focused:Bool):Hsla {
+        if (focused) {
+            final selected = EditorWidgets.themeColor(editor, 'editorSuggestWidget.selectedIconForeground');
+            if (selected != null) {
+                return selected;
+            }
+            final quickInput = EditorWidgets.themeColor(editor, 'quickInputList.focusIconForeground');
+            if (quickInput != null) {
+                return quickInput;
+            }
+        }
+        final key = cityscape.contrib.symbolIcons.view.SymbolIcons.SymbolIconColors.colorOf(codicon);
         if (key != null) {
             final c = EditorWidgets.themeColor(editor, key);
             if (c != null) {
                 return c;
             }
         }
-        // symbolIcons.ts defaults
-        return switch codicon {
-            case 'symbol-method' | 'symbol-function' | 'symbol-constructor': dark ? rgb(0xB180D7).toHsla() : rgb(0x652D90).toHsla();
-            case 'symbol-field' | 'symbol-variable' | 'symbol-interface' | 'symbol-enum-member': dark ? rgb(0x75BEFF).toHsla() : rgb(0x007ACC).toHsla();
-            case 'symbol-class' | 'symbol-enum' | 'symbol-event': dark ? rgb(0xEE9D28).toHsla() : rgb(0xD67E00).toHsla();
-            case _: foreground;
-        };
+        return foreground;
     }
 
     /**
@@ -806,7 +803,15 @@ class SuggestWidgetView extends Model implements Render {
                     row.bg(selectedBackground).textColor(selectedForeground);
                 }
                 if (options.showIcons) {
-                    row.child(Icon.empty().data(SymbolIcons.codiconSvg(codicon)).withSize(Math.round(suggestFontSize * 1.15)).textColor(codiconColor(editor, codicon, foreground)).flexNone());
+                    // the codicon of the kind (a 16px codicon, `margin-right: 4px`)
+                    final svg = Codicons.svg(codicon);
+                    final iconColor = codiconColor(editor, codicon, focused ? selectedForeground : foreground, focused);
+                    if (svg != null) {
+                        row.child(Icon.empty().data(svg).withSize(16).textColor(iconColor).flexNone());
+                    }
+                    else {
+                        row.child(Icon.empty().data(SymbolIcons.codiconSvg(codicon)).withSize(16).textColor(iconColor).flexNone());
+                    }
                 }
                 final labelElement = new StyledText(text).withHighlights(highlights);
                 final labelBox = div().flexNone().child(labelElement);

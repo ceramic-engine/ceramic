@@ -577,6 +577,11 @@ typedef IEditorOptions = {
      * Control the behavior and rendering of the code action lightbulb.
      */
     @:optional var lightbulb:cityscape.common.config.EditorLanguageFeatureOptions.IEditorLightbulbOptions;
+    /**
+     * Enable format on type.
+     * Defaults to false.
+     */
+    @:optional var formatOnType:Bool;
     // Inlay hints and code lens (step 7, cs7-rest-inlay)
     /**
      * Show code lens
@@ -3365,6 +3370,8 @@ class EditorOptions {
         _fontLigatures = register(new EditorFontLigatures());
         _fontSize = register(new EditorFontSize());
         _fontWeight = register(new EditorFontWeight());
+        // The format on type contribution (contrib/format)
+        register(new EditorBooleanOption(EditorOption.formatOnType, 'formatOnType', false));
         _glyphMargin = register(new EditorBooleanOption(EditorOption.glyphMargin, 'glyphMargin', true));
         _gotoLocation = register(new EditorGoToLocation());
         _hover = register(new EditorHover());

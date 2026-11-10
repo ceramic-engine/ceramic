@@ -1105,6 +1105,28 @@ interface DocumentRangeFormattingEditProvider {
 }
 
 /**
+ * The document formatting provider interface defines the contract between extensions and
+ * the formatting-feature.
+ */
+interface OnTypeFormattingEditProvider {
+
+    /**
+     * The characters that trigger the formatting (Monaco's
+     * `autoFormatTriggerCharacters`).
+     */
+    var autoFormatTriggerCharacters(default, null):Array<String>;
+
+    /**
+     * Provide formatting edits after a character has been typed.
+     *
+     * The given position and character should hint to the provider
+     * what range the position to expand to, like find the matching `{`
+     * when `}` has been entered.
+     */
+    function provideOnTypeFormattingEdits(model:ITextModel, position:Position, ch:String, options:FormattingOptions, token:CancellationToken, resolve:(edits:Null<Array<TextEdit>>) -> Void):Void;
+}
+
+/**
  * A link inside the editor.
  */
 typedef ILink = {

@@ -28,7 +28,8 @@ class ColorRegistryTest extends TestCase {
         // the 3 of the folding contribution (foldingDecorations.ts) and the
         // 3 of the diff editor (registrations.contribution.ts), the 15 of
         // the peek view (peekView.ts)
-        assertEquals(297 + 3 + 3 + 15, colors.length);
+        // and the 33 of the symbol icons (symbolIcons.ts)
+        assertEquals(297 + 3 + 3 + 15 + 33, colors.length);
         final ids = new Map<String, Bool>();
         for (c in colors) {
             ids.set(c.id, true);
@@ -44,6 +45,8 @@ class ColorRegistryTest extends TestCase {
         assertTrue(ids.exists('diffEditor.move.border'));
         assertTrue(ids.exists('diffEditor.moveActive.border'));
         assertTrue(ids.exists('diffEditor.unchangedRegionShadow'));
+        assertTrue(ids.exists('symbolIcon.methodForeground'));
+        assertTrue(ids.exists('symbolIcon.variableForeground'));
         assertEquals('editor.background', EditorColors.editorBackground);
         assertEquals('minimap.background', MinimapColors.minimapBackground);
         assertEquals('editorIndentGuide.activeBackground1', EditorColorRegistry.editorActiveIndentGuide1);

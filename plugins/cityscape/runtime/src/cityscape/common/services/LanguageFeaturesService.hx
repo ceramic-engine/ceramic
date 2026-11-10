@@ -36,6 +36,7 @@ class LanguageFeaturesService {
     public final documentSemanticTokensProvider:LanguageFeatureRegistry<DocumentSemanticTokensProvider> = new LanguageFeatureRegistry<DocumentSemanticTokensProvider>();
     public final documentFormattingEditProvider:LanguageFeatureRegistry<DocumentFormattingEditProvider> = new LanguageFeatureRegistry<DocumentFormattingEditProvider>();
     public final documentRangeFormattingEditProvider:LanguageFeatureRegistry<DocumentRangeFormattingEditProvider> = new LanguageFeatureRegistry<DocumentRangeFormattingEditProvider>();
+    public final onTypeFormattingEditProvider:LanguageFeatureRegistry<cityscape.common.Languages.OnTypeFormattingEditProvider> = new LanguageFeatureRegistry<cityscape.common.Languages.OnTypeFormattingEditProvider>();
     public final completionProvider:LanguageFeatureRegistry<CompletionItemProvider> = new LanguageFeatureRegistry<CompletionItemProvider>();
     public final inlayHintsProvider:LanguageFeatureRegistry<InlayHintsProvider> = new LanguageFeatureRegistry<InlayHintsProvider>();
 

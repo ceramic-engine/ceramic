@@ -11,6 +11,7 @@ import cityscape.common.config.EditorOptions;
 import cityscape.common.core.Range;
 import cityscape.common.model.TextModel.ModelDecorationOptions;
 import cityscape.contrib.codelens.view.CodeLensModel;
+import cityscape.view.Codicons;
 import cityscape.view.EditorBrowser;
 import cityscape.view.EditorWidgets;
 import glaze.Hsla;
@@ -47,12 +48,20 @@ class CodeLensPaintStyle {
 }
 
 /**
- * A text of the lenses of a line: a lens title (a link when its command has
- * an id) or the ` | ` separator.
+ * A part of the lenses of a line: a text or a `$(name)` codicon of a lens
+ * title (part of a link when its command has an id), or the ` | `
+ * separator.
  */
 class CodeLensSegment {
 
+    /**
+     * The text (empty for a codicon).
+     */
     public final text:String;
+    /**
+     * The codicon id of a `$(name)` of the title, null for a text.
+     */
+    public final icon:Null<String>;
     /**
      * The id of the link (the command of the lens), null for plain text.
      */
@@ -65,10 +74,11 @@ class CodeLensSegment {
     public var x:Float = 0;
     public var width:Float = 0;
 
-    public function new(text:String, linkId:Null<String>, tooltip:Null<String>) {
+    public function new(text:String, linkId:Null<String>, tooltip:Null<String>, ?icon:String) {
         this.text = text;
         this.linkId = linkId;
         this.tooltip = tooltip;
+        this.icon = icon;
     }
 
 }
@@ -199,13 +209,20 @@ class CodeLensContentWidget {
             }
             hasSymbol = true;
             if (lens.command != null) {
-                final title = CodeLensContentWidget.renderLabelWithIcons(StringTools.trim(lens.command.title));
+                // renderLabelWithIcons: texts and codicons
+                final title = Codicons.parseLabelWithIcons(StringTools.trim(lens.command.title));
+                var linkId:Null<String> = null;
                 if (lens.command.id != null && lens.command.id.length > 0) {
-                    final id = 'c${(CodeLensContentWidget._idPool++)}';
-                    this.segments.push(new CodeLensSegment(title, id, lens.command.tooltip));
-                    this._commands.set(id, lens.command);
-                } else {
-                    this.segments.push(new CodeLensSegment(title, null, lens.command.tooltip));
+                    linkId = 'c${(CodeLensContentWidget._idPool++)}';
+                    this._commands.set(linkId, lens.command);
+                }
+                for (part in title) {
+                    switch part {
+                        case LabelText(text):
+                            this.segments.push(new CodeLensSegment(text, linkId, lens.command.tooltip));
+                        case LabelIcon(icon):
+                            this.segments.push(new CodeLensSegment('', linkId, lens.command.tooltip, icon));
+                    }
                 }
                 if (i + 1 < lenses.length) {
                     this.segments.push(new CodeLensSegment('\u00a0|\u00a0', null, null));
@@ -222,61 +239,6 @@ class CodeLensContentWidget {
             // symbols and commands (Monaco fades the lenses in: not ported)
             this._isEmpty = false;
         }
-    }
-
-    /**
-     * Monaco's `renderLabelWithIcons`: the `$(icon)` codicons of a title are
-     * not drawn (removed, the text trimmed); `\$(` stays as text.
-     */
-    public static function renderLabelWithIcons(text:String):String {
-        if (text.indexOf("$(") == -1) {
-            return text;
-        }
-        final buf = new StringBuf();
-        var i = 0;
-        final n = text.length;
-        while (i < n) {
-            final c = StringTools.fastCodeAt(text, i);
-            if (c == "\\".code && i + 1 < n && StringTools.fastCodeAt(text, i + 1) == "$".code) {
-                buf.add("$");
-                i += 2;
-                continue;
-            }
-            if (c == "$".code && i + 1 < n && StringTools.fastCodeAt(text, i + 1) == '('.code) {
-                final close = text.indexOf(')', i + 2);
-                if (close > i + 2 && isIconName(text.substring(i + 2, close))) {
-                    i = close + 1;
-                    continue;
-                }
-            }
-            buf.addChar(c);
-            i++;
-        }
-        return StringTools.trim(buf.toString());
-    }
-
-    static function isIconName(name:String):Bool {
-        // \w[\w-]*(?:~[\w-]+)?
-        final first = StringTools.fastCodeAt(name, 0);
-        if (!isWordChar(first)) {
-            return false;
-        }
-        var tilde = false;
-        for (k in 1...name.length) {
-            final c = StringTools.fastCodeAt(name, k);
-            if (c == '~'.code && !tilde && k + 1 < name.length) {
-                tilde = true;
-                continue;
-            }
-            if (!isWordChar(c) && c != '-'.code) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    static inline function isWordChar(c:Int):Bool {
-        return (c >= 'a'.code && c <= 'z'.code) || (c >= 'A'.code && c <= 'Z'.code) || (c >= '0'.code && c <= '9'.code) || c == '_'.code;
     }
 
     /**
@@ -328,7 +290,8 @@ class CodeLensContentWidget {
         var x = 0.0;
         for (segment in this.segments) {
             segment.x = x;
-            segment.width = segment.text.length * charWidth;
+            // a codicon is one em wide
+            segment.width = segment.icon != null ? (cityscape.view.CodiconOutlines.pathOf(segment.icon) != null ? style.fontSize : 0) : segment.text.length * charWidth;
             x += segment.width;
         }
         this._measuredFontSize = style.fontSize;
@@ -379,9 +342,37 @@ class CodeLensContentWidget {
         // `vertical-align: sub` in a line of `lineHeight`: the text sits a
         // little below the middle of the zone
         final top = bounds.origin.y + (bounds.size.height - style.lineHeight) / 2 + 1;
+        // the codicons: `vertical-align: middle` (the middle of their em square
+        // half the x-height above the baseline of the text), the font size of
+        // the lenses
+        final metrics = textSystem.textSystem;
+        final fontId = metrics.resolveFont(font);
+        // the baseline of the texts as `ShapedLine.paint` places it
+        final reference = textSystem.shapeLine('x', style.fontSize, [new glaze.TextRun(1, font, foreground)]);
+        final ascent:Float = reference.layout.ascent;
+        final descent:Float = reference.layout.descent;
+        final baselineOffset:Float = (style.lineHeight - ascent - descent) / 2 + ascent;
+        // the x-height of the font (its OS/2 value, else the height of `x`)
+        var xHeight:Float = metrics.xHeight(fontId, style.fontSize);
+        if (!(xHeight > 0)) {
+            final bounds = metrics.typographicBounds(fontId, style.fontSize, 'x'.code);
+            xHeight = Math.abs((bounds.size.height : Float));
+        }
+        if (!(xHeight > 0) || xHeight > style.fontSize) {
+            xHeight = style.fontSize / 2;
+        }
+        final iconBaseline = top + baselineOffset - xHeight / 2 + style.fontSize / 2;
         var x = 0.0;
         for (segment in this.segments) {
             final color = segment.linkId != null && segment.linkId == style.hoveredLinkId ? linkForeground : foreground;
+            if (segment.icon != null) {
+                // a codicon without outline here is not drawn and takes no room
+                final painted = Codicons.paintCodicon(window, cx, segment.icon, left + x, iconBaseline, style.fontSize, color);
+                segment.x = x;
+                segment.width = painted ? style.fontSize : 0;
+                x += segment.width;
+                continue;
+            }
             final text = segment.text.split('\u00a0').join(' ');
             final shaped = textSystem.shapeLine(text, style.fontSize, [new glaze.TextRun(glaze.util.Utf8.byteLength(text), font, color)]);
             shaped.paint(new Point(left + x, top), style.lineHeight, glaze.TextAlign.Left, null, window.textPainter());

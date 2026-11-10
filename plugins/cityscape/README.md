@@ -6,7 +6,7 @@ Package `cityscape`. Monaco is by Microsoft, MIT licensed; see [NOTICE.md](NOTIC
 
 Cityscape is Glaze's code editor: it replaces gpui-kit's code editor, which Glaze does not include (the kit keeps its text inputs, `Input`, `Textarea` and the others).
 
-**Status: in progress.** In place: the text model, tokenization (TextMate grammars, themes), the view (wrapping, decorations of Monaco and typed styles, hidden ranges, selections, cursors, mouse, clipboard, IME, sticky scroll), Monaco's commands and keybindings, the editing contributions (find and replace, folding, bracket matching, multicursor, comments, line operations, indentation), the language features (suggest, hover, markers, code actions, definitions, symbols) with an LSP client, and the diff editor. Not yet: inlay hints, code lens, rename, semantic tokens, inline completions, parameter hints, color decorators, and Unity.
+**Status: in progress.** In place: the text model, tokenization (TextMate grammars, themes), the view (wrapping, decorations of Monaco and typed styles, hidden ranges, selections, cursors, mouse, clipboard, IME, sticky scroll), Monaco's commands and keybindings, the editing contributions (find and replace, folding, bracket matching, multicursor, comments, line operations, indentation), the language features (suggest, hover, markers, code actions, definitions, references, symbols, rename, inlay hints, code lens, semantic tokens, links, colors, parameter hints, inline completions, format on type) with an LSP client, and the diff editor. Not yet: the format document and format selection actions, and Unity.
 
 ## Setup
 
@@ -134,6 +134,19 @@ cityscape.onStatusMessage = message -> {
     statusBar.show(message);
     return Lifecycle.toDisposable(() -> statusBar.clear());
 };
+```
+
+## Language servers
+
+`cityscape.lsp.LspClient` plugs a language server into a context: it opens the models of its languages on the server and sends their changes, turns the published diagnostics into markers, and registers a provider for each feature the server declares (completion, hover, signature help, definition, declaration, type definition, implementation, references, highlights, symbols, code actions, code lenses, rename, formatting, on type formatting, folding and selection ranges, inlay hints, semantic tokens, links, colors), with the conversions of vscode-languageclient (`LspConversions`). A server written in Haxe runs in the same process behind an `InProcessTransport`; a host gives its own `LspTransport` for a process or a socket:
+
+```haxe
+final client = new LspClient(cityscape, new InProcessTransport(new MyServer()), {languageIds: ['mylang']});
+client.start(() -> trace('ready: ' + client.serverInfo));
+```
+
+`registerProviders: false` (or the list of the capabilities to register) keeps the synchronization and the diagnostics while the host registers its own providers, with `client.sendCancellableRequest` and `LspConversions`. The arguments of the VS Code commands a server puts in its code lenses or code actions (`editor.action.showReferences`...) are converted to Monaco's types; the `$(name)` codicons of the lens titles are drawn.
+
 ## Links and colors
 
 Links in the text (http, https and file links, and those of `registerLinkProvider`) are underlined and open on Cmd+click (Ctrl+click elsewhere), through `cityscape.openLink` when the host sets it, else with the platform (`http`, `https`, `mailto`) or as commands (`command:`). Colors (`registerColorProvider`, or the CSS like colors of the text with `defaultColorDecorators: true`) get a swatch that opens a color picker:

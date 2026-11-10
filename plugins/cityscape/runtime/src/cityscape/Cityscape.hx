@@ -578,6 +578,23 @@ class Cityscape {
     }
 
     /**
+     * Registers a formatter running as you type
+     * (`monaco.languages.registerOnTypeFormattingEditProvider`): the
+     * `formatOnType` option turns it on in an editor.
+     */
+    public function registerOnTypeFormattingEditProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.OnTypeFormattingEditProvider):IDisposable {
+        return languageFeaturesService.onTypeFormattingEditProvider.register(languageSelector, provider);
+    }
+
+    /**
+     * Registers a selection range provider (`monaco.languages.registerSelectionRangeProvider`):
+     * the ranges of the smart select commands (expand and shrink selection).
+     */
+    public function registerSelectionRangeProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.SelectionRangeProvider):IDisposable {
+        return languageFeaturesService.selectionRangeProvider.register(languageSelector, provider);
+    }
+
+    /**
      * Registers a color provider (`monaco.languages.registerColorProvider`).
      */
     public function registerColorProvider(languageSelector:cityscape.common.LanguageSelector, provider:cityscape.common.Languages.DocumentColorProvider):IDisposable {

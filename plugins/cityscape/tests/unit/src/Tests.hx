@@ -200,6 +200,8 @@ class Tests {
         runner.add(new tests.contrib.suggest.SuggestModelTest());
         runner.add(new tests.lsp.LspConversionsTest());
         runner.add(new tests.lsp.LspClientTest());
+        runner.add(new tests.lsp.LspClientFeaturesTest());
+        runner.add(new tests.view.CodiconsTest());
         runner.add(new tests.contrib.documentSymbols.OutlineModelTest());
         runner.add(new tests.contrib.LanguageFeaturesTest());
         runner.add(new tests.contrib.gotoSymbol.ReferencesModelTest());

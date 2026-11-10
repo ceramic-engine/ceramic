@@ -129,13 +129,23 @@ class CodeLensTest extends TestCase {
         contribution._flush();
         assertEquals(4, provider.resolves);
         final lenses = contribution.getLenses();
-        // ` | ` between the lenses, the codicons of the titles not drawn
-        assertDeepEquals(['3 references', NBSP + '|' + NBSP, 'Run'], texts(lenses[0]));
-        assertDeepEquals(['3 references', NBSP + '|' + NBSP, 'Run'], texts(lenses[1]));
+        // ` | ` between the lenses, the `$(play)` codicon of the title a part
+        // of its link
+        assertDeepEquals(['3 references', NBSP + '|' + NBSP, '', ' Run'], texts(lenses[0]));
+        assertDeepEquals(['3 references', NBSP + '|' + NBSP, '', ' Run'], texts(lenses[1]));
         final segments = lenses[0].getContentWidget().segments;
         assertNotNull(segments[0].linkId);
+        assertNull(segments[0].icon);
         assertNull(segments[1].linkId);
+        assertEquals('play', segments[2].icon);
+        assertEquals(segments[2].linkId, segments[3].linkId);
         assertEquals('test.run', lenses[0].getCommand(segments[2].linkId).id);
+        // the codicon is one em of the lenses' font wide (estimated widths
+        // before painting)
+        final widget = lenses[0].getContentWidget();
+        widget.linkAt(0, contribution.getPaintStyle());
+        assertEquals(12.0, segments[2].width);
+        assertEquals(segments[2].x + 12.0, segments[3].x);
 
         // the model of the contribution has the resolved commands
         var lensModel:Null<CodeLensModel> = null;
@@ -221,12 +231,12 @@ class CodeLensTest extends TestCase {
         final requests = provider.requests;
         final lenses = contribution.getLenses();
         assertEquals(2, lenses.length);
-        assertDeepEquals(['3 references', NBSP + '|' + NBSP, 'Run'], texts(lenses[0]));
+        assertDeepEquals(['3 references', NBSP + '|' + NBSP, '', ' Run'], texts(lenses[0]));
         assertNull(lenses[0].getContentWidget().segments[0].linkId);
         assertEquals(requests, provider.requests);
         contribution._flush();
         assertEquals(requests + 1, provider.requests);
-        assertDeepEquals(['3 references', NBSP + '|' + NBSP, 'Run'], texts(contribution.getLenses()[0]));
+        assertDeepEquals(['3 references', NBSP + '|' + NBSP, '', ' Run'], texts(contribution.getLenses()[0]));
         other.dispose();
     }
 
@@ -265,11 +275,23 @@ class CodeLensTest extends TestCase {
         assertEquals(16.0, editor.getWhitespaces()[0].height);
     }
 
+    /**
+     * iconLabels.ts `renderLabelWithIcons`: texts and codicons.
+     */
     function testRenderLabelWithIcons() {
-        assertEquals('Run', CodeLensContentWidget.renderLabelWithIcons("$(play) Run"));
-        assertEquals('Debug', CodeLensContentWidget.renderLabelWithIcons("$(debug-alt~spin) Debug"));
-        assertEquals("$(play) Run", CodeLensContentWidget.renderLabelWithIcons("\\$(play) Run"));
-        assertEquals("Price $(5 off)", CodeLensContentWidget.renderLabelWithIcons("Price $(5 off)"));
+        final parts = (text:String) -> [for (p in cityscape.view.Codicons.parseLabelWithIcons(text)) switch p {
+            case LabelText(t): 'text:' + t;
+            case LabelIcon(id): 'icon:' + id;
+        }];
+        assertDeepEquals(['icon:play', 'text: Run'], parts("$(play) Run"));
+        // the modifier (spinning) is dropped
+        assertDeepEquals(['icon:debug-alt', 'text: Debug'], parts("$(debug-alt~spin) Debug"));
+        // escaped: the text `$(play)`
+        assertDeepEquals(['text:$(play) Run'], parts("\\$(play) Run"));
+        // not an icon name
+        assertDeepEquals(['text:Price $(5 off)'], parts("Price $(5 off)"));
+        assertDeepEquals(['text:a ', 'icon:check', 'icon:error', 'text: b'], parts("a $(check)$(error) b"));
+        assertDeepEquals([], parts(''));
     }
 
 }

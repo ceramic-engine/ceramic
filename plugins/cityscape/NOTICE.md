@@ -25,11 +25,11 @@ This project contains Haxe translations ("ports") of third party code. The origi
 - Project: vscode-codicons, <https://github.com/microsoft/vscode-codicons>, the icon font Monaco ships (`codicon.ttf` of monaco-editor 0.52.2)
 - Copyright (c) Microsoft Corporation
 - License: Creative Commons Attribution 4.0 International (CC BY 4.0), <https://creativecommons.org/licenses/by/4.0/>
-- Used in: `runtime/src/cityscape/view/Codicons.hx`, the outlines of the `chevron-down` (U+EAB4), `chevron-right` (U+EAB6), `add` (U+EA60), `remove` (U+EB3B) and `unfold` (U+EB73) glyphs, written as SVG paths (the glyph points of the font, flipped to SVG's y axis). Modified: converted from the font's glyph outlines to SVG paths; the shapes are unchanged.
+- Used in: `runtime/src/cityscape/view/Codicons.hx`, the outlines of the `chevron-down` (U+EAB4), `chevron-right` (U+EAB6), `add` (U+EA60), `remove` (U+EB3B) and `unfold` (U+EB73) glyphs, and `runtime/src/cityscape/view/CodiconOutlines.hx`, the outlines of the symbol codicons and of a set of common codicons (`play`, `references`, `check`, `error`, `warning`, `info`, `lightbulb`, `gear`, `link`...), written as SVG paths (the glyph points of the font, flipped to SVG's y axis). Modified: converted from the font's glyph outlines to SVG paths; the shapes are unchanged.
 
 ## Lucide
 
 - Project: Lucide, <https://lucide.dev>, version lucide-static 1.60.0
 - Copyright (c) 2026 Lucide Icons and Contributors (some icons derived from Feather, Copyright (c) 2013-present Cole Bemis, MIT, listed in the license file)
 - License: ISC, see [LICENSES/ISC-lucide.txt](LICENSES/ISC-lucide.txt)
-- Used in: `runtime/src/cityscape/view/SymbolIcons.hx`, the SVG icons standing for Monaco's codicons in the suggest widget, the hover, the quick fix menu and the lightbulb (completion and symbol kinds, marker severities, lightbulb). Unmodified, embedded as SVG text.
+- Used in: `runtime/src/cityscape/view/SymbolIcons.hx`, the SVG icons standing for Monaco's codicons in the hover, the quick fix menu and the lightbulb (symbol kinds, marker severities, lightbulb). Unmodified, embedded as SVG text.

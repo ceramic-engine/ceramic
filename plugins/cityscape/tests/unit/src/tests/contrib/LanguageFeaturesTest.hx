@@ -384,4 +384,44 @@ class LanguageFeaturesTest extends TestCase {
         assertFalse(SuggestController.get(b).widget.isVisible());
     }
 
+
+    /**
+     * formatActions.ts `FormatOnType`: with `formatOnType`, typing a trigger
+     * character of the server (`}` and `;` here) applies the edits of
+     * `textDocument/onTypeFormatting` (two spaces at the start of the line),
+     * in their own undo stop; other characters, or the option off, send
+     * nothing.
+     */
+    function testFormatOnType() {
+        final ids = [cityscape.contrib.format.view.Format.FormatOnType.ID];
+        final editor = new TestCodeEditor(context, cast model, {formatOnType: true}, context.editorExtensions.getSomeEditorContributions(ids));
+        editors.push(editor);
+        // a BeforeFirstInteraction contribution, created here at once
+        assertNotNull(editor.getContribution(cityscape.contrib.format.view.Format.FormatOnType.ID));
+        editor.setPosition(new Position(2, 4));
+        editor.trigger('keyboard', 'type', {text: 'x'});
+        assertEquals(0, server.messagesOf('textDocument/onTypeFormatting').length);
+        editor.trigger('keyboard', 'type', {text: ';'});
+        final request:Dynamic = server.lastOf('textDocument/onTypeFormatting');
+        assertNotNull(request);
+        assertEquals(';', request.params.ch);
+        assertDeepEquals({line: 1, character: 5}, request.params.position);
+        assertEquals('  bazx; qux', model.getLineContent(2));
+        // the cursor moved with the text
+        assertEquals(8, editor.getPosition().column);
+        // the formatting is undone alone
+        model.undo();
+        assertEquals('bazx; qux', model.getLineContent(2));
+
+        // option off
+        final count = server.messagesOf('textDocument/onTypeFormatting').length;
+        final off = new TestCodeEditor(context, cast model, {}, context.editorExtensions.getSomeEditorContributions(ids));
+        editors.push(off);
+        off.getContribution(cityscape.contrib.format.view.Format.FormatOnType.ID);
+        off.setPosition(new Position(1, 1));
+        off.trigger('keyboard', 'type', {text: '}'});
+        assertEquals(count, server.messagesOf('textDocument/onTypeFormatting').length);
+        assertEquals('}foo bar', model.getLineContent(1));
+    }
+
 }

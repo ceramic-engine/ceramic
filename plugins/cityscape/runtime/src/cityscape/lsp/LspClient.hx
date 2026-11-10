@@ -6,6 +6,7 @@ package cityscape.lsp;
 import cityscape.Cityscape;
 import cityscape.base.common.Cancellation.CancellationToken;
 import cityscape.base.common.Errors;
+import cityscape.base.common.Event;
 import cityscape.base.common.JsValues;
 import cityscape.base.common.Lifecycle;
 import cityscape.base.common.Uri;
@@ -13,6 +14,7 @@ import cityscape.common.LanguageSelector;
 import cityscape.common.Model.ITextModel;
 import cityscape.common.Model.ModelUtils;
 import cityscape.common.TextModelEvents.IModelContentChangedEvent;
+import cityscape.common.core.Position;
 import cityscape.common.core.Range;
 import cityscape.platform.markers.common.Markers.IMarkerData;
 
@@ -134,10 +136,19 @@ private class OpenDocument {
  * an `LspTransport`) to a `Cityscape` context.
  *
  * - `start` sends `initialize` and `initialized`, then registers in the
- *   context the providers of the features the server declares (completion,
- *   hover, definition, document symbols, code actions, signature help,
- *   formatting) for `languageIds`, and the commands of its
- *   `executeCommandProvider` (they send `workspace/executeCommand`).
+ *   context the providers of the features the server declares for
+ *   `languageIds` (completion, hover, signature help, definition,
+ *   declaration, type definition, implementation, references, document
+ *   highlights, document symbols, code actions, code lenses, rename,
+ *   formatting of documents, ranges and on type, folding ranges, selection
+ *   ranges, inlay hints, semantic tokens, links, colors), and the commands
+ *   of its `executeCommandProvider` (they send `workspace/executeCommand`).
+ *   The refresh requests of the server (semantic tokens,
+ *   inlay hints, code lenses, folding ranges) ask the editors again.
+ * - The commands of code lenses, code actions and the other results keep
+ *   their LSP JSON arguments, except the well known VS Code commands taking
+ *   Monaco's types (`editor.action.showReferences`...), whose arguments are
+ *   converted (`LspConversions.toCommandArguments`).
  * - The models of the context's model service whose language is in
  *   `languageIds` are opened on the server (`didOpen`), their changes sent
  *   (`didChange`, full or incremental as the server asks), closed on
@@ -172,7 +183,11 @@ class LspClient {
                 },
                 configuration: true,
                 workspaceFolders: false,
-                executeCommand: {dynamicRegistration: false}
+                executeCommand: {dynamicRegistration: false},
+                semanticTokens: {refreshSupport: true},
+                inlayHint: {refreshSupport: true},
+                codeLens: {refreshSupport: true},
+                foldingRange: {refreshSupport: true}
             },
             textDocument: {
                 synchronization: {
@@ -206,6 +221,62 @@ class LspClient {
                     dynamicRegistration: false,
                     linkSupport: true
                 },
+                declaration: {
+                    dynamicRegistration: false,
+                    linkSupport: true
+                },
+                typeDefinition: {
+                    dynamicRegistration: false,
+                    linkSupport: true
+                },
+                implementation: {
+                    dynamicRegistration: false,
+                    linkSupport: true
+                },
+                references: {dynamicRegistration: false},
+                documentHighlight: {dynamicRegistration: false},
+                rename: {
+                    dynamicRegistration: false,
+                    prepareSupport: true,
+                    prepareSupportDefaultBehavior: 1,
+                    honorsChangeAnnotations: false
+                },
+                foldingRange: {
+                    dynamicRegistration: false,
+                    rangeLimit: 5000,
+                    lineFoldingOnly: true,
+                    foldingRangeKind: {valueSet: ['comment', 'imports', 'region']},
+                    foldingRange: {collapsedText: false}
+                },
+                selectionRange: {dynamicRegistration: false},
+                inlayHint: {
+                    dynamicRegistration: false,
+                    resolveSupport: {properties: ['tooltip', 'textEdits', 'label.tooltip', 'label.location', 'label.command']}
+                },
+                codeLens: {dynamicRegistration: false},
+                semanticTokens: {
+                    dynamicRegistration: false,
+                    tokenTypes: [
+                        'namespace', 'type', 'class', 'enum', 'interface', 'struct', 'typeParameter', 'parameter',
+                        'variable', 'property', 'enumMember', 'event', 'function', 'method', 'macro', 'keyword',
+                        'modifier', 'comment', 'string', 'number', 'regexp', 'operator', 'decorator'
+                    ],
+                    tokenModifiers: [
+                        'declaration', 'definition', 'readonly', 'static', 'deprecated', 'abstract', 'async',
+                        'modification', 'documentation', 'defaultLibrary'
+                    ],
+                    formats: ['relative'],
+                    requests: {range: true, full: {delta: true}},
+                    multilineTokenSupport: false,
+                    overlappingTokenSupport: false,
+                    serverCancelSupport: true,
+                    augmentsSyntaxTokens: true
+                },
+                documentLink: {
+                    dynamicRegistration: false,
+                    tooltipSupport: true
+                },
+                colorProvider: {dynamicRegistration: false},
                 documentSymbol: {
                     dynamicRegistration: false,
                     hierarchicalDocumentSymbolSupport: true,
@@ -235,6 +306,7 @@ class LspClient {
                 },
                 formatting: {dynamicRegistration: false},
                 rangeFormatting: {dynamicRegistration: false},
+                onTypeFormatting: {dynamicRegistration: false},
                 publishDiagnostics: {
                     relatedInformation: true,
                     tagSupport: {valueSet: [1, 2]},
@@ -309,7 +381,10 @@ class LspClient {
      * `window/showDocument` gives `{success: false}`,
      * `client/registerCapability`, `client/unregisterCapability`,
      * `window/workDoneProgress/create` and `window/showMessageRequest` give
-     * null; other methods get a `MethodNotFound` error.
+     * null, `workspace/semanticTokens/refresh`, `workspace/inlayHint/refresh`,
+     * `workspace/codeLens/refresh` and `workspace/foldingRange/refresh` give
+     * null and ask the editors again; other methods get a `MethodNotFound`
+     * error.
      */
     public var onServerRequest:Null<(method:String, params:Dynamic, respond:(result:Dynamic) -> Void) -> Bool> = null;
 
@@ -332,6 +407,9 @@ class LspClient {
     final manualModels:Array<ITextModel> = [];
     final listeners:DisposableStore = new DisposableStore();
     final registrations:DisposableStore = new DisposableStore();
+
+    // the refresh requests of the server and the providers they refresh
+    final refreshers:Map<String, Array<() -> Void>> = new Map();
 
     public function new(context:Cityscape, transport:LspTransport, options:LspClientOptions) {
         this.context = context;
@@ -449,6 +527,7 @@ class LspClient {
         isDisposed = true;
         isReady = false;
         registrations.dispose();
+        refreshers.clear();
         listeners.dispose();
         for (tracked in trackedModels) {
             tracked.store.dispose();
@@ -653,6 +732,14 @@ class LspClient {
                 respond({success: false});
             case 'client/registerCapability' | 'client/unregisterCapability' | 'window/workDoneProgress/create' | 'window/showMessageRequest':
                 respond(null);
+            case 'workspace/semanticTokens/refresh' | 'workspace/inlayHint/refresh' | 'workspace/codeLens/refresh' | 'workspace/foldingRange/refresh':
+                respond(null);
+                final list = refreshers.get(method);
+                if (list != null) {
+                    for (refresh in list.copy()) {
+                        refresh();
+                    }
+                }
             case _:
                 answered = true;
                 sendRaw({jsonrpc: '2.0', id: id, error: {code: MethodNotFound, message: 'Unhandled method ' + method}});
@@ -847,6 +934,15 @@ class LspClient {
      */
     public function textDocumentIdentifier(model:ITextModel):Dynamic {
         return {uri: model.uri.toString()};
+    }
+
+    /**
+     * The `TextDocumentPositionParams` of a position of a model (the model
+     * synchronized first).
+     */
+    public function textDocumentPosition(model:ITextModel, position:Position):Dynamic {
+        syncModel(model);
+        return {textDocument: textDocumentIdentifier(model), position: LspConversions.toLspPosition(position)};
     }
 
     /**
@@ -1054,6 +1150,79 @@ class LspClient {
         if (isEnabled(caps.documentRangeFormattingProvider)) {
             registrations.add(context.registerDocumentRangeFormattingEditProvider(selector, new LspDocumentRangeFormattingProvider(this)));
         }
+        if (isEnabled(caps.documentOnTypeFormattingProvider) && JsValues.isObject(caps.documentOnTypeFormattingProvider)) {
+            registrations.add(context.registerOnTypeFormattingEditProvider(selector, new LspOnTypeFormattingProvider(this, caps.documentOnTypeFormattingProvider)));
+        }
+        if (isEnabled(caps.declarationProvider)) {
+            registrations.add(context.registerDeclarationProvider(selector, new LspDeclarationProvider(this)));
+        }
+        if (isEnabled(caps.typeDefinitionProvider)) {
+            registrations.add(context.registerTypeDefinitionProvider(selector, new LspTypeDefinitionProvider(this)));
+        }
+        if (isEnabled(caps.implementationProvider)) {
+            registrations.add(context.registerImplementationProvider(selector, new LspImplementationProvider(this)));
+        }
+        if (isEnabled(caps.referencesProvider)) {
+            registrations.add(context.registerReferenceProvider(selector, new LspReferenceProvider(this)));
+        }
+        if (isEnabled(caps.documentHighlightProvider)) {
+            registrations.add(context.registerDocumentHighlightProvider(selector, new LspDocumentHighlightProvider(this)));
+        }
+        if (isEnabled(caps.renameProvider)) {
+            registrations.add(context.registerRenameProvider(selector, new LspRenameProvider(this, caps.renameProvider)));
+        }
+        if (isEnabled(caps.foldingRangeProvider)) {
+            final foldingRangesChanged = new Emitter<cityscape.common.Languages.FoldingRangeProvider>();
+            registrations.add(foldingRangesChanged);
+            final provider = new LspFoldingRangeProvider(this, foldingRangesChanged);
+            addRefresher('workspace/foldingRange/refresh', provider.refresh);
+            registrations.add(context.registerFoldingRangeProvider(selector, provider));
+        }
+        if (isEnabled(caps.selectionRangeProvider)) {
+            registrations.add(context.registerSelectionRangeProvider(selector, new LspSelectionRangeProvider(this)));
+        }
+        if (isEnabled(caps.inlayHintProvider)) {
+            final inlayHintsChanged = new VoidEmitter();
+            registrations.add(inlayHintsChanged);
+            final provider = new LspInlayHintsProvider(this, caps.inlayHintProvider, inlayHintsChanged);
+            addRefresher('workspace/inlayHint/refresh', provider.refresh);
+            registrations.add(context.registerInlayHintsProvider(selector, provider));
+        }
+        if (isEnabled(caps.codeLensProvider)) {
+            final codeLensesChanged = new Emitter<cityscape.common.Languages.CodeLensProvider>();
+            registrations.add(codeLensesChanged);
+            final provider = new LspCodeLensProvider(this, caps.codeLensProvider, codeLensesChanged);
+            addRefresher('workspace/codeLens/refresh', provider.refresh);
+            registrations.add(context.registerCodeLensProvider(selector, provider));
+        }
+        final semanticTokens:Dynamic = caps.semanticTokensProvider;
+        if (isEnabled(semanticTokens) && JsValues.isObject(semanticTokens)) {
+            if (LspDocumentSemanticTokensProvider.supportsFull(semanticTokens)) {
+                final semanticTokensChanged = new VoidEmitter();
+                registrations.add(semanticTokensChanged);
+                final provider = new LspDocumentSemanticTokensProvider(this, semanticTokens, semanticTokensChanged);
+                addRefresher('workspace/semanticTokens/refresh', provider.refresh);
+                registrations.add(context.registerDocumentSemanticTokensProvider(selector, provider));
+            }
+            if (LspDocumentRangeSemanticTokensProvider.supportsRange(semanticTokens)) {
+                registrations.add(context.registerDocumentRangeSemanticTokensProvider(selector, new LspDocumentRangeSemanticTokensProvider(this, semanticTokens)));
+            }
+        }
+        if (isEnabled(caps.documentLinkProvider)) {
+            registrations.add(context.registerLinkProvider(selector, new LspLinkProvider(this, caps.documentLinkProvider)));
+        }
+        if (isEnabled(caps.colorProvider)) {
+            registrations.add(context.registerColorProvider(selector, new LspColorProvider(this)));
+        }
+    }
+
+    function addRefresher(method:String, refresh:() -> Void):Void {
+        var list = refreshers.get(method);
+        if (list == null) {
+            list = [];
+            refreshers.set(method, list);
+        }
+        list.push(refresh);
     }
 
     /**

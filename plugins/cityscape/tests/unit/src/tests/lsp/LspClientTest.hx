@@ -67,6 +67,17 @@ class FakeLspServer implements LspInProcessServer {
 
     public var deferred:Bool = false;
 
+    /**
+     * Results replacing the fixed ones, by method (a null value answers
+     * null).
+     */
+    public final overrides:Map<String, Dynamic> = new Map();
+
+    /**
+     * Errors answering the requests of a method, by method.
+     */
+    public final errors:Map<String, Dynamic> = new Map();
+
     final later:Array<() -> Void> = [];
 
     var nextServerRequestId:Int = 1;
@@ -132,6 +143,10 @@ class FakeLspServer implements LspInProcessServer {
             switch method {
                 case 'fake/unknown':
                     onResponse({jsonrpc: '2.0', id: id, error: {code: -32601, message: 'Unknown method'}});
+                case _ if (errors.exists(method)):
+                    onResponse({jsonrpc: '2.0', id: id, error: errors.get(method)});
+                case _ if (overrides.exists(method)):
+                    onResponse({jsonrpc: '2.0', id: id, result: overrides.get(method)});
                 case _:
                     onResponse({jsonrpc: '2.0', id: id, result: resultOf(method, params)});
             }
@@ -201,6 +216,24 @@ class FakeLspServer implements LspInProcessServer {
                         signatureHelpProvider: {triggerCharacters: ['(', ','], retriggerCharacters: [')']},
                         documentFormattingProvider: true,
                         documentRangeFormattingProvider: true,
+                        documentOnTypeFormattingProvider: {firstTriggerCharacter: '}', moreTriggerCharacter: [';']},
+                        declarationProvider: true,
+                        typeDefinitionProvider: true,
+                        implementationProvider: true,
+                        referencesProvider: true,
+                        documentHighlightProvider: true,
+                        renameProvider: {prepareProvider: true},
+                        foldingRangeProvider: true,
+                        selectionRangeProvider: true,
+                        inlayHintProvider: {resolveProvider: true},
+                        codeLensProvider: {resolveProvider: true},
+                        semanticTokensProvider: {
+                            legend: {tokenTypes: ['variable', 'function'], tokenModifiers: ['declaration']},
+                            full: {delta: true},
+                            range: true
+                        },
+                        documentLinkProvider: {resolveProvider: true},
+                        colorProvider: true,
                         executeCommandProvider: {commands: ['fake.run']}
                     },
                     serverInfo: {name: 'fake'}
@@ -261,6 +294,111 @@ class FakeLspServer implements LspInProcessServer {
                 [{range: range(0, 0, 0, 0), newText: '  '}];
             case 'fake/echo':
                 params;
+            case 'textDocument/references':
+                ([
+                    {uri: params.textDocument.uri, range: range(0, 0, 0, 3)},
+                    {uri: 'file:///other.fake', range: range(2, 1, 2, 4)}
+                ] : Array<Dynamic>);
+            case 'textDocument/documentHighlight':
+                ([
+                    {range: range(0, 0, 0, 3), kind: 1},
+                    {range: range(0, 4, 0, 7), kind: 2},
+                    {range: range(1, 0, 1, 3), kind: 3},
+                    {range: range(1, 4, 1, 5)}
+                ] : Array<Dynamic>);
+            case 'textDocument/prepareRename':
+                {range: range(0, 0, 0, 3), placeholder: 'foo'};
+            case 'textDocument/rename':
+                {
+                    documentChanges: [
+                        {textDocument: {uri: params.textDocument.uri, version: 1}, edits: [{range: range(0, 0, 0, 3), newText: params.newName}]}
+                    ]
+                };
+            case 'textDocument/foldingRange':
+                ([
+                    {startLine: 0, endLine: 2, kind: 'region'},
+                    {startLine: 3, endLine: 5, kind: 'other'},
+                    {startLine: 1, endLine: 2, kind: 'comment'},
+                    {startLine: 4, endLine: 5}
+                ] : Array<Dynamic>);
+            case 'textDocument/selectionRange':
+                final positions:Array<Dynamic> = params.positions;
+                [for (p in positions) ({
+                    range: range(p.line, p.character, p.line, p.character + 1),
+                    parent: {range: range(p.line, 0, p.line, 9), parent: {range: range(0, 0, 3, 0)}}
+                } : Dynamic)];
+            case 'textDocument/inlayHint':
+                ([
+                    {position: {line: 0, character: 4}, label: 'a:', kind: 2, paddingRight: true, data: 1},
+                    {
+                        position: {line: 1, character: 2},
+                        label: ([
+                            {
+                                value: 'Int',
+                                tooltip: {kind: 'plaintext', value: 'a*b'},
+                                location: {uri: params.textDocument.uri, range: range(0, 0, 0, 3)},
+                                command: {title: 'Show', command: 'editor.action.showReferences', arguments: ([params.textDocument.uri, {line: 0, character: 0}, ([{uri: params.textDocument.uri, range: range(0, 0, 0, 3)}] : Array<Dynamic>)] : Array<Dynamic>)}
+                            }
+                        ] : Array<Dynamic>),
+                        kind: 1,
+                        tooltip: 'hint',
+                        textEdits: [{range: range(1, 2, 1, 2), newText: ':Int'}]
+                    },
+                    {position: {line: 2, character: 0}, label: ''},
+                    {position: {line: 2, character: 0}, label: ([] : Array<Dynamic>)}
+                ] : Array<Dynamic>);
+            case 'inlayHint/resolve':
+                {position: params.position, label: params.label, kind: params.kind, data: params.data, tooltip: {kind: 'markdown', value: '**resolved**'}};
+            case 'textDocument/codeLens':
+                ([
+                    {range: range(0, 0, 0, 3), command: {title: "$(play) Run", command: 'fake.run', arguments: ['x']}},
+                    {range: range(1, 0, 1, 3), data: 7}
+                ] : Array<Dynamic>);
+            case 'codeLens/resolve':
+                {
+                    range: params.range,
+                    data: params.data,
+                    command: {
+                        title: '2 references',
+                        command: 'editor.action.showReferences',
+                        arguments: ([
+                            'file:///a.fake',
+                            {line: 1, character: 0},
+                            ([
+                                {uri: 'file:///a.fake', range: range(0, 0, 0, 3)},
+                                {targetUri: 'file:///b.fake', targetRange: range(2, 0, 2, 5), targetSelectionRange: range(2, 0, 2, 3)}
+                            ] : Array<Dynamic>)
+                        ] : Array<Dynamic>)
+                    }
+                };
+            case 'textDocument/semanticTokens/full':
+                {resultId: 'r1', data: [0, 0, 3, 0, 1, 1, 0, 3, 1, 0]};
+            case 'textDocument/semanticTokens/full/delta':
+                {resultId: 'r2', edits: [{start: 0, deleteCount: 5, data: [0, 1, 2, 1, 0]}, {start: 10, deleteCount: 0}]};
+            case 'textDocument/semanticTokens/range':
+                {data: [0, 0, 3, 1, 0]};
+            case 'textDocument/declaration':
+                [{targetUri: 'file:///decl.fake', targetRange: range(1, 0, 3, 0), targetSelectionRange: range(1, 4, 1, 7), originSelectionRange: range(0, 0, 0, 3)}];
+            case 'textDocument/typeDefinition':
+                {uri: 'file:///type.fake', range: range(5, 0, 5, 4)};
+            case 'textDocument/implementation':
+                [{uri: 'file:///impl.fake', range: range(2, 2, 2, 6)}, {uri: 'file:///impl2.fake', range: range(0, 0, 0, 1)}];
+            case 'textDocument/documentLink':
+                ([
+                    {range: range(0, 0, 0, 4), target: 'https://example.com/a', tooltip: 'Open'},
+                    {range: range(1, 0, 1, 2), data: 9}
+                ] : Array<Dynamic>);
+            case 'documentLink/resolve':
+                {range: params.range, target: 'file:///resolved.fake', data: params.data};
+            case 'textDocument/documentColor':
+                [{range: range(0, 0, 0, 7), color: {red: 1, green: 0.5, blue: 0, alpha: 1}}];
+            case 'textDocument/colorPresentation':
+                ([
+                    {label: '#ff8000', textEdit: {range: params.range, newText: '#ff8000'}, additionalTextEdits: [{range: range(0, 0, 0, 0), newText: 'use color;\n'}]},
+                    {label: 'rgb(255, 128, 0)'}
+                ] : Array<Dynamic>);
+            case 'textDocument/onTypeFormatting':
+                [{range: range(params.position.line, 0, params.position.line, 0), newText: '  '}];
             case _:
                 null;
         }

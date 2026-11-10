@@ -50,6 +50,7 @@ class EditorAll {
         // Semantic tokens and rename (step 7, cs7-rest-sem)
         cityscape.contrib.semanticTokens.view.ViewportSemanticTokens.ViewportSemanticTokensContribution.register(r);
         cityscape.contrib.rename.view.Rename.RenameRegistration.register(r);
+        cityscape.contrib.format.view.Format.FormatRegistration.register(r);
     }
 
 }

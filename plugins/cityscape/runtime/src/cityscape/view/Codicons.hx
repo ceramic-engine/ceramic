@@ -1,5 +1,7 @@
 // New code for Cityscape (not a port): the codicons Monaco's view draws
-// with the codicon font (folding controls), drawn by Glaze as SVG outlines.
+// with the codicon font (folding controls, diff signs, the icons of the
+// suggest widget and of the `$(name)` labels), drawn by Glaze as SVG
+// outlines.
 // The outlines are the glyphs of codicon.ttf (vscode-codicons, Copyright (c)
 // Microsoft Corporation, CC BY 4.0, shipped with monaco-editor): see NOTICE.md.
 package cityscape.view;
@@ -55,6 +57,111 @@ class Codicons {
     public static inline final ASCENT = 19.5 / 19.6;
 
     static var _svgs:Null<Map<String, haxe.io.Bytes>> = null;
+
+    /**
+     * The SVG (a 300x300 viewBox, black fill: Glaze draws it as a mask in
+     * the color it is given) of the codicon `id` (`symbol-method`, `play`,
+     * `references`...; the ids of `CodiconOutlines`), null for an id
+     * without outline.
+     */
+    public static function svg(id:String):Null<haxe.io.Bytes> {
+        final path = CodiconOutlines.pathOf(id);
+        if (path == null) {
+            return null;
+        }
+        return svgData('cityscape/codicon-' + id + '.svg', path);
+    }
+
+    /**
+     * Paints the codicon `id` with its em square `size` pixels wide, its left
+     * edge at `left` and its baseline at `baseline`. Nothing is painted for
+     * an id without outline (Monaco's codicon font has no glyph for it
+     * either). Returns whether something was painted.
+     */
+    public static function paintCodicon(window:Window, cx:App, id:String, left:Float, baseline:Float, size:Float, color:Hsla):Bool {
+        final path = CodiconOutlines.pathOf(id);
+        if (path == null) {
+            return false;
+        }
+        paintIcon(window, cx, 'cityscape/codicon-' + id + '.svg', path, left, baseline, size, color);
+        return true;
+    }
+
+    /**
+     * Monaco's `renderLabelWithIcons` (iconLabels.ts): the parts of a label,
+     * texts and `$(name)` codicons (`$(name~modifier)` too, the modifier
+     * dropped: no spinning here). An escaped `\$(name)` stays as the text
+     * `$(name)`.
+     */
+    public static function parseLabelWithIcons(text:String):Array<LabelWithIconsPart> {
+        final parts:Array<LabelWithIconsPart> = [];
+        if (text.indexOf("$(") == -1) {
+            if (text.length > 0) {
+                parts.push(LabelText(text));
+            }
+            return parts;
+        }
+        var buf = new StringBuf();
+        var i = 0;
+        final n = text.length;
+        while (i < n) {
+            final c = StringTools.fastCodeAt(text, i);
+            final escaped = c == "\\".code && i + 2 < n && StringTools.fastCodeAt(text, i + 1) == "$".code && StringTools.fastCodeAt(text, i + 2) == '('.code;
+            final start = escaped ? i + 1 : i;
+            if (escaped || (c == "$".code && i + 1 < n && StringTools.fastCodeAt(text, i + 1) == '('.code)) {
+                final close = text.indexOf(')', start + 2);
+                if (close > start + 2 && isIconName(text.substring(start + 2, close))) {
+                    final name = text.substring(start + 2, close);
+                    if (escaped) {
+                        buf.add('$(' + name + ')');
+                    }
+                    else {
+                        final pending = buf.toString();
+                        if (pending.length > 0) {
+                            parts.push(LabelText(pending));
+                        }
+                        buf = new StringBuf();
+                        final tilde = name.indexOf('~');
+                        parts.push(LabelIcon(tilde >= 0 ? name.substring(0, tilde) : name));
+                    }
+                    i = close + 1;
+                    continue;
+                }
+            }
+            buf.addChar(c);
+            i++;
+        }
+        final rest = buf.toString();
+        if (rest.length > 0) {
+            parts.push(LabelText(rest));
+        }
+        return parts;
+    }
+
+    /**
+     * `ThemeIcon.iconNameExpression` and its modifier:
+     * `[A-Za-z0-9-]+(~[A-Za-z]+)?`.
+     */
+    static function isIconName(name:String):Bool {
+        var tilde = -1;
+        for (k in 0...name.length) {
+            final c = StringTools.fastCodeAt(name, k);
+            if (c == '~'.code && tilde < 0 && k > 0) {
+                tilde = k;
+                continue;
+            }
+            final letter = (c >= 'a'.code && c <= 'z'.code) || (c >= 'A'.code && c <= 'Z'.code);
+            if (tilde >= 0) {
+                if (!letter) {
+                    return false;
+                }
+            }
+            else if (!letter && !(c >= '0'.code && c <= '9'.code) && c != '-'.code) {
+                return false;
+            }
+        }
+        return name.length > 0 && tilde != name.length - 1;
+    }
 
     static function svgData(key:String, path:String):haxe.io.Bytes {
         if (_svgs == null) {
@@ -132,4 +239,12 @@ class Codicons {
         paintFoldingIcon(window, cx, left, baseline, size, collapsed, color);
     }
 
+}
+
+/**
+ * A part of a label with icons (`Codicons.parseLabelWithIcons`).
+ */
+enum LabelWithIconsPart {
+    LabelText(text:String);
+    LabelIcon(id:String);
 }

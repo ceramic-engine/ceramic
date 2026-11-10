@@ -329,6 +329,91 @@ class LspConversionsTest extends TestCase {
 
     //#endregion
 
+    //#region commands, highlights, folding
+
+    /**
+     * The well known VS Code commands get Monaco's types; the others keep
+     * their JSON arguments.
+     */
+    function testCommandArguments() {
+        final location:Dynamic = {uri: 'file:///a.x', range: lspRange(0, 1, 0, 4)};
+        final link:Dynamic = {targetUri: 'file:///b.x', targetRange: lspRange(2, 0, 3, 0), targetSelectionRange: lspRange(2, 4, 2, 6)};
+        final position:Dynamic = {line: 3, character: 7};
+
+        final findReferences = LspConversions.toCommand({title: 'refs', command: 'editor.action.findReferences', arguments: (['file:///a.x', position] : Array<Dynamic>)});
+        assertTrue(Std.isOfType(findReferences.arguments[0], Uri));
+        assertEquals('file:///a.x', (findReferences.arguments[0] : Uri).toString());
+        assertTrue(Std.isOfType(findReferences.arguments[1], Position));
+        assertEquals(4, (findReferences.arguments[1] : Position).lineNumber);
+        assertEquals(8, (findReferences.arguments[1] : Position).column);
+
+        for (id in ['editor.action.showReferences', 'editor.action.peekLocations', 'editor.action.goToLocations']) {
+            final original:Array<Dynamic> = ['file:///a.x', position, ([location, link] : Array<Dynamic>), 'goto', 'none', true];
+            final command = LspConversions.toCommand({title: 'go', command: id, arguments: original});
+            final args = command.arguments;
+            assertEquals(6, args.length, id);
+            assertTrue(Std.isOfType(args[0], Uri), id);
+            assertTrue(Std.isOfType(args[1], Position), id);
+            final locations:Array<cityscape.common.Languages.LocationLink> = args[2];
+            assertEquals(2, locations.length, id);
+            assertEquals('file:///a.x', locations[0].uri.toString());
+            assertRange(1, 2, 1, 5, locations[0].range);
+            assertEquals('file:///b.x', locations[1].uri.toString());
+            assertRange(3, 1, 4, 1, locations[1].range);
+            assertRange(3, 5, 3, 7, locations[1].targetSelectionRange);
+            assertEquals('goto', args[3]);
+            assertEquals('none', args[4]);
+            assertEquals(true, args[5]);
+            // the LSP command is left as it is
+            assertEquals('file:///a.x', original[0]);
+            assertEquals(location, original[2][0]);
+        }
+
+        // values already converted are kept
+        final uri = Uri.parse('file:///c.x');
+        final monacoPosition = new Position(2, 3);
+        final kept = LspConversions.toCommandArguments('editor.action.showReferences', ([uri, monacoPosition, ([] : Array<Dynamic>)] : Array<Dynamic>));
+        assertTrue(kept[0] == uri);
+        assertTrue(kept[1] == monacoPosition);
+
+        // other commands keep their JSON arguments
+        final other = LspConversions.toCommand({title: 'run', command: 'my.run', arguments: (['file:///a.x', position] : Array<Dynamic>)});
+        assertEquals('file:///a.x', other.arguments[0]);
+        assertEquals(position, other.arguments[1]);
+    }
+
+    function testHighlightAndFoldingKinds() {
+        assertEquals(0, (LspConversions.toDocumentHighlightKind(1) : Int));
+        assertEquals(1, (LspConversions.toDocumentHighlightKind(2) : Int));
+        assertEquals(2, (LspConversions.toDocumentHighlightKind(3) : Int));
+        assertEquals(0, (LspConversions.toDocumentHighlightKind(9) : Int));
+        assertEquals(0, (LspConversions.toDocumentHighlightKind(null) : Int));
+        assertTrue(LspConversions.toFoldingRangeKind('comment') == cityscape.common.Languages.FoldingRangeKind.Comment);
+        assertTrue(LspConversions.toFoldingRangeKind('imports') == cityscape.common.Languages.FoldingRangeKind.Imports);
+        assertTrue(LspConversions.toFoldingRangeKind('region') == cityscape.common.Languages.FoldingRangeKind.Region);
+        assertNull(LspConversions.toFoldingRangeKind('other'));
+        assertNull(LspConversions.toFoldingRangeKind(null));
+        final range = LspConversions.toFoldingRange({startLine: 0, endLine: 4, startCharacter: 3});
+        assertEquals(1, range.start);
+        assertEquals(5, range.end);
+    }
+
+    function testSemanticTokensResults() {
+        final legend = LspConversions.toSemanticTokensLegend({tokenTypes: ['a', 'b'], tokenModifiers: ['m']});
+        assertDeepEquals(['a', 'b'], legend.tokenTypes);
+        assertDeepEquals(['m'], legend.tokenModifiers);
+        final tokens:cityscape.common.Languages.SemanticTokens = LspConversions.toSemanticTokensOrEdits({data: [1, 2, 3, 4, 5]});
+        assertEquals(5, tokens.data.length);
+        assertEquals(4, tokens.data[3]);
+        final edits:cityscape.common.Languages.SemanticTokensEdits = LspConversions.toSemanticTokensOrEdits({resultId: 'x', edits: [{start: 2, deleteCount: 1, data: [9]}]});
+        assertEquals('x', edits.resultId);
+        assertEquals(9, edits.edits[0].data[0]);
+        assertNull(LspConversions.toSemanticTokens(null));
+        assertNull(LspConversions.toSemanticTokens({resultId: 'y'}));
+    }
+
+    //#endregion
+
     //#region locations and symbols
 
     function testDefinitions() {

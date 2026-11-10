@@ -66,8 +66,9 @@ class EditorOptionsTruthTest extends TestCase {
         // defaultColorDecorators (EditorColorDecoratorsOptions), codeLens, codeLensFontFamily,
         // codeLensFontSize, inlayHints (EditorInlayHintsCodeLensOptions), parameterHints
         // (EditorParameterHintsOptions), inlineSuggest (EditorInlineSuggestOptions),
-        // 2 of the drag and drop contribution (dragAndDrop, mouseStyle), plus the 5 Cityscape additions
-        assertEquals(116 + 5, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
+        // 2 of the drag and drop contribution (dragAndDrop, mouseStyle), 1 of the format contribution
+        // (formatOnType), plus the 5 Cityscape additions
+        assertEquals(117 + 5, [for (o in EditorOptions.editorOptionsRegistry) if (o != null) o].length);
     }
 
     function testDefaults() {

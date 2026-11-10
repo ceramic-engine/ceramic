@@ -107,4 +107,124 @@ class EditorSimpleWorker {
         return cityscape.common.languages.DefaultDocumentColorsComputer.computeDefaultDocumentColors(new cityscape.common.languages.DefaultDocumentColorsComputer.TextModelDocumentColorComputerTarget(model));
     }
 
+
+    static inline final _diffLimit = 100000;
+
+    /**
+     * Monaco's `$computeMoreMinimalEdits`: the edits sorted, the adjacent
+     * ones merged, then each one reduced to the characters it changes (a
+     * diff of its text with the text it replaces), so that formatting keeps
+     * the cursors and decorations of the unchanged text. An end of line
+     * change (`eol`) goes last.
+     */
+    public static function computeMoreMinimalEdits(model:ITextModel, edits:Array<cityscape.common.Languages.TextEdit>, pretty:Bool):Array<cityscape.common.Languages.TextEdit> {
+        final result:Array<cityscape.common.Languages.TextEdit> = [];
+        var lastEol:Null<cityscape.common.Model.EndOfLineSequence> = null;
+
+        edits = edits.copy();
+        haxe.ds.ArraySort.sort(edits, (a, b) -> {
+            if (a.range != null && b.range != null) {
+                return Range.compareRangesUsingStarts(a.range, b.range);
+            }
+            // eol only changes should go to the end
+            final aRng = a.range != null ? 0 : 1;
+            final bRng = b.range != null ? 0 : 1;
+            return aRng - bRng;
+        });
+
+        // merge adjacent edits (copies: the edits of the caller are not changed)
+        edits = [for (e in edits) ({range: e.range, text: e.text, eol: e.eol} : cityscape.common.Languages.TextEdit)];
+        var writeIndex = 0;
+        for (readIndex in 1...edits.length) {
+            if (Range.getEndPositionStatic(edits[writeIndex].range).equals(Range.getStartPositionStatic(edits[readIndex].range))) {
+                edits[writeIndex].range = Range.fromPositions(Range.getStartPositionStatic(edits[writeIndex].range), Range.getEndPositionStatic(edits[readIndex].range));
+                edits[writeIndex].text += edits[readIndex].text;
+            } else {
+                writeIndex++;
+                edits[writeIndex] = edits[readIndex];
+            }
+        }
+        if (edits.length > 0) {
+            edits.resize(writeIndex + 1);
+        }
+
+        for (edit in edits) {
+            final range = edit.range;
+            var text = edit.text;
+
+            if (edit.eol != null) {
+                lastEol = edit.eol;
+            }
+
+            if (Range.isEmptyStatic(range) && (text == null || text.length == 0)) {
+                // empty change
+                continue;
+            }
+
+            final original = model.getValueInRange(range);
+            text = normalizeEol(text != null ? text : '', model.getEOL());
+
+            if (original == text) {
+                // noop
+                continue;
+            }
+
+            // make sure diff won't take too long
+            if (Math.max(text.length, original.length) > _diffLimit) {
+                result.push({range: range, text: text});
+                continue;
+            }
+
+            // compute diff between original and edit.text
+            final changes = cityscape.base.common.diff.Diff.stringDiff(original, text, pretty);
+            final editOffset = model.getOffsetAt(Range.lift(range).getStartPosition());
+
+            for (change in changes) {
+                final start = model.getPositionAt(editOffset + change.originalStart);
+                final end = model.getPositionAt(editOffset + change.originalStart + change.originalLength);
+                final newEdit:cityscape.common.Languages.TextEdit = {
+                    text: text.substr(change.modifiedStart, change.modifiedLength),
+                    range: {startLineNumber: start.lineNumber, startColumn: start.column, endLineNumber: end.lineNumber, endColumn: end.column}
+                };
+
+                if (model.getValueInRange(newEdit.range) != newEdit.text) {
+                    result.push(newEdit);
+                }
+            }
+        }
+
+        if (lastEol != null) {
+            result.push({eol: lastEol, text: '', range: {startLineNumber: 0, startColumn: 0, endLineNumber: 0, endColumn: 0}});
+        }
+
+        return result;
+    }
+
+    /**
+     * `text.replace(/\r\n|\n|\r/g, eol)`.
+     */
+    static function normalizeEol(text:String, eol:String):String {
+        if (text.indexOf('\r') < 0 && (eol == '\n' || text.indexOf('\n') < 0)) {
+            return text;
+        }
+        final buf = new StringBuf();
+        var i = 0;
+        final n = text.length;
+        while (i < n) {
+            final c = StringTools.fastCodeAt(text, i);
+            if (c == '\r'.code) {
+                buf.add(eol);
+                if (i + 1 < n && StringTools.fastCodeAt(text, i + 1) == '\n'.code) {
+                    i++;
+                }
+            } else if (c == '\n'.code) {
+                buf.add(eol);
+            } else {
+                buf.addChar(c);
+            }
+            i++;
+        }
+        return buf.toString();
+    }
+
 }
