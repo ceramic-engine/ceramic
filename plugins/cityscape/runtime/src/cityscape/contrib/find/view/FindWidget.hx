@@ -100,9 +100,9 @@ class FindWidget extends Model implements Render implements IFindWidget {
     var _ignoreChangeEvent = false;
 
     public static function create(controller:FindController, editor:ICodeEditor, themeColor:(key:String) -> Null<Hsla>, window:Window, cx:App):Entity<FindWidget> {
-        final findInput = cx.newEntity((c:Context<InputState>) -> new InputState(window, c).withPlaceholder(FindWidgetLabels.FIND_INPUT_PLACEHOLDER));
-        final replaceInput = cx.newEntity((c:Context<InputState>) -> new InputState(window, c).withPlaceholder(FindWidgetLabels.REPLACE_INPUT_PLACEHOLDER));
-        return cx.newEntity((c:Context<FindWidget>) -> new FindWidget(controller, editor, themeColor, findInput, replaceInput, window, c));
+        final findInput = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<InputState>) -> new InputState(window, c).withPlaceholder(FindWidgetLabels.FIND_INPUT_PLACEHOLDER)), cx);
+        final replaceInput = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<InputState>) -> new InputState(window, c).withPlaceholder(FindWidgetLabels.REPLACE_INPUT_PLACEHOLDER)), cx);
+        return cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<FindWidget>) -> new FindWidget(controller, editor, themeColor, findInput, replaceInput, window, c)), cx);
     }
 
     function new(controller:FindController, editor:ICodeEditor, themeColor:(key:String) -> Null<Hsla>, findInput:Entity<InputState>, replaceInput:Entity<InputState>, window:Window, cx:Context<FindWidget>) {
@@ -174,6 +174,9 @@ class FindWidget extends Model implements Render implements IFindWidget {
         for (s in _subscriptions) {
             s.dispose();
         }
+        cityscape.view.ViewEntities.release(findInput);
+        cityscape.view.ViewEntities.release(replaceInput);
+        destroy();
     }
 
     function _notify():Void {

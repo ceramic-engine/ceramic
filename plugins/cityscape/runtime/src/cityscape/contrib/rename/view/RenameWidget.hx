@@ -117,6 +117,7 @@ class RenameWidget implements IOverlayWidget implements IDisposable {
     final _disposables = new DisposableStore();
 
     var _view:Null<Entity<RenameWidgetView>> = null;
+    var _input:Null<Entity<InputState>> = null;
     var _app:Null<App> = null;
 
     // Model state
@@ -176,6 +177,9 @@ class RenameWidget implements IOverlayWidget implements IDisposable {
     public function dispose():Void {
         this._disposables.dispose();
         this._editor.removeOverlayWidget(this);
+        cityscape.view.ViewEntities.release(this._input);
+        this._input = null;
+        cityscape.view.ViewEntities.release(this._view);
         this._view = null;
     }
 
@@ -195,8 +199,9 @@ class RenameWidget implements IOverlayWidget implements IDisposable {
         var v = _view;
         if (v == null) {
             _app = cx;
-            final input = cx.newEntity((c:Context<InputState>) -> new InputState(window, c));
-            v = cx.newEntity((c:Context<RenameWidgetView>) -> new RenameWidgetView(this, _editor, input, window, c));
+            final input = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<InputState>) -> new InputState(window, c)), cx);
+            _input = input;
+            v = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<RenameWidgetView>) -> new RenameWidgetView(this, _editor, input, window, c)), cx);
             _view = v;
         }
         return v;

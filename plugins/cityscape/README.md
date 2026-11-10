@@ -87,7 +87,7 @@ model.deltaDecorations([], [
 cityscape.registerDecorationStyle('my-class', {color: '#e06c75', fontWeight: 'bold'});
 ```
 
-Without a `fontFamily`, the editor uses JetBrains Mono, the monospace font bundled with Glaze, on every target; give `fontFamily` (`'Menlo, monospace'`) to use system fonts.
+Without a `fontFamily`, the editor uses JetBrains Mono, the monospace font bundled with Glaze, on every target; give `fontFamily` (`'Menlo, monospace'`) to use system fonts. Emoji are drawn with the color emoji font on every target, even when a font of the list has a text glyph for them (the Cityscape option `preferColorEmoji`, true by default; `false` follows the font list like Chromium, where Menlo's `☕` is a text glyph).
 
 The `onCreate` callback gives the `CityscapeEditor`, with Monaco's editor methods and events (`getValue`, `setValue`, `getSelection`, `setSelections`, `revealLineInCenter`, `executeEdits`, `deltaDecorations`, `createDecorationsCollection`, `saveViewState`, `onDidChangeModelContent`, `onDidChangeCursorPosition`...). Commands, actions and keybindings use Monaco's API:
 
@@ -183,7 +183,7 @@ cityscape.registerInlineCompletionsProvider('haxe', myProvider); // provideInlin
 ## Layout
 
 - `runtime/src/cityscape`: the port, organized like `src/vs/editor` (`common/core`, `common/config`, `common/...`; `browser` becomes `view`), with the parts of `src/vs/base` and `src/vs/platform` it needs under `base/` and `platform/`. `kit/` is new code tying the editor to the Glaze kit (`KitTheme`, `KitGrammars`).
-- `tests/unit`: unit tests (vscode's own tests, ported, and comparisons with recordings of the real Monaco in `tests/unit/data/monaco`). Node: `ceramic headless run node --setup --assets --allow-multiple`; macOS: `ceramic clay build mac --setup --assets --allow-multiple`, then `project/mac/unit.app/Contents/MacOS/unit`.
+- `tests/unit`: unit tests (vscode's own tests, ported, and comparisons with recordings of the real Monaco in `tests/unit/data/monaco`). The project defines `cityscape_debug_counters`: `cityscape.base.common.DebugCounters` then counts the live emitter listeners, disposables, timers, editor views and Glaze entities, which the leak test (`EditorLeakTest`, 100 editors and 20 diff editors created and destroyed) compares with their first values. Node: `ceramic headless run node --setup --assets --allow-multiple`; macOS: `ceramic clay build mac --setup --assets --allow-multiple`, then `project/mac/unit.app/Contents/MacOS/unit`.
 - `tests/bench`: benchmarks (see its README).
 - `tests/visual`: a visual check of the view (a Haxe sample in two editors), captured to PNG on macOS and the web (see `tests/visual/src/Project.hx`).
 - `docs/PORTING.md`: the porting rules. `docs/DEVIATIONS.md`: the intended differences with Monaco.

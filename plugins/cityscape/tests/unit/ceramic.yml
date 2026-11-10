@@ -23,3 +23,6 @@ app:
     defines:
         # Native test runs use a hidden SDL window (no window on screen)
         - clay_sdl_headless
+        # Counts of live listeners, disposables, timers and views for the
+        # leak tests (cityscape.base.common.DebugCounters)
+        - cityscape_debug_counters

@@ -522,7 +522,7 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
                 return null;
             }
             this._app = cx;
-            v = cx.newEntity((c:glaze.Context<StickyScrollView>) -> new StickyScrollView(this, view));
+            v = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:glaze.Context<StickyScrollView>) -> new StickyScrollView(this, view)), cx);
             this._viewEntity = v;
         }
         return v;
@@ -552,6 +552,7 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
     }
 
     override public function dispose():Void {
+        cityscape.view.ViewEntities.release(this._viewEntity);
         this._viewEntity = null;
         this._app = null;
         super.dispose();
@@ -592,6 +593,12 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
         }
     }
 
+    final _boxShadow:Array<glaze.BoxShadow> = [new glaze.BoxShadow(0, 4, new Hsla(0, 0, 0, 1)).withBlurRadius(2).withSpreadRadius(-2)];
+
+    var _shadowBounds:Null<Bounds> = null;
+
+    static final _noCorners = glaze.Corners.all(0);
+
     @:allow(cityscape.contrib.stickyScroll.view)
     function _paint(bounds:Bounds, view:CityscapeView, window:Window, cx:App):Void {
         this.bounds = bounds;
@@ -615,13 +622,16 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
         final border = theme.getColor('editorStickyScroll.border');
         final shadow = theme.getColor('editorStickyScroll.shadow');
 
-        // box-shadow: shadow 0 4px 2px -2px (under the widget)
-        if (shadow != null && shadow.a > 0) {
-            final steps = 4;
-            for (i in 0...steps) {
-                final alpha = shadow.a * (1 - (i + 0.5) / steps) * 0.75;
-                fill2(window, x0, y0 + height + i * 0.5, width, 0.5, shadow.opacity(alpha / Math.max(shadow.a, 0.0001)));
+        // box-shadow: editorStickyScroll.shadow 0 4px 2px -2px (under the
+        // widget: the widget's background covers the rest)
+        if (shadow != null && shadow.a > 0 && height > 0) {
+            final boxShadow = _boxShadow[0];
+            boxShadow.color = shadow;
+            final previous = _shadowBounds;
+            if (previous == null || previous.origin.x != x0 || previous.origin.y != y0 || previous.size.width != width || previous.size.height != height) {
+                _shadowBounds = new Bounds(new Point(x0, y0), new Size(width, height));
             }
+            window.paintDropShadows(_shadowBounds, _noCorners, _boxShadow);
         }
 
         window.pushContentMask(new ContentMask(new Bounds(new Point(x0, y0), new Size(width, Math.max(0, height)))));

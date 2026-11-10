@@ -241,7 +241,7 @@ class CityscapeEditor extends Component implements Styled {
         final configuration = new EditorConfiguration(false, mergedOptions(), {width: 600, height: 400}, (bare) -> measurements.readFontInfo(bare));
         final widget = new CodeEditorWidget(ctx, configuration);
         this.widget = widget;
-        viewEntity = cx.newEntity((vcx:Context<CityscapeView>) -> new CityscapeView(vcx, widget, measurements));
+        viewEntity = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((vcx:Context<CityscapeView>) -> new CityscapeView(vcx, widget, measurements)), cx);
         appliedOptions = options;
         appliedShortcuts = shortcutsKey();
         widget.setWrappingIndentColumns(wrappingIndentColumns);
@@ -275,6 +275,7 @@ class CityscapeEditor extends Component implements Styled {
         if (v != null) {
             (v : CityscapeView).disposeView();
         }
+        cityscape.view.ViewEntities.release(v);
         viewEntity = null;
         final w = widget;
         if (w != null) {

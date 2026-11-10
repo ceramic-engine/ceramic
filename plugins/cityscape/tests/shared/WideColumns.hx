@@ -80,7 +80,11 @@ class WideColumns {
             wordWrap: 'off',
             renderWhitespace: 'none',
             lineNumbers: 'on',
-            cursorBlinking: 'solid'
+            cursorBlinking: 'solid',
+            // Monaco's (Chromium's) font order: a listed font's text glyph
+            // before the emoji font (`☺` is Menlo's), not Cityscape's color
+            // emoji default
+            preferColorEmoji: false
         };
     }
 

@@ -20,6 +20,7 @@ class EditorAll {
         cityscape.contrib.clipboard.view.Clipboard.ClipboardRegistration.register(r);
         cityscape.contrib.comment.view.Comment.CommentRegistration.register(r);
         cityscape.contrib.cursorUndo.view.CursorUndo.CursorUndoRegistration.register(r);
+        cityscape.contrib.dnd.view.Dnd.DndRegistration.register(r);
         cityscape.contrib.find.view.FindController.FindRegistration.register(r);
         cityscape.contrib.folding.view.Folding.FoldingRegistration.register(r);
         cityscape.contrib.inPlaceReplace.view.InPlaceReplace.InPlaceReplaceRegistration.register(r);

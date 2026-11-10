@@ -367,6 +367,9 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
     final _onContextMenu = new Emitter<IEditorMouseEvent>();
     final _onMouseMove = new Emitter<IEditorMouseEvent>();
     final _onMouseLeave = new Emitter<IPartialEditorMouseEvent>();
+    final _onMouseDrag = new Emitter<IEditorMouseEvent>();
+    final _onMouseDrop = new Emitter<IPartialEditorMouseEvent>();
+    final _onMouseDropCanceled = new VoidEmitter();
     final _onKeyUp = new Emitter<cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent>();
     final _onKeyDown = new Emitter<cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent>();
     final _onDidContentSizeChange = new Emitter<IContentSizeChangedEvent>();
@@ -430,6 +433,12 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
     inline function get_onMouseMove() return _onMouseMove.event;
     public var onMouseLeave(get, never):Event<IPartialEditorMouseEvent>;
     inline function get_onMouseLeave() return _onMouseLeave.event;
+    public var onMouseDrag(get, never):Event<IEditorMouseEvent>;
+    inline function get_onMouseDrag() return _onMouseDrag.event;
+    public var onMouseDrop(get, never):Event<IPartialEditorMouseEvent>;
+    inline function get_onMouseDrop() return _onMouseDrop.event;
+    public var onMouseDropCanceled(get, never):VoidEvent;
+    inline function get_onMouseDropCanceled() return _onMouseDropCanceled.event;
     public var onKeyUp(get, never):Event<cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent>;
     inline function get_onKeyUp() return _onKeyUp.event;
     public var onKeyDown(get, never):Event<cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent>;
@@ -612,7 +621,7 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
         this._onDidDispose.fire();
 
         this._contributions.dispose();
-        for (emitter in ([_onDidChangeModelContent, _onDidChangeModelLanguage, _onDidChangeModelLanguageConfiguration, _onDidChangeModelOptions, _onDidChangeModelDecorations, _onDidChangeModelTokens, _onDidChangeConfiguration, _onWillChangeModel, _onDidChangeModel, _onDidChangeCursorPosition, _onDidChangeCursorSelection, _onDidLayoutChange, _onWillType, _onDidType, _onDidPaste, _onMouseUp, _onMouseDown, _onContextMenu, _onMouseMove, _onMouseLeave, _onKeyUp, _onKeyDown, _onDidContentSizeChange, _onDidScrollChange] : Array<IDisposable>)) {
+        for (emitter in ([_onDidChangeModelContent, _onDidChangeModelLanguage, _onDidChangeModelLanguageConfiguration, _onDidChangeModelOptions, _onDidChangeModelDecorations, _onDidChangeModelTokens, _onDidChangeConfiguration, _onWillChangeModel, _onDidChangeModel, _onDidChangeCursorPosition, _onDidChangeCursorSelection, _onDidLayoutChange, _onWillType, _onDidType, _onDidPaste, _onMouseUp, _onMouseDown, _onContextMenu, _onMouseMove, _onMouseLeave, _onMouseDrag, _onMouseDrop, _onMouseDropCanceled, _onKeyUp, _onKeyDown, _onDidContentSizeChange, _onDidScrollChange] : Array<IDisposable>)) {
             emitter.dispose();
         }
 
@@ -1890,6 +1899,23 @@ class CodeEditorWidget extends Disposable implements ICodeEditor {
     @:allow(cityscape)
     function _fireMouseLeave(e:IPartialEditorMouseEvent):Void {
         _onMouseLeave.fire(e);
+    }
+
+    @:allow(cityscape)
+    function _fireMouseDrag(e:IEditorMouseEvent):Void {
+        _contributions.onBeforeInteractionEvent();
+        _onMouseDrag.fire(e);
+    }
+
+    @:allow(cityscape)
+    function _fireMouseDrop(e:IPartialEditorMouseEvent):Void {
+        _contributions.onBeforeInteractionEvent();
+        _onMouseDrop.fire(e);
+    }
+
+    @:allow(cityscape)
+    function _fireMouseDropCanceled():Void {
+        _onMouseDropCanceled.fire();
     }
 
     @:allow(cityscape)

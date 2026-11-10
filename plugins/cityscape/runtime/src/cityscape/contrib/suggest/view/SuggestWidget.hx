@@ -621,6 +621,7 @@ class SuggestWidgetOverlay implements IOverlayWidget implements IDisposable {
 
     public function dispose():Void {
         widget.onChange = null;
+        cityscape.view.ViewEntities.release(view);
         view = null;
     }
 
@@ -636,7 +637,7 @@ class SuggestWidgetOverlay implements IOverlayWidget implements IDisposable {
         var v = view;
         if (v == null) {
             app = cx;
-            v = cx.newEntity((c:Context<SuggestWidgetView>) -> new SuggestWidgetView(widget, editor, c));
+            v = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<SuggestWidgetView>) -> new SuggestWidgetView(widget, editor, c)), cx);
             view = v;
             final entityId = v.entityId();
             widget.onChange = () -> cx.notify(entityId);

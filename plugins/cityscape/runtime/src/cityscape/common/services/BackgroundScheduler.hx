@@ -93,6 +93,13 @@ class BackgroundScheduler implements IDisposable {
         return _tasks.length == 0;
     }
 
+    /**
+     * The number of tasks scheduled (tests).
+     */
+    public function taskCount():Int {
+        return _tasks.length;
+    }
+
     public function hasTask(task:IBackgroundTask):Bool {
         return _tasks.indexOf(task) != -1;
     }

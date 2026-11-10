@@ -331,6 +331,7 @@ class ReferenceWidget implements IOverlayWidget implements IDisposable {
         }
         _isVisible = false;
         editor.removeOverlayWidget(this);
+        cityscape.view.ViewEntities.release(_view);
         _view = null;
         this._onDidClose.fire();
         this._onDidSelectReference.dispose();
@@ -712,7 +713,7 @@ class ReferenceWidget implements IOverlayWidget implements IDisposable {
         var v = _view;
         if (v == null) {
             _app = cx;
-            v = cx.newEntity((c:Context<ReferenceWidgetView>) -> new ReferenceWidgetView(c, this));
+            v = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<ReferenceWidgetView>) -> new ReferenceWidgetView(c, this)), cx);
             _view = v;
         }
         return v;

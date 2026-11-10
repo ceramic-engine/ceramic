@@ -404,6 +404,18 @@ class ContextKeyService extends AbstractContextKeyService {
     var _lastContextId:Int;
     final _contexts = new Map<Int, Context>();
 
+    /**
+     * The number of contexts (the root and the scoped ones not disposed),
+     * for the leak tests.
+     */
+    public function contextCount():Int {
+        var count = 0;
+        for (_ in _contexts) {
+            count++;
+        }
+        return count;
+    }
+
     public function new() {
         super(0);
         this._lastContextId = 0;

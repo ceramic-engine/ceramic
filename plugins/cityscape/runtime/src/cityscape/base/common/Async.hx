@@ -23,7 +23,26 @@ class Async {
         if (schedule != null) {
             return schedule(fn, delay);
         }
+        #if cityscape_debug_counters
+        DebugCounters.timers++;
+        var pending = true;
+        final cancel = ceramic.Timer.delay(null, delay / 1000.0, () -> {
+            if (pending) {
+                pending = false;
+                DebugCounters.timers--;
+            }
+            fn();
+        });
+        return () -> {
+            if (pending) {
+                pending = false;
+                DebugCounters.timers--;
+            }
+            cancel();
+        };
+        #else
         return ceramic.Timer.delay(null, delay / 1000.0, fn);
+        #end
     }
 
     /**

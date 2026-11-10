@@ -580,6 +580,22 @@ interface ICodeEditor extends IEditor {
      */
     var onMouseLeave(get, never):Event<IPartialEditorMouseEvent>;
     /**
+     * An event emitted while the selection is dragged with the mouse
+     * (`dragAndDrop`).
+     * @event
+     */
+    var onMouseDrag(get, never):Event<IEditorMouseEvent>;
+    /**
+     * An event emitted when a dragged selection is dropped.
+     * @event
+     */
+    var onMouseDrop(get, never):Event<IPartialEditorMouseEvent>;
+    /**
+     * An event emitted when the drag of a selection is canceled.
+     * @event
+     */
+    var onMouseDropCanceled(get, never):VoidEvent;
+    /**
      * An event emitted on a "keyup".
      * @event
      */

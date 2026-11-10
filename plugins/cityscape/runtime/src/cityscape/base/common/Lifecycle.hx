@@ -148,9 +148,18 @@ class Disposable implements IDisposable {
 
     final _store:DisposableStore = new DisposableStore();
 
-    public function new() {}
+    public function new() {
+        #if cityscape_debug_counters
+        DebugCounters.disposables++;
+        #end
+    }
 
     public function dispose():Void {
+        #if cityscape_debug_counters
+        if (!_store.isDisposed) {
+            DebugCounters.disposables--;
+        }
+        #end
         _store.dispose();
     }
 

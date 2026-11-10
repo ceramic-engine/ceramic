@@ -110,6 +110,16 @@ typedef IEditorOptions = {
      */
     @:optional var readOnly:Bool;
     /**
+     * Controls if the editor should allow to move selections via drag and drop.
+     * Defaults to true.
+     */
+    @:optional var dragAndDrop:Bool;
+    /**
+     * Control the mouse pointer style, either 'text' or 'default' or 'copy'
+     * Defaults to 'text'
+     */
+    @:optional var mouseStyle:String;
+    /**
      * Enable that the editor will install a ResizeObserver to check if its container dom node size has changed.
      * Defaults to false.
      */
@@ -169,6 +179,15 @@ typedef IEditorOptions = {
      * stay the editor's. Defaults to false.
      */
     @:optional var scrollbarThumbExcludesPadding:Bool;
+    /**
+     * Cityscape addition (not in Monaco): every emoji (Unicode's
+     * `Extended_Pictographic`: `☕`, `☂`, `❤`, `©`..., unless followed by
+     * U+FE0E) is drawn with the color emoji font, on every target, even
+     * when a font of `fontFamily` has a text glyph for it. False gives the
+     * browser's order (Chromium draws `☕` with Menlo's text glyph when
+     * Menlo is in the list). Defaults to true.
+     */
+    @:optional var preferColorEmoji:Bool;
     /**
      * Enable that scrolling can go beyond the last column by a number of columns.
      * Defaults to 5.
@@ -2441,7 +2460,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final disableLayerHinting:EditorOption<Any> = new EditorOption<Any>(32);
     public static inline final disableMonospaceOptimizations:EditorOption<Bool> = new EditorOption<Bool>(33);
     public static inline final domReadOnly:EditorOption<Any> = new EditorOption<Any>(34);
-    public static inline final dragAndDrop:EditorOption<Any> = new EditorOption<Any>(35);
+    public static inline final dragAndDrop:EditorOption<Bool> = new EditorOption<Bool>(35);
     public static inline final dropIntoEditor:EditorOption<Any> = new EditorOption<Any>(36);
     public static inline final emptySelectionClipboard:EditorOption<Bool> = new EditorOption<Bool>(37);
     public static inline final experimentalWhitespaceRendering:EditorOption<String> = new EditorOption<String>(38);
@@ -2480,7 +2499,7 @@ abstract EditorOption<V>(Int) to Int {
     public static inline final links:EditorOption<Bool> = new EditorOption<Bool>(71);
     public static inline final matchBrackets:EditorOption<String> = new EditorOption<String>(72);
     public static inline final minimap:EditorOption<Any> = new EditorOption<Any>(73);
-    public static inline final mouseStyle:EditorOption<Any> = new EditorOption<Any>(74);
+    public static inline final mouseStyle:EditorOption<String> = new EditorOption<String>(74);
     public static inline final mouseWheelScrollSensitivity:EditorOption<Any> = new EditorOption<Any>(75);
     public static inline final mouseWheelZoom:EditorOption<Bool> = new EditorOption<Bool>(76);
     public static inline final multiCursorMergeOverlapping:EditorOption<Bool> = new EditorOption<Bool>(77);
@@ -2565,12 +2584,15 @@ abstract EditorOption<V>(Int) to Int {
      */
     /** Cityscape addition. */
     public static inline final scrollbarThumbExcludesPadding:EditorOption<Bool> = new EditorOption<Bool>(152);
+    /** Cityscape addition. */
+    public static inline final preferColorEmoji:EditorOption<Bool> = new EditorOption<Bool>(153);
 
     /**
      * The number of option ids (Monaco's 151 and the Cityscape additions,
-     * `scrollBeyondLastLineGap` and `scrollbarThumbExcludesPadding`).
+     * `scrollBeyondLastLineGap`, `scrollbarThumbExcludesPadding` and
+     * `preferColorEmoji`).
      */
-    public static inline final COUNT:Int = 153;
+    public static inline final COUNT:Int = 154;
 
 }
 
@@ -3282,6 +3304,9 @@ class EditorOptions {
         _quickSuggestions = register(new EditorQuickSuggestions());
         _quickSuggestionsDelay = register(new EditorIntOption(EditorOption.quickSuggestionsDelay, 'quickSuggestionsDelay', 10, 0, EditorOptions.MAX_SAFE_SMALL_INTEGER));
         _readOnly = register(new EditorBooleanOption(EditorOption.readOnly, 'readOnly', false));
+        // The drag and drop of the selection (dnd contribution)
+        register(new EditorBooleanOption(EditorOption.dragAndDrop, 'dragAndDrop', true));
+        register(new EditorStringEnumOption(EditorOption.mouseStyle, 'mouseStyle', 'text', ['text', 'default', 'copy']));
         _renderControlCharacters = register(new EditorBooleanOption(EditorOption.renderControlCharacters, 'renderControlCharacters', true));
         _renderFinalNewline = register(new EditorStringEnumOption(EditorOption.renderFinalNewline, 'renderFinalNewline', (Platform.isLinux ? 'dimmed' : 'on'), ['off', 'on', 'dimmed']));
         _renderLineHighlight = register(new EditorStringEnumOption(EditorOption.renderLineHighlight, 'renderLineHighlight', 'line', ['none', 'gutter', 'line', 'all']));
@@ -3293,6 +3318,7 @@ class EditorOptions {
         _scrollBeyondLastLine = register(new EditorBooleanOption(EditorOption.scrollBeyondLastLine, 'scrollBeyondLastLine', true));
         register(new EditorScrollBeyondLastLineGap());
         register(new EditorBooleanOption(EditorOption.scrollbarThumbExcludesPadding, 'scrollbarThumbExcludesPadding', false));
+        register(new EditorBooleanOption(EditorOption.preferColorEmoji, 'preferColorEmoji', true));
         _selectionHighlight = register(new EditorBooleanOption(EditorOption.selectionHighlight, 'selectionHighlight', true));
         _showFoldingControls = register(new EditorStringEnumOption(EditorOption.showFoldingControls, 'showFoldingControls', 'mouseover', ['always', 'never', 'mouseover']));
         _smoothScrolling = register(new EditorBooleanOption(EditorOption.smoothScrolling, 'smoothScrolling', false));

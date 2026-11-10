@@ -418,6 +418,117 @@ class CityscapeEditorTest extends TestCase {
         draw();
     }
 
+    /**
+     * Monaco's scrollable element shadows (`scrollbar.useShadows`, on by
+     * default, scrollbars.css): none at the top, an inset shadow 3 px high
+     * from 3 px right of the text area's left when scrolled down (the
+     * corner too), the left one when scrolled right; none with
+     * `useShadows: false`.
+     */
+    function testScrollShadows() {
+        final model = createTextModel([for (i in 0...200) 'line ' + i + ' ' + [for (j in 0...30) 'word'].join(' ')].join('\n'));
+        final views = openTwo(model);
+        final a:CityscapeView = views.a;
+        a.updateOptions({stickyScroll: {enabled: false}});
+        draw();
+        final contentLeft:Float = a.configuration.options.get(cityscape.common.config.EditorOptions.EditorOption.layoutInfo).contentLeft;
+        // shadows of the left editor (x below 400 CSS px, device pixels at scale 2)
+        function insetShadows():Array<glaze.scene.Shadow> {
+            return [for (shadow in window.renderedScene().shadows) if (shadow.inset && shadow.elementBoundsX < 800) shadow];
+        }
+        assertEquals(0, insetShadows().length, 'no shadow at the top');
+        a.viewModel.viewLayout.setScrollPosition({scrollTop: 100}, cityscape.common.EditorCommon.ScrollType.Immediate);
+        draw();
+        final top = insetShadows();
+        assertEquals(2, top.length, 'top and corner shadows');
+        assertFloatEquals((contentLeft + 3) * 2, top[0].elementBoundsX, 1);
+        assertEquals(6., top[0].elementBoundsHeight);
+        assertEquals(12., top[0].blurRadius);
+        assertFloatEquals(contentLeft * 2, top[1].elementBoundsX, 1);
+        a.viewModel.viewLayout.setScrollPosition({scrollLeft: 50}, cityscape.common.EditorCommon.ScrollType.Immediate);
+        draw();
+        assertEquals(3, insetShadows().length, 'top, left and corner shadows');
+        a.updateOptions({stickyScroll: {enabled: false}, scrollbar: {useShadows: false}});
+        draw();
+        assertEquals(0, insetShadows().length, 'useShadows off');
+    }
+
+    /**
+     * Monaco's drag and drop of the selection (dnd.ts, `dragAndDrop` on by
+     * default): a press on the selection and a drag show the target (the
+     * `dnd-target` decoration), the release moves the text there and selects
+     * it; with Alt on macOS (Ctrl elsewhere) the text is copied; a press
+     * outside the selection selects as usual; `dragAndDrop: false` selects
+     * too; Escape cancels the drag.
+     */
+    function testDragAndDropOfTheSelection() {
+        final model = createTextModel('hello world\nsecond line');
+        final views = openTwo(model);
+        final a:CityscapeView = views.a;
+        draw();
+        final layoutInfo = a.configuration.options.get(cityscape.common.config.EditorOptions.EditorOption.layoutInfo);
+        final lineHeight:Float = a.configuration.options.get(cityscape.common.config.EditorOptions.EditorOption.lineHeight);
+        function at(lineNumber:Int, column:Int):glaze.Point {
+            final line = a.renderViewLine(lineNumber);
+            return point(a.elementBounds.origin.x + layoutInfo.contentLeft + line.columnToX(column) + 1, a.elementBounds.origin.y + (lineNumber - 0.5) * lineHeight);
+        }
+        final copyModifiers = cityscape.base.common.Platform.isMacintosh ? glaze.Modifiers.of(false, true) : glaze.Modifiers.of(true);
+        // the first move stays on the selection (Monaco takes the dragged
+        // selection there), then the mouse goes to the target
+        function drag(fromLine:Int, fromColumn:Int, toLine:Int, toColumn:Int, ?modifiers:glaze.Modifiers):Void {
+            window.dispatchEvent(new MouseDownEvent(MouseButton.Left, at(fromLine, fromColumn)), app);
+            window.dispatchEvent(new glaze.MouseMoveEvent(at(fromLine, fromColumn), MouseButton.Left, modifiers), app);
+            window.dispatchEvent(new glaze.MouseMoveEvent(at(toLine, toColumn), MouseButton.Left, modifiers), app);
+            draw();
+            window.dispatchEvent(new MouseUpEvent(MouseButton.Left, at(toLine, toColumn), modifiers), app);
+            draw();
+        }
+        final widget = a.widget;
+        // move "hello" after "second"
+        widget.setSelection(new Selection(1, 1, 1, 6));
+        window.dispatchEvent(new MouseDownEvent(MouseButton.Left, at(1, 3)), app);
+        window.dispatchEvent(new glaze.MouseMoveEvent(at(1, 4), MouseButton.Left), app);
+        window.dispatchEvent(new glaze.MouseMoveEvent(at(2, 7), MouseButton.Left), app);
+        draw();
+        final targets = [for (d in model.getAllDecorations()) if (d.options.className == 'dnd-target') d];
+        assertEquals(1, targets.length, 'the drop target is shown');
+        assertEquals('[2,7 -> 2,7]', targets[0].range.toString());
+        window.dispatchEvent(new MouseUpEvent(MouseButton.Left, at(2, 7)), app);
+        draw();
+        assertEquals(' world\nsecondhello line', model.getValue());
+        assertEquals('[2,7 -> 2,12]', a.viewModel.getSelection().toString());
+        assertEquals(0, [for (d in model.getAllDecorations()) if (d.options.className == 'dnd-target') d].length, 'the drop target is removed');
+        // undo restores the text
+        widget.trigger('keyboard', 'undo', null);
+        assertEquals('hello world\nsecond line', model.getValue());
+        // copy with the modifier
+        widget.setSelection(new Selection(1, 7, 1, 12));
+        drag(1, 8, 1, 1, copyModifiers);
+        assertEquals('worldhello world\nsecond line', model.getValue());
+        assertEquals('[1,1 -> 1,6]', a.viewModel.getSelection().toString());
+        // a press outside the selection selects
+        widget.setSelection(new Selection(1, 1, 1, 6));
+        drag(2, 1, 2, 4);
+        assertEquals('worldhello world\nsecond line', model.getValue());
+        assertEquals('[2,1 -> 2,4]', a.viewModel.getSelection().toString());
+        // Escape cancels
+        widget.setSelection(new Selection(1, 1, 1, 6));
+        window.dispatchEvent(new MouseDownEvent(MouseButton.Left, at(1, 3)), app);
+        window.dispatchEvent(new glaze.MouseMoveEvent(at(1, 4), MouseButton.Left), app);
+        window.dispatchEvent(new glaze.MouseMoveEvent(at(2, 3), MouseButton.Left), app);
+        window.dispatchEvent(new glaze.KeyDownEvent(glaze.Keystroke.parse('escape'), false, false), app);
+        window.dispatchEvent(new MouseUpEvent(MouseButton.Left, at(2, 3)), app);
+        draw();
+        assertEquals('worldhello world\nsecond line', model.getValue());
+        assertEquals(0, [for (d in model.getAllDecorations()) if (d.options.className == 'dnd-target') d].length);
+        // dragAndDrop off: the press selects
+        a.updateOptions({dragAndDrop: false});
+        widget.setSelection(new Selection(1, 1, 1, 6));
+        drag(1, 3, 2, 3);
+        assertEquals('worldhello world\nsecond line', model.getValue());
+        assertEquals('[1,3 -> 2,3]', a.viewModel.getSelection().toString());
+    }
+
     function testCreateAndDestroyManyEditors() {
         final model = createTextModel('a\nb\nc');
         for (i in 0...20) {

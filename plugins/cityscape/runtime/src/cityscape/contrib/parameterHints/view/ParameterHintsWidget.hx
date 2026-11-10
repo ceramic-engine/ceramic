@@ -405,7 +405,7 @@ class ParameterHintsOverlay implements IOverlayWidget {
         var v = _view;
         if (v == null) {
             _app = cx;
-            v = cx.newEntity((c:Context<ParameterHintsView>) -> new ParameterHintsView(widget, editor));
+            v = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<ParameterHintsView>) -> new ParameterHintsView(widget, editor)), cx);
             _view = v;
         }
         return v;

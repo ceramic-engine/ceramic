@@ -139,8 +139,8 @@ class EditorFontMeasurements implements ILineMeasurer {
      * monospace` draws `☕` with Menlo's glyph (the generic `monospace`) on
      * macOS, not with the emoji font.
      */
-    public function resolveEditorFont(fontFamily:String, weight:FontWeight, italic:Bool, features:FontFeatures):Font {
-        final key = fontFamily + '|' + weight + '|' + italic + '|' + features.key() + '|' + textSystem.fontGeneration;
+    public function resolveEditorFont(fontFamily:String, weight:FontWeight, italic:Bool, features:FontFeatures, preferColorEmoji:Bool = true):Font {
+        final key = fontFamily + '|' + weight + '|' + italic + '|' + features.key() + '|' + textSystem.fontGeneration + (preferColorEmoji ? '|e' : '');
         final cached = _fontCache.get(key);
         if (cached != null) {
             return cached;
@@ -195,6 +195,8 @@ class EditorFontMeasurements implements ILineMeasurer {
             result.fallbacks = FontFallbacks.fromFonts(fallbacks);
         }
         result.wholeRunShaping = true;
+        // Cityscape's `preferColorEmoji` option (owner decision 2026-11-11)
+        result.preferColorEmoji = preferColorEmoji;
         _fontCache.set(key, result);
         return result;
     }
@@ -255,7 +257,14 @@ class EditorFontMeasurements implements ILineMeasurer {
      * editor font (for the `advanced` wrapping strategy).
      */
     public function measure(text:String, fontInfo:FontInfo):Array<Float> {
-        final font = resolveEditorFont(fontInfo.fontFamily, parseFontWeight(fontInfo.fontWeight), false, parseFontFeatureSettings(fontInfo.fontFeatureSettings));
+        return measureWith(text, fontInfo, true);
+    }
+
+    /**
+     * `measure` with the `preferColorEmoji` option of an editor.
+     */
+    public function measureWith(text:String, fontInfo:FontInfo, preferColorEmoji:Bool):Array<Float> {
+        final font = resolveEditorFont(fontInfo.fontFamily, parseFontWeight(fontInfo.fontWeight), false, parseFontFeatureSettings(fontInfo.fontFeatureSettings), preferColorEmoji);
         final layout = textSystem.platformTextSystem.layoutLine(text, fontInfo.fontSize, [new glaze.FontRun(glaze.util.Utf8.byteLength(text), textSystem.resolveFont(font))]);
         final map = new LineOffsetMap();
         map.reset(text);

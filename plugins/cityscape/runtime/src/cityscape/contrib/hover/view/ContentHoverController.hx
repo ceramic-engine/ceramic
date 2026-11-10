@@ -647,6 +647,7 @@ class ContentHoverWidget implements IOverlayWidget implements IDisposable {
 
     public function dispose():Void {
         _editor.removeOverlayWidget(this);
+        cityscape.view.ViewEntities.release(_view);
         _view = null;
     }
 
@@ -809,7 +810,7 @@ class ContentHoverWidget implements IOverlayWidget implements IDisposable {
         var v = _view;
         if (v == null) {
             _app = cx;
-            v = cx.newEntity((c:Context<ContentHoverView>) -> new ContentHoverView(this, _editor));
+            v = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<ContentHoverView>) -> new ContentHoverView(this, _editor)), cx);
             _view = v;
         }
         return v;

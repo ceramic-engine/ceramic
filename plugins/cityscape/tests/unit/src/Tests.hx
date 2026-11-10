@@ -165,6 +165,7 @@ class Tests {
         runner.add(new tests.platform.keybinding.KeybindingResolverTest());
         runner.add(new tests.platform.markers.MarkerServiceTest());
         runner.add(new tests.view.CityscapeApiTest());
+        runner.add(new tests.view.EditorLeakTest());
 
         // Indentation, smart select, caret operations, cursor undo, in place replace (step 4, cs4-edit)
         runner.add(new tests.contrib.indentation.IndentationTest.ChangeIndentationToSpacesTest());
@@ -186,6 +187,7 @@ class Tests {
         runner.add(new tests.contrib.caretOperations.MoveCaretCommandTest());
         runner.add(new tests.contrib.cursorUndo.CursorUndoTest());
         runner.add(new tests.services.ModelServiceTest());
+        runner.add(new tests.services.WordBasedCompletionsTest());
         runner.add(new tests.view.ViewportTokenizationTest());
         runner.add(new tests.view.EditorFontsTest());
 

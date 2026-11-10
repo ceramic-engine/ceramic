@@ -64,6 +64,7 @@ class ColorPickerWidget implements IOverlayWidget implements IDisposable {
 
     public function dispose():Void {
         _editor.removeOverlayWidget(this);
+        cityscape.view.ViewEntities.release(_view);
         _view = null;
     }
 
@@ -137,7 +138,7 @@ class ColorPickerWidget implements IOverlayWidget implements IDisposable {
         var v = _view;
         if (v == null) {
             _app = cx;
-            v = cx.newEntity((c:Context<ColorPickerView>) -> new ColorPickerView(this, _editor));
+            v = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<ColorPickerView>) -> new ColorPickerView(this, _editor)), cx);
             _view = v;
         }
         return v;
@@ -198,7 +199,7 @@ class ColorPickerView extends Model implements Render {
 
         final model = session.colorHover.model;
         final initial = toHsla(model.color);
-        final state:Entity<ColorPickerState> = cx.newEntity((c:Context<ColorPickerState>) -> new ColorPickerState(window, c).defaultValue(initial));
+        final state:Entity<ColorPickerState> = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((c:Context<ColorPickerState>) -> new ColorPickerState(window, c).defaultValue(initial)), cx.app);
         // the HSLA sliders by default (Monaco's picker has no palette)
         state.update(cx.app, (s, c) -> s.setActiveTab(1, c));
         this.state = state;

@@ -434,6 +434,9 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         this.scrollHandle = new CityscapeScrollHandle(this);
         this.focusHandle = cx.app.focusHandle();
         widget.setView(this);
+        #if cityscape_debug_counters
+        cityscape.base.common.DebugCounters.views++;
+        #end
     }
 
     function notifyChanged():Void {
@@ -458,7 +461,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public function ensurePaintView(view:Entity<CityscapeView>, cx:App):Entity<CityscapePaintView> {
         var paint = paintView;
         if (paint == null) {
-            paint = cx.newEntity((_:Context<CityscapePaintView>) -> new CityscapePaintView(view));
+            paint = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((_:Context<CityscapePaintView>) -> new CityscapePaintView(view)), cx);
             paintView = paint;
         }
         return paint;
@@ -468,7 +471,17 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * Releases the timers and the theme listener (the component calls it
      * when it leaves the tree, before disposing the widget).
      */
+    #if cityscape_debug_counters
+    var viewDisposed = false;
+    #end
+
     public function disposeView():Void {
+        #if cityscape_debug_counters
+        if (!viewDisposed) {
+            viewDisposed = true;
+            cityscape.base.common.DebugCounters.views--;
+        }
+        #end
         widget.setView(null);
         final viewModel = this.viewModel;
         if (viewModel != null && eventHandler != null) {
@@ -477,12 +490,14 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         eventHandler = null;
         theme.dispose();
         stopBlink();
+        ViewEntities.release(paintView);
+        paintView = null;
     }
 
     //#region ICodeEditorView
 
     public function createDomLineBreaksComputerFactory():Null<ILineBreaksComputerFactory> {
-        return new MeasuredLineBreaksComputerFactory(measurements);
+        return new MeasuredLineBreaksComputerFactory(new ViewLineMeasurer(this));
     }
 
     public function onDidAttachModel(viewModel:ViewModel):Void {
@@ -943,6 +958,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     // `baseFont` results, by font info, weight, style and features
     var baseFontInfo:Null<FontInfo> = null;
     var baseFontGeneration:Int = -1;
+    var baseFontColorEmoji:Bool = true;
     final baseFontWeights:Array<Float> = [];
     final baseFontItalics:Array<Bool> = [];
     final baseFontFeatures:Array<Null<String>> = [];
@@ -953,9 +969,11 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final info = fontInfo();
         // the resolved fonts change with the fonts added (`resolveEditorFont`)
         final generation = app.textSystem().fontGeneration;
-        if (info != baseFontInfo || generation != baseFontGeneration || baseFonts.length >= 32) {
+        final colorEmoji = preferColorEmoji();
+        if (info != baseFontInfo || generation != baseFontGeneration || colorEmoji != baseFontColorEmoji || baseFonts.length >= 32) {
             baseFontInfo = info;
             baseFontGeneration = generation;
+            baseFontColorEmoji = colorEmoji;
             baseFontWeights.resize(0);
             baseFontItalics.resize(0);
             baseFontFeatures.resize(0);
@@ -980,7 +998,12 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     function resolveBaseFont(info:FontInfo, weight:Null<Float>, italic:Bool, features:Null<String>):Font {
         final w = weight != null ? weight : EditorFontMeasurements.parseFontWeight(info.fontWeight);
         final f = EditorFontMeasurements.parseFontFeatureSettings(features != null ? features : info.fontFeatureSettings);
-        return measurements.resolveEditorFont(info.fontFamily, w, italic, f);
+        return measurements.resolveEditorFont(info.fontFamily, w, italic, f, preferColorEmoji());
+    }
+
+    /** The `preferColorEmoji` option (Cityscape addition) */
+    public function preferColorEmoji():Bool {
+        return configuration.options.get(EditorOption.preferColorEmoji);
     }
 
     /**
@@ -1443,6 +1466,18 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         // Monaco's `MouseHandler._onMouseDown`: the content and the line
         // numbers start a mouse down operation; the rest of the gutter does
         // not steal the focus nor move the cursor
+        if (event.button == MouseButton.Left && type == MouseTargetType.CONTENT_TEXT && startsDragAndDrop(e)) {
+            // Monaco's `MouseDownOperation.start`: a single press on the
+            // primary selection drags it (`dragAndDrop`), the cursor stays
+            focusHandle.focus(window, cx);
+            syncFocus(window, cx);
+            mouseDown = true;
+            mouseDragAndDrop = true;
+            mouseDownOnLineNumbers = false;
+            widget._fireMouseDown(e);
+            notifyChanged();
+            return;
+        }
         if (event.button == MouseButton.Left && (type == MouseTargetType.CONTENT_TEXT || type == MouseTargetType.CONTENT_EMPTY || type == MouseTargetType.GUTTER_LINE_NUMBERS)) {
             focusHandle.focus(window, cx);
             syncFocus(window, cx);
@@ -1487,6 +1522,39 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     var mouseDownOnLineNumbers:Bool = false;
 
+    /** A press on the selection is dragging it (Monaco's `isDragAndDrop`). */
+    var mouseDragAndDrop:Bool = false;
+
+    /**
+     * Monaco's conditions of a drag of the selection: `dragAndDrop` on, not
+     * read only, no column selection, no Alt, a single click on the text of
+     * the primary selection, not empty.
+     */
+    function startsDragAndDrop(e:EditorMouseEvent):Bool {
+        final options = configuration.options;
+        final position = e.target.position;
+        if (position == null || options.get(EditorOption.readOnly) || !options.get(EditorOption.dragAndDrop) || options.get(EditorOption.columnSelection)
+            || e.event.altKey || e.event.detail >= 2 || mouseDown) {
+            return false;
+        }
+        final selection = widget.getSelection();
+        return selection != null && !selection.isEmpty() && selection.containsPosition(position);
+    }
+
+    /**
+     * Ends a drag of the selection without a drop (Escape, the focus lost).
+     */
+    public function cancelDragAndDrop():Bool {
+        if (!mouseDragAndDrop) {
+            return false;
+        }
+        mouseDragAndDrop = false;
+        mouseDown = false;
+        widget._fireMouseDropCanceled();
+        notifyChanged();
+        return true;
+    }
+
     public function handleMouseMove(event:MouseMoveEvent, window:Window, cx:App):Void {
         final viewModel = this.viewModel;
         if (viewModel == null) {
@@ -1497,6 +1565,11 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         setGutterHovered(relativeX >= 0 && relativeX < layoutInfo.contentLeft);
         if (!mouseDown || event.pressedButton == null) {
             widget._fireMouseMove(editorMouseEvent(MouseButton.Left, event.position, event.modifiers, 0));
+            return;
+        }
+        if (mouseDragAndDrop) {
+            widget._fireMouseDrag(editorMouseEvent(MouseButton.Left, event.position, event.modifiers, 0));
+            notifyChanged();
             return;
         }
         dispatchMouseFor(event.position, true);
@@ -1580,6 +1653,13 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public function handleMouseUp(event:MouseUpEvent, window:Window, cx:App):Void {
         if (event.button == MouseButton.Left) {
             mouseDown = false;
+            if (mouseDragAndDrop) {
+                mouseDragAndDrop = false;
+                if (viewModel != null) {
+                    final e = editorMouseEvent(event.button, event.position, event.modifiers, event.clickCount);
+                    widget._fireMouseDrop({event: e.event, target: e.target});
+                }
+            }
         }
         if (viewModel != null) {
             widget._fireMouseUp(editorMouseEvent(event.button, event.position, event.modifiers, event.clickCount));
@@ -1635,6 +1715,10 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * lets the key go on to the next Glaze binding: an app shortcut).
      */
     public function onRunKeybinding(keypress:String, window:Window, cx:App):Bool {
+        if (mouseDragAndDrop && keypress == 'Escape') {
+            // Monaco's mouse move monitor ends on a key: the drop is canceled
+            return cancelDragAndDrop();
+        }
         syncFocus(window, cx);
         widget._fireKeyDown(KeyboardEvents.fromDispatchString(keypress));
         keyDownFiredFor = keypress;
@@ -1659,6 +1743,12 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
             return;
         }
         final ks = event.keystroke;
+        if (mouseDragAndDrop && ks.key == 'escape') {
+            // Monaco's mouse move monitor ends on a key: the drop is canceled
+            cancelDragAndDrop();
+            cx.stopPropagation();
+            return;
+        }
         final dispatch = KeyboardEvents.dispatchStringOf(ks);
         if (dispatch == null || dispatch != keyDownFiredFor) {
             final e = KeyboardEvents.fromKeystroke(ks);
@@ -1698,6 +1788,9 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         if (blinkStop != null) {
             blinkStop();
             blinkStop = null;
+            #if cityscape_debug_counters
+            cityscape.base.common.DebugCounters.timers--;
+            #end
         }
     }
 
@@ -1716,6 +1809,9 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
             cursorVisible = !cursorVisible;
             notifyChanged();
         });
+        #if cityscape_debug_counters
+        cityscape.base.common.DebugCounters.timers++;
+        #end
     }
 
     //#endregion
@@ -2082,3 +2178,20 @@ class CityscapeScrollHandle implements ScrollbarHandleImpl implements glaze.kit.
 
 }
 
+/**
+ * The line measurer of a view's line breaks: the editor font with the
+ * view's `preferColorEmoji` option (an emoji is wider in the color font).
+ */
+class ViewLineMeasurer implements cityscape.view.MeasuredLineBreaksComputer.ILineMeasurer {
+
+    final view:CityscapeView;
+
+    public function new(view:CityscapeView) {
+        this.view = view;
+    }
+
+    public function measure(text:String, fontInfo:cityscape.common.config.FontInfo):Array<Float> {
+        return view.measurements.measureWith(text, fontInfo, view.preferColorEmoji());
+    }
+
+}

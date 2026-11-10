@@ -61,6 +61,9 @@ private class ListenerList<L> {
         final entry = new ListenerEntry<L>(this, listener);
         listeners.push(entry);
         count++;
+        #if cityscape_debug_counters
+        DebugCounters.listeners++;
+        #end
         return entry;
     }
 
@@ -69,6 +72,9 @@ private class ListenerList<L> {
             if (listeners[i] == entry) {
                 listeners[i] = null;
                 count--;
+                #if cityscape_debug_counters
+                DebugCounters.listeners--;
+                #end
                 if (firing > 0) {
                     hasHoles = true;
                 }
@@ -116,6 +122,9 @@ private class ListenerList<L> {
         else {
             listeners.resize(0);
         }
+        #if cityscape_debug_counters
+        DebugCounters.listeners -= count;
+        #end
         count = 0;
     }
 

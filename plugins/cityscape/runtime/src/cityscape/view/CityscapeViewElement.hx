@@ -107,7 +107,10 @@ class CityscapeViewElement extends Element {
         final v = view.read(cx);
         final hitbox = this.hitbox;
         if (hitbox != null) {
-            window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : CursorStyle.IBeam, hitbox);
+            // the pointer of a link or widget, else Monaco's `mouseStyle`
+            // (the drag and drop of the selection sets `default` and `copy`)
+            final mouseStyle:String = v.configuration.options.get(EditorOption.mouseStyle);
+            window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : (mouseStyle == 'default' ? CursorStyle.Arrow : (mouseStyle == 'copy' ? CursorStyle.DragCopy : CursorStyle.IBeam)), hitbox);
         }
         final viewModel = v.viewModel;
         final theme = v.theme;
@@ -461,6 +464,43 @@ class CityscapeViewElement extends Element {
             }
         }
 
+        // The target of a drag of the selection (dnd.css `.dnd-target`: a
+        // 2 px dotted right border on an empty range)
+        for (i in 0...decorations.length) {
+            final d = decorations[i];
+            if (d.options.className != cityscape.contrib.dnd.view.Dnd.DragAndDropController.DECORATION_CLASS) {
+                continue;
+            }
+            final ln = d.range.startLineNumber;
+            if (ln < startLine || ln > endLine) {
+                continue;
+            }
+            final line = lines[ln - startLine];
+            final x = contentX + line.columnToX(d.range.startColumn);
+            final color = switch (theme.editorTheme.type) {
+                case cityscape.platform.theme.common.Theme.ColorScheme.DARK: DND_TARGET_DARK;
+                case cityscape.platform.theme.common.Theme.ColorScheme.HIGH_CONTRAST_DARK: DND_TARGET_HC_DARK;
+                case _: DND_TARGET_LIGHT;
+            }
+            final top = lineTop(ln);
+            var y = 0.0;
+            while (y < lineHeight) {
+                fillRect(window, x, top + y, 2, Math.min(2, lineHeight - y), color);
+                y += 4;
+            }
+        }
+
+        // The shadows of Monaco's scrollable element (`scrollbar.useShadows`,
+        // scrollbars.css): 3 px at the top of the text area when it is
+        // scrolled down, at its left when it is scrolled right, above the
+        // text (the sticky scroll widget covers the top one)
+        if ((scrollTop > 0 || scrollLeft > 0) && options.get(EditorOption.scrollbar).useShadows) {
+            final shadowColor = theme.getColor('scrollbar.shadow');
+            if (shadowColor != null && shadowColor.a > 0) {
+                state.paintScrollShadows(window, originX + layoutInfo.contentLeft, originY, bounds.size.width - layoutInfo.contentLeft, bounds.size.height, scrollTop > 0, scrollLeft > 0, shadowColor);
+            }
+        }
+
         window.popContentMask();
 
         // --- margin (gutter)
@@ -633,6 +673,11 @@ class CityscapeViewElement extends Element {
 
     static final DEFAULT_BACKGROUND = new Hsla(0, 0, 0.12, 1);
 
+    // dnd.css: `border-right: 2px dotted` black (light), #AEAFAD (dark), #fff (high contrast dark)
+    static final DND_TARGET_LIGHT = new Hsla(0, 0, 0, 1);
+    static final DND_TARGET_DARK = rgb(0xAEAFAD).toHsla();
+    static final DND_TARGET_HC_DARK = new Hsla(0, 0, 1, 1);
+
     /**
      * Monaco's folding codicons in the line decorations (folding.css): a
      * chevron right for a collapsed range (always shown), a chevron down for
@@ -728,6 +773,43 @@ private class LineNumberLabel {
 class PaintState {
 
     public final viewport = new cityscape.common.viewLayout.LinesLayout.LinesViewportRange();
+
+    // Scrollable element shadows (kept from frame to frame)
+    final topShadow:Array<glaze.BoxShadow> = [new glaze.BoxShadow(0, 6, new Hsla(0, 0, 0, 1)).withBlurRadius(6).withSpreadRadius(-6).withInset()];
+    final leftShadow:Array<glaze.BoxShadow> = [new glaze.BoxShadow(6, 0, new Hsla(0, 0, 0, 1)).withBlurRadius(6).withSpreadRadius(-6).withInset()];
+    var topShadowBounds:Null<Bounds> = null;
+    var leftShadowBounds:Null<Bounds> = null;
+    var cornerShadowBounds:Null<Bounds> = null;
+    static final NO_CORNERS = Corners.all(0);
+
+    static function boundsOf(previous:Null<Bounds>, x:Float, y:Float, w:Float, h:Float):Bounds {
+        if (previous != null && previous.origin.x == x && previous.origin.y == y && previous.size.width == w && previous.size.height == h) {
+            return previous;
+        }
+        return new Bounds(new Point(x, y), new Size(w, h));
+    }
+
+    /**
+     * Monaco's scrollable element shadows (scrollbars.css), at the text
+     * area of `x, y, width, height`: `.shadow.top` (3 px high from 3 px to
+     * the right, `0 6px 6px -6px inset`), `.shadow.left` (3 px wide from
+     * 3 px down, `6px 0 6px -6px inset`) and the corner (3 px square, the
+     * left shadow when both apply, else the one that applies).
+     */
+    public function paintScrollShadows(window:Window, x:Float, y:Float, width:Float, height:Float, top:Bool, left:Bool, color:Hsla):Void {
+        topShadow[0].color = color;
+        leftShadow[0].color = color;
+        if (top) {
+            topShadowBounds = boundsOf(topShadowBounds, x + 3, y, Math.max(0, width), 3);
+            window.paintInsetShadows(topShadowBounds, NO_CORNERS, topShadow);
+        }
+        if (left) {
+            leftShadowBounds = boundsOf(leftShadowBounds, x, y + 3, 3, Math.max(0, height));
+            window.paintInsetShadows(leftShadowBounds, NO_CORNERS, leftShadow);
+        }
+        cornerShadowBounds = boundsOf(cornerShadowBounds, x, y, 3, 3);
+        window.paintInsetShadows(cornerShadowBounds, NO_CORNERS, left ? leftShadow : topShadow);
+    }
 
     public final lines:Array<RenderedViewLine> = [];
 

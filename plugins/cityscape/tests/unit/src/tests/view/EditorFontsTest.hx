@@ -139,34 +139,62 @@ class EditorFontsTest extends TestCase {
 
     /**
      * The CSS font list after the first available family gives the
-     * fallbacks, tried before the fonts of the system like a browser does:
-     * with a primary family that lacks `☕` (U+2615, emoji presentation by
-     * default), the generic `monospace` (Menlo on macOS) draws it with its
-     * text glyph, like Chromium (recorded: a monochrome glyph in the token
-     * color, 8.4 px wide at 14 px, loreline-monaco's Writer preset); a
-     * character no family of the list has (`🌧`) comes from the emoji font.
+     * fallbacks, tried before the fonts of the system like a browser does.
+     * With `preferColorEmoji: false`, a primary family that lacks `☕`
+     * (U+2615, emoji presentation by default) lets the generic `monospace`
+     * (Menlo on macOS) draw it with its text glyph, like Chromium (recorded:
+     * a monochrome glyph in the token color, 8.4 px wide at 14 px,
+     * loreline-monaco's Writer preset); a character no family of the list
+     * has (`🌧`) comes from the emoji font.
+     *
+     * By default (`preferColorEmoji: true`, owner decision 2026-11-11, see
+     * DEVIATIONS.md) every emoji (`Extended_Pictographic`) is drawn with the
+     * color emoji font even when Menlo or JetBrains Mono has a text glyph
+     * (`☕`, `☂` with or without U+FE0F, `©`), except when U+FE0E asks for
+     * the text presentation; the other characters keep the font list.
      */
     function testFontListFallbacksBeforeTheSystemFonts() {
         final measurements = new EditorFontMeasurements(app.textSystem());
-        final font = measurements.resolveEditorFont("'JetBrains Mono', 'No Such Font', monospace", 400, false, new glaze.FontFeatures());
+        final font = measurements.resolveEditorFont("'JetBrains Mono', 'No Such Font', monospace", 400, false, new glaze.FontFeatures(), false);
         assertEquals('JetBrains Mono', font.family);
         assertEquals('monospace', font.fallbacks.fallbackList().join(','));
         assertTrue(font.wholeRunShaping);
+        assertFalse(font.preferColorEmoji);
+        final colorFont = measurements.resolveEditorFont("'JetBrains Mono', 'No Such Font', monospace", 400, false, new glaze.FontFeatures());
+        assertTrue(colorFont.preferColorEmoji);
+        assertEquals('monospace', colorFont.fallbacks.fallbackList().join(','));
         final ts = app.textSystem();
         if (!ts.isFamilyAvailable('Menlo')) {
             // no system fonts (node, the web): nothing more to check
             return;
         }
-        final fontId = ts.resolveFont(font);
-        final text = 'a\u2615b\u{1F327}\uFE0F';
-        final layout = ts.platformTextSystem.layoutLine(text, 14, [new glaze.FontRun(glaze.util.Utf8.byteLength(text), fontId)]);
-        final coffee = [for (run in layout.runs) for (g in run.glyphs) if (g.index == 1) {run: run, glyph: g}][0];
-        assertFalse(coffee.glyph.isEmoji);
         final menlo = ts.resolveFont(glaze.Font.of('Menlo'));
-        assertEquals(ts.platformTextSystem.glyphForChar(menlo, 0x2615), coffee.glyph.id);
+        function glyphAt(fontToUse:glaze.Font, text:String, index:Int):glaze.ShapedGlyph {
+            final layout = ts.platformTextSystem.layoutLine(text, 14, [new glaze.FontRun(glaze.util.Utf8.byteLength(text), ts.resolveFont(fontToUse))]);
+            return [for (run in layout.runs) for (g in run.glyphs) if (g.index == index) g][0];
+        }
+
+        // preferColorEmoji: false, the browser's order
+        final text = 'a\u2615b\u{1F327}\uFE0F';
+        final coffee = glyphAt(font, text, 1);
+        assertFalse(coffee.isEmoji);
+        assertEquals(ts.platformTextSystem.glyphForChar(menlo, 0x2615), coffee.id);
         assertFloatEquals(ts.advance(menlo, 14, 'm'.code).width, ts.advance(menlo, 14, 0x2615).width, 0.01);
-        final rain = [for (run in layout.runs) for (g in run.glyphs) if (g.index == 5) g][0];
-        assertTrue(rain.isEmoji);
+        assertTrue(glyphAt(font, text, 5).isEmoji);
+
+        // the default: color emoji
+        assertTrue(glyphAt(colorFont, text, 1).isEmoji, 'coffee in color');
+        assertTrue(glyphAt(colorFont, text, 5).isEmoji, 'rain in color');
+        assertTrue(glyphAt(colorFont, 'a\u2602b', 1).isEmoji, 'umbrella in color');
+        assertTrue(glyphAt(colorFont, 'a\u2602\uFE0Fb', 1).isEmoji, 'umbrella with VS16 in color');
+        assertTrue(glyphAt(colorFont, 'a\u00A9b', 1).isEmoji, 'copyright sign in color');
+        // text presentation asked
+        final textCoffee = glyphAt(colorFont, 'a\u2615\uFE0Eb', 1);
+        assertFalse(textCoffee.isEmoji, 'coffee with VS15 as text');
+        assertEquals(ts.platformTextSystem.glyphForChar(menlo, 0x2615), textCoffee.id);
+        // not emoji: the font list
+        assertFalse(glyphAt(colorFont, 'a\u2192b', 1).isEmoji, 'arrow as text');
+        assertFalse(glyphAt(colorFont, 'a\u00E9b', 1).isEmoji, 'accented letter as text');
     }
 
     /**
