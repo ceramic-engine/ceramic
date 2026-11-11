@@ -2,6 +2,7 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified during the initial port: deviation DEV-020 (scrollbars shown on hover by default). See docs/DEVIATIONS.md.
+// Also modified: deviation DEV-023 (scrollbar appearance: fade in place by default, no thumb growth). See docs/DEVIATIONS.md.
 package glaze.kit.theme;
 
 import glaze.AppContext;
@@ -12,6 +13,7 @@ import glaze.kit.base.theme.ColorTokens;
 import glaze.kit.base.theme.RadiusTokens;
 import glaze.kit.base.theme.ScrollbarMode;
 import glaze.kit.base.theme.ScrollbarTheme;
+import glaze.kit.base.ScrollbarAppearance;
 import glaze.kit.base.Scrollbar.ScrollbarEntrance;
 import glaze.kit.base.Scrollbar.ScrollbarMotion;
 import glaze.kit.base.Scrollbar.ScrollbarStyles;
@@ -220,6 +222,17 @@ class Theme extends ThemeColor {
     public var scrollbarMode:ScrollbarMode = Scrolling;
 
     /**
+     * How scrollbars show, hide and react to hover (Glaze addition,
+     * DEV-023): a quick fade in place without thumb growth by default
+     * (`ScrollbarAppearance.defaultValue()`, define
+     * `glaze_scrollbar_appearance`). `ScrollbarAppearance.gpuiKit()` gives
+     * gpui-kit's slide out and thumb growth. Change it with
+     * `Theme.setScrollbarAppearance`; a scrollbar can override it
+     * (`Scrollbar.appearance`, `Scrollable.scrollbarAppearance`).
+     */
+    public var scrollbarAppearance:ScrollbarAppearance = ScrollbarAppearance.defaultValue();
+
+    /**
      * The styled layer's semantic motion policy (see `motionTokens()`).
      */
     public var motion:MotionTokens = new MotionTokens();
@@ -275,6 +288,7 @@ class Theme extends ThemeColor {
         theme.focusRing = focusRing;
         theme.transparent = transparent;
         theme.scrollbarMode = scrollbarMode;
+        theme.scrollbarAppearance = scrollbarAppearance;
         theme.motion = motion.copy();
         theme.notification = notification.copy();
         theme.listSettings = listSettings.copy();
@@ -463,6 +477,21 @@ class Theme extends ThemeColor {
     }
 
     /**
+     * Changes how scrollbars show, hide and react to hover (DEV-023) through
+     * `update`, which projects it onto the Base scrollbar and refreshes every
+     * window: `Theme.setScrollbarAppearance(ScrollbarAppearance.fade(0.2), cx)`,
+     * `ScrollbarAppearance.instant()`, `ScrollbarAppearance.gpuiKit()`.
+     */
+    public static function setScrollbarAppearance(appearance:ScrollbarAppearance, cx:AppContext):Void {
+
+        update(cx, theme -> {
+            theme.scrollbarAppearance = appearance != null ? appearance : ScrollbarAppearance.defaultValue();
+            return null;
+        });
+
+    }
+
+    /**
      * Sets the theme mode: `Theme.setMode(Dark)`.
      *
      * Loads the registered theme for `mode` (even when `mode` is already
@@ -510,6 +539,7 @@ class Theme extends ThemeColor {
         theme.scrollbar = new ScrollbarTheme()
             .withMode(scrollbarMode)
             .withMotion(scrollbarMotion(scrollbarMode))
+            .withAppearance(scrollbarAppearance)
             .withStyles(
                 new ScrollbarStyles()
                     .track(style -> style.bg(scrollbar))

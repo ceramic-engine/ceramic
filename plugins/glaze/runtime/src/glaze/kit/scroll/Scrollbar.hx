@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/scroll/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deviation DEV-023 (scrollbar appearance). See docs/DEVIATIONS.md.
 package glaze.kit.scroll;
 
 /**
@@ -8,6 +9,10 @@ package glaze.kit.scroll;
  * re-exported here with its types like `gpui_component::scroll` does.
  */
 typedef Scrollbar = glaze.kit.base.Scrollbar;
+
+typedef ScrollbarAppearance = glaze.kit.base.ScrollbarAppearance;
+
+typedef ScrollbarTransition = glaze.kit.base.ScrollbarAppearance.ScrollbarTransition;
 
 typedef ScrollbarAxis = glaze.kit.base.Scrollbar.ScrollbarAxis;
 

@@ -1,8 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/theme.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deviation DEV-023 (scrollbar appearance). See docs/DEVIATIONS.md.
 package glaze.kit.base.theme;
 
+import glaze.kit.base.ScrollbarAppearance;
 import glaze.kit.base.Scrollbar.ScrollbarMotion;
 import glaze.kit.base.Scrollbar.ScrollbarStyles;
 
@@ -20,7 +22,27 @@ class ScrollbarTheme {
 
     var _styles:ScrollbarStyles = new ScrollbarStyles();
 
+    /**
+     * Glaze addition (DEV-023): how scrollbars show, hide and react to hover.
+     * Null (Base's default) keeps `motion` in charge, like gpui-kit; the kit
+     * theme projects its `scrollbarAppearance` here.
+     */
+    var _appearance:Null<ScrollbarAppearance> = null;
+
     public function new() {}
+
+    public function withAppearance(appearance:Null<ScrollbarAppearance>):ScrollbarTheme {
+
+        _appearance = appearance;
+        return this;
+
+    }
+
+    public function appearance():Null<ScrollbarAppearance> {
+
+        return _appearance;
+
+    }
 
     public function withMode(mode:ScrollbarMode):ScrollbarTheme {
 

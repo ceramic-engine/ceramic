@@ -104,6 +104,7 @@ class Tests {
         runner.add(new tests.kit.ComponentControlsTest());
         // gpui-kit (wave 4)
         runner.add(new tests.kit.BaseScrollbarTest());
+        runner.add(new tests.kit.ScrollbarAppearanceTest());
         runner.add(new tests.kit.BaseScrollTest());
         runner.add(new tests.kit.ComponentScrollTest());
         // gpui-kit (wave 5: menus)

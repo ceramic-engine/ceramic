@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/scroll/scrollable.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deviation DEV-023 (scrollbar appearance). See docs/DEVIATIONS.md.
 package glaze.kit.scroll;
 
 import glaze.AnyElement;
@@ -19,6 +20,7 @@ import glaze.Window;
 import glaze.kit.base.ScrollBounce;
 import glaze.kit.base.ScrollableMask;
 import glaze.kit.base.Scrollbar;
+import glaze.kit.base.ScrollbarAppearance;
 import glaze.kit.base.Scrollbar.ScrollbarAxis;
 import glaze.kit.base.Scrollbar.ScrollbarHandle;
 import glaze.kit.base.Scrollbar.ScrollbarStyles;
@@ -113,6 +115,12 @@ class Scrollable extends Component implements Styled implements ParentElement {
      * Not in gpui-kit.
      */
     @prop var scrollbarStyles:Null<(ScrollbarStyles) -> ScrollbarStyles> = null;
+
+    /**
+     * How the scrollbars of this area show, hide and react to hover (Glaze
+     * addition, DEV-023), null for the theme's `scrollbarAppearance`.
+     */
+    @prop var scrollbarAppearance:Null<ScrollbarAppearance> = null;
 
     @:allow(glaze.kit.scroll)
     function new(element:Div, axis:ScrollbarAxis, ?pos:haxe.PosInfos) {
@@ -267,11 +275,11 @@ class Scrollable extends Component implements Styled implements ParentElement {
         if (axis == Horizontal) {
             root.child(ScrollableMask.verticalWheel(scrollHandle));
         }
-        return root.child(renderScrollbar(scrollbarId, scrollHandle, axis, window, cx, scrollbarStyles));
+        return root.child(renderScrollbar(scrollbarId, scrollHandle, axis, window, cx, scrollbarStyles, scrollbarAppearance));
     }
 
     @:allow(glaze.kit.scroll)
-    static function renderScrollbar(id:ElementIdArg, scrollHandle:ScrollbarHandle, axis:ScrollbarAxis, window:Window, cx:App, ?styles:(ScrollbarStyles) -> ScrollbarStyles):Div {
+    static function renderScrollbar(id:ElementIdArg, scrollHandle:ScrollbarHandle, axis:ScrollbarAxis, window:Window, cx:App, ?styles:(ScrollbarStyles) -> ScrollbarStyles, ?appearance:ScrollbarAppearance):Div {
         // Do not render scrollbar when inspector is picking elements, to
         // allow us to pick the background elements (the port has no
         // inspector).
@@ -284,7 +292,8 @@ class Scrollable extends Component implements Styled implements ParentElement {
         final scrollbar = new Scrollbar(scrollHandle)
             .id(id)
             .axis(axis)
-            .viewportFromLayout();
+            .viewportFromLayout()
+            .appearance(appearance);
         if (styles != null) {
             scrollbar.styles(styles);
         }

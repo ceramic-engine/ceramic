@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/scrollbar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deviation DEV-023 (scrollbar appearance: fade in place by default, no thumb growth). See docs/DEVIATIONS.md.
 package glaze.kit.base;
 
 import glaze.App;
@@ -31,6 +32,7 @@ import glaze.Size;
 import glaze.Style;
 import glaze.UniformListScrollHandle;
 import glaze.Window;
+import glaze.kit.base.ScrollbarAppearance.ScrollbarTransition;
 import glaze.kit.base.animation.Easings;
 import glaze.kit.base.motion.MotionTime;
 import glaze.kit.base.theme.ScrollbarMode;
@@ -521,6 +523,12 @@ class VisibilityAnimation {
 
     var entrance:ScrollbarEntrance = Fade;
 
+    /**
+     * Whether hiding slides toward the edge while fading (gpui-kit), or fades
+     * linearly in place (Glaze addition, DEV-023: `ScrollbarTransition.Fade`).
+     */
+    var slideOut:Bool = true;
+
     function new(opacity:ScalarTransition, position:ScalarTransition) {
         this.opacity = opacity;
         this.position = position;
@@ -533,20 +541,25 @@ class VisibilityAnimation {
     function copy():VisibilityAnimation {
         final result = new VisibilityAnimation(opacity.copy(), position.copy());
         result.entrance = entrance;
+        result.slideOut = slideOut;
         return result;
     }
 
     function sample(now:Float):VisibilitySample {
         final entering = opacity.target > opacity.from || position.target > position.from;
+        // DEV-023: a fade out in place is linear and keeps the position it
+        // started from until it ends (fully transparent by then)
+        final fadeOut = !entering && !slideOut;
         final opacitySample = opacity.sample(now, (from, target, linear) -> {
-            final factor = entering ? linear : Easings.easeInCubic(linear);
+            final factor = entering || fadeOut ? linear : Easings.easeInCubic(linear);
             return f32(from + f32(f32(target - from) * factor));
         });
         final positionSample = position.sample(now, (from, target, linear) -> {
             final factor = entering ? Easings.easeOutCubic(linear) : Easings.easeInCubic(linear);
             return f32(from + f32(f32(target - from) * factor));
         });
-        return new VisibilitySample(opacitySample.value, positionSample.value, opacitySample.running || positionSample.running);
+        final positionValue = fadeOut && positionSample.running ? position.from : positionSample.value;
+        return new VisibilitySample(opacitySample.value, positionValue, opacitySample.running || positionSample.running);
     }
 
     /**
@@ -554,8 +567,12 @@ class VisibilityAnimation {
      *
      * The leg runs for `enter` or `exit` scaled by the distance still to cover,
      * so an interrupted transition keeps its speed instead of restarting.
+     *
+     * `slideOut` (Glaze addition, DEV-023): false fades out in place,
+     * linearly, instead of sliding toward the edge.
      */
-    function setVisible(visible:Bool, entrance:ScrollbarEntrance, enter:Float, exit:Float, now:Float):Void {
+    function setVisible(visible:Bool, entrance:ScrollbarEntrance, enter:Float, exit:Float, now:Float, slideOut:Bool = true):Void {
+        this.slideOut = slideOut;
         final target = visible ? 1.0 : 0.0;
         final fullDuration = visible ? enter : exit;
         if (fullDuration == 0) {
@@ -1109,6 +1126,9 @@ class Scrollbar extends Element {
 
     var _mode:Null<ScrollbarMode> = null;
 
+    /** Glaze addition (DEV-023): this scrollbar's appearance, null for the theme's. */
+    var _appearance:Null<ScrollbarAppearance> = null;
+
     @:allow(glaze.kit.base) final scrollHandle:ScrollbarHandle;
 
     var _scrollSize:Null<Size> = null;
@@ -1174,6 +1194,18 @@ class Scrollbar extends Element {
      */
     public function mode(mode:ScrollbarMode):Scrollbar {
         _mode = mode;
+        return this;
+    }
+
+    /**
+     * Set how this scrollbar shows, hides and reacts to hover
+     * (`ScrollbarAppearance`: fade, instant or gpui-kit's slide, durations,
+     * thumb growth). Glaze addition (DEV-023).
+     *
+     * If unset, the theme's (`Theme.scrollbarAppearance` of the kit) is used.
+     */
+    public function appearance(appearance:Null<ScrollbarAppearance>):Scrollbar {
+        _appearance = appearance;
         return this;
     }
 
@@ -1410,12 +1442,21 @@ class Scrollbar extends Element {
         final baseTheme = baseTheme(cx);
         final mode = _mode != null ? _mode : baseTheme.scrollbar.mode();
         final motion = baseTheme.scrollbar.motion();
+        // DEV-023: the appearance of this scrollbar or of the theme, when one
+        // is set, gives the timing, the choreography and the thumb growth;
+        // without one (Base alone), the projected motion does, like gpui-kit
+        final appearance = _appearance != null ? _appearance : baseTheme.scrollbar.appearance();
+        final motionEnter = appearance != null ? appearance.resolvedShowDuration() : motion.enter();
+        final motionExit = appearance != null ? appearance.resolvedHideDuration() : motion.exit();
+        final motionExpand = appearance != null ? appearance.resolvedGrowthDuration() : motion.expand();
+        final slideOut = appearance == null || appearance.transition == ScrollbarTransition.GpuiKit;
+        final thumbGrowth = appearance == null || appearance.thumbGrowth;
         // Always-visible scrollbars skip visibility motion but still animate
         // their activity width. Reduced motion snaps every channel.
         final reduceMotion = cx.reduceMotion();
-        final enter = mode != Always && !reduceMotion ? motion.enter() : 0.;
-        final exit = mode != Always && !reduceMotion ? motion.exit() : 0.;
-        final expand = reduceMotion ? 0. : motion.expand();
+        final enter = mode != Always && !reduceMotion ? motionEnter : 0.;
+        final exit = mode != Always && !reduceMotion ? motionExit : 0.;
+        final expand = reduceMotion ? 0. : motionExpand;
 
         final inner = state;
         final currentOffset = scrollHandle.offset();
@@ -1428,7 +1469,10 @@ class Scrollbar extends Element {
         final isCurrentlyVisible = inner.visibility.sample(now).opacity > 0.0;
         final visible = hoverKeepsVisible(mode, isHovered, isCurrentlyVisible)
             || wantsVisible(mode, isHovered, isDragging, inner.lastScrollTime, motion.idle(), now);
-        inner.visibility.setVisible(visible, motion.entranceFor(mode, inner.hoveredOnThumb != null), enter, exit, now);
+        final entrance = appearance == null
+            ? motion.entranceFor(mode, inner.hoveredOnThumb != null)
+            : (appearance.transition == ScrollbarTransition.GpuiKit && mode == Hover && inner.hoveredOnThumb != null ? SlideAndFade : Fade);
+        inner.visibility.setVisible(visible, entrance, enter, exit, now, slideOut);
         final visibility = inner.visibility.sample(now);
         if (visibility.running) {
             window.requestAnimationFrame();
@@ -1500,6 +1544,7 @@ class Scrollbar extends Element {
             final isHoveredOnBar = state.hoveredAxis == axis;
             final isHoveredOnThumb = state.hoveredOnThumb == axis;
 
+            var normalStyle = false;
             final style = if (state.draggedAxis == axis) {
                 styleForActive(cx);
             }
@@ -1510,14 +1555,19 @@ class Scrollbar extends Element {
                 isHoveredOnThumb ? styleForHoveredThumb(cx) : styleForHoveredBar(cx);
             }
             else {
+                normalStyle = true;
                 styleForNormal(cx);
             }
-            final inset = style.inset;
+            // DEV-023: without thumb growth, the thumb keeps its resting width
+            // and inset when hovered or dragged (only its color changes)
+            final rest = thumbGrowth || normalStyle ? null : styleForNormal(cx);
+            final inset = rest != null ? rest.inset : style.inset;
+            final thumbTargetWidth = rest != null ? rest.width : style.width;
             final radius = style.radius;
             final minLength = style.minLength;
 
             final widthAnimation = isVertical ? state.verticalWidth : state.horizontalWidth;
-            final animated = widthAnimation.setTarget(style.width, expand, now);
+            final animated = widthAnimation.setTarget(thumbTargetWidth, expand, now);
             final thumbWidth = animated.value;
             if (animated.running) {
                 window.requestAnimationFrame();
@@ -1526,7 +1576,8 @@ class Scrollbar extends Element {
             final origin = isVertical ? bounds.origin.y : bounds.origin.x;
             final geometry = new ThumbGeometry(origin, containerSize, axisViewportSize, scrollAreaSize, marginEnd, inset, minLength);
             final active = styleForActive(cx);
-            final activeGeometry = new ThumbGeometry(origin, containerSize, axisViewportSize, scrollAreaSize, marginEnd, active.inset, active.minLength);
+            final activeInset = thumbGrowth ? active.inset : inset;
+            final activeGeometry = new ThumbGeometry(origin, containerSize, axisViewportSize, scrollAreaSize, marginEnd, activeInset, active.minLength);
             final thumbStart = f32(geometry.start(scrollPosition) - origin);
 
             // The clickable area of the thumb

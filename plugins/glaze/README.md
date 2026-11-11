@@ -161,6 +161,21 @@ Icons are `IconName` values: `Button.component('add').icon(IconName.Plus)`. The 
 
 The names are gpui-kit's in camelCase, so its documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences. `Kit.window(view)` is `Root.component().child(view)`: `Root` is itself a component.
 
+### Scrollbars
+
+The kit's scrollbars (`Scrollable`, `overflowYScrollbar()`, lists, tables, trees, Cityscape's editors) fade in and out quickly in place, over 0.12 seconds each way, and keep the same width when the pointer is over them or drags them (only the color of the thumb changes). gpui-kit's own behaviour, where a hiding scrollbar slides toward the edge while it fades and the thumb grows from 6 to 8 pixels on hover, is an option. The setting (`ScrollbarAppearance`, in `glaze.kit.scroll`) is global and can change at runtime:
+
+```haxe
+Theme.setScrollbarAppearance(ScrollbarAppearance.instant(), cx);     // shown and hidden at once
+Theme.setScrollbarAppearance(ScrollbarAppearance.fade(0.2), cx);     // a slower fade, 0.2 s each way
+Theme.setScrollbarAppearance(ScrollbarAppearance.fade()
+    .withShowDuration(0.08).withHideDuration(0.3), cx);              // separate show and hide durations
+Theme.setScrollbarAppearance(ScrollbarAppearance.gpuiKit(), cx);     // gpui-kit: slide out, thumb growth
+Theme.setScrollbarAppearance(ScrollbarAppearance.fade().withThumbGrowth(true), cx);
+```
+
+The define `glaze_scrollbar_appearance` (`fade`, `instant` or `gpuikit`) changes the default at compile time (Glaze's golden scenes use `gpuikit`, to compare with the real gpui-kit). One scrollbar can differ from the global setting: `Scrollbar.vertical(handle).appearance(ScrollbarAppearance.instant())`, or `div().overflowYScrollbar().scrollbarAppearance(ScrollbarAppearance.gpuiKit())`. When the bars are shown (on hover, while scrolling, always) is a separate setting, `Theme.setScrollbarMode`. With reduced motion (`cx.setReduceMotion(true)`), scrollbars show and hide at once. See DEV-023 in [docs/DEVIATIONS.md](docs/DEVIATIONS.md).
+
 ### Code editor
 
 The code editor of Glaze is [Cityscape](../cityscape/README.md) (plugin `cityscape`), a port of Monaco, the editor of Visual Studio Code. It replaces gpui-kit's code editor (`Editor`, `EditorState`), which Glaze does not include: list both plugins in `ceramic.yml` and place a `CityscapeEditor` in your interface like any kit component. The kit's text inputs (`Input`, `Textarea`, `InputGroup`, `NumberInput`, `OtpInput`), rich text and `TextView` stay in Glaze.
