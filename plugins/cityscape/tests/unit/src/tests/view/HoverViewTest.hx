@@ -3,7 +3,8 @@
 // as its content up to `max(0.66 × width, 500)` and `max(height / 4, 250)`,
 // scrolling beyond), its side (resizableContentWidget.ts
 // `_findPositionPreference`, `hover.above`), its place against the line
-// (contentWidgets.ts), the status bar with the keybindings of its actions.
+// (contentWidgets.ts), the status bar with the keybindings of its actions,
+// the `$(name)` codicons of markdown with `supportThemeIcons`.
 package tests.view;
 
 import cityscape.Cityscape;
@@ -33,12 +34,15 @@ private class FixedHover implements HoverProvider {
 
     final markdown:String;
 
-    public function new(markdown:String) {
+    final themeIcons:Bool;
+
+    public function new(markdown:String, themeIcons:Bool = false) {
         this.markdown = markdown;
+        this.themeIcons = themeIcons;
     }
 
     public function provideHover(model:ITextModel, position:Position, token:CancellationToken, context:Null<HoverContext>, resolve:(hover:Null<Hover>) -> Void):Void {
-        resolve({contents: [{value: markdown, supportHtml: true}], range: new Range(position.lineNumber, 1, position.lineNumber, 5)});
+        resolve({contents: [{value: markdown, supportHtml: true, supportThemeIcons: themeIcons}], range: new Range(position.lineNumber, 1, position.lineNumber, 5)});
     }
 
 }
@@ -68,11 +72,11 @@ class HoverViewTest extends TestCase {
         return [for (i in 0...count) 'line ' + (i + 1)].join('\n');
     }
 
-    function open(markdown:Null<String>, width:Int, height:Int, ?options:Dynamic):CityscapeEditor {
+    function open(markdown:Null<String>, width:Int, height:Int, ?options:Dynamic, themeIcons:Bool = false):CityscapeEditor {
         final context = new Cityscape();
         context.languageService.registerLanguage({id: 'hovertest'});
         if (markdown != null) {
-            context.registerHoverProvider('hovertest', new FixedHover(markdown));
+            context.registerHoverProvider('hovertest', new FixedHover(markdown, themeIcons));
         }
         final model = context.modelService.createModel(lines(60), 'hovertest', Uri.parse('file:///hover.test'));
         var editor:Null<CityscapeEditor> = null;
@@ -208,6 +212,62 @@ class HoverViewTest extends TestCase {
         // the marker row, the status bar
         final lineHeight:Float = editor.getEditor().getOption(EditorOption.lineHeight);
         near(1 + 4 + lineHeight + 4 + 1 + 22 + 2 + 1, widget.bounds.size.height, 'height');
+    }
+
+    static function sameColor(q:glaze.scene.Quad, c:glaze.Hsla):Bool {
+        return Math.abs(q.backgroundSolidH - c.h) < 0.0001 && Math.abs(q.backgroundSolidS - c.s) < 0.0001
+            && Math.abs(q.backgroundSolidL - c.l) < 0.0001 && Math.abs(q.backgroundSolidA - c.a) < 0.0001;
+    }
+
+    /**
+     * A hover higher than its maximum scrolls with Monaco's widget
+     * scrollbar (real Monaco 0.52.2: a 10 pixel square slider against the
+     * right of the hover, inside its border, in `scrollbarSlider.background`).
+     */
+    function testScrollbarLooksLikeMonacos() {
+        glaze.kit.theme.Theme.setScrollbarMode(glaze.kit.base.theme.ScrollbarMode.Always, app);
+        final paragraphs = [for (i in 0...30) 'Paragraph ' + i + ' ' + [for (j in 0...40) 'word'].join(' ')];
+        final editor = open(paragraphs.join('\n\n'), 1200, 900);
+        final widget = showHover(editor, 50);
+        draw();
+        final slider = EditorWidgets.color(editor.getEditor(), 'scrollbarSlider.background', hsla(0, 0, 0, 1));
+        final b = widget.bounds;
+        final found = [for (q in window.renderedScene().quads) if (sameColor(q, slider)) q];
+        assertEquals(1, found.length, 'one slider');
+        final q = found[0];
+        near((b.origin.x + b.size.width - 1 - 10) * 2, q.boundsX, 'slider left');
+        near(20, q.boundsWidth, 'slider width');
+        near((b.origin.y + 1) * 2, q.boundsY, 'slider top');
+        assertEquals(0.0, q.cornerRadiusTopLeft);
+    }
+
+    /**
+     * The sprites drawn inside the hover (device pixels, scale 2).
+     */
+    function spritesIn(bounds:glaze.Bounds):Array<glaze.scene.MonochromeSprite> {
+        return [for (sp in window.renderedScene().monochromeSprites) if (sp.boundsX >= bounds.origin.x * 2 && sp.boundsX + sp.boundsWidth <= (bounds.origin.x + bounds.size.width) * 2
+            && sp.boundsY >= bounds.origin.y * 2 && sp.boundsY + sp.boundsHeight <= (bounds.origin.y + bounds.size.height) * 2) sp];
+    }
+
+    /**
+     * Markdown with `supportThemeIcons`: `$(zap)` is the codicon, an em
+     * square in the text's size (real Monaco 0.52.2: a 12 px box in a 12 px
+     * hover), not the text `$(zap)`; without the option the text stays.
+     */
+    function testThemeIconsInMarkdown() {
+        final editor = open('$(zap) Run', 800, 600, null, true);
+        final widget = showHover(editor, 30);
+        final fontSize:Float = editor.getEditor().getOption(EditorOption.fontInfo).fontSize;
+        final sprites = spritesIn(widget.bounds);
+        final squares = [for (sp in sprites) if (Math.abs(sp.boundsWidth - fontSize * 2) <= 1 && Math.abs(sp.boundsHeight - fontSize * 2) <= 1) sp];
+        assertEquals(1, squares.length, 'one codicon of ' + fontSize + ' px among ' + [for (sp in sprites) sp.boundsWidth + 'x' + sp.boundsHeight].join(' '));
+        final plain = open('$(zap) Run', 800, 600, null, false);
+        final plainWidget = showHover(plain, 30);
+        final plainSprites = spritesIn(plainWidget.bounds);
+        // `$(zap)` as text: six glyphs instead of the icon (the other
+        // sprites are the text of the editor under the hover, the same)
+        assertEquals(sprites.length + 5, plainSprites.length);
+        assertEquals(0, [for (sp in plainSprites) if (Math.abs(sp.boundsWidth - fontSize * 2) <= 1 && Math.abs(sp.boundsHeight - fontSize * 2) <= 1) sp].length);
     }
 
 }

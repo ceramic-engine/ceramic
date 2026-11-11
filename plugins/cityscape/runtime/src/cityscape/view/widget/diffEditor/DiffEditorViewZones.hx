@@ -290,6 +290,8 @@ class DiffEditorViewZones implements IDisposable {
                         heightInPx: heightInLines * modLineHeight,
                         paint: this._painters.deletedCode(a.originalRange, a.diff),
                         paintMargin: this._painters.deletedCodeMargin(heightInLines, this._options.renderIndicators),
+                        // `.view-lines.line-delete.monaco-mouse-cursor-text`
+                        mouseCursor: (x, y, width, margin) -> margin ? null : glaze.CursorStyle.IBeam,
                         showInHiddenAreas: true,
                         suppressMouseDown: true,
                     });

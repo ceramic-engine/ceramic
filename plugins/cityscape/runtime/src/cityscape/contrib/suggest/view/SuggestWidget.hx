@@ -38,6 +38,7 @@ import glaze.Size;
 import glaze.StyledText;
 import glaze.Window;
 import glaze.kit.Icon;
+import glaze.kit.base.Scrollbar;
 import glaze.kit.theme.Theme;
 
 import glaze.Prelude.*;
@@ -318,6 +319,31 @@ class SuggestWidget implements IDisposable {
         else if (index >= firstVisibleIndex + visibleRowCount()) {
             firstVisibleIndex = index - visibleRowCount() + 1;
         }
+    }
+
+    /**
+     * Scrolls the list so that the row `index` is the first one shown
+     * (clamped like `scrollBy`; the scrollbar).
+     */
+    public function scrollToRow(index:Int):Void {
+        final max = Std.int(Math.max(0, items.length - visibleRowCount()));
+        final next = Std.int(Math.max(0, Math.min(max, index)));
+        if (next != firstVisibleIndex) {
+            firstVisibleIndex = next;
+            _changed();
+        }
+    }
+
+    var _listScrollHandle:Null<SuggestListScrollHandle> = null;
+
+    /**
+     * The handle of the kit scrollbar of the list (made once).
+     */
+    public function listScrollHandle():SuggestListScrollHandle {
+        if (_listScrollHandle == null) {
+            _listScrollHandle = new SuggestListScrollHandle(this);
+        }
+        return _listScrollHandle;
     }
 
     /**
@@ -892,6 +918,52 @@ class SuggestWidget implements IDisposable {
 }
 
 /**
+ * The kit scrollbar handle of the suggest list: GPUI offsets (0 at the top,
+ * negative down) over the first row shown (the port scrolls the list by
+ * whole rows: the content is as high as the list plus the rows it can
+ * scroll by).
+ */
+class SuggestListScrollHandle implements glaze.kit.base.Scrollbar.ScrollbarHandleImpl {
+
+    final widget:SuggestWidget;
+
+    public function new(widget:SuggestWidget) {
+        this.widget = widget;
+    }
+
+    function itemHeight():Float {
+        return widget.getLayoutInfo().itemHeight;
+    }
+
+    public function viewportBounds():Bounds {
+        // the scrollbar takes its viewport from its layout (`viewportFromLayout`)
+        final b = widget.listBounds;
+        return b != null ? b : new Bounds(new Point(0, 0), new Size(0, 0));
+    }
+
+    public function offset():Point {
+        return new Point(0, -widget.firstVisibleIndex * itemHeight());
+    }
+
+    public function setOffset(offset:Point):Void {
+        widget.scrollToRow(Math.round(-offset.y / itemHeight()));
+    }
+
+    public function contentSize():Size {
+        final h = itemHeight();
+        final visible = widget.visibleRowCount();
+        final size = widget.getSize();
+        final listHeight = size != null ? size.height - widget.getLayoutInfo().statusBarHeight : visible * h;
+        return new Size(size != null ? size.width : 0, listHeight + Math.max(0, widget.items.length - visible) * h);
+    }
+
+    public function startDrag():Void {}
+
+    public function endDrag():Void {}
+
+}
+
+/**
  * The suggest widget in the editor: an overlay widget whose Glaze view
  * (`SuggestWidgetView`) is created at the first render of the editor and
  * draws the widget as a popup below (or above) the cursor.
@@ -1145,6 +1217,14 @@ class SuggestWidgetView extends Model implements Render {
                 row.child(right);
                 list.child(row);
             }
+        }
+
+        // the scrollbar of the list (Monaco's list: a 10 pixel scrollbar on
+        // the right of the rows, inside the border, not over the status bar)
+        if (widget.message == null && widget.items.length > widget.visibleRowCount()) {
+            final handle = widget.listScrollHandle();
+            list.relative().child(div().absolute().top0().left0().right0().h(px(listHeight))
+                .child(Scrollbar.vertical(handle).id('cityscape-suggest-scrollbar').viewportFromLayout().styles(EditorWidgets.widgetScrollbarStyles(editor))));
         }
 
         final anchors:ContentWidgetAnchors = {

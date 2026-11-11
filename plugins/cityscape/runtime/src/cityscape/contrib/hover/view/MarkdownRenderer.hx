@@ -12,6 +12,7 @@ import cityscape.common.EncodedTokenAttributes;
 import cityscape.common.Languages.ITokenizationSupport;
 import cityscape.view.EditorBrowser.ICodeEditor;
 import cityscape.view.EditorWidgets;
+import cityscape.contrib.hover.view.MarkdownThemeIcons.ThemeIconPlugin;
 import glaze.App;
 import glaze.HighlightStyle;
 import glaze.Hsla;
@@ -36,6 +37,12 @@ import markdown.mdast.NodeTools as MdNodeTools;
  * or name of the context; blocks of another language are not colored.
  */
 class MarkdownRenderer {
+
+    /**
+     * Draws the `$(name)` icons of the strings with `supportThemeIcons`
+     * (`MarkdownThemeIcons`).
+     */
+    static final THEME_ICONS = new ThemeIconPlugin();
 
     /**
      * The code block highlighter of a context for its current token colors
@@ -176,11 +183,15 @@ class MarkdownRenderer {
      * `<br>` a line break, `<small>` smaller lines (the lines of a paragraph
      * wholly in `<small>`; elsewhere its text is kept at the paragraph's
      * size), the formatting tags of the kit's text view stay and the other
-     * tags are dropped, their text kept.
+     * tags are dropped, their text kept. With `supportThemeIcons`, the
+     * `$(name)` icons are drawn (`MarkdownThemeIcons`).
      */
     public static function parseHoverMarkdown(md:IMarkdownString, fontSize:Float):Array<HoverMarkdownBlock> {
         final value = md.value != null ? md.value : '';
-        final source = transformHtml(value, md.supportHtml == true);
+        var source = transformHtml(value, md.supportHtml == true);
+        if (md.supportThemeIcons == true) {
+            source = MarkdownThemeIcons.transform(source);
+        }
         final blocks:Array<HoverMarkdownBlock> = [];
         var root:MdNode;
         try {
@@ -576,6 +587,7 @@ class MarkdownRenderer {
                 .withStyle(hoverTextViewStyle(editor, size, foreground, window, cx))
                 .selectable(true)
                 .sharedCodeBlockHighlighter(highlighter)
+                .markdownPlugin(THEME_ICONS)
                 // no language label on the code blocks (Monaco shows none)
                 .codeBlockActions((_, _, _) -> glaze.Prelude.div());
             if (onLinkClick != null) {
@@ -640,7 +652,8 @@ class MarkdownRenderer {
             .withDark(EditorWidgets.isDark(editor));
         final fontFamily = EditorWidgets.editorFontFamily(editor);
         final codeStyle = new glaze.StyleRefinement();
-        final view = TextView.markdown(id, markdown.value)
+        final view = TextView.markdown(id, markdown.supportThemeIcons == true && markdown.value != null ? MarkdownThemeIcons.transform(markdown.value) : markdown.value)
+            .markdownPlugin(THEME_ICONS)
             .withStyle(style)
             .selectable(true)
             .sharedCodeBlockHighlighter(codeBlockHighlighter(editor.context));

@@ -2,8 +2,11 @@
 // rendered by Glaze, as Monaco's style sheets give them: the text cursor over
 // the view lines (viewLines.css), the default cursor over the margin and the
 // line numbers (lineNumbers.css), the pointer over the folding controls
-// (folding.css), the sticky lines (stickyScroll.css, stickyScrollWidget.ts)
-// and the buttons of the find widget (findWidget.css, toggle.css).
+// and the `⋯` of a folded line (folding.css), the sticky lines
+// (stickyScroll.css, stickyScrollWidget.ts, the text cursor over the digits
+// of their numbers) and the buttons of the find widget (findWidget.css,
+// toggle.css). Positions measured on the real Monaco 0.52.2 (glaze-golden
+// scratchpad/cs-polish-probe, s1-cursors.js).
 package tests.view;
 
 import cityscape.Cityscape;
@@ -129,6 +132,46 @@ class MouseCursorTest extends TestCase {
         close();
     }
 
+    /**
+     * The `⋯` after a folded line (`.inline-folded:after { cursor: pointer }`,
+     * `margin: 0.1em 0.2em 0 0.2em`): the pointer over the glyph, between
+     * the ascent and descent of the font; the text cursor in its left margin
+     * and above and below its box in the line (real Monaco: hand from the
+     * top of the content area to its bottom, text 1 px from the line edges).
+     */
+    function testFoldedEllipsisCursor() {
+        final e = open(INDENTED, {});
+        final lh = lineHeight(e);
+        final fontSize:Float = e.getOption(EditorOption.fontInfo).fontSize;
+        e.getEditor().setPosition(new cityscape.common.core.Position(2, 5));
+        e.getEditor().trigger('test', 'editor.fold', null);
+        app.update(_ -> window.draw());
+        final view:cityscape.view.CityscapeView = e.getView();
+        final ellipsisLayout = view.foldedEllipsisLayout();
+        final ellipsis = {width: (ellipsisLayout.width : Float), ascent: (ellipsisLayout.ascent : Float), descent: (ellipsisLayout.descent : Float)};
+        final layout = e.getLayoutInfo();
+        final end = e.getEditor().getScrolledVisiblePosition(new cityscape.common.core.Position(2, 19));
+        final left = end.left + fontSize * 0.2;
+        final middle = 1.5 * lh;
+        final textHeight:Float = (ellipsis.ascent : Float) + (ellipsis.descent : Float);
+        assertTrue(lh - textHeight >= 2, 'the line is taller than the text');
+        assertEquals(CursorStyle.PointingHand, cursorAt(left + ellipsis.width / 2, middle), 'center of the ellipsis');
+        assertEquals(CursorStyle.PointingHand, cursorAt(left + 0.5, middle), 'left edge of the glyph');
+        assertEquals(CursorStyle.PointingHand, cursorAt(left + ellipsis.width - 0.5, middle), 'right edge of the glyph');
+        assertEquals(CursorStyle.IBeam, cursorAt(left - 1, middle), 'its left margin');
+        assertEquals(CursorStyle.IBeam, cursorAt(left + ellipsis.width + 2, middle), 'after it');
+        assertEquals(CursorStyle.IBeam, cursorAt(left + ellipsis.width / 2, lh + 0.4), 'above its box');
+        assertEquals(CursorStyle.IBeam, cursorAt(left + ellipsis.width / 2, 2 * lh - 0.4), 'below its box');
+        assertEquals(CursorStyle.PointingHand, cursorAt(left + ellipsis.width / 2, lh + (lh - textHeight) / 2 + 0.5), 'top of its box');
+        // unfolded: the text cursor again
+        e.getEditor().trigger('test', 'editor.unfold', null);
+        app.update(_ -> window.draw());
+        assertEquals(CursorStyle.IBeam, cursorAt(left + ellipsis.width / 2, middle), 'no ellipsis');
+        // scrolled horizontally out of the text area: the margin keeps its cursor
+        assertTrue(layout.contentLeft > 0);
+        close();
+    }
+
     /** Without folding, the line decorations have the default cursor. */
     function testNoFoldingControls() {
         final e = open(INDENTED, {folding: false, lineDecorationsWidth: 20});
@@ -159,6 +202,13 @@ class MouseCursorTest extends TestCase {
 
         assertEquals(CursorStyle.PointingHand, cursorAt(layout.contentLeft + 40, lh * 1.5), 'sticky line content');
         assertEquals(CursorStyle.Arrow, cursorAt(layout.lineNumbersLeft + 2, lh * 1.5), 'sticky line number');
+        // the digits of a sticky line number: the text cursor over their box
+        // (the width of the number by the ascent and descent of the font)
+        final digitsRight = layout.lineNumbersLeft + layout.lineNumbersWidth;
+        assertEquals(CursorStyle.IBeam, cursorAt(digitsRight - 1, lh * 1.5), 'digit of line 2');
+        assertEquals(CursorStyle.IBeam, cursorAt(digitsRight - 1, lh * 0.5), 'digit of line 1');
+        assertEquals(CursorStyle.Arrow, cursorAt(digitsRight - 1, lh + 0.4), 'above the digits');
+        assertEquals(CursorStyle.Arrow, cursorAt(digitsRight - 12, lh * 1.5), 'left of the one digit of line 2');
         assertEquals(CursorStyle.PointingHand, cursorAt(layout.contentLeft - lh / 2, lh * 0.5), 'folding icon shown');
         // below the widget, the editor's own cursors
         assertEquals(CursorStyle.IBeam, cursorAt(layout.contentLeft + 40, lh * 5.5), 'text under the widget');

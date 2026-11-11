@@ -28,6 +28,16 @@ import cityscape.platform.keybinding.common.Keybinding.IKeyboardEvent;
 typedef ViewZonePainter = (window:glaze.Window, cx:glaze.App, bounds:glaze.Bounds) -> Void;
 
 /**
+ * The mouse cursor over a point of a view zone (Cityscape: Monaco's zones
+ * are DOM nodes with their own CSS `cursor`): `x` and `y` are relative to
+ * the zone's area (the content area, or the margin when `margin` is true),
+ * `width` is the width of that area; null for the default cursor (the
+ * arrow: Monaco's view zones are outside the view lines and their text
+ * cursor).
+ */
+typedef ViewZoneMouseCursor = (x:Float, y:Float, width:Float, margin:Bool) -> Null<glaze.CursorStyle>;
+
+/**
  * A view zone is a full horizontal rectangle that 'pushes' text down.
  * The editor reserves space for view zones when rendering.
  *
@@ -90,6 +100,10 @@ typedef IViewZone = {
      * Paints the zone in the margin area (Monaco's `marginDomNode`).
      */
     @:optional var paintMargin:Null<ViewZonePainter>;
+    /**
+     * The mouse cursor over the zone (Cityscape, null: the arrow).
+     */
+    @:optional var mouseCursor:Null<ViewZoneMouseCursor>;
     /**
      * Callback which gives the relative top of the view zone as it appears (taking scrolling into account).
      */

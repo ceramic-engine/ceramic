@@ -491,6 +491,9 @@ class FindWidget extends Model implements Render implements IFindWidget {
         final findFocused = findInput.read(app).focusHandle.isFocused(window);
         final replaceFocused = replaceInput.read(app).focusHandle.isFocused(window);
         final errorBorder = color('inputValidation.errorBorder', theme.danger);
+        // the placeholders in `input.placeholderForeground` (VS Code's
+        // workbench rule; standalone Monaco leaves them to the browser)
+        final placeholderColor = themeColor('input.placeholderForeground');
 
         // Monaco's `_updateButtons`
         final findInputIsNonEmpty = (state.searchString.length > 0);
@@ -519,6 +522,7 @@ class FindWidget extends Model implements Render implements IFindWidget {
             }));
 
         final findInputElement = Input.component(findInput)
+            .placeholderColor(placeholderColor)
             .focusBordered(false)
             .suffix(findToggles)
             .small()
@@ -563,6 +567,7 @@ class FindWidget extends Model implements Render implements IFindWidget {
 
         if (_isReplaceVisible) {
             final replaceInputElement = Input.component(replaceInput)
+                .placeholderColor(placeholderColor)
                 .focusBordered(false)
                 .suffix(optionToggle('find-preserve-case', IconName.CaseUpper, state.preserveCase, FindWidgetLabels.PRESERVE_CASE, theme, () -> {
                     state.change({preserveCase: !state.preserveCase}, true);

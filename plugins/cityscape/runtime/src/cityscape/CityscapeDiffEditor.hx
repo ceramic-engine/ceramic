@@ -26,8 +26,10 @@ import cityscape.view.widget.codeEditor.CodeEditorWidget;
 import cityscape.view.widget.diffEditor.DiffEditorDecorations.DiffEditorStyles;
 import cityscape.view.widget.diffEditor.DiffEditorOptions;
 import cityscape.view.widget.diffEditor.DiffEditorViewModel;
+import cityscape.view.widget.diffEditor.DiffEditorGutter;
 import cityscape.view.widget.diffEditor.DiffEditorWidget;
 import cityscape.view.widget.diffEditor.DiffProviderFactoryService.DiffComputationMode;
+import cityscape.view.widget.diffEditor.HideUnchangedRegionsFeature;
 import glaze.App;
 import glaze.Bounds;
 import glaze.ContentMask;
@@ -185,6 +187,11 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
         }));
         ownDisposables.add(w.onDidUpdateDiff(() -> _onDidUpdateDiff.fire()));
         ownDisposables.add(w.modified.onDidScrollChange((_) -> revision++));
+        // the gutter menu follows the cursor and the selections of the
+        // modified editor (`showAlways`, the selection toolbar) and its
+        // read only option
+        ownDisposables.add(w.modified.onDidChangeCursorSelection((_) -> revision++));
+        ownDisposables.add(w.modified.onDidChangeConfiguration((_) -> revision++));
         // the styles of the diff classes follow a theme change at once (the
         // editors repaint with them; this component may not render again)
         ownDisposables.add(ctx.themeService.onDidColorThemeChange(_ -> {
@@ -242,8 +249,16 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
         });
 
         final originalContainer = div().relative().flex().flexCol().minW0().minH0().overflowHidden();
+        // the gutter menu (Monaco's `DiffEditorGutter`): between the
+        // editors side by side, at the left in the inline view
+        final gutter = w != null && w.gutter.hasActions() ? gutterElement(w) : null;
         if (sideBySide) {
-            originalContainer.w(relative(diffOptions.splitViewDefaultRatio));
+            if (gutter == null) {
+                originalContainer.w(relative(diffOptions.splitViewDefaultRatio));
+            }
+            else {
+                originalContainer.flex1();
+            }
         }
         else {
             var width = 0.0;
@@ -261,9 +276,19 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
         }
         modifiedContainer.child(modified.flex1());
 
-        final editors = div().flex().flexRow().flex1().minW0().minH0()
-            .child(originalContainer)
-            .child(modifiedContainer);
+        final editors = div().flex().flexRow().flex1().minW0().minH0();
+        if (gutter == null) {
+            editors.child(originalContainer);
+        }
+        else if (sideBySide) {
+            // the original's width less the gutter's: the modified editor
+            // starts at the sash (`sashLeft`), the gutter just before it
+            editors.child(div().flex().flexRow().minW0().minH0().w(relative(diffOptions.splitViewDefaultRatio)).child(originalContainer).child(gutter));
+        }
+        else {
+            editors.child(gutter).child(originalContainer);
+        }
+        editors.child(modifiedContainer);
 
         final root = div()
             .id('cityscape-diff-editor')
@@ -298,6 +323,112 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
             root.refineStyle(s);
         }
         return root;
+    }
+
+    /**
+     * Whether the mouse is over the gutter menu (`.gutter:hover`: its items
+     * show).
+     */
+    var gutterHovered:Bool = false;
+
+    /**
+     * The gutter menu (gutterFeature.ts and style.css): 35 pixels in the
+     * editor's background, the scroll decoration at its top once the
+     * modified editor is scrolled, and per change in view a toolbar with
+     * its revert button (`arrow-right` side by side, `discard` inline): a
+     * 16 pixel codicon in `editor.foreground` in a 20 by 18 pixel button,
+     * centered in the 34 pixel item, `toolbar.hoverBackground` under the
+     * mouse, the pointer, the title as tooltip. The items show while the
+     * mouse is over the gutter, and the change of the cursor (or of the
+     * selections) always; Monaco fades them in and out (0.1 s and 0.7 s),
+     * here they show and hide at once. The background line of an item
+     * (`menu.border`, none in the default themes) is drawn when the theme
+     * has the color.
+     */
+    function gutterElement(w:DiffEditorWidget):glaze.Div {
+        final t = theme;
+        final background = t != null ? t.getColor('editor.background') : null;
+        final foreground = t != null ? t.getColor('editor.foreground') : null;
+        final hoverBackground = t != null ? t.getColor('toolbar.hoverBackground') : null;
+        final toolbarBackground = t != null ? t.getColor('editorGutter.commentRangeForeground') : null;
+        final itemLine = t != null ? t.getColor('menu.border') : null;
+        final shadowColor = t != null ? t.getColor('scrollbar.shadow') : null;
+        final modified = w.modified;
+        final gutter = div()
+            .id('cityscape-diff-gutter')
+            .relative()
+            .w(px(DiffEditorGutter.WIDTH))
+            .flexShrink0()
+            .minH0()
+            .overflowHidden()
+            .onHover((hovered, window, cx) -> {
+                if (gutterHovered != hovered) {
+                    gutterHovered = hovered;
+                    revision++;
+                }
+            })
+            // `click`: the modified editor takes the focus
+            .onMouseDown(MouseButton.Left, (event, window, cx) -> modified.focus())
+            .onScrollWheel((event, window, cx) -> {
+                if (modified.getOption(EditorOption.scrollbar).handleMouseWheel) {
+                    final lineHeight:Float = modified.getOption(EditorOption.lineHeight);
+                    final delta = glaze.ScrollDelta.ScrollDeltaTools.pixelDelta(event.delta, lineHeight);
+                    modified.setScrollTop(modified.getScrollTop() - delta.y);
+                    cx.stopPropagation();
+                }
+            });
+        if (background != null) {
+            gutter.bg(background);
+        }
+        if (modified.getScrollTop() > 0 && shadowColor != null && shadowColor.a > 0) {
+            gutter.child(div().absolute().top0().left0().w(px(DiffEditorGutter.WIDTH)).h(px(6))
+                .shadow([new glaze.BoxShadow(0, 6, shadowColor).withBlurRadius(6).withSpreadRadius(-6).withInset()]));
+        }
+        final viewHeight = modified.getLayoutInfo().height;
+        final layouts = w.gutter.layout(viewHeight);
+        for (i in 0...layouts.length) {
+            final l = layouts[i];
+            if (!gutterHovered && !l.item.showAlways) {
+                continue;
+            }
+            final item = div().absolute().left0().top(px(l.top)).w(px(DiffEditorGutter.ITEM_WIDTH)).h(px(DiffEditorGutter.ITEM_HEIGHT));
+            if (itemLine != null) {
+                // `.background`: `left: 50%; width: 1px; border-left: 2px solid menu.border`
+                item.child(div().absolute().top0().left(px(DiffEditorGutter.ITEM_WIDTH / 2)).w(px(2)).h(px(DiffEditorGutter.ITEM_HEIGHT)).bg(itemLine));
+            }
+            final gutterItem = l.item;
+            final title = w.gutter.titleOf(gutterItem);
+            final icon = glaze.kit.Icon.empty().data(cityscape.view.Codicons.svg(w.gutter.iconOf(gutterItem))).withSize(16);
+            if (foreground != null) {
+                icon.textColor(foreground);
+            }
+            final button = div()
+                .id('cityscape-diff-gutter-button-' + i)
+                .flex()
+                .itemsCenter()
+                .justifyCenter()
+                .w(px(DiffEditorGutter.BUTTON_WIDTH))
+                .h(px(DiffEditorGutter.BUTTON_HEIGHT))
+                .cursorPointer()
+                .onMouseDown(MouseButton.Left, (event, window, cx) -> cx.stopPropagation())
+                .onClick((event, window, cx) -> {
+                    w.gutter.run(gutterItem);
+                    cx.stopPropagation();
+                })
+                .tooltip((window, cx) -> new glaze.kit.tooltip.Tooltip(title).build(window, cx))
+                .child(icon);
+            if (hoverBackground != null) {
+                button.hover(s -> s.bg(hoverBackground));
+            }
+            final toolbar = div().flex().flexRow();
+            if (toolbarBackground != null) {
+                toolbar.bg(toolbarBackground).rounded(px(4));
+            }
+            toolbar.child(button);
+            item.child(div().absolute().left0().top(px(l.buttonsTop)).w(px(DiffEditorGutter.ITEM_WIDTH)).flex().justifyCenter().itemsCenter().child(toolbar));
+            gutter.child(item);
+        }
+        return gutter;
     }
 
     function reportWidth(width:Float):Void {
@@ -810,7 +941,68 @@ private class DiffPainters implements IDiffEditorPainters {
             final shaped = window.textSystem().shapeLine(label, fontSize, [new glaze.TextRun(glaze.util.Utf8.byteLength(label), font, foreground)]);
             final lineHeight = 14.0;
             shaped.paint(new Point(bounds.origin.x, bounds.origin.y + (bounds.size.height - lineHeight) / 2), lineHeight, TextAlign.Left, null, window.textPainter());
+            // the box of the text, for its mouse cursor
+            final box = barTextBoxOf(region);
+            box.width = shaped.width();
+            box.height = (shaped.layout.ascent : Float) + (shaped.layout.descent : Float);
         };
     }
 
+    /**
+     * The size of the text of each bar as last painted.
+     */
+    final barTextBoxes = new haxe.ds.ObjectMap<UnchangedRegion, BarTextBox>();
+
+    function barTextBoxOf(region:UnchangedRegion):BarTextBox {
+        var box = barTextBoxes.get(region);
+        if (box == null) {
+            box = new BarTextBox();
+            barTextBoxes.set(region, box);
+        }
+        return box;
+    }
+
+    /**
+     * The mouse cursors of a bar (style.css and the browser, measured on the
+     * real Monaco 0.52.2): its edges (`HideUnchangedRegionsFeature
+     * .barEdgeCursor`), the pointer over the unfold codicon of the margin
+     * (an `a` with `cursor: pointer`), the text cursor over the glyphs of
+     * "N hidden lines" (selectable text, `cursor: auto`), the arrow
+     * elsewhere.
+     */
+    public function collapsedCodeBarCursor(region:UnchangedRegion, hide:Bool, height:Float):ViewZoneMouseCursor {
+        return (x, y, width, margin) -> {
+            final edge = HideUnchangedRegionsFeature.barEdgeCursor(region, y, height);
+            if (edge != null) {
+                return edge;
+            }
+            if (hide) {
+                return null;
+            }
+            if (margin) {
+                // the unfold codicon: 16 px, centered in the gutter (see `collapsedCodeBar`)
+                final size = 16.0;
+                final left = (width - size) / 2;
+                final top = (height - size) / 2;
+                return x >= left && x < left + size && y >= top && y < top + size ? glaze.CursorStyle.PointingHand : null;
+            }
+            final box = barTextBoxes.get(region);
+            if (box == null) {
+                return null;
+            }
+            final top = (height - box.height) / 2;
+            return x >= 0 && x < box.width && y >= top && y < top + box.height ? glaze.CursorStyle.IBeam : null;
+        };
+    }
+
+}
+
+/**
+ * The size of the text of a bar of a collapsed region.
+ */
+private class BarTextBox {
+    public var width:Float = 0;
+    public var height:Float = 0;
+
+    public function new() {}
 }

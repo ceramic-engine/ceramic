@@ -973,7 +973,8 @@ class ReferenceWidgetView extends GlazeModel implements Render {
             }
         }
 
-        final scroll = ScrollableElement.overflowYScrollbar(list.maxH(px(height))).id('cityscape-peek-tree-scroll');
+        final scroll = ScrollableElement.overflowYScrollbar(list.maxH(px(height))).id('cityscape-peek-tree-scroll')
+            .scrollbarStyles(EditorWidgets.widgetScrollbarStyles(widget.editor));
         return div()
             .id('cityscape-peek-tree')
             .flex()

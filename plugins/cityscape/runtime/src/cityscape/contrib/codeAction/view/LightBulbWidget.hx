@@ -11,8 +11,9 @@ import cityscape.common.core.Position;
 import cityscape.contrib.codeAction.common.CodeActionTypes;
 import cityscape.view.EditorBrowser;
 import cityscape.view.EditorWidgets;
-import cityscape.view.SymbolIcons;
+import cityscape.view.Codicons;
 import glaze.App;
+import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.Window;
@@ -28,11 +29,13 @@ typedef LightBulbClickEvent = {
 }
 
 /**
- * The lightbulb of the code actions (Monaco's `LightBulbWidget`): an icon
- * of the kit (Lucide's lightbulb standing for the codicon) in the gutter
- * of the line of the cursor when code actions are available there, in
- * `editorLightBulb.foreground` (`editorLightBulbAutoFix.foreground` when a
- * preferred quick fix exists). A click shows the code actions.
+ * The lightbulb of the code actions (Monaco's `LightBulbWidget`): Monaco's
+ * codicon (16 pixels, lightBulbWidget.css) in the gutter of the line of the
+ * cursor when code actions are available there: `light-bulb`,
+ * `lightbulb-autofix` when a preferred quick fix exists, `lightbulb-sparkle`
+ * and `lightbulb-sparkle-autofix` with an AI fix, `sparkle-filled` when all
+ * the fixes are AI fixes (`_updateLightBulbTitleAndIcon`), in their colors.
+ * A click shows the code actions.
  *
  * Monaco places the lightbulb at the start of the line, or above, below or
  * in the gutter when the text leaves no room; Cityscape always places it in
@@ -177,11 +180,9 @@ class LightBulbWidget implements IEditorContribution implements IOverlayWidget {
         final glyphMargin = _editor.getOption(EditorOption.glyphMargin);
         final left = glyphMargin ? layoutInfo.glyphMarginLeft : layoutInfo.decorationsLeft;
         final width = glyphMargin ? layoutInfo.glyphMarginWidth : layoutInfo.decorationsWidth;
-        final size = Math.min(lineHeight - 2, 16.0);
-        final autoFix = actions.hasAutoFix;
-        final color = autoFix
-            ? EditorWidgets.color(_editor, 'editorLightBulbAutoFix.foreground', EditorWidgets.isDark(_editor) ? rgb(0x75BEFF).toHsla() : rgb(0x007ACC).toHsla())
-            : EditorWidgets.color(_editor, 'editorLightBulb.foreground', EditorWidgets.isDark(_editor) ? rgb(0xFFCC00).toHsla() : rgb(0xDDB100).toHsla());
+        final size = ICON_SIZE;
+        final icon = iconOf(actions);
+        final color = colorOf(_editor, icon);
         final lineNumber = _lineNumber;
         return div()
             .id('cityscape-lightbulb')
@@ -203,7 +204,46 @@ class LightBulbWidget implements IEditorContribution implements IOverlayWidget {
                 final y = bounds != null ? bounds.origin.y + bounds.size.height : event.position.y;
                 click(x, y);
             })
-            .child(Icon.empty().data(SymbolIcons.codiconSvg(autoFix ? 'lightbulb-autofix' : 'lightbulb')).withSize(size).textColor(color));
+            .child(Icon.empty().data(Codicons.svg(icon)).withSize(size).textColor(color));
+    }
+
+    /**
+     * The font size of the `.codicon` of the widget (codicon.css: 16px).
+     */
+    public static inline final ICON_SIZE:Float = 16.;
+
+    /**
+     * Monaco's `_updateLightBulbTitleAndIcon`: the codicon of the lightbulb
+     * for its actions.
+     */
+    public static function iconOf(actions:CodeActionSet):String {
+        if (actions.allAIFixes) {
+            return 'sparkle-filled';
+        }
+        if (actions.hasAutoFix) {
+            return actions.hasAIFix ? 'lightbulb-sparkle-autofix' : 'lightbulb-autofix';
+        }
+        return actions.hasAIFix ? 'lightbulb-sparkle' : 'light-bulb';
+    }
+
+    /**
+     * The color of a lightbulb codicon (lightBulbWidget.css):
+     * `editorLightBulb.foreground` for `light-bulb` and `lightbulb-sparkle`,
+     * `editorLightBulbAutoFix.foreground` (or the lightbulb's) for the auto
+     * fix ones, `editorLightBulbAi.foreground` (or `icon.foreground`) for
+     * `sparkle-filled`.
+     */
+    public static function colorOf(editor:ICodeEditor, icon:String):Hsla {
+        final dark = EditorWidgets.isDark(editor);
+        final lightBulb = EditorWidgets.color(editor, 'editorLightBulb.foreground', dark ? rgb(0xFFCC00).toHsla() : rgb(0xDDB100).toHsla());
+        return switch icon {
+            case 'lightbulb-autofix' | 'lightbulb-sparkle-autofix':
+                EditorWidgets.color(editor, 'editorLightBulbAutoFix.foreground', lightBulb);
+            case 'sparkle-filled':
+                EditorWidgets.color(editor, 'editorLightBulbAi.foreground', EditorWidgets.color(editor, 'icon.foreground', dark ? rgb(0xC5C5C5).toHsla() : rgb(0x424242).toHsla()));
+            case _:
+                lightBulb;
+        };
     }
 
 }

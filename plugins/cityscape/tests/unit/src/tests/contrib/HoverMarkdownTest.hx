@@ -1,10 +1,12 @@
 // New code for Cityscape (not a port): the blocks of the markdown of hovers
 // (MarkdownRenderer.parseHoverMarkdown): the margins of hoverWidget.css and
 // their collapsing, `<small>` lines, the HTML Monaco's sanitizer keeps or
-// escapes.
+// escapes, the `$(name)` theme icons (markdownRenderer.ts with
+// `supportThemeIcons`, iconLabels.ts).
 package tests.contrib;
 
 import cityscape.contrib.hover.view.MarkdownRenderer;
+import cityscape.contrib.hover.view.MarkdownThemeIcons;
 import testing.TestCase;
 
 class HoverMarkdownTest extends TestCase {
@@ -63,6 +65,29 @@ class HoverMarkdownTest extends TestCase {
         assertEquals('x &lt;b&gt;bold&lt;/b&gt; y', parse('x <b>bold</b> y', false)[0].source);
         // code is left alone
         assertEquals('`<b>`', parse('`<b>`')[0].source);
+    }
+
+    /**
+     * `$(name)` becomes a codicon (its `~modifier` dropped), outside code
+     * blocks and code spans; `\$(name)` stays as text
+     * (`markdownEscapeEscapedIcons`); what is not an icon name stays.
+     */
+    function testThemeIcons() {
+        final icon = (name:String) -> '![](' + MarkdownThemeIcons.SCHEME + name + ')';
+        assertEquals('Run ' + icon('play') + ' now', MarkdownThemeIcons.transform('Run $(play) now'));
+        assertEquals(icon('zap') + icon('sync'), MarkdownThemeIcons.transform('$(zap)$(sync~spin)'));
+        assertEquals('**' + icon('error') + ' bold**', MarkdownThemeIcons.transform('**$(error) bold**'));
+        assertEquals('[' + icon('link') + ' open](http://x)', MarkdownThemeIcons.transform('[$(link) open](http://x)'));
+        // an escaped backslash before the icon
+        assertEquals('\\\\' + icon('play') + ' text', MarkdownThemeIcons.transform('\\\\$(play) text'));
+        // escaped, in code, not a name
+        for (same in ['\\$(play)', '`$(play)`', '```\n$(play)\n```', '$(not a name)', '$()', '$(a~)', '$(play', 'cost $5 (each)']) {
+            assertEquals(same, MarkdownThemeIcons.transform(same), same);
+        }
+        // only with supportThemeIcons
+        final blocks = MarkdownRenderer.parseHoverMarkdown({value: '$(zap) Run', supportThemeIcons: true}, 16);
+        assertEquals(icon('zap') + ' Run', blocks[0].source);
+        assertEquals('$(zap) Run', MarkdownRenderer.parseHoverMarkdown({value: '$(zap) Run'}, 16)[0].source);
     }
 
 }

@@ -247,6 +247,193 @@ class DiffEditorTest extends TestCase {
         draw();
     }
 
+    function cursorAt(x:Float, y:Float):glaze.CursorStyle {
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(x, y)), app);
+        draw();
+        draw();
+        return window.cursorStyle();
+    }
+
+    /**
+     * The mouse cursors over the bar of a collapsed region, as on the real
+     * Monaco 0.52.2 (glaze-golden scratchpad cs-polish-probe, s2-diff.js and
+     * s6-zones.js): `s-resize` over the top edge of a region that can hide
+     * more lines, `n-resize` over the bottom edge of one that can show more,
+     * the text cursor over "N hidden lines", the arrow beside it, the
+     * pointer over the unfold codicon of the margin, the arrow elsewhere in
+     * the margin; the text cursor again on the lines after the bar.
+     */
+    function testHiddenRegionBarCursors() {
+        final original = createTextModel(lines(60).join('\n'));
+        final modifiedLines = lines(60);
+        modifiedLines[29] = 'changed 30';
+        final modified = createTextModel(modifiedLines.join('\n'));
+        final diffEditor = open(original, modified, {hideUnchangedRegions: {enabled: true}});
+        final m = widgetOf(diffEditor.getModifiedEditor());
+        final view:CityscapeView = diffEditor.getModifiedEditor().getView();
+        final b = view.elementBounds;
+        final layoutInfo = m.getLayoutInfo();
+        final lineHeight:Float = m.getOption(EditorOption.lineHeight);
+        // the first bar: a zone of 24 px before line 27, at the top
+        final whitespaces = m.getWhitespaces();
+        assertEquals(0, whitespaces[0].afterLineNumber);
+        assertEquals(24.0, whitespaces[0].height);
+        final top = b.origin.y;
+        final text = b.origin.x + layoutInfo.contentLeft;
+        assertEquals(glaze.CursorStyle.ResizeDown, cursorAt(text + 40, top + 1), 'top edge');
+        assertEquals(glaze.CursorStyle.ResizeUp, cursorAt(text + 40, top + 21), 'bottom edge');
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(text + 4, top + 12), 'the text of the bar');
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(text + 300, top + 12), 'beside the text');
+        assertEquals(glaze.CursorStyle.PointingHand, cursorAt(b.origin.x + layoutInfo.contentLeft / 2, top + 12), 'the unfold codicon');
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(b.origin.x + 1, top + 12), 'the margin beside it');
+        assertEquals(glaze.CursorStyle.ResizeDown, cursorAt(b.origin.x + 1, top + 1), 'the top edge over the margin');
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(text + 40, top + 24 + lineHeight / 2), 'the line after the bar');
+        // fully revealed: no edge cursor
+        diffEditor.showAllUnchangedRegions();
+        draw();
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(text + 40, top + 1), 'no bar');
+    }
+
+    /**
+     * The inline view: the text cursor over the deleted lines
+     * (`.view-lines.line-delete.monaco-mouse-cursor-text`), the arrow over
+     * their margin; an empty zone (the `diagonal-fill` of the side by side
+     * view) has the arrow (Monaco's view zones are outside the view lines).
+     */
+    function testDiffZoneCursors() {
+        final original = createTextModel(['a', 'b', 'c', 'd'].join('\n'));
+        final modified = createTextModel(['a', 'd'].join('\n'));
+        final diffEditor = open(original, modified, {renderSideBySide: false});
+        final m = widgetOf(diffEditor.getModifiedEditor());
+        final view:CityscapeView = diffEditor.getModifiedEditor().getView();
+        final b = view.elementBounds;
+        final layoutInfo = m.getLayoutInfo();
+        final lineHeight:Float = m.getOption(EditorOption.lineHeight);
+        final zoneY = b.origin.y + lineHeight * 1.5;
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(b.origin.x + layoutInfo.contentLeft + 30, zoneY), 'deleted line');
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(b.origin.x + layoutInfo.contentLeft - 2, zoneY), 'margin of the deleted line');
+        // side by side: the modified editor has a diagonal fill zone after
+        // its line 1, in front of the deleted `b` and `c`
+        diffEditor.updateOptions({renderSideBySide: true});
+        draw();
+        diffEditor.getWidget()._flush();
+        draw();
+        final mv:CityscapeView = diffEditor.getModifiedEditor().getView();
+        final mb = mv.elementBounds;
+        final ml = widgetOf(diffEditor.getModifiedEditor()).getLayoutInfo();
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(mb.origin.x + ml.contentLeft + 30, mb.origin.y + lineHeight * 1.5), 'diagonal fill');
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(mb.origin.x + ml.contentLeft + 30, mb.origin.y + lineHeight * 0.5), 'line 1');
+    }
+
+    /**
+     * The gutter menu (gutterFeature.ts), as on the real Monaco 0.52.2 in
+     * a 1000 pixel diff editor (glaze-golden scratchpad cs-polish-probe,
+     * s2-diff.js): a 35 pixel gutter just before the modified editor (at
+     * `sashLeft`, the split of the width less the ruler's), the original
+     * that much narrower; per change, a 20 by 18 pixel button 7 pixels from
+     * the gutter's left at the top of the change (`DiffToolBar.layout`),
+     * shown while the mouse is over the gutter, with the pointer; a click
+     * reverts the change. No gutter when the diff editor is read only.
+     */
+    function testGutterMenuRevertsAChange() {
+        final original = createTextModel(lines(20).join('\n'));
+        final modifiedLines = lines(20);
+        modifiedLines[4] = 'line 5 changed';
+        final modified = createTextModel(modifiedLines.join('\n'));
+        final diffEditor = open(original, modified);
+        final o:CityscapeView = diffEditor.getOriginalEditor().getView();
+        final mv:CityscapeView = diffEditor.getModifiedEditor().getView();
+        final m = widgetOf(diffEditor.getModifiedEditor());
+        final sash = (1200 - 30) * 0.5;
+        assertEquals(sash, mv.elementBounds.origin.x, 'the modified editor at the sash');
+        assertEquals(sash - 35, o.elementBounds.size.width, 'the original less the gutter');
+        final gutter = diffEditor.getWidget().gutter;
+        assertTrue(gutter.hasActions());
+        final items = gutter.items();
+        assertEquals(1, items.length);
+        assertEquals('arrow-right', gutter.iconOf(items[0]));
+        assertEquals('Revert Block', gutter.titleOf(items[0]));
+        assertFalse(items[0].showAlways);
+        final lineHeight:Float = m.getOption(EditorOption.lineHeight);
+        final layouts = gutter.layout(m.getLayoutInfo().height);
+        assertEquals(1, layouts.length);
+        assertEquals(4 * lineHeight, layouts[0].top);
+        assertEquals(lineHeight, layouts[0].height);
+        assertEquals(0.0, layouts[0].buttonsTop);
+        // the button: hidden until the mouse is over the gutter
+        final buttonX = sash - 35 + 7 + 10;
+        final buttonY = mv.elementBounds.origin.y + 4 * lineHeight + 9;
+        assertEquals(glaze.CursorStyle.PointingHand, cursorAt(buttonX, buttonY), 'the revert button');
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(buttonX, buttonY + 40), 'the gutter');
+        cursorAt(buttonX, buttonY);
+        window.dispatchEvent(new MouseDownEvent(MouseButton.Left, point(buttonX, buttonY)), app);
+        window.dispatchEvent(new MouseUpEvent(MouseButton.Left, point(buttonX, buttonY)), app);
+        draw();
+        assertEquals(original.getValue(), modified.getValue(), 'the change is reverted');
+        // read only: no gutter
+        diffEditor.updateOptions({readOnly: true});
+        draw();
+        draw();
+        assertFalse(gutter.hasActions());
+        assertEquals(sash, o.elementBounds.size.width, 'no gutter');
+    }
+
+    /**
+     * The cursor in a change shows its button without hovering the gutter
+     * (`showAlways`); a selection over changes gives one "Revert Selection"
+     * item that reverts the selected inner changes; the inline view has the
+     * gutter at its left with the `discard` codicon.
+     */
+    function testGutterMenuItems() {
+        final original = createTextModel(lines(20).join('\n'));
+        final modifiedLines = lines(20);
+        modifiedLines[4] = 'line 5 changed';
+        modifiedLines[14] = 'line 15 changed';
+        final modified = createTextModel(modifiedLines.join('\n'));
+        final diffEditor = open(original, modified);
+        final m = widgetOf(diffEditor.getModifiedEditor());
+        final gutter = diffEditor.getWidget().gutter;
+        assertEquals(2, gutter.items().length);
+        m.setPosition(new Position(15, 3));
+        final items = gutter.items();
+        assertFalse(items[0].showAlways);
+        assertTrue(items[1].showAlways);
+        // a selection over the second change
+        m.setSelection(new Range(15, 1, 15, 9));
+        final selected = gutter.items();
+        assertEquals(1, selected.length);
+        assertTrue(selected[0].isSelection);
+        assertTrue(selected[0].showAlways);
+        assertEquals('Revert Selection', gutter.titleOf(selected[0]));
+        gutter.run(selected[0]);
+        assertEquals('line 15', modified.getLineContent(15));
+        assertEquals('line 5 changed', modified.getLineContent(5));
+        // the inline view: the gutter first
+        diffEditor.updateOptions({renderSideBySide: false});
+        draw();
+        draw();
+        final o:CityscapeView = diffEditor.getOriginalEditor().getView();
+        assertEquals(35.0, o.elementBounds.origin.x, 'the original margin after the gutter');
+        assertEquals('discard', gutter.iconOf(gutter.items()[0]));
+    }
+
+    /**
+     * `DiffToolBar.layout`: the buttons centered on the change, kept a
+     * button's height (18) away from the edges of the view and of the change
+     * when the change leaves room.
+     */
+    function testGutterButtonsPlacement() {
+        final top = cityscape.view.widget.diffEditor.DiffEditorGutter.buttonsTop;
+        // a one line change: at its top (no room inside it)
+        assertEquals(0.0, top(72, 18, 700));
+        // a tall change in view: centered
+        assertEquals(200 - 9.0, top(100, 400, 1000));
+        // a tall change above the view: kept 18 below the view's top
+        assertEquals(18 + 500.0, top(-500, 1000, 700));
+        // its center below the view: kept above the view's bottom
+        assertEquals(700 - 18 - 18 - 1 - 100.0, top(100, 2000, 700));
+    }
+
     function testEditsRecomputeTheDiff() {
         final original = createTextModel(['a', 'b', 'c'].join('\n'));
         final modified = createTextModel(['a', 'b', 'c'].join('\n'));

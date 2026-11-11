@@ -689,14 +689,7 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
             }
 
             // line number (`.sticky-line-number-inner`, right aligned)
-            var label:Null<String> = null;
-            if (lineNumbers.renderType == RenderLineNumbersType.On || (lineNumbers.renderType == RenderLineNumbersType.Interval && stickyLine.lineNumber % 10 == 0)) {
-                label = '' + stickyLine.lineNumber;
-            }
-            else if (lineNumbers.renderType == RenderLineNumbersType.Relative) {
-                final position = this._editor.getPosition();
-                label = '' + Std.int(Math.abs(stickyLine.lineNumber - (position != null ? position.lineNumber : 0)));
-            }
+            final label = numberLabelOf(stickyLine, lineNumbers);
             if (label != null && layoutInfo.lineNumbersWidth > 0 && lineNumberColor != null) {
                 final shaped = textSystem.shapeLine(label, fontInfo.fontSize, [new glaze.TextRun(glaze.util.Utf8.byteLength(label), numberFont, lineNumberColor)]);
                 final labelWidth:Float = shaped.width();
@@ -722,13 +715,32 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
     }
 
     /**
+     * The text of the line number of a sticky line (null when the option
+     * shows none): `_renderChildNode`.
+     */
+    function numberLabelOf(stickyLine:RenderedStickyLine, lineNumbers:InternalEditorRenderLineNumbersOptions):Null<String> {
+        if (lineNumbers.renderType == RenderLineNumbersType.On || (lineNumbers.renderType == RenderLineNumbersType.Interval && stickyLine.lineNumber % 10 == 0)) {
+            return '' + stickyLine.lineNumber;
+        }
+        else if (lineNumbers.renderType == RenderLineNumbersType.Relative) {
+            final position = this._editor.getPosition();
+            return '' + Std.int(Math.abs(stickyLine.lineNumber - (position != null ? position.lineNumber : 0)));
+        }
+        return null;
+    }
+
+    /**
      * The hitboxes of the rendered sticky lines with their mouse cursors,
      * in the order of `_paint` (the last line first, the others over it):
      * the line content, from `contentLeft` to the widget's right, has the
      * pointer; the folding icon (its box of the line height, floated right
      * in the line number node of `contentLeft` pixels) the pointer when it
      * is shown, the default cursor when not. The line numbers keep the
-     * widget's default cursor.
+     * widget's default cursor, except over the digits: their node has no
+     * `cursor` rule (`auto`) and selectable text, so the browser shows the
+     * text cursor over the box of the glyphs (the width of the number by
+     * the ascent and descent of the font), measured on the real Monaco
+     * 0.52.2.
      */
     function _insertLineHitboxes(bounds:Bounds, window:Window, hitboxes:Array<glaze.Hitbox>, cursors:Array<CursorStyle>):Void {
         final count = this._renderedStickyLines.length;
@@ -744,6 +756,12 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
         final bottom = y0 + Math.max(0, this.height);
         final last = this._renderedStickyLines[count - 1];
         final lastFirst = last.index == this._lineNumbers.length - 1;
+        final options = this._editor.getOptions();
+        final fontInfo = options.get(EditorOption.fontInfo);
+        final numbersWidth = layoutInfo.lineNumbersWidth;
+        final numbers = numbersWidth > 0 ? options.get(EditorOption.lineNumbers) : null;
+        final view = numbers != null ? cityscape.view.EditorWidgets.viewOf(this._editor) : null;
+        final numberFont = view != null ? view.measurements.resolveEditorFont(fontInfo.fontFamily, cityscape.view.EditorFontMeasurements.parseFontWeight(fontInfo.fontWeight), false, cityscape.view.EditorFontMeasurements.parseFontFeatureSettings(fontInfo.fontFeatureSettings)) : null;
         for (k in 0...count) {
             final stickyLine = lastFirst ? (k == 0 ? last : this._renderedStickyLines[k - 1]) : this._renderedStickyLines[k];
             final top = y0 + topOfStickyLine(stickyLine);
@@ -756,6 +774,20 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
                 hitboxes.push(window.insertHitbox(new Bounds(new Point(x0 + contentLeft, lineTop), new Size(width - contentLeft, lineBottom - lineTop)), HitboxBehavior.Normal));
                 cursors.push(CursorStyle.PointingHand);
             }
+            final label = numbers != null ? numberLabelOf(stickyLine, numbers) : null;
+            if (label != null && numberFont != null) {
+                final shaped = window.textSystem().shapeLine(label, fontInfo.fontSize, [new glaze.TextRun(glaze.util.Utf8.byteLength(label), numberFont, NUMBER_HIT_COLOR)]);
+                final right = x0 + layoutInfo.lineNumbersLeft + numbersWidth;
+                final labelWidth:Float = shaped.width();
+                final left = Math.max(x0, right - labelWidth);
+                final textHeight:Float = (shaped.layout.ascent : Float) + (shaped.layout.descent : Float);
+                final textTop = Math.max(top + (lineHeight - textHeight) / 2, lineTop);
+                final textBottom = Math.min(top + (lineHeight + textHeight) / 2, lineBottom);
+                if (right > left && textBottom > textTop) {
+                    hitboxes.push(window.insertHitbox(new Bounds(new Point(left, textTop), new Size(right - left, textBottom - textTop)), HitboxBehavior.Normal));
+                    cursors.push(CursorStyle.IBeam);
+                }
+            }
             final icon = stickyLine.foldingIcon;
             if (icon != null) {
                 final iconLeft = Math.max(x0, x0 + contentLeft - icon.dimension);
@@ -767,6 +799,12 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
             }
         }
     }
+
+    /**
+     * The color of the numbers shaped for their hitboxes (only their size
+     * matters; one color so the shaped line is shared with the paint's).
+     */
+    static final NUMBER_HIT_COLOR = new Hsla(0, 0, 0, 1);
 
     static inline function fill2(window:Window, x:Float, y:Float, w:Float, h:Float, color:Hsla):Void {
         if (w > 0 && h > 0) {

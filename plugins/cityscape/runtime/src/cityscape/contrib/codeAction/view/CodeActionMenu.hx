@@ -10,7 +10,7 @@ import cityscape.common.Languages.CodeAction;
 import cityscape.contrib.codeAction.common.CodeActionTypes;
 import cityscape.view.EditorBrowser;
 import cityscape.view.EditorWidgets;
-import cityscape.view.SymbolIcons;
+import cityscape.view.Codicons;
 import glaze.App;
 import glaze.Bounds;
 import glaze.ClickEvent;
@@ -139,8 +139,8 @@ typedef ActionListDelegate = {
 /**
  * Shows the code actions of an editor in the Glaze kit's `PopupMenu`
  * (Monaco's action widget service): the groups as labels, the actions with
- * the icon of their group (Monaco's lightbulb for quick fixes), their
- * keybinding, disabled actions with the reason. The menu takes the focus,
+ * the codicon of their group (Monaco's lightbulb when the group has none),
+ * disabled actions with the reason. The menu takes the focus,
  * gives it back to the editor when it closes, and is drawn above
  * everything, anchored below the given point.
  */
@@ -243,16 +243,37 @@ class CodeActionWidget implements IOverlayWidget implements IDisposable {
         return null;
     }
 
-    function iconOf(item:IActionListItem):Null<String> {
-        if (item.group.icon != null) {
-            return item.group.icon;
-        }
-        // Monaco's quick fix rows show the lightbulb
-        if (item.group.kind.equals(CodeActionKind.QuickFix)) {
-            return item.item != null && item.item.action.isPreferred == true ? 'lightbulb-autofix' : 'lightbulb';
-        }
-        return null;
+    /**
+     * The codicon of an action row (actionList.ts `ActionItemRenderer`): the
+     * icon of its group, else the lightbulb.
+     */
+    public static function iconOf(item:IActionListItem):String {
+        return item.group.icon != null ? item.group.icon : 'light-bulb';
     }
+
+    /**
+     * The color of the codicon of an action row: the lightbulb (no group
+     * icon) is drawn in `editorLightBulb.foreground` (the inline style of
+     * actionList.ts), a group icon in the color of the row
+     * (actionWidget.css `.codicon { color: inherit }`, null here).
+     */
+    public static function iconColorOf(editor:ICodeEditor, item:IActionListItem):Null<glaze.Hsla> {
+        if (item.group.icon != null) {
+            return null;
+        }
+        return EditorWidgets.color(editor, 'editorLightBulb.foreground', EditorWidgets.isDark(editor) ? rgb(0xFFCC00).toHsla() : rgb(0xDDB100).toHsla());
+    }
+
+    /**
+     * The size of the codicons of the rows (codicon.css: 16px).
+     */
+    public static inline final ICON_SIZE:Float = 16.;
+
+    /**
+     * The gap between the codicon and the title of a row (actionWidget.css:
+     * the title starts 8 pixels after the 16 pixel icon).
+     */
+    static inline final ICON_GAP:Float = 8.;
 
     public function render(window:Window, cx:App):Null<IntoElement> {
         final items = this.items;
@@ -283,13 +304,18 @@ class CodeActionWidget implements IOverlayWidget implements IDisposable {
                     }
                     first = false;
                     final label = item.label != null ? item.label : '';
-                    final entry = PopupMenuItem.create(label)
+                    final iconData = Codicons.svg(iconOf(item));
+                    final iconColor = iconColorOf(editor, item);
+                    // a row of its own: the kit's menu icons are 12 pixels
+                    final entry = PopupMenuItem.element((_, _) -> {
+                        final icon = Icon.empty().data(iconData).withSize(ICON_SIZE).flexNone();
+                        if (iconColor != null) {
+                            icon.textColor(iconColor);
+                        }
+                        return div().flex().flexRow().itemsCenter().gap(px(ICON_GAP)).child(icon).child(label);
+                    })
                         .disabled(item.disabled == true)
                         .onClick((_:ClickEvent, _:Window, _:App) -> select(index));
-                    final codicon = iconOf(item);
-                    if (codicon != null) {
-                        entry.icon(Icon.empty().data(SymbolIcons.codiconSvg(codicon)));
-                    }
                     menu.item(entry);
                 }
                 if (page != null) {
@@ -297,7 +323,7 @@ class CodeActionWidget implements IOverlayWidget implements IDisposable {
                     // the editor for the window, and the room on the larger
                     // side (less the menu's border and padding)
                     final room = cityscape.view.ContentWidgetPositioner.maxHeightInPageWithPreferences(anchor, page) - 10;
-                    menu.scrollable(true).maxH(px(Math.max(0, Math.min(Math.min(450, page.size.height * 0.5), room))));
+                    menu.scrollable(true).scrollbarStyles(EditorWidgets.widgetScrollbarStyles(editor)).maxH(px(Math.max(0, Math.min(Math.min(450, page.size.height * 0.5), room))));
                 }
                 return menu.minW(160);
             });

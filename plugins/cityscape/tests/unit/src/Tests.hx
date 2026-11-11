@@ -211,6 +211,7 @@ class Tests {
         runner.add(new tests.contrib.gotoSymbol.ReferencesModelTest());
         runner.add(new tests.contrib.codeAction.CodeActionTest());
         runner.add(new tests.contrib.codeAction.CodeActionKeybindingResolverTest());
+        runner.add(new tests.contrib.codeAction.LightBulbIconsTest());
 
         // Diff computation and diff editor (step 7, cs7-diff)
         runner.add(new tests.diff.DiffComputerTest());

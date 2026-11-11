@@ -982,7 +982,8 @@ class ContentHoverView extends Model implements Render {
 
         // the content scrolls beyond the maximum height (Monaco's
         // `DomScrollableElement`), inside the 1 pixel border
-        final scrollable = ScrollableElement.overflowYScrollbar(content.maxH(px(max.height - 2))).id('cityscape-hover-scroll');
+        final scrollable = ScrollableElement.overflowYScrollbar(content.maxH(px(max.height - 2))).id('cityscape-hover-scroll')
+            .scrollbarStyles(EditorWidgets.widgetScrollbarStyles(editor));
 
         final surface = div()
             .id('cityscape-hover')

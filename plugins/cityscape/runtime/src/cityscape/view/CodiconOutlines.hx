@@ -1,7 +1,7 @@
 // New code for Cityscape (not a port): outlines of the codicons Monaco draws
 // with the codicon font, generated from codicon.ttf of monaco-editor 0.52.2
 // (vscode-codicons, Copyright (c) Microsoft Corporation, CC BY 4.0: see
-// NOTICE.md) by glaze-golden scratchpad/cs-lspmore-work/gen-codicon-outlines.py.
+// NOTICE.md) by glaze-golden scratchpad/cs-polish-codicons/gen-codicon-outlines.py.
 package cityscape.view;
 
 /**
@@ -23,18 +23,19 @@ class CodiconOutlines {
         'symbol-file', 'symbol-folder', 'symbol-interface', 'symbol-key', 'symbol-text', 'symbol-keyword',
         'symbol-misc', 'symbol-module', 'symbol-namespace', 'symbol-object', 'symbol-package',
         'symbol-number', 'symbol-numeric', 'symbol-operator', 'symbol-parameter', 'symbol-type-parameter',
-        'symbol-property', 'symbol-reference', 'go-to-file', 'symbol-ruler', 'symbol-unit', 'symbol-snippet',
-        'symbol-string', 'symbol-struct', 'symbol-structure', 'symbol-variable', 'play', 'run',
-        'debug-start', 'references', 'check', 'check-all', 'error', 'warning', 'info', 'lightbulb',
-        'light-bulb', 'lightbulb-autofix', 'lightbulb-sparkle', 'gear', 'settings-gear', 'link',
-        'link-external', 'debug', 'debug-alt', 'debug-alt-small', 'run-all', 'run-above', 'run-below',
-        'play-circle', 'beaker', 'pass', 'pass-filled', 'circle-slash', 'sync', 'refresh', 'close', 'add',
-        'plus', 'remove', 'edit', 'trash', 'search', 'eye', 'comment', 'sparkle', 'bug', 'account', 'issues',
-        'copy', 'history', 'pin', 'bookmark', 'tools', 'wand', 'star', 'star-full', 'rocket', 'flame',
-        'heart', 'globe', 'home', 'key', 'json', 'code', 'note', 'book', 'question', 'lock', 'unlock',
-        'terminal', 'github', 'filter', 'graph', 'type-hierarchy', 'preview', 'open-preview', 'arrow-right',
-        'arrow-left', 'arrow-up', 'arrow-down', 'triangle-right', 'triangle-down', 'chevron-right',
-        'chevron-down', 'chevron-up', 'chevron-left'
+        'symbol-property', 'wrench', 'symbol-reference', 'go-to-file', 'symbol-ruler', 'symbol-unit',
+        'symbol-snippet', 'symbol-string', 'symbol-struct', 'symbol-structure', 'symbol-variable', 'play',
+        'run', 'debug-start', 'references', 'check', 'check-all', 'error', 'warning', 'info', 'lightbulb',
+        'light-bulb', 'lightbulb-autofix', 'lightbulb-sparkle', 'lightbulb-sparkle-autofix', 'gear',
+        'settings-gear', 'link', 'link-external', 'debug', 'debug-alt', 'debug-alt-small', 'run-all',
+        'run-above', 'run-below', 'play-circle', 'beaker', 'pass', 'pass-filled', 'circle-slash', 'sync',
+        'refresh', 'close', 'add', 'plus', 'remove', 'edit', 'trash', 'search', 'eye', 'comment', 'sparkle',
+        'bug', 'account', 'issues', 'copy', 'history', 'pin', 'bookmark', 'tools', 'wand', 'star',
+        'star-full', 'rocket', 'flame', 'heart', 'globe', 'home', 'key', 'json', 'code', 'note', 'book',
+        'question', 'lock', 'unlock', 'terminal', 'github', 'filter', 'graph', 'type-hierarchy', 'preview',
+        'open-preview', 'arrow-right', 'arrow-left', 'arrow-up', 'arrow-down', 'triangle-right',
+        'triangle-down', 'chevron-right', 'chevron-down', 'chevron-up', 'chevron-left', 'sparkle-filled',
+        'surround-with', 'discard'
     ];
 
     /**
@@ -82,7 +83,7 @@ class CodiconOutlines {
                 'M54 21Q64 25 68 34Q70 39 70 45Q70 51 67 56.5Q64 62 58 66Q52 70 44 70Q34 70 26.5 62.5Q19 55 19 44Q19 37 23 30.5Q27 24 34 21Q44 17 54 21ZM48 54Q54 51 55 44Q55 41 52.5 38Q50 35 47 34Q44 33 41 34.5Q38 36 36 38.5Q34 41 34 44.5Q34 48 36.5 50.5Q39 53 42 54Q45 55 48 54ZM121 21 21 121 34 133 133 34ZM216 169H234V216H281V234H234V281H216V234H169V216H216ZM108 179 121 192 88 225 121 258 108 271 75 238 42 271 29 258 62 225 29 192 42 179 75 212ZM133 100Q130 93 124 88.5Q118 84 110 84Q102 84 95.5 88.5Q89 93 86.5 99.5Q84 106 84.5 112.5Q85 119 88.5 124Q92 129 97.5 132Q103 135 109.5 135.5Q116 136 122 132.5Q128 129 131.5 124Q135 119 135.5 112.5Q136 106 133 100ZM119 114Q118 118 114 119Q108 122 103 117Q101 116 100 113.5Q99 111 99.5 108Q100 105 102.5 102.5Q105 100 108 99.5Q111 99 113.5 100Q116 101 117 103Q122 108 119 114ZM263 56H188V75H263Z';
             case 'symbol-parameter' | 'symbol-type-parameter':
                 'M206 112H188V103Q188 99 185 96.5Q182 94 178 94H159V197Q159 201 161.5 203.5Q164 206 168 206H178V225H121V206H131Q135 206 137.5 203.5Q140 201 140 197V94H122Q118 94 115.5 96.5Q113 99 112 103V112H94V75H206ZM261 151 233 123 247 110 281 144V158L248 191L234 177ZM67 177 39 150 66 123 52 110 19 143V157L53 191Z';
-            case 'symbol-property':
+            case 'symbol-property' | 'wrench':
                 'M53 281Q39 281 29.5 271.5Q20 262 19 249.5Q18 237 26 227Q61 189 125 127Q120 113 120 98Q120 83 126 69Q136 45 157 32Q174 21 194.5 19Q215 17 233 25L245 30L191 86L214 109L270 55L275 67Q281 82 281 98Q281 114 275 129Q269 144 258 155Q252 161 244 166Q228 177 209.5 179Q191 181 173 174Q105 243 73 273Q64 281 53 281ZM201 36Q183 36 167 47Q161 50 156 55Q142 69 138.5 88Q135 107 143 125L146 131L142 135Q74 201 39 238Q36 243 36.5 248.5Q37 254 40.5 257.5Q44 261 47 262Q50 263 54 263Q58 263 61 260Q91 233 164 158L169 154L174 156Q189 163 205 161.5Q221 160 235 151Q241 148 246 143Q255 134 259.5 122.5Q264 111 264 98Q264 92 263 86L214 134L166 86L214 37Q208 36 201 36Z';
             case 'symbol-reference' | 'go-to-file':
                 'M113 111 151 72V59L111 19L98 32L122 56H66Q46 56 32.5 70Q19 84 19 103.5Q19 123 32.5 136.5Q46 150 66 150H75V131H66Q54 131 46 123Q38 115 37.5 103Q37 91 45.5 83Q54 75 66 75H122L98 99L111 112ZM206 37H156L137 19H225L238 24L295 80L300 94V262L281 281H113L94 262V122L113 138V262H281V112H206ZM225 37V94H281Z';
@@ -116,7 +117,7 @@ class CodiconOutlines {
                 'M219 162Q210 171 204.5 183Q199 195 199 208V238Q199 245 195 251.5Q191 258 184 261Q180 263 175 262H145Q134 263 127 255.5Q120 248 120 238V208Q120 195 115 183Q110 171 101 162Q89 151 82 135.5Q75 120 75 103Q75 80 87 61Q92 51 99.5 43.5Q107 36 116.5 30.5Q126 25 137 22Q148 19 160 19Q183 19 202.5 30Q222 41 233 60.5Q244 80 244 103Q244 121 237.5 136Q231 151 219 162ZM180 197H139V238Q139 240 140.5 242Q142 244 145 244H175Q177 244 178.5 242.5Q180 241 180 238Z';
             case 'lightbulb-autofix':
                 'M225 169Q202 169 185.5 185.5Q169 202 169 225Q169 248 185.5 264.5Q202 281 225 281Q248 281 264.5 264.5Q281 248 281 225Q281 202 264.5 185.5Q248 169 225 169ZM250 262 225 244 201 262 210 234 188 218H215L225 187L235 218H263L240 234ZM209 152Q191 155 176.5 167Q162 179 155 197H120V238Q120 240 121.5 242Q123 244 126 244H152Q155 254 160 262H126Q116 263 108.5 255.5Q101 248 101 238V208Q101 195 96 183Q91 171 82 162Q70 151 63 135.5Q56 120 56 103Q56 80 68 61Q73 51 81 43.5Q89 36 98.5 30.5Q108 25 118.5 22Q129 19 141 19Q164 19 183.5 30Q203 41 214.5 60.5Q226 80 226 103Q226 121 219 135Q215 144 209 152Z';
-            case 'lightbulb-sparkle':
+            case 'lightbulb-sparkle' | 'lightbulb-sparkle-autofix':
                 'M168 180Q173 170 181 162Q187 157 191 151L193 144Q195 136 202 131Q207 118 207 103Q207 91 204 80.5Q201 70 195.5 60.5Q190 51 182 43.5Q174 36 164.5 30.5Q155 25 144.5 22Q134 19 122 19Q110 19 99.5 22Q89 25 79.5 30.5Q70 36 62.5 43.5Q55 51 49.5 60.5Q44 70 41 80.5Q38 91 37 103Q38 121 44.5 135.5Q51 150 63 162Q73 172 78 183.5Q83 195 83 208V238Q83 243 84.5 247.5Q86 252 89.5 255.5Q93 259 97.5 260.5Q102 262 107 262H137Q142 262 146.5 260.5Q151 259 154.5 255.5Q158 252 160 247.5Q162 243 162 238L161 230H159Q150 229 143 223V238Q143 240 141.5 242Q140 244 137 244H107Q105 244 103 242Q101 240 101 238V197H138Q141 191 146.5 187Q152 183 159 183L161 182Q165 182 168 180ZM216 262Q222 238 236 223Q247 213 260 208Q267 206 272 206Q272 206 272 206L265 205Q257 204 249 199Q238 193 230 183Q220 169 216 150Q211 169 201 183Q193 193 182 199Q175 204 166 205L159 206L166 207Q175 209 182 213Q193 219 201 230Q211 243 216 262ZM242 248Q251 242 257 233Q259 231 262.5 231Q266 231 268 233Q274 242 283 248Q285 250 285 253Q285 256 283 258Q274 264 268 273Q266 276 262.5 276Q259 276 257 273Q251 264 242 258Q240 256 240 253Q240 250 242 248Z';
             case 'gear':
                 'M171 82 161 37H139L129 82L116 88L79 64L62 79L86 116L83 129L38 139V161L83 171L88 186L64 223L79 238L116 214L131 219L139 262H161L171 217L186 212L223 236L238 221L214 184L219 169L263 161V139L218 129L212 114L236 77L221 62L184 86ZM176 19 186 64 225 39 263 77 236 116 281 124V176L236 186L263 225L225 262L186 236L176 281H124L114 236L75 261L38 223L64 184L19 176V124L64 114L39 75L77 37L116 64L124 19ZM188 150Q188 165 176.5 176Q165 187 150 187Q135 187 124 176Q113 165 113 150Q113 135 124 123.5Q135 112 150 112Q165 112 176.5 123.5Q188 135 188 150ZM150 169Q158 169 163.5 163.5Q169 158 169 150Q169 142 163.5 136.5Q158 131 150 131Q142 131 136.5 136.5Q131 142 131 150Q131 158 136.5 163.5Q142 169 150 169Z';
@@ -252,6 +253,12 @@ class CodiconOutlines {
                 'M150 111 69 193 57 181 145 94H156L244 181L232 193Z';
             case 'chevron-left':
                 'M111 150 193 231 181 243 94 155V144L181 56L193 68Z';
+            case 'sparkle-filled':
+                'M101 203Q106 206 112.5 206Q119 206 124 202.5Q129 199 131 193L139 167Q143 157 150 150Q157 143 167 139L193 131Q198 129 201 126Q204 123 205.5 118.5Q207 114 206 109.5Q205 105 202 100.5Q199 96 192 94L167 85Q157 82 149.5 75Q142 68 139 58L130 32Q128 26 123.5 23Q119 20 114.5 19Q110 18 105.5 19.5Q101 21 98 24.5Q95 28 93 32L85 58Q82 68 74.5 75Q67 82 58 85L32 94Q27 95 24 98.5Q21 102 19.5 106.5Q18 111 19 115.5Q20 120 23 124.5Q26 129 32 131L58 139Q70 143 79 154Q83 160 86 167L94 193Q96 199 101 203ZM216 278Q220 281 225 281Q230 281 234 278.5Q238 276 239 271L244 257Q245 252 248.5 248.5Q252 245 257 244L271 239Q276 238 278.5 234.5Q281 231 281.5 227.5Q282 224 280.5 220.5Q279 217 276.5 214.5Q274 212 271 211L256 206Q252 205 248.5 201.5Q245 198 244 193L239 179Q237 174 234 171.5Q231 169 227 168.5Q223 168 220 169.5Q217 171 214.5 173.5Q212 176 210 179L206 193Q204 198 201 201.5Q198 205 193 206L179 211Q174 212 171.5 216Q169 220 169 225Q169 230 171.5 234Q174 238 179 239L193 244Q198 245 201.5 248.5Q205 252 206 257L211 271Q212 276 216 278Z';
+            case 'surround-with':
+                'M38 75H56V56H28L19 66V234L28 244H56V225H38ZM272 56H244V75H263V225H244V244H272L281 234V66ZM94 169Q102 169 107.5 163.5Q113 158 113 150Q113 142 107.5 136.5Q102 131 94 131Q86 131 80.5 136.5Q75 142 75 150Q75 158 80.5 163.5Q86 169 94 169ZM169 150Q169 158 163.5 163.5Q158 169 150 169Q142 169 136.5 163.5Q131 158 131 150Q131 142 136.5 136.5Q142 131 150 131Q158 131 163.5 136.5Q169 142 169 150ZM206 169Q214 169 219.5 163.5Q225 158 225 150Q225 142 219.5 136.5Q214 131 206 131Q198 131 192.5 136.5Q187 142 187.5 150Q188 158 193 163.5Q198 169 206 169Z';
+            case 'discard':
+                'M66 37V103L75 112H141V94H93L111 76Q124 63 141 58.5Q158 54 175.5 58.5Q193 63 205.5 75.5Q218 88 223 105.5Q228 123 223 140.5Q218 158 205 170L108 268L121 281L219 184Q235 167 241 145Q247 123 241 101Q235 79 218.5 62.5Q202 46 180 40.5Q158 35 136 40.5Q114 46 98 63L84 76V37Z';
             case _: null;
         }
     }

@@ -391,6 +391,14 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public var mouseCursor:Null<glaze.CursorStyle> = null;
 
     /**
+     * The mouse cursor of the view zone under the mouse (its
+     * `mouseCursor`, the arrow by default), null when the mouse is not over
+     * a zone: Monaco's view zones are not part of the view lines (no text
+     * cursor), the margin of a zone may have its own cursor.
+     */
+    public var zoneMouseCursor(default, null):Null<glaze.CursorStyle> = null;
+
+    /**
      * The widest rendered line so far (Monaco's `setMaxLineWidth`).
      */
     var maxLineWidth:Float = 0;
@@ -795,7 +803,9 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     static inline final FOLDED_ELLIPSIS = '\u22EF';
 
     var _ellipsisLayout:Null<LineLayout> = null;
-    var _ellipsisKey:String = '';
+    var _ellipsisFontGeneration:Int = -1;
+    var _ellipsisFontSize:Float = -1;
+    var _ellipsisFontId:Int = -1;
 
     /**
      * The shaped `⋯` of folding.css's `.inline-folded:after`, in the editor
@@ -805,9 +815,10 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final info = fontInfo();
         final textSystem = app.textSystem();
         final fontId = textSystem.resolveFont(baseFont(null, false, null));
-        final key = textSystem.fontGeneration + '|' + info.fontSize + '|' + fontId;
-        if (_ellipsisLayout == null || _ellipsisKey != key) {
-            _ellipsisKey = key;
+        if (_ellipsisLayout == null || _ellipsisFontGeneration != textSystem.fontGeneration || _ellipsisFontSize != info.fontSize || _ellipsisFontId != (fontId : Int)) {
+            _ellipsisFontGeneration = textSystem.fontGeneration;
+            _ellipsisFontSize = info.fontSize;
+            _ellipsisFontId = (fontId : Int);
             _ellipsisLayout = textSystem.platformTextSystem.layoutLine(FOLDED_ELLIPSIS, info.fontSize, [new FontRun(glaze.util.Utf8.byteLength(FOLDED_ELLIPSIS), fontId)]);
         }
         return _ellipsisLayout;
@@ -1583,7 +1594,9 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final relativeX = event.position.x - elementBounds.origin.x;
         setGutterHovered(relativeX >= 0 && relativeX < layoutInfo.contentLeft);
         if (!mouseDown || event.pressedButton == null) {
-            widget._fireMouseMove(editorMouseEvent(MouseButton.Left, event.position, event.modifiers, 0));
+            final e = editorMouseEvent(MouseButton.Left, event.position, event.modifiers, 0);
+            updateZoneMouseCursor(e.target, event.position);
+            widget._fireMouseMove(e);
             return;
         }
         if (mouseDragAndDrop) {
@@ -1597,11 +1610,44 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     }
 
     /**
+     * Sets `zoneMouseCursor` for a mouse target (rendering again when it
+     * changed).
+     */
+    function updateZoneMouseCursor(target:MouseTarget, point:Point):Void {
+        var cursor:Null<glaze.CursorStyle> = null;
+        final data = target.viewZoneData;
+        if ((target.type == MouseTargetType.CONTENT_VIEW_ZONE || target.type == MouseTargetType.GUTTER_VIEW_ZONE) && data != null) {
+            cursor = glaze.CursorStyle.Arrow;
+            final viewZones = widget.getViewZones();
+            final zone = viewZones != null ? viewZones.getZone(data.viewZoneId) : null;
+            final zoneCursor = zone != null ? zone.delegate.mouseCursor : null;
+            if (zoneCursor != null) {
+                final margin = target.type == MouseTargetType.GUTTER_VIEW_ZONE;
+                final layoutInfo = configuration.options.get(EditorOption.layoutInfo);
+                final left = elementBounds.origin.x + (margin ? 0 : layoutInfo.contentLeft);
+                final width = margin ? layoutInfo.contentLeft : Math.max(0, elementBounds.size.width - layoutInfo.contentLeft);
+                final own = zoneCursor(point.x - left, target.viewZoneOffsetY, width, margin);
+                if (own != null) {
+                    cursor = own;
+                }
+            }
+        }
+        if (cursor != zoneMouseCursor) {
+            zoneMouseCursor = cursor;
+            notifyChanged();
+        }
+    }
+
+    /**
      * Called when the mouse enters or leaves the editor.
      */
     public function handleHover(hovered:Bool):Void {
         if (!hovered) {
             setGutterHovered(false);
+            if (zoneMouseCursor != null) {
+                zoneMouseCursor = null;
+                notifyChanged();
+            }
             if (viewModel != null) {
                 // Monaco's `onMouseLeave` (the hover and the link gesture hide)
                 widget._fireMouseLeave({

@@ -26,6 +26,7 @@ import glaze.ElementInputHandler;
 import glaze.Entity;
 import glaze.GlobalElementId;
 import glaze.HitboxBehavior;
+import glaze.LineLayout;
 import glaze.Hsla;
 import glaze.LayoutId;
 import glaze.Length;
@@ -73,6 +74,12 @@ class CityscapeViewElement extends Element {
      */
     final foldingHitboxes:Array<glaze.Hitbox> = [];
 
+    /**
+     * The hitboxes of the `⋯` of the folded lines (folding.css
+     * `.inline-folded:after { cursor: pointer }`), with the pointing hand.
+     */
+    final foldedEllipsisHitboxes:Array<glaze.Hitbox> = [];
+
     public function new(view:Entity<CityscapeView>) {
         this.view = view;
     }
@@ -90,6 +97,7 @@ class CityscapeViewElement extends Element {
         v.layoutTo(bounds, window.scaleFactor(), window);
         hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
         insertGutterHitboxes(v, bounds, window);
+        insertFoldedEllipsisHitboxes(v, bounds, window);
         final rulerBounds = overviewRulerBounds(v, bounds);
         rulerHitbox = rulerBounds != null ? window.insertHitbox(rulerBounds, HitboxBehavior.Normal) : null;
     }
@@ -151,6 +159,78 @@ class CityscapeViewElement extends Element {
         }
     }
 
+    /**
+     * The hitboxes of the `⋯` drawn after the first line of each folded
+     * range in view (folding.css `.inline-folded:after`: `display: inline`,
+     * `margin: 0.1em 0.2em 0 0.2em`). The box of the pseudo element is the
+     * width of the glyph, after its left margin, by the content area of the
+     * font (its ascent and descent, not the line height), where the browser
+     * shows its pointer; measured on the real Monaco 0.52.2. The line is
+     * rendered here like in paint (cached: paint reuses it).
+     */
+    function insertFoldedEllipsisHitboxes(v:CityscapeView, bounds:Bounds, window:Window):Void {
+        foldedEllipsisHitboxes.resize(0);
+        final viewModel = v.viewModel;
+        if (viewModel == null) {
+            return;
+        }
+        final options = v.configuration.options;
+        final layoutInfo = options.get(EditorOption.layoutInfo);
+        final viewLayout = viewModel.viewLayout;
+        final state = v.paintState;
+        final partial = state.viewport;
+        viewLayout.getLinesViewportRange(partial);
+        final startLine = partial.startLineNumber;
+        final endLine = partial.endLineNumber;
+        final visibleRange = state.queryRange(viewModel, v.paintGeneration, startLine, endLine);
+        final decorations = viewModel.getDecorationsInViewport(visibleRange);
+        var ellipsis:Null<LineLayout> = null;
+        final lineHeight:Float = options.get(EditorOption.lineHeight);
+        final fontSize:Float = options.get(EditorOption.fontInfo).fontSize;
+        final contentLeft = bounds.origin.x + layoutInfo.contentLeft;
+        final contentX = contentLeft - viewLayout.getCurrentScrollLeft();
+        final right = bounds.origin.x + bounds.size.width - layoutInfo.verticalScrollbarWidth;
+        final top = bounds.origin.y;
+        final bottom = top + bounds.size.height;
+        final linesTop = top - viewLayout.getCurrentScrollTop();
+        for (i in 0...decorations.length) {
+            final d = decorations[i];
+            final after = d.options.afterContentClassName;
+            if (after == null || after.indexOf('inline-folded') == -1) {
+                continue;
+            }
+            final from = Std.int(Math.max(startLine, d.range.startLineNumber));
+            final to = Std.int(Math.min(endLine, d.range.endLineNumber));
+            if (from <= to && ellipsis == null) {
+                // the visible lines tokenized first, as in paint (a no-op
+                // there then), so the line rendered here is the one painted
+                v.visibleLinesRendered(startLine, endLine);
+                ellipsis = v.foldedEllipsisLayout();
+            }
+            for (ln in from...to + 1) {
+                final line = v.renderViewLine(ln, visibleRange);
+                final names = line.runs.partClassNames;
+                for (p in 0...names.length) {
+                    if (names[p].indexOf('inline-folded') == -1) {
+                        continue;
+                    }
+                    final left = contentX + line.layout.xForIndex(line.offsets.utf16ToByte(line.runs.partStarts[p])) + fontSize * 0.2;
+                    final x0 = Math.max(left, contentLeft);
+                    final ellipsisWidth:Float = ellipsis.width;
+                    final x1 = Math.min(left + ellipsisWidth, right);
+                    final textHeight:Float = (ellipsis.ascent : Float) + (ellipsis.descent : Float);
+                    final y = linesTop + viewLayout.getVerticalOffsetForLineNumber(ln) + (lineHeight - textHeight) / 2;
+                    final y0 = Math.max(y, top);
+                    final y1 = Math.min(y + textHeight, bottom);
+                    if (x1 > x0 && y1 > y0) {
+                        foldedEllipsisHitboxes.push(window.insertHitbox(new Bounds(new Point(x0, y0), new Size(x1 - x0, y1 - y0)), HitboxBehavior.Normal));
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     static final NO_RADII = new Corners(0, 0, 0, 0);
 
     /**
@@ -191,14 +271,19 @@ class CityscapeViewElement extends Element {
             // the pointer of a link or widget, else Monaco's `mouseStyle`
             // (the drag and drop of the selection sets `default` and `copy`)
             final mouseStyle:String = v.configuration.options.get(EditorOption.mouseStyle);
-            window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : (mouseStyle == 'default' ? CursorStyle.Arrow : (mouseStyle == 'copy' ? CursorStyle.DragCopy : CursorStyle.IBeam)), hitbox);
+            // (a view zone under the mouse: its cursor, the arrow by default)
+            final zoneCursor = v.zoneMouseCursor;
+            window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : (mouseStyle == 'default' ? CursorStyle.Arrow : (mouseStyle == 'copy' ? CursorStyle.DragCopy : (zoneCursor != null ? zoneCursor : CursorStyle.IBeam))), hitbox);
         }
         final gutterHitbox = this.gutterHitbox;
         if (gutterHitbox != null) {
-            window.setCursorStyle(CursorStyle.Arrow, gutterHitbox);
+            window.setCursorStyle(v.zoneMouseCursor != null ? v.zoneMouseCursor : CursorStyle.Arrow, gutterHitbox);
             for (i in 0...foldingHitboxes.length) {
                 window.setCursorStyle(CursorStyle.PointingHand, foldingHitboxes[i]);
             }
+        }
+        for (i in 0...foldedEllipsisHitboxes.length) {
+            window.setCursorStyle(CursorStyle.PointingHand, foldedEllipsisHitboxes[i]);
         }
         final rulerHitbox = this.rulerHitbox;
         if (rulerHitbox != null) {

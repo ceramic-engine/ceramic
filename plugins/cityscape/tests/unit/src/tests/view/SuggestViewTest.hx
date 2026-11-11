@@ -3,8 +3,10 @@
 // (below the cursor when the list fits there inside the window less 22
 // pixels, else above, the height capped to the room on that side, the list
 // scrolling beyond), its box against the line (contentWidgets.ts
-// `_layoutBoxInPage`), and the place of its details
-// (suggestWidgetDetails.ts `_placeAtAnchor`).
+// `_layoutBoxInPage`), the place of its details
+// (suggestWidgetDetails.ts `_placeAtAnchor`), and the scrollbar of the list
+// (a 10 pixel square slider in `scrollbarSlider.background`, measured on the
+// real Monaco 0.52.2).
 package tests.view;
 
 import cityscape.Cityscape;
@@ -346,6 +348,54 @@ class SuggestViewTest extends TestCase {
                 near(list.origin.y, details.origin.y, 'top on the list top');
             }
         }
+    }
+
+    static function sameColor(q:glaze.scene.Quad, c:glaze.Hsla):Bool {
+        return Math.abs(q.backgroundSolidH - c.h) < 0.0001 && Math.abs(q.backgroundSolidS - c.s) < 0.0001
+            && Math.abs(q.backgroundSolidL - c.l) < 0.0001 && Math.abs(q.backgroundSolidA - c.a) < 0.0001;
+    }
+
+    /**
+     * A list longer than its rows has Monaco's widget scrollbar: a slider
+     * 10 pixels wide against the right of the list inside its border, in
+     * `scrollbarSlider.background`, square, as long as the share of the
+     * rows shown (20 pixels at least), at the bottom when the list is
+     * scrolled to its end; no scrollbar when every row shows.
+     */
+    function testListScrollbar() {
+        glaze.kit.theme.Theme.setScrollbarMode(glaze.kit.base.theme.ScrollbarMode.Always, app);
+        final editor = open(40, 800, 600);
+        final widget = suggestAt(editor, 2);
+        draw();
+        final slider = EditorWidgets.color(editor.getEditor(), 'scrollbarSlider.background', glaze.Prelude.hsla(0, 0, 0, 1));
+        final b = widget.listBounds;
+        final h = widget.getLayoutInfo().itemHeight;
+        final listHeight = widget.getSize().height - widget.getLayoutInfo().statusBarHeight;
+        function sliders():Array<glaze.scene.Quad> {
+            return [for (q in window.renderedScene().quads) if (sameColor(q, slider)) q];
+        }
+        var found = sliders();
+        assertEquals(1, found.length, 'one slider');
+        var q = found[0];
+        near((b.origin.x + b.size.width - 1 - 10) * 2, q.boundsX, 'slider left');
+        near(20, q.boundsWidth, 'slider width');
+        near((b.origin.y + 1) * 2, q.boundsY, 'slider top');
+        // the visible share: 12 rows of the list plus the 28 it scrolls by
+        near(Math.max(20, listHeight * listHeight / (listHeight + 28 * h)) * 2, q.boundsHeight, 'slider length');
+        assertEquals(0.0, q.cornerRadiusTopLeft);
+        widget.scrollToRow(1000);
+        assertEquals(28, widget.firstVisibleIndex);
+        draw();
+        draw();
+        found = sliders();
+        assertEquals(1, found.length);
+        q = found[0];
+        near((b.origin.y + 1 + listHeight) * 2, q.boundsY + q.boundsHeight, 'slider at the bottom');
+        // every row shown: no scrollbar
+        final short = open(5, 800, 600);
+        suggestAt(short, 2);
+        draw();
+        assertEquals(0, sliders().length);
     }
 
 }

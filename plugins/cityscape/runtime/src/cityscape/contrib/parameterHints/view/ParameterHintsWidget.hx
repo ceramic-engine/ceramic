@@ -581,7 +581,8 @@ class ParameterHintsView extends Model implements Render {
 
         // the body scrolls beyond the maximum height (Monaco's
         // DomScrollableElement), inside the 1 pixel border
-        final scrollable = ScrollableElement.overflowYScrollbar(body.maxH(px(maxHeight - 2))).id('cityscape-parameter-hints-scroll');
+        final scrollable = ScrollableElement.overflowYScrollbar(body.maxH(px(maxHeight - 2))).id('cityscape-parameter-hints-scroll')
+            .scrollbarStyles(EditorWidgets.widgetScrollbarStyles(editor));
 
         final wrapper = div()
             .id('cityscape-parameter-hints-wrapper')

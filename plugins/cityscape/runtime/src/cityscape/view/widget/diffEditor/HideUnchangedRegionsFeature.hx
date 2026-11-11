@@ -24,6 +24,11 @@ import cityscape.view.widget.diffEditor.DiffEditorViewModel;
  */
 interface ICollapsedCodeBarPainter {
     function collapsedCodeBar(region:UnchangedRegion, hide:Bool, margin:Bool):ViewZonePainter;
+    /**
+     * The mouse cursor over the bar of a zone `height` pixels high
+     * (`HideUnchangedRegionsFeature.barMouseCursor`).
+     */
+    function collapsedCodeBarCursor(region:UnchangedRegion, hide:Bool, height:Float):ViewZoneMouseCursor;
 }
 
 /**
@@ -173,6 +178,7 @@ class HideUnchangedRegionsFeature implements IDisposable {
                     suppressMouseDown: true,
                     paint: this._painter.collapsedCodeBar(r, !sideBySide, false),
                     paintMargin: this._painter.collapsedCodeBar(r, !sideBySide, true),
+                    mouseCursor: this._painter.collapsedCodeBarCursor(r, !sideBySide, height),
                 };
                 origViewZones.push(origVz);
                 this.zones.push(new CollapsedCodeZone(r, this._editors.original, !sideBySide, origVz));
@@ -185,6 +191,7 @@ class HideUnchangedRegionsFeature implements IDisposable {
                     suppressMouseDown: true,
                     paint: this._painter.collapsedCodeBar(r, false, false),
                     paintMargin: this._painter.collapsedCodeBar(r, false, true),
+                    mouseCursor: this._painter.collapsedCodeBarCursor(r, false, height),
                 };
                 modViewZones.push(modViewZone);
                 this.zones.push(new CollapsedCodeZone(r, this._editors.modified, false, modViewZone));
@@ -272,6 +279,35 @@ class HideUnchangedRegionsFeature implements IDisposable {
                 }
             }
         }
+    }
+
+    /**
+     * The mouse cursor over the bar of a collapsed region (style.css), at
+     * `y` in its zone `height` pixels high: over its top edge (the 4 pixels
+     * the `.top` node covers) `n-resize` when it can show more lines above
+     * (`canMoveTop`: lines of the region shown at its top), `s-resize` when
+     * it can hide more (`canMoveBottom`: not fully revealed), `ns-resize`
+     * for both; over its bottom edge (the 6 pixels of `.bottom`) the same
+     * with the lines shown at its bottom; else null (the zone's own cursor).
+     * Measured on the real Monaco 0.52.2: `s-resize` and `n-resize` on a
+     * region shown collapsed.
+     */
+    public static function barEdgeCursor(region:UnchangedRegion, y:Float, height:Float):Null<glaze.CursorStyle> {
+        final fullyRevealed = region.visibleLineCountTop + region.visibleLineCountBottom == region.lineCount;
+        var canMoveTop:Bool;
+        var canMoveBottom:Bool;
+        if (y < 4) {
+            canMoveTop = region.visibleLineCountTop > 0;
+            canMoveBottom = !fullyRevealed;
+        }
+        else if (y >= height - 6) {
+            canMoveTop = !fullyRevealed;
+            canMoveBottom = region.visibleLineCountBottom > 0;
+        }
+        else {
+            return null;
+        }
+        return canMoveTop ? (canMoveBottom ? glaze.CursorStyle.ResizeUpDown : glaze.CursorStyle.ResizeUp) : (canMoveBottom ? glaze.CursorStyle.ResizeDown : null);
     }
 
     /**

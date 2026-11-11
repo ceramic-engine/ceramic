@@ -56,6 +56,12 @@ class DiffEditorWidget implements IDisposable {
     public final original:CodeEditorWidget;
     public final modified:CodeEditorWidget;
 
+    /**
+     * The gutter menu between the editors (Monaco's `DiffEditorGutter`,
+     * drawn by `CityscapeDiffEditor`).
+     */
+    public final gutter:DiffEditorGutter;
+
     final _options:DiffEditorOptions;
     final _painters:IDiffEditorPainters;
     final _store = new DisposableStore();
@@ -118,6 +124,7 @@ class DiffEditorWidget implements IDisposable {
         this.modified = modified;
         this._painters = painters;
         this._options = new DiffEditorOptions(options);
+        this.gutter = new DiffEditorGutter(this);
         this.applyOriginalOptions = (o) -> original.updateOptions(o);
         this.applyModifiedOptions = (o) -> modified.updateOptions(o);
 

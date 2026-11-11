@@ -322,6 +322,34 @@ class FindWidgetTest extends TestCase {
         draw();
     }
 
+    /**
+     * The placeholders of the inputs ("Find", "Replace") are drawn in the
+     * theme's `input.placeholderForeground` (the kit's muted color
+     * otherwise).
+     */
+    function testPlaceholderColor() {
+        final model = createModel(TEXT);
+        final views = open(model);
+        final a = views.a;
+        final context = a.getEditor().context;
+        context.themeService.defineTheme('placeholders', {base: 'vs-dark', inherit: true, rules: [], colors: {'input.placeholderForeground': '#ff0000'}});
+        context.themeService.setTheme('placeholders');
+        focusEditor(a);
+        a.trigger('test', FIND_IDS.StartFindReplaceAction, null);
+        controllerOf(a).getState().change({searchString: '', replaceString: ''}, false);
+        draw();
+        draw();
+        assertEquals('', widgetOf(a).findInput.read(app).value());
+        var red = 0;
+        for (sprite in window.renderedScene().monochromeSprites) {
+            if (sprite.colorA > 0.99 && Math.abs(sprite.colorS - 1) < 0.01 && Math.abs(sprite.colorL - 0.5) < 0.01 && (sprite.colorH < 0.01 || sprite.colorH > 0.99)) {
+                red++;
+            }
+        }
+        // the glyphs of "Find" and "Replace"
+        assertEquals(11, red);
+    }
+
     function testCloseButtonAndCommands() {
         final model = createModel(TEXT);
         final views = open(model);
