@@ -703,6 +703,9 @@ class ViewElement extends Element {
                 && state.groupHitboxesEqual(window.prepaintGroupHitboxes)
                 && state.imageCache == window.currentImageCache();
         }
+        else {
+            keepOldRanges(state, window);
+        }
         #end
         prepaintRendered(state, window, cx);
         recordKey(state, bounds, window);
@@ -740,6 +743,25 @@ class ViewElement extends Element {
         hoverPrepaintEnd = window.hoverLogMark();
         #end
     }
+
+    #if glaze_verify_cache
+    /**
+     * `glaze_verify_cache`: a view rendered for real without being compared
+     * (dirty, moved) keeps the ranges it drew in the last frame, if it was
+     * drawn in it, so that the views around it leave them out of their
+     * comparison (see `Window.endVerifyScope`).
+     */
+    function keepOldRanges(state:ViewElementState, window:Window):Void {
+        final previousFrame = window.reusableFrame();
+        if (state.prepaintFrame == previousFrame && state.paintFrame == previousFrame) {
+            verification = CacheVerification.oldRangesOf(verification, state);
+        }
+        else if (verification != null) {
+            verification.reset();
+            verification = null;
+        }
+    }
+    #end
 
     function recordKey(state:ViewElementState, bounds:Bounds, window:Window):Void {
         state.bounds = bounds;
@@ -792,6 +814,9 @@ class ViewElement extends Element {
         // is clean, so it requests the same nodes as last time: they adopt
         // the retained ones, already laid out, and nothing is laid out again.
         // Otherwise its new subtree replaces the retained one, laid out again.
+        #if glaze_verify_cache
+        keepOldRanges(state, window);
+        #end
         final oldRoot = layoutId;
         window.forgetReusedElementStates(layoutAccessedStart, layoutAccessedEnd, layoutReusedStart);
         layoutAccessedStart = window.accessedElementStatesIndex();
@@ -868,6 +893,11 @@ class ViewElement extends Element {
         box.value = state;
         this.state = state;
         recordInPlaceContext(state, window);
+        #if glaze_verify_cache
+        if (verification == null || !verification.compare) {
+            keepOldRanges(state, window);
+        }
+        #end
         final refreshing = window.refreshing;
         window.refreshing = true;
         #if glaze_verify_cache
@@ -918,7 +948,7 @@ class ViewElement extends Element {
         }
         else if (rendered != null) {
             #if glaze_verify_cache
-            final verifyMark = window.cacheVerificationMark();
+            final scope = window.beginVerifyScope(entityId, verification, state, window.isViewDirty(entityId) || window.refreshing);
             final hoverPaintStart = window.hoverLogMark();
             #end
             recordPaintContext(state, window);
@@ -945,22 +975,21 @@ class ViewElement extends Element {
             state.paintFrame = window.layoutFrame();
             #if glaze_verify_cache
             // What the hover tests answered while it drew: hover changes
-            // without an event are not invalidations (GPUI's rule)
+            // without an event are not invalidations (GPUI's rule). Other
+            // answers to the same tests are a hover change; another number
+            // of tests is a change of what the view draws, compared below.
             final hover = window.hoverLogSegment(hoverPrepaintStart, hoverPrepaintEnd) + '|' + window.hoverLogSegment(hoverPaintStart, window.hoverLogMark());
-            final hoverChanged = state.hoverLog != hover;
+            final hoverChanged = state.hoverLog != null && state.hoverLog != hover && state.hoverLog.length == hover.length;
             state.hoverLog = hover;
             if (hoverChanged) {
                 window.hoverChangedInFrame = true;
             }
             final verification = this.verification;
-            if (verification != null && verification.compare && !hoverChanged && state.paintOpacity == window.currentElementOpacity()) {
-                window.verifyCachedRendering(verification, state, verifyMark, viewName(), stateId);
-            }
-            else {
-                // Rendered for real (dirty, moved, uncached): the views
-                // around it cannot be compared in this frame
-                window.cacheVerificationUnverifiable();
-            }
+            // Compared with its cache when its cache was reusable; a view
+            // rendered for real for another reason (dirty, moved) is left
+            // out of the comparison of the views around it
+            final compare = verification != null && verification.compare && !hoverChanged && state.paintOpacity == window.currentElementOpacity();
+            window.endVerifyScope(scope, compare, viewName(), stateId);
             if (verification != null) {
                 verification.reset();
             }

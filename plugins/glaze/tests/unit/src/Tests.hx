@@ -140,6 +140,7 @@ class Tests {
         runner.add(new tests.kit.InputModeTest());
         runner.add(new tests.kit.InputStateTest());
         runner.add(new tests.kit.InputMoveNotifyTest());
+        runner.add(new tests.kit.StaleReaderTest());
         runner.add(new tests.kit.NumberInputKeyboardTest());
         runner.add(new tests.kit.NumberDecimalCommaTest());
         runner.add(new tests.kit.InputStateEditingTest());

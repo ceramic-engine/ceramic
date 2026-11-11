@@ -562,9 +562,13 @@ class WindowSelectionState extends Model {
     /**
      * Records one participant in constant time, even during a selection. Full
      * publication belongs to input handling or the end of the frame, never to
-     * each participant's draw callback.
+     * each participant's draw callback. `verification`: the frame is the one
+     * `glaze_verify_cache` draws to check a frame drawn in place
+     * (`Window.isVerificationFrame`): the participant keeps its document
+     * order, since what that frame paints, and in which order, is not what
+     * an application's frame paints (the views rendered in place are reused).
      */
-    function registerQuietly(selection:TextSelectionHandle, registration:TextSelectionRegistration):Void {
+    function registerQuietly(selection:TextSelectionHandle, registration:TextSelectionRegistration, verification:Bool = false):Void {
         final previous = participants.get(selection.entityId());
         if (isSelecting
             && registration.selfScroll
@@ -581,7 +585,10 @@ class WindowSelectionState extends Model {
             touchEdgesMoved = true;
         }
         final generation = frameGeneration;
-        final documentOrder = if (registration.paintOrder) {
+        final documentOrder = if (verification) {
+            previous != null ? previous.documentOrder : registration._documentOrder;
+        }
+        else if (registration.paintOrder) {
             final order = paintOrder;
             final previous = previous != null && previous.registration.paintOrder ? previous : null;
             final number = if (previous == null) {

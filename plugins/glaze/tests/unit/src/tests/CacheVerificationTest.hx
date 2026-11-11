@@ -35,6 +35,8 @@ class CacheVerificationTest extends TestCase {
 
     var savedFailures:Int = 0;
 
+    var savedInPlaceFailures:Int = 0;
+
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
@@ -44,6 +46,7 @@ class CacheVerificationTest extends TestCase {
         messages.resize(0);
         savedHandler = Window.onCacheVerificationFailure;
         savedFailures = Window.cacheVerificationFailures;
+        savedInPlaceFailures = Window.inPlaceVerificationFailures;
         Window.onCacheVerificationFailure = message -> messages.push(message);
         #if glaze_verify_cache
         Window.verifyCache = true;
@@ -57,7 +60,9 @@ class CacheVerificationTest extends TestCase {
         windows.resize(0);
         flushImmediate();
         Window.onCacheVerificationFailure = savedHandler;
+        // The differences these tests make on purpose are theirs, not the suite's
         Window.cacheVerificationFailures = savedFailures;
+        Window.inPlaceVerificationFailures = savedInPlaceFailures;
     }
 
     inline function flushImmediate():Void {
@@ -199,6 +204,124 @@ class CacheVerificationTest extends TestCase {
 
     #end
 
+/// A notify of a view renders the views that read it
+
+    function testANotifiedViewRendersTheViewsThatReadIt() {
+        countsRenders();
+        final source = app.newEntity((_:Context<PlainView>) -> new PlainView());
+        var lastText = '';
+        final reader = view((_, cx) -> {
+            lastText = source.read(cx).text;
+            return div().child(lastText);
+        });
+        final bystander = view((_, _) -> div().child('bystander'));
+        final root = view((_, _) -> div().child(source).child(reader).child(bystander));
+        openWindow(root);
+        frame();
+        assertEquals(1, source.read(app).renders);
+        assertEquals(1, reader.read(app).renders);
+
+        // A view's plain field, announced by its own notify (the kit's input
+        // state read by its field and its search panel)
+        source.update(app, (v, cx) -> {
+            v.text = 'changed';
+            cx.notify();
+        });
+        frame();
+        assertEquals(2, source.read(app).renders, 'the notified view renders again');
+        assertEquals(2, reader.read(app).renders, 'the sibling that read it renders again');
+        assertEquals('changed', lastText);
+        assertEquals(1, bystander.read(app).renders, 'a view that did not read it stays cached');
+
+        // Rendered again, the reader read it again: it follows the next notify too
+        source.update(app, (v, cx) -> {
+            v.text = 'again';
+            cx.notify();
+        });
+        frame();
+        assertEquals(3, reader.read(app).renders);
+        assertEquals('again', lastText);
+    }
+
+    function testAViewNotifiedWhileDrawingRendersItsReadersInTheNextFrame() {
+        countsRenders();
+        // A reader drawn before the view is notified in the frame shows
+        // the old value in that frame (like GPUI) and renders in the next
+        // one, whatever causes it
+        final source = app.newEntity((_:Context<PlainView>) -> new PlainView());
+        final other = new VerifyToggle();
+        var lastText = '';
+        final reader = view((_, cx) -> div().child(lastText = source.read(cx).text));
+        var writes = 0;
+        final writer = view((_, cx) -> div().child(canvas((_, _, cx) -> {
+            if (writes == 0) {
+                writes++;
+                source.update(cx, (v, vcx) -> {
+                    v.text = 'written';
+                    vcx.notify();
+                });
+            }
+            return null;
+        }, (_, _, _, _) -> {}).w(px(10)).h(px(10))));
+        final root = view((_, _) -> div().child(reader).child(source).child(writer).child(div().child(other.on ? 'on' : 'off')));
+        final window = openWindow(root);
+        frame();
+        assertEquals('initial', lastText, 'drawn before the write');
+        assertFalse(window.dirty, 'a notify while drawing schedules no frame');
+        other.on = false;
+        frame();
+        assertEquals(2, reader.read(app).renders, 'the reader renders in the next frame');
+        assertEquals('written', lastText);
+    }
+
+    #if glaze_verify_cache
+
+    function testAStaleViewAroundAViewRenderedAloneIsReported() {
+        // The outer view reads a plain value tracker does not see; the inner
+        // view is notified and renders alone (in place). The outer view's
+        // own drawing is compared apart from the inner view's: its stale
+        // rendering is reported (a view rendered for real inside it no
+        // longer hides it)
+        final source = new PlainSource();
+        final inner = view((_, _) -> div().child('inner'));
+        final outer = view((_, _) -> div().child(div().child(source.text)).child(inner));
+        final root = view((_, _) -> div().child(outer));
+        openWindow(root);
+        frame();
+        source.text = 'changed';
+        inner.update(app, (_, cx) -> cx.notify());
+        frame();
+        // The view's own report, then the frame drawn in place compared with a full frame
+        assertTrue(messages.length >= 1, 'reported');
+        final message = messages.length > 0 ? messages[0] : '';
+        assertTrue(message.indexOf('tests.VerifyView') == 0, message);
+        assertTrue(message.indexOf('rendered differently from its cached rendering') != -1, message);
+        for (other in messages.slice(1)) {
+            assertTrue(other.indexOf('In place rendering of') == 0, other);
+        }
+        messages.resize(0);
+    }
+
+    function testAViewDrawingANewViewWithoutBeingNotifiedIsReported() {
+        final source = new PlainSource();
+        final other = new VerifyToggle();
+        final extra = view((_, _) -> div().child('extra'));
+        // A fixed size: a stale view whose size changes is compared by the frame checks instead
+        final outer = view((_, _) -> div().w(px(200)).h(px(100)).child('outer').child(source.text == 'with child' ? extra : null));
+        final root = view((_, _) -> div().child(outer).child(div().child(other.on ? 'on' : 'off')));
+        openWindow(root);
+        frame();
+        source.text = 'with child';
+        other.on = false;
+        frame();
+        assertEquals(1, messages.length, messages.join('\n'));
+        final message = messages.length > 0 ? messages[0] : '';
+        assertTrue(message.indexOf('a view the last frame did not draw') != -1, message);
+        messages.resize(0);
+    }
+
+    #end
+
 /// A notify of a model renders the views that read it
 
     function testANotifiedModelRendersTheViewsThatReadIt() {
@@ -332,6 +455,26 @@ class PlainModel extends Model {
 
     public function new() {
         super();
+    }
+
+}
+
+/**
+ * A view with a plain field, announced by `cx.notify()`.
+ */
+class PlainView extends Model implements Render {
+
+    public var text:String = 'initial';
+
+    public var renders:Int = 0;
+
+    public function new() {
+        super();
+    }
+
+    public function render(window:Window, cx:Context<Dynamic>):IntoElement {
+        renders++;
+        return div().child(text);
     }
 
 }

@@ -129,7 +129,7 @@ class TextSelectionHandle {
             return;
         }
         state.read(cx).windowSelection = windowState.downgrade();
-        windowState.read(cx).registerQuietly(this, registration);
+        windowState.read(cx).registerQuietly(this, registration, window.isVerificationFrame());
         final snapshot = windowState.read(cx).participantSnapshot(entityId());
         if (!TextSelectionSnapshot.eq(this.snapshot(cx), snapshot)) {
             // Plain text projects its runs immediately after registering.

@@ -19,11 +19,14 @@ class AccessedEntities {
 
     public function new() {}
 
-    public inline function add(entityId:Int):Void {
+    /** Adds the id; `true` when it was not in the set. */
+    public inline function add(entityId:Int):Bool {
         if (!seen.exists(entityId)) {
             seen.set(entityId, true);
             ids.push(entityId);
+            return true;
         }
+        return false;
     }
 
     public inline function contains(entityId:Int):Bool {

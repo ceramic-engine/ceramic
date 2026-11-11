@@ -787,7 +787,13 @@ class Window implements WindowInvalidator {
     @:allow(glaze)
     var drawingClean:Bool = false;
 
-    /** Views notified since the last frame (Rust: the invalidator's dirty views) */
+    /**
+     * Views to render in the next frame (Rust: the invalidator's dirty
+     * views). The value tells whether the entity was notified (`cx.notify()`,
+     * a tracker reaction): the views that read it render again too
+     * (`markViewsThatAccessed`). A view that only has to render again
+     * (`invalidateViewForNextFrame`, a reader) is recorded with `false`.
+     */
     final pendingDirtyViews:IntMap<Bool> = new IntMap();
 
     /** The keys of `pendingDirtyViews`, iterated without allocating (a map's `keys()` copies them) */
@@ -872,6 +878,23 @@ class Window implements WindowInvalidator {
 
     /** The keys of `trackers`, iterated without allocating (a map's `keys()` copies them) */
     final trackerIds:Array<Int> = [];
+
+    /**
+     * For each entity, the views of this window whose last render, prepaint
+     * or paint accessed it (the reverse of the trackers' `accessed` sets,
+     * kept as the accesses are recorded): a notify of the entity marks them
+     * dirty in O(readers), see `markViewsThatAccessed`. A view counts among
+     * its own readers (its render leases it).
+     */
+    final readersByEntity:IntMap<Array<Int>> = new IntMap();
+
+    /** Empty reader lists kept for reuse */
+    final readerListPool:Array<Array<Int>> = [];
+
+    /** The view whose accessed set `currentAccessed` is, -1 outside of any view */
+    var currentAccessedViewId:Int = -1;
+
+    final accessedViewStack:Array<Int> = [];
 
     /**
      * The window drawing a frame, whose views record the entities accessed
@@ -1178,6 +1201,7 @@ class Window implements WindowInvalidator {
         }
         trackers.clear();
         trackerIds.resize(0);
+        readersByEntity.clear();
         invalidatedTrackers.resize(0);
         for (entityId in liveEntities.ids) {
             app.removeWindowInvalidator(entityId, id);
@@ -1209,7 +1233,7 @@ class Window implements WindowInvalidator {
      * tracker reactions go through too).
      */
     public function invalidateView(entityId:Int, cx:App):Bool {
-        addPendingDirtyView(entityId);
+        addPendingDirtyView(entityId, true);
         // Like GPUI's `WindowInvalidator::invalidate_view`, a view notified
         // while the window draws is recorded for the next frame but does not
         // make the window dirty (otherwise a view that notifies from its own
@@ -1220,7 +1244,54 @@ class Window implements WindowInvalidator {
             dirty = true;
             return true;
         }
+        addPendingReaders(entityId);
         return false;
+    }
+
+    /**
+     * An entity notified while the window draws: the views that read it
+     * render again like the entity itself, in this frame when they are
+     * reached after it (`promotePendingDirtyView`: GPUI's uncached views
+     * drawn after the notify show the change), else in the next frame
+     * (those drawn before it, like in GPUI, where the notify marks the
+     * window's dirty views for the next frame). Between frames the readers
+     * are marked when the frame starts (`drawFrame`), from the accessed
+     * sets of that moment.
+     *
+     * The views rendering at that moment are left out: the notify comes
+     * from their own render (a view writing the state it draws from, like
+     * the kit's inputs pushing their props to their state, or a story
+     * filling a command palette every render), which is the render being
+     * drawn, like a view notifying itself from its render. A notified model
+     * stays pending, so its readers render in the next frame anyway.
+     */
+    function addPendingReaders(entityId:Int):Void {
+        final readers = readersByEntity.get(entityId);
+        if (readers == null) {
+            return;
+        }
+        for (i in 0...readers.length) {
+            final viewId = readers[i];
+            if (viewId != entityId && !isRendering(viewId)) {
+                final tracker = trackers.get(viewId);
+                if (tracker != null && tracker.defaultCaching) {
+                    addPendingDirtyView(viewId);
+                }
+            }
+        }
+    }
+
+    /** Whether the view is in one of its phases right now (render, prepaint or paint) */
+    inline function isRendering(viewId:Int):Bool {
+        var found = false;
+        final stack = renderedEntityStack;
+        for (i in 0...stack.length) {
+            if (stack[i].entityId == viewId) {
+                found = true;
+                break;
+            }
+        }
+        return found;
     }
 
     /**
@@ -1299,10 +1370,13 @@ class Window implements WindowInvalidator {
      * `mark_view_dirty`): a cached view renders again when one of its
      * descendants must.
      */
-    function addPendingDirtyView(viewId:Int):Void {
+    function addPendingDirtyView(viewId:Int, notified:Bool = false):Void {
         if (!pendingDirtyViews.exists(viewId)) {
-            pendingDirtyViews.set(viewId, true);
+            pendingDirtyViews.set(viewId, notified);
             pendingDirtyViewIds.push(viewId);
+        }
+        else if (notified && !pendingDirtyViews.get(viewId)) {
+            pendingDirtyViews.set(viewId, true);
         }
         if (amending) {
             amendPendingIds.push(viewId);
@@ -1317,7 +1391,8 @@ class Window implements WindowInvalidator {
     @:allow(glaze)
     function entityNotifiedWhileDrawing(entityId:Int):Void {
         if (drawing) {
-            addPendingDirtyView(entityId);
+            addPendingDirtyView(entityId, true);
+            addPendingReaders(entityId);
         }
     }
 
@@ -1350,19 +1425,24 @@ class Window implements WindowInvalidator {
     }
 
     /**
-     * Marks dirty the views cached by default that accessed the given entity,
-     * not a view, while they were last drawn (read it, updated it). In GPUI
-     * those views are not cached: they render again in the next frame and
-     * show what the entity's notify announced. Views cached with a style and
-     * the views inside them keep GPUI's rule (only their own notify, or a
-     * descendant's, renders them).
+     * Marks dirty the views cached by default that accessed the given
+     * notified entity while they were last drawn (read it with `read(cx)`,
+     * updated it, created it), whether the entity is a model or itself a
+     * view of this window. In GPUI those views are not cached: they render
+     * again in the next frame and show what the entity's notify announced.
+     * Views cached with a style and the views inside them keep GPUI's rule
+     * (only their own notify, or a descendant's, renders them). Costs
+     * O(readers) through `readersByEntity`.
      */
     function markViewsThatAccessed(entityId:Int):Void {
-        final ids = trackerIds;
-        for (i in 0...ids.length) {
-            final viewId = ids[i];
+        final readers = readersByEntity.get(entityId);
+        if (readers == null) {
+            return;
+        }
+        for (i in 0...readers.length) {
+            final viewId = readers[i];
             final tracker = trackers.get(viewId);
-            if (tracker.defaultCaching && tracker.accessed.contains(entityId)) {
+            if (tracker != null && tracker.defaultCaching) {
                 markViewDirty(viewId);
             }
         }
@@ -1536,7 +1616,9 @@ class Window implements WindowInvalidator {
         final previousRecorder = accessRecorder;
         accessRecorder = this;
         accessedStack.resize(0);
+        accessedViewStack.resize(0);
         currentAccessed = frameAccessed;
+        currentAccessedViewId = -1;
         frameAccessed.clear();
         app.startUpdate();
         try {
@@ -1546,6 +1628,9 @@ class Window implements WindowInvalidator {
             accessRecorder = previousRecorder;
             drawing = false;
             drawingClean = false;
+            #if glaze_verify_cache
+            resetVerifyScopes();
+            #end
             AnyElement.clearArena();
             @:privateAccess app.pendingUpdates--;
             throw glaze.util.Exceptions.rethrow(e);
@@ -1572,10 +1657,15 @@ class Window implements WindowInvalidator {
         // they are marked dirty with their ancestors, like in GPUI.
         collectingDirtyViews = true;
         final pendingIds = pendingDirtyViewIds;
-        final tree = renderedFrame.dispatchTree;
         for (i in 0...pendingIds.length) {
             final entityId = pendingIds[i];
-            if (tree.viewNodeId(entityId) == -1) {
+            if (pendingDirtyViews.get(entityId)) {
+                // Notified: the views that read it render again, whether it
+                // is a model or a view (a view read by another view's render
+                // is a model to that reader: the kit's `InputBaseState` read
+                // by its field and its search panel). A view that only
+                // renders again (its render wrote what it read) does not
+                // render its readers.
                 markViewsThatAccessed(entityId);
             }
             markViewDirty(entityId);
@@ -1687,8 +1777,7 @@ class Window implements WindowInvalidator {
         for (i in 0...ids.length) {
             final entityId = ids[i];
             if (!renderedViews.exists(entityId) && !dispatchTree.containsView(entityId)) {
-                trackers.get(entityId).destroy();
-                trackers.remove(entityId);
+                dropTracker(entityId);
             }
             else {
                 ids[kept++] = entityId;
@@ -1977,13 +2066,17 @@ class Window implements WindowInvalidator {
                     amendOldAccessed.push(accessed);
                 }
             }
+            // Its accessed set starts again: so do its reader entries
+            removeReaders(tracker);
             tracker.beginCapture();
         }
         else {
             tracker.resumeCapture();
         }
         accessedStack.push(currentAccessed);
+        accessedViewStack.push(currentAccessedViewId);
         currentAccessed = tracker.accessed;
+        currentAccessedViewId = entityId;
     }
 
     /**
@@ -1994,7 +2087,7 @@ class Window implements WindowInvalidator {
     static inline function recordAccess(entityId:Int):Void {
         final window = accessRecorder;
         if (window != null) {
-            window.currentAccessed.add(entityId);
+            window.recordAccessIn(entityId);
         }
     }
 
@@ -2005,7 +2098,67 @@ class Window implements WindowInvalidator {
     static inline function recordModelAccess(model:Model):Void {
         final window = accessRecorder;
         if (window != null) {
-            window.currentAccessed.add(model.entityId);
+            window.recordAccessIn(model.entityId);
+        }
+    }
+
+    /** Records an access in the current set, and the view as a reader of the entity when the set is a view's */
+    inline function recordAccessIn(entityId:Int):Void {
+        if (currentAccessed.add(entityId) && currentAccessedViewId != -1) {
+            addReader(entityId, currentAccessedViewId);
+        }
+    }
+
+    /**
+     * Records the creation of an entity while this window draws (Rust
+     * `EntityMap::insert` marks it accessed): tracked like a read, so that
+     * the window is its invalidator, but the creating view is not one of its
+     * readers (it did not draw from the entity's state; a list creating its
+     * rows while it renders must not render again at their first notify).
+     */
+    @:allow(glaze)
+    static inline function recordCreation(entityId:Int):Void {
+        final window = accessRecorder;
+        if (window != null) {
+            window.currentAccessed.add(entityId);
+        }
+    }
+
+    function addReader(entityId:Int, viewId:Int):Void {
+        var readers = readersByEntity.get(entityId);
+        if (readers == null) {
+            readers = readerListPool.length > 0 ? readerListPool.pop() : [];
+            readersByEntity.set(entityId, readers);
+        }
+        readers.push(viewId);
+    }
+
+    /**
+     * Removes the view from the readers of everything its tracker accessed
+     * (before its accessed set is cleared by a new render, or when the
+     * tracker stops).
+     */
+    function removeReaders(tracker:ViewTracker):Void {
+        final viewId = tracker.viewId;
+        for (entityId in tracker.accessed.ids) {
+            final readers = readersByEntity.get(entityId);
+            if (readers != null) {
+                readers.remove(viewId);
+                if (readers.length == 0) {
+                    readersByEntity.remove(entityId);
+                    readerListPool.push(readers);
+                }
+            }
+        }
+    }
+
+    /** Stops the tracker of a view that is not drawn anymore (its reader entries with it) */
+    function dropTracker(viewId:Int):Void {
+        final tracker = trackers.get(viewId);
+        if (tracker != null) {
+            removeReaders(tracker);
+            tracker.destroy();
+            trackers.remove(viewId);
         }
     }
 
@@ -2066,6 +2219,8 @@ class Window implements WindowInvalidator {
         }
         final outer = accessedStack.pop();
         currentAccessed = outer != null ? outer : frameAccessed;
+        final outerView = accessedViewStack.pop();
+        currentAccessedViewId = outerView != null ? outerView : -1;
     }
 
     /**
@@ -4756,8 +4911,7 @@ class Window implements WindowInvalidator {
                     for (accessed in tracker.accessed.ids) {
                         amendOldAccessed.push(accessed);
                     }
-                    tracker.destroy();
-                    trackers.remove(oldViewId);
+                    dropTracker(oldViewId);
                     stopped = true;
                 }
             }
@@ -4846,24 +5000,9 @@ class Window implements WindowInvalidator {
     }
 
     /** Whether a view of this window or the last frame outside of views accessed the entity */
-    function stillAccessed(entityId:Int):Bool {
-        if (trackers.exists(entityId) || lastFrameAccessed.contains(entityId)) {
-            return true;
-        }
-        final rendered = inPlaceRenderedIds;
-        for (i in 0...rendered.length) {
-            final tracker = trackers.get(rendered[i]);
-            if (tracker != null && tracker.accessed.contains(entityId)) {
-                return true;
-            }
-        }
-        final ids = trackerIds;
-        for (i in 0...ids.length) {
-            if (trackers.get(ids[i]).accessed.contains(entityId)) {
-                return true;
-            }
-        }
-        return false;
+    inline function stillAccessed(entityId:Int):Bool {
+        // `readersByEntity` mirrors the accessed sets of every live tracker
+        return trackers.exists(entityId) || lastFrameAccessed.contains(entityId) || readersByEntity.exists(entityId);
     }
 
 
@@ -4890,6 +5029,26 @@ class Window implements WindowInvalidator {
 
     /** While the full frame checking a frame drawn in place is drawn */
     var inPlaceOracle:Bool = false;
+    #end
+
+    /**
+     * Whether the frame being drawn is the full frame `glaze_verify_cache`
+     * draws right after a frame drawn in place, to compare them (see
+     * `verifyInPlaceFrame`). Always false without the define. Bookkeeping
+     * that follows the paint order of a frame (the kit's text selection
+     * participants) leaves this frame out: the views rendered in place are
+     * reused in it, so what it paints is not the order of a frame an
+     * application draws.
+     */
+    public inline function isVerificationFrame():Bool {
+        #if glaze_verify_cache
+        return inPlaceOracle;
+        #else
+        return false;
+        #end
+    }
+
+    #if glaze_verify_cache
 
     /** Whether a view drawn in this frame saw other hover answers than in its last frame */
     @:allow(glaze)
@@ -4917,6 +5076,9 @@ class Window implements WindowInvalidator {
                 : Type.getClassName(Type.getClass(model)));
         }
         final live = liveEntities.ids.copy();
+        // Accessed outside of any view by the frame drawn in place (its
+        // focus listeners): the full frame dispatches no focus change
+        final outsideViews = lastFrameAccessed.ids.copy();
         final views = inPlaceViewCount;
         inPlaceInputHandlers = inputHandlerCount(renderedFrame);
         inPlaceOracle = true;
@@ -4935,7 +5097,7 @@ class Window implements WindowInvalidator {
             // The views rendered in place are reused by the full frame: those
             // they rendered without drawing (measured, like the first item
             // of a uniform list) are tracked in place only
-            final extra = [for (entityId in live) if (!liveEntities.contains(entityId) && !amendedViews.exists(entityId)) entityId];
+            final extra = [for (entityId in live) if (!liveEntities.contains(entityId) && !amendedViews.exists(entityId) && outsideViews.indexOf(entityId) == -1) entityId];
             final missing = [for (entityId in liveEntities.ids) if (live.indexOf(entityId) == -1) entityId];
             if (extra.length > 0 || missing.length > 0) {
                 reportInPlaceDifference('tracked entities: only in place $extra, only in the full frame $missing');
@@ -5392,83 +5554,250 @@ class Window implements WindowInvalidator {
         ceramic.Shortcuts.log.warning(message);
     }
 
-    /**
-     * Bumped by every view drawn for real that is not compared, and by every
-     * difference reported: a view comparing its rendering skips it when a
-     * view inside it bumped it (its rendering changed for that reason).
-     */
-    var cacheVerificationCounter:Int = 0;
+    #if glaze_verify_cache
+    /** The views drawn for real that are painting, outermost first (see `beginVerifyScope`) */
+    final verifyScopes:Array<CacheVerification.VerifyScope> = [];
 
-    @:allow(glaze)
-    inline function cacheVerificationMark():Int {
-        return cacheVerificationCounter;
-    }
-
-    @:allow(glaze)
-    inline function cacheVerificationUnverifiable():Void {
-        cacheVerificationCounter++;
-    }
+    final verifyScopePool:Array<CacheVerification.VerifyScope> = [];
 
     /**
-     * Compares what a view drew for real in this frame (the ranges of
-     * `state`) with what reusing its cache would have drawn (the ranges of
-     * the last frame kept in `verification`), when no view inside it was
-     * drawn for real since `mark`.
+     * A view with a cache state starts painting for real (`glaze_verify_cache`):
+     * opens its scope, where the views painted for real inside it record
+     * themselves (`endVerifyScope`). `old` holds the ranges the view drew
+     * in the last frame, `null` when it drew none (a view the frame did
+     * not draw).
      */
     @:allow(glaze)
-    function verifyCachedRendering(verification:CacheVerification, state:ViewElement.ViewElementState, mark:Int, name:String, path:Null<GlobalElementId>):Void {
-        if (cacheVerificationCounter != mark) {
-            cacheVerificationCounter++;
-            return;
+    function beginVerifyScope(entityId:Int, old:Null<CacheVerification>, state:ViewElement.ViewElementState, dirty:Bool):CacheVerification.VerifyScope {
+        final scope = verifyScopePool.length > 0 ? verifyScopePool.pop() : new CacheVerification.VerifyScope();
+        scope.entityId = entityId;
+        scope.old = old;
+        scope.state = state;
+        scope.dirty = dirty;
+        verifyScopes.push(scope);
+        return scope;
+    }
+
+    /**
+     * A view without a cache was drawn for real: the views around it cannot
+     * compare their ranges (its share of them is unknown in the last frame).
+     */
+    @:allow(glaze)
+    function cacheVerificationUnverifiable():Void {
+        for (scope in verifyScopes) {
+            scope.unverifiable = true;
         }
-        cacheVerifications++;
-        final difference = cachedRenderingDifference(verification, state);
-        if (difference != null) {
-            cacheVerificationCounter++;
-            cacheVerificationFailures++;
-            final where = path != null ? ' (element ${path.toString()})' : '';
-            onCacheVerificationFailure('$name$where rendered differently from its cached rendering without being notified: notify() probably missing, or a read the tracker does not see ($difference)');
+    }
+
+    /**
+     * The view of `scope` painted (`glaze_verify_cache`). When `compare`
+     * (its cache was reusable and it was rendered for real instead), what it
+     * drew is compared with its cached ranges, the ranges of the views
+     * drawn for real inside it left out of both sides (`cachedRenderingDifference`):
+     * a view notified inside it changes its drawing legitimately, and a
+     * stale view inside it is reported on its own. A view drawn inside it
+     * that the last frame did not draw is a change of its own render, and is
+     * reported. The scope is then recorded in the enclosing view's scope.
+     */
+    @:allow(glaze)
+    function endVerifyScope(scope:CacheVerification.VerifyScope, compare:Bool, name:String, path:Null<GlobalElementId>):Void {
+        final popped = verifyScopes.pop();
+        if (popped != scope) {
+            throw 'Unbalanced verify scopes';
         }
+        if (compare && !scope.unverifiable) {
+            cacheVerifications++;
+            var difference = scope.newViewInside ? 'it draws a view the last frame did not draw' : null;
+            if (difference == null) {
+                difference = cachedRenderingDifference(scope);
+            }
+            if (difference != null) {
+                cacheVerificationFailures++;
+                final where = path != null ? ' (element ${path.toString()})' : '';
+                onCacheVerificationFailure('$name$where rendered differently from its cached rendering without being notified: notify() probably missing, or a read the tracker does not see ($difference)');
+            }
+        }
+        final parent = verifyScopes.length > 0 ? verifyScopes[verifyScopes.length - 1] : null;
+        if (parent != null) {
+            if (scope.old == null) {
+                if (renderedFrame.dispatchTree.viewNodeId(scope.entityId) == -1) {
+                    // Not drawn in the last frame: the view around it changed
+                    parent.newViewInside = true;
+                }
+                else if (scope.dirty) {
+                    // Drawn in the last frame inside a reused range, so its
+                    // own ranges were not recorded since: what it drew then
+                    // cannot be left out of the comparison
+                    parent.unverifiable = true;
+                }
+                // Otherwise it draws the same as in the last frame (not
+                // dirty, not moved), at the same place in its parent's range
+            }
+            if (scope.unverifiable) {
+                parent.unverifiable = true;
+            }
+            // Its ranges are left out of the comparison of the views around
+            // it (it is the one that changed, or it is reported itself)
+            parent.nested.push(scope);
+        }
+        else {
+            recycleVerifyScope(scope);
+        }
+    }
+
+    function recycleVerifyScope(scope:CacheVerification.VerifyScope):Void {
+        for (nested in scope.nested) {
+            recycleVerifyScope(nested);
+        }
+        scope.reset();
+        verifyScopePool.push(scope);
+    }
+
+    /** Clears the verify scopes left open by a draw that threw */
+    function resetVerifyScopes():Void {
+        while (verifyScopes.length > 0) {
+            recycleVerifyScope(verifyScopes.pop());
+        }
+    }
+
+    final verifyKeptOld:Array<Int> = [];
+    final verifyKeptNew:Array<Int> = [];
+    final verifySubsOld:Array<Int> = [];
+    final verifySubsNew:Array<Int> = [];
+
+    /**
+     * Fills `verifyKeptOld` and `verifyKeptNew` with the indices of
+     * `oldStart...oldEnd` and `newStart...newEnd` outside of the ranges of the
+     * nested views (`verifySubsOld`, `verifySubsNew`: pairs of start and end,
+     * in any order). Returns a description when the counts differ.
+     */
+    function keptIndices(what:String, oldStart:Int, oldEnd:Int, newStart:Int, newEnd:Int):Null<String> {
+        inline function fill(kept:Array<Int>, start:Int, end:Int, subs:Array<Int>):Void {
+            kept.resize(0);
+            var i = start;
+            while (i < end) {
+                var inside = false;
+                var k = 0;
+                while (k < subs.length) {
+                    if (i >= subs[k] && i < subs[k + 1]) {
+                        inside = true;
+                        i = subs[k + 1];
+                        break;
+                    }
+                    k += 2;
+                }
+                if (!inside) {
+                    kept.push(i);
+                    i++;
+                }
+            }
+        }
+        fill(verifyKeptOld, oldStart, oldEnd, verifySubsOld);
+        fill(verifyKeptNew, newStart, newEnd, verifySubsNew);
+        if (verifyKeptOld.length != verifyKeptNew.length) {
+            final inside = verifySubsOld.length > 0 ? ' (views inside left out)' : '';
+            return '$what: ${verifyKeptOld.length} cached, ${verifyKeptNew.length} rendered$inside';
+        }
+        return null;
     }
 
     /**
      * The first difference between the ranges of the last frame kept in
-     * `verification` and those of this frame in `state`, `null` when they
-     * draw the same.
+     * `scope.old` and those of this frame in `scope.state`, the ranges of
+     * the views drawn for real inside the view left out, `null` when they
+     * draw the same. Compares the hitboxes, the cursor styles and the paint
+     * operations, and the counts of dispatch nodes, tooltip requests,
+     * deferred draws, mouse listeners, input handlers, text input regions
+     * and tab stops.
      */
-    function cachedRenderingDifference(verification:CacheVerification, state:ViewElement.ViewElementState):Null<String> {
+    function cachedRenderingDifference(scope:CacheVerification.VerifyScope):Null<String> {
+        final verification = scope.old;
+        final state = scope.state;
         final old = renderedFrame;
         final next = nextFrame;
+        final nested = scope.nested;
+        final subsOld = verifySubsOld;
+        final subsNew = verifySubsNew;
 
-        final oldHitboxes = verification.prepaintEnd.hitboxesIndex - verification.prepaintStart.hitboxesIndex;
-        final newHitboxes = state.prepaintEnd.hitboxesIndex - state.prepaintStart.hitboxesIndex;
-        if (oldHitboxes != newHitboxes) {
-            return 'hitboxes: $oldHitboxes cached, $newHitboxes rendered';
+        // A nested view without ranges of the last frame (drawn inside a
+        // reused range since its parent last rendered) draws the same on
+        // both sides: it is compared with the rest
+        inline function prepaintSubs(get:(PrepaintStateIndex) -> Int):Void {
+            subsOld.resize(0);
+            subsNew.resize(0);
+            for (n in nested) {
+                if (n.old != null) {
+                    subsOld.push(get(n.old.prepaintStart));
+                    subsOld.push(get(n.old.prepaintEnd));
+                    subsNew.push(get(n.state.prepaintStart));
+                    subsNew.push(get(n.state.prepaintEnd));
+                }
+            }
         }
-        for (i in 0...newHitboxes) {
-            final a = old.hitboxes[verification.prepaintStart.hitboxesIndex + i];
-            final b = next.hitboxes[state.prepaintStart.hitboxesIndex + i];
+        inline function paintSubs(get:(PaintIndex) -> Int):Void {
+            subsOld.resize(0);
+            subsNew.resize(0);
+            for (n in nested) {
+                if (n.old != null) {
+                    subsOld.push(get(n.old.paintStart));
+                    subsOld.push(get(n.old.paintEnd));
+                    subsNew.push(get(n.state.paintStart));
+                    subsNew.push(get(n.state.paintEnd));
+                }
+            }
+        }
+
+        prepaintSubs(i -> i.hitboxesIndex);
+        var problem = keptIndices('hitboxes', verification.prepaintStart.hitboxesIndex, verification.prepaintEnd.hitboxesIndex, state.prepaintStart.hitboxesIndex, state.prepaintEnd.hitboxesIndex);
+        if (problem != null) return problem;
+        for (i in 0...verifyKeptNew.length) {
+            final a = old.hitboxes[verifyKeptOld[i]];
+            final b = next.hitboxes[verifyKeptNew[i]];
             if (!a.bounds.equals(b.bounds) || !a.contentMask.equals(b.contentMask) || a.behavior != b.behavior) {
                 return 'hitbox $i: ${a.bounds} cached, ${b.bounds} rendered';
             }
         }
 
-        final oldCursors = verification.paintEnd.cursorStylesIndex - verification.paintStart.cursorStylesIndex;
-        final newCursors = state.paintEnd.cursorStylesIndex - state.paintStart.cursorStylesIndex;
-        if (oldCursors != newCursors) {
-            return 'cursor styles: $oldCursors cached, $newCursors rendered';
-        }
-        for (i in 0...newCursors) {
-            final a = old.cursorStyles[verification.paintStart.cursorStylesIndex + i];
-            final b = next.cursorStyles[state.paintStart.cursorStylesIndex + i];
+        prepaintSubs(i -> i.dispatchTreeIndex);
+        problem = keptIndices('dispatch nodes', verification.prepaintStart.dispatchTreeIndex, verification.prepaintEnd.dispatchTreeIndex, state.prepaintStart.dispatchTreeIndex, state.prepaintEnd.dispatchTreeIndex);
+        if (problem != null) return problem;
+        prepaintSubs(i -> i.tooltipsIndex);
+        problem = keptIndices('tooltip requests', verification.prepaintStart.tooltipsIndex, verification.prepaintEnd.tooltipsIndex, state.prepaintStart.tooltipsIndex, state.prepaintEnd.tooltipsIndex);
+        if (problem != null) return problem;
+        prepaintSubs(i -> i.deferredDrawsIndex);
+        problem = keptIndices('deferred draws', verification.prepaintStart.deferredDrawsIndex, verification.prepaintEnd.deferredDrawsIndex, state.prepaintStart.deferredDrawsIndex, state.prepaintEnd.deferredDrawsIndex);
+        if (problem != null) return problem;
+
+        paintSubs(i -> i.cursorStylesIndex);
+        problem = keptIndices('cursor styles', verification.paintStart.cursorStylesIndex, verification.paintEnd.cursorStylesIndex, state.paintStart.cursorStylesIndex, state.paintEnd.cursorStylesIndex);
+        if (problem != null) return problem;
+        for (i in 0...verifyKeptNew.length) {
+            final a = old.cursorStyles[verifyKeptOld[i]];
+            final b = next.cursorStyles[verifyKeptNew[i]];
             if (a.style != b.style || (a.hitboxId == -1) != (b.hitboxId == -1)) {
                 return 'cursor style $i: ${a.style} cached, ${b.style} rendered';
             }
         }
+        paintSubs(i -> i.mouseListenersIndex);
+        problem = keptIndices('mouse listeners', verification.paintStart.mouseListenersIndex, verification.paintEnd.mouseListenersIndex, state.paintStart.mouseListenersIndex, state.paintEnd.mouseListenersIndex);
+        if (problem != null) return problem;
+        paintSubs(i -> i.inputHandlersIndex);
+        problem = keptIndices('input handlers', verification.paintStart.inputHandlersIndex, verification.paintEnd.inputHandlersIndex, state.paintStart.inputHandlersIndex, state.paintEnd.inputHandlersIndex);
+        if (problem != null) return problem;
+        paintSubs(i -> i.textInputRegionsIndex);
+        problem = keptIndices('text input regions', verification.paintStart.textInputRegionsIndex, verification.paintEnd.textInputRegionsIndex, state.paintStart.textInputRegionsIndex, state.paintEnd.textInputRegionsIndex);
+        if (problem != null) return problem;
+        paintSubs(i -> i.tabHandleIndex);
+        problem = keptIndices('tab stops', verification.paintStart.tabHandleIndex, verification.paintEnd.tabHandleIndex, state.paintStart.tabHandleIndex, state.paintEnd.tabHandleIndex);
+        if (problem != null) return problem;
 
+        paintSubs(i -> i.sceneIndex);
+        problem = keptIndices('paint operations', verification.paintStart.sceneIndex, verification.paintEnd.sceneIndex, state.paintStart.sceneIndex, state.paintEnd.sceneIndex);
+        if (problem != null) return problem;
         final oldScene = sceneSource != null ? sceneSource : old.scene;
-        return next.scene.rangeDifference(state.paintStart.sceneIndex, state.paintEnd.sceneIndex, oldScene, verification.paintStart.sceneIndex, verification.paintEnd.sceneIndex);
+        return next.scene.indexedDifference(verifyKeptNew, oldScene, verifyKeptOld);
     }
+    #end
 
     /**
      * Number of layout runs (a layout root computed by taffy) since the

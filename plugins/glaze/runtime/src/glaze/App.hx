@@ -618,7 +618,7 @@ class App {
         try {
             entity = build(cx);
             attach(entity, cx, parent);
-            Window.recordAccess(cx.id);
+            Window.recordCreation(cx.id);
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;

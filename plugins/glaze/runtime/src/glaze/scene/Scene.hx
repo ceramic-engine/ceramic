@@ -232,6 +232,42 @@ class Scene {
     }
 
     /**
+     * `rangeDifference` over two lists of operation indices (the operations
+     * of two ranges with the ranges of the views inside them left out).
+     */
+    public function indexedDifference(indices:Array<Int>, other:Scene, otherIndices:Array<Int>):Null<String> {
+
+        if (indices.length != otherIndices.length) {
+            return 'paint operations: ${otherIndices.length} cached, ${indices.length} rendered (views inside left out)';
+        }
+        for (i in 0...indices.length) {
+            final index = indices[i];
+            final otherIndex = otherIndices[i];
+            final kind = opKinds[index];
+            if (kind != other.opKinds[otherIndex]) {
+                return 'paint operation $i: not the same kind';
+            }
+            switch kind {
+                case OP_START_LAYER:
+                    for (k in 0...4) {
+                        if (opLayerBounds[index * 4 + k] != other.opLayerBounds[otherIndex * 4 + k]) {
+                            return 'paint operation $i: layer bounds differ';
+                        }
+                    }
+                case OP_PRIMITIVE:
+                    final primitive = opPrimitives[index];
+                    final cached = other.opPrimitives[otherIndex];
+                    if (!primitive.sameDrawing(cached)) {
+                        return 'paint operation $i: ${primitive.kind()} at ${primitive.boundsX},${primitive.boundsY} ${primitive.boundsWidth}x${primitive.boundsHeight} differs from the cached ${cached.kind()} at ${cached.boundsX},${cached.boundsY} ${cached.boundsWidth}x${cached.boundsHeight}';
+                    }
+                case _:
+            }
+        }
+        return null;
+
+    }
+
+    /**
      * Computes the draw order of a primitive and returns true if it must be
      * kept, false if it is fully clipped by its content mask.
      */
