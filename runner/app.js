@@ -265,6 +265,11 @@ app.on('activate', function() {
 
 // Handle ceramic app settings and events
 //
+
+// Whether the app window is resizable, from ceramic settings.
+// (the window itself can't tell: it is reported as not resizable while fullscreen)
+var windowResizable = true;
+
 exports.ceramicSettings = function(settings) {
 
     settings.trace('settings.targetWidth=' + settings.targetWidth);
@@ -273,9 +278,11 @@ exports.ceramicSettings = function(settings) {
     settings.trace('settings.resizable=' + settings.resizable);
     settings.trace('settings.fullscreen=' + settings.fullscreen);
 
+    windowResizable = !!settings.resizable;
+
     mainWindow.setTitle(settings.title);
-    mainWindow.setResizable(settings.resizable);
-    mainWindow.setFullScreenable(settings.resizable);
+    mainWindow.setResizable(windowResizable);
+    mainWindow.setFullScreenable(windowResizable);
 
     if (settings.fullscreen) {
         // We delay this call so that before setting window fullscreen,
@@ -347,8 +354,17 @@ exports.setFullscreen = function(fullscreen) {
         mainWindow.setFullScreen(true);
     }
     else {
-        mainWindow.setFullScreen(false);
-        mainWindow.setFullScreenable(mainWindow.resizable);
+        if (mainWindow.isFullScreen()) {
+            // Restore the fullscreenable state once the window has left fullscreen:
+            // changing it before would prevent the window from leaving fullscreen
+            mainWindow.once('leave-full-screen', function() {
+                mainWindow.setFullScreenable(windowResizable);
+            });
+            mainWindow.setFullScreen(false);
+        }
+        else {
+            mainWindow.setFullScreenable(windowResizable);
+        }
     }
 };
 
