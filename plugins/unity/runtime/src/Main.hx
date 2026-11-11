@@ -129,6 +129,10 @@ class Main {
         // Init last update time
         _lastUpdateTime = Sys.cpuTime();
 
+        // The screen takes the window size the project asks for (screen
+        // size override `window`) before the app reads it
+        @:privateAccess ceramic.App.app.backend.screen.applyStartupSettings();
+
         // Emit ready event
         ceramic.App.app.backend.emitReady();
 

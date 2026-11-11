@@ -129,10 +129,18 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         }
         else if (screenSizeFromWindowSettings && ceramic.App.app != null && ceramic.App.app.settings != null
             && (ceramic.App.app.settings.windowWidth > 0 || ceramic.App.app.settings.targetWidth > 0)) {
+            // Resolved once, from the size the app asks for at startup, and
+            // kept as the override: once the app runs, the window settings
+            // follow the actual screen (`ceramic.Screen.syncWindowSize()`),
+            // so reading them again would feed the screen size back to
+            // itself (a 640x480 default screen stayed 640x480 whatever the
+            // window settings asked). `setWindowSize()` changes it afterwards.
             var settings = ceramic.App.app.settings;
             var screenDensity = computeDensity();
-            pixelWidth = Math.round((settings.windowWidth > 0 ? settings.windowWidth : settings.targetWidth) * screenDensity);
-            pixelHeight = Math.round((settings.windowHeight > 0 ? settings.windowHeight : settings.targetHeight) * screenDensity);
+            pixelWidthOverride = Math.round((settings.windowWidth > 0 ? settings.windowWidth : settings.targetWidth) * screenDensity);
+            pixelHeightOverride = Math.round((settings.windowHeight > 0 ? settings.windowHeight : settings.targetHeight) * screenDensity);
+            pixelWidth = pixelWidthOverride;
+            pixelHeight = pixelHeightOverride;
         }
         else {
             pixelWidth = untyped __cs__('UnityEngine.Screen.width');
@@ -451,13 +459,26 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     #end
     public function setWindowSize(width:Int, height:Int):Bool {
 
-        if (width <= 0 || height <= 0 || pixelWidthOverride > 0) {
+        if (width <= 0 || height <= 0) {
             return false;
         }
 
         if (screenSizeFromWindowSettings) {
-            // The screen size is read from the window settings at each update
+            // A screen sized from the window settings (no window): the new
+            // size replaces the resolved one and is picked up by update()
+            var screenDensity = computeDensity();
+            var newPixelWidth:Int = Math.round(width * screenDensity);
+            var newPixelHeight:Int = Math.round(height * screenDensity);
+            if (newPixelWidth == pixelWidthOverride && newPixelHeight == pixelHeightOverride) {
+                return false;
+            }
+            pixelWidthOverride = newPixelWidth;
+            pixelHeightOverride = newPixelHeight;
             return true;
+        }
+
+        if (pixelWidthOverride > 0) {
+            return false;
         }
 
         if (isEditor) {
@@ -717,6 +738,24 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     #end
     @:allow(backend.Backend)
+    #if !no_backend_docs
+    /**
+     * Applies the window settings of the project to the screen before the
+     * backend is ready (`Main`): with `CERAMIC_UNITY_SCREEN_SIZE=window` the
+     * screen must have the requested size before the first resize of
+     * `ceramic.Screen`, which copies the actual screen size into the window
+     * settings. No event is emitted.
+     */
+    #end
+    function applyStartupSettings():Void {
+
+        readPixelSize();
+        density = computeDensity();
+        width = toLogicalSize(pixelWidth, density);
+        height = toLogicalSize(pixelHeight, density);
+
+    }
+
     function update() {
 
         readPixelSize();
