@@ -30,6 +30,9 @@ class StoryInPlaceTest extends TestCase {
 
     final verifyCacheWas = Window.verifyCache;
 
+    /** `TitleBar.isWeb` before the test: true on Unity and the web, restored by `teardown` */
+    final isWebWas = glaze.kit.TitleBar.isWeb;
+
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
@@ -51,6 +54,7 @@ class StoryInPlaceTest extends TestCase {
 
     override function teardown() {
         Window.verifyCache = verifyCacheWas;
+        glaze.kit.TitleBar.isWeb = isWebWas;
         if (window != null) window.destroy();
         window = null;
         ceramic.App.app.flushImmediate();
