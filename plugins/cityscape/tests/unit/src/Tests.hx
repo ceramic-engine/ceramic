@@ -194,6 +194,7 @@ class Tests {
         runner.add(new tests.view.ViewportTokenizationTest());
         runner.add(new tests.view.EditorFontsTest());
         runner.add(new tests.view.MouseCursorTest());
+        runner.add(new tests.view.ScrollMouseTargetTest());
         runner.add(new tests.view.ScrollbarTrackTest());
 
         // Language features (step 4, cs4-lang)

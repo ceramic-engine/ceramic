@@ -95,6 +95,7 @@ class CityscapeViewElement extends Element {
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final v = view.read(cx);
         v.layoutTo(bounds, window.scaleFactor(), window);
+        v.refreshMouseTargetAfterScroll(window);
         hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
         insertGutterHitboxes(v, bounds, window);
         insertFoldedEllipsisHitboxes(v, bounds, window);

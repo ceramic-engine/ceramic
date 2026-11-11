@@ -399,6 +399,18 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public var zoneMouseCursor(default, null):Null<glaze.CursorStyle> = null;
 
     /**
+     * Whether the mouse is over the editor (its root element hovered, from
+     * `handleHover`).
+     */
+    public var mouseInside(default, null):Bool = false;
+
+    /**
+     * The scroll position changed since the mouse target was last computed
+     * (see `refreshMouseTargetAfterScroll`).
+     */
+    var mouseTargetStale:Bool = false;
+
+    /**
      * The widest rendered line so far (Monaco's `setMaxLineWidth`).
      */
     var maxLineWidth:Float = 0;
@@ -1602,7 +1614,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         setGutterHovered(relativeX >= 0 && relativeX < layoutInfo.contentLeft);
         if (!mouseDown || event.pressedButton == null) {
             final e = editorMouseEvent(MouseButton.Left, event.position, event.modifiers, 0);
-            updateZoneMouseCursor(e.target, event.position);
+            updateZoneMouseCursor(e.target, event.position, true);
             widget._fireMouseMove(e);
             return;
         }
@@ -1617,10 +1629,57 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     }
 
     /**
-     * Sets `zoneMouseCursor` for a mouse target (rendering again when it
-     * changed).
+     * The scroll position changed (`ViewScrollChangedEvent` with a new
+     * scrollTop or scrollLeft): what is under the mouse may have changed,
+     * the mouse target is computed again at the next prepaint
+     * (`refreshMouseTargetAfterScroll`).
      */
-    function updateZoneMouseCursor(target:MouseTarget, point:Point):Void {
+    @:allow(cityscape.view.CityscapeViewEventHandler)
+    function onScrollChanged(e:ViewScrollChangedEvent):Void {
+        if (e.scrollTopChanged || e.scrollLeftChanged) {
+            mouseTargetStale = true;
+        }
+    }
+
+    /**
+     * After a scroll (wheel, scrollbar, reveal, typing...), the mouse target
+     * is computed again at the mouse position without a mouse move, once per
+     * frame, with the consequences of a move: the view zone cursor, the
+     * cursor of a link or widget and the editor's `onMouseMove` listeners
+     * (the hover, the link detection under Cmd). Monaco does nothing itself:
+     * Chromium marks the hover state dirty when a scroller moves and sends a
+     * synthetic `mousemove` to the page at the next frame
+     * (`MouseEventManager::RecomputeMouseHoverState`, blink
+     * core/input/mouse_event_manager.cc), which `MouseHandler._onMouseMove`
+     * receives like a real move. Called from the element's prepaint, after
+     * the layout, so that the paint of the same frame sets the new cursor;
+     * nothing is notified from here unless a listener changes something,
+     * like a real move. Skipped while a button is down (Monaco's mouse down
+     * operation handles its own moves) and when the mouse is outside.
+     */
+    public function refreshMouseTargetAfterScroll(window:Window):Void {
+        if (!mouseTargetStale) {
+            return;
+        }
+        mouseTargetStale = false;
+        final viewModel = this.viewModel;
+        if (viewModel == null || !mouseInside || mouseDown) {
+            return;
+        }
+        final position = window.mousePosition();
+        if (!elementBounds.contains(position)) {
+            return;
+        }
+        final e = editorMouseEvent(MouseButton.Left, position, window.modifiers(), 0);
+        updateZoneMouseCursor(e.target, position, false);
+        widget._fireMouseMove(e);
+    }
+
+    /**
+     * Sets `zoneMouseCursor` for a mouse target (rendering again when it
+     * changed and `notify`; from prepaint the paint that follows reads it).
+     */
+    function updateZoneMouseCursor(target:MouseTarget, point:Point, notify:Bool):Void {
         var cursor:Null<glaze.CursorStyle> = null;
         final data = target.viewZoneData;
         if ((target.type == MouseTargetType.CONTENT_VIEW_ZONE || target.type == MouseTargetType.GUTTER_VIEW_ZONE) && data != null) {
@@ -1641,7 +1700,9 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         }
         if (cursor != zoneMouseCursor) {
             zoneMouseCursor = cursor;
-            notifyChanged();
+            if (notify) {
+                notifyChanged();
+            }
         }
     }
 
@@ -1649,6 +1710,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * Called when the mouse enters or leaves the editor.
      */
     public function handleHover(hovered:Bool):Void {
+        mouseInside = hovered;
         if (!hovered) {
             setGutterHovered(false);
             if (zoneMouseCursor != null) {
@@ -2142,7 +2204,11 @@ class CityscapeViewEventHandler extends ViewEventHandler {
                         final changed:ViewCursorStateChangedEvent = cast e;
                         view.invalidateSelectionLines(changed.selections);
                     }
-                case ViewEventType.ViewScrollChanged | ViewEventType.ViewFocusChanged | ViewEventType.ViewCompositionStart | ViewEventType.ViewCompositionEnd | ViewEventType.ViewLanguageConfigurationChanged:
+                case ViewEventType.ViewScrollChanged:
+                    // the rendering of the lines stays the same; what is
+                    // under the mouse may differ
+                    view.onScrollChanged(cast e);
+                case ViewEventType.ViewFocusChanged | ViewEventType.ViewCompositionStart | ViewEventType.ViewCompositionEnd | ViewEventType.ViewLanguageConfigurationChanged:
                     // the rendering of the lines stays the same
                 case _:
                     // decorations, view zones and anything else: every line is checked again
