@@ -59,6 +59,20 @@ class CityscapeViewElement extends Element {
      */
     var rulerHitbox:Null<glaze.Hitbox> = null;
 
+    /**
+     * The hitbox of the margin (glyph margin, line numbers, line
+     * decorations; null without a margin): Monaco's margin has the default
+     * (arrow) mouse cursor, line numbers included (lineNumbers.css
+     * `cursor: default`), not the text cursor of the view lines.
+     */
+    var gutterHitbox:Null<glaze.Hitbox> = null;
+
+    /**
+     * The hitboxes of the folding controls of the visible lines (folding.css
+     * `.codicon-folding-* { cursor: pointer }`), with the pointing hand.
+     */
+    final foldingHitboxes:Array<glaze.Hitbox> = [];
+
     public function new(view:Entity<CityscapeView>) {
         this.view = view;
     }
@@ -75,8 +89,66 @@ class CityscapeViewElement extends Element {
         final v = view.read(cx);
         v.layoutTo(bounds, window.scaleFactor(), window);
         hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
+        insertGutterHitboxes(v, bounds, window);
         final rulerBounds = overviewRulerBounds(v, bounds);
         rulerHitbox = rulerBounds != null ? window.insertHitbox(rulerBounds, HitboxBehavior.Normal) : null;
+    }
+
+    /**
+     * The hitboxes of the margin and of its folding controls (their mouse
+     * cursors are set in paint). Monaco renders each folding control as a
+     * line decoration (`.cldr`, linesDecorations.ts: `left` and `width` of
+     * the line decorations, the height of the line) with the codicon
+     * classes, whose `margin-left: 2px` (folding.css) moves its box right,
+     * in the margin.
+     */
+    function insertGutterHitboxes(v:CityscapeView, bounds:Bounds, window:Window):Void {
+        foldingHitboxes.resize(0);
+        final options = v.configuration.options;
+        final layoutInfo = options.get(EditorOption.layoutInfo);
+        final gutterWidth = Math.min(layoutInfo.contentLeft, bounds.size.width);
+        if (gutterWidth <= 0) {
+            gutterHitbox = null;
+            return;
+        }
+        gutterHitbox = window.insertHitbox(new Bounds(bounds.origin, new Size(gutterWidth, bounds.size.height)), HitboxBehavior.Normal);
+        final viewModel = v.viewModel;
+        final left = bounds.origin.x + layoutInfo.decorationsLeft + 2;
+        final right = bounds.origin.x + gutterWidth;
+        if (viewModel == null || right <= left) {
+            return;
+        }
+        final viewLayout = viewModel.viewLayout;
+        final state = v.paintState;
+        final partial = state.viewport;
+        viewLayout.getLinesViewportRange(partial);
+        final startLine = partial.startLineNumber;
+        final endLine = partial.endLineNumber;
+        final decorations = viewModel.getDecorationsInViewport(state.queryRange(viewModel, v.paintGeneration, startLine, endLine));
+        final lineHeight:Float = options.get(EditorOption.lineHeight);
+        final top = bounds.origin.y;
+        final bottom = top + bounds.size.height;
+        final linesTop = top - viewLayout.getCurrentScrollTop();
+        for (i in 0...decorations.length) {
+            final d = decorations[i];
+            final first = d.options.firstLineDecorationClassName;
+            final lines = d.options.linesDecorationsClassName;
+            final onFirst = first != null && first.indexOf('codicon-folding-') != -1;
+            final onLines = lines != null && lines.indexOf('codicon-folding-') != -1;
+            if (!onFirst && !onLines) {
+                continue;
+            }
+            final from = Std.int(Math.max(startLine, d.range.startLineNumber));
+            final to = Std.int(Math.min(endLine, onLines ? d.range.endLineNumber : d.range.startLineNumber));
+            for (ln in from...to + 1) {
+                final y = linesTop + viewLayout.getVerticalOffsetForLineNumber(ln);
+                final y0 = Math.max(y, top);
+                final y1 = Math.min(y + lineHeight, bottom);
+                if (y1 > y0) {
+                    foldingHitboxes.push(window.insertHitbox(new Bounds(new Point(left, y0), new Size(right - left, y1 - y0)), HitboxBehavior.Normal));
+                }
+            }
+        }
     }
 
     static final NO_RADII = new Corners(0, 0, 0, 0);
@@ -120,6 +192,13 @@ class CityscapeViewElement extends Element {
             // (the drag and drop of the selection sets `default` and `copy`)
             final mouseStyle:String = v.configuration.options.get(EditorOption.mouseStyle);
             window.setCursorStyle(v.mouseCursor != null ? v.mouseCursor : (mouseStyle == 'default' ? CursorStyle.Arrow : (mouseStyle == 'copy' ? CursorStyle.DragCopy : CursorStyle.IBeam)), hitbox);
+        }
+        final gutterHitbox = this.gutterHitbox;
+        if (gutterHitbox != null) {
+            window.setCursorStyle(CursorStyle.Arrow, gutterHitbox);
+            for (i in 0...foldingHitboxes.length) {
+                window.setCursorStyle(CursorStyle.PointingHand, foldingHitboxes[i]);
+            }
         }
         final rulerHitbox = this.rulerHitbox;
         if (rulerHitbox != null) {

@@ -147,11 +147,21 @@ class ModelService {
             return;
         }
 
+        // Cityscape: the bracket pair colorization of the configuration is
+        // given only when it changed. An editor also gives its own option to
+        // its model (`CodeEditorWidget._applyBracketPairColorization`, where
+        // Monaco reads the configuration only): another model option of the
+        // configuration changing (the tab size of an editor) does not undo it.
+        // In Monaco the configuration is the only source, so this is its
+        // behaviour.
+        final bracketColorizationOptions = currentOptions != null && sameBracketPairColorizationOptions(currentOptions.bracketPairColorizationOptions, newOptions.bracketPairColorizationOptions)
+            ? null
+            : newOptions.bracketPairColorizationOptions;
         if (newOptions.detectIndentation) {
             model.detectIndentation(newOptions.insertSpaces, newOptions.tabSize);
             model.updateOptions({
                 trimAutoWhitespace: newOptions.trimAutoWhitespace,
-                bracketColorizationOptions: newOptions.bracketPairColorizationOptions
+                bracketColorizationOptions: bracketColorizationOptions
             });
         }
         else {
@@ -160,7 +170,7 @@ class ModelService {
                 tabSize: newOptions.tabSize,
                 indentSize: newOptions.indentSize,
                 trimAutoWhitespace: newOptions.trimAutoWhitespace,
-                bracketColorizationOptions: newOptions.bracketPairColorizationOptions
+                bracketColorizationOptions: bracketColorizationOptions
             });
         }
     }

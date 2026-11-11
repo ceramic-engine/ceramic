@@ -1,0 +1,209 @@
+// New code for Cityscape (not a port): the mouse cursors of an editor
+// rendered by Glaze, as Monaco's style sheets give them: the text cursor over
+// the view lines (viewLines.css), the default cursor over the margin and the
+// line numbers (lineNumbers.css), the pointer over the folding controls
+// (folding.css), the sticky lines (stickyScroll.css, stickyScrollWidget.ts)
+// and the buttons of the find widget (findWidget.css, toggle.css).
+package tests.view;
+
+import cityscape.Cityscape;
+import cityscape.CityscapeEditor;
+import cityscape.common.Model.ITextModel;
+import cityscape.common.config.EditorOptions;
+import cityscape.contrib.folding.view.Folding.FoldingController;
+import cityscape.contrib.stickyScroll.view.StickyScrollController;
+import cityscape.contrib.stickyScroll.view.StickyScrollProvider.StickyLineCandidateProvider;
+import glaze.App;
+import glaze.CursorStyle;
+import glaze.TestDispatcher;
+import glaze.Window;
+import testing.TestCase;
+import tests.TestTextModel.instantiateTextModel;
+import tests.view.EditorFontsTest.EditorFontsTestHost;
+
+import glaze.Prelude.*;
+
+class MouseCursorTest extends TestCase {
+
+    static final INDENTED = [
+        'class A {',
+        '    function b() {',
+        '        if (c) {',
+        '            d();',
+        '            e();',
+        '            f();',
+        '        }',
+        '        g();',
+        '    }',
+        '    function h() {',
+        '        i();',
+        '    }',
+        '}'
+    ].join('\n');
+
+    var app:App;
+    var context:Cityscape;
+    var window:Null<Window> = null;
+    var editor:Null<CityscapeEditor> = null;
+
+    override public function setup():Void {
+        app = new App(new TestDispatcher());
+        context = new Cityscape();
+    }
+
+    override public function teardown():Void {
+        if (window != null) {
+            window.destroy();
+            window = null;
+        }
+        ceramic.App.app.flushImmediate();
+    }
+
+    function open(text:String, options:IEditorOptions):CityscapeEditor {
+        final model:ITextModel = instantiateTextModel(context, text);
+        window = Window.open(app, {width: 800, height: 400, scaleFactor: 1, autoDraw: false, bindInput: false},
+            EditorFontsTestHost.component(model, options, e -> editor = e));
+        app.update(_ -> window.draw());
+        final folding = FoldingController.get(editor.getEditor());
+        if (folding != null) {
+            folding._flushPendingUpdate();
+        }
+        app.update(_ -> window.draw());
+        return editor;
+    }
+
+    function close():Void {
+        window.destroy();
+        window = null;
+        editor = null;
+    }
+
+    function cursorAt(x:Float, y:Float):CursorStyle {
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(x, y)), app);
+        app.update(_ -> window.draw());
+        app.update(_ -> window.draw());
+        return window.cursorStyle();
+    }
+
+    function lineHeight(e:CityscapeEditor):Float {
+        return e.getOption(EditorOption.lineHeight);
+    }
+
+    /**
+     * The margin: the default cursor over the glyph margin, the line
+     * numbers and the line decorations, the pointer over the folding control
+     * of a line that starts a folding range (the box of the line
+     * decorations moved right by the codicon's `margin-left: 2px`, the
+     * chevron shown or not), the text cursor from `contentLeft`.
+     */
+    function testGutterCursors() {
+        final e = open(INDENTED, {glyphMargin: true, lineNumbers: 'on'});
+        final layout = e.getLayoutInfo();
+        final lh = lineHeight(e);
+        assertTrue(layout.glyphMarginWidth > 0);
+        assertTrue(layout.decorationsWidth > 2);
+        final line1 = lh / 2;
+        final line4 = 3.5 * lh;
+        final folding = layout.decorationsLeft + layout.decorationsWidth / 2;
+
+        assertEquals(CursorStyle.IBeam, cursorAt(layout.contentLeft + 40, line1), 'text');
+        assertEquals(CursorStyle.Arrow, cursorAt(layout.glyphMarginLeft + layout.glyphMarginWidth / 2, line1), 'glyph margin');
+        assertEquals(CursorStyle.Arrow, cursorAt(layout.lineNumbersLeft + layout.lineNumbersWidth / 2, line1), 'line number');
+        assertEquals(CursorStyle.PointingHand, cursorAt(folding, line1), 'folding control of line 1');
+        assertEquals(CursorStyle.PointingHand, cursorAt(layout.contentLeft - 0.5, line1), 'right edge of the folding control');
+        assertEquals(CursorStyle.Arrow, cursorAt(layout.decorationsLeft + 1, line1), 'left of the folding control (margin-left: 2px)');
+        assertEquals(CursorStyle.Arrow, cursorAt(folding, line4), 'line decorations of a line without folding control');
+        assertEquals(CursorStyle.PointingHand, cursorAt(folding, 2.5 * lh), 'folding control of line 3');
+        assertEquals(CursorStyle.IBeam, cursorAt(layout.contentLeft + 1, line4), 'text after the margin');
+        assertEquals(CursorStyle.Arrow, cursorAt(folding, 13.5 * lh), 'margin below the last line');
+
+        // a collapsed range keeps its control
+        e.getEditor().setPosition(new cityscape.common.core.Position(2, 5));
+        e.getEditor().trigger('test', 'editor.fold', null);
+        app.update(_ -> window.draw());
+        assertEquals(CursorStyle.PointingHand, cursorAt(folding, 1.5 * lh), 'collapsed folding control');
+        // lines 3 to 8 hidden: line 9 is the third view line, line 10 the fourth
+        assertEquals(7, e.getEditor()._getViewModel().getLineCount());
+        assertEquals(CursorStyle.Arrow, cursorAt(folding, 2.5 * lh), 'line 9, after the folded lines');
+        assertEquals(CursorStyle.PointingHand, cursorAt(folding, 3.5 * lh), 'folding control of line 10');
+        close();
+    }
+
+    /** Without folding, the line decorations have the default cursor. */
+    function testNoFoldingControls() {
+        final e = open(INDENTED, {folding: false, lineDecorationsWidth: 20});
+        final layout = e.getLayoutInfo();
+        final lh = lineHeight(e);
+        assertEquals(CursorStyle.Arrow, cursorAt(layout.decorationsLeft + layout.decorationsWidth / 2, lh / 2), 'line decorations');
+        assertEquals(CursorStyle.Arrow, cursorAt(layout.lineNumbersLeft + layout.lineNumbersWidth / 2, lh / 2), 'line number');
+        assertEquals(CursorStyle.IBeam, cursorAt(layout.contentLeft + 10, lh / 2), 'text');
+        close();
+    }
+
+    /**
+     * Sticky scroll: the pointer over the content of a sticky line and over
+     * a folding icon shown, the default cursor over the line numbers.
+     */
+    function testStickyScrollCursors() {
+        final e = open(INDENTED, {stickyScroll: {enabled: true}, showFoldingControls: 'always'});
+        final controller = StickyScrollController.get(e.getEditor());
+        final provider:StickyLineCandidateProvider = cast controller.stickyScrollCandidateProvider;
+        provider.update();
+        controller._flushPendingUpdate();
+        final lh = lineHeight(e);
+        e.getEditor().setScrollTop(3 * lh);
+        controller._flushPendingUpdate();
+        app.update(_ -> window.draw());
+        assertEquals('[1,2,3]', haxe.Json.stringify(controller.stickyScrollWidget.lineNumbers));
+        final layout = e.getLayoutInfo();
+
+        assertEquals(CursorStyle.PointingHand, cursorAt(layout.contentLeft + 40, lh * 1.5), 'sticky line content');
+        assertEquals(CursorStyle.Arrow, cursorAt(layout.lineNumbersLeft + 2, lh * 1.5), 'sticky line number');
+        assertEquals(CursorStyle.PointingHand, cursorAt(layout.contentLeft - lh / 2, lh * 0.5), 'folding icon shown');
+        // below the widget, the editor's own cursors
+        assertEquals(CursorStyle.IBeam, cursorAt(layout.contentLeft + 40, lh * 5.5), 'text under the widget');
+        close();
+    }
+
+    /**
+     * The find widget (at the top right of the editor): the pointer over
+     * its enabled buttons and toggles (the replace toggle, Match Case,
+     * Match Whole Word, Use Regular Expression, Find in Selection, Close),
+     * the default cursor over its background and its disabled buttons
+     * (previous and next match without a search), the text cursor in its
+     * input. Read along the middle of its first row.
+     */
+    function testFindWidgetCursors() {
+        final e = open(INDENTED, {});
+        final view:cityscape.view.CityscapeView = e.getView();
+        app.update(_ -> view.focusHandle.focus(window, app));
+        app.update(_ -> window.draw());
+        final mac = cityscape.base.common.Platform.isMacintosh;
+        app.update(_ -> window.dispatchKeystroke(glaze.Keystroke.parse(mac ? 'cmd-f' : 'ctrl-f'), app));
+        app.update(_ -> window.draw());
+        app.update(_ -> window.draw());
+        final runs:Array<String> = [];
+        var x = 0.0;
+        while (x < 800) {
+            final name = Std.string(cursorAt(x, 18));
+            if (runs.length == 0 || runs[runs.length - 1] != name) {
+                runs.push(name);
+            }
+            x += 2;
+        }
+        // the margin and its folding control, the text, then the widget:
+        // the replace toggle, the input (with its three toggles), the
+        // disabled buttons, Find in Selection and Close
+        var pointers = 0;
+        for (r in runs) {
+            if (r == Std.string(CursorStyle.PointingHand)) {
+                pointers++;
+            }
+        }
+        assertTrue(pointers >= 4, 'pointer runs: ' + runs.join(' '));
+        assertTrue(runs.indexOf(Std.string(CursorStyle.IBeam)) != -1);
+        assertTrue(runs.indexOf(Std.string(CursorStyle.Arrow)) != -1);
+        close();
+    }
+
+}

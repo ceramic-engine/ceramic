@@ -294,6 +294,41 @@ class CityscapeEditor extends Component implements Styled {
      */
     public static inline final DEFAULT_FONT_FAMILY = 'JetBrains Mono';
 
+    /**
+     * `matchBrackets` of an editor whose host gives none: `'never'` (no box
+     * around the bracket matching the one at the cursor). Monaco's default
+     * is `'always'`, which a host gives to get its behaviour.
+     */
+    public static inline final DEFAULT_MATCH_BRACKETS = 'never';
+
+    /**
+     * `bracketPairColorization.enabled` of an editor whose host does not
+     * give it: false (brackets keep the colors of their tokens). Monaco's
+     * default is true, which a host gives to get its behaviour.
+     */
+    public static inline final DEFAULT_BRACKET_PAIR_COLORIZATION_ENABLED = false;
+
+    /**
+     * The `bracketPairColorization` option given by the host, with
+     * `enabled` set to Cityscape's default when the host leaves it out (its
+     * other fields kept as they are).
+     */
+    static function bracketPairColorizationWithDefault(given:Dynamic):Dynamic {
+        // (a value that is not an object is Monaco's default too)
+        if (given == null || !cityscape.base.common.JsValues.isObject(given)) {
+            return {enabled: DEFAULT_BRACKET_PAIR_COLORIZATION_ENABLED};
+        }
+        if (Reflect.field(given, 'enabled') != null) {
+            return given;
+        }
+        final result:Dynamic = {};
+        for (field in Reflect.fields(given)) {
+            Reflect.setField(result, field, Reflect.field(given, field));
+        }
+        result.enabled = DEFAULT_BRACKET_PAIR_COLORIZATION_ENABLED;
+        return result;
+    }
+
     function shortcutsKey():String {
         return '' + fontSize + '|' + fontFamily + '|' + wordWrap + '|' + readOnly + '|' + lineNumbers + '|' + tabSize;
     }
@@ -319,6 +354,14 @@ class CityscapeEditor extends Component implements Styled {
                 Reflect.setField(result, field, Reflect.field(o, field));
             }
         }
+        // Cityscape's own defaults (owner decision 2026-11-11, DEVIATIONS.md):
+        // no bracket pair colors and no matching bracket boxes unless the
+        // host asks for them (Monaco: both on); an option set to null is
+        // left out, like Haxe's null everywhere in the options
+        if (result.matchBrackets == null) {
+            result.matchBrackets = DEFAULT_MATCH_BRACKETS;
+        }
+        result.bracketPairColorization = bracketPairColorizationWithDefault(result.bracketPairColorization);
         if (fontSize != null) {
             result.fontSize = fontSize;
         }

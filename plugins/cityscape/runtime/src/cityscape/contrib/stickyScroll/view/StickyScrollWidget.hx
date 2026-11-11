@@ -721,6 +721,53 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
         }
     }
 
+    /**
+     * The hitboxes of the rendered sticky lines with their mouse cursors,
+     * in the order of `_paint` (the last line first, the others over it):
+     * the line content, from `contentLeft` to the widget's right, has the
+     * pointer; the folding icon (its box of the line height, floated right
+     * in the line number node of `contentLeft` pixels) the pointer when it
+     * is shown, the default cursor when not. The line numbers keep the
+     * widget's default cursor.
+     */
+    function _insertLineHitboxes(bounds:Bounds, window:Window, hitboxes:Array<glaze.Hitbox>, cursors:Array<CursorStyle>):Void {
+        final count = this._renderedStickyLines.length;
+        if (count == 0) {
+            return;
+        }
+        final layoutInfo:EditorLayoutInfo = this._editor.getLayoutInfo();
+        final contentLeft = layoutInfo.contentLeft;
+        final lineHeight = this._lineHeight;
+        final x0 = bounds.origin.x;
+        final y0 = bounds.origin.y;
+        final width = bounds.size.width;
+        final bottom = y0 + Math.max(0, this.height);
+        final last = this._renderedStickyLines[count - 1];
+        final lastFirst = last.index == this._lineNumbers.length - 1;
+        for (k in 0...count) {
+            final stickyLine = lastFirst ? (k == 0 ? last : this._renderedStickyLines[k - 1]) : this._renderedStickyLines[k];
+            final top = y0 + topOfStickyLine(stickyLine);
+            final lineTop = Math.max(top, y0);
+            final lineBottom = Math.min(top + lineHeight, bottom);
+            if (lineBottom <= lineTop) {
+                continue;
+            }
+            if (width > contentLeft) {
+                hitboxes.push(window.insertHitbox(new Bounds(new Point(x0 + contentLeft, lineTop), new Size(width - contentLeft, lineBottom - lineTop)), HitboxBehavior.Normal));
+                cursors.push(CursorStyle.PointingHand);
+            }
+            final icon = stickyLine.foldingIcon;
+            if (icon != null) {
+                final iconLeft = Math.max(x0, x0 + contentLeft - icon.dimension);
+                final iconBottom = Math.min(top + icon.dimension, bottom);
+                if (x0 + contentLeft > iconLeft && iconBottom > lineTop) {
+                    hitboxes.push(window.insertHitbox(new Bounds(new Point(iconLeft, lineTop), new Size(x0 + contentLeft - iconLeft, iconBottom - lineTop)), HitboxBehavior.Normal));
+                    cursors.push(icon.visible ? CursorStyle.PointingHand : CursorStyle.Arrow);
+                }
+            }
+        }
+    }
+
     static inline function fill2(window:Window, x:Float, y:Float, w:Float, h:Float, color:Hsla):Void {
         if (w > 0 && h > 0) {
             window.paintQuad(fill(new Bounds(new Point(x, y), new Size(w, h)), color));
@@ -771,12 +818,32 @@ class StickyScrollPaintElement extends Element {
         return window.requestLayout(style, [], cx);
     }
 
+    var hitbox:Null<glaze.Hitbox> = null;
+
+    /** The hitboxes of the sticky lines and their cursors, in paint order. */
+    final lineHitboxes:Array<glaze.Hitbox> = [];
+    final lineCursors:Array<CursorStyle> = [];
+
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
-        final hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
-        window.setCursorStyle(CursorStyle.Arrow, hitbox);
+        hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
+        lineHitboxes.resize(0);
+        lineCursors.resize(0);
+        @:privateAccess widget._insertLineHitboxes(bounds, window, lineHitboxes, lineCursors);
     }
 
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
+        // Monaco's mouse cursors in the widget: the default (arrow) over the
+        // line numbers, the pointer over the line contents
+        // (`.sticky-line-content:hover { cursor: pointer }`) and over the
+        // folding icons shown (`StickyFoldingIcon.setVisible`); the
+        // intermediate lines are over the last one
+        final hitbox = this.hitbox;
+        if (hitbox != null) {
+            window.setCursorStyle(CursorStyle.Arrow, hitbox);
+        }
+        for (i in 0...lineHitboxes.length) {
+            window.setCursorStyle(lineCursors[i], lineHitboxes[i]);
+        }
         @:privateAccess widget._paint(bounds, view, window, cx);
     }
 

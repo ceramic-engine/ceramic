@@ -129,6 +129,7 @@ class Tests {
         runner.add(new tests.contrib.multicursor.MulticursorTest());
         runner.add(new tests.contrib.stickyScroll.StickyScrollTest());
         runner.add(new tests.view.BracketPairColorsTest());
+        runner.add(new tests.view.BracketDefaultsTest());
         runner.add(new tests.contrib.find.FindWidgetTest());
 
         // Folding (step 4, cs4-fold)
@@ -192,6 +193,7 @@ class Tests {
         runner.add(new tests.services.WordBasedCompletionsTest());
         runner.add(new tests.view.ViewportTokenizationTest());
         runner.add(new tests.view.EditorFontsTest());
+        runner.add(new tests.view.MouseCursorTest());
         runner.add(new tests.view.ScrollbarTrackTest());
 
         // Language features (step 4, cs4-lang)

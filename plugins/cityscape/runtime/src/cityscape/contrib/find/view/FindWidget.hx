@@ -431,6 +431,9 @@ class FindWidget extends Model implements Render implements IFindWidget {
             .toggled(checked)
             .tooltip(tooltip)
             .onClick((_:ClickEvent, _:Window, _:App) -> onToggle());
+        // Monaco's toggles and buttons have the pointer (toggle.css,
+        // findWidget.css `.button`), the kit's buttons the default cursor
+        button.cursorPointer();
         if (_iconColor != null) {
             button.textColor(_iconColor);
         }
@@ -459,6 +462,11 @@ class FindWidget extends Model implements Render implements IFindWidget {
             .tooltip(tooltip)
             .disabled(!enabled)
             .onClick((_:ClickEvent, _:Window, _:App) -> onTrigger());
+        // findWidget.css: `.button { cursor: pointer }`, the default cursor
+        // when disabled
+        if (enabled) {
+            button.cursorPointer();
+        }
         if (enabled && _iconColor != null) {
             button.textColor(_iconColor);
         }
@@ -592,6 +600,9 @@ class FindWidget extends Model implements Render implements IFindWidget {
             .onClick((_:ClickEvent, _:Window, _:App) -> {
                 state.change({isReplaceRevealed: !_isReplaceVisible}, false);
             });
+        if (canReplace) {
+            toggleReplace.cursorPointer();
+        }
 
         final panel = hFlex()
             .id('cityscape-find-widget')
