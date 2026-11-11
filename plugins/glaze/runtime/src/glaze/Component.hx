@@ -94,7 +94,7 @@ abstract class Component implements RenderOnce implements tracker.Owner {
      * The window that last rendered this component, and the view drawing
      * it there: the host of a persistent component, the enclosing view (or
      * persistent component) of a stateless one. Set at each render, read by
-     * `invalidate()`.
+     * `notify()`.
      */
     @:noCompletion public var __window:Null<Window> = null;
 
@@ -106,13 +106,14 @@ abstract class Component implements RenderOnce implements tracker.Owner {
      * Tells Glaze that the rendering of this component is stale because data
      * it reads changed without tracker seeing it: a plain field, an external
      * buffer, a native resource. Observable fields (`@observe`, `@prop`,
-     * models) never need it.
+     * models) never need it. The same idea as `cx.notify()` on an entity
+     * (the rendering is stale); a component has no observers today.
      *
      * A persistent component renders again, like after a change of an
-     * observable it read (its ancestors render with it, its clean siblings
-     * and descendants stay cached). A stateless component has no cache of
-     * its own: the view or persistent component it is rendered in renders
-     * again. Calls made before the next frame are merged into one render.
+     * observable it read (its clean siblings and descendants stay cached).
+     * A stateless component has no cache of its own: the view or persistent
+     * component it is rendered in renders again. Calls made before the next
+     * frame are merged into one render.
      *
      * Nothing happens when the component was never rendered, after it left
      * the tree (`destroy()`), or when called while the view it belongs to
@@ -120,10 +121,10 @@ abstract class Component implements RenderOnce implements tracker.Owner {
      * part of a draw, the view renders on the next frame, like a tracked
      * change made there.
      */
-    public function invalidate():Void {
+    public function notify():Void {
         final window = __window;
         if (window != null) {
-            window.invalidateRenderedView(__viewId);
+            window.notifyRenderedView(__viewId);
         }
     }
 

@@ -94,7 +94,7 @@ class CacheVerificationTest extends TestCase {
 
     #if glaze_verify_cache
 
-    function testAPlainFieldChangedWithoutInvalidateIsReported() {
+    function testAPlainFieldChangedWithoutNotifyIsReported() {
         final other = new VerifyToggle();
         final root = view((_, _) -> div()
             .child(PlainLabel.component().at('label'))
@@ -112,7 +112,7 @@ class CacheVerificationTest extends TestCase {
         assertEquals(1, messages.length, 'the stale cached rendering is reported');
         final message = messages.length > 0 ? messages[0] : '';
         assertTrue(message.indexOf('tests.PlainLabel') == 0, message);
-        assertTrue(message.indexOf('invalidate() probably missing') != -1, message);
+        assertTrue(message.indexOf('notify() probably missing') != -1, message);
         assertTrue(message.indexOf('(element ') != -1, 'with its element id path: $message');
         // The real rendering is the one drawn
         assertEquals('changed', label.shown);
@@ -123,7 +123,7 @@ class CacheVerificationTest extends TestCase {
         assertEquals(1, messages.length);
     }
 
-    function testTheSameChangeWithInvalidateIsNotReported() {
+    function testTheSameChangeWithNotifyIsNotReported() {
         final other = new VerifyToggle();
         final root = view((_, _) -> div()
             .child(PlainLabel.component().at('label'))
@@ -133,7 +133,7 @@ class CacheVerificationTest extends TestCase {
         frame();
         final label = VerifyProbe.label;
         label.text = 'changed';
-        label.invalidate();
+        label.notify();
         other.on = false;
         frame();
         assertEquals(0, messages.length, messages.join('\n'));
@@ -155,7 +155,7 @@ class CacheVerificationTest extends TestCase {
 
         messages.resize(0);
         VerifyProbe.plain = 'again';
-        VerifyProbe.statelessLabel.invalidate();
+        VerifyProbe.statelessLabel.notify();
         other.on = true;
         frame();
         assertEquals(0, messages.length, messages.join('\n'));

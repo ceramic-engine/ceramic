@@ -2106,14 +2106,14 @@ class Window implements WindowInvalidator {
     }
 
     /**
-     * `Component.invalidate()`: the given view, drawn by this window, renders
+     * `Component.notify()`: the given view, drawn by this window, renders
      * again as if an observable field it read had changed (its tracker is
      * invalidated, the path of a tracked change). Ignored while the view
      * renders (that render is the one being drawn), and when the view or
      * this window is gone.
      */
     @:allow(glaze)
-    function invalidateRenderedView(viewId:Int):Void {
+    function notifyRenderedView(viewId:Int):Void {
         if (destroyed || viewId == -1)
             return;
         final tracker = trackers.get(viewId);
@@ -3452,7 +3452,7 @@ class Window implements WindowInvalidator {
 
     /**
      * Whether a view that is dirty only because of its own reads (a tracked
-     * field it read changed, `cx.notify()`, `invalidate()`) and whose bounds
+     * field it read changed, `cx.notify()`, `Component.notify()`) and whose bounds
      * do not change is rendered again alone, in place, without rendering
      * its ancestors (see `renderInPlace`). On by default
      * (`defaultInPlaceRendering`); the frames drawn are the same either way.
@@ -5427,7 +5427,7 @@ class Window implements WindowInvalidator {
             cacheVerificationCounter++;
             cacheVerificationFailures++;
             final where = path != null ? ' (element ${path.toString()})' : '';
-            onCacheVerificationFailure('$name$where rendered differently from its cached rendering without being invalidated: invalidate() probably missing, or a read the tracker does not see ($difference)');
+            onCacheVerificationFailure('$name$where rendered differently from its cached rendering without being notified: notify() probably missing, or a read the tracker does not see ($difference)');
         }
     }
 

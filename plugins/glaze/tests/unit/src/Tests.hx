@@ -83,7 +83,7 @@ class Tests {
         runner.add(new tests.kit.StoryInPlaceTest());
         runner.add(new tests.ComponentTest());
         runner.add(new tests.ComponentOwnerTest());
-        runner.add(new tests.ComponentInvalidateTest());
+        runner.add(new tests.ComponentNotifyTest());
         runner.add(new tests.CacheVerificationTest());
         // gpui-kit (waves 1 and 2)
         runner.add(new tests.kit.BaseRootTest());

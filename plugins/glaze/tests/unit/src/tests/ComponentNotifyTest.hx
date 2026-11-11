@@ -15,12 +15,12 @@ import testing.TestCase;
 import glaze.Prelude.*;
 
 /**
- * `Component.invalidate()`: a component whose rendering reads data tracker
+ * `Component.notify()`: a component whose rendering reads data tracker
  * does not see (a plain field here) says its cached rendering is stale. A
  * persistent component renders again; a stateless one makes the view or
  * persistent component it renders in render again. Siblings stay cached.
  */
-class ComponentInvalidateTest extends TestCase {
+class ComponentNotifyTest extends TestCase {
 
     var dispatcher:TestDispatcher;
 
@@ -31,7 +31,7 @@ class ComponentInvalidateTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        InvalidateProbe.reset();
+        NotifyProbe.reset();
         flushImmediate();
     }
 
@@ -53,8 +53,8 @@ class ComponentInvalidateTest extends TestCase {
         return window;
     }
 
-    function view(render:(Window, Context<Dynamic>) -> IntoElement):Entity<InvalidateParentView> {
-        return app.newEntity((_:Context<InvalidateParentView>) -> new InvalidateParentView(render));
+    function view(render:(Window, Context<Dynamic>) -> IntoElement):Entity<NotifyParentView> {
+        return app.newEntity((_:Context<NotifyParentView>) -> new NotifyParentView(render));
     }
 
     /** Draws the dirty windows, like the GlazeSystem does every frame. */
@@ -67,7 +67,7 @@ class ComponentInvalidateTest extends TestCase {
 
 /// Persistent
 
-    function testPersistentComponentRendersAgainAfterInvalidate() {
+    function testPersistentComponentRendersAgainAfterNotify() {
         countsRenders();
         final parent = view((_, _) -> div()
             .child(PlainPersistent.component().at('a').name('a'))
@@ -75,8 +75,8 @@ class ComponentInvalidateTest extends TestCase {
         );
         openWindow(parent);
         frame();
-        final a = InvalidateProbe.persistent.get('a');
-        final b = InvalidateProbe.persistent.get('b');
+        final a = NotifyProbe.persistent.get('a');
+        final b = NotifyProbe.persistent.get('b');
         assertEquals(1, a.renders);
         assertEquals(1, b.renders);
         assertEquals(1, parent.read(app).renders);
@@ -87,9 +87,9 @@ class ComponentInvalidateTest extends TestCase {
         assertEquals(1, a.renders, 'a plain field change alone renders nothing');
         assertEquals('a:', a.shown);
 
-        a.invalidate();
+        a.notify();
         frame();
-        assertEquals(2, a.renders, 'invalidate() renders the component again');
+        assertEquals(2, a.renders, 'notify() renders the component again');
         assertEquals('a:changed', a.shown);
         assertEquals(1, b.renders, 'its sibling stays cached');
 
@@ -100,8 +100,8 @@ class ComponentInvalidateTest extends TestCase {
         assertEquals(3, a.renders);
         assertEquals(1, b.renders);
         final trackedDelta = parent.read(app).renders - parentRenders;
-        final beforeInvalidate = parent.read(app).renders;
-        a.invalidate();
+        final beforeNotify = parent.read(app).renders;
+        a.notify();
         frame();
         assertEquals(4, a.renders);
         assertEquals(1, b.renders);
@@ -110,7 +110,7 @@ class ComponentInvalidateTest extends TestCase {
         // whole tree out again from scratch after each layout: the caches it
         // leaves can make this frame a full one (the same frame)
         #if !glaze_verify_layout
-        assertEquals(0, parent.read(app).renders - beforeInvalidate, 'the ancestors do not render');
+        assertEquals(0, parent.read(app).renders - beforeNotify, 'the ancestors do not render');
         assertTrue(trackedDelta <= 1);
         assertEquals(1, windows[0].inPlaceViewCount);
         #end
@@ -120,16 +120,16 @@ class ComponentInvalidateTest extends TestCase {
         assertEquals(4, a.renders);
     }
 
-    function testRepeatedInvalidateRendersOnce() {
+    function testRepeatedNotifyRendersOnce() {
         final parent = view((_, _) -> div().child(PlainPersistent.component().at('a').name('a')));
         openWindow(parent);
         frame();
-        final a = InvalidateProbe.persistent.get('a');
+        final a = NotifyProbe.persistent.get('a');
         a.plain = 'x';
-        a.invalidate();
+        a.notify();
         a.plain = 'y';
-        a.invalidate();
-        a.invalidate();
+        a.notify();
+        a.notify();
         frame();
         assertEquals(2, a.renders, 'one render for the calls made before the frame');
         assertEquals('a:y', a.shown);
@@ -137,41 +137,41 @@ class ComponentInvalidateTest extends TestCase {
         assertEquals(2, a.renders);
     }
 
-    function testInvalidateDuringItsOwnRenderIsIgnored() {
+    function testNotifyDuringItsOwnRenderIsIgnored() {
         final parent = view((_, _) -> div().child(PlainPersistent.component().at('a').name('a')));
         final window = openWindow(parent);
-        InvalidateProbe.invalidateInRender = true;
+        NotifyProbe.notifyInRender = true;
         frame();
-        final a = InvalidateProbe.persistent.get('a');
+        final a = NotifyProbe.persistent.get('a');
         assertEquals(1, a.renders);
         frame();
         frame();
         assertEquals(1, a.renders, 'the render in progress is the one drawn: no loop');
         assertFalse(window.dirty);
-        InvalidateProbe.invalidateInRender = false;
+        NotifyProbe.notifyInRender = false;
         a.plain = 'later';
-        a.invalidate();
+        a.notify();
         frame();
         assertEquals(2, a.renders);
         assertEquals('a:later', a.shown);
     }
 
-    function testInvalidateAfterDestroyDoesNothing() {
-        final toggle = new InvalidateToggle();
+    function testNotifyAfterDestroyDoesNothing() {
+        final toggle = new NotifyToggle();
         final parent = view((_, _) -> div()
             .child(toggle.on ? PlainPersistent.component().at('a').name('a') : null)
             .child(PlainPersistent.component().at('b').name('b'))
         );
         final window = openWindow(parent);
         frame();
-        final a = InvalidateProbe.persistent.get('a');
-        final b = InvalidateProbe.persistent.get('b');
+        final a = NotifyProbe.persistent.get('a');
+        final b = NotifyProbe.persistent.get('b');
         toggle.on = false;
         frame();
         assertTrue(a.destroyed);
         final parentRenders = parent.read(app).renders;
         final bRenders = b.renders;
-        a.invalidate();
+        a.notify();
         frame();
         assertFalse(window.dirty);
         assertEquals(1, a.renders);
@@ -179,11 +179,11 @@ class ComponentInvalidateTest extends TestCase {
         assertEquals(parentRenders, parent.read(app).renders, 'nothing renders');
     }
 
-    function testInvalidateBeforeAnyRenderDoesNothing() {
+    function testNotifyBeforeAnyRenderDoesNothing() {
         final component = new PlainPersistent();
-        component.invalidate();
+        component.notify();
         final stateless = new PlainStateless();
-        stateless.invalidate();
+        stateless.notify();
         assertEquals(0, component.renders);
     }
 
@@ -198,29 +198,29 @@ class ComponentInvalidateTest extends TestCase {
         final other = view((_, _) -> div().child(PlainStateless.component().name('other')));
         openWindow(view((_, _) -> div().child(parent).child(other)));
         frame();
-        final s = InvalidateProbe.stateless.get('s');
-        final b = InvalidateProbe.persistent.get('b');
+        final s = NotifyProbe.stateless.get('s');
+        final b = NotifyProbe.persistent.get('b');
         assertEquals(1, parent.read(app).renders);
         assertEquals(1, other.read(app).renders);
-        assertEquals(1, InvalidateProbe.statelessRenders.get('s'));
+        assertEquals(1, NotifyProbe.statelessRenders.get('s'));
 
-        InvalidateProbe.statelessPlain = 'changed';
+        NotifyProbe.statelessPlain = 'changed';
         frame();
-        assertEquals(1, InvalidateProbe.statelessRenders.get('s'), 'a plain value change alone renders nothing');
+        assertEquals(1, NotifyProbe.statelessRenders.get('s'), 'a plain value change alone renders nothing');
 
-        s.invalidate();
+        s.notify();
         frame();
         assertEquals(2, parent.read(app).renders, 'the enclosing view renders again');
-        assertEquals(2, InvalidateProbe.statelessRenders.get('s'));
-        assertEquals('s:changed', InvalidateProbe.statelessShown.get('s'));
+        assertEquals(2, NotifyProbe.statelessRenders.get('s'));
+        assertEquals('s:changed', NotifyProbe.statelessShown.get('s'));
         assertEquals(1, b.renders, 'a persistent sibling stays cached');
         assertEquals(1, other.read(app).renders, 'a sibling view stays cached');
-        assertEquals(1, InvalidateProbe.statelessRenders.get('other'));
+        assertEquals(1, NotifyProbe.statelessRenders.get('other'));
 
         // The instance of the last render, or one kept from an earlier one
         // (a closure of a reused cached view): the same view renders
-        s.invalidate();
-        InvalidateProbe.stateless.get('s').invalidate();
+        s.notify();
+        NotifyProbe.stateless.get('s').notify();
         frame();
         assertEquals(3, parent.read(app).renders, 'one render');
         frame();
@@ -235,43 +235,43 @@ class ComponentInvalidateTest extends TestCase {
         );
         openWindow(parent);
         frame();
-        final host = InvalidateProbe.persistent.get('host');
-        final b = InvalidateProbe.persistent.get('b');
-        final s = InvalidateProbe.stateless.get('s');
+        final host = NotifyProbe.persistent.get('host');
+        final b = NotifyProbe.persistent.get('b');
+        final s = NotifyProbe.stateless.get('s');
         assertEquals(1, host.renders);
-        assertEquals(1, InvalidateProbe.statelessRenders.get('s'));
+        assertEquals(1, NotifyProbe.statelessRenders.get('s'));
 
-        InvalidateProbe.statelessPlain = 'changed';
-        s.invalidate();
+        NotifyProbe.statelessPlain = 'changed';
+        s.notify();
         frame();
         assertEquals(2, host.renders, 'the persistent component it renders in renders again');
-        assertEquals(2, InvalidateProbe.statelessRenders.get('s'));
-        assertEquals('s:changed', InvalidateProbe.statelessShown.get('s'));
+        assertEquals(2, NotifyProbe.statelessRenders.get('s'));
+        assertEquals('s:changed', NotifyProbe.statelessShown.get('s'));
         assertEquals(1, b.renders, 'the sibling stays cached');
     }
 
-    function testStatelessInvalidateDuringRenderIsIgnored() {
+    function testStatelessNotifyDuringRenderIsIgnored() {
         final parent = view((_, _) -> div().child(PlainStateless.component().name('s')));
         final window = openWindow(parent);
-        InvalidateProbe.invalidateInRender = true;
+        NotifyProbe.notifyInRender = true;
         frame();
         frame();
         assertEquals(1, parent.read(app).renders);
         assertFalse(window.dirty);
     }
 
-    function testStatelessInvalidateAfterItsViewIsGone() {
-        final toggle = new InvalidateToggle();
+    function testStatelessNotifyAfterItsViewIsGone() {
+        final toggle = new NotifyToggle();
         final inner = view((_, _) -> div().child(PlainStateless.component().name('s')));
         final root = view((_, _) -> div().child(toggle.on ? inner : null));
         final window = openWindow(root);
         frame();
-        final s = InvalidateProbe.stateless.get('s');
+        final s = NotifyProbe.stateless.get('s');
         toggle.on = false;
         frame();
         inner.read(app).destroy();
         final rootRenders = root.read(app).renders;
-        s.invalidate();
+        s.notify();
         frame();
         assertEquals(rootRenders, root.read(app).renders);
         assertFalse(window.dirty);
@@ -279,7 +279,7 @@ class ComponentInvalidateTest extends TestCase {
 
 }
 
-class InvalidateProbe {
+class NotifyProbe {
 
     public static var persistent:Map<String, PlainPersistent> = new Map();
 
@@ -292,7 +292,7 @@ class InvalidateProbe {
     /** Read by the stateless components, not observable */
     public static var statelessPlain:String = '';
 
-    public static var invalidateInRender:Bool = false;
+    public static var notifyInRender:Bool = false;
 
     public static function reset():Void {
         persistent = new Map();
@@ -300,12 +300,12 @@ class InvalidateProbe {
         statelessRenders = new Map();
         statelessShown = new Map();
         statelessPlain = '';
-        invalidateInRender = false;
+        notifyInRender = false;
     }
 
 }
 
-class InvalidateParentView extends Model implements Render {
+class NotifyParentView extends Model implements Render {
 
     public var renders:Int = 0;
 
@@ -323,7 +323,7 @@ class InvalidateParentView extends Model implements Render {
 
 }
 
-class InvalidateToggle extends Model {
+class NotifyToggle extends Model {
 
     @observe public var on:Bool = true;
 
@@ -353,14 +353,14 @@ class PlainPersistent extends Component {
     public var shown:String = '';
 
     override function init(window:Window, cx:App) {
-        InvalidateProbe.persistent.set(name, this);
+        NotifyProbe.persistent.set(name, this);
     }
 
     function render(window:Window, cx:App):IntoElement {
         renders++;
         shown = '$name:$plain';
-        if (InvalidateProbe.invalidateInRender) {
-            invalidate();
+        if (NotifyProbe.notifyInRender) {
+            notify();
         }
         return div().child('$shown $tracked').child(inner != null ? PlainStateless.component().name(inner) : null);
     }
@@ -375,13 +375,13 @@ class PlainStateless extends Component {
     @prop public var name:String = '';
 
     function render(window:Window, cx:App):IntoElement {
-        InvalidateProbe.stateless.set(name, this);
-        final count = InvalidateProbe.statelessRenders.get(name);
-        InvalidateProbe.statelessRenders.set(name, count == null ? 1 : count + 1);
-        final shown = '$name:${InvalidateProbe.statelessPlain}';
-        InvalidateProbe.statelessShown.set(name, shown);
-        if (InvalidateProbe.invalidateInRender) {
-            invalidate();
+        NotifyProbe.stateless.set(name, this);
+        final count = NotifyProbe.statelessRenders.get(name);
+        NotifyProbe.statelessRenders.set(name, count == null ? 1 : count + 1);
+        final shown = '$name:${NotifyProbe.statelessPlain}';
+        NotifyProbe.statelessShown.set(name, shown);
+        if (NotifyProbe.notifyInRender) {
+            notify();
         }
         return div().child(shown);
     }

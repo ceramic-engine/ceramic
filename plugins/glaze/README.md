@@ -103,7 +103,7 @@ Lifecycle of a persistent component: its constructor runs once; `init(window, cx
 
 Element listeners take short callbacks: `.onClick(() -> ...)` or `.onClick(event -> ...)`.
 
-**Data that tracker does not see.** Glaze keeps the rendering of a component and draws it again only when a prop or an observable it read changes. When a rendering also depends on something else (a plain field, a buffer filled by other code, a native resource), call `invalidate()` once that data changed:
+**Data that tracker does not see.** Glaze keeps the rendering of a component and draws it again only when a prop or an observable it read changes. When a rendering also depends on something else (a plain field, a buffer filled by other code, a native resource), call `notify()` once that data changed:
 
 ```haxe
 class LogPanel extends Component {
@@ -114,7 +114,7 @@ class LogPanel extends Component {
     override function init(window:Window, cx:App) {
         Timer.interval(this, 0.5, () -> {
             lines.push(Log.readPending());
-            invalidate();
+            notify();
         });
     }
 
@@ -125,11 +125,29 @@ class LogPanel extends Component {
 }
 ```
 
-A persistent component renders again like after a change of an observable (alone, see below); its siblings and the persistent components inside it stay cached. A props only component has no cache of its own: `invalidate()` renders the view or persistent component it is drawn in. Several calls before the next frame give one render; a call after the component left the tree, or from its own `render`, does nothing. Prefer observable data (`@observe` fields, models) when you can: `invalidate()` is for what cannot be observed.
+It is the same idea as `cx.notify()` on an entity: the rendering is stale (a component has no observers today, so nothing else listens to it). A persistent component renders again like after a change of an observable (alone, see below); its siblings and the persistent components inside it stay cached. A props only component has no cache of its own: `notify()` renders the view or persistent component it is drawn in. Several calls before the next frame give one render; a call after the component left the tree, or from its own `render`, does nothing. Prefer observable data (`@observe` fields, models) when you can: `notify()` is for what cannot be observed.
 
-**A change renders only what changed.** When a view or persistent component renders again because of its own data (an observable it read, `cx.notify()`, `invalidate()`) and its size and place do not change, Glaze renders it alone: its ancestors do not render again (GPUI renders them), and what it draws replaces what it drew last time, at the same place in drawing and hit testing order. One changed row of a list of thousands costs about the same as in a list of ten. The frame is the one a full redraw would give; when the view's size changes, or anything else would make it differ (popovers or a tooltip shown, an animation frame, a view drawn twice, `window.refresh()`...), the whole frame is drawn, like in GPUI. A view must therefore render from its own data only: an ancestor that draws something from a child's state (a toast stack placing its toasts, an editor listing its widgets) must be invalidated by that state, not count on rendering whenever the child does. Elements that hand their descendants a context outside of the window's stacks (an app global they read while drawing) call `Window.enterSharedContext()` and `exitSharedContext()` around them: views inside are then drawn with their ancestors. `window.inPlaceRendering = false` (or `Window.defaultInPlaceRendering`) turns it off.
+**A change renders only what changed.** When a view or persistent component renders again because of its own data (an observable it read, `cx.notify()`, `notify()` on a component) and its size and place do not change, Glaze renders it alone: its ancestors do not render again (GPUI renders them), and what it draws replaces what it drew last time, at the same place in drawing and hit testing order. One changed row of a list of thousands costs about the same as in a list of ten. The frame is the one a full redraw would give; when the view's size changes, or anything else would make it differ (popovers or a tooltip shown, an animation frame, a view drawn twice, `window.refresh()`...), the whole frame is drawn, like in GPUI. A view must therefore render from its own data only: an ancestor that draws something from a child's state (a toast stack placing its toasts, an editor listing its widgets) must be notified by that state, not count on rendering whenever the child does. Elements that hand their descendants a context outside of the window's stacks (an app global they read while drawing) call `Window.enterSharedContext()` and `exitSharedContext()` around them: views inside are then drawn with their ancestors. `window.inPlaceRendering = false` (or `Window.defaultInPlaceRendering`) turns it off.
 
-**Checking the cache in development.** A missing `invalidate()` shows as a part of the interface that does not update. Build your app with the define `glaze_verify_cache` to find them:
+**State read across views.** The same rule applies between views. The state of a view that other views read must be `@observe` fields (tracker then renders the readers again) or live in a model entity (a notified model renders the cached views that read it again). A plain field plus `cx.notify()` on the view only renders that view (and, in GPUI, its ancestors) again: a sibling view reading the field keeps a stale rendering, which `glaze_verify_cache` reports. For example, a list view whose selection a sidebar view shows:
+
+```haxe
+class FileList extends Model implements Render {
+    @observe public var selected:Null<String> = null;   // read by the sidebar: observable
+    ...
+}
+
+class Sidebar extends Model implements Render {
+    final list:Entity<FileList>;
+    function render(window:Window, cx:Context<Sidebar>):IntoElement {
+        // Reading `selected` makes the sidebar render again when it changes;
+        // a plain `var selected` would leave the sidebar showing the old value
+        return div().child(list.read(cx).selected ?? 'Nothing selected');
+    }
+}
+```
+
+**Checking the cache in development.** A missing `notify()` shows as a part of the interface that does not update. Build your app with the define `glaze_verify_cache` to find them:
 
 ```yaml
 app:
@@ -137,7 +155,7 @@ app:
         - glaze_verify_cache
 ```
 
-Every view or persistent component that Glaze would take from its cache then renders for real, and what it draws (shapes, text, hitboxes, cursors) is compared with what the cache holds. A difference logs a warning naming the class and its element id path, for example `LogPanel (element view-1.view-3) rendered differently from its cached rendering without being invalidated: invalidate() probably missing, or a read the tracker does not see`. The fresh rendering is the one displayed. Hover changes are not reported: like GPUI, a cached view keeps its hover until the mouse moves over it. Each frame where views rendered alone is also compared with a full frame drawn right after it (scene, hitboxes, dispatch tree, listeners, element states), and a difference is reported the same way. The check renders every cached view on every frame, so keep it for development and tests (`Window.verifyCache = false` turns it off at runtime, `Window.onCacheVerificationFailure` receives the messages); without the define it costs nothing. Glaze's own test suites run with it.
+Every view or persistent component that Glaze would take from its cache then renders for real, and what it draws (shapes, text, hitboxes, cursors) is compared with what the cache holds. A difference logs a warning naming the class and its element id path, for example `LogPanel (element view-1.view-3) rendered differently from its cached rendering without being notified: notify() probably missing, or a read the tracker does not see`. The fresh rendering is the one displayed. Hover changes are not reported: like GPUI, a cached view keeps its hover until the mouse moves over it. Each frame where views rendered alone is also compared with a full frame drawn right after it (scene, hitboxes, dispatch tree, listeners, element states), and a difference is reported the same way. The check renders every cached view on every frame, so keep it for development and tests (`Window.verifyCache = false` turns it off at runtime, `Window.onCacheVerificationFailure` receives the messages); without the define it costs nothing. Glaze's own test suites run with it.
 
 ## Using the kit
 
