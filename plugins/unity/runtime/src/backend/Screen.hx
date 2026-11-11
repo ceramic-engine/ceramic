@@ -439,6 +439,50 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Resizes the window of a standalone player to the given logical size.
+     * Does nothing in the editor, on mobile, in fullscreen,
+     * or when the screen size is overridden.
+     * @param width The new window width
+     * @param height The new window height
+     * @return `true` if the screen is changing size
+     */
+    #end
+    public function setWindowSize(width:Int, height:Int):Bool {
+
+        if (width <= 0 || height <= 0 || pixelWidthOverride > 0) {
+            return false;
+        }
+
+        if (screenSizeFromWindowSettings) {
+            // The screen size is read from the window settings at each update
+            return true;
+        }
+
+        if (isEditor) {
+            return false;
+        }
+
+        var isMobile:Bool = untyped __cs__('UnityEngine.Application.isMobilePlatform');
+        var isFullscreen:Bool = untyped __cs__('UnityEngine.Screen.fullScreen');
+        if (isMobile || isFullscreen) {
+            return false;
+        }
+
+        var screenDensity = computeDensity();
+        var newPixelWidth:Int = Math.round(width * screenDensity);
+        var newPixelHeight:Int = Math.round(height * screenDensity);
+        if (newPixelWidth == pixelWidth && newPixelHeight == pixelHeight) {
+            return false;
+        }
+
+        // The new size is picked up by update(), which emits the resize event
+        untyped __cs__('UnityEngine.Screen.SetResolution({0}, {1}, UnityEngine.Screen.fullScreenMode)', newPixelWidth, newPixelHeight);
+        return true;
+
+    }
+
     public function minimizeWindow():Void {}
 
     public function maximizeWindow():Void {}

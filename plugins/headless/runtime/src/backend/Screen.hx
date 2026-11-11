@@ -263,6 +263,23 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Resizes the window.
+     *
+     * In headless mode, this does nothing since there's no window.
+     *
+     * @param width The new window width
+     * @param height The new window height
+     * @return Always `false`
+     */
+    #end
+    public function setWindowSize(width:Int, height:Int):Bool {
+
+        return false;
+
+    }
+
     public function minimizeWindow():Void {}
 
     public function maximizeWindow():Void {}

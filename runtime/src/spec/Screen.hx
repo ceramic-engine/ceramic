@@ -76,6 +76,18 @@ interface Screen {
     function setWindowFullscreen(fullscreen:Bool):Void;
 
     /**
+     * Resizes the window to the given logical size (same unit as
+     * `getWidth()` and `getHeight()`).
+     *
+     * @param width The new window width
+     * @param height The new window height
+     * @return `true` if the window is changing size (a resize event will follow),
+     *         `false` if the request has no effect (no resizable window on this
+     *         platform, fullscreen, same size, or refused by the system)
+     */
+    function setWindowSize(width:Int, height:Int):Bool;
+
+    /**
      * Minimizes the window (does nothing where windows cannot be minimized:
      * web, mobile, headless).
      */

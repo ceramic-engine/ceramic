@@ -71,28 +71,49 @@ class Settings implements Observable {
     }
 
     /**
-     * Target window width at startup
-     * Uses `targetWidth` as fallback if set to 0 (default)
+     * Window width.
+     * At startup, this is the requested window width, using `targetWidth`
+     * as fallback if set to 0 (default).
+     * Once the app is running, it follows the actual width of the window
+     * (when the user resizes it for instance) and can be changed to resize the window.
+     * Changing it has no effect on mobile, in a regular web browser, or while fullscreen
+     * (in that last case, the new size is applied when leaving fullscreen).
      */
     #if ceramic_4k_window
-    @observe public var windowWidth(default,null):Int = 3840;
+    @observe public var windowWidth:Int = 3840;
     #elseif ceramic_hd_window
-    @observe public var windowWidth(default,null):Int = 1920;
+    @observe public var windowWidth:Int = 1920;
     #else
-    @observe public var windowWidth(default,null):Int = 0;
+    @observe public var windowWidth:Int = 0;
     #end
 
     /**
-     * Target window height at startup
-     * Uses `targetHeight` as fallback if set to 0 (default)
+     * Window height.
+     * At startup, this is the requested window height, using `targetHeight`
+     * as fallback if set to 0 (default).
+     * Once the app is running, it follows the actual height of the window
+     * (when the user resizes it for instance) and can be changed to resize the window.
+     * Changing it has no effect on mobile, in a regular web browser, or while fullscreen
+     * (in that last case, the new size is applied when leaving fullscreen).
      */
     #if ceramic_4k_window
-    @observe public var windowHeight(default,null):Int = 2160;
+    @observe public var windowHeight:Int = 2160;
     #elseif ceramic_hd_window
-    @observe public var windowHeight(default,null):Int = 1080;
+    @observe public var windowHeight:Int = 1080;
     #else
-    @observe public var windowHeight(default,null):Int = 0;
+    @observe public var windowHeight:Int = 0;
     #end
+
+    /**
+     * Window width and height. Same as assigning `windowWidth` and `windowHeight`:
+     * sets the window size at startup, and resizes the window once the app is running.
+     * @param windowWidth Window width
+     * @param windowHeight Window height
+     */
+    inline public function windowSize(windowWidth:Int, windowHeight:Int):Void {
+        this.windowWidth = windowWidth;
+        this.windowHeight = windowHeight;
+    }
 
     /**
      * Target density. Affects the quality of textures

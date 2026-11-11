@@ -270,6 +270,29 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    /**
+     * Resizes the window to the given logical size.
+     *
+     * On web platforms, this only works with the Electron runner:
+     * a page cannot resize the window of a regular browser.
+     *
+     * @param width The new window width
+     * @param height The new window height
+     * @return `true` if the window is changing size
+     */
+    public function setWindowSize(width:Int, height:Int):Bool {
+
+        #if web
+        // If using electron runner, use that to resize the actual window
+        if (ElectronRunner.electronRunner != null && ElectronRunner.electronRunner.setWindowSize != null) {
+            return ElectronRunner.electronRunner.setWindowSize(width, height) == true;
+        }
+        #end
+
+        return Clay.app.runtime.setWindowSize(width, height);
+
+    }
+
     public function minimizeWindow():Void {
 
         Clay.app.runtime.minimizeWindow();

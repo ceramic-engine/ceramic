@@ -93,7 +93,7 @@ class InitSettings {
         return settings.windowWidth;
     }
     inline function set_windowWidth(windowWidth:Int):Int {
-        return @:privateAccess settings.windowWidth = windowWidth;
+        return settings.windowWidth = windowWidth;
     }
 
     /**
@@ -105,7 +105,7 @@ class InitSettings {
         return settings.windowHeight;
     }
     inline function set_windowHeight(windowHeight:Int):Int {
-        return @:privateAccess settings.windowHeight = windowHeight;
+        return settings.windowHeight = windowHeight;
     }
 
     /**
@@ -115,8 +115,7 @@ class InitSettings {
      * @param windowHeight Window height
      */
     inline public function windowSize(windowWidth:Int, windowHeight:Int):Void {
-        @:privateAccess settings.windowWidth = windowWidth;
-        @:privateAccess settings.windowHeight = windowHeight;
+        settings.windowSize(windowWidth, windowHeight);
     }
 
     /**

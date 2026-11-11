@@ -274,6 +274,18 @@ class Screen extends Entity implements Observable implements RenderTarget {
     private var resizing:Bool = false;
 
     /**
+     * `true` when the window size of the settings was changed
+     * and still needs to be applied to the actual window.
+     */
+    private var windowSizeDirty:Bool = false;
+
+    /**
+     * `true` while the window size of the settings is being updated
+     * from the actual window size (not a request to resize the window).
+     */
+    private var syncingWindowSize:Bool = false;
+
+    /**
      * Whether the screen is between a `pointer down` and an `pointer up` event or not.
      */
     public var isPointerDown(get,null):Bool;
@@ -426,6 +438,16 @@ class Screen extends Entity implements Observable implements RenderTarget {
         settings.onFullscreenChange(this, function(fullscreen, prevFullscreen) {
             #if debug log.info('Setting fullscreen=$fullscreen'); #end
             app.backend.screen.setWindowFullscreen(fullscreen);
+        });
+        settings.onWindowWidthChange(this, function(windowWidth, prevWindowWidth) {
+            if (syncingWindowSize) return;
+            #if debug log.info('Setting windowWidth=$windowWidth'); #end
+            requestWindowSize();
+        });
+        settings.onWindowHeightChange(this, function(windowHeight, prevWindowHeight) {
+            if (syncingWindowSize) return;
+            #if debug log.info('Setting windowHeight=$windowHeight'); #end
+            requestWindowSize();
         });
         settings.onCursorVisibleChange(this, function(cursorVisible, prevCursorVisible) {
             #if debug log.info('Setting cursorVisible=$cursorVisible'); #end
@@ -757,6 +779,18 @@ class Screen extends Entity implements Observable implements RenderTarget {
         if (resizing) return;
         resizing = true;
 
+        // Keep window size settings and actual window size consistent
+        // (not when fullscreen: settings keep the size of the windowed mode)
+        if (!settings.fullscreen) {
+            if (windowSizeDirty) {
+                // Window size changed in settings while fullscreen: apply it now
+                applyWindowSize();
+            }
+            else {
+                syncWindowSize();
+            }
+        }
+
         // Update scaling
         updateScaling();
 
@@ -783,6 +817,65 @@ class Screen extends Entity implements Observable implements RenderTarget {
 
         // Resize finished
         resizing = false;
+
+    }
+
+    /**
+     * Called when the window size changed in settings (not from the actual window).
+     * The window is resized once, even if both width and height have changed.
+     */
+    function requestWindowSize():Void {
+
+        if (windowSizeDirty) return;
+        windowSizeDirty = true;
+
+        app.onceImmediate(this, applyWindowSizeIfDirty);
+
+    }
+
+    function applyWindowSizeIfDirty():Void {
+
+        if (windowSizeDirty) {
+            applyWindowSize();
+        }
+
+    }
+
+    /**
+     * Resizes the actual window to the window size of the settings.
+     * When fullscreen, this is postponed until the window is not fullscreen anymore.
+     */
+    function applyWindowSize():Void {
+
+        // Can't resize when fullscreen, keep it for later
+        if (settings.fullscreen) return;
+
+        windowSizeDirty = false;
+
+        var windowWidth = settings.windowWidth > 0 ? settings.windowWidth : settings.targetWidth;
+        var windowHeight = settings.windowHeight > 0 ? settings.windowHeight : settings.targetHeight;
+
+        if (windowWidth <= 0 || windowHeight <= 0 || !app.backend.screen.setWindowSize(windowWidth, windowHeight)) {
+            // Window is not changing size: no resize will follow,
+            // so restore the actual window size in settings right away
+            syncWindowSize();
+        }
+
+    }
+
+    /**
+     * Updates the window size of the settings from the actual window size.
+     */
+    function syncWindowSize():Void {
+
+        var windowWidth = Math.round(nativeWidth);
+        var windowHeight = Math.round(nativeHeight);
+        if (windowWidth <= 0 || windowHeight <= 0) return;
+
+        syncingWindowSize = true;
+        settings.windowWidth = windowWidth;
+        settings.windowHeight = windowHeight;
+        syncingWindowSize = false;
 
     }
 

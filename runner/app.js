@@ -368,6 +368,38 @@ exports.setFullscreen = function(fullscreen) {
     }
 };
 
+// Resize the window so that its content gets the given size.
+// Returns true if the window is changing size (or will when leaving fullscreen).
+var pendingWindowSize = null;
+exports.setWindowSize = function(width, height) {
+    if (mainWindow == null || !(width > 0) || !(height > 0)) return false;
+
+    if (mainWindow.isFullScreen()) {
+        // Can't resize when fullscreen: apply the size when leaving it
+        if (pendingWindowSize == null) {
+            mainWindow.once('leave-full-screen', function() {
+                var size = pendingWindowSize;
+                pendingWindowSize = null;
+                if (size != null) {
+                    exports.setWindowSize(size[0], size[1]);
+                }
+            });
+        }
+        pendingWindowSize = [width, height];
+        return true;
+    }
+
+    if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+    }
+
+    var size = mainWindow.getContentSize();
+    if (size[0] == width && size[1] == height) return false;
+
+    mainWindow.setContentSize(width, height, false);
+    return true;
+};
+
 exports.listenFullscreen = function(enterFullscreen, leaveFullscreen) {
     mainWindow.on('enter-full-screen', enterFullscreen);
     mainWindow.on('leave-full-screen', leaveFullscreen);
