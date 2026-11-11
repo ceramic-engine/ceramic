@@ -77,7 +77,8 @@ class LineLayoutCache {
             return;
         }
 
-        final previous = previousFrame;
+        // While amending, the ranges index the amended frame, the current one
+        final previous = amendedFrame != null ? amendedFrame : previousFrame;
         final older = olderFrame;
         final current = currentFrame;
 
@@ -128,6 +129,74 @@ class LineLayoutCache {
             return;
         }
         final frame = currentFrame;
+        frame.usedLines.resize(index.linesIndex);
+        frame.usedWrappedLines.resize(index.wrappedLinesIndex);
+        frame.usedLinesByHash.resize(index.linesByHashIndex);
+        frame.usedWrappedLinesByHash.resize(index.wrappedLinesByHashIndex);
+    }
+
+/// Amending the previous frame (in place rendering of a view, see `Window`)
+
+    /** The frame being amended (then also `currentFrame`), null otherwise */
+    var amendedFrame:Null<FrameCache> = null;
+
+    var amendSavedCurrent:Null<FrameCache> = null;
+
+    var amendSavedOlder:Null<FrameCache> = null;
+
+    /**
+     * Starts amending the previous frame: until `endAmend()`, the layouts
+     * used are recorded in that frame (it is the current one), ranges reused
+     * index it, and lookups search it, then the frame before it.
+     */
+    public function beginAmend():Void {
+        clearIfFontGenerationChanged();
+        amendSavedCurrent = currentFrame;
+        amendSavedOlder = olderFrame;
+        amendedFrame = previousFrame;
+        currentFrame = previousFrame;
+        previousFrame = amendSavedOlder;
+        // The frame being drawn next is empty: nothing to find there
+        olderFrame = amendSavedCurrent;
+    }
+
+    /** Whether the fonts changed since the layouts were cached (the frames are then dropped) */
+    public inline function fontGenerationChanged():Bool {
+        return fontGeneration() != cachedFontGeneration;
+    }
+
+    /** Ends `beginAmend()` */
+    public function endAmend():Void {
+        previousFrame = amendedFrame;
+        currentFrame = amendSavedCurrent;
+        olderFrame = amendSavedOlder;
+        amendedFrame = null;
+        amendSavedCurrent = null;
+        amendSavedOlder = null;
+    }
+
+    final spliceScratch:Array<LineCacheEntry> = [];
+
+    /**
+     * While amending: applies the splices of the used layouts (one plan per
+     * kind, in `LineLayoutIndex` order: lines, wrapped lines, lines by hash,
+     * wrapped lines by hash).
+     */
+    public function spliceUsed(lines:FrameSplice, wrappedLines:FrameSplice, linesByHash:FrameSplice, wrappedLinesByHash:FrameSplice):Void {
+        final frame = amendedFrame;
+        FrameSplice.apply(frame.usedLines, lines, spliceScratch);
+        FrameSplice.apply(frame.usedWrappedLines, wrappedLines, spliceScratch);
+        FrameSplice.apply(frame.usedLinesByHash, linesByHash, spliceScratch);
+        FrameSplice.apply(frame.usedWrappedLinesByHash, wrappedLinesByHash, spliceScratch);
+    }
+
+    /**
+     * Drops the used layouts recorded after `index` in the amended frame
+     * (an in place rendering abandoned for a full frame: the layouts stay
+     * cached, the full frame records them again when it uses them).
+     */
+    public function truncateAmended(index:LineLayoutIndex):Void {
+        final frame = amendedFrame;
         frame.usedLines.resize(index.linesIndex);
         frame.usedWrappedLines.resize(index.wrappedLinesIndex);
         frame.usedLinesByHash.resize(index.linesByHashIndex);
@@ -393,7 +462,8 @@ class LineLayoutCache {
  * text (or the caller's text hash and length), the font size, the font
  * runs, the wrap width and the force width.
  */
-private class LineCacheEntry {
+@:noCompletion
+class LineCacheEntry {
 
     public final hash:Int;
 
@@ -485,7 +555,8 @@ private class LineCacheEntry {
  * The layouts of one frame: buckets by hash (chained entries) and the
  * order in which they were used (for the view cache ranges).
  */
-private class FrameCache {
+@:noCompletion
+class FrameCache {
 
     public final lines:IntMap<LineCacheEntry> = new IntMap();
     public final wrappedLines:IntMap<LineCacheEntry> = new IntMap();

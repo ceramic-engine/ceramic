@@ -90,6 +90,20 @@ class ViewTracker extends Autorun {
     @:allow(glaze)
     var defaultCaching:Bool = false;
 
+    /**
+     * The view's cache state recorded during the last frame (in place
+     * rendering, see `Window`), the serial of that frame and how many
+     * times the view was drawn in it.
+     */
+    @:allow(glaze)
+    var state:Null<ViewElement.ViewElementState> = null;
+
+    @:allow(glaze)
+    var stateSerial:Int = -1;
+
+    @:allow(glaze)
+    var stateCount:Int = 0;
+
     var writeReported:Bool = false;
 
     var savedCurrent:Null<Autorun> = null;
@@ -212,6 +226,7 @@ class ViewTracker extends Autorun {
         }
         onInvalidated = null;
         window = null;
+        state = null;
         super.destroy();
     }
 

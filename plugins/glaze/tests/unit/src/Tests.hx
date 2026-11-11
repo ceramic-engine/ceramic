@@ -79,6 +79,8 @@ class Tests {
         runner.add(new tests.InputHandlerTest());
         runner.add(new tests.TextInputBehaviourTest());
         runner.add(new tests.ViewCacheTest());
+        runner.add(new tests.InPlaceRenderingTest());
+        runner.add(new tests.kit.StoryInPlaceTest());
         runner.add(new tests.ComponentTest());
         runner.add(new tests.ComponentOwnerTest());
         runner.add(new tests.ComponentInvalidateTest());

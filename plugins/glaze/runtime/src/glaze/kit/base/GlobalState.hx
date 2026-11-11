@@ -131,10 +131,13 @@ class GlobalState {
 
     public function pushTextViewState(state:glaze.Entity<glaze.kit.base.text.TextViewState>):Void {
         textViewStateStack.push(state);
+        // The views drawn inside read it: see `Window.enterSharedContext`
+        glaze.Window.enterSharedContext();
     }
 
     public function popTextViewState():Void {
         textViewStateStack.pop();
+        glaze.Window.exitSharedContext();
     }
 
     /**
@@ -142,10 +145,12 @@ class GlobalState {
      */
     public function pushTableCell(bounds:Bounds):Void {
         tableCellStack.push(bounds);
+        glaze.Window.enterSharedContext();
     }
 
     public function popTableCell():Void {
         tableCellStack.pop();
+        glaze.Window.exitSharedContext();
     }
 
     /**

@@ -105,7 +105,15 @@ class ComponentInvalidateTest extends TestCase {
         frame();
         assertEquals(4, a.renders);
         assertEquals(1, b.renders);
-        assertEquals(trackedDelta, parent.read(app).renders - beforeInvalidate, 'the ancestors render like for a tracked change');
+        // Its size is the same: rendered alone, in place (a tracked change
+        // that keeps its size does the same). `glaze_verify_layout` lays the
+        // whole tree out again from scratch after each layout: the caches it
+        // leaves can make this frame a full one (the same frame)
+        #if !glaze_verify_layout
+        assertEquals(0, parent.read(app).renders - beforeInvalidate, 'the ancestors do not render');
+        assertTrue(trackedDelta <= 1);
+        assertEquals(1, windows[0].inPlaceViewCount);
+        #end
 
         // Nothing else to draw
         frame();

@@ -30,6 +30,13 @@ class AccessedEntities {
         return seen.exists(entityId);
     }
 
+    public function remove(entityId:Int):Void {
+        if (seen.exists(entityId)) {
+            seen.remove(entityId);
+            ids.remove(entityId);
+        }
+    }
+
     public function clear():Void {
         if (ids.length > 0) {
             seen.clear();

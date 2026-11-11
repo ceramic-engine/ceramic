@@ -445,6 +445,13 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         if (paint != null) {
             app.notify(paint.entityId());
         }
+        // The view rendering the `CityscapeEditor` component draws from this
+        // view too (the scrollbar from its scroll state, the overlay
+        // widgets): it renders with the paint view (Glaze renders a dirty
+        // view alone, without its ancestors, when its bounds do not change)
+        if (hostViewId != -1) {
+            app.notify(hostViewId);
+        }
     }
 
     /**
@@ -575,10 +582,8 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public var hostViewId:Int = -1;
 
     public function overlayWidgetsChanged():Void {
+        // The host lists them (`notifyChanged` notifies it)
         notifyChanged();
-        if (hostViewId != -1) {
-            app.notify(hostViewId);
-        }
     }
 
     public function getOffsetForColumn(modelLineNumber:Int, modelColumn:Int):Float {

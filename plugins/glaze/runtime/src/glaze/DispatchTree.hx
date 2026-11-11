@@ -189,17 +189,31 @@ class DispatchTree {
         contextStack.push(context);
     }
 
+    /**
+     * While a view renders in place into this tree (see `Window`, in place
+     * rendering): the nodes it appends do not enter the focus and view maps
+     * until they replace its old ones (`applySplice`), so that lookups made
+     * while it draws (bindings of a focus handle, a view's node) see the
+     * last frame whole, like in a full frame.
+     */
+    @:allow(glaze)
+    var amending:Bool = false;
+
     public function setFocusId(focusId:Int):Void {
         final nodeId = nodeStack[nodeStack.length - 1];
         nodes[nodeId].focusId = focusId;
-        focusableNodeIds.set(focusId, nodeId);
+        if (!amending) {
+            focusableNodeIds.set(focusId, nodeId);
+        }
     }
 
     public function setViewId(viewId:Int):Void {
         if (viewStack.length == 0 || viewStack[viewStack.length - 1] != viewId) {
             final nodeId = nodeStack[nodeStack.length - 1];
             nodes[nodeId].viewId = viewId;
-            viewNodeIds.set(viewId, nodeId);
+            if (!amending) {
+                viewNodeIds.set(viewId, nodeId);
+            }
             viewStack.push(viewId);
         }
     }
@@ -280,11 +294,112 @@ class DispatchTree {
     }
 
     /**
+     * Empties the stack of active nodes (the nodes stay).
+     */
+    @:allow(glaze)
+    function resetStacks():Void {
+        nodeStack.resize(0);
+        contextStack.resize(0);
+        viewStack.resize(0);
+    }
+
+    /**
+     * Drops the nodes from `index` on (Rust `DispatchTree::truncate`).
+     */
+    @:allow(glaze)
+    function truncate(index:Int):Void {
+        for (i in index...nodeCount) {
+            final node = nodes[i];
+            if (node.focusId != -1 && focusableNodeId(node.focusId) == i) {
+                focusableNodeIds.remove(node.focusId);
+            }
+            if (node.viewId != -1 && viewNodeId(node.viewId) == i) {
+                viewNodeIds.remove(node.viewId);
+            }
+        }
+        if (index < nodeCount) {
+            nodeCount = index;
+        }
+    }
+
+    final spliceScratch:Array<DispatchNode> = [];
+
+    /**
+     * Applies the splice of a view rendered again alone (see `FrameSplice`
+     * and `Window`, in place rendering): its new nodes, appended to the
+     * tree, take the place of its old ones; parents, focus ids and view
+     * ids follow the nodes.
+     */
+    @:allow(glaze)
+    function applySplice(plan:FrameSplice):Void {
+        if (plan.isEmpty()) {
+            return;
+        }
+        final nodes = this.nodes;
+        // The old nodes leave the maps (unless a new node took their id)
+        for (k in 0...plan.count) {
+            for (i in @:privateAccess plan.oldStarts[k]...@:privateAccess plan.oldEnds[k]) {
+                final node = nodes[i];
+                if (node.focusId != -1 && focusableNodeId(node.focusId) == i) {
+                    focusableNodeIds.remove(node.focusId);
+                }
+                if (node.viewId != -1 && viewNodeId(node.viewId) == i) {
+                    viewNodeIds.remove(node.viewId);
+                }
+            }
+        }
+        final newCount = FrameSplice.applyPooled(nodes, plan, spliceScratch);
+        nodeCount = newCount;
+        if (plan.framePartUnchanged()) {
+            // Only the blocks and the other appended nodes moved
+            for (k in 0...plan.count) {
+                final start = @:privateAccess plan.newStarts[k];
+                final end = start + (@:privateAccess plan.blockEnds[k] - @:privateAccess plan.blockStarts[k]);
+                for (i in start...end) {
+                    remapNode(nodes[i], i, plan);
+                }
+            }
+            for (i in @:privateAccess plan.newBase...newCount) {
+                remapNode(nodes[i], i, plan);
+            }
+        }
+        else {
+            final first = plan.count > 0 ? @:privateAccess plan.oldStarts[0] : plan.base;
+            for (i in first...newCount) {
+                remapNode(nodes[i], i, plan);
+            }
+        }
+    }
+
+    inline function remapNode(node:DispatchNode, index:Int, plan:FrameSplice):Void {
+        final parent = node.parent;
+        if (parent != -1) {
+            node.parent = plan.remapEntry(parent);
+        }
+        if (node.focusId != -1) {
+            focusableNodeIds.set(node.focusId, index);
+        }
+        if (node.viewId != -1) {
+            viewNodeIds.set(node.viewId, index);
+        }
+    }
+
+    /**
      * The node of the given view, or -1.
      */
     public function viewNodeId(viewId:Int):Int {
+        #if cpp
+        // Without boxing the value (`get` returns a `Null<Int>`)
+        final map = viewNodeIds;
+        if (!map.exists(viewId)) {
+            return -1;
+        }
+        final nodeId:Int = untyped __global__.__int_hash_get_int(@:privateAccess map.h, viewId);
+        return nodeId;
+        #else
         final nodeId = viewNodeIds.get(viewId);
         return nodeId != null ? nodeId : -1;
+        #end
     }
 
     /**
@@ -470,8 +585,18 @@ class DispatchTree {
      * The node of the given focus id, or -1.
      */
     public function focusableNodeId(target:Int):Int {
+        #if cpp
+        // Without boxing the value (`get` returns a `Null<Int>`)
+        final map = focusableNodeIds;
+        if (!map.exists(target)) {
+            return -1;
+        }
+        final nodeId:Int = untyped __global__.__int_hash_get_int(@:privateAccess map.h, target);
+        return nodeId;
+        #else
         final nodeId = focusableNodeIds.get(target);
         return nodeId != null ? nodeId : -1;
+        #end
     }
 
     public inline function rootNodeId():Int {

@@ -81,6 +81,7 @@ class TestRunner {
         print('');
         #if glaze_verify_cache
         print('cache check: ${glaze.Window.cacheVerifications} cached renderings compared, ${glaze.Window.cacheVerificationFailures} different');
+        print('in place check: ${glaze.Window.inPlaceFramesDrawn} frames drawn in place, ${glaze.Window.inPlaceVerifications} compared with a full frame, ${glaze.Window.inPlaceVerificationFailures} different');
         #end
         print('$numTests tests, $numAssertions assertions, $numFailed failed');
         return numFailed == 0;

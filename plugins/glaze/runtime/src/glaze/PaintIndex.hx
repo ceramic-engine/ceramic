@@ -22,6 +22,12 @@ class PaintIndex {
     public var tabHandleIndex:Int = 0;
     public final lineLayoutIndex:LineLayoutIndex = new LineLayoutIndex();
 
+    /**
+     * When this position was recorded (`Window.captureClock`): orders the
+     * positions of a frame for in place rendering (see `FrameSplice`).
+     */
+    public var time:Float = 0;
+
     public function new() {}
 
     public function copyFrom(other:PaintIndex):Void {
@@ -33,6 +39,7 @@ class PaintIndex {
         accessedElementStatesIndex = other.accessedElementStatesIndex;
         tabHandleIndex = other.tabHandleIndex;
         lineLayoutIndex.copyFrom(other.lineLayoutIndex);
+        time = other.time;
     }
 
 }

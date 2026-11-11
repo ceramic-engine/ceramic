@@ -1098,6 +1098,8 @@ class ListState {
         final result = f();
         switch result {
             case Err(_):
+                // The views drawn in place need positions that only grow
+                frame.hadRollback = true;
                 frame.hitboxes.resize(hitboxesIndex);
                 frame.tooltipRequests.resize(tooltipsIndex);
                 frame.deferredDraws.resize(deferredDrawsIndex);

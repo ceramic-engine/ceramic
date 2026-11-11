@@ -116,6 +116,31 @@ class CityscapeEditorTest extends TestCase {
     }
 
     /**
+     * Glaze renders a view changed alone without its ancestors (in place):
+     * typing in an editor renders that editor (its component and its paint
+     * view), not the window's root, and the frame is the one a full redraw
+     * gives. The other editor and the root are not rendered.
+     */
+    function testTypingRendersTheEditorAlone() {
+        final views = openTwo(createTextModel('first line\nsecond line'), createTextModel('other text'));
+        final a:CityscapeView = views.a;
+        draw();
+        draw();
+        final frames = window.inPlaceFrameCount;
+        a.viewModel.setSelections('test', [new Selection(1, 11, 1, 11)]);
+        a.type(' typed');
+        assertTrue(window.drawIfDirty());
+        assertTrue(window.inPlaceFrameCount > frames, 'drawn in place');
+        assertTrue(window.inPlaceViewCount >= 1);
+        final inPlace = glaze.scene.SceneDump.toJson(window.renderedScene(), 1600, 800);
+        final summary = window.debugFrameSummary();
+        window.refresh();
+        window.draw();
+        assertEquals(inPlace, glaze.scene.SceneDump.toJson(window.renderedScene(), 1600, 800), 'the scene of a full redraw');
+        assertEquals(summary, window.debugFrameSummary(), 'the frame of a full redraw');
+    }
+
+    /**
      * A window caching its views (Glaze's default) paints the editor again
      * after an edit: the editor view notifies the view that paints it (a
      * model read by an element of a cached view would not make it render).

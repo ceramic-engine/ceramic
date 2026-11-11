@@ -399,11 +399,14 @@ class TextSelection {
             stacks.set(windowId, stack);
         }
         stack.push(scope);
+        // The views drawn inside read it: see `Window.enterSharedContext`
+        glaze.Window.enterSharedContext();
     }
 
     static function popTextSelectionScope(windowId:Int, cx:App):Void {
         final stacks = WindowSelectionState.globalOf(cx, TextSelectionScopeStacks).map;
         final stack = stacks.get(windowId);
+        glaze.Window.exitSharedContext();
         if (stack != null) {
             glaze.util.Stacks.drop(stack);
             if (stack.length == 0) {

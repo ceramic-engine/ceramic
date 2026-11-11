@@ -49,6 +49,27 @@ class WindowTextSystem {
         lineLayoutCache.finishFrame();
     }
 
+    /** See `LineLayoutCache.beginAmend` */
+    public inline function beginAmend():Void {
+        lineLayoutCache.beginAmend();
+    }
+
+    public inline function fontGenerationChanged():Bool {
+        return lineLayoutCache.fontGenerationChanged();
+    }
+
+    public inline function endAmend():Void {
+        lineLayoutCache.endAmend();
+    }
+
+    public inline function spliceUsedLayouts(lines:FrameSplice, wrappedLines:FrameSplice, linesByHash:FrameSplice, wrappedLinesByHash:FrameSplice):Void {
+        lineLayoutCache.spliceUsed(lines, wrappedLines, linesByHash, wrappedLinesByHash);
+    }
+
+    public inline function truncateAmendedLayouts(index:LineLayoutIndex):Void {
+        lineLayoutCache.truncateAmended(index);
+    }
+
     static function decorationRunsOf(runs:Array<TextRun>):Array<DecorationRun> {
         final decorationRuns:Array<DecorationRun> = [];
         for (run in runs) {

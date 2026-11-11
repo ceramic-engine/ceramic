@@ -64,6 +64,22 @@ class ViewDependencies {
     }
 
     /**
+     * Whether a recorded state changed since it was drawn (what
+     * `invalidateChanged` would mark dirty), without marking anything.
+     */
+    @:allow(glaze)
+    function anyChanged():Bool {
+        for (view in views) {
+            for (check in view.checks) {
+                if (check()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Called when a frame starts: marks dirty (`Window.markViewDirty`) every
      * view of the last frame whose recorded states changed, and forgets them
      * (they render and record again). Views missing from the last frame are

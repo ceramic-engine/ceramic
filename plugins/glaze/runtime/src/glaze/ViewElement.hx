@@ -47,6 +47,43 @@ class ViewElementState {
     public var layoutAccessedStart:Int = 0;
     public var layoutAccessedEnd:Int = 0;
 
+    /** When `layoutAccessedStart` and `layoutAccessedEnd` were recorded (see `PrepaintStateIndex.time`) */
+    public var layoutAccessedStartTime:Float = 0;
+    public var layoutAccessedEndTime:Float = 0;
+
+    /*
+     * What rendering the view again alone needs (in place rendering, see
+     * `Window`): the view, the path of this state, the node of the view in
+     * the dispatch tree and the context of its prepaint and paint that the
+     * cache key above does not hold.
+     */
+    public var model:Null<Model> = null;
+    public var stateId:Null<GlobalElementId> = null;
+    /** Drawn with `.cached(style)` (never rendered in place) */
+    public var cachedStyle:Bool = false;
+    public var dispatchNode:Int = -1;
+    public var elementOffset:Null<Point> = null;
+    public var paintContentMask:Null<ContentMask> = null;
+    public var paintTextStyle:Null<TextStyle> = null;
+    public var paintImageCache:Null<AnyImageCache> = null;
+    public var paintRemSize:Float = 0;
+
+    /** Drawn inside a shared context (see `Window.enterSharedContext`) */
+    public var inSharedContext:Bool = false;
+
+    /** The frame whose list of view states holds this one (`Window.registerViewState`) */
+    public var registeredSerial:Int = -1;
+
+    /** The in place rendering that recorded this state's ranges last */
+    public var amendSerial:Int = -1;
+
+    /** The tracker of the view (cached) */
+    public var tracker:Null<ViewTracker> = null;
+
+    /** A refinement making `inPlaceTextStyle` from the default text style (made once per text style) */
+    public var inPlaceTextStyle:Null<TextStyle> = null;
+    public var inPlaceTextStyleRefinement:Null<TextStyleRefinement> = null;
+
     /** Layout frames in which the prepaint and paint ranges were recorded */
     public var prepaintFrame:Int = -1;
     public var paintFrame:Int = -1;
@@ -184,6 +221,13 @@ class ViewElement extends Element {
     var layoutAccessedStart:Int = 0;
 
     var layoutAccessedEnd:Int = 0;
+
+    var layoutAccessedStartTime:Float = 0;
+
+    var layoutAccessedEndTime:Float = 0;
+
+    /** Where `reuseAccessedElementStates` started in the reused list (a retained view, see `prepaintRetainedLayout`) */
+    var layoutReusedStart:Int = 0;
 
     /** The layout nodes requested by the last render (see `ViewElementState.layoutNodes`) */
     var layoutNodes:Null<Array<Int>> = null;
@@ -390,6 +434,24 @@ class ViewElement extends Element {
         // Stateful path: create a reactive boundary.
         // A view notified earlier in this frame renders in this frame
         window.promotePendingDirtyView(entityId);
+
+        // Rendered already in this draw by an in place rendering that gave
+        // way to a full frame (see `Window`): its render is the one drawn
+        if (cachedStyle == null && defaultCaching(window)) {
+            final preRendered = window.takePreRenderedView(entityId, id);
+            if (preRendered != null) {
+                stateId = id;
+                mode = MODE_RENDERED;
+                rendered = preRendered.rendered;
+                layoutId = preRendered.layoutId;
+                layoutNodes = preRendered.layoutNodes;
+                layoutTextStyle = preRendered.layoutTextStyle;
+                takePreRenderedStates(preRendered, window);
+                preRendered.rendered = null;
+                followAccessedEntities(window, true);
+                return layoutId;
+            }
+        }
         #if glaze_inspector
         if (cachedStyle != null && !window.viewCachingDisabled && !window.isInspectorPicking(cx)) {
         #else
@@ -408,7 +470,7 @@ class ViewElement extends Element {
             layoutTextStyle = window.sharedCurrentTextStyle();
             if (!window.refreshing && !window.drawingClean && !window.isViewDirty(entityId)) {
                 final state:Null<ViewElementState> = window.peekElementState(stateId, STATE_TYPE);
-                final previousFrame = window.layoutFrame() - 1;
+                final previousFrame = window.reusableFrame();
                 var reusable = state != null
                     && state.layoutId != -1
                     && state.layoutFrame == previousFrame
@@ -418,7 +480,7 @@ class ViewElement extends Element {
                     && state.layoutTextStyle != null
                     && state.layoutTextStyle.equals(layoutTextStyle);
                 #if glaze_verify_cache
-                if (reusable && Window.verifyCache) {
+                if (reusable && Window.verifyCache && !window.exemptFromVerification(entityId)) {
                     // Rendered for real instead, compared in paint with
                     // what the reuse would have drawn
                     verification = CacheVerification.of(verification, state);
@@ -430,8 +492,14 @@ class ViewElement extends Element {
                     layoutId = state.layoutId;
                     // Keep the element states the view accessed while rendering
                     layoutAccessedStart = window.accessedElementStatesIndex();
+                    layoutAccessedStartTime = window.captureTime();
+                    layoutReusedStart = window.reusedElementStatesIndex();
                     window.reuseAccessedElementStates(state.layoutAccessedStart, state.layoutAccessedEnd);
                     layoutAccessedEnd = window.accessedElementStatesIndex();
+                    layoutAccessedEndTime = window.captureTime();
+                    if (window.amending) {
+                        window.amendLayoutElements.push(this);
+                    }
                     // Its tracker keeps `defaultCaching` from its last render
                     // (a view retained is drawn with default caching, outside
                     // of any view cached with a style)
@@ -447,15 +515,124 @@ class ViewElement extends Element {
         var adopt:Null<Array<Int>> = null;
         if (stateId != null && !window.refreshing) {
             final state:Null<ViewElementState> = window.peekElementState(stateId, STATE_TYPE);
-            if (state != null && state.layoutId != -1 && state.layoutFrame == window.layoutFrame() - 1) {
+            if (state != null && state.layoutId != -1 && state.layoutFrame == window.reusableFrame()) {
                 adopt = state.layoutNodes;
             }
         }
         layoutAccessedStart = window.accessedElementStatesIndex();
+        layoutAccessedStartTime = window.captureTime();
         layoutId = renderAndRequestLayout(window, cx, adopt, adopt != null);
         layoutAccessedEnd = window.accessedElementStatesIndex();
+        layoutAccessedEndTime = window.captureTime();
+        if (window.amending) {
+            window.amendLayoutElements.push(this);
+        }
         followAccessedEntities(window, stateId != null);
         return layoutId;
+    }
+
+    /**
+     * In place rendering (see `Window`): the element rendering the view of
+     * `state` again alone.
+     */
+    @:allow(glaze)
+    static function forInPlace(state:ViewElementState):ViewElement {
+        final element = forView(state.model);
+        element.stateId = state.stateId;
+        element.mode = MODE_RENDERED;
+        return element;
+    }
+
+    /**
+     * In place rendering: renders the view and requests its layout,
+     * adopting the nodes it requested last time (like a view that renders
+     * because it changed). The element id path and the context are set by
+     * the window.
+     */
+    @:allow(glaze)
+    function renderInPlace(state:ViewElementState, window:Window, cx:App):LayoutId {
+        layoutTextStyle = window.sharedCurrentTextStyle();
+        layoutAccessedStart = window.accessedElementStatesIndex();
+        layoutAccessedStartTime = window.captureTime();
+        layoutId = renderAndRequestLayout(window, cx, state.layoutNodes, true);
+        layoutAccessedEnd = window.accessedElementStatesIndex();
+        layoutAccessedEndTime = window.captureTime();
+        followAccessedEntities(window, true);
+        return layoutId;
+    }
+
+    /** In place rendering: prepaints the rendered view in `bounds` (the bounds it had) */
+    @:allow(glaze)
+    function prepaintInPlace(state:ViewElementState, bounds:Bounds, window:Window, cx:App):Void {
+        window.setViewId(entityId);
+        prepaintRenderedState(state, bounds, window, cx);
+    }
+
+    /** In place rendering: paints the rendered view */
+    @:allow(glaze)
+    function paintInPlace(state:ViewElementState, window:Window, cx:App):Void {
+        paint(stateId, state.bounds, window, cx);
+    }
+
+    /**
+     * The element states the pre-rendered view accessed (recorded before
+     * the other entries of the frame) move here, inside the ranges of its
+     * ancestors; the ranges of the views it drew follow (positions and
+     * times).
+     */
+    function takePreRenderedStates(preRendered:PreRenderedView, window:Window):Void {
+        layoutAccessedStart = window.accessedElementStatesIndex();
+        layoutAccessedStartTime = window.captureTime();
+        window.moveAccessedElementStates(preRendered.layoutAccessedStart, preRendered.layoutAccessedEnd);
+        layoutAccessedEnd = window.accessedElementStatesIndex();
+        layoutAccessedEndTime = window.captureTime();
+        final nested = preRendered.nested;
+        if (nested != null) {
+            final delta = layoutAccessedStart - preRendered.layoutAccessedStart;
+            final oldStartTime = preRendered.layoutAccessedStartTime;
+            final oldSpan = preRendered.layoutAccessedEndTime - oldStartTime;
+            final newStartTime = layoutAccessedStartTime;
+            final newSpan = layoutAccessedEndTime - newStartTime;
+            inline function mapTime(time:Float):Float {
+                return newStartTime + newSpan * (time - oldStartTime) / oldSpan;
+            }
+            for (element in nested) {
+                element.layoutAccessedStart += delta;
+                element.layoutAccessedEnd += delta;
+                element.layoutAccessedStartTime = mapTime(element.layoutAccessedStartTime);
+                element.layoutAccessedEndTime = mapTime(element.layoutAccessedEndTime);
+                // Its copies are no longer in this frame's reused list
+                element.layoutReusedStart = -1;
+            }
+            preRendered.nested = null;
+        }
+    }
+
+    /** The render of this element, given to the full frame drawn instead of rendering in place */
+    @:allow(glaze)
+    function preRendered():PreRenderedView {
+        final result = new PreRenderedView();
+        result.stateId = stateId;
+        result.rendered = rendered;
+        result.layoutId = layoutId;
+        result.layoutNodes = layoutNodes;
+        result.layoutTextStyle = layoutTextStyle;
+        result.layoutAccessedStart = layoutAccessedStart;
+        result.layoutAccessedEnd = layoutAccessedEnd;
+        result.layoutAccessedStartTime = layoutAccessedStartTime;
+        result.layoutAccessedEndTime = layoutAccessedEndTime;
+        rendered = null;
+        return result;
+    }
+
+    /** Records what in place rendering needs about the view (see `ViewElementState.model`) */
+    inline function recordInPlaceContext(state:ViewElementState, window:Window):Void {
+        state.model = view;
+        state.stateId = stateId;
+        state.cachedStyle = mode == MODE_CACHED_STYLE;
+        state.dispatchNode = window.nextFrameDispatchTree().activeNodeId();
+        state.elementOffset = window.elementOffset();
+        state.inSharedContext = Window.inSharedContext();
     }
 
     /**
@@ -491,30 +668,10 @@ class ViewElement extends Element {
                     if (box.value == null) {
                         box.value = new ViewElementState();
                     }
-                    final state:ViewElementState = box.value;
-                    this.state = state;
-                    #if glaze_verify_cache
-                    if (verification != null && verification.pending) {
-                        // The reuse of `prepaintRetainedLayout` needs the same context
-                        verification.compare = state.bounds != null
-                            && state.bounds.equals(bounds)
-                            && state.contentMask.equals(window.contentMask())
-                            && state.textStyle.equals(window.sharedCurrentTextStyle())
-                            && state.prepaintOpacity == window.prepaintOpacity
-                            && state.groupHitboxesEqual(window.prepaintGroupHitboxes)
-                            && state.imageCache == window.currentImageCache();
-                    }
-                    #end
-                    prepaintRendered(state, window, cx);
-                    recordKey(state, bounds, window);
-                    state.layoutId = layoutId;
-                    state.layoutFrame = window.layoutFrame();
-                    state.layoutTextStyle = layoutTextStyle;
-                    state.layoutAccessedStart = layoutAccessedStart;
-                    state.layoutAccessedEnd = layoutAccessedEnd;
-                    state.layoutNodes = layoutNodes;
+                    prepaintRenderedState(box.value, bounds, window, cx);
                 }
                 else {
+                    window.markUncachedViewDrawn();
                     window.beginRenderedView(view, false);
                     try {
                         rendered.prepaint(window, cx);
@@ -526,6 +683,37 @@ class ViewElement extends Element {
                     window.endRenderedView();
                 }
         }
+    }
+
+    /**
+     * Prepaints the view rendered in this frame with default caching,
+     * recording its ranges and context in `state`.
+     */
+    function prepaintRenderedState(state:ViewElementState, bounds:Bounds, window:Window, cx:App):Void {
+        this.state = state;
+        recordInPlaceContext(state, window);
+        #if glaze_verify_cache
+        if (verification != null && verification.pending) {
+            // The reuse of `prepaintRetainedLayout` needs the same context
+            verification.compare = state.bounds != null
+                && state.bounds.equals(bounds)
+                && state.contentMask.equals(window.contentMask())
+                && state.textStyle.equals(window.sharedCurrentTextStyle())
+                && state.prepaintOpacity == window.prepaintOpacity
+                && state.groupHitboxesEqual(window.prepaintGroupHitboxes)
+                && state.imageCache == window.currentImageCache();
+        }
+        #end
+        prepaintRendered(state, window, cx);
+        recordKey(state, bounds, window);
+        state.layoutId = layoutId;
+        state.layoutFrame = window.layoutFrame();
+        state.layoutTextStyle = layoutTextStyle;
+        state.layoutAccessedStart = layoutAccessedStart;
+        state.layoutAccessedEnd = layoutAccessedEnd;
+        state.layoutAccessedStartTime = layoutAccessedStartTime;
+        state.layoutAccessedEndTime = layoutAccessedEndTime;
+        state.layoutNodes = layoutNodes;
     }
 
     /**
@@ -547,6 +735,7 @@ class ViewElement extends Element {
         window.endRenderedView();
         window.prepaintIndexInto(state.prepaintEnd);
         state.prepaintFrame = window.layoutFrame();
+        window.registerViewState(state);
         #if glaze_verify_cache
         hoverPrepaintEnd = window.hoverLogMark();
         #end
@@ -572,6 +761,7 @@ class ViewElement extends Element {
         window.prepaintIndexInto(state.prepaintEnd);
         state.prepaintStart.copyFrom(start);
         state.prepaintFrame = window.layoutFrame();
+        window.registerViewState(state);
         window.countReusedView();
     }
 
@@ -579,6 +769,7 @@ class ViewElement extends Element {
         final box = window.elementStateBox(stateId, STATE_TYPE);
         final state:ViewElementState = box.value;
         this.state = state;
+        recordInPlaceContext(state, window);
         final textStyle = window.sharedCurrentTextStyle();
         final contentMask = window.contentMask();
         if (state.bounds.equals(bounds)
@@ -591,6 +782,8 @@ class ViewElement extends Element {
             state.layoutFrame = window.layoutFrame();
             state.layoutAccessedStart = layoutAccessedStart;
             state.layoutAccessedEnd = layoutAccessedEnd;
+            state.layoutAccessedStartTime = layoutAccessedStartTime;
+            state.layoutAccessedEndTime = layoutAccessedEndTime;
             rendered = null;
             return;
         }
@@ -600,9 +793,12 @@ class ViewElement extends Element {
         // the retained ones, already laid out, and nothing is laid out again.
         // Otherwise its new subtree replaces the retained one, laid out again.
         final oldRoot = layoutId;
+        window.forgetReusedElementStates(layoutAccessedStart, layoutAccessedEnd, layoutReusedStart);
         layoutAccessedStart = window.accessedElementStatesIndex();
+        layoutAccessedStartTime = window.captureTime();
         final newRoot = renderAndRequestLayout(window, cx, state.layoutNodes);
         layoutAccessedEnd = window.accessedElementStatesIndex();
+        layoutAccessedEndTime = window.captureTime();
         final adopted = window.viewLayoutNodesAdopted() && newRoot == oldRoot;
         state.layoutNodes = layoutNodes;
         if (!adopted && !window.replaceRetainedLayout(oldRoot, newRoot)) {
@@ -619,6 +815,8 @@ class ViewElement extends Element {
         // it accessed are kept like those of a render in `requestLayout`
         state.layoutAccessedStart = layoutAccessedStart;
         state.layoutAccessedEnd = layoutAccessedEnd;
+        state.layoutAccessedStartTime = layoutAccessedStartTime;
+        state.layoutAccessedEndTime = layoutAccessedEndTime;
     }
 
     /**
@@ -636,8 +834,8 @@ class ViewElement extends Element {
         // The recorded ranges index the last frame only: when an ancestor
         // reused its own range instead of visiting this view, they are stale.
         if (existing != null
-            && existing.prepaintFrame == window.layoutFrame() - 1
-            && existing.paintFrame == window.layoutFrame() - 1
+            && existing.prepaintFrame == window.reusableFrame()
+            && existing.paintFrame == window.reusableFrame()
             && existing.bounds.equals(bounds)
             && existing.contentMask.equals(contentMask)
             && existing.textStyle.equals(textStyle)
@@ -648,7 +846,7 @@ class ViewElement extends Element {
             && !window.isViewDirty(entityId)
             && !window.refreshing) {
             #if glaze_verify_cache
-            if (Window.verifyCache) {
+            if (Window.verifyCache && !window.exemptFromVerification(entityId)) {
                 // Rendered for real instead, compared in paint with what
                 // the reuse would have drawn
                 verification = CacheVerification.of(verification, existing);
@@ -657,6 +855,7 @@ class ViewElement extends Element {
             else {
             #end
             state = existing;
+            recordInPlaceContext(existing, window);
             reusePrepaint(existing, window);
             rendered = null;
             return;
@@ -668,6 +867,7 @@ class ViewElement extends Element {
         final state:ViewElementState = existing != null ? existing : new ViewElementState();
         box.value = state;
         this.state = state;
+        recordInPlaceContext(state, window);
         final refreshing = window.refreshing;
         window.refreshing = true;
         #if glaze_verify_cache
@@ -696,6 +896,7 @@ class ViewElement extends Element {
         window.refreshing = refreshing;
         recordKey(state, bounds, window);
         state.prepaintFrame = window.layoutFrame();
+        window.registerViewState(state);
     }
 
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
@@ -720,6 +921,7 @@ class ViewElement extends Element {
             final verifyMark = window.cacheVerificationMark();
             final hoverPaintStart = window.hoverLogMark();
             #end
+            recordPaintContext(state, window);
             window.paintIndexInto(state.paintStart);
             if (mode == MODE_CACHED_STYLE) {
                 final refreshing = window.refreshing;
@@ -747,6 +949,9 @@ class ViewElement extends Element {
             final hover = window.hoverLogSegment(hoverPrepaintStart, hoverPrepaintEnd) + '|' + window.hoverLogSegment(hoverPaintStart, window.hoverLogMark());
             final hoverChanged = state.hoverLog != hover;
             state.hoverLog = hover;
+            if (hoverChanged) {
+                window.hoverChangedInFrame = true;
+            }
             final verification = this.verification;
             if (verification != null && verification.compare && !hoverChanged && state.paintOpacity == window.currentElementOpacity()) {
                 window.verifyCachedRendering(verification, state, verifyMark, viewName(), stateId);
@@ -768,6 +973,7 @@ class ViewElement extends Element {
                 // prepaint (hover dependent): correct it on the next frame.
                 window.invalidateViewForNextFrame(entityId);
             }
+            recordPaintContext(state, window);
             final start = scratchPaintStart;
             window.paintIndexInto(start);
             window.reusePaint(state.paintStart, state.paintEnd);
@@ -781,6 +987,17 @@ class ViewElement extends Element {
         this.state = null;
     }
 
+    /** Records the context of the view's paint (in place rendering, see `ViewElementState.model`) */
+    inline function recordPaintContext(state:ViewElementState, window:Window):Void {
+        state.paintContentMask = window.contentMask();
+        state.paintTextStyle = window.sharedCurrentTextStyle();
+        state.paintImageCache = window.currentImageCache();
+        state.paintRemSize = window.remSize();
+        if (Window.inSharedContext()) {
+            state.inSharedContext = true;
+        }
+    }
+
     function paintRendered(window:Window, cx:App):Void {
         window.beginRenderedView(view, false);
         try {
@@ -792,5 +1009,30 @@ class ViewElement extends Element {
         }
         window.endRenderedView();
     }
+
+}
+
+/**
+ * The render of a view made by an in place rendering that gave way to a
+ * full frame in the same draw (see `Window`): the full frame takes it
+ * instead of rendering the view a second time.
+ */
+@:allow(glaze)
+class PreRenderedView {
+
+    public var viewId:Int = -1;
+    public var stateId:Null<GlobalElementId> = null;
+    public var rendered:Null<AnyElement> = null;
+    public var layoutId:LayoutId = 0;
+    public var layoutNodes:Null<Array<Int>> = null;
+    public var layoutTextStyle:Null<TextStyle> = null;
+    public var layoutAccessedStart:Int = 0;
+    public var layoutAccessedEnd:Int = 0;
+    public var layoutAccessedStartTime:Float = 0;
+    public var layoutAccessedEndTime:Float = 0;
+    /** The view elements that requested their layout inside it (see `Window.amendLayoutElements`) */
+    public var nested:Null<Array<ViewElement>> = null;
+
+    public function new() {}
 
 }

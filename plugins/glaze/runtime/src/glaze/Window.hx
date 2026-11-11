@@ -8,6 +8,7 @@ import glaze.platform.SceneRenderable;
 import glaze.TouchGestureRecognizer.RecognizedTouchGesture;
 import glaze.scene.Scene;
 import haxe.ds.IntMap;
+import glaze.TabStopMap.TabStopOperation;
 
 /**
  * Options of a new window.
@@ -78,6 +79,10 @@ class ElementStateBox<S> {
     /** The id of the state type (Rust's `TypeId` of the key, see `ElementStateType`) */
     @:allow(glaze)
     final typeId:Int;
+
+    /** Mark of the in place rendering that saw this box last (see `Window.amendView`) */
+    @:allow(glaze)
+    var inPlaceMark:Int = 0;
 
     /** The frame whose element states hold this box (the box moves to the next frame when accessed) */
     @:allow(glaze)
@@ -211,7 +216,8 @@ private class HoverListenerEntry extends MouseListenerEntry {
  * A cursor style requested by an element for its hitbox (or for the whole
  * window when `hitboxId == -1`).
  */
-private class CursorStyleRequest {
+@:noCompletion
+class CursorStyleRequest {
 
     public final hitboxId:Int;
 
@@ -227,7 +233,8 @@ private class CursorStyleRequest {
 /**
  * A tooltip set by an element for the next frame.
  */
-private class TooltipRequest {
+@:noCompletion
+class TooltipRequest {
 
     public final id:Int;
 
@@ -337,7 +344,8 @@ private class PendingInputTimeout {
 /**
  * An element whose drawing is deferred until after the main tree (see `Window.deferDraw`).
  */
-private class DeferredDraw {
+@:noCompletion
+class DeferredDraw {
 
     public var currentView:Model;
 
@@ -429,7 +437,8 @@ class InspectorInstanceCount {
 
 private class Frame {
 
-    public final scene:Scene = new Scene();
+    /** Swapped with the other frame's when a view is rendered in place (the scene is made again) */
+    public var scene:Scene = new Scene();
 
     /**
      * The element state boxes this frame owns (Rust `element_states`, a map
@@ -466,9 +475,37 @@ private class Frame {
     /** The window control areas painted this frame (Rust `window_control_hitboxes`) */
     public final windowControlHitboxes:Array<WindowControlHitbox> = [];
 
-    public final tabStops:TabStopMap = new TabStopMap();
+    /** Swapped with the other frame's when a view is rendered in place (the tab order is made again) */
+    public var tabStops:TabStopMap = new TabStopMap();
 
     public final deferredDraws:Array<DeferredDraw> = [];
+
+    /*
+     * In place rendering (see `Window.renderInPlace`): the views whose
+     * ranges index this frame, and what the frame was drawn with.
+     */
+
+    /** The cache states of the views drawn in this frame (`Window.registerViewState`) */
+    public final viewStates:Array<ViewElement.ViewElementState> = [];
+
+    /** Number of this frame (0: cleared) */
+    public var serial:Int = 0;
+
+    /** Whether a view was drawn without view caching (it renders on every frame) */
+    public var hasUncachedViews:Bool = false;
+
+    /** Whether some prepaint state was rolled back (`ListState`'s transactions) */
+    public var hadRollback:Bool = false;
+
+    public var scaleFactor:Float = 0;
+
+    public var remSize:Float = 0;
+
+    public var viewportWidth:Float = 0;
+
+    public var viewportHeight:Float = 0;
+
+    public var rootView:Null<AnyView> = null;
 
     /** Input handlers registered with `handleInput` (only the last one is used) */
     public final inputHandlers:Array<Null<PlatformInputHandler>> = [];
@@ -502,21 +539,14 @@ private class Frame {
                 // Moved to the other frame when accessed
                 continue;
             }
-            state.node.removeState(state);
-            final value:Dynamic = state.value;
-            if (value != null) {
-                if (Std.isOfType(value, Model)) {
-                    (value : Model).destroy();
-                }
-                else if (Std.isOfType(value, Interactivity.InteractiveElementState)) {
-                    (value : Interactivity.InteractiveElementState).dispose();
-                }
-                else if (Std.isOfType(value, Droppable)) {
-                    (value : Droppable).drop();
-                }
-            }
+            dropState(state);
         }
         elementStates.resize(0);
+        viewStates.resize(0);
+        serial = 0;
+        hasUncachedViews = false;
+        hadRollback = false;
+        rootView = null;
         accessedElementStates.resize(0);
         reusedElementStates.resize(0);
         scene.clear();
@@ -536,6 +566,42 @@ private class Frame {
         nextInspectorInstanceIds.clear();
         inspectorHitboxes.clear();
         #end
+    }
+
+    /**
+     * Drops an element state no frame accessed: detached from its path,
+     * models destroyed, interactive states disposed.
+     */
+    public static function dropState(state:ElementStateBox<Dynamic>):Void {
+        state.node.removeState(state);
+        state.owner = null;
+        final value:Dynamic = state.value;
+        if (value != null) {
+            if (Std.isOfType(value, Model)) {
+                (value : Model).destroy();
+            }
+            else if (Std.isOfType(value, Interactivity.InteractiveElementState)) {
+                (value : Interactivity.InteractiveElementState).dispose();
+            }
+            else if (Std.isOfType(value, Droppable)) {
+                (value : Droppable).drop();
+            }
+        }
+    }
+
+    /**
+     * Drops the boxes of `elementStates` that moved to the other frame or
+     * were dropped (after in place renderings, which only add boxes).
+     */
+    public function compactElementStates():Void {
+        var kept = 0;
+        for (i in 0...elementStates.length) {
+            final state = elementStates[i];
+            if (state.owner == this) {
+                elementStates[kept++] = state;
+            }
+        }
+        elementStates.resize(kept);
     }
 
     /**
@@ -1183,6 +1249,7 @@ class Window implements WindowInvalidator {
      */
     @:allow(glaze)
     function viewTrackerInvalidated(tracker:ViewTracker):Void {
+
         if (drawing) {
             @:privateAccess tracker.reacted = true;
             if (tracker.rendering) {
@@ -1237,6 +1304,9 @@ class Window implements WindowInvalidator {
             pendingDirtyViews.set(viewId, true);
             pendingDirtyViewIds.push(viewId);
         }
+        if (amending) {
+            amendPendingIds.push(viewId);
+        }
     }
 
     /**
@@ -1252,6 +1322,14 @@ class Window implements WindowInvalidator {
     }
 
     function markViewDirty(viewId:Int):Void {
+        if (collectingDirtyViews) {
+            // The views dirty themselves, before in place rendering decides (see `drawFrame`)
+            if (!dirtyRootSet.exists(viewId)) {
+                dirtyRootSet.set(viewId, true);
+                dirtyRootIds.push(viewId);
+            }
+            return;
+        }
         final tree = renderedFrame.dispatchTree;
         var nodeId = tree.viewNodeId(viewId);
         if (nodeId == -1) {
@@ -1449,6 +1527,10 @@ class Window implements WindowInvalidator {
         if (drawing || destroyed)
             return;
         reactToInvalidatedTrackers();
+        if (accessRecorder == null) {
+            // Left unbalanced by a draw that threw
+            sharedContextDepth = 0;
+        }
         drawing = true;
         drawingClean = !dirty;
         final previousRecorder = accessRecorder;
@@ -1483,7 +1565,12 @@ class Window implements WindowInvalidator {
     }
 
     function drawFrame():Void {
-        // Rust `invalidate_entities`
+        // Rust `invalidate_entities`. The views notified since the last
+        // frame are collected first (`markViewDirty` while
+        // `collectingDirtyViews`): when each of them can render alone, in
+        // place, its ancestors do not render (`renderInPlace`); otherwise
+        // they are marked dirty with their ancestors, like in GPUI.
+        collectingDirtyViews = true;
         final pendingIds = pendingDirtyViewIds;
         final tree = renderedFrame.dispatchTree;
         for (i in 0...pendingIds.length) {
@@ -1497,68 +1584,86 @@ class Window implements WindowInvalidator {
         pendingDirtyViews.clear();
         // Default view caching: views whose scroll states changed render again
         viewDependencies.invalidateChanged(renderedFrame.dispatchTree, this);
+        collectingDirtyViews = false;
+        // The animation frames requested before this draw (those requested
+        // while it draws are for the next one)
+        final animated = animationViews;
+        animationViews = drawnAnimationViews;
+        drawnAnimationViews = animated;
+        animationViews.clear();
 
-        dirty = false;
+        if (dirtyRootIds.length > 0 && renderInPlace()) {
+            clearDirtyRoots();
+            return;
+        }
+        for (i in 0...dirtyRootIds.length) {
+            markViewDirty(dirtyRootIds[i]);
+        }
+        clearDirtyRoots();
+        drawFullFrame(true);
+    }
+
+    /** Empties `dirtyRootIds` and `dirtyRootSet` (key by key: `clear()` would allocate the map's table again) */
+    function clearDirtyRoots():Void {
+        final ids = dirtyRootIds;
+        final set = dirtyRootSet;
+        for (i in 0...ids.length) {
+            set.remove(ids[i]);
+        }
+        ids.resize(0);
+    }
+
+    /**
+     * Draws a whole frame: the root renders, then every view that is dirty
+     * or cannot be reused. `resetDirty`: false when the draw started as an
+     * in place rendering (which reset it already, and may have marked the
+     * window dirty for the next frame since).
+     */
+    function drawFullFrame(resetDirty:Bool):Void {
+        if (resetDirty) {
+            dirty = false;
+        }
         #if glaze_verify_cache
         clearHoverLog();
         #end
         renderedViews.clear();
         renderedViewCount = 0;
         reusedViewCount = 0;
+        inPlaceViewCount = 0;
         requestedAutoscroll = null;
+        #if glaze_verify_cache
+        hoverChangedInFrame = false;
+        #end
 
-        // Restore the previously used input handler into an empty slot of the
-        // last frame, so that a reused paint range finds it at its index.
-        final previousInputHandler = platformInputHandler;
-        platformInputHandler = null;
-        if (previousInputHandler != null) {
-            final handlers = renderedFrame.inputHandlers;
-            var slot = handlers.length - 1;
-            while (slot >= 0 && handlers[slot] != null) {
-                slot--;
-            }
-            if (slot >= 0) {
-                handlers[slot] = previousInputHandler;
-            }
-            else {
-                handlers.push(previousInputHandler);
-            }
-        }
+        restorePlatformInputHandler();
+
+        final frame = nextFrame;
+        frame.serial = ++frameSerial;
+        frame.scaleFactor = _scaleFactor;
+        frame.remSize = _remSize;
+        frame.viewportWidth = _viewportSize.width;
+        frame.viewportHeight = _viewportSize.height;
+        frame.rootView = root;
 
         if (root != null) {
             drawRoots();
         }
+        preRenderedView = null;
 
         dirtyViews.clear();
         nextFrame.windowActive = _active;
 
-        // Register the requested input handler with the platform (the last one).
-        var focusedTextInput = -1;
-        var handlerIndex = nextFrame.inputHandlers.length - 1;
-        while (handlerIndex >= 0) {
-            final inputHandler = nextFrame.inputHandlers[handlerIndex];
-            if (inputHandler != null) {
-                nextFrame.inputHandlers[handlerIndex] = null;
-                final acceptsTextInput = inputHandler.acceptsTextInput(this, app);
-                platformInputHandler = inputHandler;
-                if (acceptsTextInput) {
-                    focusedTextInput = focusId();
-                }
-                break;
-            }
-            handlerIndex--;
-        }
-        applyTextInputConfiguration(app);
-        final previousTextInput = this.focusedTextInput;
-        this.focusedTextInput = focusedTextInput;
-        if ((previousTextInput != -1) != (focusedTextInput != -1) && textInputPlatform != null) {
-            textInputPlatform.textInputStateChanged(focusedTextInput != -1 ? FocusGained : FocusLost);
-        }
+        registerPlatformInputHandler(nextFrame);
 
         glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.FINISH);
         layoutEngine.finishFrame();
         windowTextSystem.finishFrame();
         nextFrame.finish(renderedFrame);
+        #if glaze_verify_cache
+        if (inPlaceOracle) {
+            compareInPlaceFrame(renderedFrame, nextFrame);
+        }
+        #end
 
         final previousFocusPath = renderedFrame.focusPath();
         final previousWindowActive = renderedFrame.windowActive;
@@ -1573,8 +1678,6 @@ class Window implements WindowInvalidator {
         // change is never shown at the new scale
         renderable.sceneScale = _scaleFactor;
         renderable.scene = renderedFrame.scene;
-        final currentFocusPath = renderedFrame.focusPath();
-        final currentWindowActive = renderedFrame.windowActive;
         var focusBeforeListeners = _focus;
 
         // Views not rendered (or reused) anymore stop reacting
@@ -1596,6 +1699,75 @@ class Window implements WindowInvalidator {
         AnyElement.clearArena();
         drawCount++;
 
+        focusBeforeListeners = dispatchFocusChanges(previousFocusPath, previousWindowActive, focusBeforeListeners);
+
+        recordEntitiesAccessed();
+        resetCursorStyle();
+        refreshing = false;
+        focusMovedWhileDrawing = _focus != focusBeforeListeners;
+        glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.FINISH);
+    }
+
+    /**
+     * Restores the input handler given to the platform after the last
+     * frame into an empty slot of that frame, so that a reused paint range
+     * finds it at its index.
+     */
+    function restorePlatformInputHandler():Void {
+        final previousInputHandler = platformInputHandler;
+        platformInputHandler = null;
+        if (previousInputHandler != null) {
+            final handlers = renderedFrame.inputHandlers;
+            var slot = handlers.length - 1;
+            while (slot >= 0 && handlers[slot] != null) {
+                slot--;
+            }
+            if (slot >= 0) {
+                handlers[slot] = previousInputHandler;
+            }
+            else {
+                handlers.push(previousInputHandler);
+            }
+        }
+    }
+
+    /**
+     * Registers the input handler requested by the frame with the platform
+     * (the last one).
+     */
+    function registerPlatformInputHandler(frame:Frame):Void {
+        var focusedTextInput = -1;
+        var handlerIndex = frame.inputHandlers.length - 1;
+        while (handlerIndex >= 0) {
+            final inputHandler = frame.inputHandlers[handlerIndex];
+            if (inputHandler != null) {
+                frame.inputHandlers[handlerIndex] = null;
+                final acceptsTextInput = inputHandler.acceptsTextInput(this, app);
+                platformInputHandler = inputHandler;
+                if (acceptsTextInput) {
+                    focusedTextInput = focusId();
+                }
+                break;
+            }
+            handlerIndex--;
+        }
+        applyTextInputConfiguration(app);
+        final previousTextInput = this.focusedTextInput;
+        this.focusedTextInput = focusedTextInput;
+        if ((previousTextInput != -1) != (focusedTextInput != -1) && textInputPlatform != null) {
+            textInputPlatform.textInputStateChanged(focusedTextInput != -1 ? FocusGained : FocusLost);
+        }
+    }
+
+    /**
+     * Calls the focus listeners when the focus path or the activation
+     * changed between the last frame and this one (`previousFocusPath`).
+     * Returns the focused handle after the listeners ran when they made the
+     * focus path empty (the handle to compare for `focusMovedWhileDrawing`).
+     */
+    function dispatchFocusChanges(previousFocusPath:Array<Int>, previousWindowActive:Bool, focusBeforeListeners:Null<FocusHandle>):Null<FocusHandle> {
+        final currentFocusPath = renderedFrame.focusPath();
+        final currentWindowActive = renderedFrame.windowActive;
         if (!samePath(previousFocusPath, currentFocusPath) || previousWindowActive != currentWindowActive) {
             if (previousFocusPath.length > 0 && currentFocusPath.length == 0) {
                 focusLostPath = previousFocusPath;
@@ -1610,12 +1782,7 @@ class Window implements WindowInvalidator {
             );
             focusListeners.retain(0, listener -> listener(event, this, app));
         }
-
-        recordEntitiesAccessed();
-        resetCursorStyle();
-        refreshing = false;
-        focusMovedWhileDrawing = _focus != focusBeforeListeners;
-        glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.FINISH);
+        return focusBeforeListeners;
     }
 
     static function samePath(a:Array<Int>, b:Array<Int>):Bool {
@@ -1800,6 +1967,15 @@ class Window implements WindowInvalidator {
             if (!renderedViews.exists(entityId)) {
                 renderedViews.set(entityId, true);
                 renderedViewCount++;
+                if (amending) {
+                    amendRenderedIds.push(entityId);
+                }
+            }
+            if (amending) {
+                // What the view accessed before (see `updateLiveEntitiesInPlace`)
+                for (accessed in tracker.accessed.ids) {
+                    amendOldAccessed.push(accessed);
+                }
             }
             tracker.beginCapture();
         }
@@ -1848,8 +2024,10 @@ class Window implements WindowInvalidator {
                 next.add(accessed);
             }
         }
+        lastFrameAccessed.clear();
         for (accessed in frameAccessed.ids) {
             next.add(accessed);
+            lastFrameAccessed.add(accessed);
         }
         frameAccessed.clear();
         final previous = liveEntities;
@@ -3270,6 +3448,1746 @@ class Window implements WindowInvalidator {
         elementIdNode = elementIdRoot;
     }
 
+/// In place rendering (port, not in GPUI: see `renderInPlace`)
+
+    /**
+     * Whether a view that is dirty only because of its own reads (a tracked
+     * field it read changed, `cx.notify()`, `invalidate()`) and whose bounds
+     * do not change is rendered again alone, in place, without rendering
+     * its ancestors (see `renderInPlace`). On by default
+     * (`defaultInPlaceRendering`); the frames drawn are the same either way.
+     */
+    public var inPlaceRendering:Bool = defaultInPlaceRendering;
+
+    /**
+     * The default of `inPlaceRendering`.
+     */
+    public static var defaultInPlaceRendering:Bool = true;
+
+    /**
+     * Number of views rendered in place during the last frame (0 when the
+     * last frame was drawn whole), for tests and benchmarks.
+     */
+    public var inPlaceViewCount(default, null):Int = 0;
+
+    /**
+     * Number of frames drawn in place since the window was opened, for
+     * tests and benchmarks.
+     */
+    public var inPlaceFrameCount(default, null):Int = 0;
+
+    /**
+     * Number of frames drawn in place by every window since the start, for
+     * tests and benchmarks.
+     */
+    public static var inPlaceFramesDrawn(default, null):Int = 0;
+
+    /**
+     * Number of in place renderings that gave way to a full frame (the
+     * view's bounds changed...) since the window was opened, for tests.
+     */
+    public var inPlaceFallbackCount(default, null):Int = 0;
+
+    /** Above this number of dirty views, a full frame is drawn (see `renderInPlace`) */
+    static inline final MAX_IN_PLACE_VIEWS = 16;
+
+    /** The time of the last position recorded (see `PrepaintStateIndex.time`) */
+    var captureClock:Float = 0;
+
+    /** Number of full frames drawn (`Frame.serial`) */
+    var frameSerial:Int = 0;
+
+    /** While `drawFrame` collects the dirty views (see `markViewDirty`) */
+    var collectingDirtyViews:Bool = false;
+
+    /** The views dirty themselves at the start of this draw */
+    final dirtyRootIds:Array<Int> = [];
+
+    final dirtyRootSet:IntMap<Bool> = new IntMap();
+
+    /**
+     * Views that requested an animation frame since the last draw, and
+     * those that did before it (consulted by the draw). An animated view
+     * renders with its ancestors, like in GPUI: code written for GPUI often
+     * animates a parent from what its animated children do (a stack of
+     * toasts following its entering toast), relying on the parent rendering
+     * on each frame of the child's animation.
+     */
+    var animationViews:IntMap<Bool> = new IntMap();
+
+    var drawnAnimationViews:IntMap<Bool> = new IntMap();
+
+    /** The dirty views to render in place (outermost ones), in tree order */
+    final inPlaceRoots:Array<Int> = [];
+
+    /** While a view renders in place: the frame being drawn is the last frame (`nextFrame == renderedFrame`) */
+    @:allow(glaze)
+    var amending:Bool = false;
+
+    /**
+     * The view elements that requested their layout inside the view
+     * rendering in place (their `layoutAccessed*` fields index the amended
+     * frame): when the render is handed to a full frame, they follow the
+     * element states it accessed (see `ViewElement.takePreRendered`).
+     */
+    @:allow(glaze)
+    final amendLayoutElements:Array<ViewElement> = [];
+
+    /** Number of in place renderings so far (`ViewElementState.amendSerial`) */
+    var amendSerial:Int = 0;
+
+    /** The view states recorded by the current in place rendering */
+    final amendStates:Array<ViewElement.ViewElementState> = [];
+
+    /** The views rendered by the current in place rendering */
+    final amendRenderedIds:Array<Int> = [];
+
+    /** The views notified while the current in place rendering renders */
+    final amendPendingIds:Array<Int> = [];
+
+    /** What the views rendered in place in this frame accessed before */
+    final amendOldAccessed:Array<Int> = [];
+
+    /** The views rendered in place in this frame */
+    final inPlaceRenderedIds:Array<Int> = [];
+
+    final amendedViews:IntMap<Bool> = new IntMap();
+
+    /** The views that were drawn inside the replaced ranges (their trackers stop if they are not drawn anymore) */
+    final inPlaceOldViews:Array<Int> = [];
+
+    /** Whether an in place rendering of this frame dropped element states */
+    var inPlaceDroppedStates:Bool = false;
+
+    /** The entities accessed outside of any view during the last frame */
+    final lastFrameAccessed:AccessedEntities = new AccessedEntities();
+
+    /**
+     * While a view paints in place, into `inPlaceScene` and `inPlaceTabStops`:
+     * the frame's scene and tab order, which the ranges of the views it
+     * reuses index.
+     */
+    var sceneSource:Null<Scene> = null;
+
+    var tabStopsSource:Null<TabStopMap> = null;
+
+    /** What the view rendered in place paints (then replayed in the frame's scene and tab order) */
+    final inPlaceScene:Scene = new Scene();
+
+    final inPlaceTabStops:TabStopMap = new TabStopMap();
+
+    /** The focus when the frame drawn in place started */
+    var inPlaceFocusAtStart:Null<FocusHandle> = null;
+
+    /** The capture time when the current in place rendering started */
+    var amendStartTime:Float = 0;
+
+    /** A view rendered by an in place rendering that gave way to a full frame */
+    var preRenderedView:Null<ViewElement.PreRenderedView> = null;
+
+    // The splices of an in place rendering, one per array (see `FrameSplice`)
+    final spliceHitboxes:FrameSplice = new FrameSplice();
+    final spliceTooltips:FrameSplice = new FrameSplice();
+    final spliceDeferred:FrameSplice = new FrameSplice();
+    final spliceNodes:FrameSplice = new FrameSplice();
+    final spliceAccessed:FrameSplice = new FrameSplice();
+    final spliceMouse:FrameSplice = new FrameSplice();
+    final spliceInput:FrameSplice = new FrameSplice();
+    final spliceRegions:FrameSplice = new FrameSplice();
+    final spliceCursors:FrameSplice = new FrameSplice();
+    final spliceScene:FrameSplice = new FrameSplice();
+    final spliceTabs:FrameSplice = new FrameSplice();
+    final spliceLines:FrameSplice = new FrameSplice();
+    final spliceWrappedLines:FrameSplice = new FrameSplice();
+    final spliceLinesByHash:FrameSplice = new FrameSplice();
+    final spliceWrappedLinesByHash:FrameSplice = new FrameSplice();
+
+    final hitboxScratch:Array<Hitbox> = [];
+    final tooltipScratch:Array<TooltipRequest> = [];
+    final deferredScratch:Array<DeferredDraw> = [];
+    final accessedScratch:Array<ElementStateBox<Dynamic>> = [];
+    final mouseScratch:Array<MouseListenerEntry> = [];
+    final inputScratch:Array<Null<PlatformInputHandler>> = [];
+    final regionScratch:Array<TextInputRegion> = [];
+    final cursorScratch:Array<CursorStyleRequest> = [];
+
+    /** The ranges of the view rendered in place, as recorded in the frame */
+    final amendOldPrepaintStart:PrepaintStateIndex = new PrepaintStateIndex();
+    final amendOldPrepaintEnd:PrepaintStateIndex = new PrepaintStateIndex();
+    final amendOldPaintStart:PaintIndex = new PaintIndex();
+    final amendOldPaintEnd:PaintIndex = new PaintIndex();
+
+    /** Where the line layouts used by the view rendered in place start, and their count */
+    final amendLineBase:LineLayoutIndex = new LineLayoutIndex();
+    final amendLineEnd:LineLayoutIndex = new LineLayoutIndex();
+
+    final droppedStateCandidates:Array<ElementStateBox<Dynamic>> = [];
+
+    /** Fills the accessed element states of a full frame drawn after an in place rendering gave way (`handOffInPlace`) */
+    final unusedStateBox:ElementStateBox<Dynamic> = @:privateAccess new ElementStateBox<Dynamic>(GlobalElementId.root(), -1, null);
+
+    var stateMark:Int = 0;
+
+    /**
+     * Depth of the shared contexts being drawn. An element that hands its
+     * descendants something outside of the window's stacks (an app global
+     * they read while they prepaint or paint, like gpui-kit's text view
+     * state, table cell or text selection scope) enters one around them
+     * (`enterSharedContext`, `exitSharedContext`): the views drawn inside
+     * are never rendered alone, in place, since their ancestor's prepaint
+     * and paint must run around them (see `renderInPlace`).
+     */
+    static var sharedContextDepth:Int = 0;
+
+    /** Enters a shared context (see `sharedContextDepth`) */
+    public static inline function enterSharedContext():Void {
+        sharedContextDepth++;
+    }
+
+    /** Exits a shared context (see `sharedContextDepth`) */
+    public static inline function exitSharedContext():Void {
+        sharedContextDepth--;
+    }
+
+    /** Whether a shared context is being drawn (see `sharedContextDepth`) */
+    @:allow(glaze)
+    static inline function inSharedContext():Bool {
+        return sharedContextDepth > 0;
+    }
+
+    /** A new capture time (see `PrepaintStateIndex.time`) */
+    @:allow(glaze)
+    inline function captureTime():Float {
+        return ++captureClock;
+    }
+
+    /**
+     * The layout frame whose view caches can be reused: the previous one,
+     * or while a view renders in place, the frame it renders in.
+     */
+    @:allow(glaze)
+    inline function reusableFrame():Int {
+        return amending ? layoutFrame() : layoutFrame() - 1;
+    }
+
+    /**
+     * Records that the ranges of a view's cache state index the frame being
+     * drawn (see `Frame.viewStates`).
+     */
+    @:allow(glaze)
+    function registerViewState(state:ViewElement.ViewElementState):Void {
+        final frame = nextFrame;
+        if (state.registeredSerial != frame.serial) {
+            state.registeredSerial = frame.serial;
+            frame.viewStates.push(state);
+        }
+        if (amending && state.amendSerial != amendSerial) {
+            state.amendSerial = amendSerial;
+            amendStates.push(state);
+        }
+        final model = state.model;
+        if (model != null) {
+            var tracker = state.tracker;
+            if (tracker == null || @:privateAccess tracker.destroyed || tracker.viewId != model.entityId || tracker.window != this) {
+                tracker = trackers.get(model.entityId);
+                state.tracker = tracker;
+            }
+            if (tracker != null) {
+                if (tracker.stateSerial != frame.serial) {
+                    tracker.stateSerial = frame.serial;
+                    tracker.stateCount = 1;
+                    tracker.state = state;
+                }
+                else if (tracker.state != state) {
+                    // Drawn twice in the frame
+                    tracker.stateCount++;
+                    tracker.state = state;
+                }
+            }
+        }
+    }
+
+    /** A view was drawn without view caching (it renders on every frame) */
+    @:allow(glaze)
+    inline function markUncachedViewDrawn():Void {
+        nextFrame.hasUncachedViews = true;
+    }
+
+    /**
+     * Moves the element states accessed at `start...end` of the frame being
+     * drawn to its end (the slots left hold `unusedStateBox`): the element
+     * states a pre-rendered view accessed, recorded before the frame's
+     * other entries, take their place in the ranges of its ancestors.
+     */
+    @:allow(glaze)
+    function moveAccessedElementStates(start:Int, end:Int):Void {
+        final list = nextFrame.accessedElementStates;
+        for (i in start...end) {
+            list.push(list[i]);
+            list[i] = unusedStateBox;
+        }
+    }
+
+    /**
+     * The render of the given view made by an in place rendering that gave
+     * way to this full frame, if it is drawn at the same place.
+     */
+    @:allow(glaze)
+    function takePreRenderedView(viewId:Int, stateId:Null<GlobalElementId>):Null<ViewElement.PreRenderedView> {
+        final preRendered = preRenderedView;
+        if (preRendered == null || preRendered.viewId != viewId) {
+            return null;
+        }
+        preRenderedView = null;
+        if (preRendered.stateId != stateId) {
+            // Drawn somewhere else: it renders again
+            return null;
+        }
+        if (!renderedViews.exists(viewId)) {
+            renderedViews.set(viewId, true);
+            renderedViewCount++;
+        }
+        return preRendered;
+    }
+
+    /**
+     * Renders the dirty views alone, in place, when they all can (see
+     * `canRenderViewInPlace`). Returns false when nothing was done (a full
+     * frame must be drawn); true when the frame is drawn, in place, or
+     * whole when a view's bounds changed (the view does not render twice).
+     *
+     * GPUI renders the ancestors of a dirty view again (`mark_view_dirty`,
+     * window.rs:1395): one changed row of a long list renders the list,
+     * which walks all its cached rows. Here, a view dirty only because of
+     * its own reads is rendered, laid out (its subtree, at its bounds),
+     * prepainted and painted again alone, in the context its ancestors gave
+     * it in the last frame, and its new entries replace its old ones in each
+     * array of the last frame (hitboxes, dispatch nodes, listeners, element
+     * states, line layouts...), keeping their place in drawing and hit test
+     * order (see `FrameSplice`). The scene and the tab order are made again
+     * around it (replayed). The frame is the one a full frame would draw: the
+     * ancestors would only render the same elements again (a view renders
+     * the same while what it read is unchanged, what `glaze_verify_cache`
+     * checks). When its bounds change, or anything else makes the frame
+     * depend on more than the view (see the conditions), a full frame is
+     * drawn, like in GPUI.
+     */
+    function renderInPlace():Bool {
+        if (!canRenderInPlace()) {
+            return false;
+        }
+        final tree = renderedFrame.dispatchTree;
+        final roots = inPlaceRoots;
+        roots.resize(0);
+        final ids = dirtyRootIds;
+        for (i in 0...ids.length) {
+            final viewId = ids[i];
+            // A view not drawn in the last frame has no place, and a view
+            // inside another dirty view renders with it
+            if (tree.viewNodeId(viewId) != -1 && !hasDirtyAncestor(viewId)) {
+                roots.push(viewId);
+            }
+        }
+        // Many views, or views drawing most of the frame: a full frame
+        // costs the same or less (each view rendered in place moves the
+        // entries drawn after it, and makes the scene again)
+        if (roots.length == 0 || roots.length > MAX_IN_PLACE_VIEWS) {
+            return false;
+        }
+        var covered = 0;
+        for (i in 0...roots.length) {
+            if (!canRenderViewInPlace(roots[i])) {
+                return false;
+            }
+            final state = trackers.get(roots[i]).state;
+            covered += state.prepaintEnd.dispatchTreeIndex - state.prepaintStart.dispatchTreeIndex;
+        }
+        if (covered * 2 > tree.len()) {
+            return false;
+        }
+        // In tree order (dispatch nodes are in tree order)
+        for (i in 1...roots.length) {
+            final viewId = roots[i];
+            final node = trackers.get(viewId).state.dispatchNode;
+            var j = i - 1;
+            while (j >= 0 && trackers.get(roots[j]).state.dispatchNode > node) {
+                roots[j + 1] = roots[j];
+                j--;
+            }
+            roots[j + 1] = viewId;
+        }
+
+        dirty = false;
+        #if glaze_verify_cache
+        clearHoverLog();
+        #end
+        renderedViews.clear();
+        renderedViewCount = 0;
+        reusedViewCount = 0;
+        inPlaceViewCount = 0;
+        requestedAutoscroll = null;
+        restorePlatformInputHandler();
+        // The dirty views themselves, not their ancestors
+        for (i in 0...ids.length) {
+            dirtyViews.set(ids[i], true);
+        }
+        final previousFocusPath = renderedFrame.focusPath();
+        final previousWindowActive = renderedFrame.windowActive;
+        inPlaceFocusAtStart = _focus;
+        inPlaceRenderedIds.resize(0);
+        amendedViews.clear();
+        inPlaceOldViews.resize(0);
+        amendOldAccessed.resize(0);
+        inPlaceDroppedStates = false;
+
+        for (i in 0...roots.length) {
+            if (!amendView(roots[i])) {
+                // A full frame (its ancestors render), where the view uses
+                // the render it just made
+                inPlaceFallbackCount++;
+                dirtyViews.clear();
+                for (j in 0...ids.length) {
+                    if (!amendedViews.exists(ids[j])) {
+                        markViewDirty(ids[j]);
+                    }
+                }
+                drawFullFrame(false);
+                return true;
+            }
+        }
+        finishInPlaceFrame(previousFocusPath, previousWindowActive);
+        return true;
+    }
+
+    /** Whether a view of the last frame has an ancestor view that is dirty itself */
+    function hasDirtyAncestor(viewId:Int):Bool {
+        final tree = renderedFrame.dispatchTree;
+        var nodeId = tree.node(tree.viewNodeId(viewId)).parent;
+        while (nodeId != -1) {
+            final node = tree.node(nodeId);
+            final nodeViewId = node.viewId;
+            if (nodeViewId != -1 && dirtyRootSet.exists(nodeViewId)) {
+                return true;
+            }
+            nodeId = node.parent;
+        }
+        return false;
+    }
+
+    /**
+     * Whether the last frame can be changed in place (nothing of the window
+     * changed since, nothing drawn after the tree...).
+     */
+    function canRenderInPlace():Bool {
+        if (!inPlaceRendering || !viewCaching || viewCachingDisabled || refreshing || drawingClean || root == null) {
+            return false;
+        }
+        final frame = renderedFrame;
+        if (frame.serial == 0 || frame.rootView != root || frame.hasUncachedViews || frame.hadRollback) {
+            return false;
+        }
+        // Drawn after the tree, in an order that depends on every view: a
+        // view's deferred draws can be added only to a frame without any
+        if (frame.deferredDraws.length > 0 || tooltipBounds != null || app.activeDrag != null) {
+            return false;
+        }
+        if (frame.scaleFactor != _scaleFactor || renderable.sceneScale != _scaleFactor || frame.remSize != _remSize
+            || frame.viewportWidth != _viewportSize.width || frame.viewportHeight != _viewportSize.height
+            || frame.windowActive != _active || windowTextSystem.fontGenerationChanged()) {
+            return false;
+        }
+        #if glaze_inspector
+        if (inspector != null || isInspectorPicking(app)) {
+            return false;
+        }
+        #end
+        return true;
+    }
+
+    /**
+     * Whether the given dirty view can render alone: drawn once in the last
+     * frame, with default caching, outside of a view cached with a style,
+     * not the root, outside of any group, in the same context in its three
+     * phases.
+     */
+    function canRenderViewInPlace(viewId:Int):Bool {
+        final tracker = trackers.get(viewId);
+        if (tracker == null || !tracker.defaultCaching || drawnAnimationViews.exists(viewId)) {
+            return false;
+        }
+        final state = tracker.state;
+        final frame = renderedFrame;
+        if (state == null || tracker.stateSerial != frame.serial || tracker.stateCount != 1 || state.cachedStyle) {
+            return false;
+        }
+        final drawn = layoutFrame() - 1;
+        if (state.layoutFrame != drawn || state.prepaintFrame != drawn || state.paintFrame != drawn || state.registeredSerial != frame.serial) {
+            return false;
+        }
+        if (state.model == null || state.stateId == null || state.layoutNodes == null || state.layoutId == -1
+            || layoutEngine.parentOf(state.layoutId) == -1) {
+            return false;
+        }
+        if (state.groupHitboxes != null || state.inSharedContext || state.dispatchNode == -1 || frame.dispatchTree.viewNodeId(viewId) != state.dispatchNode) {
+            return false;
+        }
+        if (state.bounds == null || state.contentMask == null || state.paintContentMask == null || state.elementOffset == null
+            || state.textStyle == null || state.layoutTextStyle == null || state.paintTextStyle == null) {
+            return false;
+        }
+        if (!state.textStyle.equals(state.layoutTextStyle) || !state.textStyle.equals(state.paintTextStyle)
+            || state.paintRemSize != state.remSize || state.paintImageCache != state.imageCache) {
+            return false;
+        }
+        // Its text style, as one refinement of the default one
+        if (state.inPlaceTextStyle != state.textStyle
+            && (state.inPlaceTextStyle == null || !state.inPlaceTextStyle.equals(state.textStyle))) {
+            final refinement = state.textStyle.subtract(new TextStyleRefinement());
+            final composed = new TextStyle();
+            composed.refine(refinement);
+            state.inPlaceTextStyle = state.textStyle;
+            state.inPlaceTextStyleRefinement = composed.equals(state.textStyle) ? refinement : null;
+        }
+        return state.inPlaceTextStyleRefinement != null;
+    }
+
+    /**
+     * Renders, lays out, prepaints and paints a view again alone, in the
+     * last frame (see `renderInPlace`). Returns false when its bounds
+     * changed, or when its render notified a view drawn elsewhere (GPUI
+     * would draw that view in this frame): the render is kept for a full
+     * frame (`preRenderedView`), nothing else was changed.
+     */
+    function amendView(viewId:Int):Bool {
+        final state = trackers.get(viewId).state;
+        final frame = renderedFrame;
+        final spare = nextFrame;
+        final tree = frame.dispatchTree;
+        final engine = layoutEngine;
+
+        // The view's ranges in the frame
+        final oldPrepaintStart = amendOldPrepaintStart;
+        final oldPrepaintEnd = amendOldPrepaintEnd;
+        final oldPaintStart = amendOldPaintStart;
+        final oldPaintEnd = amendOldPaintEnd;
+        oldPrepaintStart.copyFrom(state.prepaintStart);
+        oldPrepaintEnd.copyFrom(state.prepaintEnd);
+        oldPaintStart.copyFrom(state.paintStart);
+        oldPaintEnd.copyFrom(state.paintEnd);
+        final oldLayoutAccessedStart = state.layoutAccessedStart;
+        final oldLayoutAccessedEnd = state.layoutAccessedEnd;
+        final oldLayoutAccessedStartTime = state.layoutAccessedStartTime;
+        final oldLayoutAccessedEndTime = state.layoutAccessedEndTime;
+        final oldLayoutId = state.layoutId;
+        final viewNode = state.dispatchNode;
+        final oldViewsStart = inPlaceOldViews.length;
+        for (i in oldPrepaintStart.dispatchTreeIndex...oldPrepaintEnd.dispatchTreeIndex) {
+            final nodeViewId = tree.node(i).viewId;
+            if (nodeViewId != -1) {
+                inPlaceOldViews.push(nodeViewId);
+            }
+        }
+
+        // Its new entries are appended (see `FrameSplice`)
+        final baseHitboxes = frame.hitboxes.length;
+        final baseTooltips = frame.tooltipRequests.length;
+        final baseDeferred = frame.deferredDraws.length;
+        final baseNodes = tree.len();
+        final baseAccessed = frame.accessedElementStates.length;
+        final baseMouse = frame.mouseListeners.length;
+        final baseInput = frame.inputHandlers.length;
+        final baseRegions = frame.textInputRegions.length;
+        final baseCursors = frame.cursorStyles.length;
+        final oldScene = frame.scene;
+        final oldTabs = frame.tabStops;
+        final oldSceneLength = oldScene.paintIndex();
+        final oldTabsLength = oldTabs.paintIndex();
+
+        amending = true;
+        frame.dispatchTree.amending = true;
+        amendStartTime = captureClock;
+        amendSerial++;
+        amendStates.resize(0);
+        amendRenderedIds.resize(0);
+        amendPendingIds.resize(0);
+        amendLayoutElements.resize(0);
+        nextFrame = frame;
+        engine.beginAmend();
+        windowTextSystem.beginAmend();
+        windowTextSystem.layoutIndexInto(amendLineBase);
+
+        // The context its ancestors gave it
+        final imageCache = state.imageCache;
+        remSizeOverrideStack.push(state.remSize);
+        if (imageCache != null) {
+            imageCacheStack.push(imageCache);
+        }
+
+        var scenesSwapped = false;
+        try {
+            // Render and layout of its subtree, its nodes adopted
+            elementIdNode = state.stateId;
+            pushTextStyle(state.inPlaceTextStyleRefinement);
+            final element = ViewElement.forInPlace(state);
+            final reference = engine.beginViewChanges(oldLayoutId);
+            final layoutId = element.renderInPlace(state, this, app);
+            popTextStyle();
+            elementIdNode = elementIdRoot;
+            if (layoutId != oldLayoutId) {
+                engine.replaceViewRoot(oldLayoutId, layoutId);
+            }
+            // In place when every change settles inside the view (its root
+            // lays out the same for its parent) and its bounds are the same
+            var inPlace = engine.processViewChanges(layoutId, oldLayoutId, reference, this, app);
+            var bounds:Null<Bounds> = null;
+            if (inPlace) {
+                engine.forgetSubtreeBounds(layoutId);
+                elementOffsetStack.push(state.elementOffset);
+                bounds = layoutBounds(layoutId);
+                elementOffsetStack.pop();
+                inPlace = bounds.equals(state.bounds) && !notifiedElsewhere(viewNode, oldPrepaintEnd.dispatchTreeIndex);
+            }
+            if (!inPlace) {
+                handOffInPlace(viewId, element, baseAccessed, spare, imageCache);
+                return false;
+            }
+            #if glaze_verify_layout
+            engine.verifySubtreeLayout(layoutId);
+            #end
+
+            // Prepaint, in its bounds
+            elementIdNode = state.stateId;
+            pushTextStyle(state.inPlaceTextStyleRefinement);
+            contentMaskStack.push(state.contentMask);
+            elementOffsetStack.push(state.elementOffset);
+            final savedPrepaintOpacity = prepaintOpacity;
+            prepaintOpacity = state.prepaintOpacity;
+            tree.setActiveNode(viewNode);
+            element.prepaintInPlace(state, bounds, this, app);
+            tree.resetStacks();
+            prepaintOpacity = savedPrepaintOpacity;
+            elementOffsetStack.pop();
+            contentMaskStack.pop();
+            popTextStyle();
+            elementIdNode = elementIdRoot;
+
+            // The tooltip requests in place (the tooltip reads them), then
+            // what a frame draws after the tree: the view's deferred draws
+            // (the frame had none) and the tooltip
+            prepareSplice(spliceTooltips, baseTooltips, oldPrepaintStart.tooltipsIndex, oldPrepaintEnd.tooltipsIndex, oldPrepaintStart.time, oldPrepaintEnd.time,
+                state.prepaintStart.tooltipsIndex, state.prepaintEnd.tooltipsIndex, state.prepaintStart.time, state.prepaintEnd.time, frame.tooltipRequests.length);
+            FrameSplice.apply(frame.tooltipRequests, spliceTooltips, tooltipScratch);
+            prepaintDeferredDraws();
+            final tooltipElement = prepaintTooltip();
+            prepareSplice(spliceHitboxes, baseHitboxes, oldPrepaintStart.hitboxesIndex, oldPrepaintEnd.hitboxesIndex, oldPrepaintStart.time, oldPrepaintEnd.time,
+                state.prepaintStart.hitboxesIndex, state.prepaintEnd.hitboxesIndex, state.prepaintStart.time, state.prepaintEnd.time, frame.hitboxes.length);
+            mouseHitTest = hitTestInPlace(_mousePosition, frame.hitboxes, spliceHitboxes);
+
+            // Paint, into a scene and a tab order of its own (replayed below)
+            final viewScene = inPlaceScene;
+            final viewTabs = inPlaceTabStops;
+            frame.scene = viewScene;
+            frame.tabStops = viewTabs;
+            sceneSource = oldScene;
+            tabStopsSource = oldTabs;
+            scenesSwapped = true;
+            elementIdNode = state.stateId;
+            pushTextStyle(state.inPlaceTextStyleRefinement);
+            contentMaskStack.push(state.paintContentMask);
+            final savedOpacity = elementOpacity;
+            elementOpacity = state.paintOpacity;
+            tree.setActiveNode(viewNode);
+            element.paintInPlace(state, this, app);
+            tree.resetStacks();
+            elementOpacity = savedOpacity;
+            contentMaskStack.pop();
+            popTextStyle();
+            elementIdNode = elementIdRoot;
+
+            // The scene is made again around its operations (replayed, so
+            // draw orders are computed as in a full frame), unless it has
+            // none before and after (out of view); the tab order only when
+            // its tab operations changed
+            final viewOps = viewScene.paintIndex();
+            var scene = oldScene;
+            if (viewOps > 0 || oldPaintEnd.sceneIndex > oldPaintStart.sceneIndex) {
+                scene = spare.scene;
+                scene.replay(0, oldPaintStart.sceneIndex, oldScene);
+                scene.replay(0, viewOps, viewScene);
+                scene.replay(oldPaintEnd.sceneIndex, oldSceneLength, oldScene);
+            }
+            final viewTabOps = viewTabs.paintIndex();
+            var tabs = oldTabs;
+            if (!sameTabOperations(viewTabs, oldTabs, oldPaintStart.tabHandleIndex, oldPaintEnd.tabHandleIndex)) {
+                tabs = spare.tabStops;
+                tabs.replayRange(oldTabs, 0, oldPaintStart.tabHandleIndex);
+                tabs.replayRange(viewTabs, 0, viewTabOps);
+                tabs.replayRange(oldTabs, oldPaintEnd.tabHandleIndex, oldTabsLength);
+            }
+            frame.scene = scene;
+            frame.tabStops = tabs;
+            sceneSource = null;
+            tabStopsSource = null;
+            scenesSwapped = false;
+            viewScene.clear();
+            viewTabs.clear();
+            if (scene != oldScene) {
+                spare.scene = oldScene;
+                oldScene.clear();
+            }
+            if (tabs != oldTabs) {
+                spare.tabStops = oldTabs;
+                oldTabs.clear();
+            }
+
+            // Drawn after the tree
+            final sceneLength = scene.paintIndex();
+            paintDeferredDraws();
+            if (tooltipElement != null) {
+                tooltipElement.paint(this, app);
+            }
+            if (scene != oldScene || scene.paintIndex() != sceneLength) {
+                scene.finish();
+            }
+
+            // The new entries in place of the old ones
+            spliceInPlace(state, baseDeferred, baseNodes, baseAccessed, baseMouse, baseInput, baseRegions, baseCursors,
+                oldLayoutAccessedStart, oldLayoutAccessedEnd, oldLayoutAccessedStartTime, oldLayoutAccessedEndTime,
+                oldSceneLength, viewOps, oldTabsLength, viewTabOps, oldViewsStart);
+        }
+        catch (e:haxe.Exception) {
+            if (scenesSwapped) {
+                inPlaceScene.clear();
+                inPlaceTabStops.clear();
+                frame.scene = oldScene;
+                frame.tabStops = oldTabs;
+                sceneSource = null;
+                tabStopsSource = null;
+            }
+            abortInPlace(spare, imageCache, baseHitboxes, baseTooltips, baseDeferred, baseNodes, baseAccessed, baseMouse, baseInput, baseRegions, baseCursors);
+            throw glaze.util.Exceptions.rethrow(e);
+        }
+        endInPlace(spare, imageCache, true);
+        for (i in 0...amendRenderedIds.length) {
+            final renderedId = amendRenderedIds[i];
+            amendedViews.set(renderedId, true);
+            inPlaceRenderedIds.push(renderedId);
+        }
+        inPlaceViewCount++;
+        return true;
+    }
+
+    /**
+     * Whether the render of the view rendering in place notified a view
+     * drawn after it in the last frame (GPUI would render that view in this
+     * frame; a view drawn before renders in the next frame either way).
+     */
+    function notifiedElsewhere(viewNode:Int, rangeEnd:Int):Bool {
+        final tree = renderedFrame.dispatchTree;
+        for (i in 0...amendPendingIds.length) {
+            final node = tree.viewNodeId(amendPendingIds[i]);
+            if (node != -1 && node >= rangeEnd) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Whether the tab operations of `view` are those of `tabs` from `start` to `end` */
+    static function sameTabOperations(view:TabStopMap, tabs:TabStopMap, start:Int, end:Int):Bool {
+        final ops = view.insertionHistory;
+        if (ops.length != end - start) {
+            return false;
+        }
+        final history = tabs.insertionHistory;
+        for (i in 0...ops.length) {
+            final same = switch [ops[i], history[start + i]] {
+                case [Insert(a), Insert(b)]: a == b && a.tabIndexValue == b.tabIndexValue && a.isTabStop == b.isTabStop;
+                case [Group(a), Group(b)]: a == b;
+                case [GroupEnd, GroupEnd]: true;
+                case _: false;
+            }
+            if (!same) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    inline function prepareSplice(plan:FrameSplice, base:Int, oldStart:Int, oldEnd:Int, oldStartTime:Float, oldEndTime:Float,
+            newStart:Int, newEnd:Int, newStartTime:Float, newEndTime:Float, length:Int):Void {
+        plan.reset(base);
+        plan.addRange(oldStart, oldEnd, oldStartTime, oldEndTime, newStart, newEnd, newStartTime, newEndTime);
+        plan.prepare(length);
+    }
+
+    /**
+     * Ends an in place rendering: the context set up for the view and the
+     * amend modes.
+     */
+    function endInPlace(spare:Frame, imageCache:Null<AnyImageCache>, done:Bool = false):Void {
+        amendLayoutElements.resize(0);
+        Stacks.drop(remSizeOverrideStack);
+        if (imageCache != null) {
+            imageCacheStack.pop();
+        }
+        elementIdNode = elementIdRoot;
+        renderedFrame.reusedElementStates.resize(0);
+        // Drawn in place: its old nodes go now (a full frame frees them otherwise)
+        layoutEngine.endAmend(done);
+        windowTextSystem.endAmend();
+        nextFrame = spare;
+        renderedFrame.dispatchTree.amending = false;
+        amending = false;
+    }
+
+    /**
+     * The view rendering in place laid out differently: its render is given
+     * to a full frame (`takePreRenderedView`), with the element states it
+     * accessed (moved to the frame drawn next, which starts with them). Only
+     * the render and the layout happened.
+     */
+    function handOffInPlace(viewId:Int, element:ViewElement, baseAccessed:Int, spare:Frame, imageCache:Null<AnyImageCache>):Void {
+        final preRendered = element.preRendered();
+        preRendered.viewId = viewId;
+        if (amendLayoutElements.length > 0) {
+            preRendered.nested = amendLayoutElements.copy();
+            amendLayoutElements.resize(0);
+        }
+        preRenderedView = preRendered;
+        final frame = renderedFrame;
+        final accessed = frame.accessedElementStates;
+        final target = spare.accessedElementStates;
+        // At the same positions: the views it rendered recorded them (an
+        // unused prefix in the full frame)
+        for (_ in 0...baseAccessed) {
+            target.push(unusedStateBox);
+        }
+        for (i in baseAccessed...accessed.length) {
+            final box = accessed[i];
+            if (box.owner == frame) {
+                box.owner = spare;
+                spare.elementStates.push(box);
+            }
+            target.push(box);
+        }
+        accessed.resize(baseAccessed);
+        // The layouts it used stay cached: the full frame records them again
+        windowTextSystem.truncateAmendedLayouts(amendLineBase);
+        endInPlace(spare, imageCache);
+    }
+
+    /**
+     * An in place rendering threw: its appended entries are dropped and the
+     * next frame is drawn whole.
+     */
+    function abortInPlace(spare:Frame, imageCache:Null<AnyImageCache>, baseHitboxes:Int, baseTooltips:Int, baseDeferred:Int, baseNodes:Int,
+            baseAccessed:Int, baseMouse:Int, baseInput:Int, baseRegions:Int, baseCursors:Int):Void {
+        final frame = renderedFrame;
+        if (frame.hitboxes.length > baseHitboxes) frame.hitboxes.resize(baseHitboxes);
+        if (frame.tooltipRequests.length > baseTooltips) frame.tooltipRequests.resize(baseTooltips);
+        if (frame.deferredDraws.length > baseDeferred) frame.deferredDraws.resize(baseDeferred);
+        frame.dispatchTree.truncate(baseNodes);
+        frame.dispatchTree.resetStacks();
+        if (frame.accessedElementStates.length > baseAccessed) frame.accessedElementStates.resize(baseAccessed);
+        if (frame.mouseListeners.length > baseMouse) frame.mouseListeners.resize(baseMouse);
+        if (frame.inputHandlers.length > baseInput) frame.inputHandlers.resize(baseInput);
+        if (frame.textInputRegions.length > baseRegions) frame.textInputRegions.resize(baseRegions);
+        if (frame.cursorStyles.length > baseCursors) frame.cursorStyles.resize(baseCursors);
+        windowTextSystem.truncateAmendedLayouts(amendLineBase);
+        textStyleStack.resize(0);
+        contentMaskStack.resize(0);
+        elementOffsetStack.resize(0);
+        renderedEntityStack.resize(0);
+        endInPlace(spare, imageCache);
+        remSizeOverrideStack.resize(0);
+        imageCacheStack.resize(0);
+        refreshing = true;
+        dirty = true;
+    }
+
+    /**
+     * Hit test of the frame as it will be once the hitboxes of the view
+     * rendering in place replace its old ones (`plan`), without moving them
+     * yet (the views reusing their ranges while it paints read the old ones).
+     */
+    function hitTestInPlace(position:Point, hitboxes:Array<Hitbox>, plan:FrameSplice):HitTest {
+        final hitTest = new HitTest();
+        hitTestHoverSet = false;
+        final oldStart = plan.oldStart(0);
+        final oldEnd = plan.oldEnd(0);
+        final blockStart = plan.blockStart(0);
+        final blockEnd = plan.blockEnd(0);
+        final base = plan.base;
+        // Reverse order of the spliced array: the entries appended after
+        // the view's, the frame after the view, the view, the frame before
+        var stopped = false;
+        var i = plan.length - 1;
+        while (!stopped && i >= blockEnd) {
+            stopped = hitTestHitbox(hitboxes[i], position, hitTest);
+            i--;
+        }
+        i = blockStart - 1;
+        while (!stopped && i >= base) {
+            stopped = hitTestHitbox(hitboxes[i], position, hitTest);
+            i--;
+        }
+        i = base - 1;
+        while (!stopped && i >= oldEnd) {
+            stopped = hitTestHitbox(hitboxes[i], position, hitTest);
+            i--;
+        }
+        i = blockEnd - 1;
+        while (!stopped && i >= blockStart) {
+            stopped = hitTestHitbox(hitboxes[i], position, hitTest);
+            i--;
+        }
+        i = oldStart - 1;
+        while (!stopped && i >= 0) {
+            stopped = hitTestHitbox(hitboxes[i], position, hitTest);
+            i--;
+        }
+        if (!hitTestHoverSet) {
+            hitTest.hoverHitboxCount = hitTest.ids.length;
+        }
+        return hitTest;
+    }
+
+    var hitTestHoverSet:Bool = false;
+
+    /** One step of `Frame.hitTest`: returns true when the hitbox blocks the ones below */
+    inline function hitTestHitbox(hitbox:Hitbox, position:Point, hitTest:HitTest):Bool {
+        var blocks = false;
+        if (hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position)) {
+            hitTest.ids.push(hitbox.id);
+            if (!hitTestHoverSet && hitbox.behavior == BlockMouseExceptScroll) {
+                hitTest.hoverHitboxCount = hitTest.ids.length;
+                hitTestHoverSet = true;
+            }
+            blocks = hitbox.behavior == BlockMouse;
+        }
+        return blocks;
+    }
+
+    /**
+     * Puts the entries of the view rendered in place where its old ones
+     * were, in each array of the frame, then moves the indices the views
+     * recorded (see `FrameSplice`).
+     */
+    function spliceInPlace(state:ViewElement.ViewElementState, baseDeferred:Int, baseNodes:Int, baseAccessed:Int, baseMouse:Int, baseInput:Int,
+            baseRegions:Int, baseCursors:Int, oldLayoutAccessedStart:Int, oldLayoutAccessedEnd:Int, oldLayoutAccessedStartTime:Float,
+            oldLayoutAccessedEndTime:Float, oldSceneLength:Int, viewOps:Int, oldTabsLength:Int, viewTabOps:Int, oldViewsStart:Int):Void {
+        final frame = renderedFrame;
+        final tree = frame.dispatchTree;
+        final oldPrepaintStart = amendOldPrepaintStart;
+        final oldPrepaintEnd = amendOldPrepaintEnd;
+        final oldPaintStart = amendOldPaintStart;
+        final oldPaintEnd = amendOldPaintEnd;
+        final newPrepaintStart = state.prepaintStart;
+        final newPrepaintEnd = state.prepaintEnd;
+        final newPaintStart = state.paintStart;
+        final newPaintEnd = state.paintEnd;
+        final ps = oldPrepaintStart.time;
+        final pe = oldPrepaintEnd.time;
+        final qs = oldPaintStart.time;
+        final qe = oldPaintEnd.time;
+        final nps = newPrepaintStart.time;
+        final npe = newPrepaintEnd.time;
+        final nqs = newPaintStart.time;
+        final nqe = newPaintEnd.time;
+
+        // Hitboxes (the plan was made for the hit test); the window control
+        // areas of the old ones go
+        final controls = frame.windowControlHitboxes;
+        if (controls.length > 0) {
+            var kept = 0;
+            for (i in 0...controls.length) {
+                final control = controls[i];
+                var old = false;
+                for (j in oldPrepaintStart.hitboxesIndex...oldPrepaintEnd.hitboxesIndex) {
+                    if (frame.hitboxes[j] == control.hitbox) {
+                        old = true;
+                        break;
+                    }
+                }
+                if (!old) {
+                    controls[kept++] = control;
+                }
+            }
+            controls.resize(kept);
+        }
+        FrameSplice.apply(frame.hitboxes, spliceHitboxes, hitboxScratch);
+
+        // Deferred draws: the frame had none, the view's come first
+        prepareSplice(spliceDeferred, baseDeferred, oldPrepaintStart.deferredDrawsIndex, oldPrepaintEnd.deferredDrawsIndex, ps, pe,
+            newPrepaintStart.deferredDrawsIndex, newPrepaintEnd.deferredDrawsIndex, nps, npe, frame.deferredDraws.length);
+        FrameSplice.apply(frame.deferredDraws, spliceDeferred, deferredScratch);
+
+        // Dispatch nodes (parents, focus and view ids follow)
+        prepareSplice(spliceNodes, baseNodes, oldPrepaintStart.dispatchTreeIndex, oldPrepaintEnd.dispatchTreeIndex, ps, pe,
+            newPrepaintStart.dispatchTreeIndex, newPrepaintEnd.dispatchTreeIndex, nps, npe, tree.len());
+        tree.applySplice(spliceNodes);
+        for (draw in frame.deferredDraws) {
+            draw.parentNode = spliceNodes.remapEntry(draw.parentNode);
+        }
+
+        // Paint state
+        prepareSplice(spliceMouse, baseMouse, oldPaintStart.mouseListenersIndex, oldPaintEnd.mouseListenersIndex, qs, qe,
+            newPaintStart.mouseListenersIndex, newPaintEnd.mouseListenersIndex, nqs, nqe, frame.mouseListeners.length);
+        FrameSplice.apply(frame.mouseListeners, spliceMouse, mouseScratch);
+        prepareSplice(spliceInput, baseInput, oldPaintStart.inputHandlersIndex, oldPaintEnd.inputHandlersIndex, qs, qe,
+            newPaintStart.inputHandlersIndex, newPaintEnd.inputHandlersIndex, nqs, nqe, frame.inputHandlers.length);
+        FrameSplice.apply(frame.inputHandlers, spliceInput, inputScratch);
+        prepareSplice(spliceRegions, baseRegions, oldPaintStart.textInputRegionsIndex, oldPaintEnd.textInputRegionsIndex, qs, qe,
+            newPaintStart.textInputRegionsIndex, newPaintEnd.textInputRegionsIndex, nqs, nqe, frame.textInputRegions.length);
+        FrameSplice.apply(frame.textInputRegions, spliceRegions, regionScratch);
+        prepareSplice(spliceCursors, baseCursors, oldPaintStart.cursorStylesIndex, oldPaintEnd.cursorStylesIndex, qs, qe,
+            newPaintStart.cursorStylesIndex, newPaintEnd.cursorStylesIndex, nqs, nqe, frame.cursorStyles.length);
+        FrameSplice.apply(frame.cursorStyles, spliceCursors, cursorScratch);
+
+        // Element states: its three ranges (render and layout, prepaint,
+        // paint); the states it accessed before and nobody accesses now go
+        final accessed = frame.accessedElementStates;
+        final plan = spliceAccessed;
+        plan.reset(baseAccessed);
+        plan.addRange(oldLayoutAccessedStart, oldLayoutAccessedEnd, oldLayoutAccessedStartTime, oldLayoutAccessedEndTime,
+            state.layoutAccessedStart, state.layoutAccessedEnd, state.layoutAccessedStartTime, state.layoutAccessedEndTime);
+        plan.addRange(oldPrepaintStart.accessedElementStatesIndex, oldPrepaintEnd.accessedElementStatesIndex, ps, pe,
+            newPrepaintStart.accessedElementStatesIndex, newPrepaintEnd.accessedElementStatesIndex, nps, npe);
+        plan.addRange(oldPaintStart.accessedElementStatesIndex, oldPaintEnd.accessedElementStatesIndex, qs, qe,
+            newPaintStart.accessedElementStatesIndex, newPaintEnd.accessedElementStatesIndex, nqs, nqe);
+        plan.prepare(accessed.length);
+        final mark = ++stateMark;
+        for (i in baseAccessed...accessed.length) {
+            accessed[i].inPlaceMark = mark;
+        }
+        final candidates = droppedStateCandidates;
+        candidates.resize(0);
+        for (k in 0...plan.count) {
+            for (i in plan.oldStart(k)...plan.oldEnd(k)) {
+                final box = accessed[i];
+                if (box.inPlaceMark != mark && box.inPlaceMark != -mark) {
+                    box.inPlaceMark = -mark;
+                    candidates.push(box);
+                }
+            }
+        }
+        if (candidates.length > 0) {
+            // Accessed elsewhere in the frame: kept
+            var k = 0;
+            var i = 0;
+            while (i < baseAccessed) {
+                if (k < plan.count && i == plan.oldStart(k)) {
+                    i = plan.oldEnd(k);
+                    k++;
+                    continue;
+                }
+                final box = accessed[i];
+                if (box.inPlaceMark == -mark) {
+                    box.inPlaceMark = mark;
+                }
+                i++;
+            }
+        }
+        FrameSplice.apply(accessed, plan, accessedScratch);
+        for (box in candidates) {
+            if (box.inPlaceMark == -mark && box.owner == frame) {
+                Frame.dropState(box);
+                inPlaceDroppedStates = true;
+            }
+        }
+        candidates.resize(0);
+
+        // Line layouts: its prepaint and paint ranges
+        windowTextSystem.layoutIndexInto(amendLineEnd);
+        final base = amendLineBase;
+        final end = amendLineEnd;
+        final ops = oldPrepaintStart.lineLayoutIndex;
+        final ope = oldPrepaintEnd.lineLayoutIndex;
+        final oqs = oldPaintStart.lineLayoutIndex;
+        final oqe = oldPaintEnd.lineLayoutIndex;
+        final nlps = newPrepaintStart.lineLayoutIndex;
+        final nlpe = newPrepaintEnd.lineLayoutIndex;
+        final nlqs = newPaintStart.lineLayoutIndex;
+        final nlqe = newPaintEnd.lineLayoutIndex;
+        spliceLines.reset(base.linesIndex, false, true);
+        spliceLines.addRange(ops.linesIndex, ope.linesIndex, ps, pe, nlps.linesIndex, nlpe.linesIndex, nps, npe);
+        spliceLines.addRange(oqs.linesIndex, oqe.linesIndex, qs, qe, nlqs.linesIndex, nlqe.linesIndex, nqs, nqe);
+        spliceLines.prepare(end.linesIndex);
+        spliceWrappedLines.reset(base.wrappedLinesIndex, false, true);
+        spliceWrappedLines.addRange(ops.wrappedLinesIndex, ope.wrappedLinesIndex, ps, pe, nlps.wrappedLinesIndex, nlpe.wrappedLinesIndex, nps, npe);
+        spliceWrappedLines.addRange(oqs.wrappedLinesIndex, oqe.wrappedLinesIndex, qs, qe, nlqs.wrappedLinesIndex, nlqe.wrappedLinesIndex, nqs, nqe);
+        spliceWrappedLines.prepare(end.wrappedLinesIndex);
+        spliceLinesByHash.reset(base.linesByHashIndex, false, true);
+        spliceLinesByHash.addRange(ops.linesByHashIndex, ope.linesByHashIndex, ps, pe, nlps.linesByHashIndex, nlpe.linesByHashIndex, nps, npe);
+        spliceLinesByHash.addRange(oqs.linesByHashIndex, oqe.linesByHashIndex, qs, qe, nlqs.linesByHashIndex, nlqe.linesByHashIndex, nqs, nqe);
+        spliceLinesByHash.prepare(end.linesByHashIndex);
+        spliceWrappedLinesByHash.reset(base.wrappedLinesByHashIndex, false, true);
+        spliceWrappedLinesByHash.addRange(ops.wrappedLinesByHashIndex, ope.wrappedLinesByHashIndex, ps, pe, nlps.wrappedLinesByHashIndex, nlpe.wrappedLinesByHashIndex, nps, npe);
+        spliceWrappedLinesByHash.addRange(oqs.wrappedLinesByHashIndex, oqe.wrappedLinesByHashIndex, qs, qe, nlqs.wrappedLinesByHashIndex, nlqe.wrappedLinesByHashIndex, nqs, nqe);
+        spliceWrappedLinesByHash.prepare(end.wrappedLinesByHashIndex);
+        windowTextSystem.spliceUsedLayouts(spliceLines, spliceWrappedLines, spliceLinesByHash, spliceWrappedLinesByHash);
+
+        // Scene and tab order, made again: plans for the indices only (the
+        // view's were recorded in its own scene and tab order, from 0)
+        prepareRebuilt(spliceScene, oldSceneLength, oldPaintStart.sceneIndex, oldPaintEnd.sceneIndex, qs, qe,
+            newPaintStart.sceneIndex, newPaintEnd.sceneIndex, nqs, nqe);
+        prepareRebuilt(spliceTabs, oldTabsLength, oldPaintStart.tabHandleIndex, oldPaintEnd.tabHandleIndex, qs, qe,
+            newPaintStart.tabHandleIndex, newPaintEnd.tabHandleIndex, nqs, nqe);
+
+        remapViewStates(state, oldLayoutAccessedStartTime, oldLayoutAccessedEndTime, oldViewsStart);
+    }
+
+    inline function prepareRebuilt(plan:FrameSplice, oldLength:Int, oldStart:Int, oldEnd:Int, oldStartTime:Float, oldEndTime:Float,
+            newStart:Int, newEnd:Int, newStartTime:Float, newEndTime:Float):Void {
+        plan.reset(oldLength, true);
+        plan.addRange(oldStart, oldEnd, oldStartTime, oldEndTime, newStart, newEnd, newStartTime, newEndTime);
+        plan.prepare(oldLength + (newEnd - newStart) - (oldEnd - oldStart));
+    }
+
+    /**
+     * Moves the indices recorded by the views after the splices of an in
+     * place rendering: the views of the frame (only when an array of the
+     * frame changed length; those drawn inside the view's old ranges and
+     * not again are invalidated), the views recorded by the rendering (their
+     * capture times move into the view's old ones, so that the order of
+     * times stays the order of positions), and the deferred draws.
+     */
+    function remapViewStates(state:ViewElement.ViewElementState, oldLayoutStartTime:Float, oldLayoutEndTime:Float, oldViewsStart:Int):Void {
+        final frame = renderedFrame;
+        final serial = amendSerial;
+        final layoutWindowStart = oldLayoutStartTime;
+        final layoutWindowEnd = oldLayoutEndTime;
+        final prepaintWindowStart = amendOldPrepaintStart.time;
+        final prepaintWindowEnd = amendOldPrepaintEnd.time;
+        final paintWindowStart = amendOldPaintStart.time;
+        final paintWindowEnd = amendOldPaintEnd.time;
+        final changed = !(spliceHitboxes.framePartUnchanged() && spliceTooltips.framePartUnchanged() && spliceDeferred.framePartUnchanged()
+            && spliceNodes.framePartUnchanged() && spliceAccessed.framePartUnchanged() && spliceMouse.framePartUnchanged()
+            && spliceInput.framePartUnchanged() && spliceRegions.framePartUnchanged() && spliceCursors.framePartUnchanged()
+            && spliceScene.framePartUnchanged() && spliceTabs.framePartUnchanged() && spliceLines.framePartUnchanged()
+            && spliceWrappedLines.framePartUnchanged() && spliceLinesByHash.framePartUnchanged() && spliceWrappedLinesByHash.framePartUnchanged());
+        inline function inside(time:Float, start:Float, end:Float):Bool {
+            return time > start && time < end;
+        }
+        inline function stale(other:ViewElement.ViewElementState):Bool {
+            return inside(other.prepaintStart.time, prepaintWindowStart, prepaintWindowEnd)
+                || inside(other.paintStart.time, paintWindowStart, paintWindowEnd)
+                || inside(other.layoutAccessedStartTime, layoutWindowStart, layoutWindowEnd);
+        }
+        if (changed) {
+            for (other in frame.viewStates) {
+                if (other.amendSerial == serial || other.prepaintFrame == -1) {
+                    continue;
+                }
+                if (stale(other)) {
+                    invalidateViewState(other);
+                }
+                else {
+                    remapOldViewState(other);
+                }
+            }
+        }
+        else {
+            // Only the views drawn inside the view can be stale
+            for (i in oldViewsStart...inPlaceOldViews.length) {
+                final tracker = trackers.get(inPlaceOldViews[i]);
+                final other = tracker != null ? tracker.state : null;
+                if (other != null && other.amendSerial != serial && other.registeredSerial == frame.serial && other.prepaintFrame != -1 && stale(other)) {
+                    invalidateViewState(other);
+                }
+            }
+        }
+
+        // The views recorded by the rendering: their positions, then their times
+        final layoutStart = state.layoutAccessedStartTime;
+        final layoutEnd = state.layoutAccessedEndTime;
+        final prepaintStart = state.prepaintStart.time;
+        final prepaintEnd = state.prepaintEnd.time;
+        final paintStart = state.paintStart.time;
+        final paintEnd = state.paintEnd.time;
+        inline function mapTime(time:Float):Float {
+            return if (time >= layoutStart && time <= layoutEnd) {
+                layoutWindowStart + (layoutWindowEnd - layoutWindowStart) * (time - layoutStart) / (layoutEnd - layoutStart);
+            }
+            else if (time >= prepaintStart && time <= prepaintEnd) {
+                prepaintWindowStart + (prepaintWindowEnd - prepaintWindowStart) * (time - prepaintStart) / (prepaintEnd - prepaintStart);
+            }
+            else if (time >= paintStart && time <= paintEnd) {
+                paintWindowStart + (paintWindowEnd - paintWindowStart) * (time - paintStart) / (paintEnd - paintStart);
+            }
+            else {
+                // Drawn after the tree (tooltip, deferred draws): after every time of the frame
+                time;
+            }
+        }
+        final startTime = amendStartTime;
+        for (other in amendStates) {
+            if (other.prepaintStart.time <= startTime || other.paintStart.time <= startTime || other.layoutAccessedStartTime <= startTime) {
+                // Not drawn whole by this rendering (no paint...): not reusable
+                invalidateViewState(other);
+                continue;
+            }
+            remapNewPrepaintIndex(other.prepaintStart);
+            remapNewPrepaintIndex(other.prepaintEnd);
+            remapNewPaintIndex(other.paintStart);
+            remapNewPaintIndex(other.paintEnd);
+            final layoutTime = other.layoutAccessedStartTime;
+            final layoutEndTime = other.layoutAccessedEndTime;
+            other.layoutAccessedStart = spliceAccessed.remapNew(other.layoutAccessedStart, layoutTime);
+            other.layoutAccessedEnd = spliceAccessed.remapNew(other.layoutAccessedEnd, layoutEndTime);
+            other.dispatchNode = spliceNodes.remapEntry(other.dispatchNode);
+            other.prepaintStart.time = mapTime(other.prepaintStart.time);
+            other.prepaintEnd.time = mapTime(other.prepaintEnd.time);
+            other.paintStart.time = mapTime(other.paintStart.time);
+            other.paintEnd.time = mapTime(other.paintEnd.time);
+            other.layoutAccessedStartTime = mapTime(layoutTime);
+            other.layoutAccessedEndTime = mapTime(layoutEndTime);
+        }
+        for (draw in frame.deferredDraws) {
+            remapNewPrepaintIndex(draw.prepaintStart);
+            remapNewPrepaintIndex(draw.prepaintEnd);
+            remapNewPaintIndex(draw.paintStart);
+            remapNewPaintIndex(draw.paintEnd);
+        }
+        amendStates.resize(0);
+    }
+
+    /** A view state whose ranges are gone: never reused again */
+    inline function invalidateViewState(state:ViewElement.ViewElementState):Void {
+        state.prepaintFrame = -1;
+        state.paintFrame = -1;
+        state.layoutFrame = -1;
+    }
+
+    function remapOldViewState(state:ViewElement.ViewElementState):Void {
+        remapOldPrepaintIndex(state.prepaintStart);
+        remapOldPrepaintIndex(state.prepaintEnd);
+        remapOldPaintIndex(state.paintStart);
+        remapOldPaintIndex(state.paintEnd);
+        if (!spliceAccessed.framePartUnchanged()) {
+            state.layoutAccessedStart = spliceAccessed.remapOld(state.layoutAccessedStart, state.layoutAccessedStartTime);
+            state.layoutAccessedEnd = spliceAccessed.remapOld(state.layoutAccessedEnd, state.layoutAccessedEndTime);
+        }
+        if (!spliceNodes.framePartUnchanged() && state.dispatchNode != -1) {
+            state.dispatchNode = spliceNodes.remapEntry(state.dispatchNode);
+        }
+    }
+
+    function remapOldPrepaintIndex(index:PrepaintStateIndex):Void {
+        final time = index.time;
+        if (!spliceHitboxes.framePartUnchanged()) index.hitboxesIndex = spliceHitboxes.remapOld(index.hitboxesIndex, time);
+        if (!spliceTooltips.framePartUnchanged()) index.tooltipsIndex = spliceTooltips.remapOld(index.tooltipsIndex, time);
+        if (!spliceDeferred.framePartUnchanged()) index.deferredDrawsIndex = spliceDeferred.remapOld(index.deferredDrawsIndex, time);
+        if (!spliceNodes.framePartUnchanged()) index.dispatchTreeIndex = spliceNodes.remapOld(index.dispatchTreeIndex, time);
+        if (!spliceAccessed.framePartUnchanged()) index.accessedElementStatesIndex = spliceAccessed.remapOld(index.accessedElementStatesIndex, time);
+        remapOldLineLayoutIndex(index.lineLayoutIndex, time);
+    }
+
+    function remapOldPaintIndex(index:PaintIndex):Void {
+        final time = index.time;
+        if (!spliceScene.framePartUnchanged()) index.sceneIndex = spliceScene.remapOld(index.sceneIndex, time);
+        if (!spliceMouse.framePartUnchanged()) index.mouseListenersIndex = spliceMouse.remapOld(index.mouseListenersIndex, time);
+        if (!spliceInput.framePartUnchanged()) index.inputHandlersIndex = spliceInput.remapOld(index.inputHandlersIndex, time);
+        if (!spliceRegions.framePartUnchanged()) index.textInputRegionsIndex = spliceRegions.remapOld(index.textInputRegionsIndex, time);
+        if (!spliceCursors.framePartUnchanged()) index.cursorStylesIndex = spliceCursors.remapOld(index.cursorStylesIndex, time);
+        if (!spliceAccessed.framePartUnchanged()) index.accessedElementStatesIndex = spliceAccessed.remapOld(index.accessedElementStatesIndex, time);
+        if (!spliceTabs.framePartUnchanged()) index.tabHandleIndex = spliceTabs.remapOld(index.tabHandleIndex, time);
+        remapOldLineLayoutIndex(index.lineLayoutIndex, time);
+    }
+
+    inline function remapOldLineLayoutIndex(index:LineLayoutIndex, time:Float):Void {
+        if (!spliceLines.framePartUnchanged()) index.linesIndex = spliceLines.remapOld(index.linesIndex, time);
+        if (!spliceWrappedLines.framePartUnchanged()) index.wrappedLinesIndex = spliceWrappedLines.remapOld(index.wrappedLinesIndex, time);
+        if (!spliceLinesByHash.framePartUnchanged()) index.linesByHashIndex = spliceLinesByHash.remapOld(index.linesByHashIndex, time);
+        if (!spliceWrappedLinesByHash.framePartUnchanged()) index.wrappedLinesByHashIndex = spliceWrappedLinesByHash.remapOld(index.wrappedLinesByHashIndex, time);
+    }
+
+    function remapNewPrepaintIndex(index:PrepaintStateIndex):Void {
+        final time = index.time;
+        index.hitboxesIndex = spliceHitboxes.remapNew(index.hitboxesIndex, time);
+        index.tooltipsIndex = spliceTooltips.remapNew(index.tooltipsIndex, time);
+        index.deferredDrawsIndex = spliceDeferred.remapNew(index.deferredDrawsIndex, time);
+        index.dispatchTreeIndex = spliceNodes.remapNew(index.dispatchTreeIndex, time);
+        index.accessedElementStatesIndex = spliceAccessed.remapNew(index.accessedElementStatesIndex, time);
+        remapNewLineLayoutIndex(index.lineLayoutIndex, time);
+    }
+
+    function remapNewPaintIndex(index:PaintIndex):Void {
+        final time = index.time;
+        index.sceneIndex = spliceScene.remapNew(index.sceneIndex, time);
+        index.mouseListenersIndex = spliceMouse.remapNew(index.mouseListenersIndex, time);
+        index.inputHandlersIndex = spliceInput.remapNew(index.inputHandlersIndex, time);
+        index.textInputRegionsIndex = spliceRegions.remapNew(index.textInputRegionsIndex, time);
+        index.cursorStylesIndex = spliceCursors.remapNew(index.cursorStylesIndex, time);
+        index.accessedElementStatesIndex = spliceAccessed.remapNew(index.accessedElementStatesIndex, time);
+        index.tabHandleIndex = spliceTabs.remapNew(index.tabHandleIndex, time);
+        remapNewLineLayoutIndex(index.lineLayoutIndex, time);
+    }
+
+    inline function remapNewLineLayoutIndex(index:LineLayoutIndex, time:Float):Void {
+        index.linesIndex = spliceLines.remapNew(index.linesIndex, time);
+        index.wrappedLinesIndex = spliceWrappedLines.remapNew(index.wrappedLinesIndex, time);
+        index.linesByHashIndex = spliceLinesByHash.remapNew(index.linesByHashIndex, time);
+        index.wrappedLinesByHashIndex = spliceWrappedLinesByHash.remapNew(index.wrappedLinesByHashIndex, time);
+    }
+
+    /**
+     * Ends a frame drawn in place: what the end of a full frame does for
+     * the views rendered (input handler, trackers, accessed entities, focus
+     * events, cursor), without swapping frames.
+     */
+    function finishInPlaceFrame(previousFocusPath:Array<Int>, previousWindowActive:Bool):Void {
+        final frame = renderedFrame;
+        dirtyViews.clear();
+        registerPlatformInputHandler(frame);
+        renderable.scene = frame.scene;
+
+        // The views drawn inside the replaced ranges and drawn nowhere now stop reacting
+        final tree = frame.dispatchTree;
+        var stopped = false;
+        for (i in 0...inPlaceOldViews.length) {
+            final oldViewId = inPlaceOldViews[i];
+            if (!renderedViews.exists(oldViewId) && !tree.containsView(oldViewId)) {
+                final tracker = trackers.get(oldViewId);
+                if (tracker != null) {
+                    // What it accessed may not be tracked anymore
+                    amendOldAccessed.push(oldViewId);
+                    for (accessed in tracker.accessed.ids) {
+                        amendOldAccessed.push(accessed);
+                    }
+                    tracker.destroy();
+                    trackers.remove(oldViewId);
+                    stopped = true;
+                }
+            }
+        }
+        if (stopped) {
+            final ids = trackerIds;
+            var kept = 0;
+            for (i in 0...ids.length) {
+                if (trackers.exists(ids[i])) {
+                    ids[kept++] = ids[i];
+                }
+            }
+            ids.resize(kept);
+        }
+        inPlaceOldViews.resize(0);
+        if (inPlaceDroppedStates) {
+            frame.compactElementStates();
+            elementIdRoot.trie.endFrame(elementIdRoot);
+        }
+
+        AnyElement.clearArena();
+        drawCount++;
+        inPlaceFrameCount++;
+        inPlaceFramesDrawn++;
+
+        // The focused node may be new or gone
+        final focus = _focus;
+        frame.focus = focus != null && tree.focusableNodeId(focus.id) != -1 ? focus : null;
+        var focusBeforeListeners = _focus;
+        focusBeforeListeners = dispatchFocusChanges(previousFocusPath, previousWindowActive, focusBeforeListeners);
+
+        updateLiveEntitiesInPlace();
+        resetCursorStyle();
+        refreshing = false;
+        focusMovedWhileDrawing = _focus != focusBeforeListeners;
+
+        #if glaze_verify_cache
+        // Compared with a full frame, unless something changed while it
+        // drew (a view notified, a scroll handle moved...): a second render
+        // would show that change, the frame drawn shows it next frame
+        if (verifyCache && pendingDirtyViewIds.length == 0 && !dirty && !viewDependencies.anyChanged() && _focus == inPlaceFocusAtStart) {
+            verifyInPlaceFrame();
+        }
+        #end
+    }
+
+    /**
+     * `recordEntitiesAccessed` for a frame drawn in place: the entities the
+     * views rendered access now are tracked, those they accessed before and
+     * nothing accesses anymore are not.
+     */
+    function updateLiveEntitiesInPlace():Void {
+        final live = liveEntities;
+        final rendered = inPlaceRenderedIds;
+        inline function track(entityId:Int):Void {
+            if (!live.contains(entityId)) {
+                live.add(entityId);
+                app.addWindowInvalidator(entityId, id, this);
+            }
+        }
+        for (i in 0...rendered.length) {
+            final viewId = rendered[i];
+            track(viewId);
+            final tracker = trackers.get(viewId);
+            if (tracker != null) {
+                for (accessed in tracker.accessed.ids) {
+                    track(accessed);
+                }
+            }
+        }
+        for (accessed in frameAccessed.ids) {
+            track(accessed);
+            lastFrameAccessed.add(accessed);
+        }
+        frameAccessed.clear();
+        final candidates = amendOldAccessed;
+        for (i in 0...candidates.length) {
+            final entityId = candidates[i];
+            if (live.contains(entityId) && !stillAccessed(entityId)) {
+                live.remove(entityId);
+                app.removeWindowInvalidator(entityId, id);
+            }
+        }
+        candidates.resize(0);
+        inPlaceRenderedIds.resize(0);
+    }
+
+    /** Whether a view of this window or the last frame outside of views accessed the entity */
+    function stillAccessed(entityId:Int):Bool {
+        if (trackers.exists(entityId) || lastFrameAccessed.contains(entityId)) {
+            return true;
+        }
+        final rendered = inPlaceRenderedIds;
+        for (i in 0...rendered.length) {
+            final tracker = trackers.get(rendered[i]);
+            if (tracker != null && tracker.accessed.contains(entityId)) {
+                return true;
+            }
+        }
+        final ids = trackerIds;
+        for (i in 0...ids.length) {
+            if (trackers.get(ids[i]).accessed.contains(entityId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    #if glaze_verify_cache
+    /**
+     * Whether a view must not render for real in place of its reuse to be
+     * checked (`verifyCache`): during the full frame checking a frame drawn
+     * in place, the views rendered in place are reused (rendering them a
+     * second time in a draw would show what their first render changed).
+     */
+    @:allow(glaze)
+    inline function exemptFromVerification(viewId:Int):Bool {
+        return inPlaceOracle && amendedViews.exists(viewId);
+    }
+
+    /**
+     * Number of frames drawn in place that were compared with a full frame
+     * since the start (`glaze_verify_cache`).
+     */
+    public static var inPlaceVerifications:Int = 0;
+
+    /** Number of frames drawn in place that differed from the full frame */
+    public static var inPlaceVerificationFailures:Int = 0;
+
+    /** While the full frame checking a frame drawn in place is drawn */
+    var inPlaceOracle:Bool = false;
+
+    /** Whether a view drawn in this frame saw other hover answers than in its last frame */
+    @:allow(glaze)
+    var hoverChangedInFrame:Bool = false;
+
+    final inPlaceOracleNames:Array<String> = [];
+
+    /**
+     * `glaze_verify_cache`: right after a frame drawn in place, a full frame
+     * is drawn the usual way (every view renders, see `verifyCache`, except
+     * the views rendered in place, reused) and must be the frame drawn in
+     * place: scene (operations and draw orders),
+     * hitboxes, dispatch tree, listeners, cursor styles, tab order, element
+     * states and tracked entities. The full frame is the one kept. A
+     * difference is reported like a cached rendering that differs.
+     */
+    function verifyInPlaceFrame():Void {
+        inPlaceOracleNames.resize(0);
+        for (i in 0...inPlaceRoots.length) {
+            final tracker = trackers.get(inPlaceRoots[i]);
+            final state = tracker != null ? tracker.state : null;
+            final model = state != null ? state.model : null;
+            inPlaceOracleNames.push(model == null ? 'view' : Std.isOfType(model, ComponentBuilder.ComponentHost)
+                ? Type.getClassName(Type.getClass((cast model : ComponentBuilder.ComponentHost).instance))
+                : Type.getClassName(Type.getClass(model)));
+        }
+        final live = liveEntities.ids.copy();
+        final views = inPlaceViewCount;
+        inPlaceInputHandlers = inputHandlerCount(renderedFrame);
+        inPlaceOracle = true;
+        try {
+            drawFullFrame(false);
+        }
+        catch (e:haxe.Exception) {
+            inPlaceOracle = false;
+            throw glaze.util.Exceptions.rethrow(e);
+        }
+        inPlaceOracle = false;
+        // One draw for the caller
+        drawCount--;
+        inPlaceViewCount = views;
+        if (!hoverChangedInFrame) {
+            // The views rendered in place are reused by the full frame: those
+            // they rendered without drawing (measured, like the first item
+            // of a uniform list) are tracked in place only
+            final extra = [for (entityId in live) if (!liveEntities.contains(entityId) && !amendedViews.exists(entityId)) entityId];
+            final missing = [for (entityId in liveEntities.ids) if (live.indexOf(entityId) == -1) entityId];
+            if (extra.length > 0 || missing.length > 0) {
+                reportInPlaceDifference('tracked entities: only in place $extra, only in the full frame $missing');
+            }
+        }
+    }
+
+    var inPlaceInputHandlers:Int = 0;
+
+    /** The input handlers of a frame, with the one given to the platform */
+    function inputHandlerCount(frame:Frame):Int {
+        var count = platformInputHandler != null ? 1 : 0;
+        for (handler in frame.inputHandlers) {
+            if (handler != null) count++;
+        }
+        return count;
+    }
+
+    function reportInPlaceDifference(difference:String):Void {
+        inPlaceVerificationFailures++;
+        cacheVerificationFailures++;
+        onCacheVerificationFailure('In place rendering of ${inPlaceOracleNames.join(', ')} differs from a full frame ($difference)');
+    }
+
+    /** Compares the frame drawn in place with the full frame drawn after it */
+    function compareInPlaceFrame(amended:Frame, full:Frame):Void {
+        inPlaceVerifications++;
+        if (hoverChangedInFrame) {
+            // GPUI keeps the hover a view was drawn with until a mouse move notifies it
+            return;
+        }
+        final difference = inPlaceFrameDifference(amended, full);
+        if (difference != null) {
+            reportInPlaceDifference(difference);
+        }
+    }
+
+    function inPlaceFrameDifference(a:Frame, b:Frame):Null<String> {
+        if (a.hitboxes.length != b.hitboxes.length) {
+            return 'hitboxes: ${a.hitboxes.length} in place, ${b.hitboxes.length} in the full frame';
+        }
+        for (i in 0...a.hitboxes.length) {
+            final x = a.hitboxes[i];
+            final y = b.hitboxes[i];
+            if (!x.bounds.equals(y.bounds) || !x.contentMask.equals(y.contentMask) || x.behavior != y.behavior) {
+                return 'hitbox $i: ${x.bounds} in place, ${y.bounds} in the full frame';
+            }
+        }
+        if (a.cursorStyles.length != b.cursorStyles.length) {
+            return 'cursor styles: ${a.cursorStyles.length} in place, ${b.cursorStyles.length} in the full frame';
+        }
+        for (i in 0...a.cursorStyles.length) {
+            final x = a.cursorStyles[i];
+            final y = b.cursorStyles[i];
+            if (x.style != y.style || (x.hitboxId == -1) != (y.hitboxId == -1)) {
+                return 'cursor style $i';
+            }
+        }
+        if (a.mouseListeners.length != b.mouseListeners.length) {
+            return 'mouse listeners: ${a.mouseListeners.length} in place, ${b.mouseListeners.length} in the full frame';
+        }
+        for (i in 0...a.mouseListeners.length) {
+            if (a.mouseListeners[i].kind != b.mouseListeners[i].kind) {
+                return 'mouse listener $i';
+            }
+        }
+        if (a.tooltipRequests.length != b.tooltipRequests.length) {
+            return 'tooltips: ${a.tooltipRequests.length} in place, ${b.tooltipRequests.length} in the full frame';
+        }
+        if (a.deferredDraws.length != b.deferredDraws.length) {
+            return 'deferred draws: ${a.deferredDraws.length} in place, ${b.deferredDraws.length} in the full frame';
+        }
+        if (a.textInputRegions.length != b.textInputRegions.length) {
+            return 'text input regions: ${a.textInputRegions.length} in place, ${b.textInputRegions.length} in the full frame';
+        }
+        // Counted before the full frame (reused ranges move them), with the
+        // one given to the platform
+        final fullHandlers = inputHandlerCount(b);
+        if (inPlaceInputHandlers != fullHandlers) {
+            return 'input handlers: $inPlaceInputHandlers in place, $fullHandlers in the full frame';
+        }
+        final ta = a.dispatchTree;
+        final tb = b.dispatchTree;
+        if (ta.len() != tb.len()) {
+            return 'dispatch nodes: ${ta.len()} in place, ${tb.len()} in the full frame';
+        }
+        for (i in 0...ta.len()) {
+            final x = ta.node(i);
+            final y = tb.node(i);
+            final contexts = x.context == null ? y.context == null : y.context != null && x.context.equals(y.context);
+            if (x.parent != y.parent || x.focusId != y.focusId || x.viewId != y.viewId || !contexts
+                || x.keyListeners.length != y.keyListeners.length || x.actionListeners.length != y.actionListeners.length
+                || x.modifiersChangedListeners.length != y.modifiersChangedListeners.length) {
+                return 'dispatch node $i: parent ${x.parent} focus ${x.focusId} view ${x.viewId} in place, parent ${y.parent} focus ${y.focusId} view ${y.viewId} in the full frame';
+            }
+            if (x.focusId != -1 && ta.focusableNodeId(x.focusId) != tb.focusableNodeId(x.focusId)) {
+                return 'focusable node of $i';
+            }
+            if (x.viewId != -1 && ta.viewNodeId(x.viewId) != tb.viewNodeId(x.viewId)) {
+                return 'view node of $i';
+            }
+        }
+        if ((a.focus == null ? -1 : a.focus.id) != (b.focus == null ? -1 : b.focus.id)) {
+            return 'focus';
+        }
+        final ha = a.tabStops.insertionHistory;
+        final hb = b.tabStops.insertionHistory;
+        if (!sameTabOperations(a.tabStops, b.tabStops, 0, hb.length) || ha.length != hb.length) {
+            return 'tab operations: ${ha.length} in place, ${hb.length} in the full frame';
+        }
+        final sa = a.scene;
+        final sb = b.scene;
+        final sceneDifference = sa.rangeDifference(0, sa.paintIndex(), sb, 0, sb.paintIndex());
+        if (sceneDifference != null) {
+            return 'scene: $sceneDifference';
+        }
+        final pa = @:privateAccess sa.opPrimitives;
+        final pb = @:privateAccess sb.opPrimitives;
+        for (i in 0...pa.length) {
+            if (pa[i] != null && pa[i].order != pb[i].order) {
+                return 'draw order of paint operation $i: ${pa[i].order} in place, ${pb[i].order} in the full frame';
+            }
+        }
+        inline function accessedCount(frame:Frame):Int {
+            var count = 0;
+            for (box in frame.accessedElementStates) {
+                if (box != unusedStateBox) count++;
+            }
+            return count;
+        }
+        if (accessedCount(a) != accessedCount(b)) {
+            return 'accessed element states: ${accessedCount(a)} in place, ${accessedCount(b)} in the full frame';
+        }
+        final mark = ++stateMark;
+        for (box in a.accessedElementStates) {
+            box.inPlaceMark = mark;
+        }
+        for (box in b.accessedElementStates) {
+            if (box != unusedStateBox && box.inPlaceMark != mark) {
+                return 'element state ${box.node.toString()} accessed only by the full frame';
+            }
+        }
+        return null;
+    }
+    #end
+
+    /**
+     * Checks the ranges recorded by the views of the last frame against its
+     * arrays (debugging of in place rendering): returns the first problem.
+     */
+    @:noCompletion
+    public function debugCheckViewRanges(maxCheckedHeight:Float):Null<String> {
+        final frame = renderedFrame;
+        final tree = frame.dispatchTree;
+        final drawn = layoutFrame() - 1;
+        for (state in frame.viewStates) {
+            if (state.prepaintFrame != drawn || state.paintFrame != drawn || state.model == null) {
+                continue;
+            }
+            final name = Type.getClassName(Type.getClass(state.model)) + ' ' + state.model.entityId;
+            final node = state.dispatchNode;
+            if (node < 0 || node >= tree.len() || tree.node(node).viewId != state.model.entityId) {
+                return '$name: dispatch node $node is not its node';
+            }
+            final start = state.prepaintStart.dispatchTreeIndex;
+            final end = state.prepaintEnd.dispatchTreeIndex;
+            if (start > end || end > tree.len() || start != node + 1) {
+                return '$name: dispatch range $start..$end after node $node';
+            }
+            if (end > start && tree.node(start).parent != node) {
+                return '$name: first node $start has parent ${tree.node(start).parent}, not $node';
+            }
+            if (state.prepaintEnd.hitboxesIndex > frame.hitboxes.length || state.prepaintStart.hitboxesIndex > state.prepaintEnd.hitboxesIndex) {
+                return '$name: hitboxes ${state.prepaintStart.hitboxesIndex}..${state.prepaintEnd.hitboxesIndex} of ${frame.hitboxes.length}';
+            }
+            // Content drawn outside of the view's bounds (scrolled) is not checked
+            final contained = state.bounds.size.height <= maxCheckedHeight;
+            for (i in state.prepaintStart.hitboxesIndex...state.prepaintEnd.hitboxesIndex) {
+                if (!contained) break;
+                final b = frame.hitboxes[i].bounds;
+                if (b.origin.x < state.bounds.origin.x - 0.01 || b.origin.y < state.bounds.origin.y - 0.01
+                    || b.origin.x + b.size.width > state.bounds.origin.x + state.bounds.size.width + 0.01
+                    || b.origin.y + b.size.height > state.bounds.origin.y + state.bounds.size.height + 0.01) {
+                    return '$name: hitbox $i ${b} outside its bounds ${state.bounds}';
+                }
+            }
+            final scene = frame.scene;
+            if (state.paintEnd.sceneIndex > scene.paintIndex() || state.paintStart.sceneIndex > state.paintEnd.sceneIndex) {
+                return '$name: scene ${state.paintStart.sceneIndex}..${state.paintEnd.sceneIndex} of ${scene.paintIndex()}';
+            }
+            final primitives = @:privateAccess scene.opPrimitives;
+            final scale = _scaleFactor;
+            for (i in state.paintStart.sceneIndex...state.paintEnd.sceneIndex) {
+                if (!contained) break;
+                final p = primitives[i];
+                if (p == null) continue;
+                final x = p.boundsX / scale;
+                final y = p.boundsY / scale;
+                if (x < state.bounds.origin.x - 2 || y < state.bounds.origin.y - 2
+                    || x > state.bounds.origin.x + state.bounds.size.width + 2 || y > state.bounds.origin.y + state.bounds.size.height + 2) {
+                    return '$name: paint operation $i at $x,$y outside its bounds ${state.bounds}';
+                }
+            }
+            if (state.paintEnd.accessedElementStatesIndex > frame.accessedElementStates.length
+                || state.layoutAccessedEnd > frame.accessedElementStates.length) {
+                return '$name: accessed ranges past the end';
+            }
+            // The element states of its ranges are its own (paths under its element id)
+            final accessed = frame.accessedElementStates;
+            inline function under(node:GlobalElementId):Bool {
+                var current = node;
+                while (current != null && current.depth > state.stateId.depth) {
+                    current = current.parent;
+                }
+                return current == state.stateId;
+            }
+            for (range in [
+                [state.layoutAccessedStart, state.layoutAccessedEnd],
+                [state.prepaintStart.accessedElementStatesIndex, state.prepaintEnd.accessedElementStatesIndex],
+                [state.paintStart.accessedElementStatesIndex, state.paintEnd.accessedElementStatesIndex]
+            ]) {
+                for (i in range[0]...range[1]) {
+                    if (accessed[i] != unusedStateBox && !under(accessed[i].node)) {
+                        return '$name: accessed state $i ${accessed[i].node.toString()} in its range ${range[0]}..${range[1]} is not under ${state.stateId.toString()}';
+                    }
+                }
+            }
+            // And every accessed state under its element id is in its ranges
+            // (a copy may stay outside: a retained view that renders again
+            // in prepaint accesses its states again)
+            inline function inRanges(i:Int):Bool {
+                return (i >= state.layoutAccessedStart && i < state.layoutAccessedEnd)
+                    || (i >= state.prepaintStart.accessedElementStatesIndex && i < state.prepaintEnd.accessedElementStatesIndex)
+                    || (i >= state.paintStart.accessedElementStatesIndex && i < state.paintEnd.accessedElementStatesIndex);
+            }
+            function copiedInRanges(box:ElementStateBox<Dynamic>):Bool {
+                for (j in 0...accessed.length) {
+                    if (accessed[j] == box && inRanges(j)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            for (i in 0...accessed.length) {
+                if (under(accessed[i].node) && accessed[i].node != state.stateId && !inRanges(i) && !copiedInRanges(accessed[i])) {
+                    return '$name: accessed state $i ${accessed[i].node.toString()} under it is outside its ranges ${state.layoutAccessedStart}..${state.layoutAccessedEnd}, ${state.prepaintStart.accessedElementStatesIndex}..${state.prepaintEnd.accessedElementStatesIndex}, ${state.paintStart.accessedElementStatesIndex}..${state.paintEnd.accessedElementStatesIndex}';
+                }
+            }
+        }
+        return null;
+    }
+
 /// View caching (Rust `prepaint_index`, `reuse_prepaint`, `paint_index`, `reuse_paint`)
 
     /**
@@ -3278,6 +5196,7 @@ class Window implements WindowInvalidator {
     @:allow(glaze)
     function prepaintIndexInto(index:PrepaintStateIndex):Void {
         final frame = nextFrame;
+        index.time = ++captureClock;
         index.hitboxesIndex = frame.hitboxes.length;
         index.tooltipsIndex = frame.tooltipRequests.length;
         index.deferredDrawsIndex = frame.deferredDraws.length;
@@ -3343,6 +5262,32 @@ class Window implements WindowInvalidator {
         return nextFrame.accessedElementStates.length;
     }
 
+    @:allow(glaze)
+    inline function reusedElementStatesIndex():Int {
+        return nextFrame.reusedElementStates.length;
+    }
+
+    /**
+     * Forgets the element states copied by `reuseAccessedElementStates` at
+     * `start...end` (and from `reusedStart` in the reused list) for a
+     * retained view that renders again after all: it accesses what it uses
+     * again, and a state it no longer uses is dropped like after a render
+     * (a copy left in its ancestors' ranges would keep it alive).
+     */
+    @:allow(glaze)
+    function forgetReusedElementStates(start:Int, end:Int, reusedStart:Int):Void {
+        final next = nextFrame;
+        final accessed = next.accessedElementStates;
+        final reused = next.reusedElementStates;
+        for (i in start...end) {
+            accessed[i] = unusedStateBox;
+            final j = reusedStart + (i - start);
+            if (reusedStart >= 0 && j < reused.length) {
+                reused[j] = unusedStateBox;
+            }
+        }
+    }
+
     /**
      * Marks the element states accessed between `start` and `end` during the
      * last frame as accessed again (they are kept for the next frame).
@@ -3364,6 +5309,7 @@ class Window implements WindowInvalidator {
     @:allow(glaze)
     function paintIndexInto(index:PaintIndex):Void {
         final frame = nextFrame;
+        index.time = ++captureClock;
         index.sceneIndex = frame.scene.paintIndex();
         index.mouseListenersIndex = frame.mouseListeners.length;
         index.inputHandlersIndex = frame.inputHandlers.length;
@@ -3402,9 +5348,11 @@ class Window implements WindowInvalidator {
             next.accessedElementStates.push(key);
             next.reusedElementStates.push(key);
         }
-        next.tabStops.replayRange(rendered.tabStops, start.tabHandleIndex, end.tabHandleIndex);
+        // While a view renders in place, the frame's scene and tab order
+        // are being made again: the ranges index the previous ones
+        next.tabStops.replayRange(tabStopsSource != null ? tabStopsSource : rendered.tabStops, start.tabHandleIndex, end.tabHandleIndex);
         windowTextSystem.reuseLayouts(start.lineLayoutIndex, end.lineLayoutIndex);
-        next.scene.replay(start.sceneIndex, end.sceneIndex, rendered.scene);
+        next.scene.replay(start.sceneIndex, end.sceneIndex, sceneSource != null ? sceneSource : rendered.scene);
     }
 
 /// View caching: debugging
@@ -3518,7 +5466,8 @@ class Window implements WindowInvalidator {
             }
         }
 
-        return next.scene.rangeDifference(state.paintStart.sceneIndex, state.paintEnd.sceneIndex, old.scene, verification.paintStart.sceneIndex, verification.paintEnd.sceneIndex);
+        final oldScene = sceneSource != null ? sceneSource : old.scene;
+        return next.scene.rangeDifference(state.paintStart.sceneIndex, state.paintEnd.sceneIndex, oldScene, verification.paintStart.sceneIndex, verification.paintEnd.sceneIndex);
     }
 
     /**
@@ -5746,6 +7695,8 @@ class Window implements WindowInvalidator {
      */
     public function requestAnimationFrame():Void {
         final entity = currentView();
+        // Animated: drawn with its ancestors (see `renderInPlace`)
+        animationViews.set(entity, true);
         onNextFrame((_, cx) -> cx.notify(entity));
     }
 

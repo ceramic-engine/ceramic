@@ -127,8 +127,11 @@ class ViewCacheTest extends TestCase {
         for (child in children) assertEquals(1, child.read(app).renders);
 
         // Only the child reading the counter and its ancestor render again
+        // (its height changes: rendered in place, it gives way to a full frame,
+        // where it does not render a second time)
         counter.read(app).count = 5;
         frame();
+        assertEquals(0, window.inPlaceViewCount);
         assertEquals(2, window.renderedViewCount);
         assertEquals(2, window.reusedViewCount);
         assertEquals(2, root.read(app).renders);
@@ -142,12 +145,23 @@ class ViewCacheTest extends TestCase {
         frame();
         assertEquals(drawCount, window.drawCount);
 
-        // Notifying a leaf view renders it and its ancestors only
+        // Notifying a leaf view renders it alone, in place (GPUI renders its
+        // ancestors too, `inPlaceRendering` off)
+        children[2].update(app, (_, cx) -> cx.notify());
+        frame();
+        assertEquals(1, window.renderedViewCount);
+        assertEquals(1, window.inPlaceViewCount);
+        assertEquals(2, children[2].read(app).renders);
+        assertEquals(1, children[0].read(app).renders);
+        assertEquals(2, root.read(app).renders);
+        window.inPlaceRendering = false;
         children[2].update(app, (_, cx) -> cx.notify());
         frame();
         assertEquals(2, window.renderedViewCount);
-        assertEquals(2, children[2].read(app).renders);
-        assertEquals(1, children[0].read(app).renders);
+        assertEquals(0, window.inPlaceViewCount);
+        assertEquals(3, children[2].read(app).renders);
+        assertEquals(3, root.read(app).renders);
+        window.inPlaceRendering = true;
 
         // Refresh renders everything
         window.refresh();
@@ -365,10 +379,19 @@ class ViewCacheTest extends TestCase {
         assertEquals(1, cached.reusedViewCount);
         assertEquals(5, cached.renderedViewCount);
 
-        // Nothing moves: everything but the root and the grower is reused
+        // Nothing moves: the grower renders alone, in place
         grower.update(app, (_, cx) -> cx.notify());
         frame();
         assertSameFrames(cached, reference, 'notified');
+        assertEquals(1, cached.inPlaceViewCount);
+        assertEquals(1, cached.renderedViewCount);
+        assertEquals(0, cached.reusedViewCount);
+
+        // Without in place rendering, everything but the root and the grower is reused
+        cached.inPlaceRendering = false;
+        grower.update(app, (_, cx) -> cx.notify());
+        frame();
+        assertSameFrames(cached, reference, 'notified, GPUI rule');
         assertEquals(4, cached.reusedViewCount);
     }
 
