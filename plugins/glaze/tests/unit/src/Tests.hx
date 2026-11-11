@@ -56,6 +56,7 @@ class Tests {
         runner.add(new tests.SystemNotificationsTest());
         runner.add(new tests.CeramicInputHelpersTest());
         runner.add(new tests.CeramicFocusKeyboardTest());
+        runner.add(new tests.CeramicUnityScreenTest());
         // GPUI's inspector (define glaze_inspector)
         #if glaze_inspector
         runner.add(new tests.InspectorTest());
