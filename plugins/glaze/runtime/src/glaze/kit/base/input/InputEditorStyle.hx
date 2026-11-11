@@ -30,6 +30,13 @@ class InputEditorStyle {
 
     public var editorInvisible:Null<Hsla>;
 
+    /**
+     * The color of the placeholder (null: `mutedForeground`). Not in
+     * gpui-kit: set by `Input.placeholderColor` (Cityscape's find inputs
+     * take theirs from the editor theme).
+     */
+    public var placeholder:Null<Hsla> = null;
+
     public function new(?foreground:Hsla, ?mutedForeground:Hsla, ?background:Hsla, ?border:Hsla, ?selection:Hsla, ?caret:Hsla, ?editorInvisible:Hsla) {
         this.foreground = foreground != null ? foreground : new Hsla();
         this.mutedForeground = mutedForeground != null ? mutedForeground : new Hsla();
@@ -46,7 +53,9 @@ class InputEditorStyle {
 
     /** Rust `Clone` */
     public function clone():InputEditorStyle {
-        return new InputEditorStyle(foreground, mutedForeground, background, border, selection, caret, editorInvisible);
+        final result = new InputEditorStyle(foreground, mutedForeground, background, border, selection, caret, editorInvisible);
+        result.placeholder = placeholder;
+        return result;
     }
 
     /**

@@ -146,6 +146,7 @@ class Tests {
         // gpui-kit (wave 6: styled input components)
         runner.add(new tests.kit.InputComponentsTest());
         runner.add(new tests.kit.ComponentInputTest());
+        runner.add(new tests.kit.KitStyleHooksTest());
         runner.add(new tests.kit.ComponentDiffParserTest());
         runner.add(new tests.kit.ComponentDiffDocumentTest());
         runner.add(new tests.kit.ComponentDiffStateTest());

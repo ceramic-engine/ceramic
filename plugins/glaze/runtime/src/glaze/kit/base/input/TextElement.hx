@@ -1530,7 +1530,7 @@ class TextElement extends Element {
         else {
             text;
         };
-        final textColor = isEmpty ? dim(state.editorStyle.mutedForeground) : fg;
+        final textColor = isEmpty ? dim(state.editorStyle.placeholder != null ? state.editorStyle.placeholder : state.editorStyle.mutedForeground) : fg;
 
         var bounds = bounds;
         final wrapWidth:Null<Float> = if (multiLine && state.softWrap) {

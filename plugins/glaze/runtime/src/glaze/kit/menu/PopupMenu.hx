@@ -43,6 +43,7 @@ import glaze.kit.theme.Theme;
 
 import glaze.Prelude.*;
 import glaze.kit.base.Prelude.*;
+import glaze.kit.base.Scrollbar.ScrollbarStyles;
 
 using glaze.kit.base.ElementExt;
 using glaze.kit.ThemeStyled;
@@ -369,6 +370,9 @@ class PopupMenu extends Model implements Render {
     @:allow(glaze.kit, tests)
     var scrollableValue:Bool = false;
 
+    /** The styles of the scrollbar of a scrollable menu (null: the theme's). Not in gpui-kit. */
+    var scrollbarStylesValue:Null<(ScrollbarStyles) -> ScrollbarStyles> = null;
+
     var externalLinkIconValue:Bool = true;
 
     @:allow(glaze.kit, tests)
@@ -498,6 +502,15 @@ class PopupMenu extends Model implements Render {
      */
     public function scrollable(scrollable:Bool):PopupMenu {
         scrollableValue = scrollable;
+        return this;
+    }
+
+    /**
+     * Set the styles of the scrollbar of a scrollable menu
+     * (`Scrollbar.styles`). Not in gpui-kit.
+     */
+    public function scrollbarStyles(styles:(ScrollbarStyles) -> ScrollbarStyles):PopupMenu {
+        scrollbarStylesValue = styles;
         return this;
     }
 
@@ -730,6 +743,7 @@ class PopupMenu extends Model implements Render {
             size = result.size;
             checkSideValue = result.checkSideValue;
             scrollableValue = result.scrollableValue;
+            scrollbarStylesValue = result.scrollbarStylesValue;
             externalLinkIconValue = result.externalLinkIconValue;
         }
         cx.notify();
@@ -1420,7 +1434,11 @@ class PopupMenu extends Model implements Render {
             .occlude()
             .child(items);
         if (scrollableValue) {
-            root.verticalScrollbar(scrollHandle);
+            if (scrollbarStylesValue != null) {
+                root.styledScrollbar(scrollHandle, Vertical, scrollbarStylesValue);
+            } else {
+                root.verticalScrollbar(scrollHandle);
+            }
         }
         return root;
     }

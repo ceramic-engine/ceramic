@@ -114,6 +114,12 @@ class Input extends Component implements Styled implements Sizable implements Se
      */
     @prop var placeholder:Null<String> = null;
 
+    /**
+     * The color of the placeholder (null: the theme's `mutedForeground`, as
+     * in gpui-kit). Not in gpui-kit.
+     */
+    @prop var placeholderColor:Null<Hsla> = null;
+
     var inputStyle:StyleRefinement = new StyleRefinement();
 
     var size:Size = Medium;
@@ -565,6 +571,7 @@ class Input extends Component implements Styled implements Sizable implements Se
             theme.caret,
             theme.highlightTheme.style.editorInvisible
         );
+        editorStyle.placeholder = placeholderColor;
         state.state.update(cx, (s, _) -> s.setEditorStyle(editorStyle));
         final presentation0 = state.presentation(cx);
         final paddings = if (presentation0.isMultiLine()) {

@@ -21,6 +21,7 @@ import glaze.kit.base.ScrollableMask;
 import glaze.kit.base.Scrollbar;
 import glaze.kit.base.Scrollbar.ScrollbarAxis;
 import glaze.kit.base.Scrollbar.ScrollbarHandle;
+import glaze.kit.base.Scrollbar.ScrollbarStyles;
 
 import glaze.Prelude.*;
 
@@ -49,6 +50,14 @@ class ScrollableElement {
     /** Adds a horizontal scrollbar to the element. */
     public static function horizontalScrollbar(self:Div, scrollHandle:ScrollbarHandle, ?pos:haxe.PosInfos):Div {
         return scrollbar(self, scrollHandle, Horizontal, pos);
+    }
+
+    /**
+     * Adds a scrollbar styled by `styles` (`Scrollbar.styles`) to the
+     * element. Not in gpui-kit.
+     */
+    public static function styledScrollbar(self:Div, scrollHandle:ScrollbarHandle, axis:ScrollbarAxis, styles:Null<(ScrollbarStyles) -> ScrollbarStyles>, ?pos:haxe.PosInfos):Div {
+        return self.child(ScrollbarLayer.component(callerId(pos), axis, scrollHandle, styles));
     }
 
     /**
@@ -98,6 +107,12 @@ class Scrollable extends Component implements Styled implements ParentElement {
      * macOS, off elsewhere; horizontal-only areas do not bounce.
      */
     @prop var scrollBounce:Null<Bool> = null;
+
+    /**
+     * The styles of the scrollbar (`Scrollbar.styles`; null: the theme's).
+     * Not in gpui-kit.
+     */
+    @prop var scrollbarStyles:Null<(ScrollbarStyles) -> ScrollbarStyles> = null;
 
     @:allow(glaze.kit.scroll)
     function new(element:Div, axis:ScrollbarAxis, ?pos:haxe.PosInfos) {
@@ -252,11 +267,11 @@ class Scrollable extends Component implements Styled implements ParentElement {
         if (axis == Horizontal) {
             root.child(ScrollableMask.verticalWheel(scrollHandle));
         }
-        return root.child(renderScrollbar(scrollbarId, scrollHandle, axis, window, cx));
+        return root.child(renderScrollbar(scrollbarId, scrollHandle, axis, window, cx, scrollbarStyles));
     }
 
     @:allow(glaze.kit.scroll)
-    static function renderScrollbar(id:ElementIdArg, scrollHandle:ScrollbarHandle, axis:ScrollbarAxis, window:Window, cx:App):Div {
+    static function renderScrollbar(id:ElementIdArg, scrollHandle:ScrollbarHandle, axis:ScrollbarAxis, window:Window, cx:App, ?styles:(ScrollbarStyles) -> ScrollbarStyles):Div {
         // Do not render scrollbar when inspector is picking elements, to
         // allow us to pick the background elements (the port has no
         // inspector).
@@ -266,15 +281,17 @@ class Scrollable extends Component implements Styled implements ParentElement {
             return div();
         }
         #end
+        final scrollbar = new Scrollbar(scrollHandle)
+            .id(id)
+            .axis(axis)
+            .viewportFromLayout();
+        if (styles != null) {
+            scrollbar.styles(styles);
+        }
         return div()
             .absolute()
             .inset0()
-            .child(
-                new Scrollbar(scrollHandle)
-                    .id(id)
-                    .axis(axis)
-                    .viewportFromLayout()
-            );
+            .child(scrollbar);
     }
 
 }
@@ -290,15 +307,18 @@ private class ScrollbarLayer extends Component {
 
     final scrollHandle:ScrollbarHandle;
 
-    public function new(id:ElementId, axis:ScrollbarAxis, scrollHandle:ScrollbarHandle) {
+    final styles:Null<(ScrollbarStyles) -> ScrollbarStyles>;
+
+    public function new(id:ElementId, axis:ScrollbarAxis, scrollHandle:ScrollbarHandle, ?styles:(ScrollbarStyles) -> ScrollbarStyles) {
         super();
         this.id = id;
         this.axis = axis;
         this.scrollHandle = scrollHandle;
+        this.styles = styles;
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        return Scrollable.renderScrollbar(id, scrollHandle, axis, window, cx);
+        return Scrollable.renderScrollbar(id, scrollHandle, axis, window, cx, styles);
     }
 
 }
