@@ -399,6 +399,27 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public var zoneMouseCursor(default, null):Null<glaze.CursorStyle> = null;
 
     /**
+     * The mouse cursor of a drag started on a view zone, null when none
+     * (Cityscape: Monaco's `draggingUnchangedRegion` class on the editor
+     * while a hidden region bar edge is dragged, whose resize cursor covers
+     * the whole editor). While set, the element delivers the mouse moves
+     * and the mouse up of the whole window to the editor's mouse listeners
+     * (Monaco's window listeners of the drag), and the editor's own mouse
+     * handling does nothing else with them.
+     */
+    public var zoneDragCursor(default, null):Null<glaze.CursorStyle> = null;
+
+    /**
+     * Starts or updates a zone drag (`zoneDragCursor`).
+     */
+    public function setZoneDragCursor(cursor:Null<glaze.CursorStyle>):Void {
+        if (cursor != zoneDragCursor) {
+            zoneDragCursor = cursor;
+            notifyChanged();
+        }
+    }
+
+    /**
      * Whether the mouse is over the editor (its root element hovered, from
      * `handleHover`).
      */
@@ -655,11 +676,59 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * it (in model coordinates), or null.
      */
     function hitTestViewZone(mouseVerticalOffset:Float, isInContentArea:Bool, mouseColumn:Int):Null<MouseTarget> {
-        final viewModel = this.viewModel;
         final viewZoneWhitespace = viewModel.viewLayout.getWhitespaceAtVerticalOffset(mouseVerticalOffset);
         if (viewZoneWhitespace == null) {
             return null;
         }
+        return viewZoneTarget(viewZoneWhitespace, mouseVerticalOffset, isInContentArea, mouseColumn);
+    }
+
+    /**
+     * The zone whose reach covers a vertical offset outside it
+     * (`IViewZone.mouseReachAbove` and `mouseReachBelow`, a Cityscape
+     * addition for the Monaco overlays whose nodes overflow their zone: the
+     * `.top` of a hidden region bar reaches 6 px above it, its `.bottom`
+     * 4 px below), as a zone target with the offset in the zone (negative
+     * above it, past the height below it), or null.
+     */
+    function hitTestViewZoneReach(mouseVerticalOffset:Float, isInContentArea:Bool, mouseColumn:Int):Null<MouseTarget> {
+        final viewZones = widget.getViewZones();
+        if (viewZones == null) {
+            return null;
+        }
+        final layout = viewModel.viewLayout;
+        final above = viewZones.maxMouseReachAbove;
+        if (above > 0) {
+            // a zone just below the mouse, reaching up to it
+            final ws = layout.getWhitespaceAtVerticalOffset(mouseVerticalOffset + above);
+            if (ws != null && ws.verticalOffset > mouseVerticalOffset) {
+                final zone = viewZones.getZone(ws.id);
+                final reach = zone != null && zone.delegate.mouseReachAbove != null ? zone.delegate.mouseReachAbove : 0.0;
+                if (ws.verticalOffset - mouseVerticalOffset <= reach) {
+                    return viewZoneTarget(ws, mouseVerticalOffset, isInContentArea, mouseColumn);
+                }
+            }
+        }
+        final below = viewZones.maxMouseReachBelow;
+        if (below > 0) {
+            // a zone just above the mouse, reaching down to it
+            final ws = layout.getWhitespaceAtVerticalOffset(mouseVerticalOffset - below);
+            if (ws != null) {
+                final bottom = ws.verticalOffset + ws.height;
+                if (mouseVerticalOffset >= bottom) {
+                    final zone = viewZones.getZone(ws.id);
+                    final reach = zone != null && zone.delegate.mouseReachBelow != null ? zone.delegate.mouseReachBelow : 0.0;
+                    if (mouseVerticalOffset - bottom < reach) {
+                        return viewZoneTarget(ws, mouseVerticalOffset, isInContentArea, mouseColumn);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    function viewZoneTarget(viewZoneWhitespace:IViewWhitespaceViewportData, mouseVerticalOffset:Float, isInContentArea:Bool, mouseColumn:Int):MouseTarget {
+        final viewModel = this.viewModel;
         final converter = viewModel.coordinatesConverter;
         final viewZoneMiddle = viewZoneWhitespace.verticalOffset + viewZoneWhitespace.height / 2;
         final lineCount = viewModel.getLineCount();
@@ -732,6 +801,10 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final zoneTarget = hitTestViewZone(verticalOffset, relativeX >= layoutInfo.contentLeft, mouseColumn);
         if (zoneTarget != null) {
             return zoneTarget;
+        }
+        final reachTarget = hitTestViewZoneReach(verticalOffset, relativeX >= layoutInfo.contentLeft, mouseColumn);
+        if (reachTarget != null) {
+            return reachTarget;
         }
         if (relativeX < layoutInfo.contentLeft) {
             // _hitTestMargin: the full line range at the mouse
@@ -1787,6 +1860,14 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public function handleMouseUp(event:MouseUpEvent, window:Window, cx:App):Void {
         if (event.button == MouseButton.Left) {
             mouseDown = false;
+            if (zoneDragCursor != null && viewModel != null) {
+                // the drag's own mouse up listener ends it; the view stops
+                // delivering the window's events in any case
+                widget._fireMouseUp(editorMouseEvent(event.button, event.position, event.modifiers, event.clickCount));
+                setZoneDragCursor(null);
+                notifyChanged();
+                return;
+            }
             if (mouseDragAndDrop) {
                 mouseDragAndDrop = false;
                 if (viewModel != null) {

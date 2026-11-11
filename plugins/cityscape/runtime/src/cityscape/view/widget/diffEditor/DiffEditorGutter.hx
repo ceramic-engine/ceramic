@@ -10,6 +10,8 @@ import cityscape.common.diff.RangeMapping.DetailedLineRangeMapping;
 import cityscape.common.diff.RangeMapping.RangeMapping;
 import cityscape.view.widget.codeEditor.CodeEditorWidget;
 import cityscape.view.widget.diffEditor.DiffEditorViewModel;
+import glaze.kit.base.Scrollbar.ScalarTransition;
+import glaze.kit.base.animation.Easings;
 
 /**
  * An item of the gutter menu: a change of the diff, or the changes the
@@ -270,6 +272,84 @@ class DiffEditorGutter {
             effectiveCheckboxTop = Math.max(parentStart, Math.min(parentEnd - 1, effectiveCheckboxTop));
         }
         return effectiveCheckboxTop - itemStart;
+    }
+
+}
+
+/**
+ * The opacity of a gutter item over time, Monaco's CSS transitions of
+ * style.css: `.gutterItem { opacity: 0; transition: opacity 0.7s }` (the
+ * `ease` timing function of CSS), `.gutter:hover .gutterItem { opacity: 1;
+ * transition: opacity 0.1s ease-in-out }`, `.showAlways { opacity: 1;
+ * transition: none }`, and `noTransition` while `showAlways` changes
+ * (`DiffToolBar`, gutterFeature.ts). Measured on the real Monaco 0.52.2
+ * (glaze-golden scratchpad cs-cursor probe, s7-cursor.js): 0.52 at 52 ms
+ * and 1 at 100 ms after the mouse enters the gutter, 0.70 at 144 ms, 0.45
+ * at 243 ms, 0.21 at 355 ms, 0.09 at 467 ms and 0 at 714 ms after it
+ * leaves.
+ *
+ * The transition is the kit scrollbars' (`ScalarTransition` of
+ * `glaze.kit.base.Scrollbar`, times from `cx.backgroundExecutor().now()`),
+ * with CSS's curves. Like a CSS transition reversed midway, a fade that
+ * changes direction starts from its current opacity and takes the duration
+ * of the distance left. An item created visible or hidden shows so at once
+ * (a new DOM node has no transition), and so does one whose `showAlways`
+ * changes (`noTransition`) or one under reduced motion.
+ */
+class GutterItemFade {
+
+    /** The durations of style.css, in seconds. */
+    public static inline final FADE_IN_DURATION:Float = 0.1;
+    public static inline final FADE_OUT_DURATION:Float = 0.7;
+
+    /** CSS `ease-in-out` (the fade in) and `ease` (the fade out). */
+    static final EASE_IN_OUT = Easings.cubicBezier(0.42, 0, 0.58, 1);
+    static final EASE = Easings.cubicBezier(0.25, 0.1, 0.25, 1);
+
+    final transition:ScalarTransition;
+
+    var showAlways:Bool;
+
+    /** The render that last used this fade (`CityscapeDiffEditor`). */
+    public var renderStamp:Int = 0;
+
+    /** The opacity of the last render. */
+    public var rendered:Float = 0;
+
+    public function new(visible:Bool, showAlways:Bool, now:Float) {
+        this.transition = @:privateAccess ScalarTransition.settled(visible ? 1 : 0, now);
+        this.showAlways = showAlways;
+    }
+
+    /**
+     * Moves toward `visible` (the gutter hovered, or `showAlways`).
+     */
+    public function setVisible(visible:Bool, showAlways:Bool, reduceMotion:Bool, now:Float):Void {
+        final target = visible ? 1.0 : 0.0;
+        if (showAlways != this.showAlways || reduceMotion) {
+            this.showAlways = showAlways;
+            @:privateAccess transition.settle(target, now);
+            return;
+        }
+        if (@:privateAccess transition.target == target) {
+            return;
+        }
+        final current = opacity(now);
+        final duration = (visible ? FADE_IN_DURATION : FADE_OUT_DURATION) * Math.abs(target - current);
+        @:privateAccess transition.start(current, target, duration, now);
+    }
+
+    public function opacity(now:Float):Float {
+        return @:privateAccess transition.sample(now, interpolate).value;
+    }
+
+    public function running(now:Float):Bool {
+        return @:privateAccess transition.sample(now, interpolate).running;
+    }
+
+    static function interpolate(from:Float, target:Float, linear:Float):Float {
+        final curve = target > from ? EASE_IN_OUT : EASE;
+        return from + (target - from) * curve(linear);
     }
 
 }

@@ -27,6 +27,7 @@ import cityscape.view.widget.diffEditor.DiffEditorDecorations.DiffEditorStyles;
 import cityscape.view.widget.diffEditor.DiffEditorOptions;
 import cityscape.view.widget.diffEditor.DiffEditorViewModel;
 import cityscape.view.widget.diffEditor.DiffEditorGutter;
+import cityscape.view.widget.diffEditor.DiffEditorGutter.GutterItemFade;
 import cityscape.view.widget.diffEditor.DiffEditorWidget;
 import cityscape.view.widget.diffEditor.DiffProviderFactoryService.DiffComputationMode;
 import cityscape.view.widget.diffEditor.HideUnchangedRegionsFeature;
@@ -251,7 +252,7 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
         final originalContainer = div().relative().flex().flexCol().minW0().minH0().overflowHidden();
         // the gutter menu (Monaco's `DiffEditorGutter`): between the
         // editors side by side, at the left in the inline view
-        final gutter = w != null && w.gutter.hasActions() ? gutterElement(w) : null;
+        final gutter = w != null && w.gutter.hasActions() ? gutterElement(w, window, cx) : null;
         if (sideBySide) {
             if (gutter == null) {
                 originalContainer.w(relative(diffOptions.splitViewDefaultRatio));
@@ -332,6 +333,24 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
     var gutterHovered:Bool = false;
 
     /**
+     * The fades of the gutter items in view, by item id (an item out of
+     * view loses its fade, like Monaco's DOM node removed by
+     * `EditorGutter.render`).
+     */
+    final gutterItemFades = new Map<String, GutterItemFade>();
+
+    var gutterRenderStamp:Int = 0;
+
+    /**
+     * The opacity of the gutter item of `id` at the last render, -1 when it
+     * was not in view (tests).
+     */
+    public function gutterItemOpacity(id:String):Float {
+        final fade = gutterItemFades.get(id);
+        return fade != null ? fade.rendered : -1;
+    }
+
+    /**
      * The gutter menu (gutterFeature.ts and style.css): 35 pixels in the
      * editor's background, the scroll decoration at its top once the
      * modified editor is scrolled, and per change in view a toolbar with
@@ -340,12 +359,12 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
      * centered in the 34 pixel item, `toolbar.hoverBackground` under the
      * mouse, the pointer, the title as tooltip. The items show while the
      * mouse is over the gutter, and the change of the cursor (or of the
-     * selections) always; Monaco fades them in and out (0.1 s and 0.7 s),
-     * here they show and hide at once. The background line of an item
+     * selections) always, fading in over 0.1 s and out over 0.7 s like
+     * Monaco's (`GutterItemFade`). The background line of an item
      * (`menu.border`, none in the default themes) is drawn when the theme
      * has the color.
      */
-    function gutterElement(w:DiffEditorWidget):glaze.Div {
+    function gutterElement(w:DiffEditorWidget, window:Window, cx:App):glaze.Div {
         final t = theme;
         final background = t != null ? t.getColor('editor.background') : null;
         final foreground = t != null ? t.getColor('editor.foreground') : null;
@@ -386,12 +405,34 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
         }
         final viewHeight = modified.getLayoutInfo().height;
         final layouts = w.gutter.layout(viewHeight);
+        final now = cx.backgroundExecutor().now();
+        final reduceMotion = cx.reduceMotion();
+        final stamp = ++gutterRenderStamp;
+        var fading = false;
         for (i in 0...layouts.length) {
             final l = layouts[i];
-            if (!gutterHovered && !l.item.showAlways) {
-                continue;
+            final visible = gutterHovered || l.item.showAlways;
+            var fade = gutterItemFades.get(l.item.id);
+            if (fade == null) {
+                fade = new GutterItemFade(visible, l.item.showAlways, now);
+                gutterItemFades.set(l.item.id, fade);
             }
+            else {
+                fade.setVisible(visible, l.item.showAlways, reduceMotion, now);
+            }
+            fade.renderStamp = stamp;
+            final opacity = fade.opacity(now);
+            fade.rendered = opacity;
+            fading = fading || fade.running(now);
+            // an invisible item is there like Monaco's DOM node at opacity
+            // 0 (the pointer over its button at once when the gutter is
+            // entered, the fade in follows)
             final item = div().absolute().left0().top(px(l.top)).w(px(DiffEditorGutter.ITEM_WIDTH)).h(px(DiffEditorGutter.ITEM_HEIGHT));
+            if (opacity < 1) {
+                final s = new glaze.StyleRefinement();
+                s.opacity = opacity;
+                item.refineStyle(s);
+            }
             if (itemLine != null) {
                 // `.background`: `left: 50%; width: 1px; border-left: 2px solid menu.border`
                 item.child(div().absolute().top0().left(px(DiffEditorGutter.ITEM_WIDTH / 2)).w(px(2)).h(px(DiffEditorGutter.ITEM_HEIGHT)).bg(itemLine));
@@ -427,6 +468,15 @@ class CityscapeDiffEditor extends glaze.Component implements Styled {
             toolbar.child(button);
             item.child(div().absolute().left0().top(px(l.buttonsTop)).w(px(DiffEditorGutter.ITEM_WIDTH)).flex().justifyCenter().itemsCenter().child(toolbar));
             gutter.child(item);
+        }
+        // the items out of view lose their fade
+        for (id => fade in gutterItemFades) {
+            if (fade.renderStamp != stamp) {
+                gutterItemFades.remove(id);
+            }
+        }
+        if (fading) {
+            window.requestAnimationFrame();
         }
         return gutter;
     }

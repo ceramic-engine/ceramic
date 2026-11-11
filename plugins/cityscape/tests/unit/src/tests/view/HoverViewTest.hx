@@ -290,6 +290,24 @@ class HoverViewTest extends TestCase {
      * square in the text's size (real Monaco 0.52.2: a 12 px box in a 12 px
      * hover), not the text `$(zap)`; without the option the text stays.
      */
+    /**
+     * A `$(name)` inside a code span of the markdown is a codicon too
+     * (Monaco's `renderLabelWithIcons` runs over the rendered HTML, code
+     * spans included: real Monaco 0.52.2, glaze-golden scratchpad cs-cursor
+     * probe s7-hover.json), the escaped one stays text.
+     */
+    function testThemeIconsInCodeSpans() {
+        final editor = open('Run `$(zap) now` or `\\$(zap)`', 800, 600, null, true);
+        final widget = showHover(editor, 30);
+        final fontSize:Float = editor.getEditor().getOption(EditorOption.fontInfo).fontSize;
+        final sprites = spritesIn(widget.bounds);
+        final squares = [for (sp in sprites) if (Math.abs(sp.boundsWidth - fontSize * 2) <= 1 && Math.abs(sp.boundsHeight - fontSize * 2) <= 1) sp];
+        assertEquals(1, squares.length, 'one codicon in the code span among ' + [for (sp in sprites) sp.boundsWidth + 'x' + sp.boundsHeight].join(' '));
+        final plain = open('Run `$(zap) now` or `\\$(zap)`', 800, 600, null, false);
+        final plainSprites = spritesIn(showHover(plain, 30).bounds);
+        assertEquals(0, [for (sp in plainSprites) if (Math.abs(sp.boundsWidth - fontSize * 2) <= 1 && Math.abs(sp.boundsHeight - fontSize * 2) <= 1) sp].length, 'no codicon without supportThemeIcons');
+    }
+
     function testThemeIconsInMarkdown() {
         final editor = open('$(zap) Run', 800, 600, null, true);
         final widget = showHover(editor, 30);

@@ -7,6 +7,12 @@ package tests.contrib;
 
 import cityscape.contrib.hover.view.MarkdownRenderer;
 import cityscape.contrib.hover.view.MarkdownThemeIcons;
+import cityscape.contrib.hover.view.MarkdownThemeIcons.CodeSpanIcons;
+import cityscape.contrib.hover.view.MarkdownThemeIcons.ThemeIconPlugin;
+import markdown.Markdown as MdParser;
+import markdown.ParseOptions as MdParseOptions;
+import markdown.mdast.Node.Node as MdNode;
+import markdown.mdast.NodeTools as MdNodeTools;
 import testing.TestCase;
 
 class HoverMarkdownTest extends TestCase {
@@ -88,6 +94,47 @@ class HoverMarkdownTest extends TestCase {
         final blocks = MarkdownRenderer.parseHoverMarkdown({value: '$(zap) Run', supportThemeIcons: true}, 16);
         assertEquals(icon('zap') + ' Run', blocks[0].source);
         assertEquals('$(zap) Run', MarkdownRenderer.parseHoverMarkdown({value: '$(zap) Run'}, 16)[0].source);
+    }
+
+    /**
+     * Monaco renders the codicons of code spans too (`renderLabelWithIcons`
+     * over the whole HTML, markdownRenderer.ts: `<code><span class="codicon
+     * codicon-zap"></span> run</code>` on the real Monaco 0.52.2); an
+     * escaped `\$(zap)` in code stays text with its backslash. The plugin
+     * takes the code spans with icons (`splitCodeSpan`) and leaves the
+     * others to the text view.
+     */
+    function testThemeIconsInCodeSpans() {
+        function parts(value:String):Null<String> {
+            final p = MarkdownThemeIcons.splitCodeSpan(value);
+            return p == null ? null : [for (x in p) x.icon != null ? '<' + x.icon + '>' : x.text].join('|');
+        }
+        assertEquals('<zap>| run', parts('$(zap) run'));
+        assertEquals('a |<check>| b', parts('a $(check) b'));
+        assertEquals('<zap>|<sync>', parts('$(zap)$(sync~spin)'));
+        assertEquals('<a>|x|<b>', parts('$(a)x$(b)'));
+        assertEquals(null, parts('no icon'));
+        assertEquals(null, parts('\\$(zap) escaped'));
+        assertEquals(null, parts('\\\\$(zap) escaped twice'));
+        assertEquals(null, parts('$(not a name)'));
+        assertEquals('<zap>|\\$(check)', parts('$(zap)\\$(check)'));
+        // the plugin: a code span with icons becomes its node, one without
+        // stays the text view's inline code; the text of the node is the code
+        final plugin = new ThemeIconPlugin();
+        function inlineCodeOf(markdown:String):MdNode {
+            final root = MdParser.toMdast(markdown, MdParseOptions.gfm());
+            final paragraph = MdNodeTools.children(root)[0];
+            return MdNodeTools.children(paragraph)[0];
+        }
+        final withIcon = plugin.parse(inlineCodeOf('`$(zap) run`'), null);
+        assertNotNull(withIcon);
+        assertEquals('$(zap) run', withIcon.asText());
+        assertEquals(2, (withIcon.data(CodeSpanIcons) : CodeSpanIcons).parts.length);
+        assertEquals(null, plugin.parse(inlineCodeOf('`plain code`'), null));
+        assertEquals(null, plugin.parse(inlineCodeOf('`\\$(zap)`'), null));
+        // the source transform leaves the code spans alone (the plugin
+        // renders them), so the escaped icon keeps its backslash in code
+        assertEquals('`$(zap) run` and `\\$(zap)`', MarkdownThemeIcons.transform('`$(zap) run` and `\\$(zap)`'));
     }
 
 }

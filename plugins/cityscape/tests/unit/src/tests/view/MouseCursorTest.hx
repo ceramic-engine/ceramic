@@ -216,6 +216,40 @@ class MouseCursorTest extends TestCase {
     }
 
     /**
+     * The box of the digits of a sticky line number is Monaco's: the DOM
+     * range of the digits, measured on the real Monaco 0.52.2 with font
+     * size 14 and line height 18 (glaze-golden scratchpad cs-cursor probe
+     * s7-sticky.json): 16.5 px from 2 px below the top of the line, so the
+     * text cursor on rows 2..18 of the first sticky line and 20..35 of the
+     * second (the widget ends at 36), the arrow on the other rows of the
+     * number column.
+     */
+    function testStickyScrollDigitsBox() {
+        final e = open(INDENTED, {stickyScroll: {enabled: true}, fontSize: 14, lineHeight: 18});
+        final controller = StickyScrollController.get(e.getEditor());
+        final provider:StickyLineCandidateProvider = cast controller.stickyScrollCandidateProvider;
+        provider.update();
+        controller._flushPendingUpdate();
+        e.getEditor().setScrollTop(3 * 18);
+        controller._flushPendingUpdate();
+        app.update(_ -> window.draw());
+        assertEquals('[1,2,3]', haxe.Json.stringify(controller.stickyScrollWidget.lineNumbers));
+        final layout = e.getLayoutInfo();
+        final x = layout.lineNumbersLeft + layout.lineNumbersWidth - 1;
+        // sampled at integer rows like the probe (y = row)
+        for (row in 0...36) {
+            final expected = (row >= 2 && row <= 18) || (row >= 20 && row <= 35) ? CursorStyle.IBeam : CursorStyle.Arrow;
+            assertEquals(expected, cursorAt(x, row), 'row ' + row);
+        }
+        // the bottom of the box of the first number: 18.5
+        assertEquals(CursorStyle.IBeam, cursorAt(x, 18.25), 'inside the box at 18.25');
+        assertEquals(CursorStyle.Arrow, cursorAt(x, 18.5), 'below the box at 18.5');
+        assertEquals(CursorStyle.IBeam, cursorAt(x, 2.0), 'the top of the box at 2');
+        assertEquals(CursorStyle.Arrow, cursorAt(x, 1.75), 'above the box');
+        close();
+    }
+
+    /**
      * The find widget (at the top right of the editor): the pointer over
      * its enabled buttons and toggles (the replace toggle, Match Case,
      * Match Whole Word, Use Regular Expression, Find in Selection, Close),

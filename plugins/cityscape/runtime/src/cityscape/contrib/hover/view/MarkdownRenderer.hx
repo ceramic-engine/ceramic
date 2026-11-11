@@ -40,9 +40,11 @@ class MarkdownRenderer {
 
     /**
      * Draws the `$(name)` icons of the strings with `supportThemeIcons`
-     * (`MarkdownThemeIcons`).
+     * (`MarkdownThemeIcons`), the code spans with icons in `codeStyle`.
      */
-    static final THEME_ICONS = new ThemeIconPlugin();
+    static function themeIconPlugin(codeStyle:glaze.StyleRefinement):ThemeIconPlugin {
+        return new ThemeIconPlugin(codeStyle);
+    }
 
     /**
      * The code block highlighter of a context for its current token colors
@@ -186,6 +188,15 @@ class MarkdownRenderer {
      * tags are dropped, their text kept. With `supportThemeIcons`, the
      * `$(name)` icons are drawn (`MarkdownThemeIcons`).
      */
+    static function withThemeIcons(blocks:Array<HoverMarkdownBlock>, md:IMarkdownString):Array<HoverMarkdownBlock> {
+        if (md.supportThemeIcons == true) {
+            for (b in blocks) {
+                b.themeIcons = true;
+            }
+        }
+        return blocks;
+    }
+
     public static function parseHoverMarkdown(md:IMarkdownString, fontSize:Float):Array<HoverMarkdownBlock> {
         final value = md.value != null ? md.value : '';
         var source = transformHtml(value, md.supportHtml == true);
@@ -200,7 +211,7 @@ class MarkdownRenderer {
         catch (e:Dynamic) {
             blocks.push(new HoverMarkdownBlock(HoverMarkdownBlockKind.Paragraph, value, null, false));
             applyMargins(blocks, fontSize);
-            return blocks;
+            return withThemeIcons(blocks, md);
         }
         final bytes = haxe.io.Bytes.ofString(source);
         final children = MdNodeTools.children(root);
@@ -251,7 +262,7 @@ class MarkdownRenderer {
             }
         }
         applyMargins(blocks, fontSize);
-        return blocks;
+        return withThemeIcons(blocks, md);
     }
 
     /**
@@ -530,17 +541,24 @@ class MarkdownRenderer {
      * `textCodeBlock.background`) and its code blocks (`.code`: the editor's
      * font, no box).
      */
-    public static function hoverTextViewStyle(editor:ICodeEditor, size:Float, foreground:Hsla, window:glaze.Window, cx:App):glaze.kit.base.text.TextViewStyle {
-        final theme = Theme.global(cx);
-        final link = EditorWidgets.color(editor, 'textLink.foreground', theme.link);
-        final codeBackground = EditorWidgets.color(editor, 'textCodeBlock.background', theme.muted);
-        final inlineCode = glaze.StyleBuilder.build(s -> s
+    /**
+     * The inline code of hoverWidget.css (see `hoverTextViewStyle`).
+     */
+    public static function inlineCodeStyle(editor:ICodeEditor, size:Float, foreground:Hsla, codeBackground:Hsla):glaze.StyleRefinement {
+        return glaze.StyleBuilder.build(s -> s
             .fontFamily(EditorWidgets.monospaceFontFamily(editor))
             .textSize(glaze.Prelude.px(size))
             .textColor(foreground)
             .bg(codeBackground)
             .px(glaze.Prelude.px(size * 0.4))
             .rounded(glaze.Prelude.px(3)));
+    }
+
+    public static function hoverTextViewStyle(editor:ICodeEditor, size:Float, foreground:Hsla, window:glaze.Window, cx:App):glaze.kit.base.text.TextViewStyle {
+        final theme = Theme.global(cx);
+        final link = EditorWidgets.color(editor, 'textLink.foreground', theme.link);
+        final codeBackground = EditorWidgets.color(editor, 'textCodeBlock.background', theme.muted);
+        final inlineCode = inlineCodeStyle(editor, size, foreground, codeBackground);
         final fontInfo = editor.getOption(cityscape.common.config.EditorOptions.EditorOption.fontInfo);
         final codeBlock = glaze.StyleBuilder.build(s -> s
             .fontFamily(EditorWidgets.editorFontFamily(editor))
@@ -582,14 +600,16 @@ class MarkdownRenderer {
 
         // a line of the hover keeps the line height of the paragraph (its
         // strut) when its text is smaller (`<small>`)
-        function textView(viewId:String, source:String, size:Float, foreground:Hsla):glaze.IntoElement {
+        function textView(viewId:String, source:String, size:Float, foreground:Hsla, themeIcons:Bool):glaze.IntoElement {
             var view = TextView.markdown(viewId, source)
                 .withStyle(hoverTextViewStyle(editor, size, foreground, window, cx))
                 .selectable(true)
                 .sharedCodeBlockHighlighter(highlighter)
-                .markdownPlugin(THEME_ICONS)
                 // no language label on the code blocks (Monaco shows none)
                 .codeBlockActions((_, _, _) -> glaze.Prelude.div());
+            if (themeIcons) {
+                view = view.markdownPlugin(themeIconPlugin(inlineCodeStyle(editor, size, foreground, EditorWidgets.color(editor, 'textCodeBlock.background', theme.muted))));
+            }
             if (onLinkClick != null) {
                 view = view.onLinkClick((url, _, _, _) -> onLinkClick(url));
             }
@@ -623,10 +643,10 @@ class MarkdownRenderer {
                     for (j in 0...block.lines.length) {
                         final line = block.lines[j];
                         // `small { font-size: smaller }`: the size divided by 1.2
-                        box.child(textView(blockId + '-' + j, line.source, line.small ? fontSize / 1.2 : fontSize, foreground));
+                        box.child(textView(blockId + '-' + j, line.source, line.small ? fontSize / 1.2 : fontSize, foreground, block.themeIcons));
                     }
                 case _:
-                    box.child(textView(blockId, block.source, fontSize, foreground));
+                    box.child(textView(blockId, block.source, fontSize, foreground, block.themeIcons));
             }
             contents.child(box);
         }
@@ -652,11 +672,13 @@ class MarkdownRenderer {
             .withDark(EditorWidgets.isDark(editor));
         final fontFamily = EditorWidgets.editorFontFamily(editor);
         final codeStyle = new glaze.StyleRefinement();
-        final view = TextView.markdown(id, markdown.supportThemeIcons == true && markdown.value != null ? MarkdownThemeIcons.transform(markdown.value) : markdown.value)
-            .markdownPlugin(THEME_ICONS)
+        var view = TextView.markdown(id, markdown.supportThemeIcons == true && markdown.value != null ? MarkdownThemeIcons.transform(markdown.value) : markdown.value)
             .withStyle(style)
             .selectable(true)
             .sharedCodeBlockHighlighter(codeBlockHighlighter(editor.context));
+        if (markdown.supportThemeIcons == true) {
+            view = view.markdownPlugin(themeIconPlugin(glaze.StyleBuilder.build(s -> s.bg(codeBackground))));
+        }
         return view;
     }
 
@@ -710,6 +732,8 @@ class HoverMarkdownBlock {
     public final lines:Null<Array<HoverMarkdownLine>>;
     /** Whether the block is a paragraph starting with bold text. */
     public final startsWithStrong:Bool;
+    /** Whether the `$(name)` icons of the block are drawn (`supportThemeIcons`). */
+    public var themeIcons:Bool = false;
 
     /** The margins, collapsed with the margins of the next and previous blocks like CSS (negative ones included). */
     public var marginTop:Float = 0;

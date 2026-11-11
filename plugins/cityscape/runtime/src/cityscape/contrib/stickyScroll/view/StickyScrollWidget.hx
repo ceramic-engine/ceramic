@@ -738,9 +738,14 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
      * is shown, the default cursor when not. The line numbers keep the
      * widget's default cursor, except over the digits: their node has no
      * `cursor` rule (`auto`) and selectable text, so the browser shows the
-     * text cursor over the box of the glyphs (the width of the number by
-     * the ascent and descent of the font), measured on the real Monaco
-     * 0.52.2.
+     * text cursor over the box of the glyphs: the width of the number by
+     * Chrome's content area of the font (`TEXT_BOX_HEIGHT_EM`), centered in
+     * the line box of the `.sticky-line-number-inner` inline block, which
+     * the baseline alignment with its parent places `TEXT_BOX_SHIFT_EM`
+     * lower than the line. Measured on the real Monaco 0.52.2 with the DOM
+     * range of the digits (glaze-golden scratchpad cs-cursor probe): a 16.5
+     * px box 2 px below the top of an 18 px line at font size 14, rows
+     * 2..18 and 20..35 of two lines.
      */
     function _insertLineHitboxes(bounds:Bounds, window:Window, hitboxes:Array<glaze.Hitbox>, cursors:Array<CursorStyle>):Void {
         final count = this._renderedStickyLines.length;
@@ -780,9 +785,12 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
                 final right = x0 + layoutInfo.lineNumbersLeft + numbersWidth;
                 final labelWidth:Float = shaped.width();
                 final left = Math.max(x0, right - labelWidth);
-                final textHeight:Float = (shaped.layout.ascent : Float) + (shaped.layout.descent : Float);
-                final textTop = Math.max(top + (lineHeight - textHeight) / 2, lineTop);
-                final textBottom = Math.min(top + (lineHeight + textHeight) / 2, lineBottom);
+                final textHeight:Float = fontInfo.fontSize * TEXT_BOX_HEIGHT_EM;
+                // the box overflows the line (the browser hit tests the
+                // overflow of the inline block), the widget clips it
+                final boxTop = top + (lineHeight - textHeight) / 2 + fontInfo.fontSize * TEXT_BOX_SHIFT_EM;
+                final textTop = Math.max(boxTop, y0);
+                final textBottom = Math.min(boxTop + textHeight, bottom);
                 if (right > left && textBottom > textTop) {
                     hitboxes.push(window.insertHitbox(new Bounds(new Point(left, textTop), new Size(right - left, textBottom - textTop)), HitboxBehavior.Normal));
                     cursors.push(CursorStyle.IBeam);
@@ -805,6 +813,17 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
      * matters; one color so the shaped line is shared with the paint's).
      */
     static final NUMBER_HIT_COLOR = new Hsla(0, 0, 0, 1);
+
+    /**
+     * The height of the box of the digits of a sticky line number in em
+     * (Chrome's content area of the editor font: 16.5 px at 14 px), and
+     * how far below the center of the line it sits (1.25 px at 14 px: the
+     * inline block's line box starts 1.5 px below the line, the half
+     * leading above the box is 0.75 px of the 18 px line, which the
+     * centering already gives). Measured on the real Monaco 0.52.2.
+     */
+    static inline final TEXT_BOX_HEIGHT_EM:Float = 16.5 / 14;
+    static inline final TEXT_BOX_SHIFT_EM:Float = 1.25 / 14;
 
     static inline function fill2(window:Window, x:Float, y:Float, w:Float, h:Float, color:Hsla):Void {
         if (w > 0 && h > 0) {

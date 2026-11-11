@@ -378,7 +378,7 @@ class DiffEditorWidget implements IDisposable {
         if (data == null) {
             return;
         }
-        this._unchangedRangesFeature.handleBarMouseDown(editor, data.viewZoneId, target.viewZoneOffsetY, target.type == MouseTargetType.GUTTER_VIEW_ZONE, e.event.detail);
+        this._unchangedRangesFeature.handleBarMouseDown(editor, data.viewZoneId, target.viewZoneOffsetY, target.type == MouseTargetType.GUTTER_VIEW_ZONE, e.event.detail, e.event.posy, e.event.leftButton);
     }
 
     /**

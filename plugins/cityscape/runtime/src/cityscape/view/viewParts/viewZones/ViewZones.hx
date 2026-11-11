@@ -224,10 +224,38 @@ class ViewZones extends ViewEventHandler {
 
         this._zones.set(myZone.whitespaceId, myZone);
         this._zoneOrder.push(myZone.whitespaceId);
+        this._addMouseReach(zone);
 
         this.setShouldRender();
 
         return myZone.whitespaceId;
+    }
+
+    /**
+     * The largest `mouseReachAbove` and `mouseReachBelow` of the zones
+     * (Cityscape): how far from a zone the mouse target can still be the
+     * zone (`CityscapeView.hitTestViewZoneReach`).
+     */
+    public var maxMouseReachAbove(default, null):Float = 0;
+    public var maxMouseReachBelow(default, null):Float = 0;
+
+    function _addMouseReach(zone:IViewZone):Void {
+        final above = zone.mouseReachAbove;
+        if (above != null && above > this.maxMouseReachAbove) {
+            this.maxMouseReachAbove = above;
+        }
+        final below = zone.mouseReachBelow;
+        if (below != null && below > this.maxMouseReachBelow) {
+            this.maxMouseReachBelow = below;
+        }
+    }
+
+    function _recomputeMouseReach():Void {
+        this.maxMouseReachAbove = 0;
+        this.maxMouseReachBelow = 0;
+        for (zone in this._zones) {
+            this._addMouseReach(zone.delegate);
+        }
     }
 
     @:allow(cityscape.view.viewParts.viewZones.ViewZoneChangeAccessor)
@@ -237,6 +265,9 @@ class ViewZones extends ViewEventHandler {
             this._zones.remove(id);
             this._zoneOrder.remove(id);
             whitespaceAccessor.removeWhitespace(zone.whitespaceId);
+            if (zone.delegate.mouseReachAbove != null || zone.delegate.mouseReachBelow != null) {
+                this._recomputeMouseReach();
+            }
             this.setShouldRender();
             return true;
         }

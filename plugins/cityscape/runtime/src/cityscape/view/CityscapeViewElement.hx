@@ -268,7 +268,28 @@ class CityscapeViewElement extends Element {
         // paint of the view, so a view reused from the cache keeps it
         final v = view.read(cx);
         final hitbox = this.hitbox;
-        if (hitbox != null) {
+        final dragCursor = v.zoneDragCursor;
+        if (hitbox != null && dragCursor != null) {
+            // a drag started on a view zone (a hidden region bar edge): its
+            // cursor over the whole editor (Monaco's
+            // `.monaco-editor.draggingUnchangedRegion *`), and the moves
+            // and the mouse up anywhere in the window reach the editor
+            // (Monaco's window listeners); over the editor its own listeners
+            // deliver them
+            window.setCursorStyle(dragCursor, hitbox);
+            final entity = view;
+            window.onMouseEvent(MouseMove, (event, phase, window, cx) -> {
+                if (phase == Bubble && !hitbox.isHovered(window)) {
+                    entity.read(cx).handleMouseMove(cast event, window, cx);
+                }
+            });
+            window.onMouseEvent(MouseUp, (event, phase, window, cx) -> {
+                if (phase == Bubble && !hitbox.isHovered(window)) {
+                    entity.read(cx).handleMouseUp(cast event, window, cx);
+                }
+            });
+        }
+        else if (hitbox != null) {
             // the pointer of a link or widget, else Monaco's `mouseStyle`
             // (the drag and drop of the selection sets `default` and `copy`)
             final mouseStyle:String = v.configuration.options.get(EditorOption.mouseStyle);
@@ -278,7 +299,7 @@ class CityscapeViewElement extends Element {
         }
         final gutterHitbox = this.gutterHitbox;
         if (gutterHitbox != null) {
-            window.setCursorStyle(v.zoneMouseCursor != null ? v.zoneMouseCursor : CursorStyle.Arrow, gutterHitbox);
+            window.setCursorStyle(dragCursor != null ? dragCursor : (v.zoneMouseCursor != null ? v.zoneMouseCursor : CursorStyle.Arrow), gutterHitbox);
             for (i in 0...foldingHitboxes.length) {
                 window.setCursorStyle(CursorStyle.PointingHand, foldingHitboxes[i]);
             }

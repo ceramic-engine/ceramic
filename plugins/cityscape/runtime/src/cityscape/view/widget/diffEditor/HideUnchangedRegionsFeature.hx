@@ -55,13 +55,29 @@ class CollapsedCodeZone {
  * observables become `update()`, called by the diff editor when the
  * unchanged regions change.
  *
- * The bar is clicked instead of dragged: a click on its top edge shows
- * `hideUnchangedRegions.revealLineCount` more lines above, on its bottom
- * edge more lines below, on the unfold icon or a double click on the text
- * all the lines (Monaco's drag of the edges is not ported). The breadcrumbs
- * of the bar are not ported (Monaco's standalone editor has none).
+ * The edges of the bar are Monaco's `.top` and `.bottom` nodes: a press
+ * and a drag on the top edge reveals lines above as the mouse moves (one
+ * line per line height), on the bottom edge lines below (the lines after
+ * the bar kept in place), a click (no move beyond 2 px) shows
+ * `hideUnchangedRegions.revealLineCount` more lines; the unfold icon or a
+ * double click on the text shows all the lines. The breadcrumbs of the bar
+ * are not ported (Monaco's standalone editor has none).
  */
 class HideUnchangedRegionsFeature implements IDisposable {
+
+    /**
+     * How far the top edge of a bar reaches above its zone and the bottom
+     * edge below it, in pixels (style.css: `.diff-hidden-lines` is
+     * translated 10 px up; `.top` is a 10 px box (4 px top border, 4 px,
+     * 2 px bottom border) translated 4 px down, so it covers 6 px above the
+     * bar and its first 4 px; `.bottom` the same box translated 6 px up,
+     * the last 6 px of the bar and 4 px below it). Measured on the real
+     * Monaco 0.52.2: rows -6..3 and 18..27 of a 24 px bar.
+     */
+    public static inline final EDGE_REACH_ABOVE:Float = 6;
+    public static inline final EDGE_REACH_BELOW:Float = 4;
+    public static inline final TOP_EDGE_HEIGHT:Float = 4;
+    public static inline final BOTTOM_EDGE_HEIGHT:Float = 6;
 
     final _editors:{original:CodeEditorWidget, modified:CodeEditorWidget};
     final _diffModel:() -> Null<DiffEditorViewModel>;
@@ -125,6 +141,8 @@ class HideUnchangedRegionsFeature implements IDisposable {
 
         this._store.add(this._editors.original.onMouseUp((event) -> this._onMouseUp(event, this._editors.original)));
         this._store.add(this._editors.modified.onMouseUp((event) -> this._onMouseUp(event, this._editors.modified)));
+        this._store.add(this._editors.original.onMouseMove((event) -> this._onMouseMove(event, this._editors.original)));
+        this._store.add(this._editors.modified.onMouseMove((event) -> this._onMouseMove(event, this._editors.modified)));
     }
 
     public function dispose():Void {
@@ -179,6 +197,8 @@ class HideUnchangedRegionsFeature implements IDisposable {
                     paint: this._painter.collapsedCodeBar(r, !sideBySide, false),
                     paintMargin: this._painter.collapsedCodeBar(r, !sideBySide, true),
                     mouseCursor: this._painter.collapsedCodeBarCursor(r, !sideBySide, height),
+                    mouseReachAbove: EDGE_REACH_ABOVE,
+                    mouseReachBelow: EDGE_REACH_BELOW,
                 };
                 origViewZones.push(origVz);
                 this.zones.push(new CollapsedCodeZone(r, this._editors.original, !sideBySide, origVz));
@@ -192,6 +212,8 @@ class HideUnchangedRegionsFeature implements IDisposable {
                     paint: this._painter.collapsedCodeBar(r, false, false),
                     paintMargin: this._painter.collapsedCodeBar(r, false, true),
                     mouseCursor: this._painter.collapsedCodeBarCursor(r, false, height),
+                    mouseReachAbove: EDGE_REACH_ABOVE,
+                    mouseReachBelow: EDGE_REACH_BELOW,
                 };
                 modViewZones.push(modViewZone);
                 this.zones.push(new CollapsedCodeZone(r, this._editors.modified, false, modViewZone));
@@ -261,6 +283,11 @@ class HideUnchangedRegionsFeature implements IDisposable {
     }
 
     function _onMouseUp(event:IEditorMouseEvent, editor:CodeEditorWidget):Void {
+        final drag = this._drag;
+        if (drag != null && drag.editor == editor) {
+            this._endDrag(drag, event);
+            return;
+        }
         final target = event.target;
         final m = this._diffModel();
         if (m == null) {
@@ -283,40 +310,148 @@ class HideUnchangedRegionsFeature implements IDisposable {
 
     /**
      * The mouse cursor over the bar of a collapsed region (style.css), at
-     * `y` in its zone `height` pixels high: over its top edge (the 4 pixels
-     * the `.top` node covers) `n-resize` when it can show more lines above
+     * `y` in its zone `height` pixels high: over its top edge (the `.top`
+     * node, from `EDGE_REACH_ABOVE` pixels above the zone to its first
+     * `TOP_EDGE_HEIGHT` pixels) `n-resize` when it can show more lines above
      * (`canMoveTop`: lines of the region shown at its top), `s-resize` when
      * it can hide more (`canMoveBottom`: not fully revealed), `ns-resize`
-     * for both; over its bottom edge (the 6 pixels of `.bottom`) the same
-     * with the lines shown at its bottom; else null (the zone's own cursor).
-     * Measured on the real Monaco 0.52.2: `s-resize` and `n-resize` on a
-     * region shown collapsed.
+     * for both; over its bottom edge (the `.bottom` node, the last
+     * `BOTTOM_EDGE_HEIGHT` pixels of the zone to `EDGE_REACH_BELOW` pixels
+     * below it) the same with the lines shown at its bottom; else null (the
+     * zone's own cursor). Measured on the real Monaco 0.52.2: `s-resize` on
+     * rows -6..3 and `n-resize` on rows 18..27 of a 24 px bar shown
+     * collapsed, at every column (the edges win over the text of the bar).
      */
     public static function barEdgeCursor(region:UnchangedRegion, y:Float, height:Float):Null<glaze.CursorStyle> {
-        final fullyRevealed = region.visibleLineCountTop + region.visibleLineCountBottom == region.lineCount;
-        var canMoveTop:Bool;
-        var canMoveBottom:Bool;
-        if (y < 4) {
-            canMoveTop = region.visibleLineCountTop > 0;
-            canMoveBottom = !fullyRevealed;
+        if (isTopEdge(y)) {
+            return edgeCursor(region, true);
         }
-        else if (y >= height - 6) {
-            canMoveTop = !fullyRevealed;
-            canMoveBottom = region.visibleLineCountBottom > 0;
+        if (isBottomEdge(y, height)) {
+            return edgeCursor(region, false);
+        }
+        return null;
+    }
+
+    public static inline function isTopEdge(y:Float):Bool {
+        return y >= -EDGE_REACH_ABOVE && y < TOP_EDGE_HEIGHT;
+    }
+
+    public static inline function isBottomEdge(y:Float, height:Float):Bool {
+        return y >= height - BOTTOM_EDGE_HEIGHT && y < height + EDGE_REACH_BELOW;
+    }
+
+    /**
+     * The cursor of an edge (`canMoveTop` and `canMoveBottom` of the
+     * `.top` or `.bottom` node, and of the editor while the edge is
+     * dragged: `draggingUnchangedRegion`).
+     */
+    public static function edgeCursor(region:UnchangedRegion, top:Bool):Null<glaze.CursorStyle> {
+        final fullyRevealed = region.visibleLineCountTop + region.visibleLineCountBottom == region.lineCount;
+        final canMoveTop = top ? region.visibleLineCountTop > 0 : !fullyRevealed;
+        final canMoveBottom = top ? !fullyRevealed : region.visibleLineCountBottom > 0;
+        return canMoveTop ? (canMoveBottom ? glaze.CursorStyle.ResizeUpDown : glaze.CursorStyle.ResizeUp) : (canMoveBottom ? glaze.CursorStyle.ResizeDown : null);
+    }
+
+    /**
+     * The drag of a bar edge in progress (Monaco's `mousedown` listeners
+     * of `.top` and `.bottom`, and their window listeners).
+     */
+    var _drag:Null<BarEdgeDrag> = null;
+
+    /**
+     * The y of the top of the line after the region in the editor, or the
+     * content height when the region ends the text (what the bottom edge
+     * keeps in place: Monaco's `top` and `top2`).
+     */
+    function _rangeEndTop(editor:CodeEditorWidget, region:UnchangedRegion):Float {
+        final model = editor.getModel();
+        final rangeEnd = editor == this._editors.modified ? region.modifiedUnchangedRange.endLineNumberExclusive : region.originalUnchangedRange.endLineNumberExclusive;
+        return (model != null && rangeEnd > model.getLineCount()) ? editor.getContentHeight() : editor.getTopForLineNumber(rangeEnd);
+    }
+
+    function _startDrag(region:UnchangedRegion, editor:CodeEditorWidget, top:Bool, posy:Float):Void {
+        region.isDragged = top ? 'top' : 'bottom';
+        final drag = new BarEdgeDrag(region, editor, top, posy, top ? region.visibleLineCountTop : region.visibleLineCountBottom);
+        this._drag = drag;
+        this._updateDragCursor(drag);
+    }
+
+    function _updateDragCursor(drag:BarEdgeDrag):Void {
+        final view = cityscape.view.EditorWidgets.viewOf(drag.editor);
+        if (view != null) {
+            final cursor = edgeCursor(drag.region, drag.top);
+            view.setZoneDragCursor(cursor != null ? cursor : glaze.CursorStyle.Arrow);
+        }
+    }
+
+    /**
+     * Monaco's `mousemove` listener of the drag: the lines revealed follow
+     * the mouse, one per line height from the press (`Math.round`), within
+     * 0 and the lines left; a move beyond 2 px makes the release no click.
+     */
+    function _onMouseMove(event:IEditorMouseEvent, editor:CodeEditorWidget):Void {
+        final drag = this._drag;
+        if (drag == null || drag.editor != editor) {
+            return;
+        }
+        final region = drag.region;
+        final delta = event.event.posy - drag.startY;
+        drag.didMove = drag.didMove || Math.abs(delta) > 2;
+        final lineHeight:Float = editor.getOption(EditorOption.lineHeight);
+        final lineDelta = Math.round(delta / lineHeight);
+        if (drag.top) {
+            region.visibleLineCountTop = Std.int(Math.max(0, Math.min(drag.cur + lineDelta, region.getMaxVisibleLineCountTop())));
         }
         else {
-            return null;
+            final newVal = Std.int(Math.max(0, Math.min(drag.cur - lineDelta, region.getMaxVisibleLineCountBottom())));
+            final top = this._rangeEndTop(editor, region);
+            region.visibleLineCountBottom = newVal;
+            final top2 = this._rangeEndTop(editor, region);
+            editor.setScrollTop(editor.getScrollTop() + (top2 - top));
         }
-        return canMoveTop ? (canMoveBottom ? glaze.CursorStyle.ResizeUpDown : glaze.CursorStyle.ResizeUp) : (canMoveBottom ? glaze.CursorStyle.ResizeDown : null);
+        this._updateDragCursor(drag);
+    }
+
+    /**
+     * Monaco's `mouseup` listener of the drag: without a move, the click
+     * shows `revealLineCount` more lines (the lines after the bar kept in
+     * place for the bottom edge).
+     */
+    function _endDrag(drag:BarEdgeDrag, event:IEditorMouseEvent):Void {
+        this._drag = null;
+        final region = drag.region;
+        final editor = drag.editor;
+        if (drag.top) {
+            if (!drag.didMove) {
+                region.showMoreAbove(this._options.hideUnchangedRegionsRevealLineCount);
+            }
+            region.isDragged = null;
+        }
+        else {
+            region.isDragged = null;
+            if (!drag.didMove) {
+                final top = this._rangeEndTop(editor, region);
+                region.showMoreBelow(this._options.hideUnchangedRegionsRevealLineCount);
+                final top2 = this._rangeEndTop(editor, region);
+                editor.setScrollTop(editor.getScrollTop() + (top2 - top));
+            }
+        }
+        final view = cityscape.view.EditorWidgets.viewOf(editor);
+        if (view != null) {
+            view.setZoneDragCursor(null);
+        }
     }
 
     /**
      * A mouse down on the bar of a collapsed region (Monaco's listeners of
      * the overlay widget's top, bottom, unfold icon and text): returns true
-     * when the bar handled it. `zoneY` is the y of the mouse in the zone,
-     * `inMargin` whether it is over the gutter, `clickCount` the clicks.
+     * when the bar handled it. `zoneY` is the y of the mouse in the zone
+     * (outside 0..height within the reach of the edges), `inMargin` whether
+     * it is over the gutter, `clickCount` the clicks, `posy` the y of the
+     * mouse in the window (the origin of a drag), `leftButton` whether the
+     * left button is pressed (the edges only react to it: `e.button !== 0`).
      */
-    public function handleBarMouseDown(editor:CodeEditorWidget, viewZoneId:String, zoneY:Float, inMargin:Bool, clickCount:Int):Bool {
+    public function handleBarMouseDown(editor:CodeEditorWidget, viewZoneId:String, zoneY:Float, inMargin:Bool, clickCount:Int, posy:Float = 0, leftButton:Bool = true):Bool {
         final viewZones = editor.getViewZones();
         final myZone = viewZones != null ? viewZones.getZone(viewZoneId) : null;
         if (myZone == null) {
@@ -329,20 +464,19 @@ class HideUnchangedRegionsFeature implements IDisposable {
             }
             final r = z.region;
             final height:Float = z.zone.heightInPx;
-            if (zoneY < 4) {
-                // `.top`: show more above
-                r.showMoreAbove(this._options.hideUnchangedRegionsRevealLineCount);
+            if (isTopEdge(zoneY)) {
+                // `.top`: a drag reveals lines above, a click shows more above
+                if (leftButton && this._drag == null) {
+                    this._startDrag(r, editor, true, posy);
+                }
             }
-            else if (zoneY >= height - 6) {
-                // `.bottom`: show more below, keeping the lines below in place
-                final model = editor.getModel();
-                final rangeEnd = editor == this._editors.modified ? r.modifiedUnchangedRange.endLineNumberExclusive : r.originalUnchangedRange.endLineNumberExclusive;
-                final topBefore = (model != null && rangeEnd > model.getLineCount()) ? editor.getContentHeight() : editor.getTopForLineNumber(rangeEnd);
-                r.showMoreBelow(this._options.hideUnchangedRegionsRevealLineCount);
-                final topAfter = (model != null && rangeEnd > model.getLineCount()) ? editor.getContentHeight() : editor.getTopForLineNumber(rangeEnd);
-                editor.setScrollTop(editor.getScrollTop() + (topAfter - topBefore));
+            else if (isBottomEdge(zoneY, height)) {
+                // `.bottom`: a drag reveals lines below, a click shows more below
+                if (leftButton && this._drag == null) {
+                    this._startDrag(r, editor, false, posy);
+                }
             }
-            else if (!z.hide && (inMargin || clickCount >= 2)) {
+            else if (zoneY >= 0 && zoneY < height && !z.hide && (inMargin || clickCount >= 2)) {
                 // the unfold icon (`Show Unchanged Region`), or a double click on the text
                 r.showAll();
             }
@@ -351,4 +485,26 @@ class HideUnchangedRegionsFeature implements IDisposable {
         return false;
     }
 
+}
+
+/**
+ * A drag of the top or bottom edge of a hidden region bar in progress
+ * (the locals of Monaco's `mousedown` listeners: `startTop`, `didMove`,
+ * `cur`).
+ */
+class BarEdgeDrag {
+    public final region:UnchangedRegion;
+    public final editor:CodeEditorWidget;
+    public final top:Bool;
+    public final startY:Float;
+    public final cur:Int;
+    public var didMove:Bool = false;
+
+    public function new(region:UnchangedRegion, editor:CodeEditorWidget, top:Bool, startY:Float, cur:Int) {
+        this.region = region;
+        this.editor = editor;
+        this.top = top;
+        this.startY = startY;
+        this.cur = cur;
+    }
 }

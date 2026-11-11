@@ -105,6 +105,16 @@ typedef IViewZone = {
      */
     @:optional var mouseCursor:Null<ViewZoneMouseCursor>;
     /**
+     * How far above and below the zone the mouse still targets it, in
+     * pixels (Cityscape, 0 by default): a zone standing for a Monaco
+     * overlay whose nodes overflow it (the `.top` and `.bottom` of a hidden
+     * region bar). There the mouse target is the zone, with a
+     * `viewZoneOffsetY` below 0 or past the height, so `mouseCursor` and
+     * the mouse down listeners of the zone apply.
+     */
+    @:optional var mouseReachAbove:Null<Float>;
+    @:optional var mouseReachBelow:Null<Float>;
+    /**
      * Callback which gives the relative top of the view zone as it appears (taking scrolling into account).
      */
     @:optional var onDomNodeTop:Null<(top:Float) -> Void>;

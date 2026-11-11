@@ -32,10 +32,12 @@ import glaze.Prelude.*;
 class DiffEditorTest extends TestCase {
 
     var app:App;
+    var dispatcher:TestDispatcher;
     var window:Null<Window> = null;
 
     override public function setup():Void {
-        app = new App(new TestDispatcher());
+        dispatcher = new TestDispatcher();
+        app = new App(dispatcher);
     }
 
     override public function teardown():Void {
@@ -282,6 +284,8 @@ class DiffEditorTest extends TestCase {
         final text = b.origin.x + layoutInfo.contentLeft;
         assertEquals(glaze.CursorStyle.ResizeDown, cursorAt(text + 40, top + 1), 'top edge');
         assertEquals(glaze.CursorStyle.ResizeUp, cursorAt(text + 40, top + 21), 'bottom edge');
+        assertEquals(glaze.CursorStyle.ResizeDown, cursorAt(text + 4, top + 1), 'top edge over the text of the bar');
+        assertEquals(glaze.CursorStyle.ResizeUp, cursorAt(text + 4, top + 24 + 2), 'bottom edge below the bar');
         assertEquals(glaze.CursorStyle.IBeam, cursorAt(text + 4, top + 12), 'the text of the bar');
         assertEquals(glaze.CursorStyle.Arrow, cursorAt(text + 300, top + 12), 'beside the text');
         assertEquals(glaze.CursorStyle.PointingHand, cursorAt(b.origin.x + layoutInfo.contentLeft / 2, top + 12), 'the unfold codicon');
@@ -292,6 +296,241 @@ class DiffEditorTest extends TestCase {
         diffEditor.showAllUnchangedRegions();
         draw();
         assertEquals(glaze.CursorStyle.IBeam, cursorAt(text + 40, top + 1), 'no bar');
+    }
+
+    /**
+     * The top of the bar of the second hidden region of the modified editor
+     * (the first one is at the top of the editor), in window coordinates,
+     * and the region.
+     */
+    function secondBar(diffEditor:CityscapeDiffEditor):{top:Float, height:Float, region:UnchangedRegion} {
+        final m = widgetOf(diffEditor.getModifiedEditor());
+        final view:CityscapeView = diffEditor.getModifiedEditor().getView();
+        final viewLayout = m._getViewModel().viewLayout;
+        for (w in viewLayout.getWhitespaces()) {
+            if (w.height == 24 && w.afterLineNumber > 0) {
+                final top = viewLayout.getVerticalOffsetForLineNumber(w.afterLineNumber + 1) - w.height - viewLayout.getCurrentScrollTop();
+                return {top: view.elementBounds.origin.y + top, height: w.height, region: diffEditor.getWidget().getViewModel().unchangedRegions[1]};
+            }
+        }
+        fail('no second bar');
+        return null;
+    }
+
+    /**
+     * The edges of a bar reach beyond it like Monaco's `.top` and `.bottom`
+     * nodes (style.css, measured on the real Monaco 0.52.2, glaze-golden
+     * scratchpad cs-cursor probe s7-bar.json): `s-resize` on rows -6..3 of
+     * a 24 px bar shown collapsed and `n-resize` on rows 18..27, at every
+     * column (the margin, the text of the bar, beside it), over the lines
+     * before and after the bar and over the text "N hidden lines"; the
+     * bar's own cursors between, the lines' cursors beyond.
+     */
+    function testHiddenRegionBarEdgeReach() {
+        final original = createTextModel(lines(60).join('\n'));
+        final modifiedLines = lines(60);
+        modifiedLines[29] = 'changed 30';
+        final modified = createTextModel(modifiedLines.join('\n'));
+        final diffEditor = open(original, modified, {hideUnchangedRegions: {enabled: true}});
+        final m = widgetOf(diffEditor.getModifiedEditor());
+        final view:CityscapeView = diffEditor.getModifiedEditor().getView();
+        final b = view.elementBounds;
+        final layoutInfo = m.getLayoutInfo();
+        final bar = secondBar(diffEditor);
+        assertEquals(24.0, bar.height);
+        final text = b.origin.x + layoutInfo.contentLeft;
+        final columns = [{x: b.origin.x + 1, name: 'margin', own: glaze.CursorStyle.Arrow, line: glaze.CursorStyle.Arrow}, {x: text + 4, name: 'text', own: glaze.CursorStyle.IBeam, line: glaze.CursorStyle.IBeam}, {x: text + 300, name: 'beside', own: glaze.CursorStyle.Arrow, line: glaze.CursorStyle.IBeam}];
+        for (c in columns) {
+            var row = -8;
+            while (row <= 29) {
+                final cursor = cursorAt(c.x, bar.top + row + 0.5);
+                final expected = row >= -6 && row <= 3 ? glaze.CursorStyle.ResizeDown
+                    : (row >= 18 && row <= 27 ? glaze.CursorStyle.ResizeUp
+                    : (row >= 0 && row < 24 ? c.own : c.line));
+                assertEquals(expected, cursor, c.name + ' row ' + row);
+                row++;
+            }
+        }
+        // the margin column: the unfold codicon in the middle of the bar
+        assertEquals(glaze.CursorStyle.PointingHand, cursorAt(b.origin.x + layoutInfo.contentLeft / 2, bar.top + 12), 'the unfold codicon');
+    }
+
+    /**
+     * Monaco's drag of the edges (`CollapsedCodeOverlayWidget`, the
+     * `mousedown` listeners of `.top` and `.bottom` with their window
+     * listeners): pressing the top edge and dragging down reveals one line
+     * above per line height (`Math.round(delta / lineHeight)`, within the
+     * lines left), the region `isDragged` and the resize cursor on the
+     * whole editor meanwhile, the moves outside the editor counted too;
+     * the release ends the drag and shows nothing more when the mouse moved
+     * beyond 2 px, else `revealLineCount` more lines (a click); the bottom
+     * edge dragged up reveals lines below, the lines after the bar kept in
+     * place (the scroll top follows).
+     */
+    function testHiddenRegionBarDrag() {
+        final original = createTextModel(lines(60).join('\n'));
+        final modifiedLines = lines(60);
+        modifiedLines[29] = 'changed 30';
+        final modified = createTextModel(modifiedLines.join('\n'));
+        final diffEditor = open(original, modified, {hideUnchangedRegions: {enabled: true, revealLineCount: 3}});
+        final m = widgetOf(diffEditor.getModifiedEditor());
+        final view:CityscapeView = diffEditor.getModifiedEditor().getView();
+        final b = view.elementBounds;
+        final layoutInfo = m.getLayoutInfo();
+        final lineHeight:Float = m.getOption(EditorOption.lineHeight);
+        final text = b.origin.x + layoutInfo.contentLeft;
+        final bar = secondBar(diffEditor);
+        final region = bar.region;
+        assertEquals('[34,61)', region.getHiddenModifiedRange().toString());
+        assertEquals(0, region.visibleLineCountTop);
+        final viewLines = m._getViewModel().getLineCount();
+        // press 3 px above the bar (the reach of `.top`), drag 2 lines down
+        final x = text + 40;
+        final y0 = bar.top - 3;
+        window.dispatchEvent(new MouseDownEvent(MouseButton.Left, point(x, y0)), app);
+        draw();
+        assertEquals('top', region.isDragged);
+        assertEquals(glaze.CursorStyle.ResizeDown, cursorAt(x, y0), 'the cursor at the press');
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(x, y0 + 2 * lineHeight)), app);
+        draw();
+        assertEquals(2, region.visibleLineCountTop, 'two lines revealed above');
+        assertEquals('[36,61)', region.getHiddenModifiedRange().toString());
+        assertEquals(viewLines + 2, m._getViewModel().getLineCount());
+        // the resize cursor over the whole editor while dragging (now both
+        // ways: lines shown above, lines left to show): over the text and
+        // the margin at the mouse's height (another height drags on)
+        assertEquals(glaze.CursorStyle.ResizeUpDown, cursorAt(text + 200, y0 + 2 * lineHeight), 'the cursor over the text while dragging');
+        assertEquals(glaze.CursorStyle.ResizeUpDown, cursorAt(b.origin.x + 2, y0 + 2 * lineHeight), 'the cursor over the margin while dragging');
+        assertEquals(2, region.visibleLineCountTop);
+        // a move of less than half a line changes nothing
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(x, y0 + 2.4 * lineHeight)), app);
+        draw();
+        assertEquals(2, region.visibleLineCountTop);
+        // a move outside the editor (over the original editor) counts too
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(10, y0 + 3 * lineHeight)), app);
+        draw();
+        assertEquals(3, region.visibleLineCountTop, 'the move outside the editor reaches the drag');
+        // dragging back up hides again, not below 0
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(x, y0 - 5 * lineHeight)), app);
+        draw();
+        assertEquals(0, region.visibleLineCountTop);
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(x, y0 + 1 * lineHeight)), app);
+        draw();
+        assertEquals(1, region.visibleLineCountTop);
+        // the release outside the editor ends the drag: no click behaviour
+        window.dispatchEvent(new MouseUpEvent(MouseButton.Left, point(10, y0 + lineHeight)), app);
+        draw();
+        assertEquals(null, region.isDragged);
+        assertEquals(1, region.visibleLineCountTop, 'a drag shows no more lines on release');
+        final bar2 = secondBar(diffEditor);
+        assertEquals(glaze.CursorStyle.IBeam, cursorAt(text + 200, bar2.top - 1.5 * lineHeight), 'the text cursor again on the line above the bar');
+        // a click (press and release within 2 px): revealLineCount more lines
+        final y1 = bar2.top + 1;
+        window.dispatchEvent(new MouseDownEvent(MouseButton.Left, point(x, y1)), app);
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(x, y1 + 2)), app);
+        window.dispatchEvent(new MouseUpEvent(MouseButton.Left, point(x, y1 + 2)), app);
+        draw();
+        assertEquals(null, region.isDragged);
+        assertEquals(1 + 3, region.visibleLineCountTop, 'a click shows revealLineCount more lines');
+        // the bottom edge: press 2 px below the bar, drag 3 lines up; the
+        // line after the region stays where it was
+        final bar3 = secondBar(diffEditor);
+        // the region ends the text: what stays in place is the end of the
+        // content (Monaco's `top`, `getContentHeight()` past the last line)
+        assertEquals(61, region.modifiedUnchangedRange.endLineNumberExclusive);
+        final endTopBefore = m.getContentHeight() - m.getScrollTop();
+        final scrollTopBefore = m.getScrollTop();
+        final y2 = bar3.top + bar3.height + 2;
+        window.dispatchEvent(new MouseDownEvent(MouseButton.Left, point(x, y2)), app);
+        draw();
+        assertEquals('bottom', region.isDragged);
+        window.dispatchEvent(new glaze.MouseMoveEvent(point(x, y2 - 3 * lineHeight)), app);
+        draw();
+        assertEquals(3, region.visibleLineCountBottom, 'three lines revealed below');
+        assertEquals(endTopBefore, m.getContentHeight() - m.getScrollTop(), 'the end of the content kept in place');
+        assertEquals(scrollTopBefore + 3 * lineHeight, m.getScrollTop(), 'the scroll top followed the three lines');
+        window.dispatchEvent(new MouseUpEvent(MouseButton.Left, point(x, y2 - 3 * lineHeight)), app);
+        draw();
+        assertEquals(null, region.isDragged);
+        assertEquals(3, region.visibleLineCountBottom);
+        // the right button starts no drag
+        final bar4 = secondBar(diffEditor);
+        window.dispatchEvent(new MouseDownEvent(MouseButton.Right, point(x, bar4.top + 1)), app);
+        draw();
+        assertEquals(null, region.isDragged);
+        window.dispatchEvent(new MouseUpEvent(MouseButton.Right, point(x, bar4.top + 1)), app);
+        draw();
+    }
+
+    /**
+     * The gutter menu items fade like Monaco's (style.css: `opacity: 0;
+     * transition: opacity 0.7s` and `.gutter:hover .gutterItem { opacity:
+     * 1; transition: opacity 0.1s ease-in-out }`), measured on the real
+     * Monaco 0.52.2 (glaze-golden scratchpad cs-cursor probe s7-fade.json:
+     * 0.52 at 52 ms and 1 at 100 ms in; 0.70 at 144 ms, 0.45 at 243 ms,
+     * 0.21 at 355 ms, 0.09 at 467 ms and 0 at 714 ms out). An item that
+     * becomes `showAlways` (the cursor in its change) shows at once
+     * (`noTransition`); with reduced motion the items snap.
+     */
+    function testGutterMenuItemFade() {
+        final original = createTextModel(lines(20).join('\n'));
+        final modifiedLines = lines(20);
+        modifiedLines[4] = 'line 5 changed';
+        final modified = createTextModel(modifiedLines.join('\n'));
+        final diffEditor = open(original, modified);
+        final mv:CityscapeView = diffEditor.getModifiedEditor().getView();
+        final m = widgetOf(diffEditor.getModifiedEditor());
+        final gutter = diffEditor.getWidget().gutter;
+        final id = gutter.items()[0].id;
+        final lineHeight:Float = m.getOption(EditorOption.lineHeight);
+        final sash = (1200 - 30) * 0.5;
+        final gutterX = sash - 35 + 17;
+        final gutterY = mv.elementBounds.origin.y + 4 * lineHeight + 9 + 60;
+        final textX = mv.elementBounds.origin.x + 200;
+        function opacity():Float {
+            draw();
+            return diffEditor.gutterItemOpacity(id);
+        }
+        function at(seconds:Float, expected:Float, label:String):Void {
+            dispatcher.advanceClock(seconds);
+            final o = opacity();
+            assertTrue(Math.abs(o - expected) < 0.05, label + ': ' + o + ' for ' + expected);
+        }
+        cursorAt(textX, gutterY);
+        assertEquals(0.0, opacity(), 'hidden before the hover');
+        // the mouse enters the gutter: 0.1 s ease-in-out
+        cursorAt(gutterX, gutterY);
+        assertEquals(0.0, diffEditor.gutterItemOpacity(id), 'still 0 at the start of the fade in');
+        at(0.052, 0.52, 'fade in at 52 ms');
+        at(0.048, 1.0, 'fade in done at 100 ms');
+        at(0.5, 1.0, 'stays');
+        // the mouse leaves: 0.7 s ease
+        cursorAt(textX, gutterY);
+        assertEquals(1.0, diffEditor.gutterItemOpacity(id), 'still 1 at the start of the fade out');
+        at(0.144, 0.70, 'fade out at 144 ms');
+        at(0.099, 0.45, 'fade out at 243 ms');
+        at(0.112, 0.21, 'fade out at 355 ms');
+        at(0.112, 0.09, 'fade out at 467 ms');
+        at(0.247, 0.0, 'fade out done at 714 ms');
+        // a fade reversed midway starts from its current opacity and takes
+        // the time of the distance left
+        cursorAt(gutterX, gutterY);
+        at(0.05, 0.5, 'half in');
+        cursorAt(textX, gutterY);
+        assertTrue(Math.abs(diffEditor.gutterItemOpacity(id) - 0.5) < 0.05, 'reversed from 0.5');
+        at(0.35, 0.0, 'out in 0.35 s from 0.5');
+        // the cursor in the change: showAlways, shown at once; back out: hidden at once
+        m.setPosition(new Position(5, 1));
+        assertEquals(1.0, opacity(), 'showAlways at once');
+        m.setPosition(new Position(1, 1));
+        assertEquals(0.0, opacity(), 'hidden at once when showAlways ends');
+        // reduced motion: no fade
+        app.setReduceMotion(true);
+        cursorAt(gutterX, gutterY);
+        assertEquals(1.0, opacity(), 'shown at once with reduced motion');
+        cursorAt(textX, gutterY);
+        assertEquals(0.0, opacity(), 'hidden at once with reduced motion');
+        app.setReduceMotion(false);
     }
 
     /**
