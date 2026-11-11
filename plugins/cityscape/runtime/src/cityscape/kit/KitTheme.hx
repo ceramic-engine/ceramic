@@ -22,6 +22,10 @@ import glaze.kit.theme.Theme;
  * KitTheme.apply(context, Theme.global(cx));
  * ```
  *
+ * The scrollbars of an editor in this theme keep the kit's colors (the kit
+ * theme's thumb colors, `cityscape.view.ScrollbarLook`), where other themes
+ * give theirs (`scrollbarSlider.*`).
+ *
  * The editor background is the kit's editor background
  * (`highlightTheme.style.editorBackground`, else the input background), or
  * transparent with `transparentBackground` (an editor drawn inside a kit frame

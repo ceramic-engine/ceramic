@@ -157,44 +157,18 @@ class EditorWidgets {
     }
 
     /**
-     * The width of the scrollbars of Monaco's widgets (the suggest list, the
-     * hover, the parameter hints, the code action list, the peek tree): the
-     * default `verticalScrollbarSize` of their scrollable elements, the
-     * slider as wide (measured on the real Monaco 0.52.2: a 10 pixel
-     * scrollbar and slider, square).
-     */
-    public static inline final WIDGET_SCROLLBAR_SIZE:Float = 10.;
-
-    /**
-     * The minimum length of their slider (scrollbarState.ts
-     * `MINIMUM_SLIDER_SIZE`).
-     */
-    public static inline final WIDGET_SLIDER_MIN_SIZE:Float = 20.;
-
-    /**
-     * The look of Monaco's widget scrollbars for a kit scrollbar
-     * (`Scrollbar.styles`): a 10 pixel square slider filling its track, in
-     * `scrollbarSlider.background`, `scrollbarSlider.hoverBackground` when
-     * the mouse is over it, `scrollbarSlider.activeBackground` while it is
-     * dragged (scrollbars.css), no track background. When it shows and hides
-     * stays the kit's.
+     * The styles of the scrollbars of the editor's widgets (the suggest
+     * list, the hover, the parameter hints, the code action list, the peek
+     * tree), for a kit scrollbar (`Scrollbar.styles`): the kit's scrollbar
+     * in the editor's colors, or Monaco's widget scrollbars with
+     * `scrollbar.widgetStyle: 'monaco'` (see `ScrollbarLook`). When they
+     * show and hide stays the kit's. The function is the view's, resolved
+     * again only when the theme or the `scrollbar` option changed.
      */
     public static function widgetScrollbarStyles(editor:ICodeEditor):(glaze.kit.base.Scrollbar.ScrollbarStyles) -> glaze.kit.base.Scrollbar.ScrollbarStyles {
-        final dark = isDark(editor);
-        final normal = color(editor, 'scrollbarSlider.background', dark ? hsla(0, 0, 121 / 255, 0.4) : hsla(0, 0, 100 / 255, 0.4));
-        final hover = color(editor, 'scrollbarSlider.hoverBackground', dark ? hsla(0, 0, 100 / 255, 0.7) : hsla(0, 0, 100 / 255, 0.7));
-        final active = color(editor, 'scrollbarSlider.activeBackground', dark ? hsla(0, 0, 191 / 255, 0.4) : hsla(0, 0, 0, 0.6));
-        inline function slider(t:glaze.kit.base.Scrollbar.ScrollbarThumbStyle, background:Hsla):glaze.kit.base.Scrollbar.ScrollbarThumbStyle {
-            return t.bg(background).width(WIDGET_SCROLLBAR_SIZE).inset(0).radius(0).minLength(WIDGET_SLIDER_MIN_SIZE);
-        }
-        final transparent = hsla(0, 0, 0, 0);
-        return s -> s
-            .track(t -> t.width(WIDGET_SCROLLBAR_SIZE).bg(transparent))
-            .trackHover(t -> t.width(WIDGET_SCROLLBAR_SIZE).bg(transparent))
-            .trackActive(t -> t.width(WIDGET_SCROLLBAR_SIZE).bg(transparent))
-            .thumb(t -> slider(t, normal))
-            .thumbHover(t -> slider(t, hover))
-            .thumbActive(t -> slider(t, active));
+        final view = viewOf(editor);
+        final look = view != null ? view.widgetScrollbarLook : ScrollbarLook.widgetLook();
+        return look.forWidget(editor);
     }
 
     /**

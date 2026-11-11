@@ -355,12 +355,18 @@ class SuggestViewTest extends TestCase {
             && Math.abs(q.backgroundSolidL - c.l) < 0.0001 && Math.abs(q.backgroundSolidA - c.a) < 0.0001;
     }
 
+    /** The quads of `color` inside the bounds (CSS pixels) of a widget (device pixels, scale 2). */
+    function quadsIn(color:glaze.Hsla, b:Bounds):Array<glaze.scene.Quad> {
+        return [for (q in window.renderedScene().quads) if (sameColor(q, color) && q.boundsX >= b.origin.x * 2
+            && q.boundsX + q.boundsWidth <= (b.origin.x + b.size.width) * 2 && q.boundsY >= b.origin.y * 2
+            && q.boundsY + q.boundsHeight <= (b.origin.y + b.size.height) * 2) q];
+    }
+
     /**
-     * A list longer than its rows has Monaco's widget scrollbar: a slider
-     * 10 pixels wide against the right of the list inside its border, in
-     * `scrollbarSlider.background`, square, as long as the share of the
-     * rows shown (20 pixels at least), at the bottom when the list is
-     * scrolled to its end; no scrollbar when every row shows.
+     * A list longer than its rows has the kit's scrollbar (owner decision
+     * 2026-11-11: one scrollbar shape across Glaze): a rounded 6 pixel thumb
+     * 4 pixels from the right of the list inside its border, in the theme's
+     * `scrollbarSlider.background`, like the editor's own scrollbar.
      */
     function testListScrollbar() {
         glaze.kit.theme.Theme.setScrollbarMode(glaze.kit.base.theme.ScrollbarMode.Always, app);
@@ -369,10 +375,40 @@ class SuggestViewTest extends TestCase {
         draw();
         final slider = EditorWidgets.color(editor.getEditor(), 'scrollbarSlider.background', glaze.Prelude.hsla(0, 0, 0, 1));
         final b = widget.listBounds;
+        final found = quadsIn(slider, b);
+        assertEquals(1, found.length, 'one thumb');
+        final q = found[0];
+        near((b.origin.x + b.size.width - 1 - 4 - 6) * 2, q.boundsX, 'thumb left');
+        near(12, q.boundsWidth, 'thumb width');
+        near((b.origin.y + 1 + 4) * 2, q.boundsY, 'thumb top');
+        near(6, q.cornerRadiusTopLeft, 'rounded');
+        // the editor's scrollbar has the same look
+        final view:cityscape.view.CityscapeView = editor.getView();
+        final main = [for (m in window.renderedScene().quads) if (sameColor(m, slider) && m.boundsX >= (view.elementBounds.origin.x + view.elementBounds.size.width - 16) * 2) m];
+        assertEquals(1, main.length, 'the editor thumb in the same color');
+        assertEquals(q.boundsWidth, main[0].boundsWidth);
+        assertEquals(q.cornerRadiusTopLeft, main[0].cornerRadiusTopLeft);
+    }
+
+    /**
+     * With `scrollbar.widgetStyle: 'monaco'` the list has Monaco's widget
+     * scrollbar: a slider 10 pixels wide against the right of the list
+     * inside its border, in `scrollbarSlider.background`, square, as long as
+     * the share of the rows shown (20 pixels at least), at the bottom when
+     * the list is scrolled to its end; no scrollbar when every row shows.
+     */
+    function testListScrollbarMonacoStyle() {
+        glaze.kit.theme.Theme.setScrollbarMode(glaze.kit.base.theme.ScrollbarMode.Always, app);
+        final editor = open(40, 800, 600);
+        editor.getEditor().updateOptions({scrollbar: {widgetStyle: 'monaco'}});
+        final widget = suggestAt(editor, 2);
+        draw();
+        final slider = EditorWidgets.color(editor.getEditor(), 'scrollbarSlider.background', glaze.Prelude.hsla(0, 0, 0, 1));
+        final b = widget.listBounds;
         final h = widget.getLayoutInfo().itemHeight;
         final listHeight = widget.getSize().height - widget.getLayoutInfo().statusBarHeight;
         function sliders():Array<glaze.scene.Quad> {
-            return [for (q in window.renderedScene().quads) if (sameColor(q, slider)) q];
+            return quadsIn(slider, b);
         }
         var found = sliders();
         assertEquals(1, found.length, 'one slider');
@@ -393,9 +429,10 @@ class SuggestViewTest extends TestCase {
         near((b.origin.y + 1 + listHeight) * 2, q.boundsY + q.boundsHeight, 'slider at the bottom');
         // every row shown: no scrollbar
         final short = open(5, 800, 600);
-        suggestAt(short, 2);
+        short.getEditor().updateOptions({scrollbar: {widgetStyle: 'monaco'}});
+        final shortWidget = suggestAt(short, 2);
         draw();
-        assertEquals(0, sliders().length);
+        assertEquals(0, quadsIn(slider, shortWidget.listBounds).length);
     }
 
 }

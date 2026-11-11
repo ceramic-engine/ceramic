@@ -450,62 +450,19 @@ class CityscapeEditor extends Component implements Styled {
     }
 
     /**
-     * The kit scrollbar sized to the layout's band: the kit look (a 6 pixel
+     * The kit scrollbar sized to the layout's band, in the editor's colors
+     * (`cityscape.view.ScrollbarLook`): the kit look (a rounded 6 pixel
      * thumb 4 pixels from the edge, 8 pixels when hovered or dragged if the
      * kit's `ScrollbarAppearance` has thumb growth, off by default) in its
      * own 16 pixel band, else thumbs no wider than `verticalSliderSize`,
-     * centered when the band is too narrow for the kit's inset. The
-     * Cityscape options `scrollbar.thumbColor` and `scrollbar.thumbRadius`
+     * centered when the band is too narrow for the kit's inset; the thumb in
+     * the theme's `scrollbarSlider.*` colors (the kit's in the kit theme).
+     * The Cityscape options `scrollbar.thumbColor` and `scrollbar.thumbRadius`
      * give the thumb's color and corner radius in every state.
      */
     static function styledScrollbar(scrollbar:Scrollbar, widget:CodeEditorWidget, view:cityscape.view.CityscapeView):Scrollbar {
-        final options = widget.getOption(EditorOption.scrollbar);
-        final thumbColor:Null<glaze.Hsla> = options.thumbColor != null ? view.paintState.parsedColor(options.thumbColor) : null;
-        final thumbRadius:Null<Float> = options.thumbRadius;
-        if (thumbColor != null || thumbRadius != null) {
-            scrollbar.styles(s -> s
-                .thumb(t -> thumbLook(t, thumbColor, thumbRadius))
-                .thumbHover(t -> thumbLook(t, thumbColor, thumbRadius))
-                .thumbActive(t -> thumbLook(t, thumbColor, thumbRadius))
-            );
-        }
-        final width = verticalScrollbarWidth(widget);
-        if (width == Scrollbar.width()) {
-            return scrollbar;
-        }
-        final slider:Float = options.verticalSliderSize;
-        inline function thumbWidth(kitWidth:Float):Float {
-            return Math.max(0, Math.min(kitWidth, slider));
-        }
-        inline function inset(kitInset:Float, thumb:Float):Float {
-            return Math.max(0, Math.min(kitInset, Math.floor((width - thumb) / 2)));
-        }
-        final normal = thumbWidth(KIT_THUMB_WIDTH);
-        final active = thumbWidth(KIT_THUMB_ACTIVE_WIDTH);
-        return scrollbar.styles(s -> s
-            .track(t -> t.width(width))
-            .thumb(t -> t.width(normal).inset(inset(KIT_THUMB_INSET, normal)))
-            .thumbHover(t -> t.width(active).inset(inset(KIT_THUMB_INSET, active)))
-            .thumbActive(t -> t.width(active).inset(inset(KIT_THUMB_INSET, active)))
-        );
+        return scrollbar.styles(view.editorScrollbarLook.forEditor(widget, verticalScrollbarWidth(widget)));
     }
-
-    static function thumbLook(thumb:glaze.kit.base.Scrollbar.ScrollbarThumbStyle, color:Null<glaze.Hsla>, radius:Null<Float>):glaze.kit.base.Scrollbar.ScrollbarThumbStyle {
-        if (color != null) {
-            thumb.bg(color);
-        }
-        if (radius != null) {
-            thumb.radius(radius);
-        }
-        return thumb;
-    }
-
-    /** The kit scrollbar's thumb sizes (`glaze.kit.base.Scrollbar`) */
-    static inline final KIT_THUMB_WIDTH:Float = 6.;
-
-    static inline final KIT_THUMB_ACTIVE_WIDTH:Float = 8.;
-
-    static inline final KIT_THUMB_INSET:Float = 4.;
 
     var appliedFontSize:Null<Float> = null;
     var appliedFontFamily:Null<String> = null;

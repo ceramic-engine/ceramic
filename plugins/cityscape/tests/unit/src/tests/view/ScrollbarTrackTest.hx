@@ -84,6 +84,16 @@ class ScrollbarTrackTest extends TestCase {
         return cityscape.view.ViewTheme.parseColor(hex);
     }
 
+    /** A color of the editor's theme, as the scrollbar reads it. */
+    static function themed(e:CityscapeEditor, key:String):Hsla {
+        return cityscape.view.EditorWidgets.color(e.getEditor(), key, hsla(0, 0, 0, 0));
+    }
+
+    function near(expected:Hsla, actual:Hsla, ?pos:haxe.PosInfos):Void {
+        assertTrue(Math.abs(expected.h - actual.h) < 0.001 && Math.abs(expected.s - actual.s) < 0.001
+            && Math.abs(expected.l - actual.l) < 0.001 && Math.abs(expected.a - actual.a) < 0.001, 'expected ' + expected + ', got ' + actual, pos);
+    }
+
     static function sameColor(q:glaze.scene.Quad, c:Hsla):Bool {
         return Math.abs(q.backgroundSolidH - c.h) < 0.0001 && Math.abs(q.backgroundSolidS - c.s) < 0.0001
             && Math.abs(q.backgroundSolidL - c.l) < 0.0001 && Math.abs(q.backgroundSolidA - c.a) < 0.0001;
@@ -262,8 +272,90 @@ class ScrollbarTrackTest extends TestCase {
         app.update(cx -> {
             final plain = @:privateAccess CityscapeEditor.styledScrollbar(Scrollbar.vertical(v.scrollHandle), @:privateAccess e.widget, v);
             final kit = new Scrollbar(v.scrollHandle);
-            assertTrue((@:privateAccess plain.styleForNormal(cx)).thumb.equals((@:privateAccess kit.styleForNormal(cx)).thumb), 'the kit thumb');
-            assertEquals((@:privateAccess kit.styleForNormal(cx)).radius, (@:privateAccess plain.styleForNormal(cx)).radius);
+            assertEquals((@:privateAccess kit.styleForNormal(cx)).radius, (@:privateAccess plain.styleForNormal(cx)).radius, 'the kit radius');
+            return null;
+        });
+    }
+
+    /**
+     * Without `thumbColor` the thumb takes the colors of the editor's theme
+     * (owner decision 2026-11-11): `scrollbarSlider.background` at rest and
+     * over the track, `scrollbarSlider.hoverBackground` over the thumb,
+     * `scrollbarSlider.activeBackground` while dragged, without the kit's
+     * track fill and drag border; its shape stays the kit's (rounded, 6
+     * pixels, 4 from the edge in the kit's 16 pixel band).
+     */
+    function testThumbTakesTheThemeColors() {
+        context.themeService.defineTheme('sliderTest', {base: 'vs-dark', inherit: true, rules: [], colors: {
+            'scrollbarSlider.background': '#11223344',
+            'scrollbarSlider.hoverBackground': '#55667788',
+            'scrollbarSlider.activeBackground': '#99aabbcc'
+        }});
+        context.themeService.setTheme('sliderTest');
+        final e = open({scrollbar: {verticalScrollbarSize: 16}});
+        final v:cityscape.view.CityscapeView = e.getView();
+        app.update(cx -> {
+            final scrollbar = @:privateAccess CityscapeEditor.styledScrollbar(Scrollbar.vertical(v.scrollHandle), @:privateAccess e.widget, v);
+            final kit = new Scrollbar(v.scrollHandle);
+            final normal = @:privateAccess scrollbar.styleForNormal(cx);
+            assertTrue(normal.thumb.equals(bg(themed(e, 'scrollbarSlider.background'))), 'rest');
+            assertTrue((@:privateAccess scrollbar.styleForHoveredBar(cx)).thumb.equals(bg(themed(e, 'scrollbarSlider.background'))), 'over the track');
+            assertTrue((@:privateAccess scrollbar.styleForHoveredThumb(cx)).thumb.equals(bg(themed(e, 'scrollbarSlider.hoverBackground'))), 'over the thumb');
+            near(color('#55667788'), themed(e, 'scrollbarSlider.hoverBackground'));
+            final active = @:privateAccess scrollbar.styleForActive(cx);
+            assertTrue(active.thumb.equals(bg(themed(e, 'scrollbarSlider.activeBackground'))), 'dragged');
+            near(color('#99aabbcc'), themed(e, 'scrollbarSlider.activeBackground'));
+            near(color('#11223344'), themed(e, 'scrollbarSlider.background'));
+            assertEquals(0.0, active.track.a, 'no track fill');
+            assertEquals(0.0, active.border.a, 'no drag border');
+            final kitNormal = @:privateAccess kit.styleForNormal(cx);
+            assertEquals(kitNormal.width, normal.width, 'kit width');
+            assertEquals(kitNormal.inset, normal.inset, 'kit inset');
+            assertEquals(kitNormal.radius, normal.radius, 'kit radius');
+            return null;
+        });
+        // the look is resolved again when the theme changes
+        context.themeService.defineTheme('sliderTest2', {base: 'vs', inherit: true, rules: [], colors: {'scrollbarSlider.background': '#123456'}});
+        context.themeService.setTheme('sliderTest2');
+        draw();
+        app.update(cx -> {
+            final scrollbar = @:privateAccess CityscapeEditor.styledScrollbar(Scrollbar.vertical(v.scrollHandle), @:privateAccess e.widget, v);
+            assertTrue((@:privateAccess scrollbar.styleForNormal(cx)).thumb.equals(bg(themed(e, 'scrollbarSlider.background'))), 'new theme');
+            near(color('#123456'), themed(e, 'scrollbarSlider.background'));
+            return null;
+        });
+    }
+
+    /**
+     * In the kit theme (`KitTheme`, Glaze's inspector) the scrollbar keeps
+     * the kit's look entirely, colors included: the same resolved styles as
+     * a plain kit scrollbar in every state.
+     */
+    function testKitThemeKeepsTheKitScrollbar() {
+        app.update(cx -> {
+            cityscape.kit.KitTheme.apply(context, glaze.kit.theme.Theme.global(cx));
+            return null;
+        });
+        final e = open({scrollbar: {verticalScrollbarSize: 16}});
+        final v:cityscape.view.CityscapeView = e.getView();
+        app.update(cx -> {
+            final scrollbar = @:privateAccess CityscapeEditor.styledScrollbar(Scrollbar.vertical(v.scrollHandle), @:privateAccess e.widget, v);
+            final kit = new Scrollbar(v.scrollHandle);
+            final pairs = [
+                [@:privateAccess scrollbar.styleForNormal(cx), @:privateAccess kit.styleForNormal(cx)],
+                [@:privateAccess scrollbar.styleForHoveredBar(cx), @:privateAccess kit.styleForHoveredBar(cx)],
+                [@:privateAccess scrollbar.styleForHoveredThumb(cx), @:privateAccess kit.styleForHoveredThumb(cx)],
+                [@:privateAccess scrollbar.styleForActive(cx), @:privateAccess kit.styleForActive(cx)]
+            ];
+            for (p in pairs) {
+                assertTrue(p[0].thumb.equals(p[1].thumb), 'thumb');
+                assertTrue(p[0].track.equals(p[1].track), 'track');
+                assertTrue(p[0].border.equals(p[1].border), 'border');
+                assertEquals(p[1].width, p[0].width);
+                assertEquals(p[1].inset, p[0].inset);
+                assertEquals(p[1].radius, p[0].radius);
+                assertEquals(p[1].minLength, p[0].minLength);
+            }
             return null;
         });
     }

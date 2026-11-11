@@ -1338,7 +1338,14 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      */
     @:allow(cityscape.view.CityscapeViewElement)
     @:allow(cityscape.CityscapeEditor)
+    @:allow(cityscape.view.ScrollbarLook)
     final paintState:CityscapeViewElement.PaintState = new CityscapeViewElement.PaintState();
+
+    /** The look of the editor's vertical scrollbar (`CityscapeEditor`). */
+    public final editorScrollbarLook:ScrollbarLook = ScrollbarLook.editorLook();
+
+    /** The look of the scrollbars of the editor's widgets (`EditorWidgets.widgetScrollbarStyles`). */
+    public final widgetScrollbarLook:ScrollbarLook = ScrollbarLook.widgetLook();
 
     //#endregion
 

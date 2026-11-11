@@ -2019,17 +2019,32 @@ typedef IEditorScrollbarOptions = {
      */
     @:optional var trackColor:String;
     /**
-     * Cityscape addition (not in Monaco): the color of the vertical
-     * scrollbar's thumb (a CSS color, the same when hovered or dragged).
-     * Defaults to the kit's thumb colors.
+     * Cityscape addition (not in Monaco): the color of the thumb of the
+     * vertical scrollbar and of the scrollbars of the editor's widgets
+     * (suggest list, hover, parameter hints, quick fix menu, peek tree), a
+     * CSS color, the same when hovered or dragged. Defaults to the theme's
+     * `scrollbarSlider.background`, `scrollbarSlider.hoverBackground` and
+     * `scrollbarSlider.activeBackground` (the kit's thumb colors in the
+     * kit theme, `cityscape.kit.KitTheme`).
      */
     @:optional var thumbColor:String;
     /**
-     * Cityscape addition (not in Monaco): the corner radius of the vertical
-     * scrollbar's thumb, in pixels (at most half its width). Defaults to the
-     * kit's.
+     * Cityscape addition (not in Monaco): the corner radius of the thumb of
+     * the vertical scrollbar and of the widgets' scrollbars with
+     * `widgetStyle: 'kit'`, in pixels (at most half its width). Defaults to
+     * the kit's (fully rounded).
      */
     @:optional var thumbRadius:Float;
+    /**
+     * Cityscape addition (not in Monaco): the shape of the scrollbars of the
+     * editor's widgets (suggest list, hover, parameter hints, quick fix
+     * menu, peek tree). `'kit'` (the default): the Glaze kit's scrollbar,
+     * like the editor's own and every other scrollbar of Glaze (a rounded
+     * 6 pixel thumb 4 pixels from the edge). `'monaco'`: Monaco's widget
+     * scrollbars, a 10 pixel square slider filling its track, at least 20
+     * pixels long. The colors are the editor's in both.
+     */
+    @:optional var widgetStyle:String;
 }
 
 typedef InternalEditorScrollbarOptions = {
@@ -2053,6 +2068,8 @@ typedef InternalEditorScrollbarOptions = {
     final thumbColor:Null<String>;
     /** Cityscape addition: the thumb corner radius (0 to 1000), null for the kit's. */
     final thumbRadius:Null<Float>;
+    /** Cityscape addition: the shape of the widgets' scrollbars, `'monaco'`, or null for the kit's (`'kit'`). */
+    final widgetStyle:Null<String>;
 }
 
 private function _scrollbarVisibilityFromString(visibility:Any, defaultValue:ScrollbarVisibility):ScrollbarVisibility {
@@ -2087,6 +2104,7 @@ class EditorScrollbar extends BaseEditorOption<InternalEditorScrollbarOptions> {
             trackColor: null,
             thumbColor: null,
             thumbRadius: null,
+            widgetStyle: null,
         };
         super(EditorOption.scrollbar, 'scrollbar', defaults);
     }
@@ -2116,6 +2134,7 @@ class EditorScrollbar extends BaseEditorOption<InternalEditorScrollbarOptions> {
             trackColor: _color(JsValues.field(input, 'trackColor')),
             thumbColor: _color(JsValues.field(input, 'thumbColor')),
             thumbRadius: _radius(JsValues.field(input, 'thumbRadius')),
+            widgetStyle: _widgetStyle(JsValues.field(input, 'widgetStyle')),
         };
     }
 
@@ -2130,6 +2149,11 @@ class EditorScrollbar extends BaseEditorOption<InternalEditorScrollbarOptions> {
         }
         final color = StringTools.trim((value : String));
         return color.length > 0 ? color : null;
+    }
+
+    /** `widgetStyle`: `'monaco'`, else null (the kit's, `'kit'` or anything else). */
+    static function _widgetStyle(value:Any):Null<String> {
+        return JsValues.isString(value) && (value : String) == 'monaco' ? 'monaco' : null;
     }
 
     /** A radius of the Cityscape additions: a number clamped to 0..1000, else null. */

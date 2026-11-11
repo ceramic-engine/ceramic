@@ -219,12 +219,20 @@ class HoverViewTest extends TestCase {
             && Math.abs(q.backgroundSolidL - c.l) < 0.0001 && Math.abs(q.backgroundSolidA - c.a) < 0.0001;
     }
 
+    /** The quads of `color` inside the bounds (CSS pixels) of a widget (device pixels, scale 2). */
+    function quadsIn(color:glaze.Hsla, b:glaze.Bounds):Array<glaze.scene.Quad> {
+        return [for (q in window.renderedScene().quads) if (sameColor(q, color) && q.boundsX >= b.origin.x * 2
+            && q.boundsX + q.boundsWidth <= (b.origin.x + b.size.width) * 2 && q.boundsY >= b.origin.y * 2
+            && q.boundsY + q.boundsHeight <= (b.origin.y + b.size.height) * 2) q];
+    }
+
     /**
-     * A hover higher than its maximum scrolls with Monaco's widget
-     * scrollbar (real Monaco 0.52.2: a 10 pixel square slider against the
-     * right of the hover, inside its border, in `scrollbarSlider.background`).
+     * A hover higher than its maximum scrolls with the kit's scrollbar
+     * (owner decision 2026-11-11: one scrollbar shape across Glaze): a
+     * rounded 6 pixel thumb 4 pixels from the right of the hover inside its
+     * border, in the theme's `scrollbarSlider.background`.
      */
-    function testScrollbarLooksLikeMonacos() {
+    function testScrollbarHasTheKitShape() {
         glaze.kit.theme.Theme.setScrollbarMode(glaze.kit.base.theme.ScrollbarMode.Always, app);
         final paragraphs = [for (i in 0...30) 'Paragraph ' + i + ' ' + [for (j in 0...40) 'word'].join(' ')];
         final editor = open(paragraphs.join('\n\n'), 1200, 900);
@@ -232,13 +240,41 @@ class HoverViewTest extends TestCase {
         draw();
         final slider = EditorWidgets.color(editor.getEditor(), 'scrollbarSlider.background', hsla(0, 0, 0, 1));
         final b = widget.bounds;
-        final found = [for (q in window.renderedScene().quads) if (sameColor(q, slider)) q];
+        final found = quadsIn(slider, b);
+        assertEquals(1, found.length, 'one thumb');
+        final q = found[0];
+        near((b.origin.x + b.size.width - 1 - 4 - 6) * 2, q.boundsX, 'thumb left');
+        near(12, q.boundsWidth, 'thumb width');
+        near(6, q.cornerRadiusTopLeft, 'rounded');
+    }
+
+    /**
+     * With `scrollbar.widgetStyle: 'monaco'` the hover scrolls with Monaco's
+     * widget scrollbar (real Monaco 0.52.2: a 10 pixel square slider against
+     * the right of the hover, inside its border, in
+     * `scrollbarSlider.background`); `scrollbar.thumbColor` colors it.
+     */
+    function testScrollbarMonacoStyle() {
+        glaze.kit.theme.Theme.setScrollbarMode(glaze.kit.base.theme.ScrollbarMode.Always, app);
+        final paragraphs = [for (i in 0...30) 'Paragraph ' + i + ' ' + [for (j in 0...40) 'word'].join(' ')];
+        final editor = open(paragraphs.join('\n\n'), 1200, 900, {scrollbar: {widgetStyle: 'monaco'}});
+        final widget = showHover(editor, 50);
+        draw();
+        final slider = EditorWidgets.color(editor.getEditor(), 'scrollbarSlider.background', hsla(0, 0, 0, 1));
+        final b = widget.bounds;
+        final found = quadsIn(slider, b);
         assertEquals(1, found.length, 'one slider');
         final q = found[0];
         near((b.origin.x + b.size.width - 1 - 10) * 2, q.boundsX, 'slider left');
         near(20, q.boundsWidth, 'slider width');
         near((b.origin.y + 1) * 2, q.boundsY, 'slider top');
         assertEquals(0.0, q.cornerRadiusTopLeft);
+        editor.getEditor().updateOptions({scrollbar: {widgetStyle: 'monaco', thumbColor: '#ff00ff80'}});
+        draw();
+        draw();
+        final magenta = cityscape.view.ViewTheme.parseColor('#ff00ff80');
+        assertEquals(0, quadsIn(slider, b).length, 'thumbColor over the theme');
+        assertEquals(1, quadsIn(magenta, widget.bounds).length, 'thumbColor');
     }
 
     /**
