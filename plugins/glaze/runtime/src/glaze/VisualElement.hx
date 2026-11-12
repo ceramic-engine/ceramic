@@ -673,22 +673,6 @@ class VisualHost {
         if (filter.contentDirty) {
             filter.computeContent();
         }
-        if (explicit && !filter.explicitRender && (@:privateAccess filter.unobservedRenderTexture) != null) {
-            // Set once the filter's content is visible (it has a texture):
-            // `explicitRender` deactivates the content, and reactivating it
-            // gives back the visibility it had then
-            filter.explicitRender = true;
-        }
-
-        if (!dedicated && filter.textureTile != null && filter.textureTile.texture != (@:privateAccess filter.unobservedRenderTexture)) {
-            // The tile went to another page of the packer: its own texture instead
-            destroyFilter();
-            createFilter(true, explicit, antialiasing, nearest, scale);
-            filter.size(filterWidth, filterHeight);
-            filter.computeContent();
-            renderDue = true;
-        }
-
         final texture = @:privateAccess filter.unobservedRenderTexture;
         if (texture == null) {
             tileWidth = 0;
@@ -774,9 +758,9 @@ class VisualHost {
             // No depth or stencil buffer needed by most content: Ceramic's defaults kept
         }
         if (explicit) {
-            // Rendered on `render()` only (it marks the texture dirty).
-            // `explicitRender` itself is set once the texture exists (see `update()`)
+            // Rendered on `render()` only (it marks the texture dirty)
             filter.autoRender = false;
+            filter.explicitRender = true;
         }
         filter.touchable = false;
         // Mounted for the content to render into its texture, never drawn

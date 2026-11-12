@@ -281,6 +281,61 @@ class VisualElementTest extends TestCase {
         });
     }
 
+    /** Pixels of `texture` matching `color` (opaque, channels within 40) */
+    static function countPixels(texture:ceramic.RenderTexture, color:ceramic.Color):Int {
+        final pixels = texture.fetchPixels();
+        var count = 0;
+        var i = 0;
+        while (i < pixels.length) {
+            if (pixels[i + 3] > 200 && Math.abs(pixels[i] - color.red) < 40
+                && Math.abs(pixels[i + 1] - color.green) < 40 && Math.abs(pixels[i + 2] - color.blue) < 40)
+                count++;
+            i += 4;
+        }
+        return count;
+    }
+
+    function asyncTestFilterTileInAChainedPageRendersIntoThatPage(done:() -> Void) {
+        final packer = tinyPacker();
+        final first = tiledFilter(packer, 30, ceramic.Color.LIME);
+        final second = tiledFilter(packer, 30, ceramic.Color.RED);
+        created.push(packer);
+        afterFrames(3, () -> {
+            final page = packer.nextPacker.texture;
+            final density = page.density;
+            final area = Math.round(30 * density) * Math.round(30 * density);
+            // Each content in its own tile's page, nothing in the other one
+            assertTrue(countPixels(packer.texture, ceramic.Color.LIME) >= area);
+            assertEquals(0, countPixels(packer.texture, ceramic.Color.RED));
+            assertTrue(countPixels(page, ceramic.Color.RED) >= area);
+            assertEquals(0, countPixels(page, ceramic.Color.LIME));
+            done();
+        });
+    }
+
+    function asyncTestFilterExplicitRenderSetBeforeItsTextureExists(done:() -> Void) {
+        final filter = new ceramic.Filter();
+        created.push(filter);
+        filter.transparent = true;
+        filter.autoRender = false;
+        filter.explicitRender = true;
+        final content = quad(20, 20);
+        content.color = ceramic.Color.LIME;
+        filter.content.add(content);
+        filter.size(20, 20);
+        ceramic.App.app.screen.add(filter);
+        afterFrames(2, () -> {
+            assertTrue(filter.renderTexture != null);
+            // Rendered on request only, with the content as it is then
+            content.color = ceramic.Color.RED;
+            filter.render(() -> {
+                assertTrue(countPixels(filter.renderTexture, ceramic.Color.RED) >= 400);
+                assertFalse(filter.content.visible);
+                done();
+            });
+        });
+    }
+
 #end
 
 /// RenderTexture.renderVersion
@@ -817,6 +872,117 @@ class VisualElementTest extends TestCase {
         refresh();
         window.draw();
         assertTrue(content.parent != null && content.parent.parent == filter);
+    }
+
+/// Ceramic Filter (defects found with visual(), fixed in Ceramic)
+
+    /** A filter on a tile of `packer`, its content a quad of `color` filling it */
+    function tiledFilter(packer:ceramic.TextureTilePacker, size:Float, color:ceramic.Color):ceramic.Filter {
+        final filter = new ceramic.Filter();
+        filter.transparent = true;
+        filter.textureTilePacker = packer;
+        final content = quad(size, size);
+        content.color = color;
+        filter.content.add(content);
+        filter.size(size, size);
+        filter.computeContent();
+        // Mounted, so that it renders
+        ceramic.App.app.screen.add(filter);
+        created.push(filter);
+        return filter;
+    }
+
+    /** Two pages of 40 x 40 (two cells per side): a 30 x 30 tile fills a page */
+    function tinyPacker():ceramic.TextureTilePacker {
+        return new ceramic.TextureTilePacker(true, 40, 40, 16, 16, 1);
+    }
+
+    function testFilterExplicitRenderSetBeforeItsTextureExists() {
+        final filter = new ceramic.Filter();
+        created.push(filter);
+        filter.autoRender = false;
+        filter.explicitRender = true;
+        filter.content.add(quad(10, 10));
+        filter.size(10, 10);
+        filter.computeContent();
+        assertTrue(filter.renderTexture != null);
+        // At rest: deactivated, nothing rendered
+        assertFalse(filter.content.active);
+        assertFalse(filter.content.visible);
+        // Activated by render() until the frame is drawn: visible, so it renders
+        filter.render();
+        assertTrue(filter.content.active);
+        assertTrue(filter.content.visible);
+
+        // Turning explicit render off shows it too
+        final other = new ceramic.Filter();
+        created.push(other);
+        other.explicitRender = true;
+        other.content.add(quad(10, 10));
+        other.size(10, 10);
+        other.computeContent();
+        other.explicitRender = false;
+        assertTrue(other.content.active);
+        assertTrue(other.content.visible);
+    }
+
+    function testFilterExplicitRenderKeepsTheContentHiddenWithoutTexture() {
+        final filter = new ceramic.Filter();
+        created.push(filter);
+        filter.explicitRender = true;
+        filter.content.add(quad(10, 10));
+        filter.size(10, 10);
+        filter.computeContent();
+        // Zero size: no texture, the content must not draw to the screen
+        filter.size(0, 0);
+        filter.computeContent();
+        assertTrue(filter.renderTexture == null);
+        filter.explicitRender = false;
+        assertFalse(filter.content.visible);
+    }
+
+    function testFilterTileInAChainedPageUsesThatPage() {
+        final packer = tinyPacker();
+        final first = tiledFilter(packer, 30, ceramic.Color.LIME);
+        final second = tiledFilter(packer, 30, ceramic.Color.RED);
+        created.push(packer);
+        assertTrue(packer.nextPacker != null);
+        final page = packer.nextPacker.texture;
+        assertTrue(first.renderTexture == packer.texture);
+        assertTrue(first.textureTile.texture == packer.texture);
+        // The second tile lives in the chained page: rendered into and displayed from it
+        assertTrue(second.textureTile.texture == page);
+        assertTrue(second.renderTexture == page);
+        assertTrue(second.content.renderTarget == page);
+        assertTrue(second.texture == page);
+        assertTrue(first.texture == packer.texture);
+        assertEquals(second.textureTile.frameX, second.frameX);
+        assertEquals(second.textureTile.frameY, second.frameY);
+        assertEquals(30.0, second.frameWidth);
+        assertTrue(second.content.visible);
+
+        // Without packer: its own texture, the pages are not the filter's to destroy
+        second.textureTilePacker = null;
+        second.computeContent();
+        assertFalse(page.destroyed);
+        assertFalse(packer.texture.destroyed);
+        assertTrue(second.textureTile == null);
+        assertTrue(second.renderTexture != null && second.renderTexture != page && second.renderTexture != packer.texture);
+        assertTrue(second.content.renderTarget == second.renderTexture);
+    }
+
+    function testFilterTileTooLargeForThePackerHasNoTexture() {
+        final packer = tinyPacker();
+        final filter = tiledFilter(packer, 30, ceramic.Color.RED);
+        created.push(packer);
+        assertTrue(filter.renderTexture == packer.texture);
+        // Larger than a page: no tile, no texture (the content stays hidden)
+        filter.size(39, 39);
+        filter.computeContent();
+        assertTrue(filter.textureTile == null);
+        assertTrue(filter.renderTexture == null);
+        assertFalse(filter.content.visible);
+        assertFalse(packer.texture.destroyed);
     }
 
 }
