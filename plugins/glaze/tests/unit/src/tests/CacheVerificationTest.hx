@@ -291,7 +291,11 @@ class CacheVerificationTest extends TestCase {
         source.text = 'changed';
         inner.update(app, (_, cx) -> cx.notify());
         frame();
-        // The view's own report, then the frame drawn in place compared with a full frame
+        // The view's own report, then the frame drawn in place compared with a full frame.
+        // `glaze_verify_layout` lays the whole tree out again from scratch after each
+        // layout: the caches it leaves can make this frame a full one instead of an in
+        // place one, so the in place case this test is about does not happen
+        #if !glaze_verify_layout
         assertTrue(messages.length >= 1, 'reported');
         final message = messages.length > 0 ? messages[0] : '';
         assertTrue(message.indexOf('tests.VerifyView') == 0, message);
@@ -299,6 +303,7 @@ class CacheVerificationTest extends TestCase {
         for (other in messages.slice(1)) {
             assertTrue(other.indexOf('In place rendering of') == 0, other);
         }
+        #end
         messages.resize(0);
     }
 
