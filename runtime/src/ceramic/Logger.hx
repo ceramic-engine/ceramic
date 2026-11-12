@@ -114,7 +114,11 @@ class Logger extends Entity {
 #if unity
             haxe.Log.trace = function(v:Dynamic, ?pos:haxe.PosInfos):Void {
                 #if !ceramic_unity_no_log
-                untyped __cs__('UnityEngine.Debug.Log({0}+{1}+{2}+":"+{3})', v, '\n', pos.fileName, pos.lineNumber);
+                // `trace(v, null)` has no position (haxe.Log.formatOutput allows it too)
+                if (pos == null)
+                    untyped __cs__('UnityEngine.Debug.Log({0})', v);
+                else
+                    untyped __cs__('UnityEngine.Debug.Log({0}+{1}+{2}+":"+{3})', v, '\n', pos.fileName, pos.lineNumber);
                 #end
             };
 #end

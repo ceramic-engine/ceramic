@@ -65,6 +65,9 @@ class UnityCSharp {
                 else if (normalizedPath == 'haxe/ds/IntMap.cs' || normalizedPath == 'haxe/ds/StringMap.cs') {
                     processedContent = patchMapGenericCast(processedContent);
                 }
+                else if (normalizedPath == 'cs/internal/StringExt.cs') {
+                    processedContent = patchStringFromCharCode(processedContent);
+                }
                 else if (normalizedPath == 'Array.cs') {
                     processedContent = patchGenericCast(processedContent);
                     processedContent = patchArraySort(processedContent);
@@ -320,6 +323,21 @@ class UnityCSharp {
         content = content.replace('global::haxe.lang.Runtime.genericCast<T>(this.m.vals[', '(this.m.vals[');
 
         return content;
+
+    }
+
+    /**
+     * Haxe's C# `String.fromCharCode` goes through `Char.ConvertFromUtf32`,
+     * which refuses a surrogate code unit (0xD800 to 0xDFFF), while hxcpp
+     * and JavaScript build the unit and let two of them make a pair. Code
+     * ported from JavaScript builds strings from UTF-16 units that way:
+     * return the single unit for a surrogate.
+     */
+    static function patchStringFromCharCode(content:String):String {
+
+        final original = 'return global::System.Char.ConvertFromUtf32(((int) (code) ));';
+        final patched = 'return (code >= 0xD800 && code <= 0xDFFF) ? ((char) code).ToString() : global::System.Char.ConvertFromUtf32(((int) (code) ));';
+        return StringTools.replace(content, original, patched);
 
     }
 
