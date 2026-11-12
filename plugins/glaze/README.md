@@ -235,7 +235,85 @@ The visual is reparented into the content of a Ceramic `Filter` that renders it 
 
 Any `RenderTexture` shown with `img(texture)` follows its content the same way: the window checks once per frame the render textures its scene shows (`RenderTexture.renderVersion` changes each time Ceramic draws into one) and draws their rectangles again.
 
-The story gallery (`samples/story`) has a page with these cases: an animated visual in a panel, inside a scroll area, under a popover, and a Ceramic quad receiving clicks.
+The story gallery (`samples/story`) has a page with these cases: an animated visual in a panel, inside a scroll area, under a popover, and a Ceramic quad receiving clicks, then measured Ceramic views (an `ImageView`, a column of Ceramic buttons next to Glaze text, a `TextView` wrapping in a column, and a button that lengthens its text). See "Computed sizes" below for the size of a Ceramic `View`.
+
+## Computed sizes
+
+The layout computes the size of an element from its style (`w`, `h`, `flex`, `aspectRatio`...) and, when it has children, from them. A leaf whose size depends on its content has a measure function: the layout tells it what it already knows and it answers with a size. That is how text is sized ("at most 300 pixels wide", "then 3 lines, 300 by 54"). A measure function receives `known` (for each axis, the size given by the style or the parent, or `null`) and `available` (for each axis, `Definite(n)`: at most n pixels, `MinContent`: the smallest size, `MaxContent`: the ideal size without constraint). It can be called several times per layout with different constraints: it must give the same answer to the same question and change nothing visible.
+
+For a `Component`, three cases, from the most common to the rarest:
+
+```haxe
+// 1. The size comes from the content: nothing to do.
+// The card is as wide as its title and as high as its lines.
+function render(window:Window, cx:App) {
+    return vFlex().p(px(12.)).gap(px(4.))
+        .child(label(title).textLg())
+        .child(label(subtitle));
+}
+
+// 2. Keeping a ratio: the `aspectRatio` style. One dimension comes from the
+// layout, the other follows. A 16/9 thumbnail as wide as its column:
+div().wFull().aspectRatio(16. / 9.).child(img(thumbnail).sizeFull())
+
+// 3. A size computed by code: `measure(fn)` on `canvas()`.
+// A chart 24 pixels high per series, as wide as it is given (400 by default):
+canvas(prepaintChart, paintChart)
+    .measure((known, available, window, cx) -> {
+        final width = known.width ?? switch available.width {
+            case Definite(n): n;
+            case _: 400.;
+        };
+        return size(px(width), px(series.length * 24.));
+    })
+```
+
+When the data changes, the component renders again (tracker or `notify()`) and the layout measures again: nothing else to do. `canvas().measure(fn)` is an addition of Glaze: with GPUI it takes a custom element.
+
+### Ceramic views
+
+A Ceramic `View` (plugin `ui`: `TextView`, `LinearLayout`, `ImageView`, your own) shown with `visual(view)` measures itself: the element asks the view its size with `computeSize`, gives it the size the layout decides (`view.size(...)`) and Ceramic lays out its content in the same frame.
+
+```haxe
+// A column of Ceramic buttons (vertical LinearLayout, auto size): as wide as
+// its widest button, as high as their sum
+hFlex().gap(px(8.))
+    .child(visual(ceramicButtons))
+    .child(label('next to it, in Glaze'))
+
+// A Ceramic TextView in a Glaze column of 300 pixels: on one line it keeps
+// its natural width, otherwise it wraps in 300
+vFlex().itemsStart().w(px(300.)).child(visual(ceramicText))
+
+// An ImageView: the width from Glaze, the height from the ratio of its texture
+div().child(visual(imageView).w(px(200.)))
+```
+
+How a question of the layout becomes a `computeSize` call:
+
+| The layout says | The view is asked |
+|---|---|
+| an axis is known (`known.width = 300`) | that parent size, with no freedom on the axis: the view is 300 wide (a `TextView` wraps in 300, an `ImageView` gets its height from the ratio) |
+| a free axis, `MinContent` or `MaxContent` | its natural size (parent size 0, flexible on the axis, like `autoComputeSize()`). Ceramic has no separate minimal size: both get the natural size |
+| a free width, `Definite(n)` | like CSS fit-content: the natural width if it fits in n, otherwise n imposed. The height is never limited by the available height (the content overflows or scrolls, like text) |
+
+When the content of the view changes size (a longer text, a button added), Ceramic lays the view out again and the element asks its last questions again: if an answer changed, the Glaze view showing it is notified and its branch is laid out again, in the same frame. Nothing is polled: a view that does not change costs nothing.
+
+Who decides what, and the limits:
+
+- **Sizes that depend on the parent belong to the Glaze style.** Write `flex1()`, `wFull()` or `w(relative(0.5))` on the element, not `ViewSize.fill()` or `ViewSize.percent()` on the view: the view gives its natural (`auto`) or fixed size only. A view in `fill` or `percent` on a free axis takes the available space when the layout gives a definite one, and 0 otherwise.
+- **A hosted view does not shrink under a min content constraint.** In a row that shrinks its children (`hFlex()` narrower than them), the view keeps its natural width and overflows, where a Glaze text would wrap. Give it a width in the Glaze style: `visual(view).flex1().minW0()` or `w(...)`.
+- **A block container imposes its width.** In a plain `div().w(px(300.))`, a child is as wide as the div (300, even for a short text). Use a flex container with `itemsStart()` to keep the natural width.
+- **`ImageView` needs one dimension.** Ceramic's `ImageView` has no natural size of its own (`autoComputeSize()` gives 0 by 0 whatever its texture): give a width or a height in the Glaze style (the other follows the ratio), or a fixed `viewSize()`.
+- **A view measured at 0 by 0 is not shown**, and not laid out by Ceramic until its Glaze view renders again.
+- The padding of the element's style is not given to the view (the view fills the element): use the view's own padding.
+- `fit()` does not apply to a measured view (it is resized to the element). With `nativeResolution()`, the view keeps its own fixed size, like any visual.
+
+Any other visual keeps its own size (`width`, `height`) when the style gives none, or computes it with the same `measure(fn)` as `canvas()`:
+
+```haxe
+visual(particles).measure((known, available, window, cx) -> size(px(known.width ?? 120.), px(80.)))
+```
 
 ## Text and fonts
 

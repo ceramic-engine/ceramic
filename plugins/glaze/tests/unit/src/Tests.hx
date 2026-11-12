@@ -73,6 +73,7 @@ class Tests {
         runner.add(new tests.AnchoredTest());
         runner.add(new tests.ImgTest());
         runner.add(new tests.VisualElementTest());
+        runner.add(new tests.VisualMeasureTest());
         #if plugin_http
         runner.add(new tests.CeramicHttpClientTest());
         #end

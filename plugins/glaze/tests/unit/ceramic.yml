@@ -31,8 +31,9 @@ app:
         # CeramicHttpClientTest against a local server)
         - http
 
-        # UI-related classes
-        #- ui
+        # UI-related classes: Ceramic views measured by visual() elements
+        # (VisualMeasureTest; the code is under `#if plugin_ui`)
+        - ui
 
         # Immediate GUI utility (requires ui plugin)
         #- elements

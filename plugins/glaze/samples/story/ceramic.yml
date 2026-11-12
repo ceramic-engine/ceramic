@@ -16,6 +16,8 @@ app:
         - dialogs
         # System notifications: the notification story's system delivery
         - notifications
+        # Ceramic views: the "Ceramic visuals" story hosts measured views
+        - ui
 
     # The story gallery (shared with test/golden, which renders every story)
     paths:
