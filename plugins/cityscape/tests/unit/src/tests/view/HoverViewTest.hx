@@ -229,8 +229,9 @@ class HoverViewTest extends TestCase {
     /**
      * A hover higher than its maximum scrolls with the kit's scrollbar
      * (owner decision 2026-11-11: one scrollbar shape across Glaze): a
-     * rounded 6 pixel thumb 4 pixels from the right of the hover inside its
-     * border, in the theme's `scrollbarSlider.background`.
+     * fully rounded 8 pixel thumb (the kit's default `ScrollbarAppearance`)
+     * 4 pixels from the right of the hover inside its border, in the theme's
+     * `scrollbarSlider.background`.
      */
     function testScrollbarHasTheKitShape() {
         glaze.kit.theme.Theme.setScrollbarMode(glaze.kit.base.theme.ScrollbarMode.Always, app);
@@ -243,9 +244,9 @@ class HoverViewTest extends TestCase {
         final found = quadsIn(slider, b);
         assertEquals(1, found.length, 'one thumb');
         final q = found[0];
-        near((b.origin.x + b.size.width - 1 - 4 - 6) * 2, q.boundsX, 'thumb left');
-        near(12, q.boundsWidth, 'thumb width');
-        near(6, q.cornerRadiusTopLeft, 'rounded');
+        near((b.origin.x + b.size.width - 1 - 4 - 8) * 2, q.boundsX, 'thumb left');
+        near(16, q.boundsWidth, 'thumb width');
+        near(8, q.cornerRadiusTopLeft, 'rounded');
     }
 
     /**

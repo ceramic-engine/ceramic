@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/scrollbar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deviation DEV-023 (scrollbar appearance: fade in place by default, no thumb growth). See docs/DEVIATIONS.md.
+// Also modified: deviation DEV-023 (scrollbar appearance: fade in place by default, no thumb growth, an 8 pixel fully rounded thumb). See docs/DEVIATIONS.md.
 package glaze.kit.base;
 
 import glaze.App;
@@ -1200,7 +1200,7 @@ class Scrollbar extends Element {
     /**
      * Set how this scrollbar shows, hides and reacts to hover
      * (`ScrollbarAppearance`: fade, instant or gpui-kit's slide, durations,
-     * thumb growth). Glaze addition (DEV-023).
+     * thumb growth, thumb width and radius). Glaze addition (DEV-023).
      *
      * If unset, the theme's (`Theme.scrollbarAppearance` of the kit) is used.
      */
@@ -1307,13 +1307,16 @@ class Scrollbar extends Element {
         return {track: background, border: border};
     }
 
-    function resolveThumb(cx:App, state:ScrollbarThumbStyle, globalState:ScrollbarThumbStyle, defaults:ScrollbarThumbStyle):ScrollbarThumbStyle {
+    function resolveThumb(cx:App, state:ScrollbarThumbStyle, globalState:ScrollbarThumbStyle, defaults:ScrollbarThumbStyle, appearanceRadius:Null<Float>):ScrollbarThumbStyle {
         final global = baseTheme(cx).scrollbar.styles();
         final result = new ScrollbarThumbStyle();
         result._background = firstOf(state._background, _styles._thumb._background, globalState._background, global._thumb._background, defaults._background);
         result._width = firstOf(state._width, _styles._thumb._width, globalState._width, global._thumb._width, defaults._width);
         result._inset = firstOf(state._inset, _styles._thumb._inset, globalState._inset, global._thumb._inset, defaults._inset);
-        result._radius = firstOf(state._radius, _styles._thumb._radius, globalState._radius, global._thumb._radius, defaults._radius);
+        // DEV-023: the appearance's radius comes after this scrollbar's own
+        // styles and before the theme's (which always sets the theme radius)
+        final ownRadius = state._radius != null ? state._radius : _styles._thumb._radius;
+        result._radius = ownRadius != null ? ownRadius : firstOf(appearanceRadius, globalState._radius, global._thumb._radius, defaults._radius, null);
         var minLength = firstOf(state._minLength, _styles._thumb._minLength, globalState._minLength, global._thumb._minLength, defaults._minLength);
         result._minLength = minLength != null ? minLength : MIN_THUMB_SIZE;
         return result;
@@ -1343,38 +1346,60 @@ class Scrollbar extends Element {
         return result;
     }
 
-    function resolved(cx:App, track:ScrollbarTrackStyle, globalTrack:ScrollbarTrackStyle, thumb:ScrollbarThumbStyle, globalThumb:ScrollbarThumbStyle, defaults:ScrollbarThumbStyle):ScrollbarResolvedStyle {
+    function resolved(cx:App, track:ScrollbarTrackStyle, globalTrack:ScrollbarTrackStyle, thumb:ScrollbarThumbStyle, globalThumb:ScrollbarThumbStyle, defaults:ScrollbarThumbStyle, appearance:Null<ScrollbarAppearance>):ScrollbarResolvedStyle {
         final trackStyle = resolveTrack(cx, track, globalTrack, transparentBlack());
-        final thumbStyle = resolveThumb(cx, thumb, globalThumb, defaults);
+        final thumbStyle = resolveThumb(cx, thumb, globalThumb, defaults, appearance != null ? appearance.thumbRadius : null);
         return new ScrollbarResolvedStyle(thumbStyle._background, trackStyle.track, trackStyle.border, thumbStyle._width, thumbStyle._inset, thumbStyle._radius, thumbStyle._minLength);
+    }
+
+    /**
+     * The appearance in effect (DEV-023): this scrollbar's, else the
+     * theme's, null for Base alone (gpui-base's behaviour).
+     */
+    function effectiveAppearance(cx:App):Null<ScrollbarAppearance> {
+        return _appearance != null ? _appearance : baseTheme(cx).scrollbar.appearance();
+    }
+
+    /** DEV-023: the default resting thumb width, the appearance's when it has one. */
+    static function restingThumbWidth(appearance:Null<ScrollbarAppearance>):Float {
+        return appearance != null ? appearance.resolvedThumbWidth() : THUMB_WIDTH;
+    }
+
+    /** DEV-023: the default hovered and dragged thumb width, the appearance's when it has one. */
+    static function activeThumbWidth(appearance:Null<ScrollbarAppearance>):Float {
+        return appearance != null ? appearance.resolvedGrownThumbWidth() : THUMB_ACTIVE_WIDTH;
     }
 
     @:allow(glaze.kit.base)
     function styleForActive(cx:App):ScrollbarResolvedStyle {
         final global = baseTheme(cx).scrollbar.styles();
+        final appearance = effectiveAppearance(cx);
         return resolved(cx, _styles._trackActive, global._trackActive, _styles._thumbActive, global._thumbActive,
-            thumbDefaults(thumbDefaultBackground(cx, 0.55), THUMB_ACTIVE_WIDTH, THUMB_ACTIVE_INSET, THUMB_ACTIVE_RADIUS));
+            thumbDefaults(thumbDefaultBackground(cx, 0.55), activeThumbWidth(appearance), THUMB_ACTIVE_INSET, THUMB_ACTIVE_RADIUS), appearance);
     }
 
     @:allow(glaze.kit.base)
     function styleForHoveredThumb(cx:App):ScrollbarResolvedStyle {
         final global = baseTheme(cx).scrollbar.styles();
+        final appearance = effectiveAppearance(cx);
         return resolved(cx, _styles._trackActive, global._trackActive, _styles._thumbHover, global._thumbHover,
-            thumbDefaults(thumbDefaultBackground(cx, 0.55), THUMB_ACTIVE_WIDTH, THUMB_ACTIVE_INSET, THUMB_ACTIVE_RADIUS));
+            thumbDefaults(thumbDefaultBackground(cx, 0.55), activeThumbWidth(appearance), THUMB_ACTIVE_INSET, THUMB_ACTIVE_RADIUS), appearance);
     }
 
     @:allow(glaze.kit.base)
     function styleForHoveredBar(cx:App):ScrollbarResolvedStyle {
         final global = baseTheme(cx).scrollbar.styles();
+        final appearance = effectiveAppearance(cx);
         return resolved(cx, _styles._trackHover, global._trackHover, _styles._thumb, global._thumb,
-            thumbDefaults(thumbDefaultBackground(cx, 0.35), THUMB_WIDTH, THUMB_INSET, THUMB_RADIUS));
+            thumbDefaults(thumbDefaultBackground(cx, 0.35), restingThumbWidth(appearance), THUMB_INSET, THUMB_RADIUS), appearance);
     }
 
     @:allow(glaze.kit.base)
     function styleForNormal(cx:App):ScrollbarResolvedStyle {
         final global = baseTheme(cx).scrollbar.styles();
+        final appearance = effectiveAppearance(cx);
         return resolved(cx, _styles._track, global._track, _styles._thumb, global._thumb,
-            thumbDefaults(thumbDefaultBackground(cx, 0.35), THUMB_WIDTH, THUMB_INSET, THUMB_RADIUS));
+            thumbDefaults(thumbDefaultBackground(cx, 0.35), restingThumbWidth(appearance), THUMB_INSET, THUMB_RADIUS), appearance);
     }
 
     @:allow(glaze.kit.base)
@@ -1445,7 +1470,7 @@ class Scrollbar extends Element {
         // DEV-023: the appearance of this scrollbar or of the theme, when one
         // is set, gives the timing, the choreography and the thumb growth;
         // without one (Base alone), the projected motion does, like gpui-kit
-        final appearance = _appearance != null ? _appearance : baseTheme.scrollbar.appearance();
+        final appearance = effectiveAppearance(cx);
         final motionEnter = appearance != null ? appearance.resolvedShowDuration() : motion.enter();
         final motionExit = appearance != null ? appearance.resolvedHideDuration() : motion.exit();
         final motionExpand = appearance != null ? appearance.resolvedGrowthDuration() : motion.expand();

@@ -182,7 +182,7 @@ The names are gpui-kit's in camelCase, so its documentation applies; [docs/PORTI
 
 ### Scrollbars
 
-The kit's scrollbars (`Scrollable`, `overflowYScrollbar()`, lists, tables, trees, Cityscape's editors) fade in and out quickly in place, over 0.12 seconds each way, and keep the same width when the pointer is over them or drags them (only the color of the thumb changes). gpui-kit's own behaviour, where a hiding scrollbar slides toward the edge while it fades and the thumb grows from 6 to 8 pixels on hover, is an option. The setting (`ScrollbarAppearance`, in `glaze.kit.scroll`) is global and can change at runtime:
+The kit's scrollbars (`Scrollable`, `overflowYScrollbar()`, lists, tables, trees, Cityscape's editors) fade in and out quickly in place, over 0.12 seconds each way, and keep the same width when the pointer is over them or drags them (only the color of the thumb changes). Their thumb is 8 pixels wide and fully rounded, like Loreline Writer's scrollbars, 4 pixels from the edge of the 16 pixel scrollbar band. gpui-kit's own behaviour, where a hiding scrollbar slides toward the edge while it fades and a 6 pixel thumb in the theme's radius grows to 8 pixels on hover, is an option. The setting (`ScrollbarAppearance`, in `glaze.kit.scroll`) is global and can change at runtime:
 
 ```haxe
 Theme.setScrollbarAppearance(ScrollbarAppearance.instant(), cx);     // shown and hidden at once
@@ -190,8 +190,12 @@ Theme.setScrollbarAppearance(ScrollbarAppearance.fade(0.2), cx);     // a slower
 Theme.setScrollbarAppearance(ScrollbarAppearance.fade()
     .withShowDuration(0.08).withHideDuration(0.3), cx);              // separate show and hide durations
 Theme.setScrollbarAppearance(ScrollbarAppearance.gpuiKit(), cx);     // gpui-kit: slide out, thumb growth
-Theme.setScrollbarAppearance(ScrollbarAppearance.fade().withThumbGrowth(true), cx);
+Theme.setScrollbarAppearance(ScrollbarAppearance.fade().withThumbGrowth(true), cx); // 8 px, 10 px on hover
+Theme.setScrollbarAppearance(ScrollbarAppearance.fade().withThumbWidth(6), cx);      // a thinner thumb
+Theme.setScrollbarAppearance(ScrollbarAppearance.fade().withThumbRadius(null), cx);  // the theme's radius
 ```
+
+`withThumbWidth(null)` gives gpui-kit's 6 pixels (8 when grown). Explicit `ScrollbarStyles` widths and radii (a scrollbar's own `styles(...)`, the kit theme's mobile thumb) still win over the appearance, and a theme whose radius is zero still squares the thumb. Cityscape's editor scrollbars take the same width in a band of their own (`scrollbar.verticalScrollbarSize` and `horizontalScrollbarSize`), no wider than `verticalSliderSize` and `horizontalSliderSize`.
 
 The define `glaze_scrollbar_appearance` (`fade`, `instant` or `gpuikit`) changes the default at compile time (Glaze's golden scenes use `gpuikit`, to compare with the real gpui-kit). One scrollbar can differ from the global setting: `Scrollbar.vertical(handle).appearance(ScrollbarAppearance.instant())`, or `div().overflowYScrollbar().scrollbarAppearance(ScrollbarAppearance.gpuiKit())`. When the bars are shown (on hover, while scrolling, always) is a separate setting, `Theme.setScrollbarMode`. With reduced motion (`cx.setReduceMotion(true)`), scrollbars show and hide at once. See DEV-023 in [docs/DEVIATIONS.md](docs/DEVIATIONS.md).
 

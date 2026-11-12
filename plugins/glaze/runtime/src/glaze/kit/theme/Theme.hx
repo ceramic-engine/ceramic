@@ -222,11 +222,12 @@ class Theme extends ThemeColor {
     public var scrollbarMode:ScrollbarMode = Scrolling;
 
     /**
-     * How scrollbars show, hide and react to hover (Glaze addition,
-     * DEV-023): a quick fade in place without thumb growth by default
+     * How scrollbars show, hide and react to hover, and the width and
+     * radius of their thumb (Glaze addition, DEV-023): a quick fade in place
+     * without thumb growth, with an 8 pixel fully rounded thumb, by default
      * (`ScrollbarAppearance.defaultValue()`, define
      * `glaze_scrollbar_appearance`). `ScrollbarAppearance.gpuiKit()` gives
-     * gpui-kit's slide out and thumb growth. Change it with
+     * gpui-kit's slide out, thumb growth and 6 pixel thumb. Change it with
      * `Theme.setScrollbarAppearance`; a scrollbar can override it
      * (`Scrollbar.appearance`, `Scrollable.scrollbarAppearance`).
      */

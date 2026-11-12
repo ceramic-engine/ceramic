@@ -368,6 +368,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public final horizontalScrollHandle:CityscapeHorizontalScrollHandle;
     public final focusHandle:glaze.FocusHandle;
 
+    @:allow(cityscape.view.ScrollbarLook)
     final app:App;
     var eventHandler:Null<CityscapeViewEventHandler> = null;
     var window:Null<Window> = null;

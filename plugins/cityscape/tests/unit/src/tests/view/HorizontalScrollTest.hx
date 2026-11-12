@@ -82,11 +82,11 @@ class HorizontalScrollTest extends TestCase {
             && Math.abs(q.backgroundSolidL - c.l) < 0.0001 && Math.abs(q.backgroundSolidA - c.a) < 0.0001;
     }
 
-    /** The thumb quads of the horizontal scrollbar: the slider color, 6 px high, in the 12 px band at the bottom. */
+    /** The thumb quads of the horizontal scrollbar: the slider color, 8 px high (the kit's default thumb), in the 12 px band at the bottom. */
     function horizontalThumbs(e:CityscapeEditor):Array<glaze.scene.Quad> {
         final color = cityscape.view.EditorWidgets.color(e.getEditor(), 'scrollbarSlider.background', hsla(0, 0, 0, 0));
         final bottom = MARGIN_Y + 300;
-        return [for (q in window.renderedScene().quads) if (sameColor(q, color) && q.boundsHeight == 6 && q.boundsY >= bottom - 12 && q.boundsY + q.boundsHeight <= bottom) q];
+        return [for (q in window.renderedScene().quads) if (sameColor(q, color) && q.boundsHeight == 8 && q.boundsY >= bottom - 12 && q.boundsY + q.boundsHeight <= bottom) q];
     }
 
     /**
@@ -189,8 +189,8 @@ class HorizontalScrollTest extends TestCase {
     }
 
     /**
-     * The thumb (the kit's shape in the editor's colors, 6 px in the 12 px
-     * band, 3 px from the bottom) has Monaco's ratios: its track goes from
+     * The thumb (the kit's shape in the editor's colors, the kit's default
+     * 8 px thumb in the 12 px band, 2 px from the bottom) has Monaco's ratios: its track goes from
      * the content's left to the vertical scrollbar (scrollbarState.ts:126,
      * `visibleSize - oppositeScrollbarSize`), its length is the viewport over
      * the scroll width of that track, and it reaches the track's end at the
@@ -206,14 +206,14 @@ class HorizontalScrollTest extends TestCase {
         final thumb = horizontalThumbs(e)[0];
         final left = MARGIN_X + layoutInfo.contentLeft;
         final length = Math.max(layoutInfo.contentWidth / layout.getScrollWidth() * track, 48);
-        assertTrue(Math.abs(thumb.boundsX - (left + 3)) < 0.5, 'starts at the content left: ' + thumb.boundsX);
-        assertTrue(Math.abs(thumb.boundsWidth - (length - 6)) < 0.5, 'length ' + thumb.boundsWidth + ' for ' + (length - 6));
-        assertEquals(MARGIN_Y + 300 - 3 - 6, thumb.boundsY);
+        assertTrue(Math.abs(thumb.boundsX - (left + 2)) < 0.5, 'starts at the content left: ' + thumb.boundsX);
+        assertTrue(Math.abs(thumb.boundsWidth - (length - 4)) < 0.5, 'length ' + thumb.boundsWidth + ' for ' + (length - 4));
+        assertEquals(MARGIN_Y + 300 - 2 - 8, thumb.boundsY);
         // at the end of the scroll range, the thumb ends at the track's end
         layout.setScrollPosition({scrollLeft: layout.getScrollWidth()}, cityscape.common.EditorCommon.ScrollType.Immediate);
         draw();
         final end = horizontalThumbs(e)[0];
-        assertTrue(Math.abs(end.boundsX + end.boundsWidth - (left + track - 3)) < 0.5, 'ends at the vertical scrollbar: ' + (end.boundsX + end.boundsWidth));
+        assertTrue(Math.abs(end.boundsX + end.boundsWidth - (left + track - 2)) < 0.5, 'ends at the vertical scrollbar: ' + (end.boundsX + end.boundsWidth));
     }
 
     /** Dragging the thumb scrolls by the content over the track; a click on the track centers the thumb there. */
@@ -230,7 +230,7 @@ class HorizontalScrollTest extends TestCase {
         window.dispatchEvent(new MouseMoveEvent(point(x0 + 50, y), MouseButton.Left), app);
         draw();
         final scrollRange = layout.getScrollWidth() - layoutInfo.contentWidth;
-        final thumbTravel = track - (thumb.boundsWidth + 6);
+        final thumbTravel = track - (thumb.boundsWidth + 4);
         final expected = 50 / thumbTravel * scrollRange;
         assertTrue(Math.abs(layout.getCurrentScrollLeft() - expected) < 2, 'drag: ' + layout.getCurrentScrollLeft() + ' for ' + expected);
         window.dispatchEvent(new MouseUpEvent(MouseButton.Left, point(x0 + 50, y)), app);

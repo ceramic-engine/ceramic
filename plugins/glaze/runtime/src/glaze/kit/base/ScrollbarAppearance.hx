@@ -38,8 +38,19 @@ enum abstract ScrollbarTransition(Int) from Int to Int {
  *   (null: the transition's own, 0.12 for `Fade`, 0.3 and 0.5 for
  *   `GpuiKit`). `withDuration(d)` sets both.
  * - `thumbGrowth`: whether the thumb widens when hovered or dragged
- *   (gpui-kit's 6 to 8 pixels). Off by default: the thumb keeps its resting
- *   width and inset in every state, only its color changes.
+ *   (gpui-kit's 6 to 8 pixels, 2 pixels more than the resting width
+ *   otherwise). Off by default: the thumb keeps its resting width and inset
+ *   in every state, only its color changes.
+ * - `thumbWidth`: the resting width of the thumb in pixels, 8 by default
+ *   (Loreline Writer's scrollbars), still 4 pixels from the edge in the 16
+ *   pixel band (`Scrollbar.width()`); null for gpui-kit's 6 pixels (8 when
+ *   grown). Explicit `ScrollbarStyles` widths (the theme's on mobile, a
+ *   scrollbar's own) still win.
+ * - `thumbRadius`: the corner radius of the thumb, `FULL_RADIUS` by default
+ *   (fully rounded: 4 pixels for an 8 pixel thumb, like Writer); null for
+ *   the kit theme's `radius`, as in gpui-kit. A scrollbar's own
+ *   `ScrollbarStyles` radius still wins, and a theme whose radius is zero
+ *   still squares the thumb.
  *
  * The global default is the kit theme's `scrollbarAppearance`
  * (`Theme.setScrollbarAppearance(appearance, cx)` changes it at runtime),
@@ -55,6 +66,12 @@ class ScrollbarAppearance {
     /** The show and hide duration of `Fade`, in seconds. */
     public static inline final FADE_DURATION:Float = 0.12;
 
+    /** gpui-kit's resting thumb width (`THUMB_WIDTH`, `scrollbar.rs:25`). */
+    public static inline final GPUI_KIT_THUMB_WIDTH:Float = 6.;
+
+    /** gpui-kit's hovered and dragged thumb width (`THUMB_ACTIVE_WIDTH`, `scrollbar.rs:29`). */
+    public static inline final GPUI_KIT_GROWN_THUMB_WIDTH:Float = 8.;
+
     /** gpui-kit's show duration (`SCROLLBAR_ENTER`, 300 ms), in seconds. */
     public static inline final GPUI_KIT_SHOW_DURATION:Float = 0.3;
 
@@ -66,6 +83,18 @@ class ScrollbarAppearance {
      * when `thumbGrowth` is on (0 with `Instant`).
      */
     public static inline final GROWTH_DURATION:Float = 0.3;
+
+    /** The default resting thumb width, in pixels (Loreline Writer's 8 pixel scrollbars). */
+    public static inline final DEFAULT_THUMB_WIDTH:Float = 8.;
+
+    /**
+     * How much wider the thumb gets when hovered or dragged with
+     * `thumbGrowth` and a `thumbWidth` (gpui-kit's 6 to 8 pixels).
+     */
+    public static inline final THUMB_GROWTH:Float = 2.;
+
+    /** A radius that rounds the thumb fully (clamped to half its width). */
+    public static inline final FULL_RADIUS:Float = 9999.;
 
     /** How the scrollbar shows and hides. */
     public var transition(default, null):ScrollbarTransition;
@@ -79,6 +108,16 @@ class ScrollbarAppearance {
     /** Whether the thumb widens when hovered or dragged. */
     public var thumbGrowth(default, null):Bool;
 
+    /** The resting thumb width in pixels, null for gpui-kit's (6, 8 when grown). */
+    public var thumbWidth(default, null):Null<Float> = DEFAULT_THUMB_WIDTH;
+
+    /** The thumb's corner radius, null for the kit theme's `radius`. */
+    public var thumbRadius(default, null):Null<Float> = FULL_RADIUS;
+
+    /**
+     * An appearance with the default thumb (`DEFAULT_THUMB_WIDTH`, fully
+     * rounded); `withThumbWidth` and `withThumbRadius` change it.
+     */
     public function new(transition:ScrollbarTransition = Fade, thumbGrowth:Bool = false, ?showDuration:Float, ?hideDuration:Float) {
         this.transition = transition;
         this.thumbGrowth = thumbGrowth;
@@ -86,22 +125,36 @@ class ScrollbarAppearance {
         this.hideDuration = hideDuration;
     }
 
+    function copy():ScrollbarAppearance {
+        final result = new ScrollbarAppearance(transition, thumbGrowth, showDuration, hideDuration);
+        result.thumbWidth = thumbWidth;
+        result.thumbRadius = thumbRadius;
+        return result;
+    }
+
     /**
      * A quick fade in place (the default), `duration` seconds each way
-     * (`FADE_DURATION` when null), no thumb growth.
+     * (`FADE_DURATION` when null), no thumb growth, an 8 pixel fully rounded
+     * thumb.
      */
     public static function fade(?duration:Float):ScrollbarAppearance {
         return new ScrollbarAppearance(Fade, false, duration, duration);
     }
 
-    /** Shown and hidden at once, no thumb growth. */
+    /** Shown and hidden at once, no thumb growth, an 8 pixel fully rounded thumb. */
     public static function instant():ScrollbarAppearance {
         return new ScrollbarAppearance(Instant, false);
     }
 
-    /** gpui-kit's behaviour: slide out while fading, thumb growth on hover. */
+    /**
+     * gpui-kit's behaviour: slide out while fading, thumb growth on hover,
+     * gpui-kit's thumb (6 pixels, 8 when grown, the theme's radius).
+     */
     public static function gpuiKit():ScrollbarAppearance {
-        return new ScrollbarAppearance(GpuiKit, true);
+        final result = new ScrollbarAppearance(GpuiKit, true);
+        result.thumbWidth = null;
+        result.thumbRadius = null;
+        return result;
     }
 
     /**
@@ -124,27 +177,70 @@ class ScrollbarAppearance {
 
     /** A copy with another transition (durations and growth kept). */
     public function withTransition(transition:ScrollbarTransition):ScrollbarAppearance {
-        return new ScrollbarAppearance(transition, thumbGrowth, showDuration, hideDuration);
+        final result = copy();
+        result.transition = transition;
+        return result;
     }
 
     /** A copy with this show duration in seconds (null: the transition's own). */
     public function withShowDuration(duration:Null<Float>):ScrollbarAppearance {
-        return new ScrollbarAppearance(transition, thumbGrowth, duration, hideDuration);
+        final result = copy();
+        result.showDuration = duration;
+        return result;
     }
 
     /** A copy with this hide duration in seconds (null: the transition's own). */
     public function withHideDuration(duration:Null<Float>):ScrollbarAppearance {
-        return new ScrollbarAppearance(transition, thumbGrowth, showDuration, duration);
+        final result = copy();
+        result.hideDuration = duration;
+        return result;
     }
 
     /** A copy with this show and hide duration in seconds (null: the transition's own). */
     public function withDuration(duration:Null<Float>):ScrollbarAppearance {
-        return new ScrollbarAppearance(transition, thumbGrowth, duration, duration);
+        final result = copy();
+        result.showDuration = duration;
+        result.hideDuration = duration;
+        return result;
     }
 
     /** A copy with the thumb growth on hover and drag turned on or off. */
     public function withThumbGrowth(thumbGrowth:Bool):ScrollbarAppearance {
-        return new ScrollbarAppearance(transition, thumbGrowth, showDuration, hideDuration);
+        final result = copy();
+        result.thumbGrowth = thumbGrowth;
+        return result;
+    }
+
+    /**
+     * A copy with this resting thumb width in pixels (null: gpui-kit's 6
+     * pixels, 8 when grown). It still sits 4 pixels from the edge: a width
+     * above 8 (6 with growth) overflows the 16 pixel band unless the track
+     * is widened (`ScrollbarStyles.track(t -> t.width(...))`).
+     */
+    public function withThumbWidth(width:Null<Float>):ScrollbarAppearance {
+        final result = copy();
+        result.thumbWidth = width;
+        return result;
+    }
+
+    /**
+     * A copy with this thumb corner radius (`FULL_RADIUS` rounds it fully;
+     * null: the kit theme's `radius`).
+     */
+    public function withThumbRadius(radius:Null<Float>):ScrollbarAppearance {
+        final result = copy();
+        result.thumbRadius = radius;
+        return result;
+    }
+
+    /** The resting thumb width in effect, in pixels. */
+    public function resolvedThumbWidth():Float {
+        return thumbWidth != null ? thumbWidth : GPUI_KIT_THUMB_WIDTH;
+    }
+
+    /** The hovered and dragged thumb width when it grows (`thumbGrowth`), in pixels. */
+    public function resolvedGrownThumbWidth():Float {
+        return thumbWidth != null ? thumbWidth + THUMB_GROWTH : GPUI_KIT_GROWN_THUMB_WIDTH;
     }
 
     /** The show duration in effect, in seconds (0 for `Instant`). */
@@ -175,7 +271,9 @@ class ScrollbarAppearance {
             && transition == other.transition
             && thumbGrowth == other.thumbGrowth
             && showDuration == other.showDuration
-            && hideDuration == other.hideDuration;
+            && hideDuration == other.hideDuration
+            && thumbWidth == other.thumbWidth
+            && thumbRadius == other.thumbRadius;
     }
 
     public function toString():String {
@@ -184,7 +282,7 @@ class ScrollbarAppearance {
             case GpuiKit: 'GpuiKit';
             case _: 'Fade';
         }
-        return 'ScrollbarAppearance($name, thumbGrowth: $thumbGrowth, show: ${resolvedShowDuration()}, hide: ${resolvedHideDuration()})';
+        return 'ScrollbarAppearance($name, thumbGrowth: $thumbGrowth, show: ${resolvedShowDuration()}, hide: ${resolvedHideDuration()}, thumbWidth: $thumbWidth, thumbRadius: $thumbRadius)';
     }
 
 }

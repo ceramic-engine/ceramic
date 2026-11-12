@@ -451,9 +451,10 @@ class CityscapeEditor extends Component implements Styled {
 
     /**
      * The kit scrollbar sized to the layout's band, in the editor's colors
-     * (`cityscape.view.ScrollbarLook`): the kit look (a rounded 6 pixel
-     * thumb 4 pixels from the edge, 8 pixels when hovered or dragged if the
-     * kit's `ScrollbarAppearance` has thumb growth, off by default) in its
+     * (`cityscape.view.ScrollbarLook`): the kit look (the kit
+     * `ScrollbarAppearance`'s thumb, by default fully rounded and 8 pixels
+     * wide, 4 pixels from the edge, 2 pixels wider when hovered or dragged
+     * if it has thumb growth, off by default) in its
      * own 16 pixel band, else thumbs no wider than `verticalSliderSize`,
      * centered when the band is too narrow for the kit's inset; the thumb in
      * the theme's `scrollbarSlider.*` colors (the kit's in the kit theme).

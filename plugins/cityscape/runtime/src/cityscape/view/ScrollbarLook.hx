@@ -16,7 +16,8 @@ import glaze.Prelude.*;
 /**
  * The styles (`Scrollbar.styles`) of the kit scrollbars of an editor, one
  * shape across Glaze (owner decision 2026-11-11, DEVIATIONS.md): the kit's
- * scrollbar (a rounded 6 pixel thumb 4 pixels from the edge) in the colors
+ * scrollbar (by default a fully rounded 8 pixel thumb 4 pixels from the
+ * edge, the kit's `ScrollbarAppearance`) in the colors
  * of the editor's theme, `scrollbarSlider.background` at rest,
  * `scrollbarSlider.hoverBackground` under the mouse and
  * `scrollbarSlider.activeBackground` while dragged, without the kit's track
@@ -44,7 +45,11 @@ class ScrollbarLook {
     /** The minimum length of their slider (scrollbarState.ts `MINIMUM_SLIDER_SIZE`). */
     public static inline final MONACO_SLIDER_MIN_SIZE:Float = 20.;
 
-    /** The kit scrollbar's thumb sizes (`glaze.kit.base.Scrollbar`). */
+    /**
+     * The kit scrollbar's thumb sizes without an appearance (gpui-base's,
+     * `glaze.kit.base.Scrollbar`); with one (the kit theme's
+     * `scrollbarAppearance`), its `thumbWidth` gives them.
+     */
     public static inline final KIT_THUMB_WIDTH:Float = 6.;
 
     public static inline final KIT_THUMB_ACTIVE_WIDTH:Float = 8.;
@@ -62,6 +67,8 @@ class ScrollbarLook {
     var resolvedTheme:Null<IColorTheme> = null;
     var resolvedOptions:Null<InternalEditorScrollbarOptions> = null;
     var resolvedBand:Float = -1;
+    var resolvedKitWidth:Float = -1;
+    var resolvedKitActiveWidth:Float = -1;
     var resolved:Bool = false;
 
     /** The thumb colors by state (rest, hovered, dragged), null to keep the kit's. */
@@ -143,13 +150,27 @@ class ScrollbarLook {
     function update(editor:ICodeEditor, band:Float):Void {
         final theme = editor.context.themeService.getColorTheme();
         final options = editor.getOption(EditorOption.scrollbar);
-        if (resolved && theme == resolvedTheme && options == resolvedOptions && band == resolvedBand) {
+        // The kit's thumb widths, from the kit theme's scrollbar appearance
+        var kitWidth = KIT_THUMB_WIDTH;
+        var kitActiveWidth = KIT_THUMB_ACTIVE_WIDTH;
+        final view = EditorWidgets.viewOf(editor);
+        if (view != null) {
+            final appearance = glaze.kit.base.theme.Theme.global(view.app).scrollbar.appearance();
+            if (appearance != null) {
+                kitWidth = appearance.resolvedThumbWidth();
+                kitActiveWidth = appearance.resolvedGrownThumbWidth();
+            }
+        }
+        if (resolved && theme == resolvedTheme && options == resolvedOptions && band == resolvedBand
+            && kitWidth == resolvedKitWidth && kitActiveWidth == resolvedKitActiveWidth) {
             return;
         }
         resolved = true;
         resolvedTheme = theme;
         resolvedOptions = options;
         resolvedBand = band;
+        resolvedKitWidth = kitWidth;
+        resolvedKitActiveWidth = kitActiveWidth;
         resolve(editor, options, band);
     }
 
@@ -212,8 +233,8 @@ class ScrollbarLook {
         // `verticalSliderSize` (`horizontalScrollbarSize` and
         // `horizontalSliderSize` for the horizontal scrollbar)
         final slider:Float = horizontal ? options.horizontalSliderSize : options.verticalSliderSize;
-        final normal = Math.max(0, Math.min(KIT_THUMB_WIDTH, slider));
-        final active = Math.max(0, Math.min(KIT_THUMB_ACTIVE_WIDTH, slider));
+        final normal = Math.max(0, Math.min(resolvedKitWidth, slider));
+        final active = Math.max(0, Math.min(resolvedKitActiveWidth, slider));
         trackWidths[0] = band;
         thumbWidths[0] = normal;
         thumbInsets[0] = Math.max(0, Math.min(KIT_THUMB_INSET, Math.floor((band - normal) / 2)));

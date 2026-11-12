@@ -360,4 +360,47 @@ class ScrollbarTrackTest extends TestCase {
         });
     }
 
+
+    /**
+     * In a band of its own (`verticalScrollbarSize` other than the kit's 16
+     * pixels) the thumb follows the kit's `ScrollbarAppearance`: by default
+     * Loreline Writer's 8 pixel thumb (loreline-monaco's 10 pixel band with an
+     * 8 pixel slider, 1 pixel from the edge), gpui-kit's 6 pixels with
+     * `ScrollbarAppearance.gpuiKit()`, never wider than `verticalSliderSize`.
+     */
+    function testTheThumbFollowsTheKitAppearanceWidth() {
+        app.update(cx -> {
+            glaze.kit.theme.Theme.init(cx);
+            return null;
+        });
+        final e = open({scrollbar: {verticalScrollbarSize: 10, verticalSliderSize: 8}});
+        final v:cityscape.view.CityscapeView = e.getView();
+        function check(width:Float, inset:Float, label:String) {
+            app.update(cx -> {
+                final scrollbar = @:privateAccess CityscapeEditor.styledScrollbar(Scrollbar.vertical(v.scrollHandle), @:privateAccess e.widget, v);
+                final normal = @:privateAccess scrollbar.styleForNormal(cx);
+                assertEquals(width, normal.width, label);
+                assertEquals(inset, normal.inset, label);
+                return null;
+            });
+        }
+        check(8., 1., 'the default 8 px thumb');
+        app.update(cx -> {
+            glaze.kit.theme.Theme.setScrollbarAppearance(glaze.kit.base.ScrollbarAppearance.gpuiKit(), cx);
+            return null;
+        });
+        draw();
+        check(6., 2., "gpui-kit's 6 px thumb");
+        e.updateOptions({scrollbar: {verticalScrollbarSize: 14, verticalSliderSize: 14}});
+        app.update(cx -> {
+            glaze.kit.theme.Theme.setScrollbarAppearance(null, cx);
+            return null;
+        });
+        draw();
+        check(8., 3., 'the default thumb in the 14 px band');
+        e.updateOptions({scrollbar: {verticalScrollbarSize: 10, verticalSliderSize: 5}});
+        draw();
+        check(5., 2., 'no wider than the slider');
+    }
+
 }
