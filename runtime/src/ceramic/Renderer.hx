@@ -2382,6 +2382,10 @@ class Renderer extends Entity {
 
         usedRenderTarget = renderTarget;
         if (renderTarget != null) {
+            if (!renderTarget._usedInRendering) {
+                // First draw into this texture during this frame
+                renderTarget.renderVersion++;
+            }
             renderTarget._usedInRendering = true;
             renderTarget._renderedOnce = true;
             draw.setRenderTarget(renderTarget);

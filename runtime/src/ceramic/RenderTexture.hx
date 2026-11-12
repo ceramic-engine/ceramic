@@ -131,6 +131,26 @@ class RenderTexture extends Texture implements RenderTarget {
     public var renderDirty:Bool = false;
 
     /**
+     * Incremented each time the renderer draws into this texture: once per
+     * frame where at least one visual is drawn into it (automatic rendering,
+     * `renderDirty`, `stamp()`, `clear()` or a `Filter` render). Lets code that
+     * samples the texture elsewhere (a cached drawing showing it, for example)
+     * notice that its pixels changed, without an event or an allocation.
+     *
+     * Only compare it for equality with a value read earlier ("did the texture
+     * change since?"), never for order: it wraps around from the largest
+     * `Int` to the smallest one on targets with 32 bits integers (hxcpp, C#),
+     * which is a change like any other. Reading the same value again after a
+     * wrap would take 2^32 renders between two reads. On JS, it keeps growing
+     * as a double and loses no precision before 2^53 renders.
+     *
+     * Code that changes the content of the texture by other means (submitting
+     * pixels) may increment it too. Headless backends do not render: the
+     * value only changes there when code increments it.
+     */
+    public var renderVersion:Int = 0;
+
+    /**
      * Whether this render texture has a depth buffer.
      * Required for proper depth testing and 3D rendering.
      */
