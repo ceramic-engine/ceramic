@@ -2126,6 +2126,19 @@ class Draw #if !completion implements spec.Draw #end {
             untyped __cs__('{0}.SetSampledRenderTargets(sampledList)', renderPass);
             #end
 
+            #if unity_6000
+            // The passes reuse the camera's view and projection. URP flips that
+            // projection (on graphicsUVStartsAtTop APIs: Metal, D3D, Vulkan) only
+            // when the camera renders into a texture, not when it renders straight
+            // to the backbuffer (editor Game view, windowed player without an
+            // intermediate texture). Render textures drawn with the unflipped
+            // projection were upside down when displayed. Asking for the
+            // intermediate texture in the frames that draw a render texture keeps
+            // the projection flipped, like in batch mode (camera target texture),
+            // so render textures always get the same orientation.
+            untyped __cs__('{0}.requiresIntermediateTexture = {1}', renderPass, renderTarget != null);
+            #end
+
             // Add render pass
             renderer.EnqueuePass(renderPass);
         }
