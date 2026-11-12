@@ -260,16 +260,30 @@ class VisualMeasureTest extends TestCase {
     }
 
     /**
-     * Documented limit: Ceramic's `ImageView` has no natural size of its
-     * own (`autoComputeSize()` gives 0 x 0 whatever its texture): it needs
-     * one dimension, from the Glaze style or from `viewSize()`.
+     * Without any dimension, Ceramic's `ImageView` takes the natural size of
+     * its texture (`autoComputeSize()` gives the texture size).
      */
-    function testImageViewWithoutAnyDimensionHasNoNaturalSize() {
+    function testImageViewWithoutAnyDimensionTakesItsNaturalSize() {
         final image = imageView(40, 20);
         image.autoComputeSizeIfNeeded();
-        assertEquals(0.0, image.computedSize.computedWidth);
+        assertEquals(40.0, image.computedSize.computedWidth);
+        assertEquals(20.0, image.computedSize.computedHeight);
         open(300, 200, (_, _) -> div().flex().itemsStart().sizeFull().child(visual(image)));
-        assertEquals(0.0, VisualElement.contentWidth(image));
+        assertEquals(40.0, VisualElement.contentWidth(image));
+        assertEquals(20.0, VisualElement.contentHeight(image));
+        assertEquals(40.0, image.width);
+        assertEquals(20.0, image.height);
+    }
+
+    /**
+     * A natural size wider than the available width is reduced to it, like
+     * any measured view (fit-content), and the height follows the ratio.
+     */
+    function testImageViewWiderThanItsColumnFollowsItsRatio() {
+        final image = imageView(400, 200);
+        open(300, 400, (_, _) -> div().flex().itemsStart().sizeFull().child(div().flex().flexCol().itemsStart().w(px(100.)).child(visual(image))));
+        assertEquals(100.0, VisualElement.contentWidth(image));
+        assertEquals(50.0, VisualElement.contentHeight(image));
     }
 
     function testLinearLayoutTakesTheSizeOfItsChildren() {

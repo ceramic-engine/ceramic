@@ -285,6 +285,10 @@ hFlex().gap(px(8.))
 // its natural width, otherwise it wraps in 300
 vFlex().itemsStart().w(px(300.)).child(visual(ceramicText))
 
+// An ImageView with no size: the size of its texture (in points, density
+// respected), reduced to the available width if it is wider
+div().flex().itemsStart().child(visual(imageView))
+
 // An ImageView: the width from Glaze, the height from the ratio of its texture
 div().child(visual(imageView).w(px(200.)))
 ```
@@ -304,7 +308,7 @@ Who decides what, and the limits:
 - **Sizes that depend on the parent belong to the Glaze style.** Write `flex1()`, `wFull()` or `w(relative(0.5))` on the element, not `ViewSize.fill()` or `ViewSize.percent()` on the view: the view gives its natural (`auto`) or fixed size only. A view in `fill` or `percent` on a free axis takes the available space when the layout gives a definite one, and 0 otherwise.
 - **A hosted view does not shrink under a min content constraint.** In a row that shrinks its children (`hFlex()` narrower than them), the view keeps its natural width and overflows, where a Glaze text would wrap. Give it a width in the Glaze style: `visual(view).flex1().minW0()` or `w(...)`.
 - **A block container imposes its width.** In a plain `div().w(px(300.))`, a child is as wide as the div (300, even for a short text). Use a flex container with `itemsStart()` to keep the natural width.
-- **`ImageView` needs one dimension.** Ceramic's `ImageView` has no natural size of its own (`autoComputeSize()` gives 0 by 0 whatever its texture): give a width or a height in the Glaze style (the other follows the ratio), or a fixed `viewSize()`.
+- **`ImageView` sizes.** With no size anywhere, an `ImageView` takes the size of its texture (`texture.width` and `texture.height`, in points), whatever its `scaling`. A width or a height in the Glaze style, an axis imposed by the layout, or a `viewSize()` axis gives the other axis from the ratio of the texture; a fixed `viewSize()` on both axes is kept. Without a texture (image still loading) it is 0 by 0.
 - **A view measured at 0 by 0 is not shown**, and not laid out by Ceramic until its Glaze view renders again.
 - The padding of the element's style is not given to the view (the view fills the element): use the view's own padding.
 - `fit()` does not apply to a measured view (it is resized to the element). With `nativeResolution()`, the view keeps its own fixed size, like any visual.
