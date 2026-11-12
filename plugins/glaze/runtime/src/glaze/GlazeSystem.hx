@@ -4,7 +4,8 @@ package glaze;
 
 /**
  * Ceramic system drawing the dirty GPUI windows in `lateUpdate`, after input
- * and the app update (plan, principle 7).
+ * and the app update (plan, principle 7), then letting each window check
+ * the render textures its scene shows (`SceneRenderable.checkExternalTextures()`).
  *
  * Tracker reactions are scheduled with `app.onceImmediate`: they are flushed
  * first, so a model changed during `update` (a timer, a tween...) is drawn
@@ -41,6 +42,12 @@ class GlazeSystem extends ceramic.System {
                 // Like a platform frame request: next frame callbacks first, then draw if dirty
                 window.runNextFrameCallbacks();
                 window.drawIfDirty();
+            }
+            // Render textures shown by the scene (`img()` of a texture,
+            // `visual()` elements) that Ceramic draws again this frame: their
+            // rectangles are drawn again, without any view rendering
+            if (!window.isDestroyed()) {
+                window.renderable.checkExternalTextures();
             }
             i++;
         }

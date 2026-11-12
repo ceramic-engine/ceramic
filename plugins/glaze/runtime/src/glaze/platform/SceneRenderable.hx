@@ -36,6 +36,11 @@ import glaze.scene.Underline;
  * without filtering. Ceramic then draws a single quad per frame while the
  * window is idle.
  *
+ * The render textures the scene shows (`img()` of a `RenderTexture`,
+ * `visual()` elements) can change without a new scene: the window checks
+ * them once per frame (`checkExternalTextures()`) and the texture is drawn
+ * again when one of them is drawn by Ceramic.
+ *
  * With `partialRendering` too, only the region that changed since the
  * scene the texture holds is cleared and drawn again (see `SceneDamage`),
  * one pass with a scissor per damage rectangle, which gives the same bytes
@@ -128,6 +133,7 @@ class SceneRenderable extends Renderable {
         if (targetDrawer != null) {
             targetDrawer.usedTexturesDirty = true;
         }
+        externalTargetsDirty = true;
         markRenderDirty();
         return scene;
     }
@@ -162,6 +168,7 @@ class SceneRenderable extends Renderable {
         if (targetDrawer != null) {
             targetDrawer.usedTexturesDirty = true;
         }
+        externalTargetsDirty = true;
         markRenderDirty();
         return atlasTextures;
     }
@@ -204,6 +211,29 @@ class SceneRenderable extends Renderable {
 
     /** Changed region between two scenes (`partialRendering`) */
     final damage:SceneDamage = new SceneDamage();
+
+    /**
+     * The render textures (not owned) the scene's polychrome sprites show
+     * (`img()` of a `RenderTexture`, `visual()` elements), whose pixels can
+     * change without a new scene (see `checkExternalTextures()`).
+     */
+    var externalTargets:Array<ceramic.RenderTexture> = [];
+
+    /** `renderVersion` of each of `externalTargets` when the texture was last drawn */
+    var externalVersions:Array<Int> = [];
+
+    /** The arrays `updateExternalTargets()` fills next (swapped with the above) */
+    var scratchTargets:Array<ceramic.RenderTexture> = [];
+    var scratchVersions:Array<Int> = [];
+
+    /** Whether `externalTargets` must be listed again (new scene or atlas textures) */
+    var externalTargetsDirty:Bool = true;
+
+    /**
+     * Draws done because an external render texture changed (see
+     * `checkExternalTextures()`), for tests and benchmarks (reset freely).
+     */
+    public static var externalTextureRedraws:Int = 0;
 
     /**
      * Partial rendering of the frame being drawn: only the primitives whose
@@ -438,6 +468,92 @@ class SceneRenderable extends Renderable {
         #else
         return false;
         #end
+
+    }
+
+    /**
+     * Lists the render textures shown by the scene's polychrome sprites
+     * (`externalTargets`), keeping the versions of those already listed.
+     */
+    function updateExternalTargets():Void {
+
+        if (!externalTargetsDirty) return;
+        externalTargetsDirty = false;
+        final listed = scratchTargets;
+        final versions = scratchVersions;
+        listed.resize(0);
+        versions.resize(0);
+        final scene = this.scene;
+        if (scene != null) {
+            final sprites = scene.polychromeSprites;
+            final textures = atlasTextures;
+            var lastIndex = -1;
+            for (i in 0...sprites.length) {
+                final index = sprites[i].textureIndex;
+                // Consecutive sprites mostly share their texture
+                if (index == lastIndex) continue;
+                lastIndex = index;
+                final texture = index >= 0 && index < textures.length ? textures[index] : null;
+                if (texture == null) continue;
+                final target = texture.asRenderTexture;
+                if (target == null || target == targetTexture || listed.indexOf(target) != -1) continue;
+                // A texture listed before keeps the version it was drawn with
+                final previous = externalTargets.indexOf(target);
+                listed.push(target);
+                versions.push(previous != -1 ? externalVersions[previous] : target.renderVersion);
+            }
+        }
+        scratchTargets = externalTargets;
+        scratchVersions = externalVersions;
+        externalTargets = listed;
+        externalVersions = versions;
+        if (listed.length > 0) {
+            // The per frame check runs in the system, which windows drawn by
+            // hand (`autoDraw: false`) do not create
+            glaze.GlazeSystem.ensure();
+        }
+
+    }
+
+    /**
+     * Called once per frame by the window (`GlazeSystem`): when a render
+     * texture shown by the scene is about to be drawn by Ceramic this frame
+     * (`autoRender` or `renderDirty`) or was drawn since this renderable's
+     * texture was (its `renderVersion` changed), draws the texture again
+     * (`markRenderDirty()`). In `partialRendering` mode, only the rectangles
+     * of the sprites showing it are drawn again (`SceneDamage` records the
+     * versions). No view is rendered and the scene is unchanged: Ceramic
+     * draws the external texture before this one (it is among the used
+     * textures), so the sprites sample its new pixels. Returns whether the
+     * texture was marked dirty. Nothing to do without `renderToTexture`: the
+     * scene is then drawn at every Ceramic frame.
+     */
+    public function checkExternalTextures():Bool {
+
+        if (!renderToTexture || targetTexture == null) return false;
+        updateExternalTargets();
+        for (i in 0...externalTargets.length) {
+            final target = externalTargets[i];
+            if (target.destroyed) continue;
+            if (target.renderVersion != externalVersions[i] || target.renderDirty || target.autoRender) {
+                if (!targetTexture.renderDirty) {
+                    externalTextureRedraws++;
+                    markRenderDirty();
+                }
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    /** Remembers the versions of the external textures as drawn (the texture is being drawn). */
+    function recordExternalVersions():Void {
+
+        updateExternalTargets();
+        for (i in 0...externalTargets.length) {
+            externalVersions[i] = externalTargets[i].renderVersion;
+        }
 
     }
 
@@ -1794,7 +1910,10 @@ class SceneTargetDrawer extends Renderable {
         final height = owner.targetTexture != null ? owner.targetTexture.height : owner.height;
 
         // The reference drawer of `verifyPartialRendering` is left out
-        if (!reference) glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.RENDER);
+        if (!reference) {
+            owner.recordExternalVersions();
+            glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.RENDER);
+        }
         #if clay
         if (!reference && owner.partialRendering && owner.targetTexture != null) {
             renderPartial(draw, height);

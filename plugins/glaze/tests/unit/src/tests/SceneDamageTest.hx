@@ -202,6 +202,43 @@ class SceneDamageTest extends TestCase {
 
     }
 
+    static function sprite(scene:Scene, textureIndex:Int, x:Float, y:Float, w:Float, h:Float):Void {
+        final s = scene.nextPolychromeSprite();
+        s.setBounds(x, y, w, h);
+        s.setContentMask(0, 0, W, H);
+        s.setTile(textureIndex, 0, 0, w, h);
+        s.opacity = 1;
+        scene.commitPolychromeSprite(s);
+    }
+
+    function testRenderTextureContentChangeDamagesItsSprites() {
+
+        // A sprite showing a render texture (`img()` of a texture, a
+        // `visual()` element): when the renderer draws into the texture,
+        // only the rectangles of its sprites are drawn again
+        // Index 0 stands for an atlas page (not a render texture)
+        final target = new ceramic.RenderTexture(20, 10, 1);
+        final textures:Array<ceramic.Texture> = [null, target];
+        final build = (s:Scene) -> {
+            quad(s, 0, 0, W, H, 0.1);
+            sprite(s, 0, 100, 50, 4, 4);
+            sprite(s, 1, 10, 10, 20, 10);
+        };
+        final damage = new SceneDamage();
+        assertEquals('full', step(damage, sceneOf(build), textures));
+        assertEquals('0,0,0,0', step(damage, sceneOf(build), textures));
+        target.renderVersion++;
+        assertEquals('9,9,31,21', step(damage, sceneOf(build), textures));
+        assertEquals('0,0,0,0', step(damage, sceneOf(build), textures));
+        // Across the largest Int (wraps on hxcpp and C#)
+        target.renderVersion = 2147483647;
+        step(damage, sceneOf(build), textures);
+        target.renderVersion++;
+        assertEquals('9,9,31,21', step(damage, sceneOf(build), textures));
+        target.destroy();
+
+    }
+
     function testInvalidateRedrawsEverything() {
 
         final damage = new SceneDamage();

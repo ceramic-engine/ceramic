@@ -30,6 +30,9 @@ class Scenarios {
             new scenarios.Components(Views),
             new scenarios.Components(Stateless),
             new scenarios.Components(RenderOnceRows),
+            // Ceramic visuals in Glaze (`visual()`): the page animates three
+            // visuals, no view changes (run with GLAZE_BENCH_SCREEN=1)
+            new scenarios.StoryVisual(),
         ];
     }
 

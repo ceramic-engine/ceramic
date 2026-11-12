@@ -48,6 +48,8 @@ class MainScene extends Scene {
             // shows them when running from the signed app bundle
             cx.setAppIdentity('com.longbridge.gpui-component.story', 'GPUI Component');
         });
+        // The pages specific to the Haxe port are listed by the app
+        Gallery.portStories = true;
         var gallery:Null<glaze.Entity<Gallery>> = null;
         window = Lib.createNewWindow('GPUI Component', (window, cx) -> {
             final view = Gallery.view(name != null && name != '' ? name : null, window, cx);

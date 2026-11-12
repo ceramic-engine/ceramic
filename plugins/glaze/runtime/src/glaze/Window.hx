@@ -3410,6 +3410,82 @@ class Window implements WindowInvalidator {
     }
 
     /**
+     * Paint the region `tileX, tileY, tileWidth, tileHeight` (in pixels) of a
+     * Ceramic texture into `bounds` of the scene for the next frame, clipped
+     * by the content mask, with the given corner radii and the element
+     * opacity: a polychrome sprite like `paintImage`, whose texture is drawn
+     * directly (not owned, see `ImageSource.Texture`). Used by `visual()`
+     * elements to show their `Filter`'s render texture or atlas tile.
+     * Specific to the Haxe port.
+     */
+    public function paintTexture(bounds:Bounds, cornerRadii:Corners, texture:ceramic.Texture, tileX:Float, tileY:Float, tileWidth:Float, tileHeight:Float, grayscale:Bool = false):Void {
+        if (bounds.size.width <= 0 || bounds.size.height <= 0 || tileWidth <= 0 || tileHeight <= 0)
+            return;
+        if (texture == null || texture.destroyed)
+            return;
+
+        final data = ImageSource.ImageSourceTools.textureImage(texture);
+        final frame = data.frame(0);
+        final tile = spriteAtlas.getOrInsertWith(AtlasKey.Image(data.id, 0), () -> {
+            final source = new AtlasTile.AtlasTileSource(frame.width, frame.height, null);
+            source.texture = frame.texture;
+            return source;
+        });
+        if (tile == null)
+            return;
+
+        final left = roundToDevice(bounds.origin.x);
+        final top = roundToDevice(bounds.origin.y);
+        final right = Math.max(roundToDevice(bounds.origin.x + bounds.size.width), left);
+        final bottom = Math.max(roundToDevice(bounds.origin.y + bounds.size.height), top);
+
+        snapContentMask();
+        final radii = cornerRadii.clampRadiiForQuadSize(bounds.size).scale(_scaleFactor);
+
+        final scene = nextFrame.scene;
+        final sprite = scene.nextPolychromeSprite();
+        sprite.grayscale = grayscale;
+        sprite.setBounds(left, top, right - left, bottom - top);
+        sprite.setContentMask(maskX, maskY, maskW, maskH);
+        sprite.setCornerRadii(radii.topLeft, radii.topRight, radii.bottomRight, radii.bottomLeft);
+        sprite.setTile(tile.textureId.index, tile.bounds.origin.x + tileX, tile.bounds.origin.y + tileY, tileWidth, tileHeight);
+        sprite.opacity = elementOpacity;
+        scene.commitPolychromeSprite(sprite);
+    }
+
+    /**
+     * Whether `hitbox` is reached by the mouse at `x, y` (window coordinates)
+     * in the last drawn frame: it contains the point inside its content
+     * mask, and no hitbox inserted after it that contains the point blocks
+     * the mouse (`BlockMouse`, `BlockMouseExceptScroll`: an occluding element
+     * painted over it, a popover, a dialog). Hitboxes over it that do not
+     * block (a scrollbar's hover area) let it through, like GPUI's hover
+     * test (`Hitbox::is_hovered`). Used by `visual()` elements to route
+     * Ceramic pointer events to their content. Allocates nothing. Specific
+     * to the Haxe port.
+     */
+    public function isHitboxReachedAt(hitbox:Hitbox, x:Float, y:Float):Bool {
+        if (destroyed)
+            return false;
+        final hitboxes = renderedFrame.hitboxes;
+        var i = hitboxes.length - 1;
+        while (i >= 0) {
+            final candidate = hitboxes[i];
+            final b = candidate.bounds;
+            final m = candidate.contentMask.bounds;
+            if (x >= b.origin.x && x < b.origin.x + b.size.width && y >= b.origin.y && y < b.origin.y + b.size.height
+                && x >= m.origin.x && x < m.origin.x + m.size.width && y >= m.origin.y && y < m.origin.y + m.size.height) {
+                if (candidate == hitbox || candidate.id == hitbox.id)
+                    return true;
+                if (candidate.behavior != Normal)
+                    return false;
+            }
+            i--;
+        }
+        return false;
+    }
+
+    /**
      * Paint the given `Path` into the scene for the next frame at the current z-index.
      *
      * Differences with GPUI: the path is rasterized by `PathRasterizer` into

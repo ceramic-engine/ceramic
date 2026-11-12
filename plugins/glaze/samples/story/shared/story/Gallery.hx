@@ -84,6 +84,13 @@ class Gallery extends Model implements Render {
         return s.toLowerCase();
     }
 
+    /**
+     * Whether the gallery lists the pages specific to the Haxe port (Ceramic
+     * visuals in Glaze): set by the story app; off for the golden scenes,
+     * which compare the gallery with gpui-kit's.
+     */
+    public static var portStories:Bool = false;
+
     public function new(initStory:Null<String>, window:Window, cx:Context<Gallery>, embedded:Bool = false) {
         super();
         final searchInput = cx.newEntity((cx:Context<InputState>) -> new InputState(window, cx).withPlaceholder('Search…'));
@@ -184,6 +191,10 @@ class Gallery extends Model implements Render {
         add(StoryMeta.optional(story.stories.TooltipStory));
         add(StoryMeta.optional(story.stories.TreeStory));
         add(StoryMeta.optional(story.stories.VirtualListStory));
+        // Pages of the Haxe port without a gpui-kit equivalent (story app only)
+        if (portStories) {
+            add(StoryMeta.optional(story.stories.CeramicVisualStory));
+        }
 
         this.searchInput = searchInput;
         this.stories = [{name: '', stories: panels}];

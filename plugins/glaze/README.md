@@ -201,6 +201,38 @@ The code editor of Glaze is [Cityscape](../cityscape/README.md) (plugin `citysca
 
 The kit's element inspector (define `glaze_inspector`, toggled with cmd-alt-i on macOS and ctrl-shift-i elsewhere) edits styles in Cityscape editors: a project built with `glaze_inspector` lists the `cityscape` plugin too, the build stops with an error saying so otherwise. Without `glaze_inspector`, Glaze does not depend on Cityscape.
 
+## Ceramic visuals in Glaze
+
+`visual(v)` shows a Ceramic `Visual` (a quad, a mesh, text, Spine, particles, a whole sub scene, a game) as an element of the interface. It is sized by the flex layout like any styled element (the visual's own size when none is given), drawn in order with the other elements (a popover, a menu or a dialog goes over it), clipped by scrolling containers, with the element's corner radii and opacity, and Ceramic pointer events reach it. This is an addition of Glaze: GPUI has no equivalent.
+
+```haxe
+final game = new GameScene();          // any ceramic.Visual
+final focus = cx.focusHandle();
+
+div().flex().gap4()
+    .child(visual(game)
+        .flex1().h(px(300.))
+        .rounded(px(8.))
+        .onResize((width, height) -> game.size(width, height))   // lay out the visual
+        .trackFocus(focus))                                      // a click in it focuses it
+    .child(Button.component('pause').label('Pause').onClick(() -> game.paused = true));
+
+// In the game: react to Ceramic keys only when its element has the focus
+if (VisualElement.isFocused(game) && input.keyJustPressed(KeyCode.SPACE)) jump();
+```
+
+The visual is reparented into the content of a Ceramic `Filter` that renders it into a texture at the window's scale factor, and the window shows that texture in place of the element. Small visuals share an atlas of render textures, large ones get their own. While the element is not drawn, the visual is deactivated and detached, never destroyed; its filter is kept `VisualElement.gracePeriodFrames` frames (120), then destroyed. A visual is shown by one element at a time.
+
+- **Size.** The content area is the element's size, rounded to device pixels: `onResize(width, height)` is called when it changes. With `fit(ObjectFit.Contain)` (or `Cover`, `Fill`, `ScaleDown`, `None`), the visual is scaled and placed in the area from its own `width` and `height`, like an image. With `nativeResolution()`, the visual is rendered at its own size and the texture is scaled into the element (with `textureFilter(NEAREST)` for pixel art).
+- **Rendering.** `renderMode(Always)` (the default) renders the visual at every frame, for animations; `renderMode(Explicit)` renders it when it is shown or resized, and on `VisualElement.renderNow(v)`, for static content that costs nothing at rest. Either way, the window draws only the element's rectangle of its texture again: no view renders, nothing is laid out again, and cached views stay cached. `antialiasing(samples)` sets the multisampling of the texture.
+- **Pointer.** With `interactive(true)` (the default), `onPointerDown`, `onPointerOver` and the other pointer events of the visual and its children work as usual, with their local coordinates, only where no Glaze element drawn over it blocks the mouse (like GPUI's hover test) and inside its clipping: a Glaze popover or dialog over it, or a part scrolled out of view, receives nothing. The element blocks the mouse for the Glaze elements behind it, the scroll wheel excepted, so scrolling containers still scroll. `interactive(false)` makes it an image.
+- **Keyboard.** Ceramic keys are global: `trackFocus(handle)` gives the element a focus handle, focused by a click in the content, and `VisualElement.isFocused(v)` (or `handle.isFocused(window)`) tells the visual when to react. `VisualElement.isHovered(v)` tells whether the pointer is over it.
+- **Interactivity.** Like `img()`, the element takes `id`, `hover`, `onClick`, `onMouseDown`, `tooltip` and the other interactive methods.
+
+Any `RenderTexture` shown with `img(texture)` follows its content the same way: the window checks once per frame the render textures its scene shows (`RenderTexture.renderVersion` changes each time Ceramic draws into one) and draws their rectangles again.
+
+The story gallery (`samples/story`) has a page with these cases: an animated visual in a panel, inside a scroll area, under a popover, and a Ceramic quad receiving clicks.
+
 ## Text and fonts
 
 Glaze draws text with its own text system: fonts are TTF, OTF or TTC files added to the text system (Inter and JetBrains Mono are bundled). Two choices of Glaze go beyond the real GPUI and are deliberate:

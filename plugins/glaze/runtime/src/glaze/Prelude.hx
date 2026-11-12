@@ -396,6 +396,16 @@ class Prelude {
     }
 
     /**
+     * An element showing a Ceramic visual (a quad, a mesh, text, a whole
+     * sub scene...), rendered into a texture and drawn in order with the
+     * other elements, sized by the layout (the visual's size by default).
+     * See `VisualElement`. Specific to the Haxe port.
+     */
+    public static inline function visual(visual:ceramic.Visual #if glaze_inspector , ?pos:haxe.PosInfos #end):VisualElement {
+        return new VisualElement(visual #if glaze_inspector , pos #end);
+    }
+
+    /**
      * An image cache element: its child `img` elements use the given cache
      * (an `ImageCacheProvider`, or an `ImageCache` such as a
      * `RetainAllImageCache` entity). Rust `image_cache`.

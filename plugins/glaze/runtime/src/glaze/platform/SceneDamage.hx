@@ -22,6 +22,12 @@ import glaze.scene.Underline;
  * plus a margin of one pixel. A primitive changes no pixel outside that
  * rectangle.
  *
+ * A polychrome sprite also records the `renderVersion` of the render
+ * texture it shows (`img()` of a `RenderTexture`, `visual()` elements):
+ * when Ceramic drew into that texture since the previous scene, the sprite
+ * is a changed primitive, so its rectangle is drawn again with the new
+ * pixels, even if the scene is the same.
+ *
  * `diff()` compares the new records with those of the scene the texture
  * holds: the primitives of the common prefix and suffix are unchanged and
  * keep their relative order, every other primitive (removed, added or
@@ -72,6 +78,14 @@ class SceneDamage {
     /** Atlas textures (and their sizes) when the previous scene was drawn */
     final prevTextures:Array<Texture> = [];
     final prevTextureSizes:Array<Float> = [];
+
+    /**
+     * `renderVersion` of each texture of the scene being recorded (0 for
+     * textures that are not render textures): a polychrome sprite showing a
+     * render texture whose content changed since the previous scene is a
+     * changed primitive, so its rectangle is drawn again with the new pixels.
+     */
+    final textureVersions:Array<Int> = [];
 
     /** `CeramicAtlas.releaseCount` when the previous scene was drawn */
     var prevReleaseCount:Int = -1;
@@ -199,11 +213,14 @@ class SceneDamage {
         prevReleaseCount = releaseCount;
         prevTextures.resize(textures.length);
         prevTextureSizes.resize(textures.length * 2);
+        textureVersions.resize(textures.length);
         for (i in 0...textures.length) {
             final texture = textures[i];
             prevTextures[i] = texture;
             prevTextureSizes[i * 2] = texture != null ? texture.nativeWidthActual : 0;
             prevTextureSizes[i * 2 + 1] = texture != null ? texture.nativeHeightActual : 0;
+            final target = texture != null ? texture.asRenderTexture : null;
+            textureVersions[i] = target != null ? target.renderVersion : 0;
         }
 
         if (scene == null) return;
@@ -1134,6 +1151,8 @@ class SceneDamage {
 
         begin(6);
         put(sprite.textureIndex);
+        final textureIndex = sprite.textureIndex;
+        put(textureIndex >= 0 && textureIndex < textureVersions.length ? textureVersions[textureIndex] : 0);
         put(sprite.tileX);
         put(sprite.tileY);
         put(sprite.tileWidth);
