@@ -197,6 +197,7 @@ class Tests {
         runner.add(new tests.view.MouseCursorTest());
         runner.add(new tests.view.ScrollMouseTargetTest());
         runner.add(new tests.view.ScrollbarTrackTest());
+        runner.add(new tests.view.HorizontalScrollTest());
 
         // Language features (step 4, cs4-lang)
         runner.add(new tests.base.FiltersTest());

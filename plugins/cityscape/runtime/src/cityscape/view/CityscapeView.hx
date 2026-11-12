@@ -364,6 +364,8 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public final guideColors:cityscape.view.viewParts.indentGuides.IndentGuides.IndentGuideColors;
     public final theme:ViewTheme;
     public final scrollHandle:CityscapeScrollHandle;
+    /** The scroll handle of the horizontal scrollbar (`CityscapeEditor`). */
+    public final horizontalScrollHandle:CityscapeHorizontalScrollHandle;
     public final focusHandle:glaze.FocusHandle;
 
     final app:App;
@@ -438,6 +440,11 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
     // Mouse
     var mouseDown:Bool = false;
+
+    /** Whether a drag started in the editor is going on (the left button held since a press in it). */
+    public inline function isMouseDown():Bool {
+        return mouseDown;
+    }
     var mouseDownCount:Int = 0;
     var mouseDownAlt:Bool = false;
     var mouseDownShift:Bool = false;
@@ -473,6 +480,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         this.resolver = new DecorationStyleResolver(theme, context.decorationStyles);
         this.guideColors = new cityscape.view.viewParts.indentGuides.IndentGuides.IndentGuideColors(theme);
         this.scrollHandle = new CityscapeScrollHandle(this);
+        this.horizontalScrollHandle = new CityscapeHorizontalScrollHandle(this);
         this.focusHandle = cx.app.focusHandle();
         widget.setView(this);
         #if cityscape_debug_counters
@@ -1034,18 +1042,124 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
                 }
         }
         var scrollLeft:Float = viewport.left;
-        if (e.revealHorizontal && range.startLineNumber == range.endLineNumber) {
-            final line = renderViewLine(range.startLineNumber);
-            final x = line.columnToX(range.startColumn);
-            final contentWidth = configuration.options.get(EditorOption.layoutInfo).contentWidth;
-            final margin = 4 * configuration.options.get(EditorOption.fontInfo).typicalHalfwidthCharacterWidth;
-            if (x < viewport.left) {
-                scrollLeft = Math.max(0, x - margin);
-            } else if (x > viewport.left + contentWidth - margin) {
-                scrollLeft = x - contentWidth + margin;
+        if (e.revealHorizontal) {
+            // viewLines.ts:277 `onRevealRangeRequest`: two or more lines
+            // scroll to the start; one line, or selections of one line each,
+            // are revealed by `_computeScrollLeftToReveal` (Monaco waits for
+            // the line to render; the line is measured here at once)
+            if (e.range != null && e.range.startLineNumber != e.range.endLineNumber) {
+                scrollLeft = 0;
+            }
+            else {
+                final revealed = computeScrollLeftToReveal(e);
+                if (revealed != null) {
+                    scrollLeft = revealed;
+                }
             }
         }
         layout.setScrollPosition({scrollTop: scrollTop, scrollLeft: scrollLeft}, ScrollType.Immediate);
+    }
+
+    /** viewLines.ts:94 `HORIZONTAL_EXTRA_PX`. */
+    static inline final HORIZONTAL_EXTRA_PX:Int = 30;
+
+    /**
+     * viewLines.ts:766 `_computeScrollLeftToReveal`: the scroll left that
+     * shows the range (or every selection, each of one line) between the
+     * viewport's left and the vertical scrollbar, with 30 pixels on the left
+     * and `revealHorizontalRightPadding` (15) on the right unless the reveal
+     * is minimal (a mouse drag); null to leave the scroll left alone.
+     */
+    function computeScrollLeftToReveal(e:ViewRevealRangeRequestEvent):Null<Float> {
+        final viewModel = this.viewModel;
+        final layout = viewModel.viewLayout;
+        final viewport = layout.getCurrentViewport();
+        final layoutInfo = configuration.options.get(EditorOption.layoutInfo);
+        final viewportStartX = viewport.left;
+        final viewportEndX = viewportStartX + viewport.width - layoutInfo.verticalScrollbarWidth;
+
+        var boxStartX:Float = 1073741824; // Constants.MAX_SAFE_SMALL_INTEGER
+        var boxEndX:Float = 0;
+        final lineCount = viewModel.getLineCount();
+        inline function addRange(lineNumber:Int, startColumn:Int, endColumn:Int):Bool {
+            if (lineNumber < 1 || lineNumber > lineCount) {
+                return false;
+            }
+            final line = renderViewLine(lineNumber);
+            final left = line.columnToX(startColumn);
+            final right = line.columnToX(endColumn);
+            boxStartX = Math.min(boxStartX, Math.round(Math.min(left, right)));
+            boxEndX = Math.max(boxEndX, Math.round(Math.max(left, right)));
+            return true;
+        }
+        final isSelections = e.range == null;
+        if (!isSelections) {
+            if (!addRange(e.range.startLineNumber, e.range.startColumn, e.range.endColumn)) {
+                return null;
+            }
+        }
+        else {
+            final selections = e.selections;
+            if (selections == null || selections.length == 0) {
+                return null;
+            }
+            for (selection in selections) {
+                if (selection.startLineNumber != selection.endLineNumber) {
+                    return null;
+                }
+                if (!addRange(selection.startLineNumber, selection.startColumn, selection.endColumn)) {
+                    return null;
+                }
+            }
+        }
+
+        if (!e.minimalReveal) {
+            boxStartX = Math.max(0, boxStartX - HORIZONTAL_EXTRA_PX);
+            boxEndX += revealHorizontalRightPadding();
+        }
+
+        if (isSelections && boxEndX - boxStartX > viewport.width) {
+            return null;
+        }
+
+        return computeMinimumScrolling(viewportStartX, viewportEndX, boxStartX, boxEndX);
+    }
+
+    /** The `revealHorizontalRightPadding` option (Monaco's default 15, clamped to 0..1000). */
+    function revealHorizontalRightPadding():Float {
+        final value:Any = configuration.options.get(EditorOption.revealHorizontalRightPadding);
+        if (value == null || !cityscape.base.common.JsValues.isNumber(value)) {
+            return 15;
+        }
+        final n:Float = value;
+        return Math.isNaN(n) ? 15 : Math.max(0, Math.min(1000, Math.floor(n)));
+    }
+
+    /** viewLines.ts:815 `_computeMinimumScrolling` (without `revealAtStart` and `revealAtEnd`, which the horizontal reveal does not use). */
+    static function computeMinimumScrolling(viewportStart:Float, viewportEnd:Float, boxStart:Float, boxEnd:Float):Float {
+        final vs = toInt32(viewportStart);
+        final ve = toInt32(viewportEnd);
+        final bs = toInt32(boxStart);
+        final be = toInt32(boxEnd);
+        final viewportLength = ve - vs;
+        final boxLength = be - bs;
+        if (boxLength < viewportLength) {
+            if (bs < vs) {
+                return bs;
+            }
+            else if (be > ve) {
+                return Math.max(0, be - viewportLength);
+            }
+        }
+        else {
+            return bs;
+        }
+        return vs;
+    }
+
+    /** `x | 0` in JavaScript. */
+    static inline function toInt32(value:Float):Int {
+        return Math.isNaN(value) || !Math.isFinite(value) ? 0 : Std.int(value);
     }
 
     //#region layout and rendering
@@ -1432,6 +1546,30 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     /** The look of the scrollbars of the editor's widgets (`EditorWidgets.widgetScrollbarStyles`). */
     public final widgetScrollbarLook:ScrollbarLook = ScrollbarLook.widgetLook();
 
+    /** The look of the editor's horizontal scrollbar (`CityscapeEditor`). */
+    public final editorHorizontalScrollbarLook:ScrollbarLook = ScrollbarLook.editorHorizontalLook();
+
+    /**
+     * Whether the horizontal scrollbar shows: `scrollbar.horizontal` is not
+     * `'hidden'`, it has a size and the content is wider than the viewport
+     * (the scroll width over `layoutInfo.contentWidth`, Monaco's
+     * `ScrollbarState` `isNeeded` and viewLayout.ts
+     * `_getHorizontalScrollbarHeight`). With word wrap the content is never
+     * wider, so it never shows.
+     */
+    public function isHorizontalScrollbarShown():Bool {
+        final viewModel = this.viewModel;
+        if (viewModel == null) {
+            return false;
+        }
+        final scrollbar = configuration.options.get(EditorOption.scrollbar);
+        if (scrollbar.horizontal == cityscape.base.common.Scrollable.ScrollbarVisibility.Hidden || scrollbar.horizontalScrollbarSize <= 0) {
+            return false;
+        }
+        final dimensions = viewModel.viewLayout.getScrollable().getScrollDimensions();
+        return dimensions.scrollWidth > dimensions.width;
+    }
+
     //#endregion
 
     //#region hit testing
@@ -1500,14 +1638,21 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * (`multiCursorModifier` 'alt', the default).
      */
     function dispatchMouse(point:Point, inSelectionMode:Bool, mouseDownCount:Int, altKey:Bool, shiftKey:Bool):Void {
+        dispatchMouseAt(viewPositionAt(point), mouseColumnAt(point), inSelectionMode, mouseDownCount, altKey, shiftKey, NavigationCommandRevealType.Minimal);
+    }
+
+    /**
+     * `dispatchMouse` at a view position (mouseHandler.ts `_dispatchMouse`
+     * with Monaco's position of the mouse target, and its reveal type).
+     */
+    function dispatchMouseAt(viewPosition:Position, mouseColumn:Int, inSelectionMode:Bool, mouseDownCount:Int, altKey:Bool, shiftKey:Bool, revealType:NavigationCommandRevealType):Void {
         final viewModel = this.viewModel;
-        final viewPosition = viewPositionAt(point);
         final position = viewModel.coordinatesConverter.convertViewPositionToModelPosition(viewPosition);
         final args:CoreCommandArgs = {
             source: 'mouse',
             position: position,
             viewPosition: viewPosition,
-            revealType: NavigationCommandRevealType.Minimal
+            revealType: revealType
         };
         final hasMulticursorModifier = altKey;
         if (mouseDownCount >= 4) {
@@ -1532,7 +1677,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         else {
             if (hasMulticursorModifier) {
                 if (shiftKey) {
-                    args.mouseColumn = mouseColumnAt(point);
+                    args.mouseColumn = mouseColumn;
                     args.doColumnSelect = true;
                     CoreNavigationCommands.ColumnSelect.runCoreEditorCommand(viewModel, args);
                 }
@@ -1620,14 +1765,18 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * a drag started on the line numbers works on whole lines.
      */
     function dispatchMouseFor(point:Point, inSelectionMode:Bool):Void {
+        dispatchMouseForAt(viewPositionAt(point), mouseColumnAt(point), inSelectionMode, NavigationCommandRevealType.Minimal);
+    }
+
+    /** `dispatchMouseFor` at a view position, with a reveal type. */
+    function dispatchMouseForAt(viewPosition:Position, mouseColumn:Int, inSelectionMode:Bool, revealType:NavigationCommandRevealType):Void {
         final viewModel = this.viewModel;
         if (!mouseDownOnLineNumbers) {
-            dispatchMouse(point, inSelectionMode, mouseDownCount, mouseDownAlt, mouseDownShift);
+            dispatchMouseAt(viewPosition, mouseColumn, inSelectionMode, mouseDownCount, mouseDownAlt, mouseDownShift, revealType);
             return;
         }
-        final viewPosition = viewPositionAt(point);
         final position = viewModel.coordinatesConverter.convertViewPositionToModelPosition(viewPosition);
-        final args:CoreCommandArgs = {source: 'mouse', position: position, viewPosition: viewPosition, revealType: NavigationCommandRevealType.Minimal};
+        final args:CoreCommandArgs = {source: 'mouse', position: position, viewPosition: viewPosition, revealType: revealType};
         if (mouseDownAlt) {
             if (inSelectionMode) {
                 CoreNavigationCommands.LastCursorLineSelect.runCoreEditorCommand(viewModel, args);
@@ -1696,9 +1845,156 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
             notifyChanged();
             return;
         }
-        dispatchMouseFor(event.position, true);
+        onMouseDownThenMove(event.position, window);
+    }
+
+    /**
+     * mouseHandler.ts:402 `MouseDownOperation._onMouseDownThenMove`: a drag
+     * above or below the editor scrolls it, again at every animation frame
+     * while the mouse stays there (`TopBottomDragScrolling`); elsewhere,
+     * left and right of the editor included, the selection goes to the
+     * mouse's position (`_findMousePosition`: the start or the end of the
+     * line beside the editor), revealed with the minimal reveal, which
+     * scrolls horizontally to it.
+     */
+    function onMouseDownThenMove(point:Point, window:Null<Window>):Void {
+        final viewModel = this.viewModel;
+        final outside = positionOutsideEditor(point);
+        if (outside != null && (outside.outsidePosition == 'above' || outside.outsidePosition == 'below')) {
+            startTopBottomDragScrolling(outside, point, window);
+            notifyChanged();
+            return;
+        }
+        stopTopBottomDragScrolling();
+        if (outside != null) {
+            dispatchMouseForAt(outside.viewPosition, outside.mouseColumn, true, NavigationCommandRevealType.Minimal);
+        }
+        else {
+            dispatchMouseFor(point, true);
+        }
         viewModel.revealPrimaryCursor('mouse', true, true);
         notifyChanged();
+    }
+
+    /**
+     * mouseHandler.ts:516 `_getPositionOutsideEditor`: the position a drag
+     * outside the editor's bounds selects to, null inside. Above: the line
+     * `outsideDistance` above the top of the viewport, its first column;
+     * below: the line at the mouse's height, its last column; left and
+     * right: the line at the mouse's height, its first or last column. View
+     * zones are not jumped over (`_helpPositionJumpOverViewZone`).
+     */
+    @:allow(tests)
+    function positionOutsideEditor(point:Point):Null<OutsideEditorTarget> {
+        final viewModel = this.viewModel;
+        if (viewModel == null) {
+            return null;
+        }
+        final layout = viewModel.viewLayout;
+        final editorContent = elementBounds;
+        final mouseColumn = mouseColumnAt(point);
+        final relativeY = point.y - editorContent.origin.y;
+        if (point.y < editorContent.origin.y) {
+            final outsideDistance = editorContent.origin.y - point.y;
+            final verticalOffset = Math.max(layout.getCurrentScrollTop() - outsideDistance, 0);
+            final aboveLineNumber = layout.getLineNumberAtVerticalOffset(verticalOffset);
+            return new OutsideEditorTarget(mouseColumn, new Position(aboveLineNumber, 1), 'above', outsideDistance);
+        }
+        if (point.y > editorContent.origin.y + editorContent.size.height) {
+            final outsideDistance = point.y - editorContent.origin.y - editorContent.size.height;
+            final verticalOffset = layout.getCurrentScrollTop() + relativeY;
+            final belowLineNumber = layout.getLineNumberAtVerticalOffset(verticalOffset);
+            return new OutsideEditorTarget(mouseColumn, new Position(belowLineNumber, viewModel.getLineMaxColumn(belowLineNumber)), 'below', outsideDistance);
+        }
+        final possibleLineNumber = layout.getLineNumberAtVerticalOffset(layout.getCurrentScrollTop() + relativeY);
+        if (point.x < editorContent.origin.x) {
+            final outsideDistance = editorContent.origin.x - point.x;
+            return new OutsideEditorTarget(mouseColumn, new Position(possibleLineNumber, 1), 'left', outsideDistance);
+        }
+        if (point.x > editorContent.origin.x + editorContent.size.width) {
+            final outsideDistance = point.x - editorContent.origin.x - editorContent.size.width;
+            return new OutsideEditorTarget(mouseColumn, new Position(possibleLineNumber, viewModel.getLineMaxColumn(possibleLineNumber)), 'right', outsideDistance);
+        }
+        return null;
+    }
+
+    /**
+     * The drag scrolling above or below the editor (mouseHandler.ts:631
+     * `TopBottomDragScrolling`), null when there is none.
+     */
+    @:allow(tests)
+    var topBottomDragScrolling:Null<TopBottomDragScrollingOperation> = null;
+
+    function startTopBottomDragScrolling(position:OutsideEditorTarget, point:Point, window:Null<Window>):Void {
+        final operation = topBottomDragScrolling;
+        if (operation != null) {
+            operation.setPosition(position, point.x);
+            return;
+        }
+        final w = window != null ? window : this.window;
+        if (w == null) {
+            return;
+        }
+        final created = new TopBottomDragScrollingOperation(this, w, position, point.x, app.backgroundExecutor().now());
+        topBottomDragScrolling = created;
+        created.schedule();
+    }
+
+    function stopTopBottomDragScrolling():Void {
+        final operation = topBottomDragScrolling;
+        if (operation != null) {
+            operation.dispose();
+            topBottomDragScrolling = null;
+        }
+    }
+
+    /**
+     * mouseHandler.ts:725 `TopBottomDragScrollingOperation._execute`: scrolls
+     * by the speed of `_getScrollSpeed` for the time elapsed since the last
+     * frame, then selects to the mouse's column on the line at the edge of
+     * the viewport (the first or last visible line), without a reveal.
+     */
+    @:allow(cityscape.view.TopBottomDragScrollingOperation)
+    function executeTopBottomDragScrolling(operation:TopBottomDragScrollingOperation):Void {
+        final viewModel = this.viewModel;
+        if (viewModel == null || operation != topBottomDragScrolling || !mouseDown) {
+            stopTopBottomDragScrolling();
+            return;
+        }
+        final options = configuration.options;
+        final lineHeight:Float = options.get(EditorOption.lineHeight);
+        final position = operation.position;
+        final scrollSpeedInLines = operation.getScrollSpeed(lineHeight, options.get(EditorOption.layoutInfo).height);
+        final elapsed = operation.tick(app.backgroundExecutor().now());
+        final scrollInPixels = scrollSpeedInLines * (elapsed / 1000) * lineHeight;
+        final scrollValue = (position.outsidePosition == 'above' ? -scrollInPixels : scrollInPixels);
+
+        final layout = viewModel.viewLayout;
+        layout.deltaScrollNow(0, scrollValue);
+
+        final viewportData = layout.getLinesViewportData();
+        final edgeLineNumber = (position.outsidePosition == 'above' ? viewportData.startLineNumber : viewportData.endLineNumber);
+
+        // First, try to find a position that matches the horizontal position of the mouse
+        final horizontalScrollbarHeight = options.get(EditorOption.layoutInfo).horizontalScrollbarHeight;
+        final b = elementBounds;
+        final pos = new Point(operation.mouseX, b.origin.y + b.size.height - horizontalScrollbarHeight - 0.1);
+        var viewPosition:Null<Position> = null;
+        if (pos.x >= b.origin.x && pos.x <= b.origin.x + b.size.width) {
+            viewPosition = viewPositionAt(pos);
+        }
+        if (viewPosition == null || viewPosition.lineNumber != edgeLineNumber) {
+            if (position.outsidePosition == 'above') {
+                viewPosition = new Position(edgeLineNumber, 1);
+            }
+            else {
+                viewPosition = new Position(edgeLineNumber, viewModel.getLineMaxColumn(edgeLineNumber));
+            }
+        }
+
+        dispatchMouseForAt(viewPosition, position.mouseColumn, true, NavigationCommandRevealType.None);
+        notifyChanged();
+        operation.schedule();
     }
 
     /**
@@ -1860,6 +2156,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public function handleMouseUp(event:MouseUpEvent, window:Window, cx:App):Void {
         if (event.button == MouseButton.Left) {
             mouseDown = false;
+            stopTopBottomDragScrolling();
             if (zoneDragCursor != null && viewModel != null) {
                 // the drag's own mouse up listener ends it; the view stops
                 // delivering the window's events in any case
@@ -1891,6 +2188,17 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         final delta = event.delta.pixelDelta(lineHeight);
         var dx = -delta.x;
         var dy = -delta.y;
+        // scrollableElement.ts:408 `scrollPredominantAxis` (true by default):
+        // only along the predominant axis, no horizontal drift of a vertical
+        // trackpad scroll
+        if (Math.abs(dy) >= Math.abs(dx)) {
+            dx = 0;
+        }
+        else {
+            dy = 0;
+        }
+        // scrollableElement.ts:428: Shift turns a vertical scroll into a
+        // horizontal one (macOS does it for the wheel of a mouse itself)
         if (event.modifiers.shift && dx == 0) {
             dx = dy;
             dy = 0;
@@ -2393,6 +2701,182 @@ class CityscapeScrollHandle implements ScrollbarHandleImpl implements glaze.kit.
 
     public function endDrag():Void {
         dragging = false;
+    }
+
+}
+
+/**
+ * The kit scrollbar handle of a view's horizontal scrollbar. Monaco's
+ * horizontal scrollbar (horizontalScrollbar.ts:25-31, scrollbarState.ts
+ * `_computeValues`) measures its slider on a track shortened by the
+ * vertical scrollbar (`oppositeScrollbarSize`: `verticalScrollbarSize`
+ * unless `scrollbar.vertical` is `'hidden'`), with the ratio of the viewport
+ * (`layoutInfo.contentWidth`) to the scroll width; the vertical scrollbar
+ * keeps the whole height ("give priority to vertical scroll bar",
+ * verticalScrollbar.ts:27). The kit scrollbar measures its thumb against the
+ * viewport it overlays: this handle gives it the shortened track as the
+ * viewport and every length along the axis scaled by the track over the
+ * content width, so that the thumb's length and travel are Monaco's ratios.
+ */
+class CityscapeHorizontalScrollHandle implements ScrollbarHandleImpl {
+
+    final view:CityscapeView;
+    var dragging:Bool = false;
+
+    public function new(view:CityscapeView) {
+        this.view = view;
+    }
+
+    /** The length of the track: the content width without the vertical scrollbar. */
+    public function trackLength():Float {
+        final options = view.configuration.options;
+        final layoutInfo = options.get(EditorOption.layoutInfo);
+        final scrollbar = options.get(EditorOption.scrollbar);
+        final opposite = scrollbar.vertical == cityscape.base.common.Scrollable.ScrollbarVisibility.Hidden ? 0 : scrollbar.verticalScrollbarSize;
+        return Math.max(0, layoutInfo.contentWidth - opposite);
+    }
+
+    /** The track over the viewport width (1 without a viewport). */
+    function scale():Float {
+        final contentWidth = view.configuration.options.get(EditorOption.layoutInfo).contentWidth;
+        return contentWidth > 0 ? trackLength() / contentWidth : 1;
+    }
+
+    public function viewportBounds():Bounds {
+        final b = view.elementBounds;
+        if (view.viewModel == null) {
+            return b;
+        }
+        final layoutInfo = view.configuration.options.get(EditorOption.layoutInfo);
+        return new Bounds(new Point(b.origin.x + layoutInfo.contentLeft, b.origin.y), new Size(trackLength(), b.size.height));
+    }
+
+    public function offset():Point {
+        final viewModel = view.viewModel;
+        if (viewModel == null) {
+            return new Point(0, 0);
+        }
+        return new Point(-viewModel.viewLayout.getCurrentScrollLeft() * scale(), -viewModel.viewLayout.getCurrentScrollTop());
+    }
+
+    public function setOffset(offset:Point):Void {
+        final viewModel = view.viewModel;
+        if (viewModel == null) {
+            return;
+        }
+        final k = scale();
+        if (k <= 0) {
+            return;
+        }
+        viewModel.viewLayout.setScrollPosition({scrollLeft: -offset.x / k}, ScrollType.Immediate);
+    }
+
+    public function contentSize():Size {
+        final viewModel = view.viewModel;
+        if (viewModel == null) {
+            return new Size(0, 0);
+        }
+        final layout = viewModel.viewLayout;
+        return new Size(layout.getScrollWidth() * scale(), layout.getScrollHeight());
+    }
+
+    public function startDrag():Void {
+        dragging = true;
+    }
+
+    public function endDrag():Void {
+        dragging = false;
+    }
+
+}
+
+/**
+ * Monaco's `IMouseTargetOutsideEditor` (mouseTarget.ts
+ * `MouseTarget.createOutsideEditor`): a view position beside the editor.
+ */
+class OutsideEditorTarget {
+
+    public final mouseColumn:Int;
+    public final viewPosition:Position;
+    /** `'above'`, `'below'`, `'left'` or `'right'`. */
+    public final outsidePosition:String;
+    public final outsideDistance:Float;
+
+    public function new(mouseColumn:Int, viewPosition:Position, outsidePosition:String, outsideDistance:Float) {
+        this.mouseColumn = mouseColumn;
+        this.viewPosition = viewPosition;
+        this.outsidePosition = outsidePosition;
+        this.outsideDistance = outsideDistance;
+    }
+
+}
+
+/**
+ * mouseHandler.ts:666 `TopBottomDragScrollingOperation`: while the mouse is
+ * held above or below the editor during a drag, the editor scrolls at each
+ * animation frame (`dom.scheduleAtNextAnimationFrame`, here the window's
+ * `onNextFrame`), by a speed in lines per second from the distance to the
+ * editor, for the time elapsed since the previous frame (`Date.now()`,
+ * here the app's clock).
+ */
+class TopBottomDragScrollingOperation {
+
+    final view:CityscapeView;
+    final window:Window;
+    public var position(default, null):OutsideEditorTarget;
+    /** The x of the mouse (window coordinates), Monaco's `_mouseEvent.pos.x`. */
+    public var mouseX(default, null):Float;
+    var lastTime:Float;
+    var disposed:Bool = false;
+
+    public function new(view:CityscapeView, window:Window, position:OutsideEditorTarget, mouseX:Float, now:Float) {
+        this.view = view;
+        this.window = window;
+        this.position = position;
+        this.mouseX = mouseX;
+        this.lastTime = now;
+    }
+
+    public function setPosition(position:OutsideEditorTarget, mouseX:Float):Void {
+        this.position = position;
+        this.mouseX = mouseX;
+    }
+
+    public function dispose():Void {
+        disposed = true;
+    }
+
+    /** Runs `_execute` at the next animation frame. */
+    public function schedule():Void {
+        if (disposed || window.isDestroyed()) {
+            return;
+        }
+        window.onNextFrame((_, _) -> {
+            if (!disposed) {
+                @:privateAccess view.executeTopBottomDragScrolling(this);
+            }
+        });
+    }
+
+    /** `_tick`: the milliseconds elapsed since the last time (`now` in seconds). */
+    public function tick(now:Float):Float {
+        final elapsed = (now - lastTime) * 1000;
+        lastTime = now;
+        return elapsed;
+    }
+
+    /** `_getScrollSpeed`: the number of lines per second to auto-scroll. */
+    public function getScrollSpeed(lineHeight:Float, layoutHeight:Float):Float {
+        final viewportInLines = layoutHeight / lineHeight;
+        final outsideDistanceInLines = position.outsideDistance / lineHeight;
+
+        if (outsideDistanceInLines <= 1.5) {
+            return Math.max(30, viewportInLines * (1 + outsideDistanceInLines));
+        }
+        if (outsideDistanceInLines <= 3) {
+            return Math.max(60, viewportInLines * (2 + outsideDistanceInLines));
+        }
+        return Math.max(200, viewportInLines * (7 + outsideDistanceInLines));
     }
 
 }

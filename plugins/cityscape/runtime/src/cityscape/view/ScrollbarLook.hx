@@ -56,6 +56,9 @@ class ScrollbarLook {
 
     final widget:Bool;
 
+    /** Whether this is the editor's horizontal scrollbar (`horizontalSliderSize`). */
+    final horizontal:Bool;
+
     var resolvedTheme:Null<IColorTheme> = null;
     var resolvedOptions:Null<InternalEditorScrollbarOptions> = null;
     var resolvedBand:Float = -1;
@@ -82,8 +85,9 @@ class ScrollbarLook {
 
     static final TRANSPARENT:Hsla = hsla(0, 0, 0, 0);
 
-    function new(widget:Bool) {
+    function new(widget:Bool, horizontal:Bool = false) {
         this.widget = widget;
+        this.horizontal = horizontal;
         trackRest = t -> trackStyle(t, 0);
         trackHover = t -> trackStyle(t, 1);
         trackActive = t -> trackStyle(t, 2);
@@ -102,6 +106,15 @@ class ScrollbarLook {
     /** A look for the editor's vertical scrollbar. */
     public static function editorLook():ScrollbarLook {
         return new ScrollbarLook(false);
+    }
+
+    /**
+     * A look for the editor's horizontal scrollbar: the vertical one's,
+     * fitted to the band `horizontalScrollbarSize` gives it, thumbs no
+     * thicker than `horizontalSliderSize`.
+     */
+    public static function editorHorizontalLook():ScrollbarLook {
+        return new ScrollbarLook(false, true);
     }
 
     /** A look for the scrollbars of the editor's widgets. */
@@ -196,8 +209,9 @@ class ScrollbarLook {
             return;
         }
         // The editor's band (`verticalScrollbarSize`), thumbs no wider than
-        // `verticalSliderSize`
-        final slider:Float = options.verticalSliderSize;
+        // `verticalSliderSize` (`horizontalScrollbarSize` and
+        // `horizontalSliderSize` for the horizontal scrollbar)
+        final slider:Float = horizontal ? options.horizontalSliderSize : options.verticalSliderSize;
         final normal = Math.max(0, Math.min(KIT_THUMB_WIDTH, slider));
         final active = Math.max(0, Math.min(KIT_THUMB_ACTIVE_WIDTH, slider));
         trackWidths[0] = band;

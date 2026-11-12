@@ -464,6 +464,25 @@ class CityscapeEditor extends Component implements Styled {
         return scrollbar.styles(view.editorScrollbarLook.forEditor(widget, verticalScrollbarWidth(widget)));
     }
 
+    /**
+     * The height of the horizontal scrollbar band (Monaco's
+     * `layoutInfo.horizontalScrollbarHeight`, the
+     * `scrollbar.horizontalScrollbarSize` option).
+     */
+    static function horizontalScrollbarHeight(widget:CodeEditorWidget):Float {
+        final layoutInfo = widget.getLayoutInfo();
+        return layoutInfo != null ? layoutInfo.horizontalScrollbarHeight : 0;
+    }
+
+    /**
+     * The kit horizontal scrollbar in the editor's look, fitted to its band
+     * (`horizontalScrollbarSize`, thumbs no thicker than
+     * `horizontalSliderSize`), like the vertical one (`styledScrollbar`).
+     */
+    static function styledHorizontalScrollbar(scrollbar:Scrollbar, widget:CodeEditorWidget, view:cityscape.view.CityscapeView):Scrollbar {
+        return scrollbar.styles(view.editorHorizontalScrollbarLook.forEditor(widget, horizontalScrollbarHeight(widget)));
+    }
+
     var appliedFontSize:Null<Float> = null;
     var appliedFontFamily:Null<String> = null;
     var appliedWordWrap:Null<String> = null;
@@ -589,6 +608,19 @@ class CityscapeEditor extends Component implements Styled {
             root.child(
                 div().absolute().top0().right0().bottom0().w(px(scrollbarWidth))
                     .child(styledScrollbar(Scrollbar.vertical(view.scrollHandle), widget, view))
+            );
+        }
+        // The horizontal scrollbar, shown by the kit when the content is
+        // wider than the viewport (Monaco's `scrollbar.horizontal` 'auto',
+        // `CityscapeView.isHorizontalScrollbarShown`; the widths are known
+        // at prepaint, after the lines are measured): over the bottom of the
+        // text area, `horizontalScrollbarSize` high, from the content's left
+        // to the vertical scrollbar, which keeps the corner
+        // (horizontalScrollbar.ts `_renderDomNode`, scrollbarState.ts)
+        if (horizontalScrollbarHeight(widget) > 0 && widget.getOption(EditorOption.scrollbar).horizontal != cityscape.base.common.Scrollable.ScrollbarVisibility.Hidden) {
+            root.child(
+                div().absolute().left0().right0().bottom0().h(px(horizontalScrollbarHeight(widget)))
+                    .child(styledHorizontalScrollbar(Scrollbar.horizontal(view.horizontalScrollHandle), widget, view))
             );
         }
         for (overlay in widget.getOverlayWidgets()) {

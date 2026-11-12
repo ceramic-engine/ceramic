@@ -290,6 +290,24 @@ class CityscapeViewElement extends Element {
             });
         }
         else if (hitbox != null) {
+            if (v.isMouseDown()) {
+                // a drag started in the editor (a selection, a drag of the
+                // selection): the moves and the mouse up anywhere in the
+                // window reach the editor, like Monaco's
+                // `GlobalEditorPointerMoveMonitor` (mouseHandler.ts:459);
+                // over the editor its own listeners deliver them
+                final entity = view;
+                window.onMouseEvent(MouseMove, (event, phase, window, cx) -> {
+                    if (phase == Bubble && !hitbox.isHovered(window)) {
+                        entity.read(cx).handleMouseMove(cast event, window, cx);
+                    }
+                });
+                window.onMouseEvent(MouseUp, (event, phase, window, cx) -> {
+                    if (phase == Bubble && !hitbox.isHovered(window)) {
+                        entity.read(cx).handleMouseUp(cast event, window, cx);
+                    }
+                });
+            }
             // the pointer of a link or widget, else Monaco's `mouseStyle`
             // (the drag and drop of the selection sets `default` and `copy`)
             final mouseStyle:String = v.configuration.options.get(EditorOption.mouseStyle);
