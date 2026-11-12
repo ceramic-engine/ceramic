@@ -214,6 +214,10 @@ class ImageView extends View implements Observable {
 
     /**
      * Computes the view size based on the image dimensions and constraints.
+     * With an auto width and height and nothing imposed by the layout mask,
+     * the view takes the natural size of its texture (in points, density
+     * respected). When one axis is given (explicit size or imposed by the
+     * parent), the other one follows the ratio of the texture.
      * Calculates the appropriate scale factor for FIT mode.
      */
     override function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool) {

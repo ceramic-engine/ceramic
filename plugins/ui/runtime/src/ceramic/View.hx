@@ -1083,8 +1083,27 @@ class View extends Layer {
         // Update size from intrinsic bounds
         if (intrinsicWidth > 0 && intrinsicHeight > 0) {
 
-            if (!hasExplicitWidth && !hasExplicitHeight) {
-                // Width and heigh are both implicit
+            if (!hasExplicitWidth && !hasExplicitHeight && computedWidth == 0 && computedHeight == 0) {
+                // Width and height are both implicit and nothing gives a size
+                // to follow: take the natural size of the content, reduced
+                // (keeping its ratio) where the layout mask forbids growing
+                // an axis beyond the parent size.
+
+                var naturalScale = 1.0;
+                if (!layoutMask.canIncreaseWidth()) {
+                    var maxScale = paddedParentWidth > 0 ? paddedParentWidth / intrinsicWidth : 0;
+                    if (maxScale < naturalScale) naturalScale = maxScale;
+                }
+                if (!layoutMask.canIncreaseHeight()) {
+                    var maxScale = paddedParentHeight > 0 ? paddedParentHeight / intrinsicHeight : 0;
+                    if (maxScale < naturalScale) naturalScale = maxScale;
+                }
+
+                computedWidth = intrinsicWidth * naturalScale;
+                computedHeight = intrinsicHeight * naturalScale;
+            }
+            else if (!hasExplicitWidth && !hasExplicitHeight) {
+                // Width and height are both implicit
 
                 var newWidth = computedHeight * intrinsicWidth / intrinsicHeight;
                 if (newWidth > computedWidth && layoutMask.canIncreaseWidth()) {
