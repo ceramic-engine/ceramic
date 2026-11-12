@@ -7,6 +7,7 @@ import cityscape.common.EncodedTokenAttributes;
 import cityscape.common.Languages;
 import cityscape.common.Model.ITextModel;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 
 
 import cityscape.Cityscape;
@@ -230,7 +231,7 @@ private class TokenizedDocumentSupport implements ITokenizationSupport {
             offset += t.text.length;
         }
 
-        return new EncodedTokenizationResult(UInt32Array.fromArray(arr), new TokenizedDocumentState(state2.lineNumber + 1));
+        return new EncodedTokenizationResult(UInt32Arrays.fromInts(arr), new TokenizedDocumentState(state2.lineNumber + 1));
     }
 
     public function createBackgroundTokenizer(textModel:ITextModel, store:IBackgroundTokenizationStore):Null<IBackgroundTokenizer> {

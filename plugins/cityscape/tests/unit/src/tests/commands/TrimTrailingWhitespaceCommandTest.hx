@@ -14,6 +14,7 @@ import cityscape.common.core.Range;
 import cityscape.common.core.Selection;
 import cityscape.common.languages.NullTokenize;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 import testing.TestCase;
 import testing.TestCommand;
 import testing.TestTokenizationSupport;
@@ -149,20 +150,20 @@ class TrimTrailingWhitespaceCommandTest extends TestCase {
             (line, hasEOL, state) -> {
                 switch (line) {
                     case 'const a = `  ': {
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, otherMetadata,
                             10, stringMetadata,
                         ]);
                         return new EncodedTokenizationResult(tokens, state);
                     }
                     case '  a string  ': {
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, stringMetadata,
                         ]);
                         return new EncodedTokenizationResult(tokens, state);
                     }
                     case '`;  ': {
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, stringMetadata,
                             1, otherMetadata
                         ]);

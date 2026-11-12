@@ -79,7 +79,7 @@ class MonospaceLineBreaksComputerTest extends TestCase {
         final lineBreaksComputer = factory.createLineBreaksComputer(fontInfo, tabSize, breakAfter, wrappingIndent, wordBreak, wrappingIndentColumns);
         final previousLineBreakDataClone = previousLineBreakData != null ? new ModelLineProjectionData(null, null, previousLineBreakData.breakOffsets.slice(0), previousLineBreakData.breakOffsetsVisibleColumn.slice(0), previousLineBreakData.wrappedTextIndentLength) : null;
         lineBreaksComputer.addRequest(text, null, previousLineBreakDataClone);
-        return lineBreaksComputer.finalize()[0];
+        return lineBreaksComputer.finalizeResult()[0];
     }
 
     function assertLineBreaks(factory:ILineBreaksComputerFactory, tabSize:Int, breakAfter:Int, annotatedText:String, wrappingIndent:WrappingIndent = WrappingIndent.None, wordBreak:String = 'normal', ?pos:haxe.PosInfos):Null<ModelLineProjectionData> {

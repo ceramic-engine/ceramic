@@ -76,7 +76,7 @@ class LineTokens implements IViewLineTokens {
             offset += d.text.length;
             fullText += d.text;
         }
-        return new LineTokens(UInt32Array.fromArray(tokens), fullText, decoder);
+        return new LineTokens(UInt32Arrays.fromInts(tokens), fullText, decoder);
     }
 
     public function new(tokens:UInt32Array, text:String, decoder:ILanguageIdCodec) {
@@ -125,39 +125,51 @@ class LineTokens implements IViewLineTokens {
         return 0;
     }
 
+    /**
+     * The metadata of a token, 0 past the last one. JavaScript reads
+     * `undefined` past the end of the Uint32Array, which the bit operations
+     * on the metadata read as 0 (`IndentationLineProcessor.getProcessedTokens`
+     * asks for the language of token 0 of an empty slice); a typed array
+     * read out of bounds throws on C# and is undefined on hxcpp.
+     */
+    inline function metadataAt(tokenIndex:Int):Int {
+        final index = (tokenIndex << 1) + 1;
+        return (index >= 0 && index < _tokens.length) ? _tokens[index] : 0;
+    }
+
     public function getMetadata(tokenIndex:Int):Int {
-        final metadata:Int = _tokens[(tokenIndex << 1) + 1];
+        final metadata:Int = metadataAt(tokenIndex);
         return metadata;
     }
 
     public function getLanguageId(tokenIndex:Int):String {
-        final metadata:Int = _tokens[(tokenIndex << 1) + 1];
+        final metadata:Int = metadataAt(tokenIndex);
         final languageId = TokenMetadata.getLanguageId(metadata);
         return _languageIdCodec.decodeLanguageId(languageId);
     }
 
     public function getStandardTokenType(tokenIndex:Int):StandardTokenType {
-        final metadata:Int = _tokens[(tokenIndex << 1) + 1];
+        final metadata:Int = metadataAt(tokenIndex);
         return TokenMetadata.getTokenType(metadata);
     }
 
     public function getForeground(tokenIndex:Int):ColorId {
-        final metadata:Int = _tokens[(tokenIndex << 1) + 1];
+        final metadata:Int = metadataAt(tokenIndex);
         return TokenMetadata.getForeground(metadata);
     }
 
     public function getClassName(tokenIndex:Int):String {
-        final metadata:Int = _tokens[(tokenIndex << 1) + 1];
+        final metadata:Int = metadataAt(tokenIndex);
         return TokenMetadata.getClassNameFromMetadata(metadata);
     }
 
     public function getInlineStyle(tokenIndex:Int, colorMap:Array<String>):String {
-        final metadata:Int = _tokens[(tokenIndex << 1) + 1];
+        final metadata:Int = metadataAt(tokenIndex);
         return TokenMetadata.getInlineStyleFromMetadata(metadata, colorMap);
     }
 
     public function getPresentation(tokenIndex:Int):ITokenPresentation {
-        final metadata:Int = _tokens[(tokenIndex << 1) + 1];
+        final metadata:Int = metadataAt(tokenIndex);
         return TokenMetadata.getPresentationFromMetadata(metadata);
     }
 
@@ -272,7 +284,7 @@ class LineTokens implements IViewLineTokens {
             }
         }
 
-        return new LineTokens(UInt32Array.fromArray(newTokens), text, _languageIdCodec);
+        return new LineTokens(UInt32Arrays.fromInts(newTokens), text, _languageIdCodec);
     }
 
     public function getTokenText(tokenIndex:Int):String {

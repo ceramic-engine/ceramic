@@ -207,7 +207,7 @@ class ViewModelLinesFromProjectedModel implements IViewModelLines {
             final lineInjectedText = mergeViewInjectedText(i + 1, injectedTextQueue.takeWhileLine(i + 1));
             lineBreaksComputer.addRequest(linesContent[i], lineInjectedText, previousLineBreaks != null ? previousLineBreaks[i] : null);
         }
-        final linesBreaks = lineBreaksComputer.finalize();
+        final linesBreaks = lineBreaksComputer.finalizeResult();
 
         final values:Array<Int> = [];
 
@@ -1347,7 +1347,7 @@ private class NullLineBreaksComputer implements ILineBreaksComputer {
         result.push(null);
     }
 
-    public function finalize():Array<Null<ModelLineProjectionData>> {
+    public function finalizeResult():Array<Null<ModelLineProjectionData>> {
         return result;
     }
 

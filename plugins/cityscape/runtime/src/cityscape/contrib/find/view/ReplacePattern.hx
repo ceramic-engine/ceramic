@@ -192,7 +192,9 @@ class ReplacePieceBuilder {
         this._lastCharIndex = toCharIndex;
     }
 
-    public function finalize():ReplacePattern {
+    // Monaco's `finalize()`: named `finalizeResult` because the C# target (Unity)
+    // reserves `finalize` for a `Void->Void` finalizer.
+    public function finalizeResult():ReplacePattern {
         this.emitUnchanged(this._source.length);
         if (this._currentStaticPiece.length != 0) {
             this._result[this._resultLen++] = ReplacePiece.staticValueStatic(this._currentStaticPiece);
@@ -340,7 +342,7 @@ class ReplacePatternParser {
             i++;
         }
 
-        return result.finalize();
+        return result.finalizeResult();
     }
 
 }

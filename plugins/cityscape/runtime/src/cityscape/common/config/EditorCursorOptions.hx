@@ -5,6 +5,7 @@ package cityscape.common.config;
 
 import cityscape.base.common.JsValues;
 import cityscape.common.config.EditorOptions;
+import cityscape.common.config.EditorOptions.AnyEditorOption;
 
 /*
  * The editor options the cursor and its commands read, ported with the
@@ -94,7 +95,7 @@ class EditorCursorOptions {
     /**
      * Registers the cursor options (called by `EditorOptions.init()`).
      */
-    public static function registerSimple(register:(option:IEditorOption<Any>) -> Void):Void {
+    public static function registerSimple(register:(option:AnyEditorOption) -> Void):Void {
         register(cast new EditorStringEnumOption(EditorOption.autoClosingComments, 'autoClosingComments', 'languageDefined', ['always', 'languageDefined', 'beforeWhitespace', 'never']));
         register(cast new EditorBooleanOption(EditorOption.columnSelection, 'columnSelection', false));
         register(cast new EditorBooleanOption(EditorOption.copyWithSyntaxHighlighting, 'copyWithSyntaxHighlighting', true));

@@ -5,6 +5,7 @@ package cityscape.common.config;
 
 import cityscape.base.common.JsValues;
 import cityscape.common.config.EditorOptions;
+import cityscape.common.config.EditorOptions.AnyEditorOption;
 
 /*
  * The `find` editor option (`#region find` of editorOptions.ts), ported
@@ -101,7 +102,7 @@ class EditorFindOptionsRegistration {
     /**
      * Registers the `find` option (called by `EditorOptions.init()`).
      */
-    public static function registerSimple(register:(option:IEditorOption<Any>) -> Void):Void {
+    public static function registerSimple(register:(option:AnyEditorOption) -> Void):Void {
         register(cast new EditorFind());
     }
 

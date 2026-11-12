@@ -41,7 +41,7 @@ import cityscape.common.config.EditorViewOptions;
 import cityscape.common.core.Position;
 import cityscape.common.core.Range;
 import cityscape.common.core.Selection;
-import cityscape.common.cursor.Cursor.CursorsController;
+import cityscape.common.cursor.CursorsController;
 import cityscape.common.languages.LanguageConfigurationRegistry.ILanguageConfigurationService;
 import cityscape.common.viewLayout.ViewLayout;
 import cityscape.common.viewModel.GlyphLanesModel.GlyphMarginLanesModel;
@@ -381,7 +381,7 @@ class ViewModel implements IViewModel {
                         case _:
                     }
                 }
-                final lineBreaks = lineBreaksComputer.finalize();
+                final lineBreaks = lineBreaksComputer.finalizeResult();
                 var lineBreakIndex = 0;
 
                 for (change in changes) {
@@ -1310,7 +1310,7 @@ class ViewModel implements IViewModel {
             final injected = [for (t in modelInjected) if (t.lineNumber == line) t];
             lineBreaksComputer.addRequest(this.model.getLineContent(line), lines.mergeViewInjectedText(line, injected.length > 0 ? injected : null), null);
         }
-        final lineBreaks = lineBreaksComputer.finalize();
+        final lineBreaks = lineBreaksComputer.finalizeResult();
 
         var lineMappingChanged = false;
         for (i in 0...changedLines.length) {

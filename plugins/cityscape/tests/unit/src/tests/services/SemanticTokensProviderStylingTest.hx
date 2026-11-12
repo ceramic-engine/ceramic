@@ -14,6 +14,7 @@ import cityscape.platform.theme.common.Theme.ColorScheme;
 import cityscape.platform.theme.common.ThemeService.IColorTheme;
 import cityscape.platform.theme.common.ThemeService.ITokenStyle;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 import testing.TestCase;
 
 /**
@@ -99,7 +100,7 @@ class SemanticTokensProviderStylingTest extends TestCase {
         };
         final styling = createStyling(languageId, legend);
         final badTokens:SemanticTokens = {
-            data: UInt32Array.fromArray([
+            data: UInt32Arrays.fromInts([
                 0, 13, 16, 1, 0,
                 1, 2, 6, 2, 0,
                 0, 7, 6, 3, 0,
@@ -113,7 +114,7 @@ class SemanticTokensProviderStylingTest extends TestCase {
             ])
         };
         final result = SemanticTokensProviderStyling.toMultilineTokens2(badTokens, styling, languageId);
-        final expected = SparseMultilineTokens.create(1, UInt32Array.fromArray([
+        final expected = SparseMultilineTokens.create(1, UInt32Arrays.fromInts([
             0, 13, 29, fg(1),
             1, 2, 8, fg(2),
             1, 9, 15, fg(3),
@@ -135,7 +136,7 @@ class SemanticTokensProviderStylingTest extends TestCase {
         };
         final styling = createStyling(languageId, legend);
         final badTokens:SemanticTokens = {
-            data: UInt32Array.fromArray([
+            data: UInt32Arrays.fromInts([
                 0, 0, 3, 0, 0,
                 0, 4, 2, 2, 0,
                 0, 2, 3, 8, 0,
@@ -154,7 +155,7 @@ class SemanticTokensProviderStylingTest extends TestCase {
             ])
         };
         final result = SemanticTokensProviderStyling.toMultilineTokens2(badTokens, styling, languageId);
-        final expected = SparseMultilineTokens.create(1, UInt32Array.fromArray([
+        final expected = SparseMultilineTokens.create(1, UInt32Arrays.fromInts([
             0, 4, 6, fg(1),
             0, 6, 9, fg(2),
             0, 9, 10, fg(3),
@@ -171,14 +172,14 @@ class SemanticTokensProviderStylingTest extends TestCase {
         };
         final styling = createStyling(languageId, legend);
         final badTokens:SemanticTokens = {
-            data: UInt32Array.fromArray([
+            data: UInt32Arrays.fromInts([
                 0, 11, 1, 1, 0,
                 0, 4, 1, 1, 0,
                 0, -7 /* 4294967289 */, 1, 1, 0
             ])
         };
         final result = SemanticTokensProviderStyling.toMultilineTokens2(badTokens, styling, languageId);
-        final expected = SparseMultilineTokens.create(1, UInt32Array.fromArray([
+        final expected = SparseMultilineTokens.create(1, UInt32Arrays.fromInts([
             0, 11, 12, fg(1),
             0, 15, 16, fg(1),
         ]));

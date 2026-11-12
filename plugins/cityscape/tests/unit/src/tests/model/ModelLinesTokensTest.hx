@@ -69,7 +69,7 @@ private class ManualTokenizationSupport implements ITokenizationSupport {
         final b = new ContiguousMultilineTokensBuilder();
         b.add(lineNumber, tokens);
         for (s in stores.copy()) {
-            s.setTokens(b.finalize());
+            s.setTokens(b.finalizeResult());
         }
     }
 

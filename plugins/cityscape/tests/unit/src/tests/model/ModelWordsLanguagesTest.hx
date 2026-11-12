@@ -11,6 +11,7 @@ import cityscape.common.Languages;
 import cityscape.common.core.Position;
 import cityscape.common.languages.NullTokenize;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 import testing.TestCase;
 import testing.TestTokenizationSupport;
 import tests.TestTextModel;
@@ -49,7 +50,7 @@ class ModelWordsLanguagesTest extends TestCase {
                     }
                     prevLanguageId = languageId;
                 }
-                return new EncodedTokenizationResult(UInt32Array.fromArray(tokensArr), state);
+                return new EncodedTokenizationResult(UInt32Arrays.fromInts(tokensArr), state);
             }
         )));
         return languageId;

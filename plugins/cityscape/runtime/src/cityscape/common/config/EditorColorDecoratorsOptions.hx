@@ -4,6 +4,7 @@
 package cityscape.common.config;
 
 import cityscape.common.config.EditorOptions;
+import cityscape.common.config.EditorOptions.AnyEditorOption;
 
 /**
  * `'clickAndHover'`, `'hover'` or `'click'`: what opens the color picker
@@ -18,7 +19,7 @@ typedef EditorColorDecoratorsActivatedOn = String;
  */
 class EditorColorDecoratorsOptionsRegistration {
 
-    public static function registerSimple(register:(option:IEditorOption<Any>) -> Void):Void {
+    public static function registerSimple(register:(option:AnyEditorOption) -> Void):Void {
         register(cast new EditorStringEnumOption(EditorOption.colorDecoratorsActivatedOn, 'colorDecoratorsActivatedOn', 'clickAndHover', ['clickAndHover', 'hover', 'click']));
         register(cast new EditorIntOption(EditorOption.colorDecoratorsLimit, 'colorDecoratorsLimit', 500, 1, 1000000));
         register(cast new EditorBooleanOption(EditorOption.defaultColorDecorators, 'defaultColorDecorators', false));

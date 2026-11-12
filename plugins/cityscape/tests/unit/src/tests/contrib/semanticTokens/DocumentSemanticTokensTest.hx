@@ -14,6 +14,7 @@ import cityscape.contrib.semanticTokens.common.GetSemanticTokens;
 import cityscape.contrib.semanticTokens.view.DocumentSemanticTokens;
 import haxe.extern.EitherType;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 import testing.TestCase;
 
 typedef SemanticTokensResolve = (result:Null<EitherType<SemanticTokens, SemanticTokensEdits>>) -> Void;
@@ -141,7 +142,7 @@ class DocumentSemanticTokensTest extends TestCase {
                 final tokens:SemanticTokens = {
                     resultId: '1',
                     // 4294967293 is -3 as a 32 bit integer
-                    data: UInt32Array.fromArray([-3, 0, 7, 16, 0, 1, 4, 3, 11, 1])
+                    data: UInt32Arrays.fromInts([-3, 0, 7, 16, 0, 1, 4, 3, 11, 1])
                 };
                 lastResult = tokens;
                 lastResultId = '1';
@@ -154,7 +155,7 @@ class DocumentSemanticTokensTest extends TestCase {
                         // 4294967276 is -20 as a 32 bit integer
                         start: -20,
                         deleteCount: 0,
-                        data: UInt32Array.fromArray([2, 0, 3, 11, 0])
+                        data: UInt32Arrays.fromInts([2, 0, 3, 11, 0])
                     }]
                 };
                 lastResult = edits;
@@ -219,11 +220,11 @@ class DocumentSemanticTokensTest extends TestCase {
             callCount++;
             // For a secondary request return a different value
             if (lastResultId != null) {
-                final tokens:SemanticTokens = {data: UInt32Array.fromArray([2, 1, 1, 1, 1, 0, 2, 1, 1, 1])};
+                final tokens:SemanticTokens = {data: UInt32Arrays.fromInts([2, 1, 1, 1, 1, 0, 2, 1, 1, 1])};
                 resolve(tokens);
                 return;
             }
-            final tokens:SemanticTokens = {resultId: '1', data: UInt32Array.fromArray([0, 1, 1, 1, 1, 0, 2, 1, 1, 1])};
+            final tokens:SemanticTokens = {resultId: '1', data: UInt32Arrays.fromInts([0, 1, 1, 1, 1, 0, 2, 1, 1, 1])};
             resolve(tokens);
         })));
         disposables.push(context.languageFeaturesService.documentSemanticTokensProvider.register('testMode2', new FnProvider({tokenTypes: ['class2'], tokenModifiers: []}, (model, lastResultId, resolve) -> {

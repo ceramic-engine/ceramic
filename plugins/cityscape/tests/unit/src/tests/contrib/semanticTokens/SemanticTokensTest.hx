@@ -18,6 +18,7 @@ import cityscape.standalone.common.VSCodeTheme;
 import cityscape.workbench.services.themes.common.ColorThemeData;
 import haxe.extern.EitherType;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 import testing.TestCase;
 import testing.TestCodeEditor;
 
@@ -38,7 +39,7 @@ private class DataProvider implements DocumentSemanticTokensProvider {
 
     public function provideDocumentSemanticTokens(model:ITextModel, lastResultId:Null<String>, token:CancellationToken, resolve:(result:Null<EitherType<SemanticTokens, SemanticTokensEdits>>) -> Void):Void {
         calls++;
-        final tokens:SemanticTokens = {data: UInt32Array.fromArray(data)};
+        final tokens:SemanticTokens = {data: UInt32Arrays.fromInts(data)};
         resolve(tokens);
     }
 
@@ -61,7 +62,7 @@ private class RangeProvider implements DocumentRangeSemanticTokensProvider {
 
     public function provideDocumentRangeSemanticTokens(model:ITextModel, range:Range, token:CancellationToken, resolve:(result:Null<SemanticTokens>) -> Void):Void {
         ranges.push(range);
-        resolve({data: UInt32Array.fromArray(data)});
+        resolve({data: UInt32Arrays.fromInts(data)});
     }
 }
 

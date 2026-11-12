@@ -752,6 +752,15 @@ class ComputeOptionsMemory {
 
 }
 
+/**
+ * An option of the registry, whatever its value type. On C# (Unity) a
+ * generic interface instantiation cannot be stored as `IEditorOption<Any>`
+ * (`IEditorOption<string>` is not an `IEditorOption<object>` for the CLR),
+ * so the registry holds `Dynamic` entries there and the readers go through
+ * reflection (the registry is only walked when options are validated).
+ */
+typedef AnyEditorOption = #if cs Dynamic #else IEditorOption<Any> #end;
+
 interface IEditorOption<V> {
     final id:Int;
     final name:String;
@@ -2759,15 +2768,15 @@ class EditorOptions {
         return _fontDefaults;
     }
 
-    static var _registry:Null<Array<IEditorOption<Any>>> = null;
+    static var _registry:Null<Array<AnyEditorOption>> = null;
 
     /**
      * The registered options, indexed by id (null for the ids not ported
      * yet).
      * @internal
      */
-    public static var editorOptionsRegistry(get, never):Array<IEditorOption<Any>>;
-    static function get_editorOptionsRegistry():Array<IEditorOption<Any>> {
+    public static var editorOptionsRegistry(get, never):Array<AnyEditorOption>;
+    static function get_editorOptionsRegistry():Array<AnyEditorOption> {
         if (_registry == null) {
             init();
         }
@@ -2777,6 +2786,13 @@ class EditorOptions {
     static function register<V>(option:IEditorOption<V>):IEditorOption<V> {
         _registry[option.id] = cast option;
         return option;
+    }
+
+    /**
+     * Registers an option of any value type (the option files' `registerSimple`).
+     */
+    static function registerAny(option:AnyEditorOption):Void {
+        _registry[option.id] = option;
     }
 
     static var _acceptSuggestionOnEnter:IEditorOption<String>;
@@ -3455,16 +3471,16 @@ class EditorOptions {
         _wordWrapColumn = register(new EditorIntOption(EditorOption.wordWrapColumn, 'wordWrapColumn', 80, 1, EditorOptions.MAX_SAFE_SMALL_INTEGER));
         _wrappingIndent = register(new WrappingIndentOption());
         // The view options (EditorViewOptions.hx), registered with the view
-        EditorViewOptions.registerSimple(o -> register(o));
+        EditorViewOptions.registerSimple(registerAny);
         // The cursor options (EditorCursorOptions.hx), registered with the cursor
-        EditorCursorOptions.registerSimple(o -> register(o));
+        EditorCursorOptions.registerSimple(registerAny);
         // The find option (EditorFindOptions.hx), registered with the find contribution
-        cityscape.common.config.EditorFindOptions.EditorFindOptionsRegistration.registerSimple(o -> register(o));
+        cityscape.common.config.EditorFindOptions.EditorFindOptionsRegistration.registerSimple(registerAny);
         // The comments option (EditorCommentsOptions.hx), registered with the comment contribution
-        cityscape.common.config.EditorCommentsOptions.EditorCommentsOptionsRegistration.registerSimple(o -> register(o));
+        cityscape.common.config.EditorCommentsOptions.EditorCommentsOptionsRegistration.registerSimple(registerAny);
         // The options of suggest, code actions (EditorLanguageFeatureOptions.hx)
-        cityscape.common.config.EditorLanguageFeatureOptions.EditorLanguageFeatureOptionsRegistration.registerSimple(o -> register(o));
-        EditorViewOptions.registerComputed(o -> register(o));
+        cityscape.common.config.EditorLanguageFeatureOptions.EditorLanguageFeatureOptionsRegistration.registerSimple(registerAny);
+        EditorViewOptions.registerComputed(registerAny);
     }
 
     /**
@@ -3546,7 +3562,9 @@ class EditorOptions {
                 didChange = true;
             }
         }
-        return new ApplyUpdateResult(value, didChange);
+        // The type argument is explicit: inferred from `value:Null<T>`, C# got `ApplyUpdateResult<object>`
+        final merged:T = value;
+        return new ApplyUpdateResult<T>(merged, didChange);
     }
 
     /**

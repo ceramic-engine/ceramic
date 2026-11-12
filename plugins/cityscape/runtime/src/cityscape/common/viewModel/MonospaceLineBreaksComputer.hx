@@ -80,7 +80,7 @@ class MonospaceLineBreaksComputer implements ILineBreaksComputer {
         previousBreakingData.push(previousLineBreakData);
     }
 
-    public function finalize():Array<Null<ModelLineProjectionData>> {
+    public function finalizeResult():Array<Null<ModelLineProjectionData>> {
         final columnsForFullWidthChar = fontInfo.typicalFullwidthCharacterWidth / fontInfo.typicalHalfwidthCharacterWidth;
         final result:Array<Null<ModelLineProjectionData>> = [];
         for (i in 0...requests.length) {

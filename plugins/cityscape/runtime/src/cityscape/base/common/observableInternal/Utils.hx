@@ -74,7 +74,8 @@ class Utils {
     }
 
     public static function derivedObservableWithCache<T>(computeFn:(reader:IReader, lastValue:Null<T>) -> T):IObservable<T> {
-        var lastValue:Null<T> = null;
+        // Typed `T`, not `Null<T>`: a captured `Null<T>` is read as `object` on C#
+        var lastValue:T = null;
         return Derived.derived(reader -> {
             lastValue = computeFn(reader, lastValue);
             return lastValue;

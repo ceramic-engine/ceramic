@@ -115,22 +115,24 @@ class IntervalTree1GeneratedTest extends TestCase {
             state.oracleNodes[nodeId] = state.oracle.insert(new Interval(op.begin, op.end));
         }
         else if (op.type == 'delete') {
-            state.tree.delete(state.treeNodes[op.id]);
-            state.oracle.delete(state.oracleNodes[op.id]);
+            final id:Int = op.id; // an Int index: `Null<Int>` cannot index an array on C#
+            state.tree.delete(state.treeNodes[id]);
+            state.oracle.delete(state.oracleNodes[id]);
 
-            state.treeNodes[op.id] = null;
-            state.oracleNodes[op.id] = null;
+            state.treeNodes[id] = null;
+            state.oracleNodes[id] = null;
         }
         else if (op.type == 'change') {
+            final id:Int = op.id;
 
-            state.tree.delete(state.treeNodes[op.id]);
-            state.treeNodes[op.id].reset(0, op.begin, op.end, null);
-            state.tree.insert(state.treeNodes[op.id]);
+            state.tree.delete(state.treeNodes[id]);
+            state.treeNodes[id].reset(0, op.begin, op.end, null);
+            state.tree.insert(state.treeNodes[id]);
 
-            state.oracle.delete(state.oracleNodes[op.id]);
-            state.oracleNodes[op.id].start = op.begin;
-            state.oracleNodes[op.id].end = op.end;
-            state.oracle.insert(state.oracleNodes[op.id]);
+            state.oracle.delete(state.oracleNodes[id]);
+            state.oracleNodes[id].start = op.begin;
+            state.oracleNodes[id].end = op.end;
+            state.oracle.insert(state.oracleNodes[id]);
 
         }
         else {

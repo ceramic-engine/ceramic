@@ -121,7 +121,8 @@ class SnippetParserTest extends TestCase {
         else {
             marker = (input : Array<Marker>).copy();
         }
-        final ctors = ctors.toArray();
+        // A typed copy: `Rest.toArray()` of class values is an `Array<System.Type>` on C#
+        final ctors:Array<Class<Dynamic>> = [for (c in ctors) c];
         final label = Std.isOfType(input, std.String) ? (input : std.String) : 'markers';
         while (marker.length > 0) {
             final m = marker.pop();

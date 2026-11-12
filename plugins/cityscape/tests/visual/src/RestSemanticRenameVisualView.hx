@@ -21,6 +21,7 @@ import glaze.Render;
 import glaze.Window;
 import haxe.extern.EitherType;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 
 import glaze.Prelude.*;
 
@@ -88,7 +89,7 @@ private class SceneSemanticTokensProvider implements DocumentSemanticTokensProvi
                 pos = matched.pos + matched.len;
             }
         }
-        final tokens:SemanticTokens = {data: UInt32Array.fromArray(data)};
+        final tokens:SemanticTokens = {data: UInt32Arrays.fromInts(data)};
         resolve(tokens);
     }
 

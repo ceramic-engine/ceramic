@@ -47,7 +47,8 @@ class Filters {
      * filter.
      */
     public static function or(...filter:IFilter):IFilter {
-        final filters = filter.toArray();
+        // A typed copy: `Rest.toArray()` of a function type is an `Array<Function>` on C#
+        final filters:Array<IFilter> = [for (f in filter) f];
         return function(word:String, wordToMatchAgainst:String):Null<Array<IMatch>> {
             for (i in 0...filters.length) {
                 final match = filters[i](word, wordToMatchAgainst);

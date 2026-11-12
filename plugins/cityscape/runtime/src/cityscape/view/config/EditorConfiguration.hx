@@ -205,7 +205,15 @@ class EditorOptionsUtil {
                 continue;
             }
             if (Reflect.hasField(update, editorOption.name)) {
+                #if cs
+                // The raw values can have any type (an invalid input is kept and
+                // rejected later by validate), and on C# a reflection call of the
+                // generic `applyUpdate(value:Null<V>, update:V)` casts them to V
+                // and throws. Every option's applyUpdate is EditorOptions.applyUpdate.
+                final result = EditorOptions.applyUpdate((Reflect.field(options, editorOption.name) : Any), (Reflect.field(update, editorOption.name) : Any));
+                #else
                 final result = editorOption.applyUpdate(Reflect.field(options, editorOption.name), Reflect.field(update, editorOption.name));
+                #end
                 Reflect.setField(options, editorOption.name, result.newValue);
                 changed = changed || result.didChange;
             }

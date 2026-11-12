@@ -212,7 +212,10 @@ class RegExp {
             }
             return null;
         }
-        if (!ereg.matchSub(str, start, str.length - start)) {
+        // On C# without the length: `Regex.Match(s, start, length)` matches in the
+        // substring (lookbehinds and `^` see nothing before `start`), `Match(s, start)`
+        // sees the whole string like JavaScript's `lastIndex`
+        if (!#if cs ereg.matchSub(str, start) #else ereg.matchSub(str, start, str.length - start) #end) {
             if (useLastIndex) {
                 lastIndex = 0;
             }
@@ -320,11 +323,37 @@ abstract RegExpExecArray(RegExpExecArrayImpl) {
 #if !js
 /**
  * Translates a JavaScript regular expression source into a PCRE2 pattern
- * with the same meaning (see `RegExp`).
+ * with the same meaning (see `RegExp`). On C# (Unity) the target is .NET's
+ * `Regex` (Haxe's `EReg` there): same syntax except the hexadecimal escapes
+ * (`\uXXXX`, no `\x{...}`), and it matches UTF-16 code units, so a code
+ * point above U+FFFF is written as its surrogate pair and the top of a
+ * range is U+FFFF.
  */
 private class JsToPcre {
 
     static inline final WORD = 'A-Za-z0-9_';
+
+    #if cs
+
+    static inline final NOT_WORD = '\\u0000-\\u002F\\u003A-\\u0040\\u005B-\\u005E\\u0060\\u007B-\\uFFFF';
+
+    static inline final DIGIT = '0-9';
+
+    static inline final NOT_DIGIT = '\\u0000-\\u002F\\u003A-\\uFFFF';
+
+    static inline final SPACE = '\\u0009-\\u000D\\u0020\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF';
+
+    static inline final NOT_SPACE = '\\u0000-\\u0008\\u000E-\\u001F\\u0021-\\u009F\\u00A1-\\u167F\\u1681-\\u1FFF\\u200B-\\u2027\\u202A-\\u202E\\u2030-\\u205E\\u2060-\\u2FFF\\u3001-\\uFEFE\\uFF00-\\uFFFF';
+
+    static inline final LINE_TERMINATORS = '\\n\\r\\u2028\\u2029';
+
+    /** Any character (a code unit on .NET) */
+    static inline final ANY = '[\\u0000-\\uFFFF]';
+
+    /** A code point above U+FFFF: its surrogate pair */
+    static inline final SURROGATE_PAIR = '[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]';
+
+    #else
 
     static inline final NOT_WORD = '\\x{0}-\\x{2F}\\x{3A}-\\x{40}\\x{5B}-\\x{5E}\\x{60}\\x{7B}-\\x{10FFFF}';
 
@@ -337,6 +366,11 @@ private class JsToPcre {
     static inline final NOT_SPACE = '\\x{0}-\\x{8}\\x{E}-\\x{1F}\\x{21}-\\x{9F}\\x{A1}-\\x{167F}\\x{1681}-\\x{1FFF}\\x{200B}-\\x{2027}\\x{202A}-\\x{202E}\\x{2030}-\\x{205E}\\x{2060}-\\x{2FFF}\\x{3001}-\\x{FEFE}\\x{FF00}-\\x{10FFFF}';
 
     static inline final LINE_TERMINATORS = '\\n\\r\\x{2028}\\x{2029}';
+
+    /** Any character (a code point) */
+    static inline final ANY = '[\\x{0}-\\x{10FFFF}]';
+
+    #end
 
     static inline final WORD_BOUNDARY = '(?:(?<=[A-Za-z0-9_])(?![A-Za-z0-9_])|(?<![A-Za-z0-9_])(?=[A-Za-z0-9_]))';
 
@@ -355,6 +389,11 @@ private class JsToPcre {
     final out:StringBuf = new StringBuf();
 
     public var groupCount(default, null):Int = 0;
+
+    #if cs
+    /** Index of each named group: .NET numbers the named groups after the unnamed ones, so they are written unnamed */
+    final groupNames:Map<String, Int> = new Map();
+    #end
 
     public function new(src:String, multiline:Bool, dotAll:Bool, unicode:Bool) {
         this.src = src;
@@ -377,7 +416,13 @@ private class JsToPcre {
                     translateClass();
                 case '.'.code:
                     pos++;
-                    out.add(dotAll ? '[\\x{0}-\\x{10FFFF}]' : '[^' + LINE_TERMINATORS + ']');
+                    #if cs
+                    // With the `u` flag a `.` matches a whole code point: a surrogate pair first
+                    out.add(unicode ? (dotAll ? '(?:' + SURROGATE_PAIR + '|' + ANY + ')' : '(?:' + SURROGATE_PAIR + '|[^' + LINE_TERMINATORS + '])')
+                        : (dotAll ? ANY : '[^' + LINE_TERMINATORS + ']'));
+                    #else
+                    out.add(dotAll ? ANY : '[^' + LINE_TERMINATORS + ']');
+                    #end
                 case '^'.code:
                     pos++;
                     out.add(multiline ? '(?<![^' + LINE_TERMINATORS + '])' : '\\A');
@@ -392,6 +437,15 @@ private class JsToPcre {
                             if (d != '='.code && d != '!'.code) {
                                 // Named group
                                 groupCount++;
+                                #if cs
+                                // Written as a plain group, numbered in order like JavaScript
+                                final end = src.indexOf('>', pos + 2);
+                                if (end == -1) {
+                                    throw 'RegExp: invalid group name';
+                                }
+                                groupNames.set(src.substring(pos + 2, end), groupCount);
+                                pos = end + 1;
+                                #end
                             }
                         }
                     }
@@ -478,8 +532,23 @@ private class JsToPcre {
     }
 
     static function hexEscape(value:Int):String {
+        #if cs
+        if (value > 0xFFFF) {
+            // .NET matches UTF-16 code units: the surrogate pair
+            final v = value - 0x10000;
+            return hex4(0xD800 + (v >> 10)) + hex4(0xDC00 + (v & 0x3FF));
+        }
+        return hex4(value);
+        #else
         return '\\x{' + StringTools.hex(value) + '}';
+        #end
     }
+
+    #if cs
+    static function hex4(value:Int):String {
+        return '\\u' + StringTools.hex(value, 4);
+    }
+    #end
 
     /**
      * Translates the escape at `pos` (on the backslash), outside or inside a
@@ -513,13 +582,13 @@ private class JsToPcre {
                 out.add(inClass ? NOT_SPACE : '[^' + SPACE + ']');
             case 'b'.code:
                 pos += 2;
-                out.add(inClass ? '\\x{8}' : WORD_BOUNDARY);
+                out.add(inClass ? hexEscape(8) : WORD_BOUNDARY);
             case 'B'.code if (!inClass):
                 pos += 2;
                 out.add(NOT_WORD_BOUNDARY);
             case 'v'.code:
                 pos += 2;
-                out.add('\\x{B}');
+                out.add(hexEscape(0xB));
             case 'u'.code:
                 final value = readCodePointEscape();
                 if (value == -1) {
@@ -532,7 +601,7 @@ private class JsToPcre {
                 }
             case 'x'.code:
                 if (pos + 3 < len && isHex(StringTools.fastCodeAt(src, pos + 2)) && isHex(StringTools.fastCodeAt(src, pos + 3))) {
-                    out.add('\\x{' + src.substr(pos + 2, 2) + '}');
+                    out.add(hexEscape(Std.parseInt('0x' + src.substr(pos + 2, 2))));
                     pos += 4;
                 }
                 else {
@@ -541,7 +610,7 @@ private class JsToPcre {
                 }
             case '0'.code if (pos + 2 >= len || !(StringTools.fastCodeAt(src, pos + 2) >= '0'.code && StringTools.fastCodeAt(src, pos + 2) <= '9'.code)):
                 pos += 2;
-                out.add('\\x{0}');
+                out.add(hexEscape(0));
             case 'c'.code:
                 if (pos + 2 < len) {
                     final l = StringTools.fastCodeAt(src, pos + 2);
@@ -563,9 +632,28 @@ private class JsToPcre {
                 if (eq != -1) {
                     name = name.substr(eq + 1);
                 }
+                #if cs
+                // .NET has no script properties: the block of the same name (`\p{IsGreek}`),
+                // the general categories (one or two letters) keep their name
+                if (name.length > 2) {
+                    name = 'Is' + name;
+                }
+                #end
                 out.add('\\' + String.fromCharCode(c) + '{' + name + '}');
                 pos = end + 1;
             case 'k'.code:
+                #if cs
+                // Named backreference: the number of the group (written unnamed)
+                if (pos + 2 < len && StringTools.fastCodeAt(src, pos + 2) == '<'.code) {
+                    final end = src.indexOf('>', pos + 3);
+                    final name = end == -1 ? null : src.substring(pos + 3, end);
+                    if (name != null && groupNames.exists(name)) {
+                        pos = end + 1;
+                        out.add('\\' + groupNames.get(name));
+                        return;
+                    }
+                }
+                #end
                 // Named backreference, same syntax
                 pos += 2;
                 out.add('\\k');
@@ -605,7 +693,7 @@ private class JsToPcre {
         if (pos < len && StringTools.fastCodeAt(src, pos) == ']'.code) {
             // `[]` matches nothing, `[^]` any character
             pos++;
-            out.add(negated ? '[\\x{0}-\\x{10FFFF}]' : '(?!)');
+            out.add(negated ? #if cs (unicode ? '(?:' + SURROGATE_PAIR + '|' + ANY + ')' : ANY) #else ANY #end : '(?!)');
             return;
         }
         out.add(negated ? '[^' : '[');

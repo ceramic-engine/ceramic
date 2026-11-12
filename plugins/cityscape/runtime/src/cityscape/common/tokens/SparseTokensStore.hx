@@ -230,7 +230,7 @@ class SparseTokensStore {
             aIndex++;
         }
 
-        return new LineTokens(UInt32Array.fromArray(result), aTokens.getLineContent(), _languageIdCodec);
+        return new LineTokens(UInt32Arrays.fromInts(result), aTokens.getLineContent(), _languageIdCodec);
     }
 
     static function _findFirstPieceWithLine(pieces:Array<SparseMultilineTokens>, lineNumber:Int):Int {

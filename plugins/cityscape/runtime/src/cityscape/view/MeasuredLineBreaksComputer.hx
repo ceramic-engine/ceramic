@@ -74,7 +74,7 @@ private class MeasuredLineBreaksComputer implements ILineBreaksComputer {
         injectedTexts.push(injectedText);
     }
 
-    public function finalize():Array<Null<ModelLineProjectionData>> {
+    public function finalizeResult():Array<Null<ModelLineProjectionData>> {
         return createLineBreaks(requests, fontInfo, tabSize, wrappingColumn, wrappingIndent, wordBreak, injectedTexts);
     }
 

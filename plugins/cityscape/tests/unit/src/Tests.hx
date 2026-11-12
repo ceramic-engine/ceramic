@@ -66,6 +66,7 @@ class Tests {
         runner.add(new tests.model.ModelModesTest());
         runner.add(new tests.model.ModelModesTest.ModelModes2Test());
         runner.add(new tests.model.TokensStoreTest());
+        runner.add(new tests.model.LineTokensBoundsTest());
         runner.add(new tests.model.TokensStoreModelTest());
         runner.add(new tests.model.TextModelWithTokensTest());
         runner.add(new tests.model.TextModelWithTokensBracketsTest());
@@ -199,6 +200,8 @@ class Tests {
 
         // Language features (step 4, cs4-lang)
         runner.add(new tests.base.FiltersTest());
+        runner.add(new tests.base.CallbackIterableTest());
+        runner.add(new tests.base.ErrorsTest());
         runner.add(new tests.contrib.snippet.SnippetParserTest());
         runner.add(new tests.contrib.suggest.CompletionModelTest());
         runner.add(new tests.contrib.suggest.SuggestTest());

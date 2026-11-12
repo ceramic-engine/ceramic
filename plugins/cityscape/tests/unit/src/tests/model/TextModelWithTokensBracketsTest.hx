@@ -13,6 +13,7 @@ import cityscape.common.core.Range;
 import cityscape.common.languages.LanguageConfiguration.CharacterPair;
 import cityscape.common.languages.NullTokenize;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 import testing.TestCase;
 import tests.TestTextModel;
 import testing.TestTokenizationSupport;
@@ -376,7 +377,7 @@ class TextModelWithTokensBracketsTest extends TestCase {
             (line, hasEOL, state) -> {
                 switch (line) {
                     case 'function f() {':
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, otherMetadata1,
                             8, otherMetadata1,
                             9, otherMetadata1,
@@ -387,7 +388,7 @@ class TextModelWithTokensBracketsTest extends TestCase {
                         ]);
                         return new EncodedTokenizationResult(tokens, state);
                     case '  return <p>{true}</p>;':
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, otherMetadata1,
                             2, otherMetadata1,
                             8, otherMetadata1,
@@ -404,7 +405,7 @@ class TextModelWithTokensBracketsTest extends TestCase {
                         ]);
                         return new EncodedTokenizationResult(tokens, state);
                     case '}':
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, otherMetadata1
                         ]);
                         return new EncodedTokenizationResult(tokens, state);
@@ -477,12 +478,12 @@ class TextModelWithTokensBracketsTest extends TestCase {
             (line, hasEOL, state) -> {
                 switch (line) {
                     case 'function hello() {':
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, otherMetadata
                         ]);
                         return new EncodedTokenizationResult(tokens, state);
                     case "    console.log(`${100}`);":
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, otherMetadata,
                             16, stringMetadata,
                             19, otherMetadata,
@@ -491,7 +492,7 @@ class TextModelWithTokensBracketsTest extends TestCase {
                         ]);
                         return new EncodedTokenizationResult(tokens, state);
                     case '}':
-                        final tokens = UInt32Array.fromArray([
+                        final tokens = UInt32Arrays.fromInts([
                             0, otherMetadata
                         ]);
                         return new EncodedTokenizationResult(tokens, state);

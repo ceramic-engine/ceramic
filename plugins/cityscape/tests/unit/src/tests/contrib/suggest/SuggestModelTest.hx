@@ -89,7 +89,7 @@ class SuggestModelTest extends TestCase {
     }
 
     function assertEvent<E>(event:Event<E>, action:() -> Void, check:(e:E) -> Void, oracle:SuggestModel, ?pos:haxe.PosInfos):Void {
-        var received:Null<E> = null;
+        var received:E = null; // not Null<E>: a captured Null<E> is read as object on C#
         var fired = false;
         var sub:Null<cityscape.base.common.Lifecycle.IDisposable> = null;
         sub = event(e -> {

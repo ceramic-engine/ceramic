@@ -388,4 +388,43 @@ class ContextKeyExprTest extends TestCase {
         ));
     }
 
+    /**
+     * Cityscape: the registry of `RawContextKey` reads `metaOrHide` by type
+     * (a hidden key, a description or a meta object). On C# (Unity) the
+     * comparison of an `Any` with `true` is a reference comparison of boxed
+     * values, so a hidden key was registered with `true` cast to a string
+     * and every editor crashed at its first context key.
+     */
+    function testRawContextKeyRegistryReadsMetaOrHideByType() {
+        final hidden = new RawContextKey<Bool>('u8TestHiddenKey', false, true);
+        final described = new RawContextKey<Bool>('u8TestDescribedKey', true, 'A described key');
+        final meta = new RawContextKey<String>('u8TestMetaKey', 'x', {type: 'custom', description: 'From meta'});
+        final bare = new RawContextKey<Int>('u8TestBareKey', 3);
+        final all = RawContextKey.all();
+        var hiddenFound = false;
+        var describedInfo = null;
+        var metaInfo = null;
+        var bareInfo = null;
+        for (info in all) {
+            if (info.key == 'u8TestHiddenKey') hiddenFound = true;
+            if (info.key == 'u8TestDescribedKey') describedInfo = info;
+            if (info.key == 'u8TestMetaKey') metaInfo = info;
+            if (info.key == 'u8TestBareKey') bareInfo = info;
+        }
+        assertFalse(hiddenFound);
+        assertTrue(describedInfo != null);
+        assertEquals('A described key', describedInfo.description);
+        assertEquals('boolean', describedInfo.type);
+        assertTrue(metaInfo != null);
+        assertEquals('custom', metaInfo.type);
+        assertEquals('From meta', metaInfo.description);
+        assertTrue(bareInfo != null);
+        assertEquals(null, bareInfo.description);
+        assertEquals('number', bareInfo.type);
+        assertEquals('u8TestHiddenKey', hidden.key);
+        assertEquals('u8TestDescribedKey', described.key);
+        assertEquals('u8TestMetaKey', meta.key);
+        assertEquals('u8TestBareKey', bare.key);
+    }
+
 }

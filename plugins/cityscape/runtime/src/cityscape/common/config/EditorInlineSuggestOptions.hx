@@ -5,6 +5,7 @@ package cityscape.common.config;
 
 import cityscape.base.common.JsValues;
 import cityscape.common.config.EditorOptions;
+import cityscape.common.config.EditorOptions.AnyEditorOption;
 
 /*
  * The `inlineSuggest` editor option (`#region inlineSuggest` of
@@ -97,7 +98,7 @@ class EditorInlineSuggestOptionsRegistration {
     /**
      * Registers the `inlineSuggest` option (called by `EditorOptions.init()`).
      */
-    public static function registerSimple(register:(option:IEditorOption<Any>) -> Void):Void {
+    public static function registerSimple(register:(option:AnyEditorOption) -> Void):Void {
         register(cast new InlineEditorSuggest());
     }
 

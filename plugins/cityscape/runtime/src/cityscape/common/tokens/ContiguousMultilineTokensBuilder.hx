@@ -29,7 +29,9 @@ class ContiguousMultilineTokensBuilder {
         _tokens.push(new ContiguousMultilineTokens(lineNumber, [lineTokens]));
     }
 
-    public function finalize():Array<ContiguousMultilineTokens> {
+    // Monaco's `finalize()`: named `finalizeResult` because the C# target (Unity)
+    // reserves `finalize` for a `Void->Void` finalizer.
+    public function finalizeResult():Array<ContiguousMultilineTokens> {
         return _tokens;
     }
 

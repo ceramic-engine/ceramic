@@ -198,7 +198,7 @@ class ModelLineProjections {
             newTokens.push(LineTokens.defaultTokenMetadata);
         }
 
-        return new LineTokens(haxe.io.UInt32Array.fromArray(newTokens), result.toString(), lineTokens.languageIdCodec);
+        return new LineTokens(cityscape.common.tokens.UInt32Arrays.fromInts(newTokens), result.toString(), lineTokens.languageIdCodec);
     }
 
 }

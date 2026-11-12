@@ -6,6 +6,7 @@ package tests.services;
 import cityscape.common.services.SemanticTokensDto;
 import haxe.io.Bytes;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 import testing.TestCase;
 
 /**
@@ -46,7 +47,7 @@ class SemanticTokensDtoTest extends TestCase {
         doTestRoundTrip({
             id: 12,
             type: 'full',
-            data: UInt32Array.fromArray([(1 << 24) + (2 << 16) + (3 << 8) + 4])
+            data: UInt32Arrays.fromInts([(1 << 24) + (2 << 16) + (3 << 8) + 4])
         });
     }
 
@@ -61,17 +62,17 @@ class SemanticTokensDtoTest extends TestCase {
             }, {
                 start: 15,
                 deleteCount: 0,
-                data: UInt32Array.fromArray([(1 << 24) + (2 << 16) + (3 << 8) + 4])
+                data: UInt32Arrays.fromInts([(1 << 24) + (2 << 16) + (3 << 8) + 4])
             }, {
                 start: 27,
                 deleteCount: 5,
-                data: UInt32Array.fromArray([(1 << 24) + (2 << 16) + (3 << 8) + 4, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+                data: UInt32Arrays.fromInts([(1 << 24) + (2 << 16) + (3 << 8) + 4, 1, 2, 3, 4, 5, 6, 7, 8, 9])
             }]
         });
     }
 
     function testPartialArrayBuffer() {
-        final sharedArr = UInt32Array.fromArray([
+        final sharedArr = UInt32Arrays.fromInts([
             (1 << 24) + (2 << 16) + (3 << 8) + 4,
             1, 2, 3, 4, 5, (1 << 24) + (2 << 16) + (3 << 8) + 4
         ]);
@@ -99,7 +100,7 @@ class SemanticTokensDtoTest extends TestCase {
         final dto:ISemanticTokensDto = {
             id: 5,
             type: 'full',
-            data: UInt32Array.fromArray([1, 2, 3, 4, 5])
+            data: UInt32Arrays.fromInts([1, 2, 3, 4, 5])
         };
         final encoded = SemanticTokensDto.encodeSemanticTokensDto(dto);
 

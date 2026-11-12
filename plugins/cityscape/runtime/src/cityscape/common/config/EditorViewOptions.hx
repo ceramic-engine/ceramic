@@ -6,6 +6,7 @@ package cityscape.common.config;
 import cityscape.common.config.EditorOptions;
 import cityscape.common.config.FontInfo;
 import cityscape.platform.accessibility.common.Accessibility.AccessibilitySupport;
+import cityscape.common.config.EditorOptions.AnyEditorOption;
 
 /*
  * The editor options the view reads, ported with the view (step 2):
@@ -440,7 +441,7 @@ class EditorViewOptions {
      * The options registered before the others (Monaco's alphabetical part
      * of `EditorOptions`), in `register` order.
      */
-    public static function registerSimple(register:(option:IEditorOption<Any>) -> Void):Void {
+    public static function registerSimple(register:(option:AnyEditorOption) -> Void):Void {
         register(cast new EditorBooleanOption(EditorOption.disableMonospaceOptimizations, 'disableMonospaceOptimizations', false));
         register(cast new EditorEmptySelectionClipboard());
         register(cast new EditorStringEnumOption(EditorOption.experimentalWhitespaceRendering, 'experimentalWhitespaceRendering', 'svg', ['svg', 'font', 'off']));
@@ -462,7 +463,7 @@ class EditorViewOptions {
      * The options Monaco registers at the end (they depend on the others):
      * pixelRatio, layoutInfo, wrappingInfo, wrappingStrategy.
      */
-    public static function registerComputed(register:(option:IEditorOption<Any>) -> Void):Void {
+    public static function registerComputed(register:(option:AnyEditorOption) -> Void):Void {
         register(cast new EditorPixelRatio());
         register(cast new EditorLayoutInfoComputer());
         register(cast new EditorWrappingInfoComputer());

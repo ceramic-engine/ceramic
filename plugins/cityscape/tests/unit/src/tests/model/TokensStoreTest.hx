@@ -11,6 +11,7 @@ import cityscape.common.tokens.LineTokens;
 import cityscape.common.tokens.SparseMultilineTokens;
 import cityscape.common.tokens.SparseTokensStore;
 import haxe.io.UInt32Array;
+import cityscape.common.tokens.UInt32Arrays;
 import testing.TestCase;
 
 /**
@@ -36,7 +37,7 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [1,1 -> 31,2], [(5,5-10),(10,5-10),(15,5-10),(20,5-10),(25,5-10),(30,5-10)]
         store.setPartial(new Range(1, 1, 31, 2), [
-            SparseMultilineTokens.create(5, UInt32Array.fromArray([
+            SparseMultilineTokens.create(5, UInt32Arrays.fromInts([
                 0, 5, 10, 1,
                 5, 5, 10, 2,
                 10, 5, 10, 3,
@@ -48,7 +49,7 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [18,1 -> 42,1], [(20,5-10),(25,5-10),(30,5-10),(35,5-10),(40,5-10)]
         store.setPartial(new Range(18, 1, 42, 1), [
-            SparseMultilineTokens.create(20, UInt32Array.fromArray([
+            SparseMultilineTokens.create(20, UInt32Arrays.fromInts([
                 0, 5, 10, 4,
                 5, 5, 10, 5,
                 10, 5, 10, 6,
@@ -59,7 +60,7 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [1,1 -> 31,2], [(5,5-10),(10,5-10),(15,5-10),(20,5-10),(25,5-10),(30,5-10)]
         store.setPartial(new Range(1, 1, 31, 2), [
-            SparseMultilineTokens.create(5, UInt32Array.fromArray([
+            SparseMultilineTokens.create(5, UInt32Arrays.fromInts([
                 0, 5, 10, 1,
                 5, 5, 10, 2,
                 10, 5, 10, 3,
@@ -69,7 +70,7 @@ class TokensStoreTest extends TestCase {
             ]))
         ]);
 
-        final lineTokens = store.addSparseTokens(10, new LineTokens(UInt32Array.fromArray([12, 1]), 'enum Enum1 {', codec));
+        final lineTokens = store.addSparseTokens(10, new LineTokens(UInt32Arrays.fromInts([12, 1]), 'enum Enum1 {', codec));
         assertEquals(3, lineTokens.getCount());
     }
 
@@ -79,7 +80,7 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [1,1 -> 31,2], [(5,5-10),(10,5-10),(15,5-10),(20,5-10),(25,5-10),(30,5-10)]
         store.setPartial(new Range(1, 1, 31, 2), [
-            SparseMultilineTokens.create(5, UInt32Array.fromArray([
+            SparseMultilineTokens.create(5, UInt32Arrays.fromInts([
                 0, 5, 10, 1,
                 5, 5, 10, 2,
                 10, 5, 10, 3,
@@ -91,7 +92,7 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [6,1 -> 36,2], [(10,5-10),(15,5-10),(20,5-10),(25,5-10),(30,5-10),(35,5-10)]
         store.setPartial(new Range(6, 1, 36, 2), [
-            SparseMultilineTokens.create(10, UInt32Array.fromArray([
+            SparseMultilineTokens.create(10, UInt32Arrays.fromInts([
                 0, 5, 10, 2,
                 5, 5, 10, 3,
                 10, 5, 10, 4,
@@ -102,7 +103,7 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [17,1 -> 42,1], [(20,5-10),(25,5-10),(30,5-10),(35,5-10),(40,5-10)]
         store.setPartial(new Range(17, 1, 42, 1), [
-            SparseMultilineTokens.create(20, UInt32Array.fromArray([
+            SparseMultilineTokens.create(20, UInt32Arrays.fromInts([
                 0, 5, 10, 4,
                 5, 5, 10, 5,
                 10, 5, 10, 6,
@@ -111,7 +112,7 @@ class TokensStoreTest extends TestCase {
             ]))
         ]);
 
-        final lineTokens = store.addSparseTokens(20, new LineTokens(UInt32Array.fromArray([12, 1]), 'enum Enum1 {', codec));
+        final lineTokens = store.addSparseTokens(20, new LineTokens(UInt32Arrays.fromInts([12, 1]), 'enum Enum1 {', codec));
         assertEquals(3, lineTokens.getCount());
     }
 
@@ -121,7 +122,7 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [1,1 -> 31,2], [(5,5-10),(10,5-10),(15,5-10),(20,5-10),(25,5-10),(30,5-10)]
         store.setPartial(new Range(1, 1, 31, 2), [
-            SparseMultilineTokens.create(5, UInt32Array.fromArray([
+            SparseMultilineTokens.create(5, UInt32Arrays.fromInts([
                 0, 5, 10, 1,
                 5, 5, 10, 2,
                 10, 5, 10, 3,
@@ -133,13 +134,13 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [11,1 -> 16,2], [(15,5-10),(20,5-10)]
         store.setPartial(new Range(11, 1, 16, 2), [
-            SparseMultilineTokens.create(10, UInt32Array.fromArray([
+            SparseMultilineTokens.create(10, UInt32Arrays.fromInts([
                 0, 5, 10, 3,
                 5, 5, 10, 4,
             ]))
         ]);
 
-        final lineTokens = store.addSparseTokens(5, new LineTokens(UInt32Array.fromArray([12, 1]), 'enum Enum1 {', codec));
+        final lineTokens = store.addSparseTokens(5, new LineTokens(UInt32Arrays.fromInts([12, 1]), 'enum Enum1 {', codec));
         assertEquals(3, lineTokens.getCount());
     }
 
@@ -149,7 +150,7 @@ class TokensStoreTest extends TestCase {
 
         // setPartial: [1,1 -> 1,20] [(1,9-11)]
         store.setPartial(new Range(1, 1, 1, 20), [
-            SparseMultilineTokens.create(1, UInt32Array.fromArray([
+            SparseMultilineTokens.create(1, UInt32Arrays.fromInts([
                 0, 9, 11, 1,
             ]))
         ]);
@@ -157,7 +158,7 @@ class TokensStoreTest extends TestCase {
         // setPartial: [1,1 -> 1,20], []
         store.setPartial(new Range(1, 1, 1, 20), []);
 
-        final lineTokens = store.addSparseTokens(1, new LineTokens(UInt32Array.fromArray([12, 1]), 'enum Enum1 {', codec));
+        final lineTokens = store.addSparseTokens(1, new LineTokens(UInt32Arrays.fromInts([12, 1]), 'enum Enum1 {', codec));
         assertEquals(1, lineTokens.getCount());
     }
 
@@ -188,7 +189,7 @@ class TokensStoreTest extends TestCase {
                 result.push(endChar);
                 result.push((lineNumber + startChar) % 13);
             }
-            return SparseMultilineTokens.create(firstLineNumber, UInt32Array.fromArray(result));
+            return SparseMultilineTokens.create(firstLineNumber, UInt32Arrays.fromInts(result));
         }
 
         final codec = new LanguageIdCodec();
@@ -214,7 +215,7 @@ class TokensStoreTest extends TestCase {
             [createTokens('[(36442,25-35),(36442,36-50),(36443,30-39),(36443,42-46),(36443,47-53),(36443,54-58),(36443,63-73),(36443,74-84),(36443,87-91),(36443,92-98),(36443,101-105),(36443,106-112),(36443,113-119),(36444,28-37),(36444,38-42),(36444,47-57),(36444,58-75),(36444,80-95),(36444,96-105),(36445,35-53),(36445,54-62),(36448,24-29),(36448,33-46),(36448,47-54),(36450,25-35),(36450,36-50),(36451,28-33),(36451,36-49),(36451,50-57),(36452,35-53),(36452,54-62),(36454,33-38),(36454,41-54),(36454,55-60),(36455,35-53),(36455,54-62),(36457,33-44),(36457,45-49),(36457,50-56),(36457,62-83),(36457,84-88),(36458,35-53),(36458,54-62),(36460,33-37),(36460,38-42),(36460,47-57),(36460,58-67),(36461,35-53),(36461,54-62),(36463,34-38),(36463,39-45),(36463,46-51),(36463,54-63),(36463,64-71),(36463,76-80),(36463,81-87),(36463,88-92),(36463,97-107),(36463,108-119),(36464,35-53),(36464,54-62),(36466,33-71),(36466,72-76),(36467,35-53),(36467,54-62),(36469,24-29),(36469,33-46),(36469,47-54),(36470,24-35)]')]
         );
 
-        final lineTokens = store.addSparseTokens(36451, new LineTokens(UInt32Array.fromArray([60, 1]), '                        if (flags & ModifierFlags.Ambient) {', codec));
+        final lineTokens = store.addSparseTokens(36451, new LineTokens(UInt32Arrays.fromInts([60, 1]), '                        if (flags & ModifierFlags.Ambient) {', codec));
         assertEquals(7, lineTokens.getCount());
     }
 
@@ -241,12 +242,12 @@ class TokensStoreTest extends TestCase {
         final store = new SparseTokensStore(codec);
 
         store.set([
-            SparseMultilineTokens.create(1, UInt32Array.fromArray([
+            SparseMultilineTokens.create(1, UInt32Arrays.fromInts([
                 0, 6, 11, (1 << MetadataConsts.FOREGROUND_OFFSET) | MetadataConsts.SEMANTIC_USE_FOREGROUND,
             ]))
         ], true);
 
-        final lineTokens = store.addSparseTokens(1, new LineTokens(UInt32Array.fromArray([
+        final lineTokens = store.addSparseTokens(1, new LineTokens(UInt32Arrays.fromInts([
             5, createTMMetadata(5, FontStyle.Bold, 53),
             14, createTMMetadata(1, FontStyle.None, 53),
             17, createTMMetadata(6, FontStyle.None, 53),

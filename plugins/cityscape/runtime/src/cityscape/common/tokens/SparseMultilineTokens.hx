@@ -404,8 +404,8 @@ private class SparseMultilineTokensStorage {
         }
 
         return new SparseMultilineTokensStorageSplit(
-            new SparseMultilineTokensStorage(UInt32Array.fromArray(aTokens)),
-            new SparseMultilineTokensStorage(UInt32Array.fromArray(bTokens)),
+            new SparseMultilineTokensStorage(UInt32Arrays.fromInts(aTokens)),
+            new SparseMultilineTokensStorage(UInt32Arrays.fromInts(bTokens)),
             destFirstDeltaLine
         );
     }

@@ -991,7 +991,11 @@ class LspClientTest extends TestCase {
      */
     function testRegisterProvidersOption() {
         for (list in [false, true]) {
-            final option:Any = list ? (['hoverProvider', 'executeCommandProvider'] : Any) : (false : Any);
+            // Not `list ? array : false`: typed Any, the Haxe C# generator folds it into
+            // `list && toBool(array)` and the cast of the array to bool throws
+            var option:Any = false;
+            if (list)
+                option = ['hoverProvider', 'executeCommandProvider'];
             final context = newContext();
             final server = new FakeLspServer();
             final model = context.modelService.createModel('x', 'fakelang', Uri.parse(URI_A));

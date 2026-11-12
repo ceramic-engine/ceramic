@@ -996,7 +996,9 @@ class ContextKeyExpr {
     }
 
     public static function and(...expr:Null<ContextKeyExpression>):Null<ContextKeyExpression> {
-        return ContextKeyAndExpr.create(expr.toArray(), null, true);
+        // A typed copy: `Rest.toArray()` of a `Null<T>` is not an `Array<Null<T>>` on C#
+        final list:Array<Null<ContextKeyExpression>> = [for (e in expr) e];
+        return ContextKeyAndExpr.create(list, null, true);
     }
 
     public static function andArray(expr:Array<Null<ContextKeyExpression>>):Null<ContextKeyExpression> {
@@ -1004,7 +1006,8 @@ class ContextKeyExpr {
     }
 
     public static function or(...expr:Null<ContextKeyExpression>):Null<ContextKeyExpression> {
-        return ContextKeyOrExpr.create(expr.toArray(), null, true);
+        final list:Array<Null<ContextKeyExpression>> = [for (e in expr) e];
+        return ContextKeyOrExpr.create(list, null, true);
     }
 
     public static function orArray(expr:Array<Null<ContextKeyExpression>>):Null<ContextKeyExpression> {
@@ -2366,11 +2369,17 @@ class RawContextKey<T> extends ContextKeyDefinedExpr {
         this._defaultValue = defaultValue;
 
         // collect all context keys into a central place
+        // (`metaOrHide` is read with its type: on C# an `Any` compared with
+        // `true` is a reference comparison of boxed values, never equal)
         if (metaOrHide != null && JsValues.isObject(metaOrHide)) {
             _info.push({key: key, type: JsValues.field(metaOrHide, 'type'), description: JsValues.field(metaOrHide, 'description')});
         }
-        else if (metaOrHide != true) {
-            _info.push({key: key, description: metaOrHide, type: defaultValue != null ? JsTypeof.of(defaultValue) : null});
+        else {
+            final hide = Std.isOfType(metaOrHide, Bool) && (metaOrHide : Bool);
+            if (!hide) {
+                final description:Null<String> = Std.isOfType(metaOrHide, String) ? (metaOrHide : String) : null;
+                _info.push({key: key, description: description, type: defaultValue != null ? JsTypeof.of(defaultValue) : null});
+            }
         }
     }
 

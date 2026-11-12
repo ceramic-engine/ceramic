@@ -569,7 +569,7 @@ class DefaultBackgroundTokenizer implements IBackgroundTokenizer implements IBac
             }
         } while (_hasLinesToTokenize());
 
-        _backgroundTokenStore.setTokens(builder.finalize());
+        _backgroundTokenStore.setTokens(builder.finalizeResult());
         checkFinished();
     }
 

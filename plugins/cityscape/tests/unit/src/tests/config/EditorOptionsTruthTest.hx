@@ -23,7 +23,7 @@ class EditorOptionsTruthTest extends TestCase {
         return truth;
     }
 
-    function option(name:String):IEditorOption<Any> {
+    function option(name:String):AnyEditorOption {
         for (o in EditorOptions.editorOptionsRegistry) {
             if (o != null && o.name == name)
                 return o;

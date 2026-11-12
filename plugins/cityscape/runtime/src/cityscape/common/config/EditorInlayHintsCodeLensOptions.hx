@@ -5,6 +5,7 @@ package cityscape.common.config;
 
 import cityscape.base.common.JsValues;
 import cityscape.common.config.EditorOptions;
+import cityscape.common.config.EditorOptions.AnyEditorOption;
 
 /*
  * The options of the inlay hints and code lens contributions (`inlayHints`,
@@ -82,7 +83,7 @@ class EditorInlayHintsCodeLensOptionsRegistration {
     /**
      * Registers the options (called by `EditorOptions.init()`).
      */
-    public static function registerSimple(register:(option:IEditorOption<Any>) -> Void):Void {
+    public static function registerSimple(register:(option:AnyEditorOption) -> Void):Void {
         register(cast new EditorBooleanOption(EditorOption.codeLens, 'codeLens', true));
         register(cast new EditorStringOption(EditorOption.codeLensFontFamily, 'codeLensFontFamily', ''));
         register(cast new EditorIntOption(EditorOption.codeLensFontSize, 'codeLensFontSize', 0, 0, 100));

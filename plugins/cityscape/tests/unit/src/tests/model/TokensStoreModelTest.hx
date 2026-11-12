@@ -68,7 +68,7 @@ class TokensStoreModelTest extends TestCase {
 
         return {
             text: text.join('\n'),
-            tokens: cityscape.common.tokens.SparseMultilineTokens.create(baseLine, haxe.io.UInt32Array.fromArray(tokens))
+            tokens: cityscape.common.tokens.SparseMultilineTokens.create(baseLine, cityscape.common.tokens.UInt32Arrays.fromInts(tokens))
         };
     }
 
@@ -207,7 +207,7 @@ class TokensStoreModelTest extends TestCase {
     function testIssue91936SemanticTokenColorHighlightingFailsOnLineWithSelectedText() {
         final model = tests.TestTextModel.createTextModel("                    else if ($s = 08) then '\\b'");
         model.tokenization.setSemanticTokens([
-            cityscape.common.tokens.SparseMultilineTokens.create(1, haxe.io.UInt32Array.fromArray([
+            cityscape.common.tokens.SparseMultilineTokens.create(1, cityscape.common.tokens.UInt32Arrays.fromInts([
                 0, 20, 24, 0x78010, // 0b01111000000000010000
                 0, 25, 27, 0x78010, // 0b01111000000000010000
                 0, 28, 29, 0x08010, // 0b00001000000000010000
@@ -253,7 +253,7 @@ class TokensStoreModelTest extends TestCase {
         // (`createModelServices`, `instantiateTextModel`).
         final model = tests.TestTextModel.createTextModel('--[[\n\n]]');
         model.tokenization.setSemanticTokens([
-            cityscape.common.tokens.SparseMultilineTokens.create(1, haxe.io.UInt32Array.fromArray([
+            cityscape.common.tokens.SparseMultilineTokens.create(1, cityscape.common.tokens.UInt32Arrays.fromInts([
                 0, 2, 4, 0x20010, // 0b100000000000010000
                 1, 0, 0, 0x20010, // 0b100000000000010000
                 2, 0, 2, 0x20010, // 0b100000000000010000

@@ -233,7 +233,7 @@ class TextMateService extends Disposable {
             final support = createTokenizationSupport(languageId);
             return support != null ? new TextMateTokenizationSupportDisposable(support) : null;
         });
-        _registrations.set(languageId, _context.tokenizationRegistry.registerFactory(languageId, new LazyTokenizationSupportAdapter(factory)));
+        _registrations.set(languageId, _context.tokenizationRegistry.registerFactory(languageId, new LazyTokenizationSupportAdapter<ITokenizationSupport>(factory, d -> d.support)));
         if (_context.languageService.hasRequestedRichLanguageFeatures(languageId)) {
             // A model of this language exists: create the tokenizer now (Monaco
             // creates it when a model requests the language)
@@ -427,17 +427,24 @@ private class TextMateTokenizationSupportDisposable implements IDisposable {
  * Exposes the lazily created `TextMateTokenizationSupport` as an
  * `ILazyTokenizationSupport<ITokenizationSupport>`.
  */
-private class LazyTokenizationSupportAdapter implements ILazyTokenizationSupport<ITokenizationSupport> {
+private class LazyTokenizationSupportAdapter<TSupport> implements ILazyTokenizationSupport<TSupport> {
 
+    // Generic over the support type like the interface: the C# target (Unity)
+    // cannot implement `ILazyTokenizationSupport<ITokenizationSupport>` with a
+    // concrete `Null<ITokenizationSupport>` return (hxcs declares the method
+    // on the `object` instantiation of the interface).
     final _lazy:LazyTokenizationSupport<TextMateTokenizationSupportDisposable>;
 
-    public function new(lazy:LazyTokenizationSupport<TextMateTokenizationSupportDisposable>) {
+    final _support:(TextMateTokenizationSupportDisposable) -> TSupport;
+
+    public function new(lazy:LazyTokenizationSupport<TextMateTokenizationSupportDisposable>, support:(TextMateTokenizationSupportDisposable) -> TSupport) {
         _lazy = lazy;
+        _support = support;
     }
 
-    public function getTokenizationSupport():Null<ITokenizationSupport> {
+    public function getTokenizationSupport():Null<TSupport> {
         final d = _lazy.getTokenizationSupport();
-        return d != null ? d.support : null;
+        return d != null ? _support(d) : null;
     }
 
 }

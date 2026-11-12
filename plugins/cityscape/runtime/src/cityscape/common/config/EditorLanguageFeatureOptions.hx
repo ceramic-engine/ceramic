@@ -5,6 +5,7 @@ package cityscape.common.config;
 
 import cityscape.base.common.JsValues;
 import cityscape.common.config.EditorOptions;
+import cityscape.common.config.EditorOptions.AnyEditorOption;
 
 /*
  * The options of the language feature contributions (suggest, code
@@ -53,7 +54,7 @@ class EditorLanguageFeatureOptionsRegistration {
     /**
      * Registers the options (called by `EditorOptions.init()`).
      */
-    public static function registerSimple(register:(option:IEditorOption<Any>) -> Void):Void {
+    public static function registerSimple(register:(option:AnyEditorOption) -> Void):Void {
         register(cast new EditorBooleanOption(EditorOption.acceptSuggestionOnCommitCharacter, 'acceptSuggestionOnCommitCharacter', true));
         register(cast new EditorLightbulb());
         register(cast new EditorStringEnumOption(EditorOption.snippetSuggestions, 'snippetSuggestions', 'inline', ['top', 'bottom', 'inline', 'none']));
