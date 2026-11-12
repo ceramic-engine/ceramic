@@ -277,6 +277,12 @@ class Filter extends Layer implements Observable {
             content.renderTarget = null;
         }
 
+        // The previous packer's page is not this filter's to keep (or destroy)
+        if (renderTexture != null && this.textureTilePacker != null && this.textureTilePacker.managesTexture(renderTexture)) {
+            renderTexture = null;
+            updateContentVisibility();
+        }
+
         this.textureTilePacker = textureTilePacker;
         contentDirty = true;
         return textureTilePacker;
@@ -381,9 +387,18 @@ class Filter extends Layer implements Observable {
      * drawn straight to its parent's target, at its own alpha. A disabled filter draws
      * its content directly, so it stays visible.
      */
-    inline function updateContentVisibility():Void {
+    function updateContentVisibility():Void {
 
-        content.visible = !enabled || renderTexture != null;
+        final shown = !enabled || renderTexture != null;
+        if (content.active) {
+            content.visible = shown;
+        }
+        else {
+            // Deactivated by `explicitRender`: update the visibility that
+            // reactivating the content gives back (see `Visual.active`),
+            // so the order of setup doesn't matter
+            content.flags = shown ? content.flags | Visual.FLAG_VISIBLE_WHEN_ACTIVE : content.flags & ~Visual.FLAG_VISIBLE_WHEN_ACTIVE;
+        }
 
     }
 
@@ -433,9 +448,18 @@ class Filter extends Layer implements Observable {
                 // Instanciate a new texture or tile to match constraints
                 if (filterWidth > 0 && filterHeight > 0) {
                     if (textureTilePacker != null) {
-                        renderTexture = textureTilePacker.texture;
                         textureTile = textureTilePacker.allocTile(filterWidth, filterHeight);
                         tile = textureTile;
+                        // The tile may live in a chained page of the packer (`nextPacker`):
+                        // render into and display that page's texture, not the first one
+                        if (textureTile != null) {
+                            renderTexture = cast textureTile.texture;
+                            texture = textureTile.texture;
+                        }
+                        else {
+                            renderTexture = null;
+                            texture = null;
+                        }
                     }
                     else {
                         renderTexture = new RenderTexture(filterWidth, filterHeight, density, depthBuffer, stencil, antialiasing);
@@ -445,6 +469,12 @@ class Filter extends Layer implements Observable {
                         tile = null;
                         texture = renderTexture;
                     }
+                }
+                else if (renderTexture != null && textureTilePacker != null && textureTilePacker.managesTexture(renderTexture)) {
+                    // A page of the packer is only used through a tile of it
+                    tile = null;
+                    texture = null;
+                    renderTexture = null;
                 }
             }
         }
