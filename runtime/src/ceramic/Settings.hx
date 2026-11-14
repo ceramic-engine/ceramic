@@ -256,13 +256,13 @@ class Settings implements Observable {
      * of Glaze views does) or when the app calls `requestRender()` itself: frames where
      * such a callback ran but nothing changed are then not drawn. An editor like
      * Cityscape runs many timers and thread callbacks after each key: with the safety
-     * net it draws about 7 frames per key, without it about 4, and the next key finds
-     * the app at rest more often.
+     * net it draws about 7 frames per key, without it fewer than 2, and the next key
+     * finds the app at rest more often.
      *
      * Window and screen events (resize, focus, display change), finished asset loads,
      * tweens and dirty visuals always request a render, whatever this setting.
      */
-    public var renderOnDemandCallbacks:Bool = true;
+    public var renderAfterTimersAndInput:Bool = true;
 
     /**
      * Controls whether mouse wheel events are consumed by the app.

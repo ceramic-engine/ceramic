@@ -1426,11 +1426,11 @@ class App extends Entity {
 
     /**
      * Requests the next frame because app code ran from a timer, a main thread callback
-     * or an input event: only when `settings.renderOnDemandCallbacks` is `true`.
+     * or an input event: only when `settings.renderAfterTimersAndInput` is `true`.
      */
     @:noCompletion inline public function requestCallbackRender():Void {
 
-        if (settings.renderOnDemandCallbacks) renderRequested = true;
+        if (settings.renderAfterTimersAndInput) renderRequested = true;
 
     }
 
@@ -1607,7 +1607,7 @@ class App extends Entity {
         // Run 'begin update' callbacks, like touch/mouse/key events etc...
         if (beginUpdateCallbacks.length > 0) {
             // Input, menu and backend events: what they run may change anything on
-            // screen (render on demand, see `Settings.renderOnDemandCallbacks`). Window
+            // screen (render on demand, see `Settings.renderAfterTimersAndInput`). Window
             // and screen events request their render themselves. Due timers request it
             // when a callback runs.
             if (beginUpdateCallbacks.length > quietBeginUpdateCallbacks) {

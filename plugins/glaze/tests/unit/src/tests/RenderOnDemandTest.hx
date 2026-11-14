@@ -609,8 +609,8 @@ class RenderOnDemandTest extends TestCase {
         final screen = ceramicApp.screen;
         final key = new ceramic.Key(ceramic.KeyCode.KEY_A, ceramic.ScanCode.KEY_A);
         after(1, () -> {
-            assertTrue(ceramicApp.settings.renderOnDemandCallbacks, 'on by default');
-            ceramicApp.settings.renderOnDemandCallbacks = false;
+            assertTrue(ceramicApp.settings.renderAfterTimersAndInput, 'on by default');
+            ceramicApp.settings.renderAfterTimersAndInput = false;
         });
 
         // App code runs, nothing asks for a render: no frame
@@ -671,7 +671,7 @@ class RenderOnDemandTest extends TestCase {
         expectRender('screen resize', () -> @:privateAccess screen.resize(), 1, 3);
         expectRender('backend resize', () -> @:privateAccess ceramicApp.backend.screen.emitResize(), 1, 3);
 
-        after(1, () -> ceramicApp.settings.renderOnDemandCallbacks = true);
+        after(1, () -> ceramicApp.settings.renderAfterTimersAndInput = true);
         expectRender('on again: key down', () -> @:privateAccess input.emitKeyDown(key), 1, 3);
         expectRender('on again: key up', () -> @:privateAccess input.emitKeyUp(key), 1, 3);
         after(1, done);

@@ -241,14 +241,14 @@ class InitSettings {
 
     /**
      * With `renderOnDemand`: draw a frame each time a timer, a main thread callback or
-     * an input event ran app code (default `true`). See `Settings.renderOnDemandCallbacks`.
+     * an input event ran app code (default `true`). See `Settings.renderAfterTimersAndInput`.
      */
-    public var renderOnDemandCallbacks(get,set):Bool;
-    inline function get_renderOnDemandCallbacks():Bool {
-        return settings.renderOnDemandCallbacks;
+    public var renderAfterTimersAndInput(get,set):Bool;
+    inline function get_renderAfterTimersAndInput():Bool {
+        return settings.renderAfterTimersAndInput;
     }
-    inline function set_renderOnDemandCallbacks(renderOnDemandCallbacks:Bool):Bool {
-        return settings.renderOnDemandCallbacks = renderOnDemandCallbacks;
+    inline function set_renderAfterTimersAndInput(renderAfterTimersAndInput:Bool):Bool {
+        return settings.renderAfterTimersAndInput = renderAfterTimersAndInput;
     }
 
 
