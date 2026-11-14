@@ -101,6 +101,9 @@ class Tests {
         runner.add(new tests.viewModel.ModelLineProjectionTest());
         runner.add(new tests.viewModel.ViewModelHiddenRangesTest());
         runner.add(new tests.view.CityscapeEditorTest());
+        runner.add(new tests.view.KeystrokeRenderCountTest());
+        runner.add(new tests.view.EditorOptionsPropTest());
+        runner.add(new tests.view.KeyContextNotificationTest());
         runner.add(new tests.view.HoverViewTest());
         runner.add(new tests.view.SuggestViewTest());
         runner.add(new tests.view.OverflowWidgetsBoundsTest());

@@ -87,6 +87,14 @@ class RenderedViewLine {
     public final themeVersion:Int;
 
     /**
+     * The version of the context's registered decoration styles
+     * (`DecorationStyles.version`) this line was rendered with: a style
+     * registered or replaced later renders the line again (its parts keep
+     * the styles resolved from their class names).
+     */
+    public var stylesVersion:Int = -1;
+
+    /**
      * The `CityscapeView.renderGeneration` this line was last checked
      * against (-1: one of its view events invalidated it).
      */
@@ -1312,7 +1320,8 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         }
         final fontGeneration = app.textSystem().fontGeneration;
         final cached = renderCache.get(viewLineNumber);
-        final current = cached != null && cached.fontGeneration == fontGeneration && cached.themeVersion == theme.version;
+        final stylesVersion = context.decorationStyles.version;
+        final current = cached != null && cached.fontGeneration == fontGeneration && cached.themeVersion == theme.version && cached.stylesVersion == stylesVersion;
         // No view event touched the line since it was checked (Monaco's
         // `ViewLine` renders again only the lines its events invalidated):
         // its rendering input is the same, not built again
@@ -1379,6 +1388,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
 
         final rendered = new RenderedViewLine(input, runs, output, layout, offsets, partStyles, decorationRuns, created.minColumn, created.maxColumn, fontGeneration, theme.version);
         rendered.generation = renderGeneration;
+        rendered.stylesVersion = stylesVersion;
         if (cache == null && cached == null) {
             renderCacheKeys.push(viewLineNumber);
         }
@@ -1512,6 +1522,9 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      * Drops the rendered lines and what the element keeps between frames.
      */
     function resetRenderCache():Void {
+        #if cityscape_debug_counters
+        cityscape.base.common.DebugCounters.renderCacheResets++;
+        #end
         renderCache = new Map();
         renderCacheKeys.resize(0);
         selectionInputLines.resize(0);
@@ -2627,6 +2640,9 @@ class CityscapePaintView extends GlazeModel implements glaze.Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):glaze.IntoElement {
+        #if cityscape_debug_counters
+        cityscape.base.common.DebugCounters.paintRenders++;
+        #end
         return element;
     }
 

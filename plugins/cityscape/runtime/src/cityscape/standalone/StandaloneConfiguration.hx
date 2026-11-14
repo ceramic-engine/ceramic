@@ -7,6 +7,7 @@ package cityscape.standalone;
 
 import cityscape.base.common.Event;
 import cityscape.common.config.EditorOptions;
+import cityscape.common.config.OptionValues;
 import cityscape.platform.configuration.common.Configuration;
 
 /**
@@ -70,13 +71,17 @@ class StandaloneConfigurationService implements IConfigurationService {
         for (entry in values) {
             final key = entry.key;
             final value = entry.value;
-            if (_values.exists(key) && (_values.get(key) : Dynamic) == (value : Dynamic)) {
+            // By content (Cityscape: an object option given again with the
+            // same content, `semanticHighlighting: {enabled: true}`, is not
+            // a change), against a copy: the value stored is not the
+            // caller's object, which it may change in place later
+            if (_values.exists(key) && OptionValues.equals(_values.get(key), value)) {
                 continue;
             }
             if (!_values.exists(key)) {
                 _keys.push(key);
             }
-            _values.set(key, value);
+            _values.set(key, OptionValues.copy(value));
             changedKeys.push(key);
         }
         if (changedKeys.length > 0) {

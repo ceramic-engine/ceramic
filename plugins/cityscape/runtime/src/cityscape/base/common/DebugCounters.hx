@@ -33,6 +33,31 @@ class DebugCounters {
     public static var entities:Int = 0;
 
     /**
+     * Renders of the `CityscapeEditor` components (the host of an editor:
+     * its root element, scrollbars and overlay widgets), of every editor.
+     * The tests read the difference around a keystroke.
+     */
+    public static var hostRenders:Int = 0;
+
+    /**
+     * Renders of the paint views (`CityscapePaintView`, the view holding the
+     * element that paints the lines), of every editor.
+     */
+    public static var paintRenders:Int = 0;
+
+    /**
+     * Times a change of context keys asked the `CityscapeEditor` host to
+     * render again (its key context was stale).
+     */
+    public static var keyContextNotifications:Int = 0;
+
+    /**
+     * Times an editor view dropped its rendered lines
+     * (`CityscapeView.resetRenderCache`: new options, a new model, a flush).
+     */
+    public static var renderCacheResets:Int = 0;
+
+    /**
      * Counts `entity` in `entities` until the app releases it (returns it).
      */
     public static inline function trackEntity<T:glaze.Model>(entity:glaze.Entity<T>, app:glaze.App):glaze.Entity<T> {

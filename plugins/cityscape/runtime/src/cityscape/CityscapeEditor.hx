@@ -136,7 +136,12 @@ class CityscapeEditor extends Component implements Styled {
 
     /**
      * Monaco's editor options (`IEditorOptions`), applied with
-     * `updateOptions` when they change.
+     * `updateOptions` when their content changes (compared by content with
+     * the ones applied last, `cityscape.common.config.OptionValues`: the
+     * same options built again at each render of the host change nothing,
+     * and an object changed in place is seen). Like every unobserved prop,
+     * new options do not render the editor by themselves: they are applied
+     * at its next render.
      */
     @prop(unobserved) var options:Null<IEditorOptions> = null;
 
@@ -198,6 +203,11 @@ class CityscapeEditor extends Component implements Styled {
 
     var widget:Null<CodeEditorWidget> = null;
     var viewEntity:Null<Entity<CityscapeView>> = null;
+    /**
+     * A copy of the `options` applied last (`OptionValues.copy`): the
+     * options are applied again when their content differs from it, whether
+     * the host gave a new object or changed its own in place.
+     */
     var appliedOptions:Null<IEditorOptions> = null;
     var appliedShortcuts:String = '';
     var lastPropModel:Null<ITextModel> = null;
@@ -242,7 +252,7 @@ class CityscapeEditor extends Component implements Styled {
         final widget = new CodeEditorWidget(ctx, configuration);
         this.widget = widget;
         viewEntity = cityscape.base.common.DebugCounters.trackEntity(cx.newEntity((vcx:Context<CityscapeView>) -> new CityscapeView(vcx, widget, measurements)), cx);
-        appliedOptions = options;
+        appliedOptions = cityscape.common.config.OptionValues.copy(options);
         appliedShortcuts = shortcutsKey();
         widget.setWrappingIndentColumns(wrappingIndentColumns);
         // The key context of the root lists the context keys: a key set after
@@ -254,8 +264,13 @@ class CityscapeEditor extends Component implements Styled {
             final app = cx;
             final viewForHost = viewEntity;
             ownDisposables.add(keyService.onDidChangeContext(_ -> {
+                // Only when the key context rendered last is stale (a value
+                // of the chain of contexts changed since: their versions)
                 final host = (viewForHost : CityscapeView).hostViewId;
-                if (host != -1 && keyContextValue != null) {
+                if (host != -1 && keyContextValue != null && !keyContextCurrent(keyService)) {
+                    #if cityscape_debug_counters
+                    cityscape.base.common.DebugCounters.keyContextNotifications++;
+                    #end
                     app.notify(host);
                 }
             }));
@@ -400,6 +415,23 @@ class CityscapeEditor extends Component implements Styled {
     final keyContextVersions:Array<Int> = [];
 
     /**
+     * Whether the chain of contexts of `service` and their versions are the
+     * ones `keyContextValue` was built from (no value changed since).
+     */
+    function keyContextCurrent(service:AbstractContextKeyService):Bool {
+        var context = service.getContextValuesContainer(service.contextId);
+        var i = 0;
+        while (context != null) {
+            if (i >= keyContextChain.length || keyContextChain[i] != context || keyContextVersions[i] != context.version) {
+                return false;
+            }
+            context = context.parentContext();
+            i++;
+        }
+        return i == keyContextChain.length;
+    }
+
+    /**
      * `keyContextOf(widget)`, built again only when a value of the widget's
      * context or of its parents changed (their `version`) or the chain of
      * contexts changed.
@@ -410,21 +442,8 @@ class CityscapeEditor extends Component implements Styled {
             return keyContextOf(widget);
         }
         final existing = keyContextValue;
-        if (existing != null) {
-            var context = service.getContextValuesContainer(service.contextId);
-            var i = 0;
-            var same = true;
-            while (context != null) {
-                if (i >= keyContextChain.length || keyContextChain[i] != context || keyContextVersions[i] != context.version) {
-                    same = false;
-                    break;
-                }
-                context = context.parentContext();
-                i++;
-            }
-            if (same && i == keyContextChain.length) {
-                return existing;
-            }
+        if (existing != null && keyContextCurrent(service)) {
+            return existing;
         }
         keyContextChain.resize(0);
         keyContextVersions.resize(0);
@@ -551,11 +570,20 @@ class CityscapeEditor extends Component implements Styled {
     }
 
     public function render(window:Window, cx:App):IntoElement {
+        #if cityscape_debug_counters
+        cityscape.base.common.DebugCounters.hostRenders++;
+        #end
         final entity = viewEntity;
         final view:CityscapeView = entity;
         final widget = this.widget;
-        if (options != appliedOptions || shortcutsChanged()) {
-            appliedOptions = options;
+        // By content: a host building the same options again at each of its
+        // renders changes nothing (applying options drops the rendered
+        // lines); `mergedOptions()` is `options` under the shortcut props,
+        // compared just below. Not short-circuited: both are recorded.
+        final optionsChanged = !cityscape.common.config.OptionValues.equals(options, appliedOptions);
+        final shortcutPropsChanged = shortcutsChanged();
+        if (optionsChanged || shortcutPropsChanged) {
+            appliedOptions = cityscape.common.config.OptionValues.copy(options);
             appliedShortcuts = shortcutsKey();
             final merged = mergedOptions();
             // Monaco's `updateOptions` of the standalone editor
