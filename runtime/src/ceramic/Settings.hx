@@ -243,6 +243,28 @@ class Settings implements Observable {
     public var renderOnDemand:Bool = false;
 
     /**
+     * With `renderOnDemand`: whether a frame is also drawn each time app code ran
+     * outside of what Ceramic can track (default `true`): a timer callback, a main
+     * thread callback coming back from a thread (`Runner`), a `onceXUpdates` callback,
+     * an input event (key, text, pointer, wheel, gamepad).
+     *
+     * This is a safety net for code that changes, from such a callback, a field that
+     * raises no dirty flag (`Quad.color`, `Mesh` arrays, shader uniforms): the frame is
+     * drawn anyway, so the change shows.
+     *
+     * Set it to `false` when everything on screen requests its own renders (an app made
+     * of Glaze views does) or when the app calls `requestRender()` itself: frames where
+     * such a callback ran but nothing changed are then not drawn. An editor like
+     * Cityscape runs many timers and thread callbacks after each key: with the safety
+     * net it draws about 7 frames per key, without it about 4, and the next key finds
+     * the app at rest more often.
+     *
+     * Window and screen events (resize, focus, display change), finished asset loads,
+     * tweens and dirty visuals always request a render, whatever this setting.
+     */
+    public var renderOnDemandCallbacks:Bool = true;
+
+    /**
      * Controls whether mouse wheel events are consumed by the app.
      *
      * When true (default), prevents mouse wheel events from bubbling to

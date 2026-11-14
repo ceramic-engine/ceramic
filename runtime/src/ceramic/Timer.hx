@@ -107,7 +107,7 @@ class Timer {
                         if (callback.interval >= 0) {
                             while (callback.time <= now && !callback.cleared) {
                                 // A timer callback may change anything on screen (render on demand)
-                                ceramic.App.app.requestRender();
+                                ceramic.App.app.requestCallbackRender();
                                 #if ceramic_check_handlers
                                 try {
                                 #end
@@ -127,7 +127,7 @@ class Timer {
                             }
                         }
                         else {
-                            ceramic.App.app.requestRender();
+                            ceramic.App.app.requestCallbackRender();
                             #if ceramic_check_handlers
                             try {
                             #end

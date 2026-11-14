@@ -239,6 +239,18 @@ class InitSettings {
         return settings.renderOnDemand = renderOnDemand;
     }
 
+    /**
+     * With `renderOnDemand`: draw a frame each time a timer, a main thread callback or
+     * an input event ran app code (default `true`). See `Settings.renderOnDemandCallbacks`.
+     */
+    public var renderOnDemandCallbacks(get,set):Bool;
+    inline function get_renderOnDemandCallbacks():Bool {
+        return settings.renderOnDemandCallbacks;
+    }
+    inline function set_renderOnDemandCallbacks(renderOnDemandCallbacks:Bool):Bool {
+        return settings.renderOnDemandCallbacks = renderOnDemandCallbacks;
+    }
+
 
     /**
      * If set to `true` (default). Default mouse wheel events

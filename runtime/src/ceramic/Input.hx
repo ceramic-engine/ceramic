@@ -252,7 +252,7 @@ class Input extends Entity {
     function willEmitKeyDown(key:Key):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         modifiers = key.modifiers;
         keyDownHandled = false;
@@ -285,7 +285,7 @@ class Input extends Entity {
     function willEmitKeyUp(key:Key):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         modifiers = key.modifiers;
 
@@ -310,7 +310,7 @@ class Input extends Entity {
     function willEmitTextCommit(text:String):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         textComposing = false;
 
@@ -319,7 +319,7 @@ class Input extends Entity {
     function willEmitTextComposition(text:String, start:Int, length:Int):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         textComposing = text != null && text.length > 0;
 
@@ -626,7 +626,7 @@ class Input extends Entity {
     function willEmitGamepadEnable(gamepadId:Int, name:String):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         // Reset gamepad state
         var key = gamepadId * GAMEPAD_STORAGE_SIZE;
@@ -650,7 +650,7 @@ class Input extends Entity {
     function willEmitGamepadDisable(gamepadId:Int):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         // Trigger buttons release and axis reset if needed
         var key = gamepadId * GAMEPAD_STORAGE_SIZE;
@@ -681,7 +681,7 @@ class Input extends Entity {
     function willEmitGamepadDown(gamepadId:Int, button:GamepadButton):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
         var prevValue = pressedGamepadButtons.get(key);
@@ -706,7 +706,7 @@ class Input extends Entity {
     function willEmitGamepadUp(gamepadId:Int, button:GamepadButton):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + button;
         pressedGamepadButtons.set(key, -1);
@@ -722,7 +722,7 @@ class Input extends Entity {
     function willEmitGamepadGyro(gamepadId:Int, dx:Float, dy:Float, dz:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         var key = gamepadId;
         var deltas = gamepadGyroDeltas.get(key);
@@ -838,7 +838,7 @@ class Input extends Entity {
     inline function willEmitGamepadAxis(gamepadId:Int, axis:GamepadAxis, value:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         var key = gamepadId * GAMEPAD_STORAGE_SIZE + axis;
         gamepadAxisValues.set(key, value);

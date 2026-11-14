@@ -589,6 +589,94 @@ class RenderOnDemandTest extends TestCase {
         after(1, done);
     }
 
+    /**
+     * From an app at rest: `trigger` runs app code (a timer, an event) and no frame
+     * is drawn for it.
+     */
+    function expectNoRender(name:String, trigger:() -> Void, wait:Int = 4):Void {
+        rest();
+        after(1, () -> {
+            assertEquals(0, newDraws(), '$name: frames drawn at rest before');
+            mark();
+            trigger();
+        });
+        after(wait, () -> assertEquals(0, newDraws(), '$name: frames drawn'));
+    }
+
+    function asyncTestCallbackRequestsCanBeTurnedOff(done:() -> Void) {
+        onDemand();
+        final input = ceramicApp.input;
+        final screen = ceramicApp.screen;
+        final key = new ceramic.Key(ceramic.KeyCode.KEY_A, ceramic.ScanCode.KEY_A);
+        after(1, () -> {
+            assertTrue(ceramicApp.settings.renderOnDemandCallbacks, 'on by default');
+            ceramicApp.settings.renderOnDemandCallbacks = false;
+        });
+
+        // App code runs, nothing asks for a render: no frame
+        var fired = 0;
+        rest();
+        after(1, () -> {
+            assertEquals(0, newDraws());
+            mark();
+            ceramic.Timer.delay(probe, 0.01, () -> fired++);
+        });
+        when(() -> fired == 1, () -> {});
+        after(3, () -> assertEquals(0, newDraws(), 'timer: frames drawn'));
+        expectNoRender('onceXUpdates', () -> ceramicApp.onceXUpdates(probe, 1, () -> fired++));
+        expectNoRender('runInMain', () -> ceramic.Runner.runInMain(() -> fired++));
+        after(1, () -> assertEquals(3, fired, 'the callbacks ran'));
+        expectNoRender('key down', () -> @:privateAccess input.emitKeyDown(key));
+        expectNoRender('key up', () -> @:privateAccess input.emitKeyUp(key));
+        expectNoRender('mouse move', () -> @:privateAccess screen.emitMouseMove(610, 410));
+        expectNoRender('mouse down', () -> @:privateAccess screen.emitMouseDown(0, 610, 410));
+        expectNoRender('mouse up', () -> @:privateAccess screen.emitMouseUp(0, 610, 410));
+        expectNoRender('backend key down', () -> @:privateAccess ceramicApp.backend.input.emitKeyDown(key));
+        expectNoRender('backend key up', () -> @:privateAccess ceramicApp.backend.input.emitKeyUp(key));
+
+        // What Ceramic tracks, window events and explicit requests still draw
+        var q:ceramic.Quad = null;
+        expectRender('visual added', () -> {
+            q = quad(10, 10);
+            ceramicApp.screen.add(q);
+        }, 1, 3);
+        expectRender('requestRender', () -> ceramicApp.requestRender());
+
+        // A timer moves a visual: tracked by its dirty flag, drawn without any request
+        var moved = false;
+        rest();
+        after(1, () -> {
+            assertEquals(0, newDraws());
+            ceramic.Timer.delay(probe, 0.01, () -> { q.x = 20; moved = true; });
+        });
+        when(() -> moved, mark);
+        after(1, () -> assertEquals(1, newDraws(), 'visual moved from a timer'));
+        after(3, () -> assertEquals(1, newDraws(), 'visual moved from a timer, at rest after'));
+
+        // A timer changes a plain field: the app asks for the render itself
+        var colored = false;
+        rest();
+        after(1, () -> {
+            assertEquals(0, newDraws());
+            ceramic.Timer.delay(probe, 0.01, () -> {
+                q.color = ceramic.Color.BLUE;
+                ceramicApp.requestRender();
+                colored = true;
+            });
+        });
+        when(() -> colored, mark);
+        after(1, () -> assertEquals(1, newDraws(), 'plain field from a timer, with a request'));
+        after(3, () -> assertEquals(1, newDraws(), 'plain field from a timer, at rest after'));
+
+        expectRender('screen resize', () -> @:privateAccess screen.resize(), 1, 3);
+        expectRender('backend resize', () -> @:privateAccess ceramicApp.backend.screen.emitResize(), 1, 3);
+
+        after(1, () -> ceramicApp.settings.renderOnDemandCallbacks = true);
+        expectRender('on again: key down', () -> @:privateAccess input.emitKeyDown(key), 1, 3);
+        expectRender('on again: key up', () -> @:privateAccess input.emitKeyUp(key), 1, 3);
+        after(1, done);
+    }
+
 /// Listeners of the draw events, continuous requests
 
     function asyncTestOnceDrawListenersGetTheirFrame(done:() -> Void) {

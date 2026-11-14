@@ -517,7 +517,7 @@ class App extends Entity {
 
         if (numToCall > 0) {
             // Like a timer (render on demand)
-            renderRequested = true;
+            requestCallbackRender();
             for (i in 0...numToCall) {
                 var callback = _xUpdatesToCallNow.unsafeGet(i);
                 _xUpdatesToCallNow.unsafeSet(i, null);
@@ -1425,6 +1425,16 @@ class App extends Entity {
     }
 
     /**
+     * Requests the next frame because app code ran from a timer, a main thread callback
+     * or an input event: only when `settings.renderOnDemandCallbacks` is `true`.
+     */
+    @:noCompletion inline public function requestCallbackRender():Void {
+
+        if (settings.renderOnDemandCallbacks) renderRequested = true;
+
+    }
+
+    /**
      * Requests every frame to be drawn for as long as `owner` holds the request:
      * until `releaseContinuousRender(owner)` is called or `owner` is destroyed.
      * Only has an effect when `settings.renderOnDemand` is `true`. Use it while
@@ -1596,10 +1606,12 @@ class App extends Entity {
 
         // Run 'begin update' callbacks, like touch/mouse/key events etc...
         if (beginUpdateCallbacks.length > 0) {
-            // Input, window and screen events: what they run may change anything on
-            // screen (render on demand). Due timers request it when a callback runs.
+            // Input, menu and backend events: what they run may change anything on
+            // screen (render on demand, see `Settings.renderOnDemandCallbacks`). Window
+            // and screen events request their render themselves. Due timers request it
+            // when a callback runs.
             if (beginUpdateCallbacks.length > quietBeginUpdateCallbacks) {
-                renderRequested = true;
+                requestCallbackRender();
             }
             quietBeginUpdateCallbacks = 0;
             var callbacks = beginUpdateCallbacks;

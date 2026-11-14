@@ -1700,21 +1700,21 @@ class Screen extends Entity implements Observable implements RenderTarget {
     inline function willEmitMouseScroll(deltaX:Float, deltaY:Float, unit:ScrollUnit):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
     }
 
     inline function willEmitTouchCancel(touchIndex:Int, x:Float, y:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
     }
 
     function willEmitMouseMove(x:Float, y:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         mouseDeltaX += (x - prevMouseX);
         mouseDeltaY += (y - prevMouseY);
@@ -1726,7 +1726,7 @@ class Screen extends Entity implements Observable implements RenderTarget {
     function willEmitMouseDown(buttonId:Int, x:Float, y:Float) {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         prevMouseX = x;
         prevMouseY = y;
@@ -1767,7 +1767,7 @@ class Screen extends Entity implements Observable implements RenderTarget {
     function willEmitMouseUp(buttonId:Int, x:Float, y:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         pressedMouseButtons.set(buttonId, -1);
         // Used to differenciate "released" and "just released" states
@@ -1782,7 +1782,7 @@ class Screen extends Entity implements Observable implements RenderTarget {
     function willEmitMouseWheel(x:Float, y:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         mouseWheelDeltaX += x;
         mouseWheelDeltaY += y;
@@ -1876,7 +1876,7 @@ class Screen extends Entity implements Observable implements RenderTarget {
     function willEmitTouchMove(touchIndex:Int, x:Float, y:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         if (touchIndex > maxTouchIndex) {
             maxTouchIndex = touchIndex;
@@ -1899,7 +1899,7 @@ class Screen extends Entity implements Observable implements RenderTarget {
     function willEmitTouchDown(touchIndex:Int, x:Float, y:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         var keyX = touchIndex * 2;
         var keyY = keyX + 1;
@@ -1942,7 +1942,7 @@ class Screen extends Entity implements Observable implements RenderTarget {
     function willEmitTouchUp(touchIndex:Int, x:Float, y:Float):Void {
 
         // Every input event requests a render (render on demand)
-        ceramic.App.app.requestRender();
+        ceramic.App.app.requestCallbackRender();
 
         var state = pressedTouches.get(touchIndex);
         if (state == 1) {
