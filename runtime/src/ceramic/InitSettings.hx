@@ -314,10 +314,10 @@ class InitSettings {
         return @:privateAccess settings.antialiasing = antialiasing;
     }
 
-    // Native loop (clay backend, macOS and iOS): drawables, wait for the drawable first, frame pacing
+    // Native loop (clay backend, macOS): drawables, wait for the drawable first, frame pacing
 
     /**
-     * Number of drawables of the Metal layer the app renders to (macOS and iOS): 2 or 3, 0 to leave it alone. Default: 2. See `Settings.maxDrawables`.
+     * Number of drawables of the Metal layer the app renders to (macOS): 2 or 3, 0 to leave it alone. Default: 2. See `Settings.maxDrawables`.
      */
     public var maxDrawables(get,set):Int;
     inline function get_maxDrawables():Int {
@@ -328,7 +328,7 @@ class InitSettings {
     }
 
     /**
-     * Wait for the drawable at the start of the frame, before input is read (macOS and iOS). Default: true. See `Settings.waitDrawableFirst`.
+     * Wait for the drawable at the start of the frame, before input is read (macOS). Default: true. See `Settings.waitDrawableFirst`.
      */
     public var waitDrawableFirst(get,set):Bool;
     inline function get_waitDrawableFirst():Bool {

@@ -364,14 +364,16 @@ class Settings implements Observable {
      */
     public var antialiasing(default,null):Int = 0;
 
-    // Native loop (clay backend, macOS and iOS): drawables, wait for the drawable first, frame pacing
+    // Native loop (clay backend, macOS): drawables, wait for the drawable first, frame pacing
 
     /**
-     * Number of drawables of the Metal layer the app renders to (macOS and iOS): 2 or 3.
+     * Number of drawables of the Metal layer the app renders to (macOS): 2 or 3.
      *
      * macOS gives 3 by default: with vsync, a frame then waits behind two older ones
      * before it is shown. With 2 it waits behind one, so what is on screen is one frame
-     * more recent. 0 leaves the layer as the system made it. Ignored on other targets.
+     * more recent. 0 leaves the layer as the system made it. Ignored on other targets,
+     * iOS included: its loop is a display link callback, which two drawables slow down
+     * to half the frame rate.
      *
      * Default: 2
      */
@@ -379,7 +381,7 @@ class Settings implements Observable {
 
     /**
      * Wait for the drawable at the start of the frame, before input is read, instead of in
-     * the first draw call after the update (macOS and iOS, ignored elsewhere; compiled out
+     * the first draw call after the update (macOS, ignored elsewhere; compiled out
      * with `ceramic_no_clay_wait_drawable_first`). What is drawn is then one vsync more recent.
      *
      * A frame that starts when the drawable is there has `period - framePacingFloor` for its
