@@ -3840,6 +3840,61 @@ class Window implements WindowInvalidator {
 
     var tabStopsSource:Null<TabStopMap> = null;
 
+    /**
+     * What to subtract from an index recorded by a view to get its place in
+     * `sceneSource` and `tabStopsSource`: the ranges of the views follow the
+     * views rendered in place before in this frame, the sources are the
+     * scene and the tab order as they were when the frame started (see
+     * `inPlaceNewScene`).
+     */
+    var sceneSourceShift:Int = 0;
+
+    var tabStopsSourceShift:Int = 0;
+
+    /**
+     * The scene of a frame drawn in place is made again once, whatever the
+     * number of views rendered: each view replays the operations of the
+     * frame's scene from the end of the previous view (`inPlaceSceneCursor`,
+     * an index of the frame's scene, which stays as it was until the last
+     * view is done) up to its own range, then its own operations, into this
+     * scene (the spare frame's); the last view replays the rest. Null until
+     * a view needs the scene made again. Meanwhile the indices recorded by
+     * the views are those of the scene being made: `inPlaceSceneShift` is
+     * what the views rendered so far added to the indices after them.
+     * `flushInPlaceScene` ends it early (a full frame takes over).
+     */
+    var inPlaceNewScene:Null<Scene> = null;
+
+    var inPlaceSceneCursor:Int = 0;
+
+    var inPlaceSceneShift:Int = 0;
+
+    /** Same as `inPlaceNewScene`, for the tab order */
+    var inPlaceNewTabs:Null<TabStopMap> = null;
+
+    var inPlaceTabsCursor:Int = 0;
+
+    var inPlaceTabsShift:Int = 0;
+
+    /**
+     * For tests: the scene and the tab order are made again after each
+     * view rendered in place (one replay of the scene per view), which is
+     * also what a view whose ranges do not follow those of the previous
+     * one gets (see `amendView`). The frames drawn are the same.
+     */
+    @:noCompletion
+    public static var inPlaceReplayPerView:Bool = false;
+
+    #if glaze_debug_counters
+    /**
+     * Number of primitives replayed to make the scene again around the
+     * views rendered in place during the last frame drawn in place (those
+     * of the scene and those the views painted; what is painted after the
+     * tree is not replayed), for tests (`glaze_debug_counters`).
+     */
+    public var inPlaceReplayedPrimitives(default, null):Int = 0;
+    #end
+
     /** What the view rendered in place paints (then replayed in the frame's scene and tab order) */
     final inPlaceScene:Scene = new Scene();
 
@@ -4078,7 +4133,7 @@ class Window implements WindowInvalidator {
         }
         // Many views, or views drawing most of the frame: a full frame
         // costs the same or less (each view rendered in place moves the
-        // entries drawn after it, and makes the scene again)
+        // entries drawn after it; the scene is made again once)
         if (roots.length == 0 || roots.length > MAX_IN_PLACE_VIEWS) {
             return false;
         }
@@ -4130,6 +4185,10 @@ class Window implements WindowInvalidator {
         inPlaceOldViews.resize(0);
         amendOldAccessed.resize(0);
         inPlaceDroppedStates = false;
+        resetInPlaceScene();
+        #if glaze_debug_counters
+        inPlaceReplayedPrimitives = 0;
+        #end
 
         // The deferred draws of the frame are drawn again by the views
         // rendered (see `deferredDrawsReplaceable`): their elements are
@@ -4150,6 +4209,9 @@ class Window implements WindowInvalidator {
                 // A full frame (its ancestors render), where the view uses
                 // the render it just made
                 inPlaceFallbackCount++;
+                // The scene made so far is completed: the full frame reuses
+                // its ranges
+                flushInPlaceScene();
                 dirtyViews.clear();
                 // The deferred draws of the views rendered so far are not
                 // drawn yet (they are with the last view): these views
@@ -4415,10 +4477,30 @@ class Window implements WindowInvalidator {
         final baseInput = frame.inputHandlers.length;
         final baseRegions = frame.textInputRegions.length;
         final baseCursors = frame.cursorStyles.length;
+        // One pass over the scene and the tab order for all the views (see
+        // `inPlaceNewScene`) needs the ranges of this view after those of
+        // the previous one, and what is drawn after the tree after them
+        // all. Otherwise what was made so far is completed first, and the
+        // view starts from it (one replay per view, as before)
+        if (inPlaceNewScene != null || inPlaceNewTabs != null) {
+            if (inPlaceReplayPerView
+                || state.paintStart.sceneIndex - inPlaceSceneShift < inPlaceSceneCursor
+                || state.paintStart.tabHandleIndex - inPlaceTabsShift < inPlaceTabsCursor
+                || state.paintEnd.sceneIndex < state.paintStart.sceneIndex
+                || state.paintEnd.tabHandleIndex < state.paintStart.tabHandleIndex
+                || (last && (tailPaintStart.sceneIndex < state.paintEnd.sceneIndex || tailPaintStart.tabHandleIndex < state.paintEnd.tabHandleIndex))) {
+                flushInPlaceScene();
+            }
+        }
+        // The frame's scene and tab order, as they were when the frame
+        // started (unless completed above); the lengths and the indices of
+        // the views are those of the scene and tab order being made
+        final sceneShift = inPlaceSceneShift;
+        final tabsShift = inPlaceTabsShift;
         final oldScene = frame.scene;
         final oldTabs = frame.tabStops;
-        final oldSceneLength = oldScene.paintIndex();
-        final oldTabsLength = oldTabs.paintIndex();
+        final oldSceneLength = oldScene.paintIndex() + sceneShift;
+        final oldTabsLength = oldTabs.paintIndex() + tabsShift;
 
         amending = true;
         frame.dispatchTree.amending = true;
@@ -4443,6 +4525,9 @@ class Window implements WindowInvalidator {
         // 1: the view paints into a scene of its own; 2: what is drawn
         // after the tree paints into the scene made again
         var scenesSwapped = 0;
+        // Whether this rendering added to the scene or the tab order being
+        // made (they cannot be completed anymore if it throws)
+        var replayed = false;
         try {
             // Render and layout of its subtree, its nodes adopted
             elementIdNode = state.stateId;
@@ -4533,6 +4618,8 @@ class Window implements WindowInvalidator {
             frame.tabStops = viewTabs;
             sceneSource = oldScene;
             tabStopsSource = oldTabs;
+            sceneSourceShift = sceneShift;
+            tabStopsSourceShift = tabsShift;
             scenesSwapped = 1;
             elementIdNode = state.stateId;
             pushTextStyle(state.inPlaceTextStyleRefinement);
@@ -4548,41 +4635,71 @@ class Window implements WindowInvalidator {
             elementIdNode = elementIdRoot;
 
             // The scene is made again around its operations (replayed, so
-            // draw orders are computed as in a full frame), unless it has
-            // none before and after (out of view); the tab order only when
-            // its tab operations changed
-            // With the last view, the tree ends where the deferred draws
-            // of the last frame start: they are left out, what is drawn
-            // after the tree in this frame is painted after it
+            // draw orders are computed as in a full frame), unless no view
+            // had or has any so far (out of view); the tab order only when
+            // the tab operations of a view changed. Once for the frame: this
+            // view continues what the views before it started (see
+            // `inPlaceNewScene`), from where they stopped in the frame's
+            // scene to its own range, then its operations
+            // With the last view, the rest of the tree follows; the tree
+            // ends where the deferred draws of the last frame start: they
+            // are left out, what is drawn after the tree in this frame is
+            // painted after it
             final viewOps = viewScene.paintIndex();
             final treeSceneEnd = last ? tailPaintStart.sceneIndex : oldSceneLength;
             final treeTabsEnd = last ? tailPaintStart.tabHandleIndex : oldTabsLength;
             final paintsAfter = last && (tooltipElement != null || frame.deferredDraws.length > deferredSkipEnd - deferredSkipStart);
-            var scene = oldScene;
-            if (viewOps > 0 || oldPaintEnd.sceneIndex > oldPaintStart.sceneIndex || treeSceneEnd < oldSceneLength || paintsAfter) {
+            replayed = true;
+            var scene = inPlaceNewScene;
+            if (scene == null && (viewOps > 0 || oldPaintEnd.sceneIndex > oldPaintStart.sceneIndex || treeSceneEnd < oldSceneLength || paintsAfter)) {
                 scene = spare.scene;
-                scene.replay(0, oldPaintStart.sceneIndex, oldScene);
+                inPlaceNewScene = scene;
+                inPlaceSceneCursor = 0;
+            }
+            if (scene != null) {
+                #if glaze_debug_counters
+                final primitivesBefore = scene.len();
+                #end
+                scene.replay(inPlaceSceneCursor, oldPaintStart.sceneIndex - sceneShift, oldScene);
                 scene.replay(0, viewOps, viewScene);
-                scene.replay(oldPaintEnd.sceneIndex, treeSceneEnd, oldScene);
+                inPlaceSceneCursor = oldPaintEnd.sceneIndex - sceneShift;
+                if (last) {
+                    scene.replay(inPlaceSceneCursor, treeSceneEnd - sceneShift, oldScene);
+                }
+                #if glaze_debug_counters
+                inPlaceReplayedPrimitives += scene.len() - primitivesBefore;
+                #end
             }
+            inPlaceSceneShift = sceneShift + viewOps - (oldPaintEnd.sceneIndex - oldPaintStart.sceneIndex);
             final viewTabOps = viewTabs.paintIndex();
-            var tabs = oldTabs;
-            if (treeTabsEnd < oldTabsLength || paintsAfter || !sameTabOperations(viewTabs, oldTabs, oldPaintStart.tabHandleIndex, oldPaintEnd.tabHandleIndex)) {
+            var tabs = inPlaceNewTabs;
+            if (tabs == null && (treeTabsEnd < oldTabsLength || paintsAfter
+                || !sameTabOperations(viewTabs, oldTabs, oldPaintStart.tabHandleIndex - tabsShift, oldPaintEnd.tabHandleIndex - tabsShift))) {
                 tabs = spare.tabStops;
-                tabs.replayRange(oldTabs, 0, oldPaintStart.tabHandleIndex);
-                tabs.replayRange(viewTabs, 0, viewTabOps);
-                tabs.replayRange(oldTabs, oldPaintEnd.tabHandleIndex, treeTabsEnd);
+                inPlaceNewTabs = tabs;
+                inPlaceTabsCursor = 0;
             }
-            frame.scene = scene;
-            frame.tabStops = tabs;
-            scenesSwapped = 2;
+            if (tabs != null) {
+                tabs.replayRange(oldTabs, inPlaceTabsCursor, oldPaintStart.tabHandleIndex - tabsShift);
+                tabs.replayRange(viewTabs, 0, viewTabOps);
+                inPlaceTabsCursor = oldPaintEnd.tabHandleIndex - tabsShift;
+                if (last) {
+                    tabs.replayRange(oldTabs, inPlaceTabsCursor, treeTabsEnd - tabsShift);
+                }
+            }
+            inPlaceTabsShift = tabsShift + viewTabOps - (oldPaintEnd.tabHandleIndex - oldPaintStart.tabHandleIndex);
             viewScene.clear();
             viewTabs.clear();
 
-            // Drawn after the tree, into the scene and the tab order made
-            // again (the deferred draws reused with a view index the
-            // previous ones, still the sources)
+            var newSceneLength = oldSceneLength + inPlaceSceneShift - sceneShift;
+            var newTabsLength = oldTabsLength + inPlaceTabsShift - tabsShift;
             if (last) {
+                // Drawn after the tree, into the scene and the tab order
+                // made again (the deferred draws reused with a view index
+                // the previous ones, still the sources)
+                frame.scene = scene != null ? scene : oldScene;
+                frame.tabStops = tabs != null ? tabs : oldTabs;
+                scenesSwapped = 2;
                 paintIndexInto(newTailPaintStart);
                 paintDeferredDraws();
                 if (tooltipElement != null) {
@@ -4591,26 +4708,41 @@ class Window implements WindowInvalidator {
                 paintIndexInto(newTailPaintEnd);
                 deferredSkipStart = 0;
                 deferredSkipEnd = 0;
+                sceneSource = null;
+                tabStopsSource = null;
+                // The frame's scene and tab order are the ones made again
+                if (scene != null) {
+                    spare.scene = oldScene;
+                    oldScene.clear();
+                }
+                if (tabs != null) {
+                    spare.tabStops = oldTabs;
+                    oldTabs.clear();
+                }
+                resetInPlaceScene();
+                scenesSwapped = 0;
+                replayed = false;
+                if (scene != null) {
+                    scene.finish();
+                }
+                newSceneLength = frame.scene.paintIndex();
+                newTabsLength = frame.tabStops.paintIndex();
             }
-            sceneSource = null;
-            tabStopsSource = null;
-            scenesSwapped = 0;
-            if (scene != oldScene) {
-                spare.scene = oldScene;
-                oldScene.clear();
-            }
-            if (tabs != oldTabs) {
-                spare.tabStops = oldTabs;
-                oldTabs.clear();
-            }
-            if (scene != oldScene) {
-                scene.finish();
+            else {
+                // Until the last view: the frame keeps its scene and tab
+                // order, the sources of the views rendered next
+                frame.scene = oldScene;
+                frame.tabStops = oldTabs;
+                sceneSource = null;
+                tabStopsSource = null;
+                scenesSwapped = 0;
             }
 
             // The new entries in place of the old ones
             spliceInPlace(state, baseDeferred, baseNodes, baseAccessed, baseMouse, baseInput, baseRegions, baseCursors,
                 oldLayoutAccessedStart, oldLayoutAccessedEnd, oldLayoutAccessedStartTime, oldLayoutAccessedEndTime,
-                oldSceneLength, viewOps, oldTabsLength, viewTabOps, oldViewsStart);
+                oldSceneLength, viewOps, newSceneLength, oldTabsLength, viewTabOps, newTabsLength, oldViewsStart);
+            replayed = false;
         }
         catch (e:haxe.Exception) {
             deferredSkipStart = 0;
@@ -4618,17 +4750,20 @@ class Window implements WindowInvalidator {
             if (scenesSwapped != 0) {
                 inPlaceScene.clear();
                 inPlaceTabStops.clear();
-                if (scenesSwapped == 2) {
-                    // Made again in the spare frame's
-                    if (frame.scene != oldScene) frame.scene.clear();
-                    if (frame.tabStops != oldTabs) frame.tabStops.clear();
-                }
                 frame.scene = oldScene;
                 frame.tabStops = oldTabs;
                 sceneSource = null;
                 tabStopsSource = null;
             }
             abortInPlace(spare, imageCache, baseHitboxes, baseTooltips, baseDeferred, baseNodes, baseAccessed, baseMouse, baseInput, baseRegions, baseCursors);
+            if (replayed) {
+                // The scene being made holds a part of this rendering
+                discardInPlaceScene();
+            }
+            else {
+                // What the views rendered before made is completed
+                flushInPlaceScene();
+            }
             throw glaze.util.Exceptions.rethrow(e);
         }
         endInPlace(spare, imageCache, true);
@@ -4639,6 +4774,77 @@ class Window implements WindowInvalidator {
         }
         inPlaceViewCount++;
         return true;
+    }
+
+    inline function resetInPlaceScene():Void {
+        inPlaceNewScene = null;
+        inPlaceSceneCursor = 0;
+        inPlaceSceneShift = 0;
+        inPlaceNewTabs = null;
+        inPlaceTabsCursor = 0;
+        inPlaceTabsShift = 0;
+        sceneSourceShift = 0;
+        tabStopsSourceShift = 0;
+    }
+
+    /**
+     * Completes the scene and the tab order being made by the views
+     * rendered in place so far (see `inPlaceNewScene`) with the rest of the
+     * frame's, which they replace: the indices recorded by the views are
+     * those of the frame's scene and tab order again. Called between two
+     * views (the frame being drawn is the spare one): before a full frame
+     * takes over, or before a view that cannot continue the pass.
+     */
+    function flushInPlaceScene():Void {
+        final frame = renderedFrame;
+        final spare = nextFrame;
+        final scene = inPlaceNewScene;
+        if (scene != null) {
+            final old = frame.scene;
+            #if glaze_debug_counters
+            final primitivesBefore = scene.len();
+            #end
+            scene.replay(inPlaceSceneCursor, old.paintIndex(), old);
+            #if glaze_debug_counters
+            inPlaceReplayedPrimitives += scene.len() - primitivesBefore;
+            #end
+            frame.scene = scene;
+            spare.scene = old;
+            old.clear();
+            scene.finish();
+        }
+        final tabs = inPlaceNewTabs;
+        if (tabs != null) {
+            final old = frame.tabStops;
+            tabs.replayRange(old, inPlaceTabsCursor, old.paintIndex());
+            frame.tabStops = tabs;
+            spare.tabStops = old;
+            old.clear();
+        }
+        resetInPlaceScene();
+    }
+
+    /**
+     * An in place rendering threw after it added to the scene or the tab
+     * order being made (see `inPlaceNewScene`): they are dropped, the frame
+     * keeps the ones it had when it started. When views were rendered in
+     * place before in this frame, the indices of the views do not match
+     * them anymore: no view of the frame is reused (the next frame is drawn
+     * whole, see `abortInPlace`).
+     */
+    function discardInPlaceScene():Void {
+        if (inPlaceNewScene != null) {
+            inPlaceNewScene.clear();
+        }
+        if (inPlaceNewTabs != null) {
+            inPlaceNewTabs.clear();
+        }
+        if (inPlaceViewCount > 0) {
+            for (other in renderedFrame.viewStates) {
+                invalidateViewState(other);
+            }
+        }
+        resetInPlaceScene();
     }
 
     /**
@@ -4842,7 +5048,8 @@ class Window implements WindowInvalidator {
      */
     function spliceInPlace(state:ViewElement.ViewElementState, baseDeferred:Int, baseNodes:Int, baseAccessed:Int, baseMouse:Int, baseInput:Int,
             baseRegions:Int, baseCursors:Int, oldLayoutAccessedStart:Int, oldLayoutAccessedEnd:Int, oldLayoutAccessedStartTime:Float,
-            oldLayoutAccessedEndTime:Float, oldSceneLength:Int, viewOps:Int, oldTabsLength:Int, viewTabOps:Int, oldViewsStart:Int):Void {
+            oldLayoutAccessedEndTime:Float, oldSceneLength:Int, viewOps:Int, newSceneLength:Int, oldTabsLength:Int, viewTabOps:Int, newTabsLength:Int,
+            oldViewsStart:Int):Void {
         final frame = renderedFrame;
         final tree = frame.dispatchTree;
         final oldPrepaintStart = amendOldPrepaintStart;
@@ -5068,13 +5275,13 @@ class Window implements WindowInvalidator {
             // Painted in place, after the tree
             spliceScene.addRange(tqs.sceneIndex, oldSceneLength, tqs.time, tqe.time, ntqs.sceneIndex, ntqe.sceneIndex, ntqs.time, ntqe.time);
         }
-        spliceScene.prepare(frame.scene.paintIndex());
+        spliceScene.prepare(newSceneLength);
         spliceTabs.reset(oldTabsLength, true);
         spliceTabs.addRange(oldPaintStart.tabHandleIndex, oldPaintEnd.tabHandleIndex, qs, qe, newPaintStart.tabHandleIndex, newPaintEnd.tabHandleIndex, nqs, nqe);
         if (last) {
             spliceTabs.addRange(tqs.tabHandleIndex, oldTabsLength, tqs.time, tqe.time, ntqs.tabHandleIndex, ntqe.tabHandleIndex, ntqs.time, ntqe.time);
         }
-        spliceTabs.prepare(frame.tabStops.paintIndex());
+        spliceTabs.prepare(newTabsLength);
 
         remapViewStates(state, oldLayoutAccessedStartTime, oldLayoutAccessedEndTime, oldViewsStart);
 
@@ -5974,9 +6181,24 @@ class Window implements WindowInvalidator {
         }
         // While a view renders in place, the frame's scene and tab order
         // are being made again: the ranges index the previous ones
-        next.tabStops.replayRange(tabStopsSource != null ? tabStopsSource : rendered.tabStops, start.tabHandleIndex, end.tabHandleIndex);
+        // (as they were when the frame started: the indices are moved back
+        // by what the views rendered in place before added, see
+        // `sceneSourceShift`)
+        final tabsSource = tabStopsSource;
+        if (tabsSource != null) {
+            next.tabStops.replayRange(tabsSource, start.tabHandleIndex - tabStopsSourceShift, end.tabHandleIndex - tabStopsSourceShift);
+        }
+        else {
+            next.tabStops.replayRange(rendered.tabStops, start.tabHandleIndex, end.tabHandleIndex);
+        }
         windowTextSystem.reuseLayouts(start.lineLayoutIndex, end.lineLayoutIndex);
-        next.scene.replay(start.sceneIndex, end.sceneIndex, sceneSource != null ? sceneSource : rendered.scene);
+        final source = sceneSource;
+        if (source != null) {
+            next.scene.replay(start.sceneIndex - sceneSourceShift, end.sceneIndex - sceneSourceShift, source);
+        }
+        else {
+            next.scene.replay(start.sceneIndex, end.sceneIndex, rendered.scene);
+        }
     }
 
 /// View caching: debugging
@@ -6257,6 +6479,12 @@ class Window implements WindowInvalidator {
         problem = keptIndices('paint operations', verification.paintStart.sceneIndex, verification.paintEnd.sceneIndex, state.paintStart.sceneIndex, state.paintEnd.sceneIndex);
         if (problem != null) return problem;
         final oldScene = sceneSource != null ? sceneSource : old.scene;
+        if (sceneSource != null && sceneSourceShift != 0) {
+            // (see `sceneSourceShift`)
+            for (i in 0...verifyKeptOld.length) {
+                verifyKeptOld[i] -= sceneSourceShift;
+            }
+        }
         return next.scene.indexedDifference(verifyKeptNew, oldScene, verifyKeptOld);
     }
     #end

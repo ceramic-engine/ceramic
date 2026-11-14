@@ -51,6 +51,7 @@ class InPlaceRenderingTest extends TestCase {
             window.destroy();
         }
         windows.resize(0);
+        Window.inPlaceReplayPerView = false;
         flushImmediate();
     }
 
@@ -873,6 +874,211 @@ class InPlaceRenderingTest extends TestCase {
         return dump(a) == dump(b) && a.debugFrameSummary() == b.debugFrameSummary();
     }
 
+/// One replay of the scene per frame drawn in place, whatever the number of views (`Window.inPlaceNewScene`)
+
+    /** Number of primitives of the scene of the caching window */
+    inline function primitives(r:InPlaceRows):Int {
+        return r.cached.renderedScene().len();
+    }
+
+    function testTwoViewsReplayTheSceneOnce() {
+        twoViewsSteps(true);
+    }
+
+    /** Without the check: the clean views inside the views rendered are reused for real */
+    function testTwoViewsReplayTheSceneOnceReusingViews() {
+        countsRenders();
+        twoViewsSteps(false);
+    }
+
+    function twoViewsSteps(log:Bool):Void {
+        final r = rows(20);
+        final first = r.models[2].read(app);
+        final second = r.models[13].read(app);
+        // Labels of other lengths: what follows the first view moves
+        first.label = 'Row 2 changed';
+        second.label = 'B';
+        inPlaceFrame(r, 2, 'two rows');
+        #if glaze_debug_counters
+        final once = r.cached.inPlaceReplayedPrimitives;
+        assertEquals(primitives(r), once, 'two views: each primitive of the scene replayed once');
+        #end
+        first.label = 'Row 2';
+        inPlaceFrame(r, 1, 'one row');
+        #if glaze_debug_counters
+        assertEquals(primitives(r), r.cached.inPlaceReplayedPrimitives, 'one view');
+        #end
+        // The scene made again after each view (as it was before, and as
+        // it is for a view that cannot continue the pass): the same frame
+        Window.inPlaceReplayPerView = true;
+        first.label = 'Row 2 changed again';
+        second.label = 'C';
+        inPlaceFrame(r, 2, 'two rows, one replay per view');
+        #if glaze_debug_counters
+        final twice = r.cached.inPlaceReplayedPrimitives;
+        assertEquals(2 * primitives(r), twice, 'one replay per view: twice the scene');
+        if (log) trace('replayed primitives with two views: $once in one pass, $twice with one replay per view (scene: ${primitives(r)})');
+        #end
+        Window.inPlaceReplayPerView = false;
+        first.label = 'Row 2 last';
+        second.label = 'Row 13 last';
+        inPlaceFrame(r, 2, 'two rows again');
+        #if glaze_debug_counters
+        assertEquals(primitives(r), r.cached.inPlaceReplayedPrimitives, 'one pass again');
+        #end
+    }
+
+    function testThreeViewsReplayTheSceneOnce() {
+        threeViewsSteps();
+    }
+
+    function testThreeViewsReplayTheSceneOnceReusingViews() {
+        countsRenders();
+        threeViewsSteps();
+    }
+
+    function threeViewsSteps():Void {
+        final r = rows(20);
+        final a = r.models[1].read(app);
+        final b = r.models[7].read(app);
+        final c = r.models[11].read(app);
+        for (step in 0...6) {
+            // Paint operations and tab stops of other counts in each view
+            // (the first one gets and loses a tab stop: the tab order is
+            // made again too), a badge view reused in each
+            a.label = step % 2 == 0 ? 'Row 1 with a longer label' : 'R';
+            a.extra = true;
+            a.extraFocus = step % 2 == 0;
+            b.label = 'Row 7 step $step';
+            b.extra = step % 3 == 0;
+            b.extraFocus = true;
+            c.label = step % 2 == 0 ? 'c' : 'Row 11 step $step';
+            c.extra = step % 3 != 0;
+            c.extraFocus = step >= 3;
+            inPlaceFrame(r, 3, 'three rows, step $step');
+            #if glaze_debug_counters
+            assertEquals(primitives(r), r.cached.inPlaceReplayedPrimitives, 'three views, step $step: each primitive replayed once');
+            #end
+        }
+        Window.inPlaceReplayPerView = true;
+        a.label = 'Row 1';
+        b.label = 'Row 7';
+        c.label = 'Row 11';
+        c.extraFocus = false;
+        inPlaceFrame(r, 3, 'three rows, one replay per view');
+        #if glaze_debug_counters
+        assertTrue(r.cached.inPlaceReplayedPrimitives > 2 * primitives(r), 'one replay per view: ${r.cached.inPlaceReplayedPrimitives} for ${primitives(r)}');
+        #end
+    }
+
+    function testTwoViewsAndADeferredDrawReplayTheSceneOnce() {
+        deferredDrawSteps();
+    }
+
+    function testTwoViewsAndADeferredDrawReplayTheSceneOnceReusingViews() {
+        countsRenders();
+        deferredDrawSteps();
+    }
+
+    function deferredDrawSteps():Void {
+        final r = rows(8);
+        // The popover of the first or of the last of the two views
+        for (popoverRow in [1, 5]) {
+            final otherRow = popoverRow == 1 ? 4 : 2;
+            final model = r.models[popoverRow].read(app);
+            final other = r.models[otherRow].read(app);
+            model.popover = true;
+            model.popoverItems = 2;
+            other.label = 'Row $otherRow changed';
+            inPlaceFrame(r, 2, 'row $popoverRow: popover appears');
+            assertEquals(1, deferredDraws(r.cached));
+            #if glaze_debug_counters
+            assertTrue(r.cached.inPlaceReplayedPrimitives < primitives(r), 'row $popoverRow: the popover is painted, not replayed');
+            #end
+            model.label = 'Row $popoverRow with its popover';
+            other.label = 'R';
+            other.extra = true;
+            other.extraFocus = true;
+            inPlaceFrame(r, 2, 'row $popoverRow: popover stays');
+            assertEquals(1, deferredDraws(r.cached));
+            #if glaze_debug_counters
+            final replayed = r.cached.inPlaceReplayedPrimitives;
+            #end
+            // A deferred draw reused with a clean view (the badge), in the
+            // other view
+            other.badgePopover = true;
+            frame();
+            assertSameFrames(r.cached, r.reference, 'row $popoverRow: badge popover');
+            model.label = 'Row $popoverRow';
+            other.label = 'Row $otherRow with a badge popover';
+            inPlaceFrame(r, 2, 'row $popoverRow: two popovers, one reused');
+            assertEquals(2, deferredDraws(r.cached));
+            other.badgePopover = false;
+            other.label = 'R';
+            model.label = 'Row $popoverRow with its popover';
+            frame();
+            assertSameFrames(r.cached, r.reference, 'row $popoverRow: badge popover gone');
+            model.popover = false;
+            inPlaceFrame(r, 1, 'row $popoverRow: popover disappears');
+            #if glaze_debug_counters
+            // The scene is the tree of the frame that had the popover
+            assertEquals(primitives(r), replayed, 'row $popoverRow: the tree replayed once under the popover');
+            assertEquals(primitives(r), r.cached.inPlaceReplayedPrimitives, 'row $popoverRow: without popover');
+            #end
+        }
+    }
+
+    /** A view gives way to a full frame after others were rendered in place: the frame reuses what they made */
+    function testAViewGivingWayAfterOthersWereRendered() {
+        givingWaySteps();
+    }
+
+    function testAViewGivingWayAfterOthersWereRenderedReusingViews() {
+        countsRenders();
+        givingWaySteps();
+    }
+
+    function givingWaySteps():Void {
+        final r = rows(12);
+        var step = 0;
+        for (tallRow in [5, 8, 2, 8]) {
+            step++;
+            final fallbacks = r.cached.inPlaceFallbackCount;
+            for (row in [2, 5, 8]) {
+                final model = r.models[row].read(app);
+                model.label = step % 2 == 0 ? 'R' : 'Row $row before the tall one, step $step';
+                model.extra = step % 2 == 0;
+                model.extraFocus = true;
+            }
+            final tall = r.models[tallRow].read(app);
+            tall.tall = !tall.tall;
+            frame();
+            assertEquals(0, r.cached.inPlaceViewCount, 'row $tallRow: drawn whole');
+            assertEquals(fallbacks + 1, r.cached.inPlaceFallbackCount, 'row $tallRow: gave way');
+            final problem = r.cached.debugCheckViewRanges(40);
+            if (problem != null) {
+                fail('row $tallRow: $problem');
+            }
+            assertSameFrames(r.cached, r.reference, 'row $tallRow taller or back');
+            r.models[3].read(app).label = 'Row 3 step $step';
+            r.models[9].read(app).label = step % 2 == 0 ? 'Row 9 step $step' : '9';
+            inPlaceFrame(r, 2, 'after row $tallRow');
+            #if glaze_debug_counters
+            assertEquals(primitives(r), r.cached.inPlaceReplayedPrimitives, 'after row $tallRow: one pass');
+            #end
+        }
+    }
+
+    /** `randomSteps` with the scene made again after each view (the path of a view that cannot continue the pass) */
+    function testRandomSequencesWithOneReplayPerView() {
+        Window.inPlaceReplayPerView = true;
+        randomSteps(91, 250);
+        for (window in windows) window.destroy();
+        windows.resize(0);
+        countsRenders();
+        randomSteps(31337, 250);
+    }
+
 /// With the check of `glaze_verify_cache` (every frame drawn in place is compared with a full frame)
 
     function testFramesDrawnInPlaceAreChecked() {
@@ -906,6 +1112,9 @@ class InPlaceRowModel extends Model {
     @observe public var tall:Bool = false;
 
     @observe public var extra:Bool = false;
+
+    /** Whether the extra box is a tab stop */
+    @observe public var extraFocus:Bool = false;
 
     @observe public var popover:Bool = false;
 
@@ -977,6 +1186,9 @@ class InPlaceRows {
 
     public final focusHandles:Array<FocusHandle> = [];
 
+    /** The tab stops of the extra boxes (`InPlaceRowModel.extraFocus`) */
+    public final extraHandles:Array<FocusHandle> = [];
+
     public final list:Entity<InPlaceView>;
 
     public final root:Entity<InPlaceView>;
@@ -992,6 +1204,7 @@ class InPlaceRows {
             final model = app.newEntity(_ -> new InPlaceRowModel('Row $i'));
             models.push(model);
             focusHandles.push(app.focusHandle().tabIndex(i).tabStop(true));
+            extraHandles.push(app.focusHandle().tabIndex(100 + i).tabStop(true));
             final index = i;
             badgeViews.push(app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((window, cx) -> {
                 final value = model.read(cx).badge;
@@ -1036,12 +1249,16 @@ class InPlaceRows {
         final slot = div().flexNone().w(px(30)).h(px(14)).overflowHidden();
         if (model.extra) {
             final clicks = window.useKeyedState('extra-clicks', cx.app, _ -> 0);
-            slot.child(div().id('extra').sizeFull().bg(red()).textXs().child('${clicks.read(cx).value}')
+            final extra = div().id('extra').sizeFull().bg(red()).textXs().child('${clicks.read(cx).value}')
                 .onClick((_, _, cx) -> {
                     log.push('extra $index');
                     final state = clicks.read(cx);
                     state.value = state.value + 1;
-                }));
+                });
+            if (model.extraFocus) {
+                extra.trackFocus(extraHandles[index]);
+            }
+            slot.child(extra);
         }
         row.child(slot);
         // The popover in a clipped box of no size, always there: the row lays
