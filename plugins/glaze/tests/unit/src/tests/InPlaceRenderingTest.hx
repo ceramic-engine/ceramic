@@ -112,7 +112,7 @@ class InPlaceRenderingTest extends TestCase {
     }
 
     /** The middle of row `index` (the list starts at 24: padding, header, gap) */
-    static inline function rowY(index:Int):Float {
+    public static inline function rowY(index:Int):Float {
         return 34 + 20 * index;
     }
 
@@ -341,6 +341,362 @@ class InPlaceRenderingTest extends TestCase {
         assertSameFrames(r.cached, r.reference, 'in place again');
     }
 
+    /**
+     * Two views rendered in place in one frame, one of them showing a
+     * popover: its deferred draw is prepainted and painted once.
+     */
+    function testTwoRowsInPlaceWithAPopoverAppearing() {
+        final r = rows(8);
+        #if glaze_verify_cache
+        final failures = Window.inPlaceVerificationFailures;
+        #end
+        // The first of the two rows shows a popover
+        r.models[1].read(app).popover = true;
+        r.models[4].read(app).label = 'Row 4 changed';
+        frame();
+        assertEquals(2, r.cached.inPlaceViewCount, 'popover on the first row: in place');
+        assertTrue(r.cached.debugFrameSummary().indexOf('deferred draws 1') != -1, 'one deferred draw');
+        assertSameFrames(r.cached, r.reference, 'popover on the first row');
+        #if glaze_verify_cache
+        assertEquals(failures, Window.inPlaceVerificationFailures, 'popover on the first row: checked');
+        #end
+        r.models[1].read(app).popover = false;
+        frame();
+        assertSameFrames(r.cached, r.reference, 'no popover');
+        // The second of the two rows shows a popover
+        r.models[2].read(app).label = 'Row 2 changed';
+        r.models[5].read(app).popover = true;
+        frame();
+        assertEquals(2, r.cached.inPlaceViewCount, 'popover on the second row: in place');
+        assertSameFrames(r.cached, r.reference, 'popover on the second row');
+        r.models[5].read(app).popover = false;
+        frame();
+        assertSameFrames(r.cached, r.reference, 'no popover again');
+        // Both
+        r.models[3].read(app).popover = true;
+        r.models[6].read(app).popover = true;
+        frame();
+        assertEquals(2, r.cached.inPlaceViewCount, 'two popovers: in place');
+        assertTrue(r.cached.debugFrameSummary().indexOf('deferred draws 2') != -1, 'two deferred draws');
+        assertSameFrames(r.cached, r.reference, 'two popovers');
+        #if glaze_verify_cache
+        assertEquals(failures, Window.inPlaceVerificationFailures, 'checked');
+        #end
+    }
+
+    /** Frames drawn in place and fallbacks of the caching window, and the frames found different by the check */
+    function inPlaceCounters(r:InPlaceRows):Array<Int> {
+        return [r.cached.inPlaceFrameCount, r.cached.inPlaceFallbackCount,
+            #if glaze_verify_cache Window.inPlaceVerificationFailures #else 0 #end];
+    }
+
+    /** A frame, required to be drawn in place (`views` views), like the reference */
+    function inPlaceFrame(r:InPlaceRows, views:Int, step:String, ?pos:haxe.PosInfos):Void {
+        final before = inPlaceCounters(r);
+        frame();
+        final after = inPlaceCounters(r);
+        assertEquals(views, r.cached.inPlaceViewCount, '$step: views in place', pos);
+        assertEquals(before[0] + 1, after[0], '$step: drawn in place', pos);
+        assertEquals(before[1], after[1], '$step: no fallback', pos);
+        assertEquals(before[2], after[2], '$step: same as a full frame', pos);
+        final problem = r.cached.debugCheckViewRanges(40);
+        if (problem != null) {
+            fail('$step: $problem', pos);
+        }
+        assertSameFrames(r.cached, r.reference, step, pos);
+    }
+
+    /** A frame, required to be drawn whole */
+    function fullFrame(r:InPlaceRows, step:String, ?pos:haxe.PosInfos):Void {
+        final before = inPlaceCounters(r);
+        frame();
+        final after = inPlaceCounters(r);
+        assertEquals(0, r.cached.inPlaceViewCount, '$step: drawn whole', pos);
+        assertEquals(before[0], after[0], '$step: not drawn in place', pos);
+        assertEquals(before[2], after[2], '$step: checked', pos);
+        assertSameFrames(r.cached, r.reference, step, pos);
+    }
+
+    static function deferredDraws(window:Window):Int {
+        final summary = window.debugFrameSummary();
+        final at = summary.indexOf('deferred draws ');
+        return Std.parseInt(summary.substring(at + 15, summary.indexOf('\n', at)));
+    }
+
+    /**
+     * The deferred draws of the last frame all come from the view rendered
+     * in place: the frame is drawn in place, the deferred draws drawn again
+     * after the tree (the popover changes, appears and disappears).
+     */
+    function testDeferredDrawsOfTheViewRenderedInPlace() {
+        final r = rows(8);
+        final model = r.models[2].read(app);
+        model.popover = true;
+        inPlaceFrame(r, 1, 'popover appears');
+        assertEquals(1, deferredDraws(r.cached));
+        // The frame has a deferred draw, from the row rendered
+        for (step in 0...6) {
+            model.label = 'Row 2 step $step';
+            model.popoverItems = step % 4;
+            inPlaceFrame(r, 1, 'popover changes, step $step');
+            assertEquals(1, deferredDraws(r.cached));
+        }
+        // With another view rendered in place, before or after it
+        r.models[0].read(app).label = 'Row 0 too';
+        model.popoverItems = 2;
+        inPlaceFrame(r, 2, 'with a row before');
+        r.models[6].read(app).label = 'Row 6 too';
+        model.popoverItems = 3;
+        inPlaceFrame(r, 2, 'with a row after');
+        r.models[1].read(app).label = 'Row 1 too';
+        r.models[5].read(app).label = 'Row 5 too';
+        model.label = 'Row 2 between';
+        inPlaceFrame(r, 3, 'with rows around');
+        // Hover and click of the list items (drawn after the tree)
+        for (window in windows) window.dispatchEvent(new MouseMoveEvent(point(px(150), px(rowY(2) + 61))));
+        frame();
+        assertSameFrames(r.cached, r.reference, 'hover in the popover');
+        model.label = 'Row 2 hovered';
+        frame();
+        assertSameFrames(r.cached, r.reference, 'popover hovered, row changed');
+        for (window in windows) window.dispatchEvent(new MouseMoveEvent(point(px(390), px(290))));
+        frame();
+        assertSameFrames(r.cached, r.reference, 'mouse away');
+        model.popover = false;
+        inPlaceFrame(r, 1, 'popover disappears');
+        assertEquals(0, deferredDraws(r.cached));
+        model.label = 'Row 2 without';
+        inPlaceFrame(r, 1, 'without popover');
+    }
+
+    /** Deferred draws of several views rendered in place, with priorities (the order of a full frame) */
+    function testDeferredDrawsWithPriorities() {
+        final r = rows(8);
+        // Next to each other: they overlap
+        final a = r.models[1].read(app);
+        final b = r.models[2].read(app);
+        final c = r.models[3].read(app);
+        a.popover = true;
+        a.popoverPriority = 2;
+        a.popoverItems = 2;
+        b.popover = true;
+        b.popoverPriority = 1;
+        b.popoverItems = 2;
+        c.popover = true;
+        c.popoverItems = 2;
+        frame();
+        assertEquals(3, deferredDraws(r.cached));
+        assertSameFrames(r.cached, r.reference, 'three popovers');
+        for (step in 0...6) {
+            a.label = 'A $step';
+            b.label = 'B $step';
+            c.label = 'C $step';
+            a.popoverPriority = (step + 2) % 3;
+            b.popoverPriority = (step + 1) % 3;
+            c.popoverPriority = step % 3;
+            inPlaceFrame(r, 3, 'priorities, step $step');
+            assertEquals(3, deferredDraws(r.cached));
+        }
+        // One of them goes, one comes back
+        b.popover = false;
+        a.label = 'A again';
+        c.label = 'C again';
+        inPlaceFrame(r, 3, 'one popover less');
+        assertEquals(2, deferredDraws(r.cached));
+        b.popover = true;
+        a.popoverPriority = 0;
+        c.popoverPriority = 0;
+        inPlaceFrame(r, 3, 'one popover more');
+        assertEquals(3, deferredDraws(r.cached));
+    }
+
+    /** A deferred draw of a view that is not rendered: a full frame, like before */
+    function testADeferredDrawOfAnotherViewIsDrawnWhole() {
+        final r = rows(8);
+        r.models[1].read(app).popover = true;
+        inPlaceFrame(r, 1, 'popover');
+        r.models[5].read(app).label = 'Row 5 changed';
+        fullFrame(r, 'another row');
+        // One of two popovers only
+        r.models[5].read(app).popover = true;
+        fullFrame(r, 'second popover');
+        r.models[5].read(app).label = 'Row 5 again';
+        fullFrame(r, 'one of two');
+        r.models[1].read(app).label = 'Row 1 again';
+        r.models[5].read(app).label = 'Row 5 both';
+        inPlaceFrame(r, 2, 'both');
+    }
+
+    /** A deferred draw deferred by a deferred draw (nested): a full frame */
+    function testANestedDeferredDrawIsDrawnWhole() {
+        final r = rows(8);
+        final model = r.models[2].read(app);
+        model.popover = true;
+        model.popoverNested = true;
+        // Appears in a frame without any
+        inPlaceFrame(r, 1, 'nested popover appears');
+        assertEquals(2, deferredDraws(r.cached));
+        model.label = 'Row 2 nested';
+        fullFrame(r, 'nested, row changed');
+        assertEquals(2, deferredDraws(r.cached));
+        model.popoverNested = false;
+        fullFrame(r, 'not nested anymore');
+        model.label = 'Row 2 flat';
+        inPlaceFrame(r, 1, 'flat again');
+    }
+
+    /**
+     * Views drawn by a deferred draw (a view in the popover, a popover of a
+     * view inside the row), reused or rendered, with the row rendered in
+     * place first or last in its frame.
+     */
+    function deferredViewsSteps(mode:String):Void {
+        final r = rows(8);
+        final model = r.models[3].read(app);
+        model.popover = true;
+        model.popoverView = true;
+        frame();
+        assertSameFrames(r.cached, r.reference, '$mode: popover with a view');
+        for (step in 0...4) {
+            model.label = 'Row 3 step $step';
+            inPlaceFrame(r, 1, '$mode: row alone, step $step');
+            // First of two (its deferred draw is drawn with the other row)
+            model.label = 'Row 3 first $step';
+            r.models[6].read(app).label = 'Row 6 step $step';
+            inPlaceFrame(r, 2, '$mode: row first, step $step');
+            // Last of two
+            model.label = 'Row 3 last $step';
+            r.models[0].read(app).label = 'Row 0 step $step';
+            inPlaceFrame(r, 2, '$mode: row last, step $step');
+        }
+        // The view of the popover alone: inside a deferred draw of a view that is not rendered
+        model.badge = 4;
+        frame();
+        assertSameFrames(r.cached, r.reference, '$mode: view of the popover');
+        model.popover = false;
+        frame();
+        assertSameFrames(r.cached, r.reference, '$mode: closed');
+
+        // The popover of the badge, a view inside the row
+        final other = r.models[4].read(app);
+        other.badgePopover = true;
+        frame();
+        assertSameFrames(r.cached, r.reference, '$mode: badge popover');
+        assertEquals(1, deferredDraws(r.cached));
+        for (step in 0...4) {
+            other.label = 'Row 4 step $step';
+            inPlaceFrame(r, 1, '$mode: around the badge, step $step');
+            other.label = 'Row 4 first $step';
+            r.models[7].read(app).label = 'Row 7 step $step';
+            inPlaceFrame(r, 2, '$mode: around the badge, first, step $step');
+            other.label = 'Row 4 last $step';
+            r.models[1].read(app).label = 'Row 1 step $step';
+            inPlaceFrame(r, 2, '$mode: around the badge, last, step $step');
+            assertEquals(1, deferredDraws(r.cached));
+        }
+        other.badge = 7;
+        frame();
+        assertSameFrames(r.cached, r.reference, '$mode: badge with its popover');
+        other.badgePopover = false;
+        frame();
+        assertSameFrames(r.cached, r.reference, '$mode: badge popover closed');
+        assertEquals(0, deferredDraws(r.cached));
+    }
+
+    function testViewsDrawnByDeferredDrawsRendered() {
+        // Every view renders (`glaze_verify_cache`), each frame is compared with a full frame
+        deferredViewsSteps('checked');
+    }
+
+    function testViewsDrawnByDeferredDrawsReused() {
+        countsRenders();
+        deferredViewsSteps('reused');
+    }
+
+    /**
+     * Like the suggestions of a code editor: a view rendered on each
+     * keystroke lists them in a deferred draw. Every keystroke is a frame
+     * drawn in place, none a full frame.
+     */
+    function testAListDeferredByAViewRenderedOnEachKeystroke() {
+        final r = rows(12);
+        final editor = r.models[4].read(app);
+        final frames = r.cached.inPlaceFrameCount;
+        final fallbacks = r.cached.inPlaceFallbackCount;
+        final draws = r.cached.drawCount;
+        #if glaze_verify_cache
+        final compared = Window.inPlaceVerifications;
+        final failures = Window.inPlaceVerificationFailures;
+        #end
+        var text = '';
+        final keys = 'window.draw';
+        for (i in 0...keys.length) {
+            text += keys.charAt(i);
+            editor.label = text;
+            // The list opens on the first key, and changes with each one
+            editor.popover = true;
+            editor.popoverPriority = 1;
+            editor.popoverItems = 1 + (keys.length - i) % 5;
+            inPlaceFrame(r, 1, 'key $i');
+            assertEquals(1, deferredDraws(r.cached));
+        }
+        assertEquals(frames + keys.length, r.cached.inPlaceFrameCount, 'every keystroke in place');
+        assertEquals(fallbacks, r.cached.inPlaceFallbackCount, 'no fallback');
+        assertEquals(draws + keys.length, r.cached.drawCount, 'one draw per keystroke');
+        #if glaze_verify_cache
+        assertEquals(compared + keys.length, Window.inPlaceVerifications, 'each one compared with a full frame');
+        assertEquals(failures, Window.inPlaceVerificationFailures, 'none different');
+        #end
+        // A click in the list reaches its item
+        final at = point(px(150), px(rowY(4) + 61));
+        for (window in windows) {
+            window.dispatchEvent(new MouseDownEvent(Left, at));
+            window.dispatchEvent(new MouseUpEvent(Left, at));
+        }
+        frame();
+        // (once per window; the row under the popover is clicked too)
+        final items = r.log.filter(entry -> StringTools.startsWith(entry, 'item 4 '));
+        assertTrue(items.length == 2 && items[0] == items[1], 'clicked items: ${r.log}');
+        assertSameFrames(r.cached, r.reference, 'after the click');
+    }
+
+    /**
+     * A popover appearing under the mouse hides a row from it: the views
+     * rendered before the last one were painted under the deferred draws
+     * of the last frame, so the frame is drawn whole.
+     */
+    function testADeferredDrawHidingTheMouseFromTheTree() {
+        final r = rows(8);
+        for (window in windows) window.dispatchEvent(new MouseMoveEvent(point(px(60), px(rowY(2)))));
+        frame();
+        assertSameFrames(r.cached, r.reference, 'row hovered');
+        final model = r.models[2].read(app);
+        // Alone: painted after its popover is prepainted
+        model.popover = true;
+        model.popoverOccludes = true;
+        frame();
+        assertSameFrames(r.cached, r.reference, 'popover over the hovered row');
+        model.popover = false;
+        frame();
+        assertSameFrames(r.cached, r.reference, 'hovered again');
+        // First of two views
+        final fallbacks = r.cached.inPlaceFallbackCount;
+        model.popover = true;
+        r.models[5].read(app).label = 'Row 5 changed';
+        frame();
+        assertSameFrames(r.cached, r.reference, 'popover over the hovered row, two rows');
+        assertEquals(fallbacks + 1, r.cached.inPlaceFallbackCount, 'drawn whole');
+        // The popover stays: the mouse is hidden as before
+        model.label = 'Row 2 under';
+        r.models[5].read(app).label = 'Row 5 again';
+        inPlaceFrame(r, 2, 'two rows under the popover');
+        model.popover = false;
+        r.models[5].read(app).label = 'Row 5 last';
+        frame();
+        assertSameFrames(r.cached, r.reference, 'popover gone, two rows');
+        assertEquals(fallbacks + 2, r.cached.inPlaceFallbackCount, 'drawn whole again');
+    }
+
     function testElementStatesFollowTheRow() {
         countsRenders();
         final r = rows(6);
@@ -428,11 +784,14 @@ class InPlaceRenderingTest extends TestCase {
         final trail:Array<String> = [];
         var seed = initialSeed;
         var inPlace = 0;
+        var inPlaceWithDeferredDraws = 0;
+        var popoverRow = -1;
         for (i in 0...count) {
             seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
             final row = (seed >> 8) % 24;
             final model = r.models[row].read(app);
-            final name = switch seed % 9 {
+            // (the low bits of the seed have short periods: not for an even count)
+            final name = switch (seed >> 12) % 12 {
                 case 0 | 1:
                     model.label = model.label.length > 30 ? 'Row $row' : model.label + ' +';
                     'label $row';
@@ -458,6 +817,27 @@ class InPlaceRenderingTest extends TestCase {
                 case 7:
                     for (window in windows) window.dispatchEvent(new ScrollEvent(point(px(60), px(100)), ScrollDelta.Pixels(point(px(0), px((seed & 1) == 0 ? -23 : 23)))));
                     'scroll';
+                case 9:
+                    // Opens or closes a popover (one at most: the others close with it)
+                    final open = !model.popover;
+                    for (other in r.models) {
+                        other.read(app).popover = false;
+                    }
+                    model.popover = open;
+                    model.popoverPriority = (seed >> 4) % 3;
+                    model.popoverItems = (seed >> 6) % 4;
+                    model.popoverView = (seed & 8) != 0;
+                    popoverRow = open ? row : -1;
+                    'popover $row ${open ? 'opens' : 'closes'}';
+                case 10 | 11:
+                    // The row with the popover (any row without one), sometimes with another row
+                    final target = popoverRow != -1 ? r.models[popoverRow].read(app) : model;
+                    target.label = target.label.length > 30 ? 'Row' : target.label + ' *';
+                    target.popoverItems = (seed >> 6) % 4;
+                    if ((seed & 16) != 0) {
+                        model.badge = model.badge + 1;
+                    }
+                    'popover row $popoverRow, row $row';
                 case _:
                     model.label = 'Row $row';
                     model.badge = model.badge + 2;
@@ -467,6 +847,9 @@ class InPlaceRenderingTest extends TestCase {
             }
             frame();
             inPlace += r.cached.inPlaceViewCount;
+            if (r.cached.inPlaceViewCount > 0 && deferredDraws(r.cached) > 0) {
+                inPlaceWithDeferredDraws++;
+            }
             trail.push('$name (in place ${r.cached.inPlaceViewCount}, fallbacks ${r.cached.inPlaceFallbackCount})');
             // The ranges recorded by the views point at their own entries
             // (rows and badges, not the list: its content is scrolled)
@@ -481,7 +864,9 @@ class InPlaceRenderingTest extends TestCase {
                 return;
             }
         }
-        assertTrue(inPlace * 3 > count, 'seed $initialSeed: $inPlace views rendered in place in $count steps');
+        // (while a popover is open, a change of another row is a full frame)
+        assertTrue(inPlace * 5 > count, 'seed $initialSeed: $inPlace views rendered in place in $count steps');
+        assertTrue(inPlaceWithDeferredDraws > 5, 'seed $initialSeed: $inPlaceWithDeferredDraws frames drawn in place with deferred draws');
     }
 
     static function sameFrames(a:Window, b:Window):Bool {
@@ -523,6 +908,24 @@ class InPlaceRowModel extends Model {
     @observe public var extra:Bool = false;
 
     @observe public var popover:Bool = false;
+
+    /** Priority of the popover's deferred draw */
+    @observe public var popoverPriority:Int = 0;
+
+    /** Lines listed in the popover (a list of suggestions) */
+    @observe public var popoverItems:Int = 0;
+
+    /** Whether the popover defers a draw itself (nested) */
+    @observe public var popoverNested:Bool = false;
+
+    /** Whether the popover draws a view of its own */
+    @observe public var popoverView:Bool = false;
+
+    /** Whether the popover is drawn over its row and hides it from the mouse */
+    @observe public var popoverOccludes:Bool = false;
+
+    /** Whether the badge view defers a draw of its own */
+    @observe public var badgePopover:Bool = false;
 
     @observe public var badge:Int = 0;
 
@@ -569,6 +972,9 @@ class InPlaceRows {
 
     public final badgeViews:Array<Entity<InPlaceView>> = [];
 
+    /** The view each popover can draw (`InPlaceRowModel.popoverView`) */
+    public final popoverViews:Array<Entity<InPlaceView>> = [];
+
     public final focusHandles:Array<FocusHandle> = [];
 
     public final list:Entity<InPlaceView>;
@@ -586,11 +992,21 @@ class InPlaceRows {
             final model = app.newEntity(_ -> new InPlaceRowModel('Row $i'));
             models.push(model);
             focusHandles.push(app.focusHandle().tabIndex(i).tabStop(true));
+            final index = i;
             badgeViews.push(app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((window, cx) -> {
                 final value = model.read(cx).badge;
-                return div().id('badge').px1().roundedFull().bg(hsla(value / 10, 0.6, 0.5, 1)).textXs().child('$value');
+                final badge = div().id('badge').px1().roundedFull().bg(hsla(value / 10, 0.6, 0.5, 1)).textXs().child('$value');
+                if (model.read(cx).badgePopover) {
+                    // Out of the flow: the badge lays out the same with it
+                    badge.child(div().absolute().size(px(0)).child(deferred(anchored().child(
+                        div().id('badge-popover').w(px(50)).p1().bg(hsla(0.45, 0.7, 0.8, 1)).hover(s -> s.bg(hsla(0.45, 0.7, 0.6, 1))).textXs().child('Badge $index')))));
+                }
+                return badge;
             })));
-            final index = i;
+            popoverViews.push(app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((window, cx) -> {
+                final value = model.read(cx).badge;
+                return div().id('popover-view').h(px(12)).textXs().child('view $index: $value');
+            })));
             rowViews.push(app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((window, cx) -> renderRow(index, window, cx))));
         }
         list = app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((_, _) -> div().id('list').flex().flexCol().h(px(260)).overflowYScroll()
@@ -632,7 +1048,24 @@ class InPlaceRows {
         // out the same with or without it
         final popover = div().flexNone().size(px(0)).overflowHidden();
         if (model.popover) {
-            popover.child(deferred(anchored().child(div().w(px(60)).p1().bg(hsla(0.15, 0.7, 0.8, 1)).child('Popover $index'))));
+            final content = div().id('popover').w(px(60)).p1().bg(hsla(0.15 + 0.2 * model.popoverPriority, 0.7, 0.8, 1)).child('Popover $index');
+            for (item in 0...model.popoverItems) {
+                content.child(div().id('item-$item').h(px(10)).textXs().hover(s -> s.bg(hsla(0.3, 0.5, 0.7, 1)))
+                    .onClick((_, _, _) -> log.push('item $index $item')).child('${model.label} $item'));
+            }
+            if (model.popoverView) {
+                content.child((popoverViews[index] : AnyView));
+            }
+            if (model.popoverNested) {
+                content.child(deferred(anchored().child(div().w(px(40)).p1().bg(hsla(0.8, 0.7, 0.8, 1)).textXs().child('Nested $index'))));
+            }
+            final anchor = anchored();
+            if (model.popoverOccludes) {
+                content.occlude();
+                anchor.position(point(px(40), px(InPlaceRenderingTest.rowY(index) - 6)));
+            }
+            anchor.child(content);
+            popover.child(model.popoverPriority != 0 ? deferred(anchor).withPriority(model.popoverPriority) : deferred(anchor));
         }
         row.child(popover);
         return row;

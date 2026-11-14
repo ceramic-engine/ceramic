@@ -371,6 +371,9 @@ class DeferredDraw {
 
     public final prepaintEnd:PrepaintStateIndex = new PrepaintStateIndex();
 
+    /** The in place rendering that prepainted this draw (`Window.amendSerial`), -1 for a full frame */
+    public var amendSerial:Int = -1;
+
     public final paintStart:PaintIndex = new PaintIndex();
 
     public final paintEnd:PaintIndex = new PaintIndex();
@@ -497,6 +500,23 @@ private class Frame {
     /** Whether some prepaint state was rolled back (`ListState`'s transactions) */
     public var hadRollback:Bool = false;
 
+    /**
+     * Where the deferred draws start and end in the prepaint state and in
+     * the paint state of this frame (they are drawn after the tree): what
+     * an in place rendering replaces as a whole when the deferred draws
+     * come from the views it renders (see `Window.renderInPlace`).
+     */
+    public final deferredPrepaintStart:PrepaintStateIndex = new PrepaintStateIndex();
+
+    public final deferredPrepaintEnd:PrepaintStateIndex = new PrepaintStateIndex();
+
+    public final deferredPaintStart:PaintIndex = new PaintIndex();
+
+    public final deferredPaintEnd:PaintIndex = new PaintIndex();
+
+    /** Whether a dragged view was drawn after the deferred draws */
+    public var hadDrag:Bool = false;
+
     public var scaleFactor:Float = 0;
 
     public var remSize:Float = 0;
@@ -546,6 +566,7 @@ private class Frame {
         serial = 0;
         hasUncachedViews = false;
         hadRollback = false;
+        hadDrag = false;
         rootView = null;
         accessedElementStates.resize(0);
         reusedElementStates.resize(0);
@@ -1924,11 +1945,14 @@ class Window implements WindowInvalidator {
         );
         #end
 
+        prepaintIndexInto(nextFrame.deferredPrepaintStart);
         prepaintDeferredDraws();
+        prepaintIndexInto(nextFrame.deferredPrepaintEnd);
 
         var activeDragElement:Null<AnyElement> = null;
         var tooltipElement:Null<AnyElement> = null;
         final activeDrag = app.activeDrag;
+        nextFrame.hadDrag = activeDrag != null;
         if (activeDrag != null) {
             app.activeDrag = null;
             final element = activeDrag.view.intoAnyElement();
@@ -1952,7 +1976,9 @@ class Window implements WindowInvalidator {
         paintInspector(inspectorElement, app);
         #end
 
+        paintIndexInto(nextFrame.deferredPaintStart);
         paintDeferredDraws();
+        paintIndexInto(nextFrame.deferredPaintEnd);
 
         if (activeDragElement != null) {
             activeDragElement.paint(this, app);
@@ -3585,8 +3611,19 @@ class Window implements WindowInvalidator {
         nextFrame.deferredDraws.push(draw);
     }
 
+    /**
+     * Deferred draws left out by `prepaintDeferredDraws` and
+     * `paintDeferredDraws`: the old ones of the view rendering in place,
+     * still in the frame until its entries are spliced.
+     */
+    var deferredSkipStart:Int = 0;
+
+    var deferredSkipEnd:Int = 0;
+
     function deferredDrawOrder(start:Int, end:Int):Array<Int> {
-        final order = [for (i in start...end) i];
+        final skipStart = deferredSkipStart;
+        final skipEnd = deferredSkipEnd;
+        final order = [for (i in start...end) if (i < skipStart || i >= skipEnd) i];
         final draws = nextFrame.deferredDraws;
         // Stable sort by priority
         haxe.ds.ArraySort.sort(order, (a, b) -> {
@@ -3618,6 +3655,7 @@ class Window implements WindowInvalidator {
 
             for (index in deferredDrawOrder(roundStart, roundEnd)) {
                 final draw = nextFrame.deferredDraws[index];
+                draw.amendSerial = amending ? amendSerial : -1;
                 elementIdNode = draw.elementIdNode;
                 textStyleStack.resize(0);
                 for (style in draw.textStyleStack) textStyleStack.push(style);
@@ -3848,6 +3886,25 @@ class Window implements WindowInvalidator {
     final amendOldPaintStart:PaintIndex = new PaintIndex();
     final amendOldPaintEnd:PaintIndex = new PaintIndex();
 
+    /** Whether the view rendering in place is the last one of the frame (see `amendView`) */
+    var amendLast:Bool = false;
+
+    /**
+     * With the last view rendered in place: where what is drawn after the
+     * tree (deferred draws, tooltip) starts and ends in the entries
+     * appended to the frame.
+     */
+    final amendTailPrepaintStart:PrepaintStateIndex = new PrepaintStateIndex();
+    final amendTailPrepaintEnd:PrepaintStateIndex = new PrepaintStateIndex();
+    final amendTailPaintStart:PaintIndex = new PaintIndex();
+    final amendTailPaintEnd:PaintIndex = new PaintIndex();
+
+    /**
+     * The capture time when the tooltip requests were spliced (before what
+     * is drawn after the tree): the indices captured later are final.
+     */
+    var amendTooltipsTime:Float = 0;
+
     /** Where the line layouts used by the view rendered in place start, and their count */
     final amendLineBase:LineLayoutIndex = new LineLayoutIndex();
     final amendLineEnd:LineLayoutIndex = new LineLayoutIndex();
@@ -4036,6 +4093,9 @@ class Window implements WindowInvalidator {
         if (covered * 2 > tree.len()) {
             return false;
         }
+        if (!deferredDrawsReplaceable(roots)) {
+            return false;
+        }
         // In tree order (dispatch nodes are in tree order)
         for (i in 1...roots.length) {
             final viewId = roots[i];
@@ -4071,14 +4131,32 @@ class Window implements WindowInvalidator {
         amendOldAccessed.resize(0);
         inPlaceDroppedStates = false;
 
+        // The deferred draws of the frame are drawn again by the views
+        // rendered (see `deferredDrawsReplaceable`): their elements are
+        // gone with the frame that drew them
+        final frame = renderedFrame;
+        final hadDeferredDraws = frame.deferredDraws.length > 0;
+        for (draw in frame.deferredDraws) {
+            draw.element = null;
+        }
+        // What the first views paint under, when several render: the
+        // deferred draws of the last frame (those of this frame are
+        // prepainted once, with the last view)
+        final several = roots.length > 1;
+        final hitboxesAbove = several ? deferredHitTestEffect(frame, frame.deferredPrepaintStart.hitboxesIndex) : 0;
+
         for (i in 0...roots.length) {
-            if (!amendView(roots[i])) {
+            if (!amendView(roots[i], i == roots.length - 1)) {
                 // A full frame (its ancestors render), where the view uses
                 // the render it just made
                 inPlaceFallbackCount++;
                 dirtyViews.clear();
+                // The deferred draws of the views rendered so far are not
+                // drawn yet (they are with the last view): these views
+                // render again with the frame
+                final renderAgain = hadDeferredDraws || frame.deferredDraws.length > 0;
                 for (j in 0...ids.length) {
-                    if (!amendedViews.exists(ids[j])) {
+                    if (renderAgain || !amendedViews.exists(ids[j])) {
                         markViewDirty(ids[j]);
                     }
                 }
@@ -4086,8 +4164,88 @@ class Window implements WindowInvalidator {
                 return true;
             }
         }
+        if (several && deferredHitTestEffect(frame, frame.deferredPrepaintStart.hitboxesIndex) != hitboxesAbove) {
+            // The deferred draws hide the mouse from the tree, or show it,
+            // unlike those the first views were painted under: a full
+            // frame, where every view rendered paints with the hit test of
+            // the frame
+            inPlaceFallbackCount++;
+            dirtyViews.clear();
+            for (j in 0...ids.length) {
+                markViewDirty(ids[j]);
+            }
+            drawFullFrame(false);
+            return true;
+        }
         finishInPlaceFrame(previousFocusPath, previousWindowActive);
         return true;
+    }
+
+    /**
+     * Whether the deferred draws of the last frame can be drawn again by
+     * the views to render in place alone: each one was deferred by one of
+     * these views (their ranges cover the whole list), none was deferred by
+     * another deferred draw (nested), and nothing else was drawn after the
+     * tree. The deferred draws are then prepainted and painted again as a
+     * whole, once, after the tree, in the order of a full frame (see
+     * `amendView`). Anything else: a full frame.
+     */
+    function deferredDrawsReplaceable(roots:Array<Int>):Bool {
+        final frame = renderedFrame;
+        final prepaintStart = frame.deferredPrepaintStart;
+        final paintEnd = frame.deferredPaintEnd;
+        // What the deferred draws recorded ends the frame's arrays
+        if (frame.deferredPrepaintEnd.hitboxesIndex != frame.hitboxes.length || frame.deferredPrepaintEnd.tooltipsIndex != frame.tooltipRequests.length
+            || frame.deferredPrepaintEnd.dispatchTreeIndex != frame.dispatchTree.len() || frame.deferredPrepaintEnd.deferredDrawsIndex != frame.deferredDraws.length
+            || paintEnd.sceneIndex != frame.scene.paintIndex() || paintEnd.mouseListenersIndex != frame.mouseListeners.length
+            || paintEnd.inputHandlersIndex != frame.inputHandlers.length || paintEnd.textInputRegionsIndex != frame.textInputRegions.length
+            || paintEnd.cursorStylesIndex != frame.cursorStyles.length || paintEnd.tabHandleIndex != frame.tabStops.paintIndex()) {
+            return false;
+        }
+        final count = frame.deferredDraws.length;
+        if (count == 0) {
+            return true;
+        }
+        // No nested deferred draw (deferred after the tree)
+        if (prepaintStart.deferredDrawsIndex != count) {
+            return false;
+        }
+        var covered = 0;
+        for (i in 0...roots.length) {
+            final state = trackers.get(roots[i]).state;
+            final start = state.prepaintStart.deferredDrawsIndex;
+            final end = state.prepaintEnd.deferredDrawsIndex;
+            if (start < 0 || end < start || end > count) {
+                return false;
+            }
+            covered += end - start;
+        }
+        return covered == count;
+    }
+
+    /**
+     * What the hitboxes from `start` on (those of the deferred draws) do to
+     * the hit test of the tree at the mouse position: 2 when they block it,
+     * 1 when they end the hovered ones (`BlockMouseExceptScroll`), 0 otherwise.
+     */
+    function deferredHitTestEffect(frame:Frame, start:Int):Int {
+        final hitboxes = frame.hitboxes;
+        final position = _mousePosition;
+        var effect = 0;
+        var i = hitboxes.length - 1;
+        while (i >= start) {
+            final hitbox = hitboxes[i];
+            if (hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position)) {
+                if (hitbox.behavior == BlockMouse) {
+                    return 2;
+                }
+                if (hitbox.behavior == BlockMouseExceptScroll) {
+                    effect = 1;
+                }
+            }
+            i--;
+        }
+        return effect;
     }
 
     /** Whether a view of the last frame has an ancestor view that is dirty itself */
@@ -4117,9 +4275,10 @@ class Window implements WindowInvalidator {
         if (frame.serial == 0 || frame.rootView != root || frame.hasUncachedViews || frame.hadRollback) {
             return false;
         }
-        // Drawn after the tree, in an order that depends on every view: a
-        // view's deferred draws can be added only to a frame without any
-        if (frame.deferredDraws.length > 0 || tooltipBounds != null || app.activeDrag != null) {
+        // Drawn after the tree: a tooltip or a dragged view depend on more
+        // than the views rendered (the deferred draws are checked with the
+        // views to render, see `deferredDrawsReplaceable`)
+        if (tooltipBounds != null || app.activeDrag != null || frame.hadDrag) {
             return false;
         }
         if (frame.scaleFactor != _scaleFactor || renderable.sceneScale != _scaleFactor || frame.remSize != _remSize
@@ -4188,10 +4347,28 @@ class Window implements WindowInvalidator {
      * changed, or when its render notified a view drawn elsewhere (GPUI
      * would draw that view in this frame): the render is kept for a full
      * frame (`preRenderedView`), nothing else was changed.
+     *
+     * `last`: the last view rendered in place in this frame. What a frame
+     * draws after the tree is drawn with it, once: the deferred draws of
+     * the frame (all deferred by the views rendered in place, see
+     * `deferredDrawsReplaceable`: those the views rendered before it
+     * deferred, its own, and those of the views they reuse) are prepainted
+     * after its prepaint and painted after its paint, in the order of a
+     * full frame, and their entries replace those of the deferred draws of
+     * the last frame, removed as a whole.
      */
-    function amendView(viewId:Int):Bool {
+    function amendView(viewId:Int, last:Bool):Bool {
         final state = trackers.get(viewId).state;
         final frame = renderedFrame;
+        amendLast = last;
+        final tailPrepaintStart = frame.deferredPrepaintStart;
+        final tailPrepaintEnd = frame.deferredPrepaintEnd;
+        final tailPaintStart = frame.deferredPaintStart;
+        final tailPaintEnd = frame.deferredPaintEnd;
+        final newTailPrepaintStart = amendTailPrepaintStart;
+        final newTailPrepaintEnd = amendTailPrepaintEnd;
+        final newTailPaintStart = amendTailPaintStart;
+        final newTailPaintEnd = amendTailPaintEnd;
         final spare = nextFrame;
         final tree = frame.dispatchTree;
         final engine = layoutEngine;
@@ -4213,6 +4390,15 @@ class Window implements WindowInvalidator {
         final viewNode = state.dispatchNode;
         final oldViewsStart = inPlaceOldViews.length;
         for (i in oldPrepaintStart.dispatchTreeIndex...oldPrepaintEnd.dispatchTreeIndex) {
+            final nodeViewId = tree.node(i).viewId;
+            if (nodeViewId != -1) {
+                inPlaceOldViews.push(nodeViewId);
+            }
+        }
+        // The views drawn by the deferred draws of the last frame (replaced
+        // with the last view; those laid out inside this view are not
+        // reusable after it either way, see `remapViewStates`)
+        for (i in tailPrepaintStart.dispatchTreeIndex...tree.len()) {
             final nodeViewId = tree.node(i).viewId;
             if (nodeViewId != -1) {
                 inPlaceOldViews.push(nodeViewId);
@@ -4254,7 +4440,9 @@ class Window implements WindowInvalidator {
             imageCacheStack.push(imageCache);
         }
 
-        var scenesSwapped = false;
+        // 1: the view paints into a scene of its own; 2: what is drawn
+        // after the tree paints into the scene made again
+        var scenesSwapped = 0;
         try {
             // Render and layout of its subtree, its nodes adopted
             elementIdNode = state.stateId;
@@ -4302,17 +4490,41 @@ class Window implements WindowInvalidator {
             popTextStyle();
             elementIdNode = elementIdRoot;
 
-            // The tooltip requests in place (the tooltip reads them), then
-            // what a frame draws after the tree: the view's deferred draws
-            // (the frame had none) and the tooltip
-            prepareSplice(spliceTooltips, baseTooltips, oldPrepaintStart.tooltipsIndex, oldPrepaintEnd.tooltipsIndex, oldPrepaintStart.time, oldPrepaintEnd.time,
-                state.prepaintStart.tooltipsIndex, state.prepaintEnd.tooltipsIndex, state.prepaintStart.time, state.prepaintEnd.time, frame.tooltipRequests.length);
+            // The tooltip requests in place (the tooltip reads them; with
+            // the last view, those of the deferred draws of the last frame
+            // go), then what a frame draws after the tree, once, with the
+            // last view: the deferred draws and the tooltip
+            final tooltipsLength = frame.tooltipRequests.length;
+            spliceTooltips.reset(baseTooltips);
+            spliceTooltips.addRange(oldPrepaintStart.tooltipsIndex, oldPrepaintEnd.tooltipsIndex, oldPrepaintStart.time, oldPrepaintEnd.time,
+                state.prepaintStart.tooltipsIndex, state.prepaintEnd.tooltipsIndex, state.prepaintStart.time, state.prepaintEnd.time);
+            if (last) {
+                spliceTooltips.addRange(tailPrepaintStart.tooltipsIndex, baseTooltips, tailPrepaintStart.time, tailPrepaintEnd.time,
+                    tooltipsLength, tooltipsLength, -1, -1);
+            }
+            spliceTooltips.prepare(tooltipsLength);
             FrameSplice.apply(frame.tooltipRequests, spliceTooltips, tooltipScratch);
-            prepaintDeferredDraws();
-            final tooltipElement = prepaintTooltip();
-            prepareSplice(spliceHitboxes, baseHitboxes, oldPrepaintStart.hitboxesIndex, oldPrepaintEnd.hitboxesIndex, oldPrepaintStart.time, oldPrepaintEnd.time,
-                state.prepaintStart.hitboxesIndex, state.prepaintEnd.hitboxesIndex, state.prepaintStart.time, state.prepaintEnd.time, frame.hitboxes.length);
-            mouseHitTest = hitTestInPlace(_mousePosition, frame.hitboxes, spliceHitboxes);
+            amendTooltipsTime = captureClock;
+            var tooltipElement:Null<AnyElement> = null;
+            if (last) {
+                deferredSkipStart = oldPrepaintStart.deferredDrawsIndex;
+                deferredSkipEnd = oldPrepaintEnd.deferredDrawsIndex;
+                prepaintIndexInto(newTailPrepaintStart);
+                prepaintDeferredDraws();
+                tooltipElement = prepaintTooltip();
+                prepaintIndexInto(newTailPrepaintEnd);
+            }
+            spliceHitboxes.reset(baseHitboxes);
+            spliceHitboxes.addRange(oldPrepaintStart.hitboxesIndex, oldPrepaintEnd.hitboxesIndex, oldPrepaintStart.time, oldPrepaintEnd.time,
+                state.prepaintStart.hitboxesIndex, state.prepaintEnd.hitboxesIndex, state.prepaintStart.time, state.prepaintEnd.time);
+            if (last) {
+                spliceHitboxes.addRange(tailPrepaintStart.hitboxesIndex, baseHitboxes, tailPrepaintStart.time, tailPrepaintEnd.time,
+                    newTailPrepaintStart.hitboxesIndex, newTailPrepaintEnd.hitboxesIndex, newTailPrepaintStart.time, newTailPrepaintEnd.time);
+            }
+            spliceHitboxes.prepare(frame.hitboxes.length);
+            // The views rendered before the last one paint under the
+            // deferred draws of the last frame (see `renderInPlace`)
+            mouseHitTest = hitTestInPlace(_mousePosition, frame.hitboxes, spliceHitboxes, last ? tailPrepaintStart.hitboxesIndex : baseHitboxes);
 
             // Paint, into a scene and a tab order of its own (replayed below)
             final viewScene = inPlaceScene;
@@ -4321,7 +4533,7 @@ class Window implements WindowInvalidator {
             frame.tabStops = viewTabs;
             sceneSource = oldScene;
             tabStopsSource = oldTabs;
-            scenesSwapped = true;
+            scenesSwapped = 1;
             elementIdNode = state.stateId;
             pushTextStyle(state.inPlaceTextStyleRefinement);
             contentMaskStack.push(state.paintContentMask);
@@ -4339,29 +4551,50 @@ class Window implements WindowInvalidator {
             // draw orders are computed as in a full frame), unless it has
             // none before and after (out of view); the tab order only when
             // its tab operations changed
+            // With the last view, the tree ends where the deferred draws
+            // of the last frame start: they are left out, what is drawn
+            // after the tree in this frame is painted after it
             final viewOps = viewScene.paintIndex();
+            final treeSceneEnd = last ? tailPaintStart.sceneIndex : oldSceneLength;
+            final treeTabsEnd = last ? tailPaintStart.tabHandleIndex : oldTabsLength;
+            final paintsAfter = last && (tooltipElement != null || frame.deferredDraws.length > deferredSkipEnd - deferredSkipStart);
             var scene = oldScene;
-            if (viewOps > 0 || oldPaintEnd.sceneIndex > oldPaintStart.sceneIndex) {
+            if (viewOps > 0 || oldPaintEnd.sceneIndex > oldPaintStart.sceneIndex || treeSceneEnd < oldSceneLength || paintsAfter) {
                 scene = spare.scene;
                 scene.replay(0, oldPaintStart.sceneIndex, oldScene);
                 scene.replay(0, viewOps, viewScene);
-                scene.replay(oldPaintEnd.sceneIndex, oldSceneLength, oldScene);
+                scene.replay(oldPaintEnd.sceneIndex, treeSceneEnd, oldScene);
             }
             final viewTabOps = viewTabs.paintIndex();
             var tabs = oldTabs;
-            if (!sameTabOperations(viewTabs, oldTabs, oldPaintStart.tabHandleIndex, oldPaintEnd.tabHandleIndex)) {
+            if (treeTabsEnd < oldTabsLength || paintsAfter || !sameTabOperations(viewTabs, oldTabs, oldPaintStart.tabHandleIndex, oldPaintEnd.tabHandleIndex)) {
                 tabs = spare.tabStops;
                 tabs.replayRange(oldTabs, 0, oldPaintStart.tabHandleIndex);
                 tabs.replayRange(viewTabs, 0, viewTabOps);
-                tabs.replayRange(oldTabs, oldPaintEnd.tabHandleIndex, oldTabsLength);
+                tabs.replayRange(oldTabs, oldPaintEnd.tabHandleIndex, treeTabsEnd);
             }
             frame.scene = scene;
             frame.tabStops = tabs;
-            sceneSource = null;
-            tabStopsSource = null;
-            scenesSwapped = false;
+            scenesSwapped = 2;
             viewScene.clear();
             viewTabs.clear();
+
+            // Drawn after the tree, into the scene and the tab order made
+            // again (the deferred draws reused with a view index the
+            // previous ones, still the sources)
+            if (last) {
+                paintIndexInto(newTailPaintStart);
+                paintDeferredDraws();
+                if (tooltipElement != null) {
+                    tooltipElement.paint(this, app);
+                }
+                paintIndexInto(newTailPaintEnd);
+                deferredSkipStart = 0;
+                deferredSkipEnd = 0;
+            }
+            sceneSource = null;
+            tabStopsSource = null;
+            scenesSwapped = 0;
             if (scene != oldScene) {
                 spare.scene = oldScene;
                 oldScene.clear();
@@ -4370,14 +4603,7 @@ class Window implements WindowInvalidator {
                 spare.tabStops = oldTabs;
                 oldTabs.clear();
             }
-
-            // Drawn after the tree
-            final sceneLength = scene.paintIndex();
-            paintDeferredDraws();
-            if (tooltipElement != null) {
-                tooltipElement.paint(this, app);
-            }
-            if (scene != oldScene || scene.paintIndex() != sceneLength) {
+            if (scene != oldScene) {
                 scene.finish();
             }
 
@@ -4387,9 +4613,16 @@ class Window implements WindowInvalidator {
                 oldSceneLength, viewOps, oldTabsLength, viewTabOps, oldViewsStart);
         }
         catch (e:haxe.Exception) {
-            if (scenesSwapped) {
+            deferredSkipStart = 0;
+            deferredSkipEnd = 0;
+            if (scenesSwapped != 0) {
                 inPlaceScene.clear();
                 inPlaceTabStops.clear();
+                if (scenesSwapped == 2) {
+                    // Made again in the spare frame's
+                    if (frame.scene != oldScene) frame.scene.clear();
+                    if (frame.tabStops != oldTabs) frame.tabStops.clear();
+                }
                 frame.scene = oldScene;
                 frame.tabStops = oldTabs;
                 sceneSource = null;
@@ -4542,7 +4775,7 @@ class Window implements WindowInvalidator {
      * rendering in place replace its old ones (`plan`), without moving them
      * yet (the views reusing their ranges while it paints read the old ones).
      */
-    function hitTestInPlace(position:Point, hitboxes:Array<Hitbox>, plan:FrameSplice):HitTest {
+    function hitTestInPlace(position:Point, hitboxes:Array<Hitbox>, plan:FrameSplice, frameEnd:Int):HitTest {
         final hitTest = new HitTest();
         hitTestHoverSet = false;
         final oldStart = plan.oldStart(0);
@@ -4563,7 +4796,9 @@ class Window implements WindowInvalidator {
             stopped = hitTestHitbox(hitboxes[i], position, hitTest);
             i--;
         }
-        i = base - 1;
+        // (`frameEnd`: without the deferred draws of the last frame when
+        // those of this frame, appended, replace them)
+        i = frameEnd - 1;
         while (!stopped && i >= oldEnd) {
             stopped = hitTestHitbox(hitboxes[i], position, hitTest);
             i--;
@@ -4627,6 +4862,21 @@ class Window implements WindowInvalidator {
         final nqs = newPaintStart.time;
         final nqe = newPaintEnd.time;
 
+        // With the last view: what the deferred draws of the last frame
+        // recorded (after the tree, see `Frame.deferredPrepaintStart`) is
+        // replaced by what was drawn after the tree in this rendering
+        final last = amendLast;
+        final tps = frame.deferredPrepaintStart;
+        final tpe = frame.deferredPrepaintEnd;
+        final tqs = frame.deferredPaintStart;
+        final tqe = frame.deferredPaintEnd;
+        final ntps = amendTailPrepaintStart;
+        final ntpe = amendTailPrepaintEnd;
+        final ntqs = amendTailPaintStart;
+        final ntqe = amendTailPaintEnd;
+        final tailHitboxesStart = tps.hitboxesIndex;
+        final tailHitboxesEnd = spliceHitboxes.base;
+
         // Hitboxes (the plan was made for the hit test); the window control
         // areas of the old ones go
         final controls = frame.windowControlHitboxes;
@@ -4641,6 +4891,14 @@ class Window implements WindowInvalidator {
                         break;
                     }
                 }
+                if (last && !old) {
+                    for (j in tailHitboxesStart...tailHitboxesEnd) {
+                        if (frame.hitboxes[j] == control.hitbox) {
+                            old = true;
+                            break;
+                        }
+                    }
+                }
                 if (!old) {
                     controls[kept++] = control;
                 }
@@ -4649,31 +4907,57 @@ class Window implements WindowInvalidator {
         }
         FrameSplice.apply(frame.hitboxes, spliceHitboxes, hitboxScratch);
 
-        // Deferred draws: the frame had none, the view's come first
+        // Deferred draws: the view's in place of its old ones (those
+        // deferred after the tree, nested, stay after them)
         prepareSplice(spliceDeferred, baseDeferred, oldPrepaintStart.deferredDrawsIndex, oldPrepaintEnd.deferredDrawsIndex, ps, pe,
             newPrepaintStart.deferredDrawsIndex, newPrepaintEnd.deferredDrawsIndex, nps, npe, frame.deferredDraws.length);
         FrameSplice.apply(frame.deferredDraws, spliceDeferred, deferredScratch);
 
         // Dispatch nodes (parents, focus and view ids follow)
-        prepareSplice(spliceNodes, baseNodes, oldPrepaintStart.dispatchTreeIndex, oldPrepaintEnd.dispatchTreeIndex, ps, pe,
-            newPrepaintStart.dispatchTreeIndex, newPrepaintEnd.dispatchTreeIndex, nps, npe, tree.len());
+        spliceNodes.reset(baseNodes);
+        spliceNodes.addRange(oldPrepaintStart.dispatchTreeIndex, oldPrepaintEnd.dispatchTreeIndex, ps, pe,
+            newPrepaintStart.dispatchTreeIndex, newPrepaintEnd.dispatchTreeIndex, nps, npe);
+        if (last) {
+            spliceNodes.addRange(tps.dispatchTreeIndex, baseNodes, tps.time, tpe.time, ntps.dispatchTreeIndex, ntpe.dispatchTreeIndex, ntps.time, ntpe.time);
+        }
+        spliceNodes.prepare(tree.len());
         tree.applySplice(spliceNodes);
         for (draw in frame.deferredDraws) {
             draw.parentNode = spliceNodes.remapEntry(draw.parentNode);
         }
 
         // Paint state
-        prepareSplice(spliceMouse, baseMouse, oldPaintStart.mouseListenersIndex, oldPaintEnd.mouseListenersIndex, qs, qe,
-            newPaintStart.mouseListenersIndex, newPaintEnd.mouseListenersIndex, nqs, nqe, frame.mouseListeners.length);
+        spliceMouse.reset(baseMouse);
+        spliceMouse.addRange(oldPaintStart.mouseListenersIndex, oldPaintEnd.mouseListenersIndex, qs, qe,
+            newPaintStart.mouseListenersIndex, newPaintEnd.mouseListenersIndex, nqs, nqe);
+        if (last) {
+            spliceMouse.addRange(tqs.mouseListenersIndex, baseMouse, tqs.time, tqe.time, ntqs.mouseListenersIndex, ntqe.mouseListenersIndex, ntqs.time, ntqe.time);
+        }
+        spliceMouse.prepare(frame.mouseListeners.length);
         FrameSplice.apply(frame.mouseListeners, spliceMouse, mouseScratch);
-        prepareSplice(spliceInput, baseInput, oldPaintStart.inputHandlersIndex, oldPaintEnd.inputHandlersIndex, qs, qe,
-            newPaintStart.inputHandlersIndex, newPaintEnd.inputHandlersIndex, nqs, nqe, frame.inputHandlers.length);
+        spliceInput.reset(baseInput);
+        spliceInput.addRange(oldPaintStart.inputHandlersIndex, oldPaintEnd.inputHandlersIndex, qs, qe,
+            newPaintStart.inputHandlersIndex, newPaintEnd.inputHandlersIndex, nqs, nqe);
+        if (last) {
+            spliceInput.addRange(tqs.inputHandlersIndex, baseInput, tqs.time, tqe.time, ntqs.inputHandlersIndex, ntqe.inputHandlersIndex, ntqs.time, ntqe.time);
+        }
+        spliceInput.prepare(frame.inputHandlers.length);
         FrameSplice.apply(frame.inputHandlers, spliceInput, inputScratch);
-        prepareSplice(spliceRegions, baseRegions, oldPaintStart.textInputRegionsIndex, oldPaintEnd.textInputRegionsIndex, qs, qe,
-            newPaintStart.textInputRegionsIndex, newPaintEnd.textInputRegionsIndex, nqs, nqe, frame.textInputRegions.length);
+        spliceRegions.reset(baseRegions);
+        spliceRegions.addRange(oldPaintStart.textInputRegionsIndex, oldPaintEnd.textInputRegionsIndex, qs, qe,
+            newPaintStart.textInputRegionsIndex, newPaintEnd.textInputRegionsIndex, nqs, nqe);
+        if (last) {
+            spliceRegions.addRange(tqs.textInputRegionsIndex, baseRegions, tqs.time, tqe.time, ntqs.textInputRegionsIndex, ntqe.textInputRegionsIndex, ntqs.time, ntqe.time);
+        }
+        spliceRegions.prepare(frame.textInputRegions.length);
         FrameSplice.apply(frame.textInputRegions, spliceRegions, regionScratch);
-        prepareSplice(spliceCursors, baseCursors, oldPaintStart.cursorStylesIndex, oldPaintEnd.cursorStylesIndex, qs, qe,
-            newPaintStart.cursorStylesIndex, newPaintEnd.cursorStylesIndex, nqs, nqe, frame.cursorStyles.length);
+        spliceCursors.reset(baseCursors);
+        spliceCursors.addRange(oldPaintStart.cursorStylesIndex, oldPaintEnd.cursorStylesIndex, qs, qe,
+            newPaintStart.cursorStylesIndex, newPaintEnd.cursorStylesIndex, nqs, nqe);
+        if (last) {
+            spliceCursors.addRange(tqs.cursorStylesIndex, baseCursors, tqs.time, tqe.time, ntqs.cursorStylesIndex, ntqe.cursorStylesIndex, ntqs.time, ntqe.time);
+        }
+        spliceCursors.prepare(frame.cursorStyles.length);
         FrameSplice.apply(frame.cursorStyles, spliceCursors, cursorScratch);
 
         // Element states: its three ranges (render and layout, prepaint,
@@ -4685,8 +4969,17 @@ class Window implements WindowInvalidator {
             state.layoutAccessedStart, state.layoutAccessedEnd, state.layoutAccessedStartTime, state.layoutAccessedEndTime);
         plan.addRange(oldPrepaintStart.accessedElementStatesIndex, oldPrepaintEnd.accessedElementStatesIndex, ps, pe,
             newPrepaintStart.accessedElementStatesIndex, newPrepaintEnd.accessedElementStatesIndex, nps, npe);
+        if (last) {
+            // After the prepaint of the tree, before its paint
+            plan.addRange(tps.accessedElementStatesIndex, tpe.accessedElementStatesIndex, tps.time, tpe.time,
+                ntps.accessedElementStatesIndex, ntpe.accessedElementStatesIndex, ntps.time, ntpe.time);
+        }
         plan.addRange(oldPaintStart.accessedElementStatesIndex, oldPaintEnd.accessedElementStatesIndex, qs, qe,
             newPaintStart.accessedElementStatesIndex, newPaintEnd.accessedElementStatesIndex, nqs, nqe);
+        if (last) {
+            plan.addRange(tqs.accessedElementStatesIndex, tqe.accessedElementStatesIndex, tqs.time, tqe.time,
+                ntqs.accessedElementStatesIndex, ntqe.accessedElementStatesIndex, ntqs.time, ntqe.time);
+        }
         plan.prepare(accessed.length);
         final mark = ++stateMark;
         for (i in baseAccessed...accessed.length) {
@@ -4743,37 +5036,58 @@ class Window implements WindowInvalidator {
         final nlqe = newPaintEnd.lineLayoutIndex;
         spliceLines.reset(base.linesIndex, false, true);
         spliceLines.addRange(ops.linesIndex, ope.linesIndex, ps, pe, nlps.linesIndex, nlpe.linesIndex, nps, npe);
+        if (last) spliceLines.addRange(tps.lineLayoutIndex.linesIndex, tpe.lineLayoutIndex.linesIndex, tps.time, tpe.time, ntps.lineLayoutIndex.linesIndex, ntpe.lineLayoutIndex.linesIndex, ntps.time, ntpe.time);
         spliceLines.addRange(oqs.linesIndex, oqe.linesIndex, qs, qe, nlqs.linesIndex, nlqe.linesIndex, nqs, nqe);
+        if (last) spliceLines.addRange(tqs.lineLayoutIndex.linesIndex, tqe.lineLayoutIndex.linesIndex, tqs.time, tqe.time, ntqs.lineLayoutIndex.linesIndex, ntqe.lineLayoutIndex.linesIndex, ntqs.time, ntqe.time);
         spliceLines.prepare(end.linesIndex);
         spliceWrappedLines.reset(base.wrappedLinesIndex, false, true);
         spliceWrappedLines.addRange(ops.wrappedLinesIndex, ope.wrappedLinesIndex, ps, pe, nlps.wrappedLinesIndex, nlpe.wrappedLinesIndex, nps, npe);
+        if (last) spliceWrappedLines.addRange(tps.lineLayoutIndex.wrappedLinesIndex, tpe.lineLayoutIndex.wrappedLinesIndex, tps.time, tpe.time, ntps.lineLayoutIndex.wrappedLinesIndex, ntpe.lineLayoutIndex.wrappedLinesIndex, ntps.time, ntpe.time);
         spliceWrappedLines.addRange(oqs.wrappedLinesIndex, oqe.wrappedLinesIndex, qs, qe, nlqs.wrappedLinesIndex, nlqe.wrappedLinesIndex, nqs, nqe);
+        if (last) spliceWrappedLines.addRange(tqs.lineLayoutIndex.wrappedLinesIndex, tqe.lineLayoutIndex.wrappedLinesIndex, tqs.time, tqe.time, ntqs.lineLayoutIndex.wrappedLinesIndex, ntqe.lineLayoutIndex.wrappedLinesIndex, ntqs.time, ntqe.time);
         spliceWrappedLines.prepare(end.wrappedLinesIndex);
         spliceLinesByHash.reset(base.linesByHashIndex, false, true);
         spliceLinesByHash.addRange(ops.linesByHashIndex, ope.linesByHashIndex, ps, pe, nlps.linesByHashIndex, nlpe.linesByHashIndex, nps, npe);
+        if (last) spliceLinesByHash.addRange(tps.lineLayoutIndex.linesByHashIndex, tpe.lineLayoutIndex.linesByHashIndex, tps.time, tpe.time, ntps.lineLayoutIndex.linesByHashIndex, ntpe.lineLayoutIndex.linesByHashIndex, ntps.time, ntpe.time);
         spliceLinesByHash.addRange(oqs.linesByHashIndex, oqe.linesByHashIndex, qs, qe, nlqs.linesByHashIndex, nlqe.linesByHashIndex, nqs, nqe);
+        if (last) spliceLinesByHash.addRange(tqs.lineLayoutIndex.linesByHashIndex, tqe.lineLayoutIndex.linesByHashIndex, tqs.time, tqe.time, ntqs.lineLayoutIndex.linesByHashIndex, ntqe.lineLayoutIndex.linesByHashIndex, ntqs.time, ntqe.time);
         spliceLinesByHash.prepare(end.linesByHashIndex);
         spliceWrappedLinesByHash.reset(base.wrappedLinesByHashIndex, false, true);
         spliceWrappedLinesByHash.addRange(ops.wrappedLinesByHashIndex, ope.wrappedLinesByHashIndex, ps, pe, nlps.wrappedLinesByHashIndex, nlpe.wrappedLinesByHashIndex, nps, npe);
+        if (last) spliceWrappedLinesByHash.addRange(tps.lineLayoutIndex.wrappedLinesByHashIndex, tpe.lineLayoutIndex.wrappedLinesByHashIndex, tps.time, tpe.time, ntps.lineLayoutIndex.wrappedLinesByHashIndex, ntpe.lineLayoutIndex.wrappedLinesByHashIndex, ntps.time, ntpe.time);
         spliceWrappedLinesByHash.addRange(oqs.wrappedLinesByHashIndex, oqe.wrappedLinesByHashIndex, qs, qe, nlqs.wrappedLinesByHashIndex, nlqe.wrappedLinesByHashIndex, nqs, nqe);
+        if (last) spliceWrappedLinesByHash.addRange(tqs.lineLayoutIndex.wrappedLinesByHashIndex, tqe.lineLayoutIndex.wrappedLinesByHashIndex, tqs.time, tqe.time, ntqs.lineLayoutIndex.wrappedLinesByHashIndex, ntqe.lineLayoutIndex.wrappedLinesByHashIndex, ntqs.time, ntqe.time);
         spliceWrappedLinesByHash.prepare(end.wrappedLinesByHashIndex);
         windowTextSystem.spliceUsedLayouts(spliceLines, spliceWrappedLines, spliceLinesByHash, spliceWrappedLinesByHash);
 
         // Scene and tab order, made again: plans for the indices only (the
         // view's were recorded in its own scene and tab order, from 0)
-        prepareRebuilt(spliceScene, oldSceneLength, oldPaintStart.sceneIndex, oldPaintEnd.sceneIndex, qs, qe,
-            newPaintStart.sceneIndex, newPaintEnd.sceneIndex, nqs, nqe);
-        prepareRebuilt(spliceTabs, oldTabsLength, oldPaintStart.tabHandleIndex, oldPaintEnd.tabHandleIndex, qs, qe,
-            newPaintStart.tabHandleIndex, newPaintEnd.tabHandleIndex, nqs, nqe);
+        spliceScene.reset(oldSceneLength, true);
+        spliceScene.addRange(oldPaintStart.sceneIndex, oldPaintEnd.sceneIndex, qs, qe, newPaintStart.sceneIndex, newPaintEnd.sceneIndex, nqs, nqe);
+        if (last) {
+            // Painted in place, after the tree
+            spliceScene.addRange(tqs.sceneIndex, oldSceneLength, tqs.time, tqe.time, ntqs.sceneIndex, ntqe.sceneIndex, ntqs.time, ntqe.time);
+        }
+        spliceScene.prepare(frame.scene.paintIndex());
+        spliceTabs.reset(oldTabsLength, true);
+        spliceTabs.addRange(oldPaintStart.tabHandleIndex, oldPaintEnd.tabHandleIndex, qs, qe, newPaintStart.tabHandleIndex, newPaintEnd.tabHandleIndex, nqs, nqe);
+        if (last) {
+            spliceTabs.addRange(tqs.tabHandleIndex, oldTabsLength, tqs.time, tqe.time, ntqs.tabHandleIndex, ntqe.tabHandleIndex, ntqs.time, ntqe.time);
+        }
+        spliceTabs.prepare(frame.tabStops.paintIndex());
 
         remapViewStates(state, oldLayoutAccessedStartTime, oldLayoutAccessedEndTime, oldViewsStart);
-    }
 
-    inline function prepareRebuilt(plan:FrameSplice, oldLength:Int, oldStart:Int, oldEnd:Int, oldStartTime:Float, oldEndTime:Float,
-            newStart:Int, newEnd:Int, newStartTime:Float, newEndTime:Float):Void {
-        plan.reset(oldLength, true);
-        plan.addRange(oldStart, oldEnd, oldStartTime, oldEndTime, newStart, newEnd, newStartTime, newEndTime);
-        plan.prepare(oldLength + (newEnd - newStart) - (oldEnd - oldStart));
+        // Where the deferred draws are in the frame now
+        remapOldPrepaintIndex(tps);
+        remapOldPrepaintIndex(tpe);
+        remapOldPaintIndex(tqs);
+        remapOldPaintIndex(tqe);
+        if (last) {
+            // Spliced before they were drawn, and appended after the tree
+            tpe.tooltipsIndex = frame.tooltipRequests.length;
+            tpe.deferredDrawsIndex = frame.deferredDraws.length;
+        }
     }
 
     /**
@@ -4798,21 +5112,51 @@ class Window implements WindowInvalidator {
             && spliceInput.framePartUnchanged() && spliceRegions.framePartUnchanged() && spliceCursors.framePartUnchanged()
             && spliceScene.framePartUnchanged() && spliceTabs.framePartUnchanged() && spliceLines.framePartUnchanged()
             && spliceWrappedLines.framePartUnchanged() && spliceLinesByHash.framePartUnchanged() && spliceWrappedLinesByHash.framePartUnchanged());
+        // With the last view: the deferred draws of the last frame are
+        // replaced too (see `spliceInPlace`)
+        final last = amendLast;
+        final tailPrepaintWindowStart = frame.deferredPrepaintStart.time;
+        final tailPrepaintWindowEnd = frame.deferredPrepaintEnd.time;
+        final tailPaintWindowStart = frame.deferredPaintStart.time;
+        final tailPaintWindowEnd = frame.deferredPaintEnd.time;
         inline function inside(time:Float, start:Float, end:Float):Bool {
             return time > start && time < end;
         }
         inline function stale(other:ViewElement.ViewElementState):Bool {
             return inside(other.prepaintStart.time, prepaintWindowStart, prepaintWindowEnd)
                 || inside(other.paintStart.time, paintWindowStart, paintWindowEnd)
-                || inside(other.layoutAccessedStartTime, layoutWindowStart, layoutWindowEnd);
+                || (last && (inside(other.prepaintStart.time, tailPrepaintWindowStart, tailPrepaintWindowEnd)
+                    || inside(other.paintStart.time, tailPaintWindowStart, tailPaintWindowEnd)));
+        }
+        // Laid out inside the view and drawn outside of it, by a deferred
+        // draw of the last frame that the last view draws again: its
+        // prepaint and paint ranges still index the frame until then (a
+        // view retained by the layout of this rendering reuses them when
+        // its deferred draw is prepainted), it is not reusable beyond
+        inline function laidOutInside(other:ViewElement.ViewElementState):Bool {
+            return inside(other.layoutAccessedStartTime, layoutWindowStart, layoutWindowEnd);
+        }
+        inline function drawnDeferred(other:ViewElement.ViewElementState):Bool {
+            return !last && inside(other.prepaintStart.time, tailPrepaintWindowStart, tailPrepaintWindowEnd)
+                && inside(other.paintStart.time, tailPaintWindowStart, tailPaintWindowEnd);
         }
         if (changed) {
             for (other in frame.viewStates) {
                 if (other.amendSerial == serial || other.prepaintFrame == -1) {
                     continue;
                 }
-                if (stale(other)) {
+                if (stale(other) || (laidOutInside(other) && !drawnDeferred(other))) {
                     invalidateViewState(other);
+                }
+                else if (laidOutInside(other)) {
+                    other.layoutFrame = -1;
+                    remapOldPrepaintIndex(other.prepaintStart);
+                    remapOldPrepaintIndex(other.prepaintEnd);
+                    remapOldPaintIndex(other.paintStart);
+                    remapOldPaintIndex(other.paintEnd);
+                    if (!spliceNodes.framePartUnchanged() && other.dispatchNode != -1) {
+                        other.dispatchNode = spliceNodes.remapEntry(other.dispatchNode);
+                    }
                 }
                 else {
                     remapOldViewState(other);
@@ -4820,12 +5164,18 @@ class Window implements WindowInvalidator {
             }
         }
         else {
-            // Only the views drawn inside the view can be stale
+            // Only the views drawn inside the view, or by the deferred
+            // draws, can be stale
             for (i in oldViewsStart...inPlaceOldViews.length) {
                 final tracker = trackers.get(inPlaceOldViews[i]);
                 final other = tracker != null ? tracker.state : null;
-                if (other != null && other.amendSerial != serial && other.registeredSerial == frame.serial && other.prepaintFrame != -1 && stale(other)) {
-                    invalidateViewState(other);
+                if (other != null && other.amendSerial != serial && other.registeredSerial == frame.serial && other.prepaintFrame != -1) {
+                    if (stale(other) || (laidOutInside(other) && !drawnDeferred(other))) {
+                        invalidateViewState(other);
+                    }
+                    else if (laidOutInside(other)) {
+                        other.layoutFrame = -1;
+                    }
                 }
             }
         }
@@ -4837,6 +5187,10 @@ class Window implements WindowInvalidator {
         final prepaintEnd = state.prepaintEnd.time;
         final paintStart = state.paintStart.time;
         final paintEnd = state.paintEnd.time;
+        final tailPrepaintStart = amendTailPrepaintStart.time;
+        final tailPrepaintEnd = amendTailPrepaintEnd.time;
+        final tailPaintStart = amendTailPaintStart.time;
+        final tailPaintEnd = amendTailPaintEnd.time;
         inline function mapTime(time:Float):Float {
             return if (time >= layoutStart && time <= layoutEnd) {
                 layoutWindowStart + (layoutWindowEnd - layoutWindowStart) * (time - layoutStart) / (layoutEnd - layoutStart);
@@ -4847,8 +5201,15 @@ class Window implements WindowInvalidator {
             else if (time >= paintStart && time <= paintEnd) {
                 paintWindowStart + (paintWindowEnd - paintWindowStart) * (time - paintStart) / (paintEnd - paintStart);
             }
+            else if (last && time >= tailPrepaintStart && time <= tailPrepaintEnd) {
+                // Drawn after the tree (deferred draws, tooltip): where the
+                // deferred draws were in the frame
+                tailPrepaintWindowStart + (tailPrepaintWindowEnd - tailPrepaintWindowStart) * (time - tailPrepaintStart) / (tailPrepaintEnd - tailPrepaintStart);
+            }
+            else if (last && time >= tailPaintStart && time <= tailPaintEnd) {
+                tailPaintWindowStart + (tailPaintWindowEnd - tailPaintWindowStart) * (time - tailPaintStart) / (tailPaintEnd - tailPaintStart);
+            }
             else {
-                // Drawn after the tree (tooltip, deferred draws): after every time of the frame
                 time;
             }
         }
@@ -4876,10 +5237,25 @@ class Window implements WindowInvalidator {
             other.layoutAccessedEndTime = mapTime(layoutEndTime);
         }
         for (draw in frame.deferredDraws) {
-            remapNewPrepaintIndex(draw.prepaintStart);
-            remapNewPrepaintIndex(draw.prepaintEnd);
-            remapNewPaintIndex(draw.paintStart);
-            remapNewPaintIndex(draw.paintEnd);
+            if (draw.amendSerial == serial) {
+                // Drawn by this rendering (with the last view)
+                remapNewPrepaintIndex(draw.prepaintStart);
+                remapNewPrepaintIndex(draw.prepaintEnd);
+                remapNewPaintIndex(draw.paintStart);
+                remapNewPaintIndex(draw.paintEnd);
+                draw.prepaintStart.time = mapTime(draw.prepaintStart.time);
+                draw.prepaintEnd.time = mapTime(draw.prepaintEnd.time);
+                draw.paintStart.time = mapTime(draw.paintStart.time);
+                draw.paintEnd.time = mapTime(draw.paintEnd.time);
+            }
+            else if (draw.element == null) {
+                // Drawn in the last frame (reused with a view, drawn again
+                // with the last view): its ranges index the frame
+                remapOldPrepaintIndex(draw.prepaintStart);
+                remapOldPrepaintIndex(draw.prepaintEnd);
+                remapOldPaintIndex(draw.paintStart);
+                remapOldPaintIndex(draw.paintEnd);
+            }
         }
         amendStates.resize(0);
     }
@@ -4937,7 +5313,10 @@ class Window implements WindowInvalidator {
     function remapNewPrepaintIndex(index:PrepaintStateIndex):Void {
         final time = index.time;
         index.hitboxesIndex = spliceHitboxes.remapNew(index.hitboxesIndex, time);
-        index.tooltipsIndex = spliceTooltips.remapNew(index.tooltipsIndex, time);
+        // (spliced before what is drawn after the tree: final from then on)
+        if (time <= amendTooltipsTime) {
+            index.tooltipsIndex = spliceTooltips.remapNew(index.tooltipsIndex, time);
+        }
         index.deferredDrawsIndex = spliceDeferred.remapNew(index.deferredDrawsIndex, time);
         index.dispatchTreeIndex = spliceNodes.remapNew(index.dispatchTreeIndex, time);
         index.accessedElementStatesIndex = spliceAccessed.remapNew(index.accessedElementStatesIndex, time);
@@ -5349,8 +5728,10 @@ class Window implements WindowInvalidator {
             if (state.prepaintEnd.hitboxesIndex > frame.hitboxes.length || state.prepaintStart.hitboxesIndex > state.prepaintEnd.hitboxesIndex) {
                 return '$name: hitboxes ${state.prepaintStart.hitboxesIndex}..${state.prepaintEnd.hitboxesIndex} of ${frame.hitboxes.length}';
             }
-            // Content drawn outside of the view's bounds (scrolled) is not checked
-            final contained = state.bounds.size.height <= maxCheckedHeight;
+            // Content drawn outside of the view's bounds (scrolled, or
+            // moved by the anchored element of a deferred draw) is not checked
+            final drawnDeferred = state.paintStart.time > frame.deferredPaintStart.time && state.paintStart.time < frame.deferredPaintEnd.time;
+            final contained = state.bounds.size.height <= maxCheckedHeight && !drawnDeferred;
             for (i in state.prepaintStart.hitboxesIndex...state.prepaintEnd.hitboxesIndex) {
                 if (!contained) break;
                 final b = frame.hitboxes[i].bounds;
@@ -5417,8 +5798,13 @@ class Window implements WindowInvalidator {
                 }
                 return false;
             }
+            // (what its deferred draws access is recorded after the tree)
+            inline function deferredRanges(i:Int):Bool {
+                return (i >= frame.deferredPrepaintStart.accessedElementStatesIndex && i < frame.deferredPrepaintEnd.accessedElementStatesIndex)
+                    || (i >= frame.deferredPaintStart.accessedElementStatesIndex && i < frame.deferredPaintEnd.accessedElementStatesIndex);
+            }
             for (i in 0...accessed.length) {
-                if (under(accessed[i].node) && accessed[i].node != state.stateId && !inRanges(i) && !copiedInRanges(accessed[i])) {
+                if (under(accessed[i].node) && accessed[i].node != state.stateId && !inRanges(i) && !deferredRanges(i) && !copiedInRanges(accessed[i])) {
                     return '$name: accessed state $i ${accessed[i].node.toString()} under it is outside its ranges ${state.layoutAccessedStart}..${state.layoutAccessedEnd}, ${state.prepaintStart.accessedElementStatesIndex}..${state.prepaintEnd.accessedElementStatesIndex}, ${state.paintStart.accessedElementStatesIndex}..${state.paintEnd.accessedElementStatesIndex}';
                 }
             }
