@@ -290,6 +290,118 @@ class InitSettings {
         return @:privateAccess settings.antialiasing = antialiasing;
     }
 
+    // Native loop (clay backend, macOS and iOS): drawables, wait for the drawable first, frame pacing
+
+    /**
+     * Number of drawables of the Metal layer the app renders to (macOS and iOS): 2 or 3, 0 to leave it alone. Default: 2. See `Settings.maxDrawables`.
+     */
+    public var maxDrawables(get,set):Int;
+    inline function get_maxDrawables():Int {
+        return settings.maxDrawables;
+    }
+    inline function set_maxDrawables(maxDrawables:Int):Int {
+        return @:privateAccess settings.maxDrawables = maxDrawables;
+    }
+
+    /**
+     * Wait for the drawable at the start of the frame, before input is read (macOS and iOS). Default: true. See `Settings.waitDrawableFirst`.
+     */
+    public var waitDrawableFirst(get,set):Bool;
+    inline function get_waitDrawableFirst():Bool {
+        return settings.waitDrawableFirst;
+    }
+    inline function set_waitDrawableFirst(waitDrawableFirst:Bool):Bool {
+        return @:privateAccess settings.waitDrawableFirst = waitDrawableFirst;
+    }
+
+    /**
+     * Slow frames in a row that stop the wait for the drawable first. Unit: frames. Default: 3. See `Settings.waitDrawableFirstSlowFrames`.
+     */
+    public var waitDrawableFirstSlowFrames(get,set):Int;
+    inline function get_waitDrawableFirstSlowFrames():Int {
+        return settings.waitDrawableFirstSlowFrames;
+    }
+    inline function set_waitDrawableFirstSlowFrames(waitDrawableFirstSlowFrames:Int):Int {
+        return @:privateAccess settings.waitDrawableFirstSlowFrames = waitDrawableFirstSlowFrames;
+    }
+
+    /**
+     * Fast frames in a row that resume the wait for the drawable first. Unit: frames. Default: 8. See `Settings.waitDrawableFirstFastFrames`.
+     */
+    public var waitDrawableFirstFastFrames(get,set):Int;
+    inline function get_waitDrawableFirstFastFrames():Int {
+        return settings.waitDrawableFirstFastFrames;
+    }
+    inline function set_waitDrawableFirstFastFrames(waitDrawableFirstFastFrames:Int):Int {
+        return @:privateAccess settings.waitDrawableFirstFastFrames = waitDrawableFirstFastFrames;
+    }
+
+    /**
+     * Longest run of fast frames needed to resume the wait for the drawable first. Unit: seconds. Default: 2.0. See `Settings.waitDrawableFirstBackoffCap`.
+     */
+    public var waitDrawableFirstBackoffCap(get,set):Float;
+    inline function get_waitDrawableFirstBackoffCap():Float {
+        return settings.waitDrawableFirstBackoffCap;
+    }
+    inline function set_waitDrawableFirstBackoffCap(waitDrawableFirstBackoffCap:Float):Float {
+        return @:privateAccess settings.waitDrawableFirstBackoffCap = waitDrawableFirstBackoffCap;
+    }
+
+    /**
+     * Margin frame pacing (macOS). Default: true. See `Settings.framePacing`.
+     */
+    public var framePacing(get,set):Bool;
+    inline function get_framePacing():Bool {
+        return settings.framePacing;
+    }
+    inline function set_framePacing(framePacing:Bool):Bool {
+        return @:privateAccess settings.framePacing = framePacing;
+    }
+
+    /**
+     * Fixed part of the frame pacing margin. Unit: seconds. Default: 0.004. See `Settings.framePacingFloor`.
+     */
+    public var framePacingFloor(get,set):Float;
+    inline function get_framePacingFloor():Float {
+        return settings.framePacingFloor;
+    }
+    inline function set_framePacingFloor(framePacingFloor:Float):Float {
+        return @:privateAccess settings.framePacingFloor = framePacingFloor;
+    }
+
+    /**
+     * Multiple of the worst recent work in the frame pacing margin. Default: 2.0. See `Settings.framePacingMultiple`.
+     */
+    public var framePacingMultiple(get,set):Float;
+    inline function get_framePacingMultiple():Float {
+        return settings.framePacingMultiple;
+    }
+    inline function set_framePacingMultiple(framePacingMultiple:Float):Float {
+        return @:privateAccess settings.framePacingMultiple = framePacingMultiple;
+    }
+
+    /**
+     * Largest number of frames over which the worst work is taken for the frame pacing margin. Unit: frames. Default: 120. See `Settings.framePacingWindow`.
+     */
+    public var framePacingWindow(get,set):Int;
+    inline function get_framePacingWindow():Int {
+        return settings.framePacingWindow;
+    }
+    inline function set_framePacingWindow(framePacingWindow:Int):Int {
+        return @:privateAccess settings.framePacingWindow = framePacingWindow;
+    }
+
+    /**
+     * Smallest number of frames over which the worst work is taken for the frame pacing margin. Unit: frames. Default: 8. See `Settings.framePacingMinWindow`.
+     */
+    public var framePacingMinWindow(get,set):Int;
+    inline function get_framePacingMinWindow():Int {
+        return settings.framePacingMinWindow;
+    }
+    inline function set_framePacingMinWindow(framePacingMinWindow:Int):Int {
+        return @:privateAccess settings.framePacingMinWindow = framePacingMinWindow;
+    }
+
     /**
      * App collections.
      */

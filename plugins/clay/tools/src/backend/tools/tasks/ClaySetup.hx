@@ -241,6 +241,11 @@ class ClaySetup extends tools.Task {
                     targetFlags += '\n' + '-D clay_gl_finish';
                 }
             }
+            if ((target.name == 'mac' || target.name == 'ios') && context.defines.exists('gles_angle') && !context.defines.exists('ceramic_no_clay_wait_drawable_first')) {
+                // ANGLE Metal: the wait for the drawable lands in the first draw call of the
+                // frame, so the loop takes it first (before reading input) and paces itself on it
+                targetFlags += '\n' + '-D clay_wait_drawable_first';
+            }
             targetFlags += '\n' + '-D clay_shader_from_source';
         }
 

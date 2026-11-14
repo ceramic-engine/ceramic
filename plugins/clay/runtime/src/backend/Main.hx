@@ -326,6 +326,18 @@ class Main {
 
         config.render.antialiasing = app.settings.antialiasing;
 
+        // Native loop: drawables, wait for the drawable first, frame pacing
+        config.render.maxDrawables = app.settings.maxDrawables;
+        config.render.waitDrawableFirst = app.settings.waitDrawableFirst;
+        config.render.waitDrawableFirstSlowFrames = app.settings.waitDrawableFirstSlowFrames;
+        config.render.waitDrawableFirstFastFrames = app.settings.waitDrawableFirstFastFrames;
+        config.render.waitDrawableFirstBackoffCap = app.settings.waitDrawableFirstBackoffCap;
+        config.render.framePacing = app.settings.framePacing;
+        config.render.framePacingFloor = app.settings.framePacingFloor;
+        config.render.framePacingMultiple = app.settings.framePacingMultiple;
+        config.render.framePacingWindow = app.settings.framePacingWindow;
+        config.render.framePacingMinWindow = app.settings.framePacingMinWindow;
+
         if (app.settings.windowWidth > 0)
             config.window.width = app.settings.windowWidth;
         else if (app.settings.targetWidth > 0)
