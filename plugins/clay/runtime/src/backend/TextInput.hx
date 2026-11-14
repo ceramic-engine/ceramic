@@ -419,14 +419,21 @@ class TextInput implements spec.TextInput {
             if (!textEditing) return;
             // Keep the focus while text editing, unless another editable element took it
             js.Browser.window.setTimeout(function() {
-                if (!textEditing) return;
-                final active = js.Browser.document.activeElement;
-                if (active != null && active != webTextArea && untyped (active.isContentEditable || active.matches('input, textarea, select'))) {
-                    return;
-                }
-                focusWebTextArea();
+                keepWebTextAreaFocused(WEB_REFOCUS_ATTEMPTS);
             }, 0);
         });
+
+        // A click gives the focus to the canvas (the runtime grabs it): while text
+        // editing it goes back to the textarea, which is where the keys are read
+        final canvas:js.html.Element = cast clay.Clay.app.runtime.window;
+        if (canvas != null) {
+            canvas.addEventListener('focus', function(_) {
+                if (!textEditing) return;
+                js.Browser.window.setTimeout(function() {
+                    keepWebTextAreaFocused(WEB_REFOCUS_ATTEMPTS);
+                }, 0);
+            });
+        }
 
         js.Browser.document.body.appendChild(textArea);
         webTextArea = textArea;
@@ -487,6 +494,34 @@ class TextInput implements spec.TextInput {
 
         if (webTextArea != null && !webComposing) {
             webTextArea.value = '';
+        }
+
+    }
+
+    /** Animation frames during which a lost focus is asked again (about 2 s) */
+    static inline final WEB_REFOCUS_ATTEMPTS:Int = 120;
+
+    /**
+     * While text editing: focuses the textarea again, unless another editable
+     * element took the focus. The focus cannot be taken while the page is hidden
+     * (the backend hides the body for a moment during a resize, which also blurs
+     * the textarea), so it is asked again at the next animation frames until it holds.
+     */
+    function keepWebTextAreaFocused(attempts:Int):Void {
+
+        if (!textEditing || webTextArea == null) return;
+        if (webTextAreaFocused()) return;
+        final active = js.Browser.document.activeElement;
+        if (active != null && active != webTextArea && untyped (active.isContentEditable || active.matches('input, textarea, select'))) {
+            return;
+        }
+        webRefocusing = true;
+        focusWebTextArea();
+        webRefocusing = false;
+        if (!webTextAreaFocused() && attempts > 0) {
+            js.Browser.window.requestAnimationFrame(function(_) {
+                keepWebTextAreaFocused(attempts - 1);
+            });
         }
 
     }
