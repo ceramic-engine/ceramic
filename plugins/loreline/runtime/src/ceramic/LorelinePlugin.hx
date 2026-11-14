@@ -40,7 +40,7 @@ using StringTools;
  * ```
  * 
  * @see LorelineAsset
- * @see https://github.com/loreline/loreline for the Loreline language
+ * @see https://github.com/jeremyfa/loreline for the Loreline language
  */
 @:access(ceramic.App)
 class LorelinePlugin {

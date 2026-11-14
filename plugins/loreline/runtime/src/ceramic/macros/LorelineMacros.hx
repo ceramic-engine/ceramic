@@ -15,11 +15,11 @@ using StringTools;
  * Build macros for generating compile-time constants for Loreline assets.
  * 
  * This macro scans the assets directory for Loreline files and generates
- * static constants in the Loreines class for type-safe asset references.
- * 
+ * static constants in the Lorelines class for type-safe asset references.
+ *
  * The generated constants allow referencing assets like:
  * ```haxe
- * assets.add(Loreines.STORY_INTRO);
+ * assets.add(Lorelines.STORY_INTRO);
  * ```
  * Instead of using string literals.
  */

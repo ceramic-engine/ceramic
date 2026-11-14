@@ -132,8 +132,10 @@ class LorelineAsset extends Asset {
                                 emitComplete(true);
                             }
                             else {
+                                // With a callback, parse() reports its errors here
+                                // and keeps them in Loreline.lastError()
                                 status = BROKEN;
-                                log.error('Failed to decode loreline data at path: $path');
+                                log.error('Failed to decode loreline data at path: $path' + errorDetails(Loreline.lastError()));
                                 emitComplete(false);
                             }
                         }
@@ -141,7 +143,7 @@ class LorelineAsset extends Asset {
 
                 } catch (e:Dynamic) {
                     status = BROKEN;
-                    log.error('Failed to decode loreline data at path: $path');
+                    log.error('Failed to decode loreline data at path: $path' + errorDetails(e));
                     emitComplete(false);
                 }
             }
@@ -178,12 +180,34 @@ class LorelineAsset extends Asset {
             }
             catch (e:Dynamic) {
                 status = BROKEN;
-                log.error('Failed to import loreline file: $importPath');
+                log.error('Failed to import loreline file: $importPath' + errorDetails(e));
                 emitComplete(false);
             }
             asset.destroy();
         });
         assets.load();
+
+    }
+
+    /**
+     * Formats a Loreline error (message, file and position) to append to a log message.
+     * @param error A `loreline.Error`, any other thrown value, or null
+     * @return The details, prefixed with ` (`, or an empty string if there is no error
+     */
+    static function errorDetails(error:Dynamic):String {
+
+        if (error == null)
+            return '';
+
+        if (Std.isOfType(error, loreline.Error)) {
+            var lorelineError:loreline.Error = error;
+            var details = lorelineError.toString();
+            if (lorelineError.filePath != null)
+                details = lorelineError.filePath + ': ' + details;
+            return ' (' + details + ')';
+        }
+
+        return ' (' + Std.string(error) + ')';
 
     }
 
