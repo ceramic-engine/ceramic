@@ -315,6 +315,8 @@ class Runner {
         while (more) {
             var item = queue.pop(false);
             if (item != null) {
+                // A callback back from a thread may change anything on screen (render on demand)
+                if (count == 0) ceramic.App.app.requestRender();
                 count++; item(); item = null;
             } else {
                 more = false; break;
@@ -367,6 +369,8 @@ class Runner {
         #if (cpp || cs)
         queue.push(_fn);
         #else
+        // Run at the next flush: the frame that runs it is drawn (render on demand)
+        app.requestRender();
         app.onceImmediate(_fn);
         #end
 

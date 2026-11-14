@@ -131,6 +131,9 @@ class Tween extends Entity {
 
         _tweens.push(this);
 
+        // Its first value is given in this frame (render on demand)
+        App.app.requestRender();
+
         remaining = duration;
 
         App.app.onceImmediate(immediateStart);
@@ -175,6 +178,9 @@ class Tween extends Entity {
     }
 
     function immediateComplete() {
+
+        // A tween without duration never joins the active tweens
+        App.app.requestRender();
 
         emitUpdate(toValue, 0);
         emitComplete();
@@ -282,6 +288,16 @@ class Tween extends Entity {
                 tween.updateFromTick(delta);
             }
         }
+
+    }
+
+    /**
+     * Whether at least one tween is running: the count of active tweens is the
+     * length of the internal list (render on demand draws every frame meanwhile).
+     */
+    inline static function hasActiveTweens():Bool {
+
+        return _tweens.length > 0;
 
     }
 

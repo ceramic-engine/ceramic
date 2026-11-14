@@ -270,6 +270,10 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         _activeEditTextInput = this;
 
+        // The editing state changes without any dirty flag (render on demand):
+        // listeners of the draw events read it (the DOM input on web, field views)
+        app.requestRender();
+
         var content = entity.content;
 
         computeInputRect();
@@ -310,6 +314,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
      * Stop text input and editing.
      */
     public function stopInput():Void {
+
+        // See `startInput()`
+        app.requestRender();
 
         inputActive = false;
 

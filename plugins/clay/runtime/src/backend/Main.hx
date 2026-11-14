@@ -478,6 +478,8 @@ class Main {
                 appEl.style.height = containerHeight + 'px';
                 appEl.width = Math.round(containerWidth * js.Browser.window.devicePixelRatio);
                 appEl.height = Math.round(containerHeight * js.Browser.window.devicePixelRatio);
+                // Resizing a canvas clears it (render on demand)
+                ceramic.App.app.requestRender();
                 // clay reads the bounds of the canvas only when they may have changed
                 (cast Clay.app.runtime:clay.web.WebRuntime).invalidateWindowBounds();
 
@@ -560,6 +562,9 @@ class Main {
             if (Clay.app.shouldUpdate(timestamp)) {
                 Clay.app.emitTick(timestamp);
             }
+            // Same decision as a regular frame: with `settings.renderOnDemand`, the app
+            // draws nothing when nothing was requested
+            Clay.app.renderSkipped = false;
             Clay.app.emitRender();
         }
 

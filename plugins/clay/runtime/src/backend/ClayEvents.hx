@@ -186,6 +186,16 @@ class ClayEvents extends clay.Events {
 
         handleReady();
 
+        #if web
+        // A restored WebGL context has lost the image of the canvas (render on demand)
+        var canvas:Dynamic = (cast Clay.app.runtime:clay.web.WebRuntime).window;
+        if (canvas != null) {
+            canvas.addEventListener('webglcontextrestored', function(_) {
+                ceramic.App.app.requestRender();
+            });
+        }
+        #end
+
         backend.emitReady();
 
     }
@@ -208,6 +218,11 @@ class ClayEvents extends clay.Events {
     override function render() {
 
         backend.emitRender();
+
+        // Nothing was drawn (`settings.renderOnDemand`): nothing to swap or present
+        if (ceramic.App.app.renderSkipped) {
+            Clay.app.renderSkipped = true;
+        }
 
     }
 
@@ -1135,6 +1150,13 @@ class ClayEvents extends clay.Events {
     }
 
     override function windowEvent(type:WindowEventType, timestamp:Float, windowId:Int, x:Int, y:Int) {
+
+        // Every window event requests a render (render on demand): shown, exposed,
+        // moved to another display, resized (a resized canvas is cleared on web),
+        // restored, focus...
+        if (ceramic.App.app != null) {
+            ceramic.App.app.requestRender();
+        }
 
         switch type {
             case UNKNOWN:

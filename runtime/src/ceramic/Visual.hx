@@ -1289,6 +1289,8 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      */
     public var blending(default,set):Blending = Blending.AUTO;
     function set_blending(blending:Blending):Blending {
+        // No dirty flag for this one (render on demand)
+        if (this.blending != blending) ceramic.App.app.requestRender();
         return this.blending = blending;
     }
 
@@ -1493,6 +1495,8 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     function set_width(width:Float):Float {
         if (_width == width) return width;
         _width = width;
+        // No dirty flag without an anchor (render on demand)
+        ceramic.App.app.requestRender();
         if (anchorX != 0) matrixDirty = true;
         return width;
     }
@@ -1511,6 +1515,8 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     function set_height(height:Float):Float {
         if (_height == height) return height;
         _height = height;
+        // No dirty flag without an anchor (render on demand)
+        ceramic.App.app.requestRender();
         if (anchorY != 0) matrixDirty = true;
         return height;
     }
@@ -1646,6 +1652,8 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      */
     public var shader(default, set):Shader = null;
     function set_shader(shader:Shader):Shader {
+        // No dirty flag for this one (render on demand)
+        if (this.shader != shader) ceramic.App.app.requestRender();
         return this.shader = shader;
     }
 

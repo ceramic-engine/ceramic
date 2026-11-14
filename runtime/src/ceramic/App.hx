@@ -516,6 +516,8 @@ class App extends Entity {
         }
 
         if (numToCall > 0) {
+            // Like a timer (render on demand)
+            renderRequested = true;
             for (i in 0...numToCall) {
                 var callback = _xUpdatesToCallNow.unsafeGet(i);
                 _xUpdatesToCallNow.unsafeSet(i, null);
@@ -776,7 +778,44 @@ class App extends Entity {
      */
     var beginUpdateCallbacks:Array<Void->Void> = [];
 
+    /**
+     * How many of the `beginUpdateCallbacks` request a render themselves if they need
+     * one, with `settings.renderOnDemand` (the flush of the due timers): any other
+     * callback requests one.
+     */
+    var quietBeginUpdateCallbacks:Int = 0;
+
     var disposedEntities:Array<Entity> = [];
+
+/// Render on demand
+
+    /**
+     * Whether a render was requested since the last drawn frame (see `requestRender()`).
+     * Only decides anything when `settings.renderOnDemand` is `true`.
+     */
+    @:noCompletion public var renderRequested:Bool = true;
+
+    /**
+     * `true` if the last frame was not drawn: `settings.renderOnDemand` is `true` and
+     * nothing requested a render. Backends read it to know that nothing must be presented.
+     */
+    public var renderSkipped(default,null):Bool = false;
+
+    /**
+     * The entities holding a continuous render request (see `requestContinuousRender()`).
+     */
+    var continuousRenderOwners:Array<Entity> = [];
+
+    #if unity
+    var didWarnRenderOnDemandUnity:Bool = false;
+    #end
+
+    #if ceramic_verify_render_on_demand
+    /**
+     * Debug check of the skipped frames (define `ceramic_verify_render_on_demand`).
+     */
+    @:noCompletion public var renderOnDemandVerifier:RenderOnDemandVerifier = new RenderOnDemandVerifier();
+    #end
 
 #if (cppia || ceramic_cppia_host)
     @:noCompletion public var initSettings:InitSettings;
@@ -1372,6 +1411,102 @@ class App extends Entity {
 
     }
 
+/// Render on demand
+
+    /**
+     * Requests the next frame to be drawn. Only needed when `settings.renderOnDemand`
+     * is `true`, after a change that Ceramic cannot detect by itself (see
+     * `Settings.renderOnDemand`). Cheap, can be called any number of times.
+     */
+    inline public function requestRender():Void {
+
+        renderRequested = true;
+
+    }
+
+    /**
+     * Requests every frame to be drawn for as long as `owner` holds the request:
+     * until `releaseContinuousRender(owner)` is called or `owner` is destroyed.
+     * Only has an effect when `settings.renderOnDemand` is `true`. Use it while
+     * something animates without raising a dirty flag (see `Settings.renderOnDemand`).
+     * An owner holds one request at most.
+     */
+    public function requestContinuousRender(owner:Entity):Void {
+
+        if (owner == null || owner.destroyed)
+            return;
+
+        if (continuousRenderOwners.indexOf(owner) == -1) {
+            continuousRenderOwners.push(owner);
+            owner.onDestroy(this, continuousRenderOwnerDestroyed);
+        }
+
+        renderRequested = true;
+
+    }
+
+    /**
+     * Releases the continuous render request held by `owner`, if any
+     * (see `requestContinuousRender()`). One more frame is drawn.
+     */
+    public function releaseContinuousRender(owner:Entity):Void {
+
+        if (owner != null && continuousRenderOwners.remove(owner)) {
+            if (!owner.destroyed) {
+                owner.offDestroy(continuousRenderOwnerDestroyed);
+            }
+            renderRequested = true;
+        }
+
+    }
+
+    /**
+     * Whether `owner` holds a continuous render request.
+     */
+    public function hasContinuousRender(owner:Entity):Bool {
+
+        return continuousRenderOwners.indexOf(owner) != -1;
+
+    }
+
+    function continuousRenderOwnerDestroyed(owner:tracker.Owner):Void {
+
+        if (continuousRenderOwners.remove(cast owner)) {
+            renderRequested = true;
+        }
+
+    }
+
+    /**
+     * Whether the frame must be drawn, with `settings.renderOnDemand`.
+     */
+    function shouldRenderOnDemand():Bool {
+
+        if (renderRequested || continuousRenderOwners.length > 0)
+            return true;
+
+        // A listener registered with `onceBeginDraw()` or `onceFinishDraw()` waits for
+        // a frame to be drawn (a screenshot, a pixel read, a stamp, a filter render)
+        if ((this.__cbOnceBeginDraw != null && this.__cbOnceBeginDraw.length > 0)
+            || (this.__cbOnceFinishDraw != null && this.__cbOnceFinishDraw.length > 0))
+            return true;
+
+        // A render texture marked to be rendered (`renderDirty`, `stamp()`, `Filter.render()`)
+        for (i in 0...renderTextures.length) {
+            if (renderTextures.unsafeGet(i).renderDirty)
+                return true;
+        }
+
+        #if ceramic_verify_render_on_demand
+        // Nothing requested this frame: nothing the check sees may have changed
+        if (renderOnDemandVerifier.check(visuals))
+            return true;
+        #end
+
+        return false;
+
+    }
+
     function updatePreReady(delta:Float):Void {
 
         #if sys
@@ -1461,6 +1596,12 @@ class App extends Entity {
 
         // Run 'begin update' callbacks, like touch/mouse/key events etc...
         if (beginUpdateCallbacks.length > 0) {
+            // Input, window and screen events: what they run may change anything on
+            // screen (render on demand). Due timers request it when a callback runs.
+            if (beginUpdateCallbacks.length > quietBeginUpdateCallbacks) {
+                renderRequested = true;
+            }
+            quietBeginUpdateCallbacks = 0;
             var callbacks = beginUpdateCallbacks;
             beginUpdateCallbacks = [];
             for (callback in callbacks) {
@@ -1479,6 +1620,11 @@ class App extends Entity {
 
         // Flush immediate callbacks
         flushImmediate();
+
+        // An active tween changes values at every frame (render on demand)
+        if (Tween.hasActiveTweens()) {
+            renderRequested = true;
+        }
 
         if (delta > 0) {
 
@@ -1546,6 +1692,32 @@ class App extends Entity {
      */
     function render():Void {
 
+        #if unity
+        // Unity draws every frame by itself: the setting is ignored
+        if (settings.renderOnDemand) {
+            settings.renderOnDemand = false;
+            if (!didWarnRenderOnDemandUnity) {
+                didWarnRenderOnDemandUnity = true;
+                log.warning('settings.renderOnDemand is ignored by the Unity backend: every frame is drawn');
+            }
+        }
+        #else
+        if (settings.renderOnDemand && !shouldRenderOnDemand()) {
+
+            // Nothing asked for this frame: no draw event, nothing drawn or presented
+            renderSkipped = true;
+
+            // Tween end frame
+            Tween.endFrame();
+
+            return;
+        }
+        #end
+
+        // Requests made from now on (by a draw event listener, for instance) are for the next frame
+        renderSkipped = false;
+        renderRequested = false;
+
         // Begin draw
         emitBeginDraw();
 
@@ -1561,6 +1733,12 @@ class App extends Entity {
 
         // Tween end frame
         Tween.endFrame();
+
+        #if (ceramic_verify_render_on_demand && !unity)
+        if (settings.renderOnDemand) {
+            renderOnDemandVerifier.capture(visuals);
+        }
+        #end
 
         // Swap display (if backends needs to)
         backend.draw.swap();
@@ -1625,6 +1803,7 @@ class App extends Entity {
             }
 
             hierarchyDirty = true;
+            renderRequested = true;
 
             return true;
 
@@ -1676,6 +1855,7 @@ class App extends Entity {
             visuals.setArrayLength(len - gap);
 
             hierarchyDirty = true;
+            renderRequested = true;
 
         }
 
@@ -1722,6 +1902,7 @@ class App extends Entity {
             // Notify if screen matrix has changed
             screen.matrix.computeChanged();
             if (screen.matrix.changed) {
+                renderRequested = true;
                 screen.matrix.emitChange();
             }
 
@@ -1745,6 +1926,7 @@ class App extends Entity {
                         }
 
                         if (visual.computedVisible) {
+                            renderRequested = true;
                             visual.computeContent();
                         }
                     }
@@ -1758,6 +1940,7 @@ class App extends Entity {
                 if (!visual.destroyed && visual.transform != null) {
                     visual.transform.computeChanged();
                     if (visual.transform.changed) {
+                        renderRequested = true;
                         visual.transform.emitChange();
                     }
                 }
@@ -1799,20 +1982,26 @@ class App extends Entity {
             var visual = visuals.unsafeGet(i);
             if (!visual.destroyed) {
 
+                // Each dirty flag found here requests a render (render on demand)
+
                 if (visual.renderTargetDirty) {
+                    renderRequested = true;
                     visual.computeRenderTarget();
                 }
 
                 if (visual.matrixDirty) {
+                    renderRequested = true;
                     visual.computeMatrix();
                 }
 
                 if (visual.visibilityDirty) {
+                    renderRequested = true;
                     visual.computeVisibility();
                 }
 
                 if (visual.computedVisible) {
                     if (visual.clipDirty) {
+                        renderRequested = true;
                         visual.computeClip();
                     }
 
@@ -1869,6 +2058,8 @@ class App extends Entity {
     public function computeHierarchy() {
 
         if (hierarchyDirty) {
+
+            renderRequested = true;
 
             // Compute visuals depth, starting from the visuals directly added to each render target
             computeRootsDepth(screen.rootVisuals);

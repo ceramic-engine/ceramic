@@ -430,6 +430,7 @@ class Screen extends Entity implements Observable implements RenderTarget {
         settings.onBackgroundChange(this, function(background, prevBackground) {
             #if debug log.info('Setting background=$background'); #end
             app.backend.screen.setBackground(background);
+            app.requestRender();
         });
         settings.onTitleChange(this, function(title, prevTitle) {
             #if debug log.info('Setting title=$title'); #end
@@ -779,6 +780,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
         if (resizing) return;
         resizing = true;
 
+        // The size, the density or the scaling may have changed (render on demand)
+        app.requestRender();
+
         // Keep window size settings and actual window size consistent
         // (not when fullscreen: settings keep the size of the windowed mode)
         if (!settings.fullscreen) {
@@ -887,6 +891,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
      * Otherwise, density is rounded to the nearest integer (minimum 1).
      */
     function updateTexturesDensity():Void {
+
+        // Textures may be replaced by the ones of another density (render on demand)
+        app.requestRender();
 
         if (settings.targetDensity > 0) {
             this.texturesDensity = settings.targetDensity;
@@ -1690,7 +1697,24 @@ class Screen extends Entity implements Observable implements RenderTarget {
 
 /// Mouse states
 
+    inline function willEmitMouseScroll(deltaX:Float, deltaY:Float, unit:ScrollUnit):Void {
+
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
+
+    }
+
+    inline function willEmitTouchCancel(touchIndex:Int, x:Float, y:Float):Void {
+
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
+
+    }
+
     function willEmitMouseMove(x:Float, y:Float):Void {
+
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
 
         mouseDeltaX += (x - prevMouseX);
         mouseDeltaY += (y - prevMouseY);
@@ -1700,6 +1724,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
     }
 
     function willEmitMouseDown(buttonId:Int, x:Float, y:Float) {
+
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
 
         prevMouseX = x;
         prevMouseY = y;
@@ -1739,6 +1766,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
 
     function willEmitMouseUp(buttonId:Int, x:Float, y:Float):Void {
 
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
+
         pressedMouseButtons.set(buttonId, -1);
         // Used to differenciate "released" and "just released" states
         ceramic.App.app.beginUpdateCallbacks.push(function() {
@@ -1750,6 +1780,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
     }
 
     function willEmitMouseWheel(x:Float, y:Float):Void {
+
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
 
         mouseWheelDeltaX += x;
         mouseWheelDeltaY += y;
@@ -1842,6 +1875,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
 
     function willEmitTouchMove(touchIndex:Int, x:Float, y:Float):Void {
 
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
+
         if (touchIndex > maxTouchIndex) {
             maxTouchIndex = touchIndex;
         }
@@ -1861,6 +1897,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
     }
 
     function willEmitTouchDown(touchIndex:Int, x:Float, y:Float):Void {
+
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
 
         var keyX = touchIndex * 2;
         var keyY = keyX + 1;
@@ -1901,6 +1940,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
     }
 
     function willEmitTouchUp(touchIndex:Int, x:Float, y:Float):Void {
+
+        // Every input event requests a render (render on demand)
+        ceramic.App.app.requestRender();
 
         var state = pressedTouches.get(touchIndex);
         if (state == 1) {

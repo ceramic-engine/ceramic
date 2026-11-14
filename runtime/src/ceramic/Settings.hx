@@ -195,6 +195,54 @@ class Settings implements Observable {
     @observe public var overrideDelta:Float = -1;
 
     /**
+     * Render on demand: a frame is drawn only when something asked for it.
+     *
+     * When `false` (default), every frame is drawn, as always. When `true`, the app
+     * still updates at every frame, but a frame where nothing requested a render is
+     * not drawn and not presented: the screen keeps the last image. This lowers the
+     * latency of the next drawn frame and the power used at rest.
+     *
+     * A render is requested automatically by:
+     * - a visual added or removed, or any visual change that raises a dirty flag
+     *   (position, scale, rotation, alpha, visibility, depth, content of a `Text`
+     *   or any visual with `contentDirty`, render target, clip);
+     * - the setters of `Visual.width` / `height`, `Visual.blending`, `Visual.shader`,
+     *   `Quad.texture`, `Mesh.texture` and `Mesh.color`;
+     * - an active `Tween`;
+     * - every input event (keys, text, pointer, wheel, gamepad);
+     * - any frame where a `Timer` callback, a callback given to `Runner.runInMain()` or
+     *   an `app.onceXUpdates()` callback ran;
+     * - the end of an asset load;
+     * - every window or screen event (resize, density, expose, restore, display change,
+     *   focus, system appearance) and a change of `settings.background`;
+     * - a `RenderTexture` marked with `renderDirty = true`, `stamp()`, `Filter.render()`;
+     * - a listener waiting in `app.onceBeginDraw()` / `app.onceFinishDraw()` (used by
+     *   screenshots, pixel reads, `stamp()` and `Filter.render()`). A permanent
+     *   listener (`app.onBeginDraw()` / `app.onFinishDraw()`) requests nothing: it is
+     *   called on drawn frames only.
+     *
+     * What is NOT detected (plain fields, without a dirty flag) when changed outside of
+     * the cases above, for instance at every frame from `app.onUpdate`:
+     * - `Quad.color`, `Quad.frameX` / `frameY`;
+     * - the arrays of a `Mesh` (`vertices`, `indices`, `colors`, `uvs`);
+     * - shader uniforms;
+     * - a `RenderTexture` with `autoRender` whose content must change by itself, and
+     *   the pixels of a texture.
+     *
+     * In those cases, call `app.requestRender()` after the change, or hold
+     * `app.requestContinuousRender(owner)` while the animation runs.
+     *
+     * In debug, the define `ceramic_verify_render_on_demand` checks the skipped frames:
+     * when a visual changed without a request, a warning names it and the frame is
+     * drawn. The check does not see the content of a custom `Renderable`, shader
+     * uniforms or texture pixels.
+     *
+     * Verified on macOS and web. Ignored by the Unity backend (every frame is drawn
+     * there). Can be changed at any time.
+     */
+    public var renderOnDemand:Bool = false;
+
+    /**
      * Controls whether mouse wheel events are consumed by the app.
      *
      * When true (default), prevents mouse wheel events from bubbling to

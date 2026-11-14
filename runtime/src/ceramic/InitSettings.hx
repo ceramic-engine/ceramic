@@ -227,6 +227,18 @@ class InitSettings {
         return settings.overrideDelta = overrideDelta;
     }
 
+    /**
+     * Render on demand (default `false`): when `true`, a frame is drawn only when
+     * something requested it. See `Settings.renderOnDemand`.
+     */
+    public var renderOnDemand(get,set):Bool;
+    inline function get_renderOnDemand():Bool {
+        return settings.renderOnDemand;
+    }
+    inline function set_renderOnDemand(renderOnDemand:Bool):Bool {
+        return settings.renderOnDemand = renderOnDemand;
+    }
+
 
     /**
      * If set to `true` (default). Default mouse wheel events

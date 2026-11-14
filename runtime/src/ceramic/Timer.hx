@@ -79,6 +79,8 @@ class Timer {
         timestamp += realDelta;
 
         if (next <= now) {
+            // Requests a render itself, when a callback does run (render on demand)
+            ceramic.App.app.quietBeginUpdateCallbacks++;
             ceramic.App.app.beginUpdateCallbacks.push(flush);
         }
 
@@ -104,6 +106,8 @@ class Timer {
                     if (callback.time <= now) {
                         if (callback.interval >= 0) {
                             while (callback.time <= now && !callback.cleared) {
+                                // A timer callback may change anything on screen (render on demand)
+                                ceramic.App.app.requestRender();
                                 #if ceramic_check_handlers
                                 try {
                                 #end
@@ -123,6 +127,7 @@ class Timer {
                             }
                         }
                         else {
+                            ceramic.App.app.requestRender();
                             #if ceramic_check_handlers
                             try {
                             #end

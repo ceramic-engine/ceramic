@@ -149,6 +149,8 @@ class Mesh extends Visual {
 
     }
     function set_color(color:Color):Color {
+        // No dirty flag for this one (render on demand)
+        ceramic.App.app.requestRender();
         if (floatColors != null) {
             floatColors[0] = color.redFloat;
             floatColors[1] = color.greenFloat;
@@ -217,6 +219,9 @@ class Mesh extends Visual {
     public var texture(default,set):Texture = null;
     #if !debug inline #end function set_texture(texture:Texture):Texture {
         if (this.texture == texture) return texture;
+
+        // No dirty flag for this one (render on demand)
+        ceramic.App.app.requestRender();
 
         assert(texture == null || !texture.destroyed, 'Cannot assign destroyed texture: ' + texture);
 

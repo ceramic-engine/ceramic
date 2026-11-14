@@ -203,6 +203,14 @@ class ImSystem extends System {
 
         Im.endFrame();
 
+        // Immediate mode: the windows are built again at every frame and may differ
+        // from the last one, so every frame is drawn while a window is used, and until
+        // the filter is put to rest (a continuous render request, with
+        // `settings.renderOnDemand`)
+        if (Im._numUsedWindows > 0 || makeFilterActive > -2) {
+            ceramic.App.app.requestRender();
+        }
+
         if (filter != null) {
 
             // This logic is basically ensuring we wait for a

@@ -462,6 +462,9 @@ class Asset extends Entity implements Observable {
 
     inline function willEmitComplete(success:Bool) {
 
+        // The end of a load usually changes what is on screen (render on demand)
+        ceramic.App.app.requestRender();
+
         if (success && owner != null) {
             owner.emitUpdate(this);
         }

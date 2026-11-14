@@ -406,6 +406,11 @@ class ImGuiSystem extends System {
 
         ImGui.render();
 
+        // Immediate mode: the whole UI is built again at every frame and may differ
+        // from the last one, so every frame is drawn while the system runs
+        // (a continuous render request, with `settings.renderOnDemand`)
+        app.requestRender();
+
         var io = ImGui.getIO();
         wantCaptureMouse = io.wantCaptureMouse;
         wantCaptureKeyboard = io.wantCaptureKeyboard;

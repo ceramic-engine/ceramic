@@ -154,6 +154,9 @@ class TtfGlyphAtlas extends Entity {
 
     function handlePageEvicted(page:AtlasPage):Void {
 
+        // The glyphs of the page must be drawn again from their new place (render on demand)
+        app.requestRender();
+
         emitPageEvicted(page.index);
 
     }
@@ -231,6 +234,8 @@ class TtfGlyphAtlas extends Entity {
         rasterizer.renderInto(font, gid, fontSize, subpixelX, 0, bounds.left, bounds.top,
             page.data, r.y * page.width + r.x, page.width, r.width, r.height);
         page.markDirty(r.x, r.y, r.width, r.height);
+        // Uploaded before the next drawn frame (`upload()`): ask for it (render on demand)
+        app.requestRender();
 
         entry.page = page.index;
         entry.generation = page.generation;

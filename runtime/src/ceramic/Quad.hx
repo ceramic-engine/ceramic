@@ -148,6 +148,9 @@ class Quad extends Visual {
 
         _texture = texture;
 
+        // No dirty flag for this one (render on demand)
+        ceramic.App.app.requestRender();
+
         // Update frame
         if (texture == null) {
             frameX = -1;
