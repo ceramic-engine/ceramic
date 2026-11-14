@@ -1646,9 +1646,14 @@ class Window implements WindowInvalidator {
             drawFrame();
         }
         catch (e:haxe.Exception) {
+            closeOpenCaptures();
             accessRecorder = previousRecorder;
             drawing = false;
             drawingClean = false;
+            // The frame was not drawn: the next draw starts again from the whole tree
+            // (as after a failed frame drawn in place, see `abortInPlace`)
+            refreshing = true;
+            dirty = true;
             #if glaze_verify_cache
             resetVerifyScopes();
             #end
@@ -2234,6 +2239,33 @@ class Window implements WindowInvalidator {
     @:allow(glaze)
     inline function countReusedView():Void {
         reusedViewCount++;
+    }
+
+    /**
+     * A draw failed (an exception in a render, a prepaint or a paint): closes the
+     * captures of the views that were being drawn, innermost first, and empties the
+     * stacks that follow them. Without it the tracker of such a view stays open, and
+     * every later draw of the view throws "ViewTracker ... is already capturing".
+     */
+    function closeOpenCaptures():Void {
+        var i = renderedEntityStack.length;
+        while (i-- > 0) {
+            final tracker = trackers.get(renderedEntityStack[i].entityId);
+            if (tracker != null) {
+                tracker.endCapture();
+            }
+        }
+        renderedEntityStack.resize(0);
+        // A view left open outside of the stack (should not happen)
+        for (tracker in trackers) {
+            if (tracker.capturing) {
+                tracker.endCapture();
+            }
+        }
+        accessedStack.resize(0);
+        accessedViewStack.resize(0);
+        currentAccessed = frameAccessed;
+        currentAccessedViewId = -1;
     }
 
     @:allow(glaze)
@@ -4968,7 +5000,7 @@ class Window implements WindowInvalidator {
         textStyleStack.resize(0);
         contentMaskStack.resize(0);
         elementOffsetStack.resize(0);
-        renderedEntityStack.resize(0);
+        closeOpenCaptures();
         endInPlace(spare, imageCache);
         remSizeOverrideStack.resize(0);
         imageCacheStack.resize(0);

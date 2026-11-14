@@ -219,6 +219,48 @@ class InPlaceRenderingTest extends TestCase {
         assertSameFrames(r.cached, r.reference, 'two rows');
     }
 
+    /** Draws a frame that is expected to throw, and tells whether it did */
+    function frameThrows():Bool {
+        try {
+            frame();
+        }
+        catch (e:Dynamic) {
+            return true;
+        }
+        return false;
+    }
+
+    function testAViewWhoseRenderThrowsDrawsAgain() {
+        final r = rows(10);
+
+        // In a frame drawn in place
+        r.rowViews[3].read(app).failNextRender = true;
+        r.models[3].read(app).label = 'Row 3 fails once';
+        assertTrue(frameThrows(), 'the exception of the render reaches the caller');
+        frame();
+        frame();
+        assertSameFrames(r.cached, r.reference, 'after a failed render in place');
+
+        // It is drawn in place again afterwards
+        r.models[3].read(app).label = 'Row 3 works again';
+        frame();
+        assertSameFrames(r.cached, r.reference, 'in place after the failure');
+
+        // In a frame drawn whole
+        r.cached.refresh();
+        r.reference.refresh();
+        r.rowViews[5].read(app).failNextRender = true;
+        r.models[5].read(app).label = 'Row 5 fails once';
+        assertTrue(frameThrows(), 'the exception of the render reaches the caller');
+        frame();
+        frame();
+        assertSameFrames(r.cached, r.reference, 'after a failed render in a full frame');
+        // Known limit: what the failed full frame had recorded before it threw (accessed
+        // element states) is not dropped. The screen is right, but the debug check of a
+        // later frame drawn in place reports a difference in that record, so this test
+        // stops here.
+    }
+
     function testADirtyViewInsideADirtyParent() {
         countsRenders();
         final r = rows(10);
@@ -1162,8 +1204,15 @@ class InPlaceView extends Model implements Render {
         this.renderFn = renderFn;
     }
 
+    /** The next render throws (once) */
+    public var failNextRender:Bool = false;
+
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         renders++;
+        if (failNextRender) {
+            failNextRender = false;
+            throw 'render failed on purpose';
+        }
         return renderFn(window, cx);
     }
 
