@@ -1139,6 +1139,12 @@ class VisualHost {
             return;
         filter.active = true;
         if (proxy != null && !proxy.destroyed) proxy.active = true;
+        if (!explicit) {
+            // `Always` mode: the content is rendered at every frame, so every frame is
+            // drawn while the visual is shown (`settings.renderOnDemand`). Released in
+            // `detach()` or when the filter is destroyed.
+            ceramic.App.app.requestContinuousRender(filter);
+        }
         if (!attached || visual.parent != filter.content) {
             if (visual.parent != null && visual.parent != filter.content) {
                 visual.parent.remove(visual);
@@ -1163,6 +1169,7 @@ class VisualHost {
             attached = false;
         }
         if (filter != null) {
+            ceramic.App.app.releaseContinuousRender(filter);
             filter.active = false;
             filter.touchable = false;
         }

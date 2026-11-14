@@ -239,6 +239,9 @@ class CeramicAtlasPage {
     public function markDirty(x:Int, y:Int, w:Int, h:Int):Void {
         if (w <= 0 || h <= 0)
             return;
+        // The area is uploaded before the next drawn frame (`upload()`, a listener
+        // of Ceramic's begin draw event): ask for that frame (`settings.renderOnDemand`)
+        ceramic.App.app.requestRender();
         final rects = dirtyRects;
         var i = 0;
         while (i < rects.length) {

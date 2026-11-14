@@ -118,11 +118,16 @@ class TestRunner {
             testCase.failures = [];
             testCase.assertions = 0;
             var completed = false;
+            var cancelTimeout:Null<() -> Void> = null;
             final cacheCheck = beginCacheCheck();
             function complete(?timedOut:Bool):Void {
                 if (completed)
                     return;
                 completed = true;
+                if (cancelTimeout != null) {
+                    cancelTimeout();
+                    cancelTimeout = null;
+                }
                 if (timedOut == true)
                     testCase.failures.push('timed out after $ASYNC_TIMEOUT seconds');
                 try {
@@ -146,7 +151,9 @@ class TestRunner {
                 // Continue from a fresh frame
                 ceramic.App.app.onceImmediate(next);
             }
-            ceramic.Timer.delay(null, ASYNC_TIMEOUT, () -> complete(true));
+            // Cleared when the test completes: a timer that fires is activity for the
+            // app (RenderOnDemandTest counts the frames drawn at rest)
+            cancelTimeout = ceramic.Timer.delay(null, ASYNC_TIMEOUT, () -> complete(true));
             try {
                 testCase.setup();
                 Reflect.callMethod(testCase, Reflect.field(testCase, test.method), [() -> complete()]);

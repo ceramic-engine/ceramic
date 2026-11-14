@@ -448,6 +448,11 @@ class SceneRenderable extends Renderable {
      */
     public function markRenderDirty():Void {
 
+        // With `settings.renderOnDemand`, Ceramic draws a frame only when asked: every
+        // Glaze change comes through here (a new scene, in texture mode or not, an in
+        // place frame, atlas pages, external textures, scale, size, gamma)
+        ceramic.App.app.requestRender();
+
         if (targetTexture != null) {
             targetTexture.renderDirty = true;
         }

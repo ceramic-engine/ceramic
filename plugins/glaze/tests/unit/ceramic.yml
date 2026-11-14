@@ -91,6 +91,10 @@ app:
         # the cache renders for real and is compared with its cached rendering
         # (Window.verifyCache); CacheVerificationTest reads the result
         - glaze_verify_cache
+        # Debug check of render on demand (`settings.renderOnDemand`, turned on by
+        # RenderOnDemandTest only): a skipped frame whose visuals changed without a
+        # render request is reported and drawn
+        - ceramic_verify_render_on_demand
         #- some_define
         #- some_define: 'some value'
 

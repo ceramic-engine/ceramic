@@ -319,6 +319,25 @@ Any other visual keeps its own size (`width`, `height`) when the style gives non
 visual(particles).measure((known, available, window, cx) -> size(px(known.width ?? 120.), px(80.)))
 ```
 
+## Render on demand
+
+By default Ceramic draws every frame. With `settings.renderOnDemand = true` (in
+`Project.hx`, off by default, see `ceramic.Settings.renderOnDemand`), a frame is drawn
+only when something changed. An interface at rest then costs almost nothing, and the
+frame that answers a keystroke reaches the screen sooner.
+
+Glaze needs nothing more: every change of a window requests a render (a view notified
+or refreshed, input, `window.requestAnimationFrame()`, timers such as the caret blink,
+images that finish loading, textures shown by `img()` that are drawn again). A
+`visual(v)` element in `Always` mode (the default) renders its visual at every frame,
+so every frame is drawn while it is shown: use `renderMode(Explicit)` and
+`VisualElement.renderNow(v)` for a visual that changes rarely.
+
+Ceramic code of the app that changes a plain field at every frame (`quad.color`, the
+arrays of a `Mesh`, shader uniforms) calls `app.requestRender()`, or holds
+`app.requestContinuousRender(owner)` while it animates. In debug, the define
+`ceramic_verify_render_on_demand` reports such a change made without a request.
+
 ## Text and fonts
 
 Glaze draws text with its own text system: fonts are TTF, OTF or TTC files added to the text system (Inter and JetBrains Mono are bundled). Two choices of Glaze go beyond the real GPUI and are deliberate:
