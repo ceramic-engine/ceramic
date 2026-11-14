@@ -251,6 +251,19 @@ class InitSettings {
         return settings.renderAfterTimersAndInput = renderAfterTimersAndInput;
     }
 
+    /**
+     * With `renderOnDemand`: handle a discrete input event at once while nothing renders
+     * continuously (default `true`). Web; the native loop already ticks at once for a
+     * discrete event while idle. See `Settings.earlyTickOnInput`.
+     */
+    public var earlyTickOnInput(get,set):Bool;
+    inline function get_earlyTickOnInput():Bool {
+        return settings.earlyTickOnInput;
+    }
+    inline function set_earlyTickOnInput(earlyTickOnInput:Bool):Bool {
+        return @:privateAccess settings.earlyTickOnInput = earlyTickOnInput;
+    }
+
 
     /**
      * If set to `true` (default). Default mouse wheel events

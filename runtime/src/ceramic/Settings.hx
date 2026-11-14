@@ -265,6 +265,28 @@ class Settings implements Observable {
     public var renderAfterTimersAndInput:Bool = true;
 
     /**
+     * With `renderOnDemand`: handle a discrete input event (key, text, mouse button,
+     * touch down or up) at once while nothing renders continuously, instead of at the
+     * next frame (default `true`).
+     *
+     * Web: the update and the draw of the event are run from its DOM event handler, at
+     * most once per refresh period of the display, and the browser shows the result at
+     * its next frame. Without it the event waits for the next animation frame (8 ms on
+     * average at 60 Hz) before anything is computed. It only happens when
+     * `renderOnDemand` is `true`, no owner holds `app.requestContinuousRender()`, no
+     * tween is active, the last frames were not all drawn and `targetFps` is not set:
+     * an app that draws every frame keeps ticking on the animation frames only, and so
+     * does any app when this is `false`. Such an update gets the time really passed
+     * since the last one as its delta, which can be shorter than a display period.
+     *
+     * Native: nothing to set, the native loop already ticks at once for a discrete
+     * event while idle.
+     *
+     * Must be set at startup (`InitSettings`).
+     */
+    public var earlyTickOnInput(default,null):Bool = true;
+
+    /**
      * Controls whether mouse wheel events are consumed by the app.
      *
      * When true (default), prevents mouse wheel events from bubbling to

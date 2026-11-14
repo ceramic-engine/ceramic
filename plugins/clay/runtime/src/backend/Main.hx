@@ -294,6 +294,8 @@ class Main {
         app.settings.onWebWheelResamplingChange(app, (webWheelResampling, _) -> {
             config.runtime.wheelResampling = webWheelResampling;
         });
+        // A discrete input event handled at once while idle (see Settings.earlyTickOnInput)
+        config.runtime.earlyTickOnInput = settings.earlyTickOnInput;
         config.runtime.preventDefaultTouches = settings.preventDefaultTouches;
         app.settings.onPreventDefaultTouchesChange(app, (preventDefaultTouches, _) -> {
             config.runtime.preventDefaultTouches = preventDefaultTouches || app.numBlockingDefaultScroll > 0;

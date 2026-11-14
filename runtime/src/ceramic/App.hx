@@ -1488,9 +1488,34 @@ class App extends Entity {
     }
 
     /**
-     * Whether the frame must be drawn, with `settings.renderOnDemand`.
+     * Whether continuous rendering is going on: every frame is drawn, or expected to be.
+     * `true` unless `settings.renderOnDemand` is `true`, no owner holds a continuous
+     * render request (see `requestContinuousRender()`) and no tween is active. Unlike
+     * `renderSkipped`, it stays `false` right after a frame drawn once. Backends read it
+     * to know that a discrete input event can be handled at once
+     * (see `Settings.earlyTickOnInput`).
      */
-    function shouldRenderOnDemand():Bool {
+    public var renderContinuous(get,never):Bool;
+    function get_renderContinuous():Bool {
+
+        return !settings.renderOnDemand
+            || continuousRenderOwners.length > 0
+            || Tween.hasActiveTweens();
+
+    }
+
+    /**
+     * Whether something already asks for the next frame to be drawn: always without
+     * `settings.renderOnDemand`, otherwise a render request, a continuous render owner,
+     * a listener waiting for a draw or a render texture to render.
+     */
+    @:noCompletion public function renderPending():Bool {
+
+        return !settings.renderOnDemand || hasRenderRequest();
+
+    }
+
+    function hasRenderRequest():Bool {
 
         if (renderRequested || continuousRenderOwners.length > 0)
             return true;
@@ -1506,6 +1531,18 @@ class App extends Entity {
             if (renderTextures.unsafeGet(i).renderDirty)
                 return true;
         }
+
+        return false;
+
+    }
+
+    /**
+     * Whether the frame must be drawn, with `settings.renderOnDemand`.
+     */
+    function shouldRenderOnDemand():Bool {
+
+        if (hasRenderRequest())
+            return true;
 
         #if ceramic_verify_render_on_demand
         // Nothing requested this frame: nothing the check sees may have changed

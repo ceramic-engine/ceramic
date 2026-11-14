@@ -249,6 +249,45 @@ class RenderOnDemandTest extends TestCase {
         a.destroy();
     }
 
+    /**
+     * What the backend reads to handle a discrete input event at once
+     * (`Settings.earlyTickOnInput`): continuous rendering is going on unless the app
+     * renders on demand, no owner holds a continuous render and no tween is active.
+     */
+    function testRenderContinuous() {
+        assertTrue(@:privateAccess new ceramic.Settings().earlyTickOnInput);
+        ceramicApp.settings.renderOnDemand = false;
+        assertTrue(ceramicApp.renderContinuous);
+        assertTrue(ceramicApp.renderPending());
+        ceramicApp.settings.renderOnDemand = true;
+        // (no tween of another test is expected to run here; if one does, it counts)
+        final quiet = @:privateAccess ceramic.Tween._tweens.length == 0;
+        assertEquals(!quiet, ceramicApp.renderContinuous);
+        // A render requested once is not continuous rendering
+        // (not asserted false before: a render texture of the suite may wait for a render)
+        ceramicApp.renderRequested = false;
+        ceramicApp.requestRender();
+        assertTrue(ceramicApp.renderPending());
+        assertEquals(!quiet, ceramicApp.renderContinuous);
+        ceramicApp.renderRequested = false;
+        // An owner of a continuous render
+        final owner = new ceramic.Entity();
+        ceramicApp.requestContinuousRender(owner);
+        assertTrue(ceramicApp.renderContinuous);
+        assertTrue(ceramicApp.renderPending());
+        ceramicApp.releaseContinuousRender(owner);
+        assertEquals(!quiet, ceramicApp.renderContinuous);
+        owner.destroy();
+        // An active tween
+        final tweenOwner = new ceramic.Entity();
+        final tween = ceramic.Tween.start(tweenOwner, LINEAR, 10.0, 0.0, 1.0, (_, _) -> {});
+        assertTrue(ceramicApp.renderContinuous);
+        tween.destroy();
+        assertEquals(!quiet, ceramicApp.renderContinuous);
+        tweenOwner.destroy();
+        ceramicApp.settings.renderOnDemand = previousSetting;
+    }
+
     function testOnceDrawListenersNeedAFrame() {
         final owner = new ceramic.Entity();
         final rest = ceramicApp.renderRequested;

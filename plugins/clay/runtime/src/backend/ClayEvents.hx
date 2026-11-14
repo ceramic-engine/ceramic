@@ -210,6 +210,19 @@ class ClayEvents extends clay.Events {
 
         backend.emitUpdate(delta);
 
+        // Tells the runtime whether something renders continuously (always, without
+        // `settings.renderOnDemand`): see `Settings.earlyTickOnInput`
+        Clay.app.renderContinuous = ceramic.App.app.renderContinuous;
+
+    }
+
+    /**
+     * Whether something already asks for the next frame to be drawn.
+     */
+    override function renderPending():Bool {
+
+        return ceramic.App.app.renderPending();
+
     }
 
     /**
