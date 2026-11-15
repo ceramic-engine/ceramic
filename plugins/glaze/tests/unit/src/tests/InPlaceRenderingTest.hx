@@ -121,6 +121,44 @@ class InPlaceRenderingTest extends TestCase {
         return [for (view in rows.rowViews) view.read(app).renders];
     }
 
+/// A dirty view inside another dirty view, with a clean view between them
+
+    /**
+     * Row `i` draws a middle view, which draws an inner view; the row and
+     * the inner view change in the same frame, the middle view does not.
+     * The row renders in place, and the inner view with it: the middle view
+     * between them cannot come from the cache (it would bring the inner
+     * view's old drawing with it).
+     */
+    function testADirtyViewUnderACleanViewOfARowRenderedInPlace() {
+        countsRenders();
+        final count = 30;
+        final labels = [for (i in 0...count) app.newEntity(_ -> new InPlaceRowModel('Row $i'))];
+        final values = [for (i in 0...count) app.newEntity(_ -> new InPlaceRowModel('Value $i'))];
+        final inners = [for (i in 0...count) app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((_, cx) ->
+            div().id('inner').h(px(12)).textXs().child(values[i].read(cx).label)))];
+        final middles = [for (i in 0...count) app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((_, _) ->
+            div().id('middle').w(px(120)).h(px(14)).child((inners[i] : AnyView))))];
+        final outers = [for (i in 0...count) app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((_, cx) ->
+            div().id('outer').flexNone().h(px(20)).flex().gap1().itemsCenter()
+                .child(div().w(px(70)).flexNone().whitespaceNowrap().overflowHidden().textSm().child(labels[i].read(cx).label))
+                .child((middles[i] : AnyView))))];
+        final root = app.newEntity((_:Context<InPlaceView>) -> new InPlaceView((_, _) -> div().sizeFull().flex().flexCol().p2().gap1()
+            .children([for (view in outers) (view : AnyView)])));
+        final cached = openWindow(root, true);
+        final reference = openWindow(root, false);
+        frame();
+        assertSameFrames(cached, reference, 'first frame');
+        for (step in 0...4) {
+            final index = 3 + step * 5;
+            labels[index].read(app).label = 'Row $index, step $step';
+            values[index].read(app).label = 'Value $index, step $step';
+            frame();
+            assertEquals(1, cached.inPlaceViewCount, 'step $step: the row renders in place');
+            assertSameFrames(cached, reference, 'step $step');
+        }
+    }
+
 /// One view alone
 
     function testOneRowRendersAlone() {

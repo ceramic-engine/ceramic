@@ -4802,9 +4802,18 @@ class Window implements WindowInvalidator {
         inPlaceViewCount = 0;
         requestedAutoscroll = null;
         restorePlatformInputHandler();
-        // The dirty views themselves, not their ancestors
+        // The dirty views themselves, not their ancestors outside the views
+        // rendered in place. A dirty view inside another one renders with
+        // it: the views between them are dirty too, or the outer view's
+        // render would reuse the one in between from the cache, with the
+        // dirty view inside it (as `markViewDirty` does for a full frame)
         for (i in 0...ids.length) {
-            dirtyViews.set(ids[i], true);
+            final viewId = ids[i];
+            dirtyViews.set(viewId, true);
+            final nodeId = tree.viewNodeId(viewId);
+            if (nodeId != -1) {
+                markViewsUpToDirtyRoot(tree, tree.node(nodeId).parent);
+            }
         }
         final previousFocusPath = renderedFrame.focusPath();
         final previousWindowActive = renderedFrame.windowActive;
@@ -4940,6 +4949,35 @@ class Window implements WindowInvalidator {
     }
 
     /** Whether a view of the last frame has an ancestor view that is dirty itself */
+    /**
+     * In place rendering: marks dirty the views from `nodeId` up to the
+     * first ancestor that is a dirty view (excluded). Nothing is marked
+     * when there is no such ancestor (the view renders in place itself).
+     */
+    function markViewsUpToDirtyRoot(tree:DispatchTree, nodeId:Int):Void {
+        var current = nodeId;
+        while (current != -1) {
+            final node = tree.node(current);
+            final nodeViewId = node.viewId;
+            if (nodeViewId != -1 && dirtyRootSet.exists(nodeViewId)) {
+                break;
+            }
+            current = node.parent;
+        }
+        if (current == -1) {
+            return;
+        }
+        var marked = nodeId;
+        while (marked != current) {
+            final node = tree.node(marked);
+            final nodeViewId = node.viewId;
+            if (nodeViewId != -1) {
+                dirtyViews.set(nodeViewId, true);
+            }
+            marked = node.parent;
+        }
+    }
+
     function hasDirtyAncestor(viewId:Int):Bool {
         final tree = renderedFrame.dispatchTree;
         var nodeId = tree.node(tree.viewNodeId(viewId)).parent;
