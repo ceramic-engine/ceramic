@@ -10,6 +10,7 @@ import ceramic.ScrollPhase;
 import ceramic.ScrollUnit;
 import ceramic.Settings;
 import ceramic.TitleBarStyle;
+import ceramic.WindowHitKind;
 import tracker.Model;
 import tracker.SaveModel;
 
@@ -500,6 +501,37 @@ class Project extends Entity {
                 if (text.indexOf('style=1 fullSize=1 transparent=1 titleHidden=1') != 0) return false;
                 if (text.indexOf(' close=12,10 ') == -1) return false;
                 check(true, 'overlay title bar set while running');
+
+                // A press in the title bar strip moves the window only on a
+                // draggable region: a control drawn there (a tab) keeps its drags.
+                // Regions in window points, given to clay as they are (the
+                // screen of this project is scaled)
+                runtime.setWindowHitRegions([
+                    0, 0, 100, 40, WindowHitKind.DRAGGABLE,
+                    20, 10, 30, 20, WindowHitKind.NORMAL
+                ]);
+                return true;
+            },
+            () -> {
+                equals('1 regions', runtime.windowTitleBarCanMoveAt(5, 5), 'overlay: a draggable region moves the window');
+                equals('0 regions', runtime.windowTitleBarCanMoveAt(25, 15), 'overlay: a control in the strip does not');
+                equals('0 regions', runtime.windowTitleBarCanMoveAt(5, 80), 'overlay: outside the regions does not');
+                runtime.setWindowHitRegions([]);
+                return true;
+            },
+            () -> {
+                equals('1 sdl', runtime.windowTitleBarCanMoveAt(25, 15), 'overlay without regions: the answer of SDL');
+                runtime.setWindowHitRegions([
+                    0, 0, 100, 40, WindowHitKind.DRAGGABLE,
+                    20, 10, 30, 20, WindowHitKind.NORMAL
+                ]);
+                settings.titleBarStyle = TitleBarStyle.DEFAULT;
+                return true;
+            },
+            () -> {
+                if (describe().indexOf('style=0') != 0) return false;
+                equals('1 sdl', runtime.windowTitleBarCanMoveAt(25, 15), 'default title bar: the answer of SDL, unchanged');
+                runtime.setWindowHitRegions([]);
                 return true;
             }
         ];
