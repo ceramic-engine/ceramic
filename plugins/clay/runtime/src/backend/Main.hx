@@ -367,6 +367,8 @@ class Main {
         if (app.settings.windowBorderless)
             config.window.borderless = true;
         config.window.startsHidden = app.settings.windowStartsHidden;
+        // Read once, when clay starts its audio
+        config.audio = app.settings.audio;
         #if clay_sdl
         // Read when SDL starts (SDL_HINT_MAC_SCROLL_MOMENTUM, macOS)
         config.runtime.scrollMomentum = app.settings.scrollMomentum;

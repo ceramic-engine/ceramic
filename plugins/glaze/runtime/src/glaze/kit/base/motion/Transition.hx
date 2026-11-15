@@ -25,6 +25,7 @@ class Transition {
      * The duration, in whole nanoseconds (see `MotionTime`).
      */
     @:allow(glaze.kit.base)
+    @:allow(glaze.kit.theme)
     var durationNanos(default, null):Float;
 
     var delayValue:SignedDuration;
@@ -64,6 +65,7 @@ class Transition {
     }
 
     @:allow(glaze.kit.base)
+    @:allow(glaze.kit.theme)
     inline function sample(progress:Float):Float {
         return easingValue.sample(progress);
     }
@@ -81,6 +83,7 @@ class Transition {
      * with the status; see `progressStatus`).
      */
     @:allow(glaze.kit.base)
+    @:allow(glaze.kit.theme)
     function progressValue(elapsedNanos:Float, durationNanos:Float):Float {
         final activeElapsed = SignedDurationTools.activeElapsedNanos(delayValue, elapsedNanos);
         if (activeElapsed < 0) {

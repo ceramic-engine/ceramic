@@ -7,6 +7,8 @@ import glaze.OperatingSystem;
 import glaze.Prelude.*;
 import glaze.TestDispatcher;
 import glaze.ViewTracker;
+import glaze.kit.base.motion.Easing;
+import glaze.kit.base.motion.Transition;
 import glaze.kit.base.theme.ColorTokens;
 import glaze.kit.base.theme.ScrollbarMode;
 import glaze.kit.base.theme.ThemeAppearance;
@@ -738,6 +740,229 @@ class ThemeTest extends TestCase {
 
         assertRaises(() -> ThemeRegistry.globalMut(app).loadThemesFromStr('{"themes": [{"mode": "sepia"}]}'));
         assertRaises(() -> ThemeRegistry.globalMut(app).loadThemesFromStr('{"themes": [{"radius": 6.5}]}'));
+    }
+
+
+    // Color transition (Glaze addition KIT-027)
+
+    function linearFade(duration:Float):Transition {
+        return new Transition(duration).easing(Easing.Linear);
+    }
+
+    function near(expected:Hsla, actual:Hsla, epsilon:Float = 2e-3):Bool {
+        return Math.abs(expected.h - actual.h) <= epsilon && Math.abs(expected.s - actual.s) <= epsilon
+            && Math.abs(expected.l - actual.l) <= epsilon && Math.abs(expected.a - actual.a) <= epsilon;
+    }
+
+    function sameThemeColors(expected:Theme, actual:Theme):Bool {
+        return expected.colorsEqual(actual) && expected.tokens.equals(actual.tokens) && expected.transparent.equals(actual.transparent);
+    }
+
+    /** The light and dark themes as installed without a transition. */
+    function lightAndDark():{light:Theme, dark:Theme} {
+        Theme.init(app);
+        Theme.setMode(Dark, app);
+        final dark = Theme.global(app);
+        Theme.setMode(Light, app);
+        final light = Theme.global(app);
+        return {light: light, dark: dark};
+    }
+
+    function testColorsSwitchAtOnceWithoutATransition() {
+        final themes = lightAndDark();
+        assertTrue(Theme.global(app).colorTransition == null, 'off by default');
+        Theme.setMode(Dark, app);
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(sameThemeColors(themes.dark, Theme.global(app)));
+        Theme.update(app, theme -> {
+            theme.primary = Hsla.red();
+            return null;
+        });
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(Theme.global(app).primary.equals(Hsla.red()));
+        assertTrue(Theme.global(app).tokens.primary.color.equals(Hsla.red()));
+        // A zero duration is instant too
+        Theme.setMode(Light, app, new Transition(0.));
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(sameThemeColors(themes.light, Theme.global(app)));
+    }
+
+    function testColorTransitionStartsFromTheShownColorsAndEndsOnTheNewTheme() {
+        final themes = lightAndDark();
+        final light = themes.light;
+        final dark = themes.dark;
+        assertFalse(light.background.equals(dark.background));
+
+        Theme.setMode(Dark, app, linearFade(0.3));
+        var shown = Theme.global(app);
+        assertTrue(Theme.isColorTransitionRunning(app));
+        // Start: the old colors, every other field already the new theme's
+        assertTrue(shown.isDark());
+        assertTrue(sameThemeColors(light, shown));
+        assertTrue(glaze.kit.base.theme.Theme.global(app).appearance == Dark);
+
+        // Middle: mixed in Oklab, the Base projection follows
+        app.backgroundExecutor().advanceClock(0.155);
+        shown = Theme.global(app);
+        assertTrue(Theme.isColorTransitionRunning(app));
+        final middle = dark.background.mixOklab(light.background, 0.5);
+        assertTrue(near(middle, shown.background), 'background $middle, got ${shown.background}');
+        assertTrue(near(dark.foreground.mixOklab(light.foreground, 0.5), shown.foreground));
+        assertTrue(near(middle, shown.tokens.background.color));
+        assertTrue(near(middle, shown.tokens.background.background.solid));
+        assertTrue(near(middle, glaze.kit.base.theme.Theme.global(app).tokens.colors.background));
+        assertFalse(near(light.background, shown.background));
+        assertFalse(near(dark.background, shown.background));
+
+        // End: exactly the new theme
+        app.backgroundExecutor().advanceClock(0.2);
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(sameThemeColors(dark, Theme.global(app)));
+        assertTrue(glaze.kit.base.theme.Theme.global(app).tokens.colors.background.equals(dark.background));
+    }
+
+    function testColorTransitionFollowsItsEasing() {
+        final themes = lightAndDark();
+        // Tailwind's default easing, used by the Writer: ahead of linear at mid time
+        Theme.setMode(Dark, app, new Transition(0.3).easing(Easing.cubicBezier(0.4, 0., 0.2, 1.)));
+        app.backgroundExecutor().advanceClock(0.155);
+        final eased = Easing.cubicBezier(0.4, 0., 0.2, 1.).sample(0.5);
+        assertTrue(eased > 0.6);
+        final expected = themes.dark.background.mixOklab(themes.light.background, eased);
+        assertTrue(near(expected, Theme.global(app).background), 'expected $expected, got ${Theme.global(app).background}');
+        app.backgroundExecutor().advanceClock(0.2);
+        assertTrue(sameThemeColors(themes.dark, Theme.global(app)));
+    }
+
+    function testThemeColorTransitionAppliesToEveryChange() {
+        final themes = lightAndDark();
+        Theme.update(app, theme -> {
+            theme.colorTransition = linearFade(0.3);
+            return null;
+        });
+        assertFalse(Theme.isColorTransitionRunning(app), 'no color changed');
+        Theme.setMode(Dark, app);
+        assertTrue(Theme.isColorTransitionRunning(app));
+        assertTrue(sameThemeColors(themes.light, Theme.global(app)));
+        app.backgroundExecutor().advanceClock(0.4);
+        assertTrue(sameThemeColors(themes.dark, Theme.global(app)));
+        assertTrue(Theme.global(app).colorTransition != null, 'kept by the new theme');
+        // An explicit transition wins: zero switches at once
+        Theme.setMode(Light, app, new Transition(0.));
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(sameThemeColors(themes.light, Theme.global(app)));
+    }
+
+    function testInterruptedColorTransitionStartsFromTheCurrentColors() {
+        final themes = lightAndDark();
+        Theme.setMode(Dark, app, linearFade(0.3));
+        app.backgroundExecutor().advanceClock(0.1);
+        final current = Theme.global(app);
+        assertFalse(near(themes.light.background, current.background));
+        assertFalse(near(themes.dark.background, current.background));
+
+        // Back to light: starts from the colors on screen
+        Theme.setMode(Light, app, linearFade(0.3));
+        var shown = Theme.global(app);
+        assertFalse(shown.isDark());
+        assertTrue(sameThemeColors(current, shown));
+        app.backgroundExecutor().advanceClock(0.155);
+        shown = Theme.global(app);
+        assertTrue(near(themes.light.background.mixOklab(current.background, 0.5), shown.background));
+
+        // An edit of other fields goes on toward the same colors
+        Theme.update(app, theme -> {
+            theme.radius = 3.;
+            return null;
+        });
+        assertTrue(Theme.isColorTransitionRunning(app));
+        assertEquals(3., Theme.global(app).radius);
+        // Sampled at the time of the edit, 155 ms into the fade
+        assertTrue(near(themes.light.background.mixOklab(current.background, 0.155 / 0.3), Theme.global(app).background));
+        app.backgroundExecutor().advanceClock(0.2);
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(sameThemeColors(themes.light, Theme.global(app)));
+        assertEquals(3., Theme.global(app).radius);
+    }
+
+    function testColorTransitionEditsApplyToTheFinalTheme() {
+        lightAndDark();
+        Theme.setMode(Dark, app, linearFade(0.3));
+        app.backgroundExecutor().advanceClock(0.1);
+        // A color edited during the fade is reached at its end
+        Theme.update(app, theme -> {
+            theme.primary = Hsla.red();
+            return null;
+        }, linearFade(0.3));
+        assertTrue(Theme.isColorTransitionRunning(app));
+        app.backgroundExecutor().advanceClock(0.4);
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(Theme.global(app).isDark());
+        assertTrue(Theme.global(app).primary.equals(Hsla.red()));
+        assertTrue(Theme.global(app).tokens.primary.color.equals(Hsla.red()));
+
+        // finishColorTransition and globalMut land on the final theme
+        Theme.setMode(Light, app, linearFade(0.3));
+        assertTrue(Theme.isColorTransitionRunning(app));
+        Theme.globalMut(app).radius = 5.;
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertFalse(Theme.global(app).isDark());
+        assertEquals(5., Theme.global(app).radius);
+    }
+
+    function testColorTransitionRespectsReducedMotion() {
+        final themes = lightAndDark();
+        app.setReduceMotion(true);
+        Theme.setMode(Dark, app, linearFade(0.3));
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(sameThemeColors(themes.dark, Theme.global(app)));
+
+        // Reduced while running: the next frame is the end
+        app.setReduceMotion(false);
+        Theme.setMode(Light, app, linearFade(0.3));
+        assertTrue(Theme.isColorTransitionRunning(app));
+        app.setReduceMotion(true);
+        app.backgroundExecutor().advanceClock(0.02);
+        assertFalse(Theme.isColorTransitionRunning(app));
+        assertTrue(sameThemeColors(themes.light, Theme.global(app)));
+    }
+
+    function testColorTransitionRedrawsViewsReadingTheTheme() {
+        lightAndDark();
+        ceramic.App.app.flushImmediate();
+        var invalidations = 0;
+        final view = new ViewTracker(() -> invalidations++);
+        view.capture(() -> app.theme().background);
+        Theme.setMode(Dark, app, linearFade(0.3));
+        ceramic.App.app.flushImmediate();
+        assertEquals(1, invalidations);
+        for (i in 0...3) {
+            view.capture(() -> app.theme().background);
+            app.backgroundExecutor().advanceClock(1. / 60.);
+            ceramic.App.app.flushImmediate();
+        }
+        assertEquals(4, invalidations, 'a new theme on each frame');
+        view.destroy();
+        app.backgroundExecutor().advanceClock(0.4);
+    }
+
+    function testColorTransitionMixesGradientTokens() {
+        Theme.init(app);
+        Theme.update(app, theme -> {
+            theme.tokens.primary = gradient(hex(0x000000), hex(0x0000ff));
+            return null;
+        });
+        Theme.update(app, theme -> {
+            theme.tokens.primary = gradient(hex(0xffffff), hex(0xff0000));
+            return null;
+        }, linearFade(0.3));
+        app.backgroundExecutor().advanceClock(0.155);
+        final token = Theme.global(app).tokens.primary;
+        assertTrue(token.background.tag == glaze.BackgroundTag.LinearGradient);
+        assertTrue(near(hex(0xffffff).mixOklab(hex(0x000000), 0.5), token.background.colors0.color));
+        assertTrue(near(hex(0xff0000).mixOklab(hex(0x0000ff), 0.5), token.background.colors1.color));
+        app.backgroundExecutor().advanceClock(0.2);
+        assertTrue(Theme.global(app).tokens.primary.equals(gradient(hex(0xffffff), hex(0xff0000))));
     }
 
 }

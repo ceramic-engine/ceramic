@@ -647,6 +647,22 @@ class Settings implements Observable {
     public var scrollMomentum(default,null):Bool = true;
 
     /**
+     * Whether audio is initialized. When false, the app runs without
+     * audio: native builds create no audio device and no audio thread
+     * (SoLoud and SDL audio are not started), the web creates no audio
+     * context. Audio calls stay safe and do nothing: sounds load as empty
+     * placeholders (duration 0), `play` returns a player that plays
+     * nothing, filters are ignored, and the first such call logs a
+     * warning that audio is disabled.
+     *
+     * An init setting: it applies when the app launches and cannot change
+     * afterwards. The headless and Unity backends ignore it.
+     *
+     * Default: true
+     */
+    public var audio(default,null):Bool = true;
+
+    /**
      * Root directory path for loading assets.
      *
      * All asset loading is relative to this path. Can be:

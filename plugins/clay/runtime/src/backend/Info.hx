@@ -22,12 +22,16 @@ class Info #if !completion implements spec.Info #end {
      * Gets the platform-specific directory for persistent storage.
      * 
      * On SDL platforms (desktop), returns the user preferences directory
-     * where the application can store settings and save data.
+     * where the application can store settings and save data. On web inside
+     * Electron (`clay_web_use_electron_fs`), the same folder.
      * 
      * @return The storage directory path, or null if not available
      */
     inline public function storageDirectory():String {
         #if (clay_sdl && !macro)
+        return clay.Clay.app.io.appPathPrefs();
+        #elseif (clay_web_use_electron_fs && !macro)
+        // Inside Electron: the folder a native build would use
         return clay.Clay.app.io.appPathPrefs();
         #else
         return null;

@@ -157,6 +157,17 @@ class SystemFontFamilies {
         // TODO: Windows (C:\Windows\Fonts, %LOCALAPPDATA%\Microsoft\Windows\Fonts)
         // and Linux (fontconfig directories)
         return [];
+        #elseif (web && ceramic_use_electron)
+        // Inside Electron: the host's directories, read through node
+        final nodeProcess:Dynamic = js.Syntax.code("(typeof process !== 'undefined') ? process : null");
+        if (nodeProcess != null && nodeProcess.platform == 'darwin') {
+            final result = ['/System/Library/Fonts', '/System/Library/Fonts/Supplemental', '/Library/Fonts'];
+            final home = ceramic.Platform.getEnv('HOME');
+            if (home != null && home.length > 0)
+                result.push(home + '/Library/Fonts');
+            return result;
+        }
+        return [];
         #else
         return [];
         #end
@@ -214,10 +225,10 @@ class SystemFontFamilies {
         index = result;
         final dirs = directories != null ? directories : platformDirectories();
         for (dir in dirs) {
-            #if sys
+            #if (sys || (web && ceramic_use_electron))
             if (!ceramic.Files.exists(dir) || !ceramic.Files.isDirectory(dir))
                 continue;
-            final names = try sys.FileSystem.readDirectory(dir) catch (e:Dynamic) [];
+            final names = try readDirectory(dir) catch (e:Dynamic) [];
             names.sort((a, b) -> a < b ? -1 : (a > b ? 1 : 0));
             for (file in names) {
                 final lower = file.toLowerCase();
@@ -234,6 +245,20 @@ class SystemFontFamilies {
         indexTime = haxe.Timer.stamp() - start;
         return result;
     }
+
+    #if (sys || (web && ceramic_use_electron))
+    static function readDirectory(dir:String):Array<String> {
+        #if sys
+        return sys.FileSystem.readDirectory(dir);
+        #else
+        final fs:Dynamic = ceramic.Platform.nodeRequireInRenderer('fs');
+        if (fs == null)
+            return [];
+        final names:Array<String> = fs.readdirSync(dir);
+        return [for (name in names) name];
+        #end
+    }
+    #end
 
     static inline function u16(b:Bytes, o:Int):Int {
         return (b.get(o) << 8) | b.get(o + 1);

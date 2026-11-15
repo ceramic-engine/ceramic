@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified during the initial port: deviation DEV-020 (scrollbars shown on hover by default). See docs/DEVIATIONS.md.
 // Also modified: deviation DEV-023 (scrollbar appearance: fade in place by default, no thumb growth). See docs/DEVIATIONS.md.
+// Also modified: addition KIT-027 (animated color transition, off by default). See docs/DEVIATIONS.md.
 package glaze.kit.theme;
 
 import glaze.AppContext;
@@ -17,6 +18,8 @@ import glaze.kit.base.ScrollbarAppearance;
 import glaze.kit.base.Scrollbar.ScrollbarEntrance;
 import glaze.kit.base.Scrollbar.ScrollbarMotion;
 import glaze.kit.base.Scrollbar.ScrollbarStyles;
+import glaze.kit.base.motion.MotionTime;
+import glaze.kit.base.motion.Transition;
 import glaze.kit.base.theme.SemanticThemeTokens;
 import glaze.kit.base.theme.ShadowTokens;
 import glaze.kit.base.theme.SpacingTokens;
@@ -255,6 +258,23 @@ class Theme extends ThemeColor {
     public var sheet:glaze.kit.sheet.Sheet.SheetSettings = new glaze.kit.sheet.Sheet.SheetSettings();
 
     /**
+     * How later theme changes animate their colors (Glaze addition,
+     * KIT-027). `null`, the default, switches colors at once, like
+     * gpui-kit. With a transition, `update`, `setMode`, `change` and
+     * `syncSystemAppearance` fade every color and color token from the
+     * colors on screen to the new ones (see `update`):
+     * `new Transition(0.3).easing(Easing.cubicBezier(0.4, 0., 0.2, 1.))`.
+     */
+    public var colorTransition:Null<Transition> = null;
+
+    /**
+     * The color fade this installed theme is a frame of, `null` when no fade
+     * runs. Not copied by `clone`.
+     */
+    @:allow(glaze.kit.theme)
+    var colorFade:Null<ThemeColorFade> = null;
+
+    /**
      * A theme with the given colors (Rust: `From<&ThemeColor> for Theme`);
      * without argument, all-zero colors (Rust: `Theme::default()`).
      */
@@ -294,6 +314,7 @@ class Theme extends ThemeColor {
         theme.notification = notification.copy();
         theme.listSettings = listSettings.copy();
         theme.sheet = sheet.copy();
+        theme.colorTransition = colorTransition;
         return theme;
 
     }
@@ -382,6 +403,7 @@ class Theme extends ThemeColor {
     public static inline function globalMut(cx:AppContext):Theme {
 
         Kit.ensureInit(cx);
+        finishColorTransition(cx);
         return cx.globalMut(Theme);
 
     }
@@ -400,10 +422,21 @@ class Theme extends ThemeColor {
      * in one step, and the closure may go on editing after it.
      *
      * The edit is made on a copy, installed when the closure returns.
+     *
+     * Color transition (Glaze addition, KIT-027): with `transition`, or
+     * else the edited theme's `colorTransition`, a change of colors fades
+     * every color and color token in Oklab from the colors on screen to the
+     * new ones over the transition's duration and easing, redrawing every
+     * window, and ends exactly on the new theme. Every other field (mode,
+     * radius, fonts, scrollbar settings...) takes its new value at once. An
+     * edit made during a fade applies to the theme the fade leads to, and a
+     * new change of colors fades from the colors shown at that moment. Under
+     * `cx.reduceMotion()`, with a zero duration, or without a transition
+     * (the default), colors switch at once.
      */
-    public static function update<R>(cx:AppContext, edit:(Theme) -> R):R {
+    public static function update<R>(cx:AppContext, edit:(Theme) -> R, ?transition:Transition):R {
 
-        return Theme.edit(cx, false, edit);
+        return Theme.edit(cx, false, edit, transition);
 
     }
 
@@ -414,12 +447,15 @@ class Theme extends ThemeColor {
      * mode did not change, which is what `change` promises.
      */
     @:allow(glaze.kit.theme)
-    static function edit<R>(cx:AppContext, reloadMode:Bool, edit:(Theme) -> R):R {
+    static function edit<R>(cx:AppContext, reloadMode:Bool, edit:(Theme) -> R, ?transition:Transition):R {
 
         Kit.ensureInit(cx);
         tracker.Autorun.unobserve();
-        final before = cx.global(Theme);
+        final shown = cx.global(Theme);
         tracker.Autorun.reobserve();
+        // During a color fade, the edit applies to the theme it leads to
+        final fade = shown.colorFade;
+        final before = fade != null ? fade.target : shown;
 
         final theme = before.clone();
         final result = edit(theme);
@@ -439,10 +475,103 @@ class Theme extends ThemeColor {
         // Rust resolves the default font families against the installed fonts
         // here (`resolve_default_font`, `resolve_default_mono_font`): not ported.
 
+        installEdited(cx, shown, theme, transition != null ? transition : theme.colorTransition);
+        return result;
+
+    }
+
+    /**
+     * Installs `theme` after an edit, at once or as the first frame of a
+     * color fade from `shown`, the theme on screen.
+     */
+    static function installEdited(cx:AppContext, shown:Theme, theme:Theme, policy:Null<Transition>):Void {
+
+        final fade = shown.colorFade;
+        final animate = policy != null && policy.durationNanos > 0 && !cx.reduceMotion();
+        if (fade != null && sameColors(theme, fade.target) && !cx.reduceMotion()) {
+            // The colors the fade leads to did not change: it goes on, toward
+            // the edited theme
+            fade.target = theme;
+            install(cx, fade.frame(fade.progress(MotionTime.nanos(cx.backgroundExecutor().now()))));
+        }
+        else if (animate && !sameColors(theme, shown)) {
+            final fade = new ThemeColorFade(shown, theme, MotionTime.nanos(cx.backgroundExecutor().now()), policy);
+            install(cx, fade.frame(fade.progress(fade.startedAt)));
+            scheduleColorFade(cx, fade);
+        }
+        else {
+            install(cx, theme);
+        }
+
+    }
+
+    static function sameColors(a:Theme, b:Theme):Bool {
+
+        return a.colorsEqual(b) && a.tokens.equals(b.tokens) && a.transparent.equals(b.transparent);
+
+    }
+
+    static function install(cx:AppContext, theme:Theme):Void {
+
         cx.setGlobal(theme, Theme);
         syncBase(cx);
         cx.refreshWindows();
-        return result;
+
+    }
+
+    static function scheduleColorFade(cx:AppContext, fade:ThemeColorFade):Void {
+
+        final app:glaze.App = cx;
+        app.backgroundExecutor().timer(ThemeColorFade.TICK).then(_ -> {
+            app.update(app -> stepColorFade(app, fade));
+        });
+
+    }
+
+    static function stepColorFade(cx:AppContext, fade:ThemeColorFade):Void {
+
+        if (!cx.hasGlobal(Theme)) return;
+        tracker.Autorun.unobserve();
+        final shown = cx.global(Theme);
+        tracker.Autorun.reobserve();
+        // Replaced by a newer fade, finished, or cancelled
+        if (shown.colorFade != fade) return;
+        final now = MotionTime.nanos(cx.backgroundExecutor().now());
+        if (cx.reduceMotion() || fade.finished(now)) {
+            install(cx, fade.target);
+        }
+        else {
+            install(cx, fade.frame(fade.progress(now)));
+            scheduleColorFade(cx, fade);
+        }
+
+    }
+
+    /**
+     * Ends a running color fade at once on the theme it leads to (Glaze
+     * addition, KIT-027). Does nothing when no fade runs. `globalMut`
+     * calls it, so an edit in place applies to the final theme.
+     */
+    public static function finishColorTransition(cx:AppContext):Void {
+
+        if (!cx.hasGlobal(Theme)) return;
+        tracker.Autorun.unobserve();
+        final shown = cx.global(Theme);
+        tracker.Autorun.reobserve();
+        if (shown.colorFade != null) install(cx, shown.colorFade.target);
+
+    }
+
+    /**
+     * Whether a color fade runs (Glaze addition, KIT-027).
+     */
+    public static function isColorTransitionRunning(cx:AppContext):Bool {
+
+        if (!cx.hasGlobal(Theme)) return false;
+        tracker.Autorun.unobserve();
+        final shown = cx.global(Theme);
+        tracker.Autorun.reobserve();
+        return shown.colorFade != null;
 
     }
 
@@ -500,9 +629,10 @@ class Theme extends ThemeColor {
      * new theme) through `update`, and refreshes every window. Applies to
      * the app of `cx` (the current app when `cx` is not given), and
      * initializes its kit first, so a mode set before the first render
-     * applies to it.
+     * applies to it. `transition` (or else the theme's `colorTransition`)
+     * fades the colors, see `update`.
      */
-    public static function setMode(mode:ThemeMode, ?cx:AppContext):Void {
+    public static function setMode(mode:ThemeMode, ?cx:AppContext, ?transition:Transition):Void {
 
         if (cx == null) cx = glaze.Glaze.app;
         Kit.ensureInit(cx);
@@ -517,7 +647,7 @@ class Theme extends ThemeColor {
         Theme.edit(cx, true, theme -> {
             theme.mode = mode;
             return null;
-        });
+        }, transition);
 
     }
 

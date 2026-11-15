@@ -266,6 +266,40 @@ class Platform {
 
     }
 
+    static var testedRendererRequire:Bool = false;
+    static var rendererRequire:Null<Dynamic> = null;
+
+    /**
+     * A node module loaded in the renderer process itself when the page has
+     * node integration (`require` exists), else through `@electron/remote`
+     * like `nodeRequire`. Calls that fill a buffer they are given
+     * (`fs.readSync`) need the renderer's module: through the remote
+     * module, the main process fills a copy. Also faster: no message to the
+     * main process per call.
+     */
+    public static function nodeRequireInRenderer(module:String):Null<Dynamic> {
+
+        if (!testedRendererRequire) {
+            testedRendererRequire = true;
+            try {
+                rendererRequire = js.Syntax.code("(typeof require === 'function') ? require : null");
+            }
+            catch (e:Dynamic) {}
+        }
+
+        if (rendererRequire != null) {
+            try {
+                final required:Dynamic = rendererRequire(module);
+                if (required != null)
+                    return required;
+            }
+            catch (e:Dynamic) {}
+        }
+
+        return nodeRequire(module);
+
+    }
+
     public static function electronRemote():Null<Dynamic> {
 
         if (!testedElectronRemoteAvailability) {

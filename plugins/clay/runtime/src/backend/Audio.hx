@@ -138,6 +138,21 @@ class Audio implements spec.Audio {
 
         }
 
+        // Audio disabled (`settings.audio = false`): an empty placeholder,
+        // loaded without reading the file
+        if (!Clay.app.audio.enabled) {
+            logAudioDisabled('load', 'load of $path');
+            final placeholder = new clay.audio.AudioData(Clay.app, {id: fullPath, isStream: isStream});
+            final resource = new clay.audio.AudioSource(Clay.app, placeholder);
+            loadedAudioResources.set(path, resource);
+            final callbacks = loadingAudioCallbacks.get(path);
+            loadingAudioCallbacks.remove(path);
+            for (callback in callbacks) {
+                callback(resource);
+            }
+            return;
+        }
+
         // Load audio
         Clay.app.audio.loadData(fullPath, isStream, null, !synchronous, function(audioData) {
 
@@ -170,6 +185,21 @@ class Audio implements spec.Audio {
 
     var nextSamplesBufferIndex:Int = 0;
 
+    var audioDisabledLogged:Map<String,Bool> = null;
+
+    /**
+     * Logs that audio is disabled, once per run for each kind of call:
+     * loading a sound, creating one from samples, playing, adding a filter.
+     */
+    function logAudioDisabled(kind:String, what:String):Void {
+
+        if (audioDisabledLogged == null) audioDisabledLogged = new Map();
+        if (audioDisabledLogged.exists(kind)) return;
+        audioDisabledLogged.set(kind, true);
+        log.warning('Audio is disabled (settings.audio = false): $what ignored, every audio call does nothing');
+
+    }
+
     /**
      * Creates an audio resource from raw PCM sample data.
      * 
@@ -189,7 +219,12 @@ class Audio implements spec.Audio {
 
         var id = 'samples:' + (nextSamplesBufferIndex++);
 
-        var audioData = Clay.app.audio.dataFromPCM(
+        var audioData = if (!Clay.app.audio.enabled) {
+            // Audio disabled: an empty placeholder
+            logAudioDisabled('samples', 'sound created from samples');
+            new clay.audio.AudioData(Clay.app, {id: id, channels: channels});
+        }
+        else Clay.app.audio.dataFromPCM(
             id, buffer, samples, channels, sampleRate, interleaved
         );
 
@@ -229,6 +264,11 @@ class Audio implements spec.Audio {
     public function resumeAudioContext(done:Bool->Void):Void {
 
         var webAudio:clay.web.WebAudio = cast Clay.app.audio;
+        if (webAudio != null && !webAudio.enabled) {
+            // No audio context to resume
+            done(false);
+            return;
+        }
         if (webAudio != null) {
             try {
                 var context:Dynamic = webAudio.context;
@@ -321,7 +361,10 @@ class Audio implements spec.Audio {
      */
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, bus:Int = 0):AudioHandle {
 
-        if (!Clay.app.audio.active) return -1;
+        if (!Clay.app.audio.active) {
+            if (!Clay.app.audio.enabled) logAudioDisabled('play', 'play');
+            return -1;
+        }
 
         var audioResource:clay.audio.AudioSource = audio;
         var isStream = audioResource.data.isStream;
@@ -532,6 +575,11 @@ class Audio implements spec.Audio {
      * @param onReady Callback when the filter is ready for processing
      */
     public function addFilter(bus:Int, filter:ceramic.AudioFilter, onReady:(bus:Int)->Void):Void {
+        if (!Clay.app.audio.enabled) {
+            // Audio disabled: the filter never processes anything
+            logAudioDisabled('filter', 'audio filter');
+            return;
+        }
         #if sys
         audioFiltersLock.acquire();
         #end
@@ -713,6 +761,7 @@ class Audio implements spec.Audio {
      * @param filterId The unique ID of the filter to remove
      */
     public function removeFilter(bus:Int, filterId:Int):Void {
+        if (!Clay.app.audio.enabled) return;
         #if sys
         audioFiltersLock.acquire();
         #end
@@ -773,6 +822,7 @@ class Audio implements spec.Audio {
      * @param filterId The unique ID of the filter that changed
      */
     public function filterParamsChanged(bus:Int, filterId:Int):Void {
+        if (!Clay.app.audio.enabled) return;
         #if sys
         audioFiltersLock.acquire();
         #end

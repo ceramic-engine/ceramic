@@ -564,6 +564,19 @@ class InitSettings {
     }
 
     /**
+     * Whether audio is initialized (default true). When false, no audio
+     * device, audio thread or web audio context is created and audio calls
+     * do nothing. Applies at launch.
+     */
+    public var audio(get,set):Bool;
+    inline function get_audio():Bool {
+        return settings.audio;
+    }
+    inline function set_audio(audio:Bool):Bool {
+        return @:privateAccess settings.audio = audio;
+    }
+
+    /**
      * How the title bar of the window is shown (macOS native builds).
      */
     public var titleBarStyle(get,set):TitleBarStyle;

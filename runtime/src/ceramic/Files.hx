@@ -780,7 +780,10 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = Platform.nodeRequire('fs');
+        // `readSync` fills the array it is given: through
+        // `@electron/remote`, the main process would fill a copy of it.
+        // The renderer's own `fs` is used when it has one.
+        var fs = Platform.nodeRequireInRenderer('fs');
         if (fs == null)
             return null;
         try {

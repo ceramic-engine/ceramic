@@ -127,7 +127,8 @@ class App {
      * (`glaze.platform.SystemFontFallback`, loaded on first use; define
      * `glaze_no_system_fonts` to skip), and families that no added font
      * provides are loaded from the installed fonts by name
-     * (`glaze.platform.SystemFontFamilies`, macOS for now). In browsers (clay web, Electron),
+     * (`glaze.platform.SystemFontFamilies`, macOS for now; inside Electron
+     * too when `glaze_electron_system_fonts` is defined). In browsers (clay web, Electron),
      * graphemes missing from the added fonts are drawn by the browser,
      * emoji and CJK text included (`CanvasFontFallback.EmojiAndCjk`; change it with
      * `CeramicTextSystem.canvasFontFallback`, define
@@ -138,6 +139,10 @@ class App {
             final platform = new glaze.platform.CeramicTextSystem('Inter');
             #if (sys && !glaze_no_system_fonts && !ios && !android && !tvos)
             platform.systemFallback = new glaze.platform.SystemFontFallback();
+            platform.systemFamilies = new glaze.platform.SystemFontFamilies();
+            #elseif (web && ceramic_use_electron && glaze_electron_system_fonts && !glaze_no_system_fonts)
+            // Opt-in inside Electron: installed families by name, read
+            // through node like a native build reads them
             platform.systemFamilies = new glaze.platform.SystemFontFamilies();
             #end
             #if (js && !glaze_no_canvas_fallback)
