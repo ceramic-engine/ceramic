@@ -89,6 +89,15 @@ class StickyScrollController extends Disposable implements IEditorContribution i
         this._register(this._editor.onDidChangeConfiguration(e -> {
             this._readConfigurationChange(e);
         }));
+        // Not in Monaco (DEVIATIONS.md, "Sticky lines emptied when the model changes"):
+        // the state of a new model waits for its folding model, a few frames
+        // later; until then the widget would still show the lines (numbers
+        // and text) of the previous model, so it is emptied at once
+        this._register(this._editor.onDidChangeModel(_ -> {
+            if (this._enabled) {
+                this._resetState();
+            }
+        }));
         this._register(this._editor.onDidBlurEditorWidget(() -> {
             if (this._focused) {
                 this._disposeFocusStickyScrollStore();
