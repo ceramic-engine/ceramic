@@ -368,7 +368,14 @@ class Runner {
 
         #if (cpp || cs)
         queue.push(_fn);
+        #if clay_sdl
+        // Wakes the main loop at once if it waits while throttled (`settings.idleUpdateRate`)
+        clay.Runner.wakeMain();
+        #end
         #else
+        #if clay
+        clay.Clay.app.throttle.markActive();
+        #end
         // Run at the next flush: the frame that runs it is drawn (render on demand)
         app.requestCallbackRender();
         app.onceImmediate(_fn);

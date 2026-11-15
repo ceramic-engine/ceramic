@@ -87,6 +87,20 @@ class Timer {
     }
 
     /**
+     * Seconds of app time until the next timer callback is due (0 when one is already
+     * due), or -1 when no callback is scheduled. A cleared callback may still count until
+     * the next flush: the result can be early, never late.
+     */
+    @:allow(ceramic.App)
+    static function nextDelay():Float {
+
+        if (next >= 999999999) return -1;
+        var delay = next - now;
+        return delay > 0 ? delay : 0;
+
+    }
+
+    /**
      * Process all pending timer callbacks that are ready to execute.
      * Called automatically when timer callbacks are due.
      */

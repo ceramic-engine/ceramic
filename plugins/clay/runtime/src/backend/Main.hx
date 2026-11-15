@@ -117,6 +117,9 @@ class Main {
      */
     static var backgroundWorker:Dynamic = null;
 
+    /** Interval of the throttle after the last tick made by the heartbeat (0: not throttled). */
+    static var backgroundThrottleInterval:Float = 0;
+
     #end
 
     #end
@@ -588,7 +591,15 @@ class Main {
             var now = js.Browser.window.performance.now();
             if (now - lastRafTimestamp <= staleThresholdMs) return;
 
-            var timestamp = now / 1000.0;
+            // The clock of the animation frames (`clay.web.WebRuntime.timestamp()`): a tick
+            // made here is followed by ticks of animation frames when the page comes back
+            var timestamp = clay.web.WebRuntime.timestamp();
+
+            // Throttled (`settings.idleUpdateRate`): not more often than its rate, which
+            // replaces the interval of the heartbeat when it is longer
+            if (backgroundThrottleInterval > 0 && timestamp - Clay.app.timestamp < backgroundThrottleInterval - 0.005
+                && !Clay.app.throttle.activityPending) return;
+
             if (Clay.app.shouldUpdate(timestamp)) {
                 Clay.app.emitTick(timestamp);
             }
@@ -596,6 +607,7 @@ class Main {
             // draws nothing when nothing was requested
             Clay.app.renderSkipped = false;
             Clay.app.emitRender();
+            backgroundThrottleInterval = Clay.app.throttleInterval(timestamp, !Clay.app.renderSkipped);
         }
 
         var workerSrc = 'setInterval(function(){postMessage(0);}, ' + intervalMs + ');';

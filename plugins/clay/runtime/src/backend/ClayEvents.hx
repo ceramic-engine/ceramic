@@ -214,6 +214,16 @@ class ClayEvents extends clay.Events {
         // `settings.renderOnDemand`): see `Settings.earlyTickOnInput`
         Clay.app.renderContinuous = ceramic.App.app.renderContinuous;
 
+        // Throttled update rate at rest (see `Settings.idleUpdateRate`), with render on demand only
+        var settings = ceramic.App.app.settings;
+        var idleUpdateRate = settings.renderOnDemand ? settings.idleUpdateRate : 0;
+        var config = Clay.app.config;
+        config.idleUpdateRate = idleUpdateRate;
+        if (idleUpdateRate > 0) {
+            config.idleDelay = settings.idleDelay;
+            Clay.app.nextWorkDelay = ceramic.App.app.nextTimerDelay();
+        }
+
     }
 
     /**

@@ -373,6 +373,47 @@ class Settings implements Observable {
     public var renderAfterTimersAndInput:Bool = true;
 
     /**
+     * With `renderOnDemand`: the most updates per second while the app is at rest or its
+     * window is in the background (default `0`: no cap, the loop runs as without it).
+     *
+     * An app that renders on demand still updates at the rate of the display when nothing
+     * is drawn (timers, `onUpdate` listeners, threads coming back). With a rate above 0
+     * (10 is a good value for a desktop tool), the loop is throttled to that rate:
+     * - after `idleDelay` seconds without activity, for the updates that draw nothing (a
+     *   frame drawn because something changed is always followed by an update at the
+     *   normal rate, so animations are never throttled);
+     * - at once when the window loses the focus, for every update, until an input event
+     *   comes (mouse moves over an unfocused window included) or the focus comes back;
+     * - at once while the window is hidden or minimized, for every update.
+     *
+     * Activity is any input event (keys, text, mouse moves and buttons, wheel, touches,
+     * gamepads), a window event, work posted with `Runner.runInMain` and, while the window
+     * has the focus, a continuous render request (`app.requestContinuousRender()`) or an
+     * active tween. The first input event after a rest is handled at once (the native loop
+     * wakes on any event, a thread posting work wakes it too) and the loop goes back to the
+     * normal rate. Timers are not delayed: a throttled loop wakes when the next one is due.
+     * Code that polls the time in `app.onUpdate` sees updates at this rate only.
+     *
+     * When the window loses the focus, this replaces the native sleep made at each update
+     * (`ceramic_disable_background_sleep` has no effect then). Web: animation frames are
+     * skipped (no update, no draw) until the interval passed; the update made by
+     * `ceramic_web_update_in_background` in a hidden page follows the same rate.
+     *
+     * Note: an update further apart than `maxDelta` gets `maxDelta` as its delta: keep the
+     * rate at `1 / maxDelta` (10 with the default) or above, or app time runs slower than
+     * real time while throttled. Can be changed at any time.
+     */
+    public var idleUpdateRate:Float = 0;
+
+    /**
+     * With `idleUpdateRate`: seconds at the normal rate after the last activity (default
+     * `0.5`). Short enough for the app to go to rest between two blinks of a text cursor,
+     * long enough to cover the pauses inside a gesture (between two keys, two moves of the
+     * mouse). Can be changed at any time.
+     */
+    public var idleDelay:Float = 0.5;
+
+    /**
      * With `renderOnDemand`: handle a discrete input event (key, text, mouse button,
      * touch down or up) at once while nothing renders continuously, instead of at the
      * next frame (default `true`).

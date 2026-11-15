@@ -1542,6 +1542,18 @@ class App extends Entity {
     }
 
     /**
+     * Seconds until the next timer callback is due (see `Timer`), -1 when none or when
+     * the delta is fixed (`settings.overrideDelta`). Backends read it after each update to
+     * know how long a throttled loop may wait (see `Settings.idleUpdateRate`).
+     */
+    @:noCompletion public function nextTimerDelay():Float {
+
+        if (settings.overrideDelta >= 0) return -1;
+        return Timer.nextDelay();
+
+    }
+
+    /**
      * Whether something already asks for the next frame to be drawn: always without
      * `settings.renderOnDemand`, otherwise a render request, a continuous render owner,
      * a listener waiting for a draw or a render texture to render.

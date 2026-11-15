@@ -252,6 +252,30 @@ class InitSettings {
     }
 
     /**
+     * With `renderOnDemand`: the most updates per second at rest or in the background
+     * (default `0`: no cap). See `Settings.idleUpdateRate`.
+     */
+    public var idleUpdateRate(get,set):Float;
+    inline function get_idleUpdateRate():Float {
+        return settings.idleUpdateRate;
+    }
+    inline function set_idleUpdateRate(idleUpdateRate:Float):Float {
+        return settings.idleUpdateRate = idleUpdateRate;
+    }
+
+    /**
+     * With `idleUpdateRate`: seconds at the normal rate after the last activity (default
+     * `0.5`). See `Settings.idleDelay`.
+     */
+    public var idleDelay(get,set):Float;
+    inline function get_idleDelay():Float {
+        return settings.idleDelay;
+    }
+    inline function set_idleDelay(idleDelay:Float):Float {
+        return settings.idleDelay = idleDelay;
+    }
+
+    /**
      * With `renderOnDemand`: handle a discrete input event at once while nothing renders
      * continuously (default `true`). Web; the native loop already ticks at once for a
      * discrete event while idle. See `Settings.earlyTickOnInput`.
