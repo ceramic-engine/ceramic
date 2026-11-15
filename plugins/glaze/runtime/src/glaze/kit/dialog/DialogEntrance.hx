@@ -22,7 +22,14 @@ import glaze.Window;
  * closes in a single frame.
  */
 enum abstract DialogEntrance(Int) {
-    /** Slide down from the window top while fading in, preserving the legacy entrance (the default). */
+    /**
+     * Slide down from the window top while fading in (the default).
+     *
+     * Modified for Glaze (DEV-024): the surface's top edge moves from the top
+     * limit of the window to its resting place along the whole entrance, for
+     * every size and placement (gpui-kit moved the anchor, which a tall
+     * dialog clamped to the top margin for most of the entrance).
+     */
     var SlideDown = 0;
     /** Fade in at the final position without movement. */
     var Fade = 1;

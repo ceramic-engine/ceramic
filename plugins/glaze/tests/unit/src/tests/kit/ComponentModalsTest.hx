@@ -30,6 +30,7 @@ import glaze.kit.notification.Notification.NotificationIdTools;
 import glaze.kit.notification.Notification.NotificationList;
 import glaze.FocusHandle;
 import glaze.kit.base.Positioner;
+import glaze.kit.base.animation.Easings;
 import glaze.kit.dialog.DialogEntrance;
 import glaze.kit.theme.Theme;
 import tests.kit.BaseModalsTest.BoundsProbe;
@@ -601,6 +602,69 @@ class ComponentModalsTest extends TestCase {
     }
 
 // entrance.rs
+
+    /**
+     * DEV-024: `SlideDown` moves the surface's top edge from the top limit
+     * (window padding plus the edge margin) to its resting place along the
+     * entrance curve, from the first frame to the last, whatever the size and
+     * placement of the dialog. gpui-kit moved the positioner's anchor instead,
+     * so a tall centered dialog stayed clamped against the top margin for
+     * most of the entrance, then jumped into place at the end.
+     */
+    function testSlideDownMovesTheTopEdgeAlongTheWholeCurve() {
+        final margin = 16.;
+        final ease = Easings.cubicBezier(1. / 3., 0.72, 2. / 3., 1.);
+        final step = 0.01;
+        final cases:Array<{name:String, width:Float, height:Float, build:(Dialog) -> Dialog}> = [
+            {name: 'short centered', width: 1000, height: 800, build: dialog -> dialog.centered().child('body')},
+            {name: 'tall centered', width: 1000, height: 800, build: dialog -> dialog.centered().maxHRatio(0.85).child(div().h(px(2000.)))},
+            {name: 'short top offset', width: 1000, height: 800, build: dialog -> dialog.marginTop(px(300.)).child('body')},
+            {name: 'tall top offset', width: 1000, height: 800, build: dialog -> dialog.maxHRatio(0.85).child(div().h(px(2000.)))},
+            {name: 'window smaller than the dialog', width: 400, height: 300, build: dialog -> dialog.centered().child(div().h(px(2000.)))}
+        ];
+        for (item in cases) {
+            final cx = window(item.width, item.height).cx;
+            cx.update((_, cx) -> cx.setReduceMotion(false));
+            open(cx, (dialog, _, _) -> item.build(dialog.title('Slide').entrance(SlideDown)));
+            final tops:Array<Float> = [surface(cx, 0).top()];
+            var elapsed = 0.;
+            while (elapsed < Dialog.ANIMATION_DURATION + step * 2.) {
+                advance(cx, step);
+                frame(cx);
+                elapsed += step;
+                tops.push(surface(cx, 0).top());
+            }
+            final rest = tops[tops.length - 1];
+            // The entrance starts at the top limit and ends exactly at the place
+            // the dialog keeps once it settled (the place without an entrance).
+            assertTrue(Math.abs(tops[0] - margin) < 0.5, '${item.name}: starts at ${tops[0]}, not at the top limit');
+            cx.update((window, cx) -> window.closeDialog(cx));
+            advance(cx, 1.);
+            frame(cx);
+            cx.update((_, cx) -> cx.setReduceMotion(true));
+            open(cx, (dialog, _, _) -> item.build(dialog.title('Slide').entrance(SlideDown)));
+            assertEquals(surface(cx, 0).top(), rest, '${item.name}: rest place');
+            final travel = rest - margin;
+            for (index in 1...tops.length) {
+                assertTrue(tops[index] >= tops[index - 1], '${item.name}: moved up at frame $index (${tops[index - 1]} to ${tops[index]})');
+            }
+            if (travel < 0.5) {
+                for (top in tops) assertEquals(rest, top, '${item.name}: a dialog that cannot move must stay in place');
+                continue;
+            }
+            // Every frame of the entrance has the surface on the curve: no
+            // frame where it waits against the top margin.
+            var previous = 0.;
+            for (index in 1...tops.length) {
+                final progress = (tops[index] - margin) / travel;
+                assertTrue(progress > previous || progress == 1., '${item.name}: stalled at frame $index (progress $progress)');
+                previous = progress;
+            }
+            final firstProgress = (tops[1] - margin) / travel;
+            final expected = ease(step / Dialog.ANIMATION_DURATION);
+            assertTrue(Math.abs(firstProgress - expected) < 0.05, '${item.name}: first frame progress $firstProgress, expected about $expected');
+        }
+    }
 
     function testFadeSlideUsesResolvedBoundsAndKeepsTheSurfaceInsideTheWindow() {
         final probe = new SurfaceProbe();

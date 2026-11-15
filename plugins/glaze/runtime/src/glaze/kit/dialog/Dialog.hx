@@ -3,6 +3,8 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Additions without upstream equivalent (KIT-006 in docs/DEVIATIONS.md): `maxH`, `maxHRatio`, `overlayCloseOnClick`,
 // a public `header`. KIT-026: `bodyGap`.
+// Modified for Glaze (DEV-024 in docs/DEVIATIONS.md): the `SlideDown` entrance slides the surface's top edge to its
+// resting place instead of moving the positioner's anchor.
 package glaze.kit.dialog;
 
 import glaze.Action;
@@ -927,6 +929,18 @@ class Dialog extends Component implements Styled implements ParentElement {
             entranceSurface.progress = visibility;
             surfaceElement = entranceSurface.intoAnyElement();
         }
+        else if (entrance == SlideDown && visibility < 1.) {
+            // Modified for Glaze (DEV-024): gpui-kit moves the positioner's
+            // anchor to `y * visibility`, and the positioner clamps the surface
+            // below the top margin, so a tall centered dialog waited against
+            // that margin for most of the entrance, then jumped into place.
+            // The surface is laid out at its resting place instead, and its top
+            // edge slides from the top limit to that place along the whole
+            // curve (an entrance travel without limit).
+            final entranceSurface = new EntranceSurface(scopedSurface.intoAnyElement(), Math.POSITIVE_INFINITY, windowPaddings.top + margin);
+            entranceSurface.progress = visibility;
+            surfaceElement = entranceSurface.intoAnyElement();
+        }
         else {
             surfaceElement = scopedSurface.intoAnyElement();
         }
@@ -934,9 +948,6 @@ class Dialog extends Component implements Styled implements ParentElement {
         final positioner = Positioner.corner(anchor, new Point(windowPaddings.left + x, windowPaddings.top + y))
             .margin(margin)
             .child(surfaceElement);
-        if (entrance == SlideDown) {
-            positioner.position(new Point(windowPaddings.left + x, f32(windowPaddings.top + f32(y * visibility))));
-        }
 
         final props = this.props;
         final host = base;
