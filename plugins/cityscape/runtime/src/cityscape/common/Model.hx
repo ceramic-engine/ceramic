@@ -1174,6 +1174,14 @@ interface ITextModel extends cityscape.common.CursorCommon.ICursorSimpleModel {
     function getInjectedTextDecorations(?ownerId:Int):Array<IModelDecoration>;
 
     /**
+     * Gets the decorations that hide or replace text (`hidden`,
+     * `replacement`; Cityscape), without going through the other
+     * decorations of the model.
+     * @param ownerId If set, it will ignore decorations belonging to other owners.
+     */
+    function getHiddenDecorations(?ownerId:Int):Array<IModelDecoration>;
+
+    /**
      * @internal
      */
     function _getTrackedRange(id:String):Null<Range>;

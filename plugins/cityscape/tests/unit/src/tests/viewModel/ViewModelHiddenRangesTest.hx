@@ -127,4 +127,94 @@ class ViewModelHiddenRangesTest extends TestCase {
         viewModel.dispose();
     }
 
+    /** The hidden decorations of a model: `line,column-line,column description`, sorted. */
+    static function hiddenOf(model:TextModel, ?ownerId:Int):String {
+        final out = [for (d in model.getHiddenDecorations(ownerId)) d.range.startLineNumber + ',' + d.range.startColumn + '-' + d.range.endLineNumber + ',' + d.range.endColumn + ' ' + d.options.description];
+        out.sort(Reflect.compare);
+        return out.join(' | ');
+    }
+
+    function testHiddenDecorationsAreReadWithoutTheOthers() {
+        final lines = [for (i in 0...200) 'line $i has some text #tag'];
+        final model = createTextModel(lines.join('\n'));
+        final viewModel = createViewModel(model);
+        // the decorations of the view model itself
+        final own = model.getAllDecorations().length;
+        // many decorations that hide nothing
+        final plain = model.deltaDecorations([], [for (i in 0...200) {range: new Range(i + 1, 1, i + 1, 5), options: {description: 'plain', inlineClassName: 'word'}}]);
+        assertEquals('', hiddenOf(model));
+        assertEquals(own + 200, model.getAllDecorations().length);
+
+        // three that do: a plain one, one that also shows in the overview
+        // ruler, one that also injects text (Monaco keeps those two in
+        // trees of their own)
+        final hidden = model.deltaDecorations([], [
+            {range: new Range(10, 22, 10, 26), options: {description: 'a', hidden: true}},
+            {range: new Range(20, 22, 20, 26), options: {description: 'b', hidden: true, overviewRuler: {color: '#ff0000', position: cityscape.common.Model.OverviewRulerLane.Full}}},
+            {range: new Range(30, 22, 30, 26), options: {description: 'c', replacement: {content: '*'}, after: {content: '!'}}}
+        ], 7);
+        assertEquals('10,22-10,26 a | 20,22-20,26 b | 30,22-30,26 c', hiddenOf(model));
+        assertEquals('10,22-10,26 a | 20,22-20,26 b | 30,22-30,26 c', hiddenOf(model, 7));
+        assertEquals('', hiddenOf(model, 8));
+        // every decoration is still part of the whole
+        assertEquals(own + 203, model.getAllDecorations().length);
+        assertEquals(1, model.getOverviewRulerDecorations().length);
+        assertEquals(1, model.getInjectedTextDecorations().length);
+        assertEquals(2, model.getDecorationsInRange(new Range(10, 1, 10, 30)).length);
+        assertEquals(2, model.getLineDecorations(20).length);
+
+        // they follow the edits like the others
+        model.applyEdits([{range: new Range(1, 1, 1, 1), text: 'new first line\n'}, {range: new Range(10, 1, 10, 1), text: '>> '}]);
+        assertEquals('11,25-11,29 a | 21,22-21,26 b | 31,22-31,26 c', hiddenOf(model));
+        assertEquals('[11,25 -> 11,29]', model.getDecorationRange(hidden[0]).toString());
+
+        // options changed in place: a decoration starts or stops hiding
+        model.changeDecorations(accessor -> {
+            accessor.changeDecorationOptions(plain[4], {description: 'now hidden', hidden: true});
+            accessor.changeDecorationOptions(hidden[0], {description: 'shown again', inlineClassName: 'word'});
+            return null;
+        });
+        assertEquals('21,22-21,26 b | 31,22-31,26 c | 6,1-6,5 now hidden', hiddenOf(model));
+        assertEquals(own + 203, model.getAllDecorations().length);
+        assertEquals('[11,25 -> 11,29]', model.getDecorationRange(hidden[0]).toString());
+        // moved, and its line edited
+        model.changeDecorations(accessor -> {
+            accessor.changeDecoration(plain[4], new Range(7, 1, 7, 6));
+            return null;
+        });
+        model.applyEdits([{range: new Range(7, 1, 7, 1), text: 'x'}]);
+        assertEquals('21,22-21,26 b | 31,22-31,26 c | 7,1-7,7 now hidden', hiddenOf(model));
+
+        // removed with their owner, or one by one
+        model.removeAllDecorationsWithOwnerId(7);
+        assertEquals('7,1-7,7 now hidden', hiddenOf(model));
+        model.deltaDecorations([plain[4]], []);
+        assertEquals('', hiddenOf(model));
+        assertEquals(own + 199, model.getAllDecorations().length);
+        viewModel.dispose();
+    }
+
+    function testTheViewFollowsHiddenDecorationsAmongManyOthers() {
+        final lines = [for (i in 0...300) 'word $i #t$i end'];
+        final model = createTextModel(lines.join('\n'));
+        final viewModel = createViewModel(model);
+        model.deltaDecorations([], [for (i in 0...300) {range: new Range(i + 1, 1, i + 1, 5), options: {description: 'plain', inlineClassName: 'word'}}]);
+        // nothing hidden: typing changes the line and nothing else
+        model.applyEdits([{range: new Range(150, 1, 150, 1), text: 'A'}]);
+        assertEquals('Aword 149 #t149 end', viewModel.getLineContent(150));
+        // one tag hidden, then typing before it and on other lines
+        final id = model.deltaDecorations([], [{range: new Range(150, 11, 150, 17), options: {description: 'hide', hidden: true}}]);
+        assertEquals('Aword 149 end', viewModel.getLineContent(150));
+        model.applyEdits([{range: new Range(150, 1, 150, 1), text: 'B'}]);
+        assertEquals('BAword 149 end', viewModel.getLineContent(150));
+        model.applyEdits([{range: new Range(10, 1, 10, 1), text: 'first\n'}]);
+        assertEquals('BAword 149 end', viewModel.getLineContent(151));
+        // shown again
+        model.deltaDecorations(id, []);
+        assertEquals('BAword 149 #t149 end', viewModel.getLineContent(151));
+        model.applyEdits([{range: new Range(151, 1, 151, 1), text: 'C'}]);
+        assertEquals('CBAword 149 #t149 end', viewModel.getLineContent(151));
+        viewModel.dispose();
+    }
+
 }

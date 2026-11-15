@@ -1187,8 +1187,14 @@ class ViewModel implements IViewModel {
      * (the lines are not projected again: see `_updateHiddenRanges`).
      */
     function _recomputeHiddenRanges():Void {
+        // only the decorations that hide text: this runs at every change of
+        // the text, of the decorations and of the cursors
+        final hidden = this.model.getHiddenDecorations(this._editorId);
+        if (hidden.length == 0 && !this._hiddenDecorationsByLine.keys().hasNext() && !this._hiddenByLine.keys().hasNext()) {
+            return;
+        }
         final byDecorationLine = new Map<Int, Array<{decoration:IModelDecoration, startColumn:Int, endColumn:Int}>>();
-        for (decoration in this.model.getAllDecorations(this._editorId)) {
+        for (decoration in hidden) {
             if (!isHiddenDecoration(decoration.options)) {
                 continue;
             }

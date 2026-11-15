@@ -1878,6 +1878,10 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
         return this._decorationsTree.getAllInjectedText(this, ownerId != null ? ownerId : 0);
     }
 
+    public function getHiddenDecorations(?ownerId:Int):Array<IModelDecoration> {
+        return this._decorationsTree.getAllHidden(this, ownerId != null ? ownerId : 0);
+    }
+
     function _getInjectedTextInLine(lineNumber:Int):Array<LineInjectedText> {
         final startOffset = this._buffer.getOffsetAt(lineNumber, 1);
         final endOffset = startOffset + this._buffer.getLineLength(lineNumber);
@@ -1963,7 +1967,22 @@ class TextModel extends Disposable implements ITextModel implements IDecorations
 
         final movedInOverviewRuler = nodeWasInOverviewRuler != nodeIsInOverviewRuler;
         final changedWhetherInjectedText = DecorationsTrees.isOptionsInjectedText(options) != DecorationsTrees.isNodeInjectedText(node);
-        if (movedInOverviewRuler || changedWhetherInjectedText) {
+        // Cityscape: hidden text has a tree of its own
+        final changedWhetherHidden = DecorationsTrees.isOptionsHidden(options) != DecorationsTrees.isNodeHidden(node);
+        if (changedWhetherHidden) {
+            // Cityscape: the node goes to or leaves the tree of hidden
+            // text with its current offsets. Inserted as it is, it would
+            // keep the offsets it had inside its tree, which miss the
+            // moves that tree still holds in its deltas after an edit.
+            final range = this._decorationsTree.getNodeRange(this, node);
+            final startOffset = this._buffer.getOffsetAt(range.startLineNumber, range.startColumn);
+            final endOffset = this._buffer.getOffsetAt(range.endLineNumber, range.endColumn);
+            this._decorationsTree.delete(node);
+            node.reset(this.getVersionId(), startOffset, endOffset, range);
+            node.setOptions(options);
+            this._decorationsTree.insert(node);
+        }
+        else if (movedInOverviewRuler || changedWhetherInjectedText) {
             this._decorationsTree.delete(node);
             node.setOptions(options);
             this._decorationsTree.insert(node);
@@ -2207,10 +2226,39 @@ class DecorationsTrees {
      */
     final _injectedTextDecorationsTree:IntervalTree;
 
+    /**
+     * Cityscape: this tree holds the decorations that hide or replace text
+     * (`hidden`, `replacement`) and belong to neither of the two trees
+     * above. A view reads them at every change of the text, of the
+     * decorations and of the cursors (`getAllHidden`): kept apart, that
+     * costs the number of hidden ranges, not the number of decorations.
+     */
+    final _hiddenDecorationsTree:IntervalTree;
+
     public function new() {
         this._decorationsTree0 = new IntervalTree();
         this._decorationsTree1 = new IntervalTree();
         this._injectedTextDecorationsTree = new IntervalTree();
+        this._hiddenDecorationsTree = new IntervalTree();
+    }
+
+    public static function isOptionsHidden(options:ModelDecorationOptions):Bool {
+        return options.hidden == true || options.replacement != null;
+    }
+
+    public static function isNodeHidden(node:IntervalNode):Bool {
+        return node.options.hidden == true || node.options.replacement != null;
+    }
+
+    /**
+     * The tree of a node, from its options: injected text first, then the
+     * overview ruler (Monaco's two rules), then hidden text.
+     */
+    inline function _treeOf(node:IntervalNode):IntervalTree {
+        return if (isNodeInjectedText(node)) this._injectedTextDecorationsTree;
+            else if (isNodeInOverviewRuler(node)) this._decorationsTree1;
+            else if (isNodeHidden(node)) this._hiddenDecorationsTree;
+            else this._decorationsTree0;
     }
 
     public static function isNodeInOverviewRuler(node:IntervalNode):Bool {
@@ -2250,6 +2298,7 @@ class DecorationsTrees {
         final versionId = host.getVersionId();
         final result:Array<IModelDecoration> = [];
         _ensureNodesHaveRanges(host, this._decorationsTree0.intervalSearch(start, end, filterOwnerId, filterOutValidation, versionId, onlyMarginDecorations), result, false);
+        _ensureNodesHaveRanges(host, this._hiddenDecorationsTree.intervalSearch(start, end, filterOwnerId, filterOutValidation, versionId, onlyMarginDecorations), result, false);
         _ensureNodesHaveRanges(host, this._decorationsTree1.intervalSearch(start, end, filterOwnerId, filterOutValidation, versionId, onlyMarginDecorations), result, false);
         _ensureNodesHaveRanges(host, this._injectedTextDecorationsTree.intervalSearch(start, end, filterOwnerId, filterOutValidation, versionId, onlyMarginDecorations), result, false);
         return result;
@@ -2275,8 +2324,34 @@ class DecorationsTrees {
         }
         else {
             _ensureNodesHaveRanges(host, this._decorationsTree0.search(filterOwnerId, filterOutValidation, versionId, onlyMarginDecorations), result, false);
+            _ensureNodesHaveRanges(host, this._hiddenDecorationsTree.search(filterOwnerId, filterOutValidation, versionId, onlyMarginDecorations), result, false);
             _ensureNodesHaveRanges(host, this._decorationsTree1.search(filterOwnerId, filterOutValidation, versionId, onlyMarginDecorations), result, false);
             _ensureNodesHaveRanges(host, this._injectedTextDecorationsTree.search(filterOwnerId, filterOutValidation, versionId, onlyMarginDecorations), result, false);
+        }
+        return result;
+    }
+
+    /**
+     * Cityscape: the decorations that hide or replace text. Most are in
+     * their own tree; one that also injects text or shows in the overview
+     * ruler is in the tree Monaco puts it in, and those two trees are small.
+     */
+    public function getAllHidden(host:IDecorationsTreesHost, filterOwnerId:Int):Array<IModelDecoration> {
+        final versionId = host.getVersionId();
+        final result:Array<IModelDecoration> = [];
+        _ensureNodesHaveRanges(host, this._hiddenDecorationsTree.search(filterOwnerId, false, versionId, false), result, false);
+        final others = this._decorationsTree1.search(filterOwnerId, false, versionId, false).concat(this._injectedTextDecorationsTree.search(filterOwnerId, false, versionId, false));
+        var hidden:Null<Array<IntervalNode>> = null;
+        for (node in others) {
+            if (isNodeHidden(node)) {
+                if (hidden == null) {
+                    hidden = [];
+                }
+                hidden.push(node);
+            }
+        }
+        if (hidden != null) {
+            _ensureNodesHaveRanges(host, hidden, result, false);
         }
         return result;
     }
@@ -2285,14 +2360,16 @@ class DecorationsTrees {
         final r0 = this._decorationsTree0.collectNodesFromOwner(ownerId);
         final r1 = this._decorationsTree1.collectNodesFromOwner(ownerId);
         final r2 = this._injectedTextDecorationsTree.collectNodesFromOwner(ownerId);
-        return r0.concat(r1).concat(r2);
+        final r3 = this._hiddenDecorationsTree.collectNodesFromOwner(ownerId);
+        return r0.concat(r1).concat(r2).concat(r3);
     }
 
     public function collectNodesPostOrder():Array<IntervalNode> {
         final r0 = this._decorationsTree0.collectNodesPostOrder();
         final r1 = this._decorationsTree1.collectNodesPostOrder();
         final r2 = this._injectedTextDecorationsTree.collectNodesPostOrder();
-        return r0.concat(r1).concat(r2);
+        final r3 = this._hiddenDecorationsTree.collectNodesPostOrder();
+        return r0.concat(r1).concat(r2).concat(r3);
     }
 
     /**
@@ -2300,7 +2377,7 @@ class DecorationsTrees {
      * tree (Monaco's `recomputeMaxEnd(node)` needs the tree's sentinel here).
      */
     public function forEachNodePostOrder(callback:(tree:IntervalTree, node:IntervalNode) -> Void):Void {
-        for (tree in [this._decorationsTree0, this._decorationsTree1, this._injectedTextDecorationsTree]) {
+        for (tree in [this._decorationsTree0, this._decorationsTree1, this._injectedTextDecorationsTree, this._hiddenDecorationsTree]) {
             for (node in tree.collectNodesPostOrder()) {
                 callback(tree, node);
             }
@@ -2308,27 +2385,11 @@ class DecorationsTrees {
     }
 
     public function insert(node:IntervalNode):Void {
-        if (isNodeInjectedText(node)) {
-            this._injectedTextDecorationsTree.insert(node);
-        }
-        else if (isNodeInOverviewRuler(node)) {
-            this._decorationsTree1.insert(node);
-        }
-        else {
-            this._decorationsTree0.insert(node);
-        }
+        this._treeOf(node).insert(node);
     }
 
     public function delete(node:IntervalNode):Void {
-        if (isNodeInjectedText(node)) {
-            this._injectedTextDecorationsTree.delete(node);
-        }
-        else if (isNodeInOverviewRuler(node)) {
-            this._decorationsTree1.delete(node);
-        }
-        else {
-            this._decorationsTree0.delete(node);
-        }
+        this._treeOf(node).delete(node);
     }
 
     public function getNodeRange(host:IDecorationsTreesHost, node:IntervalNode):Range {
@@ -2343,21 +2404,14 @@ class DecorationsTrees {
     }
 
     function _resolveNode(node:IntervalNode, cachedVersionId:Int):Void {
-        if (isNodeInjectedText(node)) {
-            this._injectedTextDecorationsTree.resolveNode(node, cachedVersionId);
-        }
-        else if (isNodeInOverviewRuler(node)) {
-            this._decorationsTree1.resolveNode(node, cachedVersionId);
-        }
-        else {
-            this._decorationsTree0.resolveNode(node, cachedVersionId);
-        }
+        this._treeOf(node).resolveNode(node, cachedVersionId);
     }
 
     public function acceptReplace(offset:Int, length:Int, textLength:Int, forceMoveMarkers:Bool):Void {
         this._decorationsTree0.acceptReplace(offset, length, textLength, forceMoveMarkers);
         this._decorationsTree1.acceptReplace(offset, length, textLength, forceMoveMarkers);
         this._injectedTextDecorationsTree.acceptReplace(offset, length, textLength, forceMoveMarkers);
+        this._hiddenDecorationsTree.acceptReplace(offset, length, textLength, forceMoveMarkers);
     }
 
 }
