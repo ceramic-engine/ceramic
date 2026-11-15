@@ -10,7 +10,10 @@ package ceramic;
  * otherwise the app gets `screen.menuAction` like for any item. `UNDO` and
  * `REDO` behave like regular items (there is no native text view to undo
  * in). `WINDOW` makes a top level submenu the Window menu, which the system
- * completes with the list of windows.
+ * completes with the list of windows. `HIDE`, `HIDE_OTHERS` and `SHOW_ALL`
+ * items send `hide:`, `hideOtherApplications:` and `unhideAllApplications:`
+ * to the application object: the system does the work, as in every macOS
+ * application.
  *
  * @see Screen.setMenuBar
  */
@@ -39,5 +42,18 @@ enum abstract MenuItemRole(Int) from Int to Int {
 
     /** The Window menu (on a top level submenu). */
     var WINDOW = 7;
+
+    /**
+     * The "hide" item of the application menu. On macOS the system hides
+     * the application itself (the app gets no `screen.menuAction`);
+     * elsewhere it is a regular item.
+     */
+    var HIDE = 8;
+
+    /** The "hide others" item (see `HIDE`). */
+    var HIDE_OTHERS = 9;
+
+    /** The "show all" item (see `HIDE`). */
+    var SHOW_ALL = 10;
 
 }

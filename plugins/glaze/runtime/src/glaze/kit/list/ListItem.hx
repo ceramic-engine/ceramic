@@ -15,6 +15,7 @@ import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.MouseMoveEvent;
 import glaze.ParentElement;
+import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -85,6 +86,10 @@ class ListItem extends Component implements ListDelegateItem implements Styled i
 
     final childElements:Array<AnyElement> = [];
 
+    var hoverStyleValue:Null<(StyleBuilder) -> StyleBuilder> = null;
+
+    var selectedStyleValue:Null<(StyleBuilder) -> StyleBuilder> = null;
+
     /**
      * Set the accessibility label of the list item.
      *
@@ -130,6 +135,27 @@ class ListItem extends Component implements ListDelegateItem implements Styled i
             }
         }
         onMouseDownHandlers.push({button: button, handler: handler});
+        return this;
+    }
+
+    /**
+     * The style of this item while the pointer is over it, in place of the
+     * theme's `list.hover` background (addition, KIT-015). Like the default
+     * one, it does not apply to a selected, confirmed or disabled item.
+     * `null`, the default, keeps the theme's.
+     */
+    public function hover(f:Null<(StyleBuilder) -> StyleBuilder>):ListItem {
+        hoverStyleValue = f;
+        return this;
+    }
+
+    /**
+     * The style of this item when it is selected, in place of the theme's
+     * `list.active` (or accent) background (addition, KIT-015). `null`, the
+     * default, keeps the theme's.
+     */
+    public function selectedStyle(f:Null<(StyleBuilder) -> StyleBuilder>):ListItem {
+        selectedStyleValue = f;
         return this;
     }
 
@@ -216,7 +242,12 @@ class ListItem extends Component implements ListDelegateItem implements Styled i
             }
             // Register `hover` unconditionally, a conditional registration
             // leaves a stale hover style behind when the item turns active.
-            element.hover(s -> isActive ? s : s.bg(theme.tokens.listHover.background));
+            final hoverStyle = hoverStyleValue;
+            if (hoverStyle != null) {
+                element.hover(s -> isActive ? s : hoverStyle(s));
+            } else {
+                element.hover(s -> isActive ? s : s.bg(theme.tokens.listHover.background));
+            }
         }
         if (!isSelectable) {
             element.textColor(theme.mutedForeground);
@@ -238,8 +269,12 @@ class ListItem extends Component implements ListDelegateItem implements Styled i
         element.child(row);
         if (suffixBuilder != null) element.child(suffixBuilder(window, cx));
         if (isSelectable && selected) {
-            final bg = theme.listSettings.activeHighlight ? theme.listActive : theme.accent;
-            element.bg(bg);
+            if (selectedStyleValue != null) {
+                element.refineStyle(StyleBuilder.build(selectedStyleValue));
+            } else {
+                final bg = theme.listSettings.activeHighlight ? theme.listActive : theme.accent;
+                element.bg(bg);
+            }
         }
         if (isSelectable && secondarySelected) {
             element.child(div()

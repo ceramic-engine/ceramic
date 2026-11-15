@@ -333,6 +333,68 @@ class KeyDispatchWindowTest extends TestCase {
         assertEquals(2, view.actionCount);
     }
 
+    /** A prefix without a binding of its own: `ctrl-b` only starts `ctrl-b h`. */
+    function setupPrefixWithoutBindingTest():PendingInputTestView {
+        return setupPendingInputTest([
+            new KeyBinding('ctrl-b h', new WindowSecondaryTestAction(), 'Terminal'),
+        ]);
+    }
+
+    function testAPrefixWithoutABindingWaitsWithoutLimitByDefault() {
+        final view = setupPrefixWithoutBindingTest();
+        cx.update((_, cx) -> assertFalse(cx.pendingInputAlwaysTimesOut()));
+        simulatePendingBinding();
+        cx.update((window, _) -> {
+            assertTrue(window.hasPendingKeystrokes());
+            assertNull(window.pendingInputTimeoutDuration());
+        });
+        cx.advanceClock(PENDING_INPUT_TIMEOUT * 10);
+        cx.runUntilParked();
+        cx.update((window, _) -> assertTrue(window.hasPendingKeystrokes()));
+        // The sequence still completes
+        cx.simulateKeystrokes('h');
+        cx.runUntilParked();
+        assertEquals(1, view.secondaryActionCount);
+    }
+
+    function testAPrefixWithoutABindingTimesOutWhenAsked() {
+        final view = setupPrefixWithoutBindingTest();
+        cx.update((_, cx) -> {
+            cx.setPendingInputAlwaysTimesOut(true);
+            cx.setPendingInputTimeout(1.5);
+        });
+        simulatePendingBinding();
+        cx.update((window, _) -> {
+            assertTrue(window.hasPendingKeystrokes());
+            assertEquals(1.5, window.pendingInputTimeoutDuration());
+        });
+        cx.advanceClock(1.0);
+        cx.runUntilParked();
+        cx.update((window, _) -> assertTrue(window.hasPendingKeystrokes()));
+        cx.advanceClock(0.5);
+        cx.runUntilParked();
+        cx.update((window, _) -> assertFalse(window.hasPendingKeystrokes()));
+        // Forgotten: the second key alone does nothing
+        cx.simulateKeystrokes('h');
+        cx.runUntilParked();
+        assertEquals(0, view.secondaryActionCount);
+        assertEquals(0, view.actionCount);
+        // In time, the sequence completes
+        simulatePendingBinding();
+        cx.advanceClock(1.0);
+        cx.runUntilParked();
+        cx.simulateKeystrokes('h');
+        cx.runUntilParked();
+        assertEquals(1, view.secondaryActionCount);
+        // Off again: no limit
+        cx.update((_, cx) -> cx.setPendingInputAlwaysTimesOut(false));
+        simulatePendingBinding();
+        cx.update((window, _) -> assertNull(window.pendingInputTimeoutDuration()));
+        cx.advanceClock(10.0);
+        cx.runUntilParked();
+        cx.update((window, _) -> assertTrue(window.hasPendingKeystrokes()));
+    }
+
     function testRunningPendingInputTimeoutResetsWhenBindingAdvances() {
         final view = setupPendingInputTimeoutTest();
         simulatePendingBinding();

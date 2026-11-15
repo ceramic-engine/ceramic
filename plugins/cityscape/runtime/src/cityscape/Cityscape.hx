@@ -332,6 +332,30 @@ class Cityscape {
     }
 
     /**
+     * Binds the keys of this context's keybindings in the Glaze app `cx`
+     * now (a Glaze binding per chord, in the `CityscapeEditor` key
+     * context), instead of at the first render of an editor.
+     *
+     * Glaze resolves a key to the binding added last among those of the
+     * deepest matching context, so the order of the calls decides who
+     * wins a chord that both the editor and the application bind in the
+     * `CityscapeEditor` context:
+     *
+     * - `context.bindKeys(cx)` first, then the application's `cx.bindKeys`:
+     *   the application's bindings win;
+     * - the application's `cx.bindKeys` first, then `context.bindKeys(cx)`
+     *   (or nothing: the editor binds its keys when it is first drawn):
+     *   the editor's keybindings win, as before.
+     *
+     * Calling it again binds only the chords added since (keybindings added
+     * later with `addKeybindingRule` or `addCommand` are bound when they are
+     * added, after everything bound before).
+     */
+    public function bindKeys(cx:glaze.App):Void {
+        cityscape.view.KeyboardEvents.CityscapeKeyBindings.ensure(this, cx);
+    }
+
+    /**
      * The styles of Monaco's built-in decoration class names (its CSS):
      * the squiggles of the markers, in the theme colors.
      */

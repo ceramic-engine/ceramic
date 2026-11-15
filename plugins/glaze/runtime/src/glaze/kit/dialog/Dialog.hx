@@ -688,6 +688,19 @@ class Dialog extends Component implements Styled implements ParentElement {
         return Theme.global(cx).overlay;
     }
 
+    /** The caller's shadows with their opacity multiplied by `delta` (as they are when fully visible). */
+    static function fadedShadows(shadows:Array<BoxShadow>, delta:Float):Array<BoxShadow> {
+        if (delta >= 1.) return shadows;
+        return [for (shadow in shadows) {
+            final color = shadow.color;
+            final faded = new BoxShadow(shadow.offset.x, shadow.offset.y, hsla(color.h, color.s, color.l, f32(color.a * delta)));
+            faded.blurRadius = shadow.blurRadius;
+            faded.spreadRadius = shadow.spreadRadius;
+            faded.inset = shadow.inset;
+            faded;
+        }];
+    }
+
     static function dialogShadow(delta:Float):Array<BoxShadow> {
         final first = new BoxShadow(glaze.Prelude.px(0.), glaze.Prelude.px(20.), hsla(0., 0., 0., f32(0.1 * delta)));
         first.blurRadius = glaze.Prelude.px(25.);
@@ -887,9 +900,11 @@ class Dialog extends Component implements Styled implements ParentElement {
         }
         // Base paints its popup in a deferred pass; the
         // surface must apply opacity itself.
+        // Addition (KIT-018): a shadow set by the caller is kept (it fades
+        // in and out like the default one); `shadow([])` gives none.
         surface
             .opacity(visibility)
-            .shadow(dialogShadow(visibility));
+            .shadow(dialogStyle.boxShadow != null ? fadedShadows(dialogStyle.boxShadow, visibility) : dialogShadow(visibility));
         final scopedSurface = glaze.kit.base.TextSelection.textSelectionScope(selectionScope, surface);
         var surfaceElement:AnyElement;
         if (entrance == FadeSlide) {

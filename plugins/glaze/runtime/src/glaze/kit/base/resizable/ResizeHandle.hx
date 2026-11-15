@@ -54,12 +54,25 @@ class ResizeHandleContext {
 
     final indexValue:Null<Int>;
 
+    final sizeValue:Pixels;
+
     @:allow(glaze.kit.base.resizable, tests)
-    function new(axis:Axis, edge:Null<HandleEdge>, state:ResizeHandleState, ?index:Int) {
+    function new(axis:Axis, edge:Null<HandleEdge>, state:ResizeHandleState, ?index:Int, ?size:Pixels) {
         this.axisValue = axis;
         this.edgeValue = edge;
         this.stateValue = state;
         this.indexValue = index;
+        this.sizeValue = size != null ? size : ResizeHandle.HANDLE_SIZE;
+    }
+
+    /**
+     * The thickness of the hairline: the extent, across the boundary, of
+     * the box the appearance fills. 1px unless the handle was given another
+     * with `handleSize` (addition without upstream equivalent, KIT-013 in
+     * docs/DEVIATIONS.md).
+     */
+    public function size():Pixels {
+        return sizeValue;
     }
 
     /**
@@ -226,6 +239,8 @@ class ResizeHandle<T> extends Element {
 
     var appearance:Null<ResizeHandleRenderer> = null;
 
+    var handleSizeValue:Null<Pixels> = null;
+
     /** See `ResizeHandleContext.index`. */
     @:allow(glaze.kit.base.resizable)
     var index:Null<Int> = null;
@@ -251,6 +266,17 @@ class ResizeHandle<T> extends Element {
      */
     public function withAppearance(appearance:ResizeHandleRenderer):ResizeHandle<T> {
         this.appearance = appearance;
+        return this;
+    }
+
+    /**
+     * Sets the thickness of the hairline, `HANDLE_SIZE` (1px) by default.
+     * The band the pointer hits is this thickness plus `HANDLE_PADDING` on
+     * each side, so with zero nothing is drawn over the panels and the
+     * handle still resizes (port addition, KIT-013).
+     */
+    public function handleSize(size:Null<Pixels>):ResizeHandle<T> {
+        handleSizeValue = size;
         return this;
     }
 
@@ -288,8 +314,9 @@ class ResizeHandle<T> extends Element {
         // Sizes are border-box: the extent has to name the whole band, padding
         // included, or the content box resolves to zero and the hairline
         // overflows into the padding.
-        final hugExtent = HANDLE_SIZE + HANDLE_PADDING;
-        final straddleExtent = HANDLE_SIZE + HANDLE_PADDING * 2.;
+        final handleSize:Pixels = handleSizeValue != null ? handleSizeValue : HANDLE_SIZE;
+        final hugExtent = handleSize + HANDLE_PADDING;
+        final straddleExtent = handleSize + HANDLE_PADDING * 2.;
         // The caller's listeners are already on it; what base adds is where the
         // band goes and what it holds.
         final base = this.base;
@@ -340,7 +367,7 @@ class ResizeHandle<T> extends Element {
             // container's own mask.
             var painted:Null<AnyElement> = null;
             if (appearance != null) {
-                painted = appearance(new ResizeHandleContext(axis, edge, state.get(), index), window, cx);
+                painted = appearance(new ResizeHandleContext(axis, edge, state.get(), index, handleSize), window, cx);
             }
             if (painted == null) {
                 final line = div()
@@ -349,8 +376,8 @@ class ResizeHandle<T> extends Element {
                     .flexNone()
                     .bg(bgColor)
                     .groupHover('handle', s -> s.bg(bgColor));
-                if (axis.isHorizontal()) line.hFull().w(HANDLE_SIZE);
-                if (axis.isVertical()) line.wFull().h(HANDLE_SIZE);
+                if (axis.isHorizontal()) line.hFull().w(handleSize);
+                if (axis.isVertical()) line.wFull().h(handleSize);
                 painted = line.intoAnyElement();
             }
             el.child(painted);

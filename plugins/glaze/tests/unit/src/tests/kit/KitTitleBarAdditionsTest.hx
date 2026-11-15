@@ -86,6 +86,63 @@ class KitTitleBarAdditionsTest extends KitAdditionsTestCase {
         assertEquals('drag,min,max,close', areas(titleBar(bar -> bar.platform(TitleBarPlatform.Windows))));
     }
 
+    // KIT-009
+
+    function testWindowControlsOffDrawsNoButton() {
+        OperatingSystem.current = OperatingSystem.Mac;
+        final plain = titleBar(bar -> bar.platform(TitleBarPlatform.Windows));
+        assertEquals('drag,min,max,close', areas(plain));
+        // `true` is the default
+        assertEquals(sceneSignature(plain), sceneSignature(titleBar(bar -> bar.platform(TitleBarPlatform.Windows).windowControls(true))));
+        final bare = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).windowControls(false));
+        assertEquals('drag', areas(bare));
+        // The look stays: the left padding of Windows, the drag area over the whole bar
+        assertEquals(12., boundsOf(bare, 'title').left());
+        final ops = new TitleBarOperations();
+        final cx = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).windowControls(false), ops);
+        cx.simulateClick(new Point(583., 17.));
+        cx.simulateClick(new Point(515., 17.));
+        assertEquals('', ops.calls.join(','));
+        assertFalse(cx.update((window, _) -> window.isDestroyed()));
+        // Nothing to hide on the Mac look
+        assertEquals(sceneSignature(titleBar(bar -> bar.platform(TitleBarPlatform.Mac))), sceneSignature(titleBar(bar -> bar.platform(TitleBarPlatform.Mac).windowControls(false))));
+    }
+
+    function controlLefts(cx:VisualTestContext):Array<Float> {
+        return cx.update((window, _) -> [for (entry in window.windowControlHitboxes()) if (entry.area != Drag) entry.hitbox.bounds.left()]);
+    }
+
+    function testControlWidthSizesTheButtons() {
+        OperatingSystem.current = OperatingSystem.Mac;
+        // 34 px by default: three buttons at the right end of the 600 px bar
+        assertEquals('498,532,566', controlLefts(titleBar(bar -> bar.platform(TitleBarPlatform.Windows))).join(','));
+        final wide = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).controlWidth(px(46.)));
+        assertEquals('462,508,554', controlLefts(wide).join(','));
+        final ops = new TitleBarOperations();
+        final cx = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).controlWidth(px(46.)), ops);
+        cx.simulateClick(new Point(470., 17.));
+        cx.simulateClick(new Point(520., 17.));
+        assertEquals('minimize,zoom', ops.calls.join(','));
+    }
+
+    function testTheFullscreenPaddingIsForTheDefaultLeftPadding() {
+        OperatingSystem.current = OperatingSystem.Mac;
+        final settings = ceramic.App.app.settings;
+        final previous = settings.fullscreen;
+        assertEquals(80., boundsOf(titleBar(bar -> bar), 'title').left());
+        assertEquals(20., boundsOf(titleBar(bar -> bar.pl(px(20.))), 'title').left());
+        settings.fullscreen = true;
+        final plain = boundsOf(titleBar(bar -> bar), 'title').left();
+        final own = boundsOf(titleBar(bar -> bar.pl(px(20.))), 'title').left();
+        final zero = boundsOf(titleBar(bar -> bar.pl(px(0.))), 'title').left();
+        settings.fullscreen = previous;
+        // As before: 12 px more than the padding of the look
+        assertEquals(92., plain);
+        // The caller's padding alone
+        assertEquals(20., own);
+        assertEquals(0., zero);
+    }
+
     function testAGivenPlatformDrawsWhatTheOperatingSystemDraws() {
         final looks:Array<{os:OperatingSystem, platform:TitleBarPlatform}> = [
             {os: OperatingSystem.Mac, platform: TitleBarPlatform.Mac},

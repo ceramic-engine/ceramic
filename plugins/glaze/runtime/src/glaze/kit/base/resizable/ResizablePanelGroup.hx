@@ -93,7 +93,19 @@ class ResizablePanelGroup extends Component {
      */
     @prop var onResizing:Null<(Entity<ResizableState>, Window, App) -> Void> = null;
 
+    /**
+     * Set the callback to be called when a change of the container's size
+     * changed the sizes of the panels (the window was resized, a parent
+     * panel moved), and once when the group is first laid out. It runs
+     * after the frame that saw the new size, with the sizes the state
+     * holds then (`ResizableState.sizes()`). `onResize` stays the callback
+     * of the drags (port addition, KIT-014).
+     */
+    @prop var onLayoutSizes:Null<(Entity<ResizableState>, Window, App) -> Void> = null;
+
     var handleAppearance:Null<ResizeHandleRenderer> = null;
+
+    var handleSizeValue:Null<Pixels> = null;
 
     /**
      * Create a new resizable panel group.
@@ -111,6 +123,17 @@ class ResizablePanelGroup extends Component {
      */
     public function withHandleAppearance(appearance:ResizeHandleRenderer):ResizablePanelGroup {
         handleAppearance = appearance;
+        return this;
+    }
+
+    /**
+     * Set the thickness of the line of every divider in this group, 1px by
+     * default. Zero is allowed: nothing is drawn over the panels and the
+     * dividers still resize, their hit band is the 4px on each side of the
+     * boundary (port addition, KIT-013).
+     */
+    public function handleSize(size:Null<Pixels>):ResizablePanelGroup {
+        handleSizeValue = size;
         return this;
     }
 
@@ -188,12 +211,14 @@ class ResizablePanelGroup extends Component {
             panel.axis = axis;
             panel.state = state;
             panel.handleAppearance = handleAppearance;
+            panel.handleSize = handleSizeValue;
             panel.leadingHandle = visibleBefore;
             if (@:privateAccess panel.visibleProp) visibleBefore = true;
             // Read when the container changes size; not a change to draw.
             if (ix < panelStates.length) panelStates[ix].shrinkPriority = panel.shrinkPriorityValue;
             container.child(panel);
         }
+        final onLayoutSizes = this.onLayoutSizes;
         container.onPrepaint((bounds, window, cx) -> {
             // The same bounds as last frame change nothing; updating the
             // state for them would mark it changed every frame.
@@ -213,8 +238,9 @@ class ResizablePanelGroup extends Component {
                     // a frame for it. Defer the notify so it runs once the
                     // draw has finished and can schedule the settling frame.
                     final state = cx.entity();
-                    window.defer(cx.app, (_, cx) -> {
+                    window.defer(cx.app, (window, cx) -> {
                         state.update(cx, (state, cx) -> state.notifyChanged(cx));
+                        if (onLayoutSizes != null) onLayoutSizes(state, window, cx);
                     });
                 }
             });

@@ -83,6 +83,14 @@ class Tree extends Component implements Styled {
 
     var rootDropTargetStyleValue:Null<(StyleBuilder) -> StyleBuilder> = null;
 
+    var dropTargetForValue:Null<(Int, TreeEntry) -> Null<Int>> = null;
+
+    var rootContextMenuValue:Null<(PopupMenu, Window, Context<PopupMenu>) -> PopupMenu> = null;
+
+    var rowHoverValue:Null<(StyleBuilder) -> StyleBuilder> = null;
+
+    var rowSelectedValue:Null<(StyleBuilder) -> StyleBuilder> = null;
+
     public function new(state:Entity<TreeState>, renderItem:TreeComponentRenderItem) {
         super();
         id = ElementId.Name('tree-' + state.entityId());
@@ -143,6 +151,52 @@ class Tree extends Component implements Styled {
         return this;
     }
 
+    /**
+     * Chooses the row that is highlighted while an accepted drag is over a
+     * row (addition, KIT-016): `target(ix, entry)` gets the row under the
+     * pointer and returns the index of the row that takes the
+     * `dropTargetStyle` (the row of the parent folder of a file, with
+     * `TreeState.parentIndex`), or `null` for the tree itself, which then
+     * takes the `rootDropTargetStyle`. Only the highlight moves: the drop
+     * still goes to `dropOnEntries` with the row under the pointer.
+     * Without it, the row under the pointer is highlighted.
+     */
+    public function dropTargetFor(target:Null<(ix:Int, entry:TreeEntry) -> Null<Int>>):Tree {
+        dropTargetForValue = target;
+        return this;
+    }
+
+    /**
+     * Opens the menu `builder` fills on a right click (or a long press) on
+     * the tree outside its rows: the empty area under the last row
+     * (addition, KIT-017). A right click on a row opens the row's menu
+     * (`contextMenu`) only, and closes this one if it was open.
+     */
+    public function rootContextMenu(builder:Null<(PopupMenu, Window, Context<PopupMenu>) -> PopupMenu>):Tree {
+        rootContextMenuValue = builder;
+        return this;
+    }
+
+    /**
+     * The style of a row under the pointer, in place of the theme's
+     * `list.hover` background, for the rows of this tree only (addition,
+     * KIT-015; it is `ListItem.hover` set on every row that has none).
+     */
+    public function rowHover(style:Null<(StyleBuilder) -> StyleBuilder>):Tree {
+        rowHoverValue = style;
+        return this;
+    }
+
+    /**
+     * The style of the selected row, in place of the theme's `list.active`
+     * background, for the rows of this tree only (addition, KIT-015; it is
+     * `ListItem.selectedStyle` set on every row that has none).
+     */
+    public function rowSelected(style:Null<(StyleBuilder) -> StyleBuilder>):Tree {
+        rowSelectedValue = style;
+        return this;
+    }
+
     /** Sets the style of the tree while a drag accepted by `dropOnRoot` is over it. */
     public function rootDropTargetStyle(style:(StyleBuilder) -> StyleBuilder):Tree {
         rootDropTargetStyleValue = style;
@@ -164,6 +218,17 @@ class Tree extends Component implements Styled {
         final dropTargetStyle:(StyleBuilder) -> StyleBuilder = dropTargetStyleValue != null ? dropTargetStyleValue : s -> s.bg(theme.dropTarget);
         final rootDropTargetStyle:(StyleBuilder) -> StyleBuilder = rootDropTargetStyleValue != null ? rootDropTargetStyleValue : s -> s.bg(theme.dropTarget);
 
+        final rowHover = rowHoverValue;
+        final rowSelected = rowSelectedValue;
+        // KIT-016: the row an accepted drag points at, kept across frames
+        final redirect = entryDrops.length > 0 ? dropTargetForValue : null;
+        final highlight:Null<TreeDropHighlight> = redirect != null
+            ? window.useKeyedState(ElementId.Name('tree-drop-highlight-' + state.entityId()), cx, _ -> new TreeDropHighlight()).read(cx).value
+            : null;
+        if (highlight != null && !cx.hasActiveDrag()) highlight.clear();
+        // KIT-017: the menu of the empty area
+        final rootMenuControl = rootContextMenuValue != null ? new glaze.kit.menu.ContextMenu.ContextMenuControl() : null;
+
         final tree = new BaseTree(state)
             .toggleOnClick(toggleOnClick)
             .navigationKeys(navigationKeys)
@@ -175,6 +240,8 @@ class Tree extends Component implements Styled {
                     .disabled(entry.isDisabled())
                     .selected(entryState.isSelected())
                     .secondarySelected(entryState.isRightClicked());
+                if (rowHover != null && @:privateAccess item.hoverStyleValue == null) item.hover(rowHover);
+                if (rowSelected != null && @:privateAccess item.selectedStyleValue == null) item.selectedStyle(rowSelected);
 
                 final row = div();
                 if (rowDragAndDrop) {
@@ -203,7 +270,23 @@ class Tree extends Component implements Styled {
                         };
                         row.canDrop(accepts);
                         for (drop in entryDrops) {
-                            row.dragOver(drop.type, (s, _, _, _) -> dropTargetStyle(s));
+                            if (highlight == null) {
+                                row.dragOver(drop.type, (s, _, _, _) -> dropTargetStyle(s));
+                            } else {
+                                // KIT-016: the highlight goes to the row `redirect` names
+                                row.onDragMove(drop.type, (event, window, cx) -> {
+                                    final over = event.bounds.contains(event.event.position) && accepts(event.drag(cx), window, cx);
+                                    var changed = false;
+                                    if (over) {
+                                        final found = current(cx);
+                                        changed = found != null && highlight.set(ix, redirect(ix, found));
+                                    } else if (highlight.active && highlight.source == ix) {
+                                        highlight.clear();
+                                        changed = true;
+                                    }
+                                    if (changed) state.update(cx, (_, cx) -> cx.notify());
+                                });
+                            }
                             row.onDrop(drop.type, (value, window, cx) -> {
                                 final found = current(cx);
                                 if (found != null) drop.onDrop(value, ix, found, window, cx);
@@ -211,9 +294,14 @@ class Tree extends Component implements Styled {
                         }
                     }
                 }
+                if (highlight != null && highlight.active && highlight.target == ix) {
+                    row.refineStyle(StyleBuilder.build(dropTargetStyle));
+                }
                 return row
                     .child(item)
                     .contextMenu((menu, window, cx) -> {
+                        // KIT-017: a row's menu replaces the tree's own
+                        if (rootMenuControl != null) rootMenuControl.close(window);
                         final build = contextMenuBuilder;
                         if (build == null) {
                             return menu;
@@ -249,10 +337,53 @@ class Tree extends Component implements Styled {
                 container.onDrop(drop.type, (value, window, cx) -> drop.onDrop(value, window, cx));
             }
         }
-        return container
+        container
             .child(bounce)
-            .refineStyle(treeStyle)
-            .verticalScrollbar(scrollHandle);
+            .refineStyle(treeStyle);
+        if (highlight != null && highlight.active && highlight.target == null) {
+            container.refineStyle(StyleBuilder.build(rootDropTargetStyle));
+        }
+        final rootMenu = rootContextMenuValue;
+        if (rootMenu != null) {
+            // The rows' own triggers are inside this one and stop the right
+            // click before it gets here
+            return new glaze.kit.menu.ContextMenu(ElementId.Name('tree-root-menu-' + state.entityId()), container.verticalScrollbar(scrollHandle))
+                .menu(rootMenu)
+                .withControl(rootMenuControl);
+        }
+        return container.verticalScrollbar(scrollHandle);
+    }
+
+}
+
+/**
+ * The row an accepted drag points at in a tree with `dropTargetFor`
+ * (KIT-016): `source` is the row under the pointer, `target` the row to
+ * highlight (`null`: the tree itself).
+ */
+private class TreeDropHighlight {
+
+    public var active:Bool = false;
+
+    public var source:Int = -1;
+
+    public var target:Null<Int> = null;
+
+    public function new() {}
+
+    /** Returns whether something changed. */
+    public function set(source:Int, target:Null<Int>):Bool {
+        if (active && this.source == source && this.target == target) return false;
+        active = true;
+        this.source = source;
+        this.target = target;
+        return true;
+    }
+
+    public function clear():Void {
+        active = false;
+        source = -1;
+        target = null;
     }
 
 }

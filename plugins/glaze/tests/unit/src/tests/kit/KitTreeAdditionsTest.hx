@@ -272,6 +272,208 @@ class KitTreeAdditionsTest extends KitAdditionsTestCase {
         assertEquals(null, state().selectedIndex());
     }
 
+    // KIT-015, KIT-016, KIT-017
+
+    /** A folder with two files, a root file: every row takes a drop, the highlight goes to the parent folder. */
+    function redirectTree(drops:Array<String>, redirect:Bool, rootStyle:Bool = false):VisualTestContext {
+        newTree([
+            new TreeItem('src', 'src').expanded(true).child(new TreeItem('main', 'main.lor')).child(new TreeItem('lib', 'lib.lor')),
+            new TreeItem('notes', 'notes.lor'),
+            new TreeItem('todo', 'todo.lor'),
+        ]);
+        return show(tree -> {
+            tree.dragEntries((ix, entry) -> new DraggedFile(entry.item().id),
+                (_, _, _, cx) -> (cx.newEntity((_:Context<DraggedFilePreview>) -> new DraggedFilePreview()) : AnyView))
+                .dropOnEntries(DraggedFile, (file, ix, entry, _, _) -> drops.push('${file.id} on ${entry.item().id} ($ix)'),
+                    (file, _, entry, _, _) -> entry.item().id != file.id)
+                .dropTargetStyle(s -> s.bg(hsla(0., 0.75, 0.5, 1.)));
+            if (rootStyle) tree.rootDropTargetStyle(s -> s.bg(hsla(0.3, 0.75, 0.5, 1.)));
+            if (redirect) tree.dropTargetFor((ix, entry) -> entry.isFolder() ? ix : state().parentIndex(ix));
+            return tree;
+        });
+    }
+
+    function rowsFilled(cx:VisualTestContext, color:glaze.Hsla):Array<String> {
+        final result = [];
+        for (id in ['src', 'main', 'lib', 'notes', 'todo']) {
+            final center = boundsOf(cx, 'row-$id').center();
+            for (entry in quadsFilled(cx, color)) {
+                if (entry.bounds.size.height < 100. && entry.bounds.contains(center)) {
+                    result.push(id);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    function testWithoutDropTargetForTheRowUnderThePointerIsHighlighted() {
+        final red = hsla(0., 0.75, 0.5, 1.);
+        final cx = redirectTree([], false);
+        drag(cx, 'notes', boundsOf(cx, 'row-lib').center());
+        assertEquals('lib', rowsFilled(cx, red).join(','));
+        drop(cx, boundsOf(cx, 'row-lib').center());
+    }
+
+    function testDropTargetForMovesTheHighlightToAnotherRow() {
+        final red = hsla(0., 0.75, 0.5, 1.);
+        final green = hsla(0.3, 0.75, 0.5, 1.);
+        final drops:Array<String> = [];
+        final cx = redirectTree(drops, true, true);
+        assertEquals('', rowsFilled(cx, red).join(','));
+        // Over a file of the folder: the folder is highlighted, not the file
+        final lib = boundsOf(cx, 'row-lib').center();
+        drag(cx, 'notes', lib);
+        assertEquals('src', rowsFilled(cx, red).join(','));
+        // Over the folder itself
+        cx.simulateMouseMove(boundsOf(cx, 'row-src').center(), Left);
+        frame(cx);
+        assertEquals('src', rowsFilled(cx, red).join(','));
+        // Over a root file: no row, the tree takes its root style
+        assertEquals(0, quadsFilled(cx, green).length);
+        cx.simulateMouseMove(boundsOf(cx, 'row-todo').center(), Left);
+        frame(cx);
+        assertEquals('', rowsFilled(cx, red).join(','));
+        assertEquals(1, quadsFilled(cx, green).length);
+        // Over the row being dragged (it refuses itself): nothing
+        cx.simulateMouseMove(boundsOf(cx, 'row-notes').center(), Left);
+        frame(cx);
+        assertEquals('', rowsFilled(cx, red).join(','));
+        assertEquals(0, quadsFilled(cx, green).length);
+        // Back over a file of the folder, then dropped: the drop goes to the row under the pointer
+        cx.simulateMouseMove(lib, Left);
+        frame(cx);
+        assertEquals('src', rowsFilled(cx, red).join(','));
+        drop(cx, lib);
+        assertEquals('notes on lib (2)', drops.join(','));
+        // Nothing stays highlighted
+        frame(cx);
+        assertEquals('', rowsFilled(cx, red).join(','));
+        assertEquals(0, quadsFilled(cx, green).length);
+    }
+
+    function testRowHoverAndRowSelectedReplaceTheThemeColors() {
+        final red = hsla(0., 0.75, 0.5, 1.);
+        final blue = hsla(0.6, 0.75, 0.5, 1.);
+        final build = (styled:Bool) -> {
+            newTree(project());
+            return show(tree -> styled ? tree.rowHover(s -> s.bg(red)).rowSelected(s -> s.bg(blue)) : tree);
+        };
+        final plain = build(false);
+        final plainTree = tree;
+        final styled = build(true);
+        // At rest (the pointer outside) the two trees draw the same
+        for (cx in [plain, styled]) {
+            cx.simulateMouseMove(new Point(400., 300.));
+            frame(cx);
+        }
+        assertEquals(sceneSignature(plain), sceneSignature(styled));
+        final theme = styled.update((_, app) -> Theme.global(app));
+        final hover = (theme.tokens.listHover.background : glaze.Background).solid;
+        final readme = boundsOf(styled, 'row-readme').center();
+        // Hover
+        plain.simulateMouseMove(readme);
+        frame(plain);
+        styled.simulateMouseMove(readme);
+        frame(styled);
+        assertTrue(quadsFilled(plain, hover).length > 0);
+        assertEquals(0, quadsFilled(plain, red).length);
+        assertEquals(1, quadsFilled(styled, red).length);
+        assertTrue(quadsFilled(styled, red)[0].bounds.contains(readme));
+        // Selected: the selected style, and no hover style on it
+        click(styled, 'readme');
+        assertEquals(1, quadsFilled(styled, blue).length);
+        assertEquals(0, quadsFilled(styled, red).length);
+        assertTrue(quadsFilled(styled, blue)[0].bounds.contains(readme));
+        tree = plainTree;
+        click(plain, 'readme');
+        assertEquals(0, quadsFilled(plain, blue).length);
+    }
+
+    function testAListItemsOwnHoverWinsOverTheTrees() {
+        final red = hsla(0., 0.75, 0.5, 1.);
+        final green = hsla(0.3, 0.75, 0.5, 1.);
+        newTree(project());
+        final cx = open((_, _) -> {
+            final tree = Tree.component(tree, (ix, entry, _, _, _) -> {
+                final item = new ListItem(ElementId.NamedInteger('file', ix)).child(probe('row-' + entry.item().id, div().child(entry.item().label)));
+                return entry.item().id == 'readme' ? item.hover(s -> s.bg(green)) : item;
+            }).rowHover(s -> s.bg(red));
+            return div().w(px(300.)).h(px(240.)).child(tree);
+        }, 480, 320, true);
+        frame(cx);
+        cx.simulateMouseMove(boundsOf(cx, 'row-readme').center());
+        frame(cx);
+        assertEquals(1, quadsFilled(cx, green).length);
+        assertEquals(0, quadsFilled(cx, red).length);
+        cx.simulateMouseMove(boundsOf(cx, 'row-empty').center());
+        frame(cx);
+        assertEquals(0, quadsFilled(cx, green).length);
+        assertEquals(1, quadsFilled(cx, red).length);
+    }
+
+    function rightClick(cx:VisualTestContext, at:Point):Void {
+        cx.simulateMouseMove(at);
+        cx.simulateMouseDown(at, Right);
+        cx.simulateEvent(new MouseUpEvent(Right, at, Modifiers.none(), 1));
+        frame(cx);
+        frame(cx);
+    }
+
+    function testTheRootContextMenuOpensOnTheEmptyArea() {
+        newTree(project());
+        final built:Array<String> = [];
+        final chosen:Array<String> = [];
+        final cx = show(tree -> tree
+            .contextMenu((ix, entry, menu, _, _) -> {
+                built.push(entry.item().id);
+                return menu.item(glaze.kit.menu.PopupMenu.PopupMenuItem.create('Rename').onClick((_, _, _) -> chosen.push('rename ' + entry.item().id)));
+            })
+            .rootContextMenu((menu, _, _) -> {
+                built.push('root');
+                return menu.item(glaze.kit.menu.PopupMenu.PopupMenuItem.create('New file').onClick((_, _, _) -> chosen.push('new file')));
+            }));
+        final empty = new Point(150., 200.);
+        final readme = boundsOf(cx, 'row-readme').center();
+        assertTrue(empty.y > boundsOf(cx, 'row-readme').bottom() + 20.);
+
+        // On a row: the row's menu only
+        rightClick(cx, readme);
+        assertEquals('readme', built.join(','));
+        cx.simulateKeystrokes('down enter');
+        frame(cx);
+        assertEquals('rename readme', chosen.join(','));
+
+        // On the empty area: the tree's menu
+        rightClick(cx, empty);
+        assertEquals('readme,root', built.join(','));
+        cx.simulateKeystrokes('down enter');
+        frame(cx);
+        assertEquals('rename readme,new file', chosen.join(','));
+
+        // The tree's menu is open; a right click on a row replaces it with the row's
+        rightClick(cx, empty);
+        assertEquals('readme,root,root', built.join(','));
+        rightClick(cx, boundsOf(cx, 'row-src').center());
+        assertEquals('readme,root,root,src', built.join(','));
+        cx.simulateKeystrokes('down enter');
+        frame(cx);
+        assertEquals('rename readme,new file,rename src', chosen.join(','));
+        // Nothing is left open: the keys choose nothing more
+        cx.simulateKeystrokes('down enter');
+        frame(cx);
+        assertEquals('rename readme,new file,rename src', chosen.join(','));
+    }
+
+    function testWithoutARootContextMenuTheTreeIsDrawnAsBefore() {
+        newTree(project());
+        final plain = show();
+        final plainSignature = sceneSignature(plain);
+        newTree(project());
+        final withMenu = show(tree -> tree.rootContextMenu((menu, _, _) -> menu));
+        assertEquals(plainSignature, sceneSignature(withMenu));
+    }
+
     function testARowThatRefusesTheDropNeitherHighlightsNorTakesIt() {
         final drops:Array<String> = [];
         final cx = dragTree(drops);

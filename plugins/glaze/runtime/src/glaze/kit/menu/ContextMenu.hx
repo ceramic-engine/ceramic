@@ -98,11 +98,23 @@ class ContextMenu<E:ParentElement & Styled> extends Element implements ParentEle
     /**
      * Build the context menu using the given builder function.
      */
-    @:allow(glaze.kit.menu)
+    @:allow(glaze.kit)
     function menu(builder:MenuBuilder):ContextMenu<E> {
         menuBuilder = builder;
         return this;
     }
+
+    /**
+     * Binds `control` to the state of this menu when it is laid out, so
+     * that other code can close it (addition, KIT-017).
+     */
+    @:allow(glaze.kit)
+    function withControl(control:Null<ContextMenuControl>):ContextMenu<E> {
+        this.control = control;
+        return this;
+    }
+
+    var control:Null<ContextMenuControl> = null;
 
     public function extend(elements:Array<AnyElement>):Void {
         if (element != null) {
@@ -145,6 +157,7 @@ class ContextMenu<E:ParentElement & Styled> extends Element implements ParentEle
 
         return withElementState(id, window, cx, (this_, state, window, cx) -> {
             final shared = state.sharedState;
+            if (this_.control != null) @:privateAccess this_.control.shared = shared;
             final position = shared.position;
             final open = shared.open;
             if (shared.triggerFocusHandle == null) {
@@ -411,6 +424,32 @@ class ContextMenuState implements glaze.Droppable {
 
     public function drop():Void {
         sharedState.dropMenu();
+    }
+
+}
+
+/**
+ * Closes a context menu from outside (addition, KIT-017): bound by
+ * `ContextMenu.withControl` to the state of the menu laid out last.
+ */
+@:allow(glaze.kit)
+class ContextMenuControl {
+
+    var shared:Null<ContextMenuSharedState> = null;
+
+    public function new() {}
+
+    public function isOpen():Bool {
+        return shared != null && shared.open;
+    }
+
+    /** Closes the menu if it is open or about to open. */
+    public function close(window:Window):Void {
+        final shared = this.shared;
+        if (shared == null || !shared.open) return;
+        shared.open = false;
+        shared.dropMenu();
+        window.refresh();
     }
 
 }

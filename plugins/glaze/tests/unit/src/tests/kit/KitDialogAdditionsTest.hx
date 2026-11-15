@@ -133,6 +133,30 @@ class KitDialogAdditionsTest extends KitAdditionsTestCase {
         assertTrue(isOpen(cx));
     }
 
+    // KIT-018
+
+    /** The shadows of the frame drawn last: blur radius in logical pixels and color. */
+    function shadows(cx:VisualTestContext):Array<String> {
+        return cx.update((window, _) -> {
+            final scale = window.scaleFactor();
+            return [for (shadow in window.renderedScene().shadows)
+                '${shadow.blurRadius / scale}:${Math.round(shadow.colorH * 100) / 100},${Math.round(shadow.colorS * 100) / 100},${Math.round(shadow.colorL * 100) / 100},${Math.round(shadow.colorA * 100) / 100}'];
+        });
+    }
+
+    function testByDefaultTheDialogHasItsOwnShadow() {
+        assertEquals('25:0,0,0,0.1|10:0,0,0,0.1', shadows(dialog(d -> d.title('Hello'))).join('|'));
+    }
+
+    function testAShadowSetByTheCallerIsKept() {
+        final own = new glaze.BoxShadow(px(0.), px(4.), hsla(0.6, 0.5, 0.5, 0.4)).withBlurRadius(px(12.));
+        assertEquals('12:0.6,0.5,0.5,0.4', shadows(dialog(d -> d.title('Hello').shadow([own]))).join('|'));
+        // The geometry of the dialog does not depend on it
+        assertTrue(surface(dialog(d -> d.title('Hello'))).equals(surface(dialog(d -> d.title('Hello').shadow([own])))));
+        // An empty list: no shadow
+        assertEquals('', shadows(dialog(d -> d.title('Hello').shadow([]))).join('|'));
+    }
+
     function testAHeaderIsRenderedAboveTheTitle() {
         final cx = dialog(d -> d
             .header(probe('header', div().h(px(24.)).child('Back')))

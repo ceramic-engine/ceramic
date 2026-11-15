@@ -91,6 +91,15 @@ class ButtonCustomVariant {
     @:allow(glaze.kit.button)
     var activeValue:Hsla;
 
+    @:allow(glaze.kit.button)
+    var hoverForegroundValue:Null<Hsla> = null;
+
+    @:allow(glaze.kit.button)
+    var activeForegroundValue:Null<Hsla> = null;
+
+    @:allow(glaze.kit.button)
+    var exactValue:Bool = false;
+
     public function new(cx:App) {
         final theme = Theme.global(cx);
         colorValue = theme.transparent;
@@ -129,6 +138,38 @@ class ButtonCustomVariant {
      */
     public function active(color:Hsla):ButtonCustomVariant {
         activeValue = color;
+        return this;
+    }
+
+    /**
+     * Set the foreground color (label and icon) of the hovered button, and
+     * of the pressed one unless `activeForeground` is set. Default is
+     * `null`: the foreground color in every state (addition, KIT-010).
+     */
+    public function hoverForeground(color:Null<Hsla>):ButtonCustomVariant {
+        hoverForegroundValue = color;
+        return this;
+    }
+
+    /**
+     * Set the foreground color of the pressed button. Default is `null`:
+     * the hover foreground when one is set, else the foreground color
+     * (addition, KIT-010).
+     */
+    public function activeForeground(color:Null<Hsla>):ButtonCustomVariant {
+        activeForegroundValue = color;
+        return this;
+    }
+
+    /**
+     * With `true`, the colors are used as given: the background of the
+     * resting button is `color` itself and the border of an outline button
+     * too. By default (`false`, gpui-kit's rule) the resting background is
+     * `color` mixed with 20 % of transparent, and the outline border is
+     * mixed with 40 % of transparent white (addition, KIT-010).
+     */
+    public function exact(exact:Bool = true):ButtonCustomVariant {
+        exactValue = exact;
         return this;
     }
 
@@ -227,10 +268,16 @@ class ButtonVariantTools {
         return switch [self, other] {
             case [Custom(a), Custom(b)]:
                 a.colorValue.equals(b.colorValue) && a.foregroundValue.equals(b.foregroundValue) && a.shadowValue == b.shadowValue
-                    && a.hoverValue.equals(b.hoverValue) && a.activeValue.equals(b.activeValue);
+                    && a.hoverValue.equals(b.hoverValue) && a.activeValue.equals(b.activeValue)
+                    && a.exactValue == b.exactValue && sameColor(a.hoverForegroundValue, b.hoverForegroundValue)
+                    && sameColor(a.activeForegroundValue, b.activeForegroundValue);
             case [Custom(_), _] | [_, Custom(_)]: false;
             case _: Type.enumIndex(self) == Type.enumIndex(other);
         }
+    }
+
+    static function sameColor(a:Null<Hsla>, b:Null<Hsla>):Bool {
+        return a == null ? b == null : (b != null && a.equals(b));
     }
 
     static function outlineBackground(self:ButtonVariant, state:ButtonStyleState, cx:App):IntoBackground {
@@ -259,7 +306,7 @@ class ButtonVariantTools {
             case [Info, Hovered]: tokens.infoHover.background.opacity(0.2);
             case [Info, Active]: tokens.infoActive.background.opacity(0.4);
             case [Ghost | Link | Text, _]: theme.transparent;
-            case [Custom(colors), _]: colors.colorValue.mixOklab(theme.transparent, 0.2);
+            case [Custom(colors), _]: colors.exactValue ? colors.colorValue : colors.colorValue.mixOklab(theme.transparent, 0.2);
         }
     }
 
@@ -278,7 +325,7 @@ class ButtonVariantTools {
             case Success: tokens.buttonSuccess.background;
             case Info: tokens.buttonInfo.background;
             case Ghost | Link | Text: theme.transparent;
-            case Custom(colors): colors.colorValue.mixOklab(theme.transparent, 0.2);
+            case Custom(colors): colors.exactValue ? colors.colorValue : colors.colorValue.mixOklab(theme.transparent, 0.2);
         }
     }
 
@@ -310,7 +357,7 @@ class ButtonVariantTools {
             case Warning: outline ? theme.warning.mixOklab(transparentWhite(), 0.4) : theme.buttonWarning;
             case Success: outline ? theme.success.mixOklab(transparentWhite(), 0.4) : theme.buttonSuccess;
             case Ghost | Link | Text: theme.transparent;
-            case Custom(colors): outline ? colors.colorValue.mixOklab(transparentWhite(), 0.4) : colors.colorValue;
+            case Custom(colors): outline && !colors.exactValue ? colors.colorValue.mixOklab(transparentWhite(), 0.4) : colors.colorValue;
         }
     }
 
@@ -357,6 +404,7 @@ class ButtonVariantTools {
             case Link: theme.linkHover;
             case Text: theme.foreground;
             case Ghost: theme.accentForeground;
+            case Custom(colors) if (colors.hoverForegroundValue != null): colors.hoverForegroundValue;
             case _: textColor(self, outline, cx);
         }
         return new ButtonVariantStyle(bg, border, fg, underline(self, cx), shadow(self, outline, cx));
@@ -383,6 +431,8 @@ class ButtonVariantTools {
         final fg = switch self {
             case Link: theme.linkActive;
             case Text: theme.foreground.opacity(0.7);
+            case Custom(colors) if (colors.activeForegroundValue != null): colors.activeForegroundValue;
+            case Custom(colors) if (colors.hoverForegroundValue != null): colors.hoverForegroundValue;
             case _: textColor(self, outline, cx);
         }
         return new ButtonVariantStyle(bg, border, fg, underline(self, cx), shadow(self, outline, cx));

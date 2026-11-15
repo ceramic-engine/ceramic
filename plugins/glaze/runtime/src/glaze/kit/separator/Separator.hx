@@ -48,6 +48,8 @@ class Separator extends Component implements Styled {
 
     var lineStyle:SeparatorStyle = Solid;
 
+    var labelRefinement:Null<StyleRefinement> = null;
+
     function new(base:Div, axis:Axis) {
         super();
         this.base = base;
@@ -97,6 +99,16 @@ class Separator extends Component implements Styled {
     /**
      * Use the dashed line style.
      */
+    /**
+     * Styles the label over the kit's own look (its paddings, text size,
+     * background and color): `separator.labelStyle(s -> s.bg(surface).px3())`.
+     * Addition without upstream equivalent (KIT-011).
+     */
+    public function labelStyle(f:(glaze.StyleBuilder) -> glaze.StyleBuilder):Separator {
+        labelRefinement = glaze.StyleBuilder.build(f);
+        return this;
+    }
+
     public function dashed():Separator {
         lineStyle = Dashed;
         return this;
@@ -153,16 +165,15 @@ class Separator extends Component implements Styled {
                 case Dashed: renderDashed(axis, color);
             });
         if (label != null) {
-            element.child(
-                div()
-                    .px2()
-                    .py1()
-                    .mxAuto()
-                    .textXs()
-                    .bg(theme.tokens.background.background)
-                    .textColor(theme.mutedForeground)
-                    .child(label)
-            );
+            final labelElement = div()
+                .px2()
+                .py1()
+                .mxAuto()
+                .textXs()
+                .bg(theme.tokens.background.background)
+                .textColor(theme.mutedForeground);
+            if (labelRefinement != null) labelElement.refineStyle(labelRefinement);
+            element.child(labelElement.child(label));
         }
         return element;
     }

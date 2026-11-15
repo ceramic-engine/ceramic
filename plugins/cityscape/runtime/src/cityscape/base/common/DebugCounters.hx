@@ -46,6 +46,12 @@ class DebugCounters {
     public static var paintRenders:Int = 0;
 
     /**
+     * Times an editor view was notified because the focus entered or left
+     * it without the editor moving it (the focus listeners of the view).
+     */
+    public static var focusNotifications:Int = 0;
+
+    /**
      * Times a change of context keys asked the `CityscapeEditor` host to
      * render again (its key context was stale).
      */

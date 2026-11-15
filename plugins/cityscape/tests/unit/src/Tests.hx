@@ -104,6 +104,8 @@ class Tests {
         runner.add(new tests.view.KeystrokeRenderCountTest());
         runner.add(new tests.view.EditorOptionsPropTest());
         runner.add(new tests.view.KeyContextNotificationTest());
+        runner.add(new tests.view.StaleEditorCacheTest());
+        runner.add(new tests.view.KeyBindingOrderTest());
         runner.add(new tests.view.HoverViewTest());
         runner.add(new tests.view.SuggestViewTest());
         runner.add(new tests.view.OverflowWidgetsBoundsTest());

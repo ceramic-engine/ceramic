@@ -243,6 +243,46 @@ class KitTabAdditionsTest extends KitAdditionsTestCase {
         return measure(label) - measure('');
     }
 
+/// KIT-011, KIT-012
+
+    function testALastEmptySpaceSetByTheCallerIsAlwaysDrawn() {
+        // The default one is drawn next to a suffix or the menu only
+        final plain = bar(bar -> bar);
+        final plainEnd = boundsOf(plain, 'tab-1').right();
+        final own = bar(bar -> bar.lastEmptySpace(probe('space', div().w(px(30.)).h(px(10.)))));
+        final space = boundsOf(own, 'space');
+        assertNotNull(space);
+        assertEquals(30., space.size.width);
+        assertEquals(boundsOf(own, 'tab-1').right(), space.left());
+        // The tabs did not move
+        assertEquals(plainEnd, boundsOf(own, 'tab-1').right());
+        // Next to a suffix it was already drawn, and still is
+        final withSuffix = bar(bar -> bar.suffix(div().w(px(20.))).lastEmptySpace(probe('space', div().w(px(30.)).h(px(10.)))));
+        assertEquals(30., boundsOf(withSuffix, 'space').size.width);
+    }
+
+    function testLabelStyleStylesTheLabelAlone() {
+        final red = color(0.);
+        final plain = bar(bar -> bar, (tab, _) -> tab.suffix(probe('suffix', div().size(px(16.)))));
+        final styled = bar(bar -> bar, (tab, ix) -> tab.suffix(probe('suffix', div().size(px(16.)))).labelStyle(ix == 0 ? (s -> s.bg(red).lineThrough()) : null));
+        // Same geometry
+        assertTrue(boundsOf(plain, 'tab-0').equals(boundsOf(styled, 'tab-0')));
+        assertTrue(boundsOf(plain, 'tab-1').equals(boundsOf(styled, 'tab-1')));
+        // One red box, inside the first tab, that leaves the suffix out
+        final boxes = quadsFilled(styled, red);
+        assertEquals(1, boxes.length);
+        final tab = boundsOf(styled, 'tab-0');
+        final suffix = boundsOf(styled, 'suffix');
+        assertTrue(boxes[0].bounds.left() >= tab.left() && boxes[0].bounds.right() <= tab.right());
+        assertTrue(boxes[0].bounds.size.width < tab.size.width - 16.);
+        assertEquals(0, quadsFilled(plain, red).length);
+        // With a capped label, the style is on the capped box
+        final capped = bar(bar -> bar.labelMaxWidth(px(20.)), (tab, _) -> tab.label(LONG_LABEL).labelStyle(s -> s.bg(red)));
+        final cappedBoxes = quadsFilled(capped, red);
+        assertEquals(2, cappedBoxes.length);
+        assertEquals(20., cappedBoxes[0].bounds.size.width);
+    }
+
 /// KIT-002
 
     function testAHoverGroupStylesTheSuffix() {

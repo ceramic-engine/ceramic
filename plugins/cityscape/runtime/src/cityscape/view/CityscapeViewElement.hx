@@ -342,6 +342,11 @@ class CityscapeViewElement extends Element {
         v.syncFocus(window, cx);
         final focused = v.focusHandle.isFocused(window);
         window.handleInput(v.focusHandle, state.inputHandlerFor(bounds, view), cx);
+        // What this painting holds of the focus (the input handler, the
+        // cursors) and of the layout (the hitboxes): when one changes
+        // without the view being notified, the next frame paints the editor
+        // again instead of taking it from the window's view cache
+        v.recordPaintDependencies(window, cx);
 
         final layoutInfo = options.get(EditorOption.layoutInfo);
         final lineHeight:Float = options.get(EditorOption.lineHeight);

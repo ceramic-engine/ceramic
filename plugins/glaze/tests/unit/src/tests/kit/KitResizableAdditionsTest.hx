@@ -147,6 +147,93 @@ class KitResizableAdditionsTest extends KitAdditionsTestCase {
         assertEquals('0,1', h.indices.join(','));
     }
 
+    // KIT-013, KIT-014
+
+    /** Two panels, 200 px then the rest of 400 px; `size` is the handle size (`null`: the default). */
+    function pair(size:Null<Float>, width:Array<Float>, ?reported:Array<String>):VisualTestContext {
+        final cx = open((_, _) -> {
+            final group = Resizable.hResizable('group');
+            if (size != null) group.handleSize(px(size));
+            if (reported != null) group.onLayoutSizes((state, _, cx) -> reported.push(state.read(cx).sizes().join('/')));
+            return div().w(px(width[0])).h(px(100.)).child(group.children([
+                Resizable.resizablePanel().size(px(200.)).child(probe('first', div().sizeFull())),
+                Resizable.resizablePanel().child(probe('second', div().sizeFull())),
+            ]));
+        });
+        for (_ in 0...3) draw(cx);
+        return cx;
+    }
+
+    /** The quads of the handle line: full height, starting at the boundary. */
+    function lines(cx:VisualTestContext):Array<Float> {
+        final border = cx.update((_, app) -> glaze.kit.theme.Theme.global(app).border);
+        return [for (entry in quadsFilled(cx, border)) if (entry.bounds.size.height == 100. && entry.bounds.left() == 200.) entry.bounds.size.width];
+    }
+
+    function testHandleSizeSetsTheThicknessOfTheLine() {
+        assertEquals('1', lines(pair(null, [400.])).join(','));
+        assertEquals('1', lines(pair(1., [400.])).join(','));
+        assertEquals(sceneSignature(pair(null, [400.])), sceneSignature(pair(1., [400.])));
+        assertEquals('3', lines(pair(3., [400.])).join(','));
+        // Zero: nothing is drawn
+        final none = pair(0., [400.]);
+        assertEquals('', lines(none).join(','));
+        // The panels are where they were
+        assertEquals(200., boundsOf(none, 'second').left());
+        assertEquals(200., boundsOf(none, 'second').size.width);
+    }
+
+    function testAHandleOfSizeZeroStillResizes() {
+        final cx = pair(0., [400.]);
+        // The band is the 4 px on each side of the boundary
+        for (start in [197., 203.]) {
+            final boundary = boundsOf(cx, 'second').left();
+            final from = boundary + (start - 200.);
+            cx.simulateMouseDown(new Point(from, 50.), Left);
+            cx.simulateMouseMove(new Point(from + 10., 50.), Left);
+            cx.simulateMouseMove(new Point(boundary + 30., 50.), Left);
+            cx.simulateMouseUp(new Point(boundary + 30., 50.), Left);
+            for (_ in 0...3) draw(cx);
+            assertEquals(boundary + 30., boundsOf(cx, 'second').left(), 'dragged from ${start}');
+        }
+        // Outside the band nothing moves
+        final boundary = boundsOf(cx, 'second').left();
+        cx.simulateMouseDown(new Point(boundary + 6., 50.), Left);
+        cx.simulateMouseMove(new Point(boundary + 20., 50.), Left);
+        cx.simulateMouseMove(new Point(boundary + 40., 50.), Left);
+        cx.simulateMouseUp(new Point(boundary + 40., 50.), Left);
+        for (_ in 0...3) draw(cx);
+        assertEquals(boundary, boundsOf(cx, 'second').left());
+    }
+
+    function testOnLayoutSizesReportsAContainerResize() {
+        final reported:Array<String> = [];
+        final width = [400.];
+        final cx = pair(null, width, reported);
+        // Once for the first layout
+        assertEquals(1, reported.length);
+        // Nothing while nothing changes
+        rerender(cx);
+        for (_ in 0...3) draw(cx);
+        assertEquals(1, reported.length);
+        // The container grows: the sizes follow and are reported
+        width[0] = 600.;
+        rerender(cx);
+        for (_ in 0...3) draw(cx);
+        assertEquals(2, reported.length);
+        final sizes = cx.update((_, _) -> [for (selector in ['first', 'second']) boundsOf(cx, selector).size.width].join('/'));
+        assertEquals(sizes, reported[1]);
+        assertEquals(600., boundsOf(cx, 'first').size.width + boundsOf(cx, 'second').size.width);
+        // A drag is reported by `onResize`, not here
+        final boundary = boundsOf(cx, 'second').left();
+        cx.simulateMouseDown(new Point(boundary - 2., 50.), Left);
+        cx.simulateMouseMove(new Point(boundary + 10., 50.), Left);
+        cx.simulateMouseMove(new Point(boundary + 30., 50.), Left);
+        cx.simulateMouseUp(new Point(boundary + 30., 50.), Left);
+        for (_ in 0...3) draw(cx);
+        assertEquals(2, reported.length);
+    }
+
     function testOnResizingIsCalledDuringTheDrag() {
         final resizing:Array<String> = [];
         final resized = [0];

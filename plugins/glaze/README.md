@@ -203,7 +203,7 @@ The define `glaze_scrollbar_appearance` (`fade`, `instant` or `gpuikit`) changes
 
 A few options of the kit have no equivalent in gpui-kit. Each one is off by default, so a component left alone looks and behaves like gpui-kit's. They are listed as KIT-nnn in [docs/DEVIATIONS.md](docs/DEVIATIONS.md).
 
-**Tabs.** A style set on a `Tab` wins over its variant, like on a `Button`: `Tab.component().h(px(34)).textSize(px(13)).bg(color)`, and `.hover(s -> s.bg(color))` for the pointer. `TabVariant.Custom` is a rectangular tab filled from the theme tokens `tab.background`, `tab.hover.background`, `tab.hover.foreground` and `tab.active.background`, with a geometry of your own:
+**Tabs.** A style set on a `Tab` wins over its variant, like on a `Button`: `Tab.component().h(px(34)).textSize(px(13)).bg(color)`, and `.hover(s -> s.bg(color))` for the pointer. `TabVariant.Custom` is a rectangular tab filled from the theme tokens `tab.background`, `tab.hover.background`, `tab.hover.foreground` and `tab.active.background`, with a geometry of your own: `Tab.labelStyle(s -> s.textColor(red).lineThrough())` styles the label alone, not the prefix, the suffix or the children. A `TabBar.lastEmptySpace(element)` set by the caller is always drawn after the last tab (the default one only next to a suffix or the menu), so it can hold a button.
 
 ```haxe
 TabBar.component('documents')
@@ -220,7 +220,7 @@ TabBar.component('documents')
         .contextMenu((menu, _, _) -> menu.item(PopupMenuItem.create('Close')))])
 ```
 
-**Resizable panels.** `resizablePanel().shrinkPriority(n)` orders the panels that give up space when the window shrinks (highest first, each down to the start of its `sizeRange`; a `fixed()` panel with a priority gets its size back when the window grows again). `hResizable(id).onResizing((state, window, cx) -> ...)` follows a drag move by move, `onResize` still reports its end. A handle appearance can tell the dividers of a group apart with `handle.index()`. A group whose first panel is hidden no longer keeps a handle on its leading edge.
+**Resizable panels.** `resizablePanel().shrinkPriority(n)` orders the panels that give up space when the window shrinks (highest first, each down to the start of its `sizeRange`; a `fixed()` panel with a priority gets its size back when the window grows again). `hResizable(id).onResizing((state, window, cx) -> ...)` follows a drag move by move, `onResize` still reports its end. A handle appearance can tell the dividers of a group apart with `handle.index()`. A group whose first panel is hidden no longer keeps a handle on its leading edge. `.handleSize(px(0))` on a group sets the thickness of the divider line (1 px by default; with zero nothing is drawn over the panels and the 4 px on each side of the boundary still resize), and `.onLayoutSizes((state, window, cx) -> ...)` reports the sizes after the container changed size (`onResize` reports the drags).
 
 ```haxe
 hResizable('workspace')
@@ -244,9 +244,13 @@ Tree.component(state, renderRow)
     .dropOnRoot(DraggedFile, (file, _, _) -> move(file.id, null))
 ```
 
-**Title bar.** `TitleBar.component().platform(TitleBarPlatform.Windows)` gives one title bar the look and behaviour of another system (`Mac`, `Windows`, `Linux`, `Web`) without touching `OperatingSystem.current`, which also decides the key bindings: the Windows or Linux bar can be shown and tested on a Mac. On the Windows look, the minimize, maximize or restore, and close buttons act on the window themselves (`onCloseWindow` replaces the default close); `.controlClicks(false)` leaves them to a platform that handles the window control areas.
+A drag over a file can highlight its folder instead of the file: `.dropTargetFor((ix, entry) -> entry.isFolder() ? ix : state.read(cx).parentIndex(ix))` names the row that takes the `dropTargetStyle` (`null`: the tree itself, with its `rootDropTargetStyle`); the drop still goes to the row under the pointer. `.rootContextMenu((menu, window, cx) -> menu.item(...))` is the menu of the empty area under the rows; a right click on a row opens the row's menu only. `.rowHover(s -> s.bg(color))` and `.rowSelected(s -> s.bg(color))` replace the theme's `list.hover` and `list.active` for the rows of one tree (`ListItem.hover(style)` and `ListItem.selectedStyle(style)` do it for one item of any list).
 
-**Dialog.** `dialog.maxH(px(480))` and `dialog.maxHRatio(0.85)` limit the height of a dialog (it scrolls its children beyond). `dialog.overlayCloseOnClick(true)` closes on a whole click of the overlay, press and release, so a text selection that ends outside the dialog does not close it. `dialog.header(element)` places a row above the title, for a back button.
+**Title bar.** `TitleBar.component().platform(TitleBarPlatform.Windows)` gives one title bar the look and behaviour of another system (`Mac`, `Windows`, `Linux`, `Web`) without touching `OperatingSystem.current`, which also decides the key bindings: the Windows or Linux bar can be shown and tested on a Mac. On the Windows look, the minimize, maximize or restore, and close buttons act on the window themselves (`onCloseWindow` replaces the default close); `.controlClicks(false)` leaves them to a platform that handles the window control areas. `.windowControls(false)` draws no window button (for a window that keeps the system's decorations), `.controlWidth(px(46))` sets their width, and a left padding set on the bar is the whole left padding, in fullscreen too (the 12 px a fullscreen window adds are for the default padding).
+
+**Dialog.** `dialog.maxH(px(480))` and `dialog.maxHRatio(0.85)` limit the height of a dialog (it scrolls its children beyond). `dialog.overlayCloseOnClick(true)` closes on a whole click of the overlay, press and release, so a text selection that ends outside the dialog does not close it. `dialog.header(element)` places a row above the title, for a back button. A `shadow` set on the dialog replaces the default one (`dialog.shadow([])` for none).
+
+**Custom button colors.** `new ButtonCustomVariant(cx).color(bg).foreground(fg).hover(hoverBg).hoverForeground(hoverFg)` changes the label and icon color under the pointer (and while pressed, unless `activeForeground` is set). Like gpui-kit, the resting background of a custom variant is `color` mixed with 20 % of transparent; `.exact()` uses the colors as given.
 
 **App menu behind a button.** The menus declared once with `cx.setMenus(...)` feed the native menu bar on macOS and, where no menu bar shows, a drawn menu: `Button.component('menu').icon(IconName.Menu).appMenu()` (with `using glaze.kit.menu.DropdownMenu;`) opens every app menu as a submenu under the button. `menu.withAppMenus(window, cx)` and `menu.withMenuItems(items, window, cx)` do the same inside any `PopupMenu` builder (a context menu, a dropdown of your own).
 
@@ -265,6 +269,8 @@ cx.subscribe(codes, SuggestInputEvent, (view, _, event, cx) -> switch event {
 // in render
 SuggestInput.component(codes).input(input -> input.small())
 ```
+
+**Alert content, separator label.** `Alert.info('note', '').content(element)` shows any element in place of the message, a `RichText` for example. `Separator.horizontal().label('Section').labelStyle(s -> s.bg(surface).px3().textSize(px(11)))` styles the label, to match a surface that is not the theme's background.
 
 ### Code editor
 
@@ -444,6 +450,8 @@ RichText.component('line')
     ])
 ```
 
+`RichTextStyle.baselineShift(Em(0.4))` raises a span from the baseline (a superscript with a smaller `fontSize`, `Em(-0.2)` for a subscript, a few hundredths of an em to center a pill), `lineHeight(Relative(1.6))` gives a span its own line height (it takes part in the height of its line with it, and a box is as tall as it), and the vertical margins of a box make its line taller. A span without a line height of its own counts for its glyphs only, so a shifted span grows the line just by what leaves it.
+
 A style left unset is inherited from the text style around the component. `RichTextStyle.merge(other)` layers two styles. An animation is keyframes of `MotionTransform` (translation, scale, rotation, opacity) with a `Timing` from `glaze.kit.base.motion`: `perRun()` (the default) moves the span in one piece with its box, `perCharacter(stagger)` animates each character, whose words are then never cut by a line end. An animated span never lays the paragraph out again, asks for frames only while it is visible, and stands still under reduced motion (`cx.setReduceMotion(true)`). See ADD-008 in [docs/DEVIATIONS.md](docs/DEVIATIONS.md).
 
 ## Additions to GPUI
@@ -472,6 +480,12 @@ Only translation and scale apply to an element (a rotation is ignored, with an e
 **Glyph transformations.** `window.paintGlyph(origin, fontId, glyphId, fontSize, color, matrix)` and `window.paintEmoji(origin, fontId, glyphId, fontSize, matrix)` draw one glyph moved, scaled or rotated around its origin on the baseline (`TransformationMatrix.unit().rotate(radians(0.02))`), for animated text. An emoji is moved and scaled, not rotated.
 
 **Key sequence delay.** `cx.setPendingInputTimeout(1.5)` sets how long the first keys of a sequence (`cmd-k cmd-s`) wait for the next one before they are replayed. 1 second by default, like GPUI.
+
+**Key sequences that never complete.** The first keys of a sequence wait for the next one during that delay only when they could also be something by themselves: when they have a binding of their own (`cmd-k` bound next to `cmd-k cmd-s`), or when a focused text input would take the key as text. A prefix that only starts longer sequences (`cmd-k` with nothing bound to `cmd-k` alone) waits with no limit, until another key or a focus change: this is GPUI's rule. `cx.setPendingInputAlwaysTimesOut(true)` makes every unfinished sequence time out after the delay (the keys typed so far are replayed, then forgotten), which is what most editors do.
+
+**Hide, Hide Others, Show All.** `MenuItemTools.osAction('Hide My App', new NoAction(), Hide)`, `HideOthers` and `ShowAll` are the three items of a macOS application menu that the system handles itself: no handler to write, and `cmd-h` and `alt-cmd-h` are shown unless the action has its own binding. On other platforms they are regular items.
+
+**Dependencies of a cached view.** A view that draws from something no entity notifies (the focus of a handle, a setting behind a plain reference) calls `window.recordViewDependency(state, () -> changed)` while it renders or paints: when the next frame starts and the check answers true, the view renders instead of being taken from the cache. A persistent component with a `@prop(unobserved)` compared by content overrides `propsApplied():Bool` to render when its parent gave a value whose content really changed.
 
 **Window zoom.** `window.setZoom(1.5)` (or `zoom: 1.5` in the window options) zooms the whole interface like a web page: the window keeps its size on the screen, its viewport becomes 1.5 times smaller in logical pixels, the interface is laid out again and everything is drawn 1.5 times larger, text rasterized at the new size. With a `Glaze` visual, the window is `ui.window`. `window.zoom()` reads it, `window.scaleFactor()` and `window.viewportSize()` answer with the zoom applied.
 

@@ -9,6 +9,7 @@ import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Hsla;
+import glaze.AnyElement;
 import glaze.IntoElement;
 import glaze.Pixels;
 import glaze.StyleRefinement;
@@ -96,6 +97,8 @@ class Alert extends Component implements Styled implements Sizable {
 
     var size:Size = Medium;
 
+    var contentElement:Null<AnyElement> = null;
+
     var bannerValue:Bool = false;
 
     var onCloseHandler:Null<(ClickEvent, Window, App) -> Void> = null;
@@ -149,6 +152,16 @@ class Alert extends Component implements Styled implements Sizable {
         return this;
     }
 
+    /**
+     * Shows `content` in place of the message: any element (a rich text, a
+     * few lines of your own) inside the alert's frame, next to its icon.
+     * Addition without upstream equivalent (KIT-010).
+     */
+    public function content(content:IntoElement):Alert {
+        contentElement = content.intoAnyElement();
+        return this;
+    }
+
     public function withSize(size:IntoSize):Alert {
         this.size = size;
         return this;
@@ -188,7 +201,8 @@ class Alert extends Component implements Styled implements Sizable {
         if (!banner && title != null) {
             body.child(div().wFull().truncate().fontSemibold().child(title));
         }
-        body.child(message.style(TextViewStyle.defaultValue().withParagraphGap(0.2)).intoAnyElement());
+        if (contentElement != null) body.child(contentElement);
+        else body.child(message.style(TextViewStyle.defaultValue().withParagraphGap(0.2)).intoAnyElement());
 
         final content = div().flex().flex1();
         if (banner) content.itemsCenter();

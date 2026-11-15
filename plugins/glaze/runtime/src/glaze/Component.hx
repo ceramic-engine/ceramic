@@ -182,6 +182,20 @@ abstract class Component implements RenderOnce implements tracker.Owner {
     }
 
     /**
+     * Port addition (ADD-010). Called on a persistent component each time
+     * its parent renders it again, right after the props of that render
+     * were assigned (not when the component is created). Return `true` to
+     * render the component in this frame even though no observable prop
+     * changed: a component that compares a `@prop(unobserved)` by content
+     * (options built again at each render of the parent) says here whether
+     * the content really changed. The default is `false`: unobserved props
+     * are applied at the next render, as before.
+     */
+    function propsApplied():Bool {
+        return false;
+    }
+
+    /**
      * Starts the `@autorun` methods (generated).
      */
     @:noCompletion public function __start():Void {}

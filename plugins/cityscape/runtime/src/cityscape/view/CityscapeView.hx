@@ -555,6 +555,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
         eventHandler = null;
         theme.dispose();
         stopBlink();
+        stopListeningToFocus();
         ViewEntities.release(paintView);
         paintView = null;
     }
@@ -589,8 +590,14 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
     public function focus():Void {
         final w = this.window;
         if (w != null) {
+            final had = focusHandle.isFocused(w);
             focusHandle.focus(w, app);
             syncFocus(w, app);
+            if (!had) {
+                // The painting cached by the window has no input handler:
+                // it is painted again, in this frame when one is being drawn
+                notifyChanged();
+            }
         }
     }
 
@@ -945,6 +952,7 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
      */
     public function syncFocus(window:Window, cx:App):Void {
         this.window = window;
+        listenToFocus(window, cx);
         final textFocus = focusHandle.isFocused(window);
         final widgetFocus = textFocus || focusHandle.containsFocused(window, cx);
         if (widgetFocus != lastWidgetFocus) {
@@ -965,6 +973,103 @@ class CityscapeView extends GlazeModel implements glaze.EntityInputHandler imple
                 cursorVisible = true;
             }
         }
+    }
+
+    // The window whose focus changes are listened to, and the listeners
+    var focusListenersWindow:Null<Window> = null;
+    var focusInSubscription:Null<glaze.Subscription> = null;
+    var focusOutSubscription:Null<glaze.Subscription> = null;
+
+    /**
+     * Listens to the focus entering and leaving the editor in `window`
+     * (once per window): the painting is notified, so the input handler,
+     * the cursors and the hitboxes a window keeps in its view cache never
+     * outlive a focus change the editor did not make itself (a dialog, an
+     * inline field or any other element taking the focus, then giving it
+     * back). Glaze calls these listeners after the frame in which the focus
+     * path changed.
+     */
+    function listenToFocus(window:Window, cx:App):Void {
+        if (focusListenersWindow == window) {
+            return;
+        }
+        stopListeningToFocus();
+        focusListenersWindow = window;
+        focusInSubscription = window.onFocusIn(focusHandle, cx, (_, _) -> focusChangedOutside());
+        focusOutSubscription = window.onFocusOut(focusHandle, cx, (_, _, _) -> focusChangedOutside());
+    }
+
+    function stopListeningToFocus():Void {
+        final focusIn = focusInSubscription;
+        if (focusIn != null) {
+            focusIn.dispose();
+            focusInSubscription = null;
+        }
+        final focusOut = focusOutSubscription;
+        if (focusOut != null) {
+            focusOut.dispose();
+            focusOutSubscription = null;
+        }
+        focusListenersWindow = null;
+    }
+
+    function focusChangedOutside():Void {
+        #if cityscape_debug_counters
+        cityscape.base.common.DebugCounters.focusNotifications++;
+        #end
+        // The listeners run while the window finishes drawing its frame,
+        // when a notification does not ask for another frame (GPUI's
+        // rule): notified once the draw is over
+        app.defer(_ -> notifyChanged());
+    }
+
+    /**
+     * Called by the element while it paints: records, for the window's view
+     * cache, the focus and the layout this painting was made with
+     * (`Window.recordViewDependency`). A frame that starts with another
+     * focus or another layout paints the editor again.
+     */
+    public function recordPaintDependencies(window:Window, cx:App):Void {
+        final textFocus = focusHandle.isFocused(window);
+        final options = configuration.options;
+        paintedWindow = window;
+        paintedTextFocus = textFocus;
+        paintedWidgetFocus = textFocus || focusHandle.containsFocused(window, cx);
+        paintedLayoutInfo = options.get(EditorOption.layoutInfo);
+        paintedFontInfo = options.get(EditorOption.fontInfo);
+        paintedLineHeight = options.get(EditorOption.lineHeight);
+        paintedWrappingInfo = options.get(EditorOption.wrappingInfo);
+        var check = paintDependencyCheck;
+        if (check == null) {
+            // one closure for the life of the view: nothing is allocated per paint
+            check = paintDependenciesChanged;
+            paintDependencyCheck = check;
+        }
+        window.recordViewDependency(this, check);
+    }
+
+    // What the last painting was made with (`recordPaintDependencies`)
+    var paintedWindow:Null<Window> = null;
+    var paintedTextFocus:Bool = false;
+    var paintedWidgetFocus:Bool = false;
+    var paintedLayoutInfo:Null<cityscape.common.config.EditorViewOptions.EditorLayoutInfo> = null;
+    var paintedFontInfo:Null<cityscape.common.config.FontInfo> = null;
+    var paintedLineHeight:Float = 0;
+    var paintedWrappingInfo:Null<cityscape.common.config.EditorViewOptions.EditorWrappingInfo> = null;
+    var paintDependencyCheck:Null<() -> Bool> = null;
+
+    function paintDependenciesChanged():Bool {
+        final window = paintedWindow;
+        if (window == null || window.isDestroyed()) {
+            return false;
+        }
+        final textFocus = focusHandle.isFocused(window);
+        if (textFocus != paintedTextFocus || (textFocus || focusHandle.containsFocused(window, app)) != paintedWidgetFocus) {
+            return true;
+        }
+        final options = configuration.options;
+        return options.get(EditorOption.layoutInfo) != paintedLayoutInfo || options.get(EditorOption.fontInfo) != paintedFontInfo
+            || options.get(EditorOption.lineHeight) != paintedLineHeight || options.get(EditorOption.wrappingInfo) != paintedWrappingInfo;
     }
 
     var lastVisibleStart:Int = -1;

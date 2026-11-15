@@ -491,6 +491,139 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** `KitSuggestInputTest`: filtering and its order while typing, case, Enter keeping free text, arrows and Enter picking, the ends of the list and up leaving it, down on an empty field, Escape closing then propagating, a click picking, the list placed under the field and scrolled to the highlight, `setValue` and `setSuggestions`, the blur closing the list.
 - **Upstream.** Not proposed.
 
+### KIT-009: TitleBar (no window buttons, button width, fullscreen padding)
+
+- **Component.** gpui-kit `TitleBar` (`crates/component/src/title_bar.rs`). Port: `runtime/src/glaze/kit/TitleBar.hx`.
+- **Behaviour of the original.** The Windows and Linux looks always draw their minimize, maximize and close buttons, 34 px wide (`TITLE_BAR_HEIGHT`). In a fullscreen window the inner bar gets 12 px of left padding on every native look, whatever the caller's own padding.
+- **Addition.**
+  - `TitleBar.windowControls(false)`: the bar draws no window button and keeps everything else of its look (padding, drag area, double click). For a window that keeps the decorations of the system.
+  - `TitleBar.controlWidth(px)`: the width of each window button.
+  - The 12 px of a fullscreen window are added only when the caller did not set a left padding on the bar (`pl`, `px`, `p`): a caller's padding is then the whole left padding.
+- **Default.** `windowControls` is true and `controlWidth` is null (34 px): unchanged. The fullscreen rule changes one case: a bar with a left padding set by the caller, in a fullscreen window, loses the extra 12 px.
+- **Scope.** None in the golden (no scene is fullscreen, none sets a left padding on a title bar).
+- **Tests.** `KitTitleBarAdditionsTest`: no control area and no click on the buttons' place with `windowControls(false)`, the scene of `windowControls(true)` equal to the default, the place of the buttons and their clicks with `controlWidth(46)`, the left of the title in fullscreen with the default padding (92), a padding of 20 and a padding of 0.
+- **Upstream.** Not proposed.
+
+### KIT-010: Button custom variant (hover and active foreground, exact colors)
+
+- **Component.** gpui-kit `ButtonCustomVariant` (`crates/component/src/button/button.rs`). Port: `runtime/src/glaze/kit/button/Button.hx`.
+- **Behaviour of the original.** A custom variant has one foreground for every state. Its resting background is not the color given: it is that color mixed with 20 % of transparent in Oklab (`color.mix_oklab(transparent, 0.2)`), and the border of an outline button is mixed with 40 % of transparent white. Hover and active backgrounds are used as given.
+- **Addition.** `ButtonCustomVariant.hoverForeground(color)` (the hovered button, and the pressed one unless `activeForeground(color)` is set), `activeForeground(color)`, and `exact()`: the resting background and the outline border are the color given, unmixed. The disabled state is unchanged (15 % of the color).
+- **Default.** The three are unset: the styles of the four states are the original's. `ButtonVariantTools.equals` compares the new fields.
+- **Scope.** None.
+- **Tests.** `KitButtonAdditionsTest`: one foreground in every state by default, the hover foreground on the hovered and the pressed button (filled and outline), an active foreground over it, the diluted resting background and border by default and the given color with `exact()`, equality, the scene of a button with the fields left unset equal to the scene without them.
+- **Upstream.** Not proposed.
+
+### KIT-011: TabBar, a last empty space set by the caller is always drawn
+
+- **Component.** gpui-kit `TabBar` (`crates/component/src/tab/tab_bar.rs`). Port: `runtime/src/glaze/kit/tab/TabBar.hx`, `runtime/src/glaze/kit/dock/TabGroupSkin.hx`.
+- **Behaviour of the original.** `last_empty_space` (12 px by default) is drawn after the last tab only when the bar has a suffix or the menu button.
+- **Addition.** An element given with `TabBar.lastEmptySpace(element)` is drawn after the last tab in every case, so it can hold a button that follows the last tab. The default one keeps the original's rule, and so do the dock's tab groups (they set theirs through an internal setter that keeps the rule).
+- **Default.** Unchanged for a bar that does not call `lastEmptySpace`. A bar that called it without a suffix or a menu, where it was ignored, now draws it.
+- **Scope.** None in the golden (only the dock sets it, with the original's rule).
+- **Tests.** `KitTabAdditionsTest.testALastEmptySpaceSetByTheCallerIsAlwaysDrawn`.
+- **Upstream.** Not proposed.
+
+### KIT-012: Tab, a style for the label alone
+
+- **Component.** gpui-kit `Tab` (`crates/component/src/tab/tab.rs`). Port: `runtime/src/glaze/kit/tab/Tab.hx`.
+- **Behaviour of the original.** A style set on a tab applies to the whole tab: its prefix, suffix and children take the text color and the decorations too.
+- **Addition.** `Tab.labelStyle((StyleBuilder) -> StyleBuilder)` styles the label alone (a color, a strikethrough). Without a label box (no `maxWidth`, no `labelMaxWidth`) the label is wrapped in a box that takes the style.
+- **Default.** Null: the label is added as before, without a box.
+- **Scope.** None.
+- **Tests.** `KitTabAdditionsTest.testLabelStyleStylesTheLabelAlone`: same geometry, one styled box inside the tab that leaves the suffix out, and the style on the capped box with `labelMaxWidth`.
+- **Upstream.** Not proposed.
+
+### KIT-013: Resizable, the thickness of the handle line
+
+- **Component.** gpui-base `ResizeHandle` and `ResizablePanelGroup` (`crates/base/src/resizable`). Port: `runtime/src/glaze/kit/base/resizable/ResizeHandle.hx`, `ResizablePanel.hx`, `ResizablePanelGroup.hx`, `runtime/src/glaze/kit/resizable/Resizable.hx`.
+- **Behaviour of the original.** The hairline of a handle is 1 px (`HANDLE_SIZE`), drawn over the first pixel of the panel after the boundary, inside a band of 4 px on each side.
+- **Addition.** `ResizablePanelGroup.handleSize(px)` and `ResizeHandle.handleSize(px)` set the thickness; an appearance reads it with `ResizeHandleContext.size()`, and the kit's appearance draws its line with it. Zero is allowed: nothing is drawn at rest over the panels, and the band (4 px on each side of the boundary) still resizes and still shows the kit's hover indicator.
+- **Default.** Null: 1 px, the same elements with the same sizes.
+- **Scope.** None.
+- **Tests.** `KitResizableAdditionsTest`: the line of 1 px by default and with `handleSize(1)` (same scene), 3 px, none with zero and the panels in place; a drag from each side of a zero handle, nothing outside the band.
+- **Upstream.** Not proposed.
+
+### KIT-014: Resizable, sizes changed by a container resize are reported
+
+- **Component.** gpui-base `ResizablePanelGroup`. Port: `runtime/src/glaze/kit/base/resizable/ResizablePanelGroup.hx`.
+- **Behaviour of the original.** `on_resize` is called at the end of a handle drag only. When the container changes size the panels are adjusted and nothing is reported.
+- **Addition.** `ResizablePanelGroup.onLayoutSizes((Entity<ResizableState>, Window, App) -> Void)` is called after a frame in which the container's size along the axis changed (and once for the first layout), when the panel sizes were adjusted, with the sizes of the state. A separate callback: `onResize` stays the callback of the drags, so existing code is not called more often.
+- **Default.** Null: nothing more is called.
+- **Scope.** None.
+- **Tests.** `KitResizableAdditionsTest.testOnLayoutSizesReportsAContainerResize`: once at the first layout, not on a render without a change, once per container resize with the sizes drawn, not on a drag.
+- **Upstream.** Not proposed.
+
+### KIT-015: ListItem and Tree, hover and selected styles of a row
+
+- **Component.** gpui-kit `ListItem` (`crates/component/src/list/list_item.rs`) and `Tree`. Port: `runtime/src/glaze/kit/list/ListItem.hx`, `runtime/src/glaze/kit/tree/Tree.hx`.
+- **Behaviour of the original.** A hovered item takes the theme's `list.hover` background and a selected one `list.active` (or the accent): one color for every list of the application.
+- **Addition.** `ListItem.hover(style)` and `ListItem.selectedStyle(style)` replace these two for one item; `Tree.rowHover(style)` and `Tree.rowSelected(style)` set them on every row of a tree that has none of its own. The hover style, like the default one, is not applied to a selected or disabled item.
+- **Default.** Null: the theme's colors.
+- **Scope.** None.
+- **Tests.** `KitTreeAdditionsTest`: the same scene at rest, the styles in place of the theme colors under the pointer and on the selected row, an item's own hover over the tree's.
+- **Upstream.** Not proposed.
+
+### KIT-016: Tree, the row highlighted by a drag can be another row
+
+- **Component.** Port only (the drag and drop of KIT-004): `runtime/src/glaze/kit/tree/Tree.hx`.
+- **Behaviour before.** While an accepted drag is over a row, that row takes the `dropTargetStyle`.
+- **Addition.** `Tree.dropTargetFor((ix, entry) -> Null<Int>)` names the row to highlight for the row under the pointer (the parent folder of a file, with `TreeState.parentIndex(ix)`); `null` highlights the tree itself with the `rootDropTargetStyle`. Only the highlight moves: `canDrop` and `onDrop` still get the row under the pointer. The row is followed with drag move listeners and kept in an element state of the tree.
+- **Default.** Null: the rows keep their `dragOver` style, nothing else is created.
+- **Scope.** None.
+- **Tests.** `KitTreeAdditionsTest`: the row under the pointer without it; with it, the folder for one of its files and for itself, the tree for a root file, nothing over a refusing row, the drop given to the row under the pointer, nothing left highlighted.
+- **Upstream.** Not applicable.
+
+### KIT-017: Tree, a context menu for the empty area
+
+- **Component.** gpui-kit `Tree` and `ContextMenu` (`crates/component/src/menu/context_menu.rs`). Port: `runtime/src/glaze/kit/tree/Tree.hx`, `runtime/src/glaze/kit/menu/ContextMenu.hx` (`ContextMenuControl`, `withControl`, both internal to the kit).
+- **Behaviour of the original.** `context_menu` is for the rows. A menu for the rest of the tree needs a second `context_menu` around it, whose menu stays open when a row then opens its own.
+- **Addition.** `Tree.rootContextMenu(builder)` opens a menu on a right click (or a long press) outside the rows. A right click on a row opens the row's menu only (its trigger is inside and stops the event) and closes the tree's if it was open.
+- **Default.** Null: the tree element is the same as before.
+- **Scope.** None.
+- **Tests.** `KitTreeAdditionsTest`: the row's menu on a row, the tree's on the empty area, the tree's replaced by a row's, nothing left open, and the same scene as a tree without it.
+- **Upstream.** Not proposed.
+
+### KIT-018: Dialog, a shadow set by the caller is kept
+
+- **Component.** gpui-kit `Dialog` (`crates/component/src/dialog/dialog.rs`). Port: `runtime/src/glaze/kit/dialog/Dialog.hx`.
+- **Behaviour of the original.** The dialog sets its own shadow after the caller's style, so `dialog.shadow(...)` has no effect.
+- **Addition.** A `shadow` set on the dialog is used instead of the default one, with its opacity following the dialog's entrance like the default (`shadow([])` gives none).
+- **Default.** Without a shadow in the caller's style, the default shadow, as before.
+- **Scope.** None in the golden (no scene sets a shadow on a dialog).
+- **Tests.** `KitDialogAdditionsTest`: the two default shadows, the caller's one in their place with the same dialog geometry, none with an empty list.
+- **Upstream.** Not proposed.
+
+### KIT-019: rich text, baseline shift, line height of a span, vertical margins of a box
+
+- **Component.** Port only (ADD-008): `runtime/src/glaze/kit/base/text/InlineHighlight.hx`, `InlineFlow.hx`, `runtime/src/glaze/kit/text/RichText.hx`.
+- **Addition.**
+  - `InlineHighlight.baselineShiftPx` and `baselineShiftEm` (`RichTextStyle.baselineShift(RichLength)`): the span is drawn that far above the baseline of its line (below when negative), and the line grows to hold it.
+  - `InlineHighlight.lineHeightPx` and `lineHeightRelative` (`RichTextStyle.lineHeight(RichLineHeight)`, `Absolute(px)` or `Relative(scale)` of the span's font size): the span takes part in the height of its line with that height, centered on its glyphs. The paragraph's own line height stays the minimum of every line. A `box` with a line height taller than its glyphs is that tall (plus paddings and borders).
+  - The top and bottom margins of a `box` (they were ignored) make the line taller; the box keeps its size.
+- **Rule kept.** A span without a line height of its own takes part in the line with its glyphs only (the engine's rule for every run): a shifted span grows the line by what leaves the room of the line, not by the whole shift. Give it the paragraph's line height to get the line box of a CSS inline box.
+- **Default.** The four fields are null and a box without vertical margins has none: the layout code of a flow without them is the code of before (same operations in the same order). A span with one of the first four is a fragment of its own.
+- **Scope.** None: markdown never sets them. A `RichText` box that already had vertical margins (they did nothing) now grows its line.
+- **Tests.** `RichTextTest`: a shift up, down and in em, with and without a line height; a small raised span that does not grow the line; a line height larger and smaller than the paragraph's, on one line of two; a box as tall as its line height; the margins of a box above and below; the layout key.
+
+### KIT-020: Alert around an element
+
+- **Component.** gpui-kit `Alert` (`crates/component/src/alert.rs`). Port: `runtime/src/glaze/kit/alert/Alert.hx`.
+- **Behaviour of the original.** The body of an alert is its message, a text or a markdown view.
+- **Addition.** `Alert.content(element)` shows any element in place of the message (a `RichText`, a few rows), in the same frame, next to the icon and under the title.
+- **Default.** Unchanged: without `content`, the message is shown.
+- **Scope.** None.
+- **Tests.** `KitPopupAdditionsTest`: the message by default, an element drawn at its own size inside the frame, after the icon.
+### KIT-021: Style of a separator's label
+
+- **Component.** gpui-kit `Separator` (`crates/component/src/separator.rs`). Port: `runtime/src/glaze/kit/separator/Separator.hx`.
+- **Behaviour of the original.** The label has fixed paddings, the extra small text size, the theme's background (which hides the line behind it) and muted foreground. On a surface of another color than the theme's background (a dialog, a card), the label shows as a patch.
+- **Addition.** `Separator.labelStyle(s -> ...)` refines the label's style over the kit's own: its background, paddings, text size, weight, letter spacing, color.
+- **Default.** Unchanged: without `labelStyle`, the label keeps gpui-kit's look.
+- **Scope.** None.
+- **Tests.** `KitPopupAdditionsTest`: no quad of the caller's color by default, the label filled with it and without vertical padding with `labelStyle`.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.
@@ -589,6 +722,35 @@ Features Glaze adds to GPUI's API. Each one is off or neutral by default: an int
 - **Default.** Every new field is null, every new option off: a highlight without them goes through gpui-kit's arithmetic unchanged (the code chip keeps its insets, bounds and radius; two adjacent code spans still make one fragment), and nothing in the markdown view sets them.
 - **Scope.** None in the golden. The gallery page "Rich Text" is added to the pages of the port (`Gallery.portStories`), after the gpui-kit pages.
 - **Tests.** `RichTextTest` (20 tests): sizes on one baseline, the bounds of a box with padding, border and margin, a box kept whole, letter spacing in pixels and em and its width, spaced and bigger spans wrapping, case with a length change and the ranges that follow, white space rules, hanging spaces, alignment, a word animated per character kept whole, no layout while animating (`FLOW_LAYOUTS`), one transform for a whole run, a new descriptor of the same shape keeping the layout, a finite animation that stops asking for frames, reduced motion, a fixed transformation leaving the line alone, a highlight without rich fields unchanged, a box moving with its animated run, a paragraph with an inline element laid out every frame (the engine's rule), the gallery page drawing and animating. The ported gpui-kit text tests pass untouched.
+
+### ADD-009: a view can record what it depends on
+
+- **Component.** Port only: `Window.hx` (`recordViewDependency`), over the existing `ViewDependencies` (the shared scroll handles of ENG-001).
+- **What it does.** `window.recordViewDependency(state, () -> changed)` is called while a view renders, prepaints or paints. When the next frame starts, a view whose check answers true renders like a notified view instead of being reused from the cache. For what no entity notifies: the focus, a setting read through a plain reference. It never asks for a frame.
+- **Cache check.** With `glaze_verify_cache`, a frame during which the focus moved while it was being drawn (a render that focuses a handle: the refresh asked is ignored, GPUI's rule) is not reported; a view that stays stale is reported by the next frame.
+- **Default.** Nothing recorded: nothing changes.
+- **Tests.** Cityscape `StaleEditorCacheTest` (the editor's paint view records its focus and its layout).
+
+### ADD-010: a persistent component can render for a prop that is not observable
+
+- **Component.** Port only: `Component.hx` (`propsApplied`), `Window.useComponent`.
+- **What it does.** `function propsApplied():Bool` is called on a persistent component each time its parent renders it again, after the props were assigned. Returning true renders the component in that frame. A component that compares a `@prop(unobserved)` by content says there whether it really changed, so a parent can build the same value again at each render without rendering the component, and a real change is not left for a later render.
+- **Default.** Returns false: unobserved props are applied at the component's next render, as before.
+- **Tests.** Cityscape `StaleEditorCacheTest` (font size and wrapping through the `options` prop of the editor), `EditorOptionsPropTest`.
+
+### ADD-011: every unfinished key sequence can time out
+
+- **Component.** Port only: `App.hx` (`pendingInputAlwaysTimesOut()`, `setPendingInputAlwaysTimesOut(always)`), `Window.hx`.
+- **What it does.** GPUI starts the countdown of a pending key sequence only when the keys typed so far have a binding of their own, or when a text input would take the key as text. A prefix that only starts longer sequences waits without limit. With `cx.setPendingInputAlwaysTimesOut(true)` it also times out after `pendingInputTimeout()`: the keys are replayed and the sequence is forgotten.
+- **Default.** False: GPUI's rule.
+- **Tests.** `KeyDispatchWindowTest.testAPrefixWithoutABindingWaitsWithoutLimitByDefault`, `testAPrefixWithoutABindingTimesOutWhenAsked`.
+
+### ADD-012: Hide, Hide Others and Show All menu items
+
+- **Component.** Port only: `Menu.hx` (`OsAction.Hide`, `HideOthers`, `ShowAll`), `platform/CeramicPlatformOperations.hx`; Ceramic `ceramic.MenuItemRole` (`HIDE`, `HIDE_OTHERS`, `SHOW_ALL`); clay `linc_sdl_menu_mac.mm`, `MenuItemSpec`.
+- **What it does.** `MenuItemTools.osAction('Hide My App', action, Hide)` gives the item the system's behaviour on macOS: the native item sends `hide:`, `hideOtherApplications:` or `unhideAllApplications:` to the application object, so the system does it and the action is not dispatched. Without a binding of the action, Hide shows `cmd-h` and Hide Others `alt-cmd-h`. On the other platforms, and in the kit's popup of the app menus, they are regular items: the action is dispatched.
+- **Default.** GPUI's six roles are unchanged.
+- **Tests.** `AppMenuBarTest.testHideRolesOfTheApplicationMenu` (roles, default shortcuts, a binding winning). The native part was checked for syntax only (`clang -fsyntax-only`), not run.
 
 ## Decision policy
 

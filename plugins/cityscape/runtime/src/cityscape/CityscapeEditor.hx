@@ -569,6 +569,17 @@ class CityscapeEditor extends Component implements Styled {
         return true;
     }
 
+    /**
+     * `options` is not observable (a host may build the same options again
+     * at each of its renders): when the host gives options whose content
+     * differs from the ones applied, the editor renders in this frame and
+     * applies them, so the lines, the hitboxes and the layout a window
+     * keeps in its view cache never show the old options.
+     */
+    override function propsApplied():Bool {
+        return !cityscape.common.config.OptionValues.equals(options, appliedOptions);
+    }
+
     public function render(window:Window, cx:App):IntoElement {
         #if cityscape_debug_counters
         cityscape.base.common.DebugCounters.hostRenders++;

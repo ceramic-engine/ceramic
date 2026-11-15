@@ -134,6 +134,21 @@ class TitleBar extends Component implements Styled implements ParentElement {
     @prop var controlClicks:Bool = true;
 
     /**
+     * Whether the bar draws the window control buttons (minimize, maximize
+     * or restore, close) on the looks that have them, default true. Turn it
+     * off on a window that keeps the decorations of the system (a native
+     * title bar on Windows): the bar keeps its look, padding and drag area,
+     * without buttons (addition, KIT-009).
+     */
+    @prop var windowControls:Bool = true;
+
+    /**
+     * The width of each window control button, `TITLE_BAR_HEIGHT` (34) by
+     * default (addition, KIT-009).
+     */
+    @prop var controlWidth:Null<Pixels> = null;
+
+    /**
      * Create a new TitleBar.
      */
     public function new() {
@@ -248,7 +263,10 @@ class TitleBar extends Component implements Styled implements ParentElement {
             .flex1();
         if (!isWeb) {
             inner.windowControlArea(Drag);
-            if (window.isFullscreen()) inner.pl3();
+            // Addition (KIT-009): the 12px of a fullscreen window (no traffic
+            // lights to leave room for) are for a bar that keeps the default
+            // left padding; a caller that set its own decides alone.
+            if (window.isFullscreen() && titleBarStyle.paddingLeft == null) inner.pl3();
             if (isLinux && isClientDecorated) {
                 inner.child(div()
                     .top0()
@@ -263,7 +281,9 @@ class TitleBar extends Component implements Styled implements ParentElement {
         }
         inner.extend(childElements);
         bar.child(inner)
-            .child(WindowControls.component(onCloseWindowHandler, platform, controlClicks));
+            .child(windowControls
+                ? WindowControls.component(onCloseWindowHandler, platform, controlClicks, controlWidth)
+                : div().id('window-controls'));
 
         return div().flexShrink0().child(bar);
     }
@@ -358,11 +378,14 @@ private class ControlIconElement extends Component {
 
     final controlClicks:Bool;
 
-    public function new(icon:ControlIcon, ?platform:TitleBarPlatform, controlClicks:Bool = true) {
+    final controlWidth:Null<Pixels>;
+
+    public function new(icon:ControlIcon, ?platform:TitleBarPlatform, controlClicks:Bool = true, ?controlWidth:Pixels) {
         super();
         this.icon = icon;
         this.platform = platform;
         this.controlClicks = controlClicks;
+        this.controlWidth = controlWidth;
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -380,7 +403,7 @@ private class ControlIconElement extends Component {
         final root = div()
             .id(ControlIconTools.id(icon))
             .flex()
-            .w(TitleBar.TITLE_BAR_HEIGHT)
+            .w(controlWidth != null ? controlWidth : TitleBar.TITLE_BAR_HEIGHT)
             .hFull()
             .flexShrink0()
             .justifyCenter()
@@ -437,16 +460,20 @@ private class WindowControls extends Component {
 
     final controlClicks:Bool;
 
-    public function new(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>, ?platform:TitleBarPlatform, controlClicks:Bool = true) {
+    final controlWidth:Null<Pixels>;
+
+    public function new(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>, ?platform:TitleBarPlatform, controlClicks:Bool = true, ?controlWidth:Pixels) {
         super();
         this.onCloseWindow = onCloseWindow;
         this.platform = platform;
         this.controlClicks = controlClicks;
+        this.controlWidth = controlWidth;
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final platform = this.platform;
         final controlClicks = this.controlClicks;
+        final controlWidth = this.controlWidth;
         if (@:privateAccess TitleBar.isMacos(platform) || @:privateAccess TitleBar.isWebLook(platform)) {
             return div().id('window-controls');
         }
@@ -479,12 +506,12 @@ private class WindowControls extends Component {
             .flexShrink0()
             .hFull();
         if (supported.minimize) {
-            controls.child(ControlIconElement.component(Minimize, platform, controlClicks));
+            controls.child(ControlIconElement.component(Minimize, platform, controlClicks, controlWidth));
         }
         if (supported.maximize) {
-            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize, platform, controlClicks));
+            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize, platform, controlClicks, controlWidth));
         }
-        return controls.child(ControlIconElement.component(Close(onCloseWindow), platform, controlClicks));
+        return controls.child(ControlIconElement.component(Close(onCloseWindow), platform, controlClicks, controlWidth));
     }
 
 }

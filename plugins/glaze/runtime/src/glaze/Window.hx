@@ -844,6 +844,21 @@ class Window implements WindowInvalidator {
     @:allow(glaze)
     final viewDependencies:ViewDependencies = new ViewDependencies();
 
+    /**
+     * Port addition (ADD-009): records that the view being drawn depends on
+     * something no entity notifies (the focus, a shared handle, a setting
+     * read through a plain reference). `changed` tells whether it differs
+     * from what the view drew; it is asked when the next frame starts, and a
+     * view whose answer is `true` renders in that frame like a notified
+     * view instead of being taken from the cache. It never asks for a frame
+     * by itself. `state` identifies the dependency (one check per view and
+     * state, the last one recorded wins). Call it while the view renders,
+     * prepaints or paints. See `ViewDependencies`.
+     */
+    public function recordViewDependency(state:{}, changed:() -> Bool):Void {
+        viewDependencies.record(this, state, changed);
+    }
+
     /** Hitbox ids of the groups being prepainted (see `ViewElement` cache keys) */
     @:allow(glaze)
     final prepaintGroupHitboxes:Array<Int> = [];
@@ -1740,6 +1755,9 @@ class Window implements WindowInvalidator {
         }
         drawing = true;
         drawingClean = !dirty;
+        #if glaze_verify_cache
+        focusMovedInDraw = false;
+        #end
         // Port addition: no element transformation at the start of a frame
         // (a draw that threw may have left one), and none of a mouse
         // listener that draws
@@ -2723,7 +2741,10 @@ class Window implements WindowInvalidator {
         else {
             final viewId = host.entityId;
             final childrenChanged = proto.__apply(host.instance);
-            if (!promotePendingDirtyView(viewId) && childrenChanged) {
+            // Port addition (ADD-010): the component may ask to render for
+            // props that are not observable (`Component.propsApplied`)
+            final asked = @:privateAccess host.instance.propsApplied();
+            if (!promotePendingDirtyView(viewId) && (childrenChanged || asked)) {
                 markViewDirty(viewId);
             }
         }
@@ -6275,6 +6296,9 @@ class Window implements WindowInvalidator {
 
 
     #if glaze_verify_cache
+    /** The focus moved while the frame being drawn was drawn (see `endVerifyScope`) */
+    var focusMovedInDraw:Bool = false;
+
     /**
      * Whether a view must not render for real in place of its reuse to be
      * checked (`verifyCache`): during the full frame checking a frame drawn
@@ -6901,7 +6925,12 @@ class Window implements WindowInvalidator {
             if (difference == null) {
                 difference = cachedRenderingDifference(scope);
             }
-            if (difference != null) {
+            // The focus moved while this frame was being drawn (a render
+            // that focuses a handle): like in GPUI, the refresh it asks is
+            // ignored and a cached view shows the new focus at its next
+            // render. Such a frame is not reported; what stays stale is
+            // reported by the next frame.
+            if (difference != null && !focusMovedInDraw) {
                 cacheVerificationFailures++;
                 final where = path != null ? ' (element ${path.toString()})' : '';
                 onCacheVerificationFailure('$name$where rendered differently from its cached rendering without being notified: notify() probably missing, or a read the tracker does not see ($difference)');
@@ -8118,6 +8147,9 @@ class Window implements WindowInvalidator {
         _focus = handle;
         focusGeneration++;
         clearPendingKeystrokes();
+        #if glaze_verify_cache
+        if (drawing) focusMovedInDraw = true;
+        #end
 
         refresh();
     }
@@ -8134,6 +8166,9 @@ class Window implements WindowInvalidator {
 
         if (_focus != null) {
             focusGeneration++;
+            #if glaze_verify_cache
+            if (drawing) focusMovedInDraw = true;
+            #end
         }
         _focus = null;
         refresh();
@@ -8885,7 +8920,9 @@ class Window implements WindowInvalidator {
                 }
             }
 
-            final needsTimeout = previousTimeout != null || matchResult.pendingHasBinding || textInputRequiresTimeout;
+            // (`pendingInputAlwaysTimesOut`: port addition ADD-011, off by default)
+            final needsTimeout = previousTimeout != null || matchResult.pendingHasBinding || textInputRequiresTimeout
+                || cx.pendingInputAlwaysTimesOut();
             if (needsTimeout) {
                 if (previousTimeout != null && previousTimeout.isPaused()) {
                     previousTimeout.resetDuration(cx.pendingInputTimeout());

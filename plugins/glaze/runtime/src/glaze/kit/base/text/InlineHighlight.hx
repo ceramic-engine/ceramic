@@ -47,8 +47,8 @@ class InlineHighlight {
 
     /**
      * A box around the span: background, border, corner radii, paddings and
-     * horizontal margins of the refinement (the vertical margins are not
-     * used). The span is then one unbreakable pill. Unlike the code chip,
+     * margins of the refinement (the vertical margins only make the line
+     * taller, they do not move the box). The span is then one unbreakable pill. Unlike the code chip,
      * nothing is implied: no default padding, and square corners unless the
      * box rounds them.
      */
@@ -88,10 +88,65 @@ class InlineHighlight {
      */
     public var animation:Null<InlineMotion.InlineAnimation> = null;
 
+    /**
+     * Moves the span up from the baseline of its line, in pixels (down when
+     * negative); wins over `baselineShiftEm`. The line grows to hold the
+     * moved span, as with CSS `vertical-align: <length>`.
+     */
+    public var baselineShiftPx:Null<Float> = null;
+
+    /** The same in em of the span's font size (`0.06`, or `0.4` for a superscript). */
+    public var baselineShiftEm:Null<Float> = null;
+
+    /**
+     * The line height of the span in pixels; wins over `lineHeightRelative`.
+     * The span then takes part in the height of its line with this height,
+     * centered on its glyphs, instead of the height of its glyphs; the
+     * line is never smaller than the paragraph's own line height. A `box`
+     * is as tall as this height (plus its paddings and borders) when it is
+     * taller than the glyphs.
+     */
+    public var lineHeightPx:Null<Float> = null;
+
+    /** The same as a multiple of the span's font size (`1.6`). */
+    public var lineHeightRelative:Null<Float> = null;
+
     /** Whether one of the rich text fields is set (then the span is its own fragment). */
     @:allow(glaze.kit.base.text)
     inline function isRich():Bool {
-        return box != null || transformation != null || animation != null;
+        return box != null || transformation != null || animation != null
+            || baselineShiftPx != null || baselineShiftEm != null || lineHeightPx != null || lineHeightRelative != null;
+    }
+
+    /** The baseline shift of the span in pixels (up when positive), for a font size of `emSize`. */
+    @:allow(glaze.kit.base.text)
+    function baselineShiftFor(emSize:Float):Float {
+        if (baselineShiftPx != null) return taffy.util.F32.fround(baselineShiftPx);
+        if (baselineShiftEm != null) return taffy.util.F32.fround(baselineShiftEm * emSize);
+        return 0.;
+    }
+
+    /** The line height of the span in pixels for a font size of `emSize`, `null` when it has none of its own. */
+    @:allow(glaze.kit.base.text)
+    function lineHeightFor(emSize:Float):Null<Float> {
+        if (lineHeightPx != null) return taffy.util.F32.fround(Math.max(lineHeightPx, 0.));
+        if (lineHeightRelative != null) return taffy.util.F32.fround(Math.max(lineHeightRelative, 0.) * emSize);
+        return null;
+    }
+
+    /** The top and bottom margins of a generic `box` in pixels (`left` and `right` are zero). */
+    @:allow(glaze.kit.base.text)
+    function boxVerticalMargins(fontSize:Pixels, remSize:Pixels):Edges {
+        final style = box;
+        if (style == null || (style.marginTop == null && style.marginBottom == null)) return new Edges();
+        inline function margin(length:Null<glaze.Length>):Float {
+            return switch length {
+                case null: 0.;
+                case Definite(definite): Math.max(definite.toPixels(glaze.AbsoluteLength.Pixels(fontSize), remSize), 0);
+                case _: 0.;
+            }
+        }
+        return new Edges(margin(style.marginTop), 0, margin(style.marginBottom), 0);
     }
 
     /** Whether the span measures differently from body text of its family. */
@@ -107,6 +162,10 @@ class InlineHighlight {
         to.fontSizeRelative = fontSizeRelative;
         to.letterSpacingPx = letterSpacingPx;
         to.letterSpacingEm = letterSpacingEm;
+        to.baselineShiftPx = baselineShiftPx;
+        to.baselineShiftEm = baselineShiftEm;
+        to.lineHeightPx = lineHeightPx;
+        to.lineHeightRelative = lineHeightRelative;
         to.textTransform = textTransform;
         to.opacity = opacity;
         to.transformation = transformation;
@@ -118,6 +177,8 @@ class InlineHighlight {
         return (box == null ? other.box == null : box.equals(other.box))
             && fontSizeAbsolute == other.fontSizeAbsolute && fontSizeRelative == other.fontSizeRelative
             && letterSpacingPx == other.letterSpacingPx && letterSpacingEm == other.letterSpacingEm
+            && baselineShiftPx == other.baselineShiftPx && baselineShiftEm == other.baselineShiftEm
+            && lineHeightPx == other.lineHeightPx && lineHeightRelative == other.lineHeightRelative
             && textTransform == other.textTransform && opacity == other.opacity
             && (transformation == null ? other.transformation == null : transformation.equals(other.transformation))
             // The descriptor itself is left out, see `animation`.
@@ -252,6 +313,10 @@ class InlineHighlight {
         if (other.fontSizeRelative != null) result.fontSizeRelative = other.fontSizeRelative;
         if (other.letterSpacingPx != null) result.letterSpacingPx = other.letterSpacingPx;
         if (other.letterSpacingEm != null) result.letterSpacingEm = other.letterSpacingEm;
+        if (other.baselineShiftPx != null) result.baselineShiftPx = other.baselineShiftPx;
+        if (other.baselineShiftEm != null) result.baselineShiftEm = other.baselineShiftEm;
+        if (other.lineHeightPx != null) result.lineHeightPx = other.lineHeightPx;
+        if (other.lineHeightRelative != null) result.lineHeightRelative = other.lineHeightRelative;
         if (other.textTransform != null) result.textTransform = other.textTransform;
         if (other.opacity != null) result.opacity = other.opacity;
         if (other.transformation != null) result.transformation = other.transformation;

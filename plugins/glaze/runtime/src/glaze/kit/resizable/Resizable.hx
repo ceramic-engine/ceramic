@@ -111,6 +111,8 @@ class Resizable {
         var opacity = Motion.transition('resizable-handle-indicator-opacity', target.opacity, policy, window, cx);
         opacity = opacity < 0. ? 0. : (opacity > 1. ? 1. : opacity);
 
+        // 1px unless the handle was given another size (KIT-013)
+        final thickness:Pixels = handle.size();
         final line = div()
             // The hairline fills the handle's content area exactly, so it has
             // nothing to give: shrinking it collapses the divider.
@@ -121,8 +123,8 @@ class Resizable {
         // centring it there is safe. Across the hairline it is thicker than
         // the line and has to overhang, so that axis is offset by hand.
         switch axis {
-            case Horizontal: line.w(px(1.)).hFull().itemsCenter();
-            case _: line.h(px(1.)).wFull().itemsStart().justifyCenter();
+            case Horizontal: line.w(thickness).hFull().itemsCenter();
+            case _: line.h(thickness).wFull().itemsStart().justifyCenter();
         }
         if (length > 0.5) {
             final pill = div()
@@ -135,9 +137,9 @@ class Resizable {
             // hairline evenly.
             switch axis {
                 case Horizontal:
-                    pill.w(px(INDICATOR_THICKNESS)).h(px(length)).ml(px((INDICATOR_THICKNESS - 1.) * -0.5));
+                    pill.w(px(INDICATOR_THICKNESS)).h(px(length)).ml(px((INDICATOR_THICKNESS - (thickness : Float)) * -0.5));
                 case _:
-                    pill.h(px(INDICATOR_THICKNESS)).w(px(length)).mt(px((INDICATOR_THICKNESS - 1.) * -0.5));
+                    pill.h(px(INDICATOR_THICKNESS)).w(px(length)).mt(px((INDICATOR_THICKNESS - (thickness : Float)) * -0.5));
             }
             // A hugging handle's hairline is its container's outermost pixel,
             // so the pill's outer pixel lies past the boundary, where a

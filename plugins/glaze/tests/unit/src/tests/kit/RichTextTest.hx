@@ -485,6 +485,172 @@ class RichTextTest extends TestCase {
 
 /// the markdown code chip is untouched
 
+    /** Links of a standalone `RichText` (no markdown view around it) answer a click. */
+    function testALinkOfAStandaloneRichTextIsClickable() {
+        final clicked:Array<String> = [];
+        final cx = open((_, _) -> div().p(px(20.)).child(RichText.component('t')
+            .spans([
+                RichSpan.text('Open the documentation', new RichTextStyle().link('https://example.org/docs')),
+                RichSpan.text(' or '),
+                RichSpan.box('the forum', new RichTextStyle().link('https://example.org/forum').box(StyleBuilder.build(s -> s.px(px(4.))))),
+                RichSpan.text(' and plain text that is not a link at all'),
+            ])
+            .onLinkClick((url, _, _) -> clicked.push(url))));
+        final rich = RichText.component('t').spans([
+            RichSpan.text('Open the documentation', new RichTextStyle().link('https://example.org/docs')),
+            RichSpan.text(' or '),
+            RichSpan.box('the forum', new RichTextStyle().link('https://example.org/forum').box(StyleBuilder.build(s -> s.px(px(4.))))),
+            RichSpan.text(' and plain text that is not a link at all'),
+        ]);
+        final parts = texts(layout(rich, null));
+        final center = (ix:Int) -> new Point(20. + parts[ix].origin.x + parts[ix].size.width / 2., 20. + parts[ix].origin.y + parts[ix].size.height / 2.);
+        cx.simulateMouseMove(center(0));
+        cx.simulateClick(center(0));
+        assertEquals('https://example.org/docs', clicked.join(','));
+        // a boxed link
+        var boxIx = -1;
+        for (ix in 0...parts.length) if (parts[ix].text == 'the forum') boxIx = ix;
+        assertTrue(boxIx > 0);
+        cx.simulateMouseMove(center(boxIx));
+        cx.simulateClick(center(boxIx));
+        assertEquals('https://example.org/docs,https://example.org/forum', clicked.join(','));
+        // plain text
+        cx.simulateMouseMove(center(parts.length - 1));
+        cx.simulateClick(center(parts.length - 1));
+        assertEquals(2, clicked.length);
+    }
+
+    // Baseline shift, line height of a span, vertical margins of a box
+
+    function testABaselineShiftMovesTheSpanAndGrowsTheLine() {
+        final plain = layout(RichText.component('t').spans([RichSpan.text('ab'), RichSpan.text('cd'), RichSpan.text('ef')]), null);
+        final plainLine = texts(plain)[0];
+        // The shifted span has the line height of the paragraph, like a CSS
+        // inline box: the line then grows by exactly the shift
+        final shifted = (shift:glaze.kit.text.RichText.RichLength) -> layout(RichText.component('t').spans([
+            RichSpan.text('ab'), RichSpan.text('cd', new RichTextStyle().baselineShift(shift).lineHeight(Absolute(px(plain.size.height)))), RichSpan.text('ef')]), null);
+        // Without a line height of its own, a span only has to fit its glyphs
+        // (the engine's rule for every run): the line grows by what leaves it
+        final glyphsOnly = layout(RichText.component('t').spans([
+            RichSpan.text('ab'), RichSpan.text('cd', new RichTextStyle().baselineShift(Absolute(px(6.)))), RichSpan.text('ef')]), null);
+        assertTrue(glyphsOnly.size.height > plain.size.height && glyphsOnly.size.height <= plain.size.height + 6.01, 'glyphs only: ${glyphsOnly.size.height}');
+        final glyphParts = texts(glyphsOnly);
+        assertTrue(Math.abs(((glyphParts[0].origin.y + glyphParts[0].size.height / 2.) - (glyphParts[1].origin.y + glyphParts[1].size.height / 2.)) - 6.) < 0.01);
+        // Up by 6 px: the span is 6 px higher than its neighbours, the line 6 px taller above
+        final up = shifted(Absolute(px(6.)));
+        final parts = texts(up);
+        assertEquals(3, parts.length);
+        assertEquals('cd', parts[1].text);
+        final center = (part:{origin:Point, size:Size}) -> part.origin.y + part.size.height / 2.;
+        assertTrue(Math.abs((center(parts[0]) - center(parts[1])) - 6.) < 0.01, 'moved by ${center(parts[0]) - center(parts[1])}');
+        assertTrue(Math.abs(center(parts[0]) - center(parts[2])) < 0.01);
+        assertTrue(Math.abs(up.size.height - (plain.size.height + 6.)) < 0.01, 'line height ${up.size.height} for ${plain.size.height}');
+        // The neighbours moved down with the baseline
+        assertTrue(Math.abs(center(parts[0]) - (plainLine.origin.y + plainLine.size.height / 2. + 6.)) < 0.01);
+        // The widths did not change
+        assertEquals(plain.size.width, up.size.width);
+        // Down: the line grows below, the neighbours stay
+        final down = shifted(Absolute(px(-4.)));
+        final downParts = texts(down);
+        assertTrue(Math.abs((center(downParts[1]) - center(downParts[0])) - 4.) < 0.01);
+        assertTrue(Math.abs(center(downParts[0]) - (plainLine.origin.y + plainLine.size.height / 2.)) < 0.01);
+        assertTrue(Math.abs(down.size.height - (plain.size.height + 4.)) < 0.01);
+        // In em of the span's font size
+        final fontSize:Float = bodyStyle().fontSize.toPixels(px(16.));
+        final em = texts(shifted(Em(0.25)));
+        assertTrue(Math.abs((center(em[0]) - center(em[1])) - fontSize * 0.25) < 0.01);
+        // Zero changes nothing
+        final zero = shifted(Absolute(px(0.)));
+        assertEquals(plain.size.height, zero.size.height);
+        assertTrue(Math.abs(center(texts(zero)[1]) - center(texts(zero)[0])) < 0.01);
+    }
+
+    function testASmallShiftInsideTheLineDoesNotGrowIt() {
+        // A superscript: smaller text raised stays inside the room of the line when it fits
+        final plain = layout(RichText.component('t').spans([RichSpan.text('E = mc')]), null);
+        final rich = layout(RichText.component('t').spans([
+            RichSpan.text('E = mc'), RichSpan.text('2', new RichTextStyle().fontSize(Relative(0.5)).baselineShift(Em(0.1)))]), null);
+        assertEquals(plain.size.height, rich.size.height);
+    }
+
+    function testALineHeightOfASpanTakesPartInTheLine() {
+        final fontSize:Float = bodyStyle().fontSize.toPixels(px(16.));
+        final plain = layout(RichText.component('t').spans([RichSpan.text('ab'), RichSpan.text('cd')]), null);
+        final withHeight = (height:glaze.kit.text.RichText.RichLineHeight) -> layout(RichText.component('t').spans([
+            RichSpan.text('ab'), RichSpan.text('cd', new RichTextStyle().lineHeight(height))]), null);
+        // Taller than the paragraph's: the line takes it, the text stays centered in it
+        final tall = withHeight(Absolute(px(60.)));
+        assertTrue(Math.abs(tall.size.height - 60.) < 0.01, 'line of ${tall.size.height}');
+        final parts = texts(tall);
+        assertTrue(Math.abs((parts[0].origin.y + parts[0].size.height / 2.) - (parts[1].origin.y + parts[1].size.height / 2.)) < 0.01, 'one baseline');
+        assertTrue(Math.abs(withHeight(Relative(4.)).size.height - fontSize * 4.) < 0.01);
+        // Smaller: the paragraph's line height stays
+        assertEquals(plain.size.height, withHeight(Relative(0.5)).size.height);
+        assertEquals(plain.size.height, withHeight(Absolute(px(1.))).size.height);
+        // Only the line holding the span grows
+        final two = layout(RichText.component('t').spans([
+            RichSpan.text('ab'), RichSpan.lineBreak(), RichSpan.text('cd', new RichTextStyle().lineHeight(Absolute(px(60.))))]), null);
+        assertTrue(Math.abs(two.size.height - (plain.size.height + 60.)) < 0.01);
+    }
+
+    function testABoxIsAsTallAsItsLineHeight() {
+        final box = () -> StyleBuilder.build(s -> s.px(px(4.)).bg(hsla(0., 0., 0.5, 1.)));
+        final plain = layout(RichText.component('t').spans([RichSpan.text('ab'), RichSpan.box('pill', new RichTextStyle().box(box()))]), null);
+        final tall = layout(RichText.component('t').spans([RichSpan.text('ab'), RichSpan.box('pill', new RichTextStyle().box(box()).lineHeight(Absolute(px(50.))))]), null);
+        final plainBox = texts(plain)[1].box;
+        final tallBox = texts(tall)[1].box;
+        assertNotNull(plainBox);
+        assertNotNull(tallBox);
+        assertTrue(plainBox.size.height < 50.);
+        assertTrue(Math.abs(tallBox.size.height - 50.) < 0.01, 'box of ${tallBox.size.height}');
+        assertEquals(plainBox.size.width, tallBox.size.width);
+        assertTrue(Math.abs(tall.size.height - 50.) < 0.01);
+        // The text of the pill stays on the baseline of the line
+        final a = texts(tall)[0];
+        final b = texts(tall)[1];
+        assertTrue(Math.abs((a.origin.y + a.size.height / 2.) - (b.origin.y + b.size.height / 2.)) < 0.01);
+    }
+
+    function testTheVerticalMarginsOfABoxGrowTheLine() {
+        final box = (top:Float, bottom:Float) -> StyleBuilder.build(s -> {
+            s.px(px(4.)).py(px(8.)).bg(hsla(0., 0., 0.5, 1.));
+            if (top > 0.) s.mt(px(top));
+            if (bottom > 0.) s.mb(px(bottom));
+            return s;
+        });
+        final build = (top:Float, bottom:Float) -> layout(RichText.component('t').spans([
+            RichSpan.text('ab'), RichSpan.box('pill', new RichTextStyle().box(box(top, bottom)))]), null);
+        final plain = build(0., 0.);
+        final above = build(10., 0.);
+        final below = build(0., 7.);
+        final both = build(10., 7.);
+        assertTrue(Math.abs(above.size.height - (plain.size.height + 10.)) < 0.01, '${above.size.height} for ${plain.size.height}');
+        assertTrue(Math.abs(below.size.height - (plain.size.height + 7.)) < 0.01);
+        assertTrue(Math.abs(both.size.height - (plain.size.height + 17.)) < 0.01);
+        // The box keeps its size; the margin is above it
+        final plainBox = texts(plain)[1];
+        final aboveBox = texts(above)[1];
+        assertEquals(plainBox.box.size.height, aboveBox.box.size.height);
+        assertTrue(Math.abs((aboveBox.box.origin.y) - (plainBox.box.origin.y + 10.)) < 0.01, 'box at ${aboveBox.box.origin.y} for ${plainBox.box.origin.y}');
+        assertTrue(Math.abs(texts(below)[1].box.origin.y - plainBox.box.origin.y) < 0.01);
+    }
+
+    function testTheNewFieldsTakePartInTheLayoutKey() {
+        final plain = new InlineHighlight(new glaze.HighlightStyle());
+        for (set in [
+            (h:InlineHighlight) -> h.baselineShiftPx = 2.,
+            (h:InlineHighlight) -> h.baselineShiftEm = 0.1,
+            (h:InlineHighlight) -> h.lineHeightPx = 30.,
+            (h:InlineHighlight) -> h.lineHeightRelative = 1.6,
+        ]) {
+            final changed = new InlineHighlight(new glaze.HighlightStyle());
+            set(changed);
+            assertFalse(plain.equals(changed));
+            assertTrue(changed.equals(changed.clone()));
+            assertTrue(@:privateAccess plain.highlight(changed).equals(changed));
+        }
+    }
+
     function testAHighlightWithoutRichFieldsIsUnchanged() {
         final highlight = new InlineHighlight(null, 'Menlo', 0.875);
         assertFalse(@:privateAccess highlight.isRich());

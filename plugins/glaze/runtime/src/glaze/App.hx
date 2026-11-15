@@ -1120,6 +1120,29 @@ class App {
         _pendingInputTimeout = seconds;
     }
 
+    var _pendingInputAlwaysTimesOut:Bool = false;
+
+    /** See `setPendingInputAlwaysTimesOut`. */
+    public inline function pendingInputAlwaysTimesOut():Bool {
+        return _pendingInputAlwaysTimesOut;
+    }
+
+    /**
+     * GPUI's rule (the default, `false`): the first keys of a key sequence
+     * wait for the next key during `pendingInputTimeout()` only when they
+     * have a binding of their own (`cmd-k` bound next to `cmd-k cmd-s`) or
+     * when a text input would take the key as text; otherwise they wait
+     * with no limit, until another key or a focus change. With `true`,
+     * every unfinished sequence times out: after the delay the keys typed
+     * so far are replayed as if no sequence had started, and the sequence is
+     * forgotten. Applies to the sequences that start or advance from now on,
+     * in every window of the app. Port addition without GPUI equivalent
+     * (ADD-011).
+     */
+    public function setPendingInputAlwaysTimesOut(always:Bool):Void {
+        _pendingInputAlwaysTimesOut = always;
+    }
+
     /**
      * Group hitboxes of the elements being painted (Rust global `GroupHitboxes`).
      */

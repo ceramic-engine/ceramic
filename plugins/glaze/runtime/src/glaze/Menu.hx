@@ -295,4 +295,17 @@ enum abstract OsAction(Int) {
     /** The 'redo' action. */
     var Redo;
 
+    /**
+     * Hide the application (port addition, ADD-012: GPUI has no such
+     * action). On macOS the system handles the item itself, like the Hide
+     * item of every application; elsewhere it is a regular item.
+     */
+    var Hide;
+
+    /** Hide the other applications (port addition, ADD-012; see `Hide`). */
+    var HideOthers;
+
+    /** Show every application again (port addition, ADD-012; see `Hide`). */
+    var ShowAll;
+
 }

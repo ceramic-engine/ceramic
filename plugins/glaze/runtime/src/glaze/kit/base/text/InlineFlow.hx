@@ -653,16 +653,67 @@ class InlineFlow extends glaze.Element {
                             // its line taller than a plain one. Positioning grows the
                             // box back to the line. The compact code background is
                             // painted independently.
-                            final glyphSize = new Size(width, f32(f32(f32(shapedLine.ascent() + shapedLine.descent()) + insets.top) + insets.bottom));
-                            final baseline = f32(shapedLine.ascent() + insets.top);
+                            var glyphSize = new Size(width, f32(f32(f32(shapedLine.ascent() + shapedLine.descent()) + insets.top) + insets.bottom));
+                            var baseline = f32(shapedLine.ascent() + insets.top);
+                            // Rich text fields (all null in a markdown flow): a
+                            // baseline shift, a line height of the span, the
+                            // vertical margins of a box.
+                            var shift:Float = 0;
+                            var ownLineHeight:Null<Float> = null;
+                            var marginTop:Float = 0;
+                            var marginBottom:Float = 0;
+                            var richLine = false;
+                            for (h in highlights) {
+                                final rich = h.highlight;
+                                if (shift == 0 && (rich.baselineShiftPx != null || rich.baselineShiftEm != null)) {
+                                    shift = rich.baselineShiftFor(segmentFontSize);
+                                }
+                                if (ownLineHeight == null) {
+                                    ownLineHeight = rich.lineHeightFor(segmentFontSize);
+                                }
+                                if (rich.box != null && marginTop == 0 && marginBottom == 0) {
+                                    final margins = rich.boxVerticalMargins(segmentFontSize, window.remSize());
+                                    marginTop = margins.top;
+                                    marginBottom = margins.bottom;
+                                }
+                            }
+                            richLine = shift != 0 || ownLineHeight != null || marginTop != 0 || marginBottom != 0;
+                            // Half of what the span's line height adds to (or takes
+                            // from) the height of its glyphs
+                            var halfLeading:Float = 0;
+                            if (ownLineHeight != null) {
+                                halfLeading = f32(f32(ownLineHeight - f32(shapedLine.ascent() + shapedLine.descent())) / 2.);
+                                if (isBox && halfLeading > 0) {
+                                    // The box is as tall as its line height
+                                    glyphSize = new Size(width, f32(glyphSize.height + f32(halfLeading * 2.)));
+                                    baseline = f32(baseline + halfLeading);
+                                    halfLeading = 0;
+                                }
+                            }
                             final codeBackground = isCode
                                 ? codeBackground(shapedLine, runs, segmentFontSize, highlights, glyphSize, baseline, window)
                                 : (isBox ? boxBackground(highlights, segmentFontSize, glyphSize, window) : null);
-                            lineAscent = Math.max(lineAscent, f32(baseline - bodyOverflowAbove));
-                            lineDescent = Math.max(lineDescent, f32(f32(glyphSize.height - baseline) - bodyOverflowBelow));
+                            if (!richLine) {
+                                lineAscent = Math.max(lineAscent, f32(baseline - bodyOverflowAbove));
+                                lineDescent = Math.max(lineDescent, f32(f32(glyphSize.height - baseline) - bodyOverflowBelow));
+                            } else {
+                                // A span with its own line height takes part with
+                                // exactly that height; another one as far as its
+                                // glyphs go past what body glyphs overflow
+                                var above:Float = ownLineHeight != null ? f32(baseline + halfLeading) : f32(baseline - bodyOverflowAbove);
+                                var below:Float = ownLineHeight != null
+                                    ? f32(f32(glyphSize.height - baseline) + halfLeading)
+                                    : f32(f32(glyphSize.height - baseline) - bodyOverflowBelow);
+                                above = f32(f32(above + marginTop) + shift);
+                                below = f32(f32(below + marginBottom) - shift);
+                                lineAscent = Math.max(lineAscent, above);
+                                lineDescent = Math.max(lineDescent, below);
+                            }
                             lineWidth = f32(lineWidth + width);
-                            lineFragments.push(new LineFragmentLayout(itemIx, LineFragmentKind.Text(segmentFontSize, subtext, links, highlights, codeBackground),
-                                glyphSize, new Range(start, end), baseline));
+                            final lineFragment = new LineFragmentLayout(itemIx, LineFragmentKind.Text(segmentFontSize, subtext, links, highlights, codeBackground),
+                                glyphSize, new Range(start, end), baseline);
+                            lineFragment.shift = shift;
+                            lineFragments.push(lineFragment);
                         }
                     case Object(_, _, _, _):
                         final object = objects[itemIx].clone();
@@ -698,7 +749,13 @@ class InlineFlow extends glaze.Element {
                 // box, so this keeps them on the line's baseline, and a body run
                 // gets exactly the line box. The leading is negative where the
                 // glyphs overflow the line, as a plain text line's do.
+                // (a span moved off the baseline has its room above and below
+                // counted from where its own baseline is)
+                final shift = fragment.shift;
                 final leading:Float = switch fragment.kind {
+                    case Text(_, _, _, _, _) if (shift != 0):
+                        Math.max(Math.min(f32(f32(lineAscent - fragment.baseline) - shift), f32(f32(lineDescent - f32(fragment.size.height - fragment.baseline)) + shift)),
+                            f32(-fragment.size.height / 2.));
                     case Text(_, _, _, _, _):
                         Math.max(Math.min(f32(lineAscent - fragment.baseline), f32(lineDescent - f32(fragment.size.height - fragment.baseline))),
                             f32(-fragment.size.height / 2.));
@@ -707,7 +764,9 @@ class InlineFlow extends glaze.Element {
                 };
                 fragment.size = new Size(fragment.size.width, f32(fragment.size.height + f32(leading * 2.)));
                 fragment.baseline = f32(fragment.baseline + leading);
-                final origin = new Point(x, f32(f32(y + lineAscent) - fragment.baseline));
+                final origin = shift != 0
+                    ? new Point(x, f32(f32(f32(y + lineAscent) - fragment.baseline) - shift))
+                    : new Point(x, f32(f32(y + lineAscent) - fragment.baseline));
                 final selectionBounds = new Bounds(new Point(x, y), new Size(fragment.size.width, f32(lineAscent + lineDescent)));
                 final positioned = switch fragment.kind {
                     case Object(object):
@@ -1547,6 +1606,9 @@ private class LineFragmentLayout {
     public final sourceRange:Range;
 
     public var baseline:Float;
+
+    /** How far the fragment's baseline is above the line's (a rich text baseline shift). */
+    public var shift:Float = 0;
 
     public function new(itemIx:Int, kind:LineFragmentKind, size:Size, sourceRange:Range, baseline:Float) {
         this.itemIx = itemIx;

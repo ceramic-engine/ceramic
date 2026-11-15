@@ -130,6 +130,7 @@ class Tests {
         runner.add(new tests.kit.BaseModalsTest());
         runner.add(new tests.kit.ComponentModalsTest());
         runner.add(new tests.kit.KitDialogAdditionsTest());
+        runner.add(new tests.kit.KitPopupAdditionsTest());
         // gpui-kit (wave 5: popovers, tooltips, hover cards)
         runner.add(new tests.kit.BaseOverlaysTest());
         runner.add(new tests.kit.ComponentOverlaysTest());
@@ -195,6 +196,7 @@ class Tests {
         runner.add(new tests.kit.ComponentNavigationTest());
         runner.add(new tests.kit.ComponentWindowTest());
         runner.add(new tests.kit.KitTitleBarAdditionsTest());
+        runner.add(new tests.kit.KitButtonAdditionsTest());
         // gpui-kit (wave 7: resizable panels)
         runner.add(new tests.kit.BaseResizableTest());
         runner.add(new tests.kit.KitResizableAdditionsTest());

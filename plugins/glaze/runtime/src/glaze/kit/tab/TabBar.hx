@@ -107,6 +107,9 @@ class TabBar extends Component implements Styled implements Sizable {
 
     @prop var lastEmptySpace:AnyElement;
 
+    /** The caller set `lastEmptySpace` (KIT-011). */
+    var lastEmptySpaceSet:Bool = false;
+
     /** Set the selected index of the TabBar. */
     @prop var selectedIndex:Null<Int> = null;
 
@@ -219,8 +222,25 @@ class TabBar extends Component implements Styled implements Sizable {
         return this;
     }
 
-    /** Set the last empty space element of the TabBar. */
+    /**
+     * Set the last empty space element of the TabBar, drawn after the last
+     * tab inside the scrolling row. The default one (12px wide) is drawn
+     * only next to a suffix or the menu button, as in gpui-kit; one set
+     * here is always drawn (addition, KIT-011), so it can hold a button
+     * that follows the last tab.
+     */
     public function lastEmptySpace(lastEmptySpace:IntoElement):TabBar {
+        this.lastEmptySpace = lastEmptySpace;
+        lastEmptySpaceSet = true;
+        return this;
+    }
+
+    /**
+     * Sets the last empty space element with gpui-kit's rule: drawn only
+     * next to a suffix or the menu button (the dock's tab groups).
+     */
+    @:allow(glaze.kit)
+    function lastEmptySpaceNextToSuffix(lastEmptySpace:IntoElement):TabBar {
         this.lastEmptySpace = lastEmptySpace;
         return this;
     }
@@ -642,7 +662,7 @@ class TabBar extends Component implements Styled implements Sizable {
             .lockScrollAxis()
             .trackScroll(scrollHandle)
             .children([for (tab in renderedTabs) (tab : IntoElement)]);
-        if (hasSuffixOrMenu) tabsInner.child(lastEmptySpace);
+        if (hasSuffixOrMenu || lastEmptySpaceSet) tabsInner.child(lastEmptySpace);
 
         final tabsElement = hFlex()
             .id('tabs')

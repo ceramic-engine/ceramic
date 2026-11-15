@@ -137,6 +137,42 @@ class AppMenuBarTest extends TestCase {
         assertEquals(ceramic.MenuItemRole.NONE, edit[3].items[0].role);
     }
 
+    /** Port addition (ADD-012): the Hide, Hide Others and Show All roles. */
+    function testHideRolesOfTheApplicationMenu() {
+        final items = CeramicPlatformOperations.menuBarItems([
+            new Menu('Story').withItems([
+                MenuItemTools.osAction('Hide Story', new Save(), Hide),
+                MenuItemTools.osAction('Hide Others', new Save(), HideOthers),
+                MenuItemTools.osAction('Show All', new Save(), ShowAll),
+                MenuItemTools.action('Save', new Save()),
+            ]),
+        ], app.keyBindings());
+        final story = items[0].items;
+        assertEquals(ceramic.MenuItemRole.HIDE, story[0].role);
+        assertEquals(ceramic.MenuItemRole.HIDE_OTHERS, story[1].role);
+        assertEquals(ceramic.MenuItemRole.SHOW_ALL, story[2].role);
+        assertEquals(ceramic.MenuItemRole.NONE, story[3].role);
+        // The system's shortcuts when the action has no binding
+        assertEquals('h', story[0].key);
+        assertEquals((ceramic.KeyModifiers.META:Int), (story[0].modifiers:Int));
+        assertEquals('h', story[1].key);
+        assertEquals((ceramic.KeyModifiers.META | ceramic.KeyModifiers.ALT:Int), (story[1].modifiers:Int));
+        assertNull(story[2].key);
+        assertNull(story[3].key);
+        // The values the native layer reads
+        assertEquals(8, (ceramic.MenuItemRole.HIDE:Int));
+        assertEquals(9, (ceramic.MenuItemRole.HIDE_OTHERS:Int));
+        assertEquals(10, (ceramic.MenuItemRole.SHOW_ALL:Int));
+
+        // A binding of the action wins over the default shortcut
+        app.bindKeys([new KeyBinding('cmd-shift-h', new Export(), null)]);
+        final bound = CeramicPlatformOperations.menuBarItems([
+            new Menu('Story').withItems([MenuItemTools.osAction('Hide Story', new Export(), Hide)]),
+        ], app.keyBindings());
+        assertEquals('h', bound[0].items[0].key);
+        assertEquals((ceramic.KeyModifiers.META | ceramic.KeyModifiers.SHIFT:Int), (bound[0].items[0].modifiers:Int));
+    }
+
     function testShortcutIsTheEarliestBindingMatchingTheDefaultContext() {
         app.bindKeys([
             new KeyBinding('cmd-1', new Save(), 'Terminal'),

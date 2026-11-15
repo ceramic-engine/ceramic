@@ -128,6 +128,8 @@ class Tab extends Component implements Styled implements ParentElement implement
 
     var userHover:Null<(StyleBuilder) -> StyleBuilder> = null;
 
+    var labelStyleValue:Null<(StyleBuilder) -> StyleBuilder> = null;
+
     var contextMenuBuilder:Null<glaze.kit.menu.ContextMenu.MenuBuilder> = null;
 
     /** Create a new tab. */
@@ -200,6 +202,16 @@ class Tab extends Component implements Styled implements ParentElement implement
      */
     public function labelMaxWidth(maxWidth:Null<Pixels>):Tab {
         labelMaxWidthValue = maxWidth;
+        return this;
+    }
+
+    /**
+     * A style for the label alone (a color, a strikethrough, a weight): the
+     * prefix, the suffix and the children keep the style of the tab
+     * (addition, KIT-012). `null`, the default, leaves the label as it is.
+     */
+    public function labelStyle(f:Null<(StyleBuilder) -> StyleBuilder>):Tab {
+        labelStyleValue = f;
         return this;
     }
 
@@ -489,14 +501,21 @@ class Tab extends Component implements Styled implements ParentElement implement
             if (label != null) {
                 // Text always takes its natural width, so it needs a box
                 // that is allowed to shrink to ellipsize inside of.
+                // Addition (KIT-012): the caller's style of the label alone
+                final labelRefinement = labelStyleValue != null ? labelStyleValue(new StyleBuilder()).style() : null;
                 if (maxWidth != null) {
                     final labelBox = div().minW0().whitespaceNowrap().textEllipsis();
                     if (labelMaxWidth != null) labelBox.maxW(labelMaxWidth);
+                    if (labelRefinement != null) labelBox.refineStyle(labelRefinement);
                     innerContent.child(labelBox.child(label));
                 } else if (labelMaxWidth != null) {
                     // The label alone is capped: the tab keeps its natural
                     // width around it.
-                    innerContent.child(div().minW0().maxW(labelMaxWidth).whitespaceNowrap().textEllipsis().child(label));
+                    final labelBox = div().minW0().maxW(labelMaxWidth).whitespaceNowrap().textEllipsis();
+                    if (labelRefinement != null) labelBox.refineStyle(labelRefinement);
+                    innerContent.child(labelBox.child(label));
+                } else if (labelRefinement != null) {
+                    innerContent.child(div().flexNone().refineStyle(labelRefinement).child(label));
                 } else {
                     innerContent.child(label);
                 }

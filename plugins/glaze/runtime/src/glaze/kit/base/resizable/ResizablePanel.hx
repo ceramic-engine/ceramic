@@ -78,6 +78,9 @@ class ResizablePanel extends Component implements Styled implements ParentElemen
     @:allow(glaze.kit.base.resizable)
     var handleAppearance:Null<ResizeHandleRenderer> = null;
 
+    @:allow(glaze.kit.base.resizable)
+    var handleSize:Null<Pixels> = null;
+
     var fixedValue:Bool = false;
 
     @:allow(glaze.kit.base.resizable)
@@ -213,6 +216,7 @@ class ResizablePanel extends Component implements Styled implements ParentElemen
             final handle = ResizeHandle.resizeHandle(ElementId.NamedInteger('resizable-handle', ix), axis);
             handle.index = ix;
             if (handleAppearance != null) handle.withAppearance(handleAppearance);
+            if (handleSize != null) handle.handleSize(handleSize);
             handle.onDrag(new DragPanel(), (_, _, _, cx) -> {
                 cx.stopPropagation();
                 // Set current resizing panel ix

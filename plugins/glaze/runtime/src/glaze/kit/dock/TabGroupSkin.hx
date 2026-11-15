@@ -497,7 +497,8 @@ class TabGroupSkin extends TabGroupRendererBase {
                 .dragOver(AnyDrag, (style, _, _, cx) -> style.bg(Theme.global(cx).tokens.dropTarget.background))
                 .onDrop(AnyDrag, (item:AnyDrag, window, cx) -> group.dropItem(item.clone(), null, window, cx));
         }
-        bar.lastEmptySpace(emptySpace);
+        // gpui-kit's rule (next to the suffix only), not KIT-011's
+        bar.lastEmptySpaceNextToSuffix(emptySpace);
 
         if (!collapsed) {
             final suffix = hFlex()

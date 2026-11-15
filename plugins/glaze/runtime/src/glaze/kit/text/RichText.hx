@@ -51,6 +51,17 @@ enum RichFontSize {
 
 }
 
+/** The line height of a span. */
+enum RichLineHeight {
+
+    /** In pixels. */
+    Absolute(height:Pixels);
+
+    /** A multiple of the span's own font size (`1.6`). */
+    Relative(scale:Float);
+
+}
+
 /** A length that follows the text or not. */
 enum RichLength {
 
@@ -106,6 +117,8 @@ class RichTextStyle {
     var underlineValue:Null<UnderlineStyle> = null;
     var strikethroughValue:Null<StrikethroughStyle> = null;
     var letterSpacingValue:Null<RichLength> = null;
+    var baselineShiftValue:Null<RichLength> = null;
+    var lineHeightValue:Null<RichLineHeight> = null;
     var textTransformValue:Null<TextTransform> = null;
     var boxValue:Null<StyleRefinement> = null;
     var linkValue:Null<String> = null;
@@ -173,6 +186,27 @@ class RichTextStyle {
         return this;
     }
 
+    /**
+     * Moves the span up from the baseline of its line (down when negative):
+     * `Em(0.4)` with a smaller font size for a superscript, `Em(-0.2)` for a
+     * subscript, a few hundredths of an em to center a pill. The line grows
+     * to hold the moved span.
+     */
+    public function baselineShift(shift:RichLength):RichTextStyle {
+        baselineShiftValue = shift;
+        return this;
+    }
+
+    /**
+     * The line height of the span: it takes part in the height of its line
+     * with this height, centered on its glyphs (the line is never smaller
+     * than the paragraph's own line height), and a box is as tall as it.
+     */
+    public function lineHeight(height:RichLineHeight):RichTextStyle {
+        lineHeightValue = height;
+        return this;
+    }
+
     public function textTransform(transform:TextTransform):RichTextStyle {
         textTransformValue = transform;
         return this;
@@ -180,7 +214,7 @@ class RichTextStyle {
 
     /**
      * A box around the span: the background, border, corner radii, paddings
-     * and horizontal margins of `box` (`StyleBuilder.build(s -> s.px1().rounded(px(4)).border1())`).
+     * and margins of `box` (the vertical margins make the line taller) (`StyleBuilder.build(s -> s.px1().rounded(px(4)).border1())`).
      * A boxed span is never broken across lines.
      */
     public function box(box:StyleRefinement):RichTextStyle {
@@ -228,6 +262,8 @@ class RichTextStyle {
         if (other.strikethroughValue != null) strikethroughValue = other.strikethroughValue;
         if (other.letterSpacingValue != null) letterSpacingValue = other.letterSpacingValue;
         if (other.textTransformValue != null) textTransformValue = other.textTransformValue;
+        if (other.baselineShiftValue != null) baselineShiftValue = other.baselineShiftValue;
+        if (other.lineHeightValue != null) lineHeightValue = other.lineHeightValue;
         if (other.boxValue != null) boxValue = other.boxValue;
         if (other.linkValue != null) linkValue = other.linkValue;
         if (other.transformationValue != null) transformationValue = other.transformationValue;
@@ -239,7 +275,8 @@ class RichTextStyle {
     function isPlain():Bool {
         return fontFamilyValue == null && fontWeightValue == null && fontStyleValue == null && fontFeaturesValue == null && fontSizeValue == null
             && colorValue == null && opacityValue == null && backgroundValue == null && underlineValue == null && strikethroughValue == null
-            && letterSpacingValue == null && boxValue == null && transformationValue == null && animationValue == null;
+            && letterSpacingValue == null && boxValue == null && transformationValue == null && animationValue == null
+            && baselineShiftValue == null && lineHeightValue == null;
     }
 
     /** The style as the paragraph engine takes it. */
@@ -262,6 +299,16 @@ class RichTextStyle {
             case null:
             case Absolute(length): highlight.letterSpacingPx = length;
             case Em(em): highlight.letterSpacingEm = em;
+        }
+        switch baselineShiftValue {
+            case null:
+            case Absolute(length): highlight.baselineShiftPx = length;
+            case Em(em): highlight.baselineShiftEm = em;
+        }
+        switch lineHeightValue {
+            case null:
+            case Absolute(height): highlight.lineHeightPx = height;
+            case Relative(scale): highlight.lineHeightRelative = scale;
         }
         highlight.textTransform = textTransformValue;
         highlight.opacity = opacityValue;

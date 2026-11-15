@@ -365,7 +365,23 @@ class CeramicPlatformOperations implements PlatformOperations {
                     case SelectAll: ceramic.MenuItemRole.SELECT_ALL;
                     case Undo: ceramic.MenuItemRole.UNDO;
                     case Redo: ceramic.MenuItemRole.REDO;
+                    case Hide: ceramic.MenuItemRole.HIDE;
+                    case HideOthers: ceramic.MenuItemRole.HIDE_OTHERS;
+                    case ShowAll: ceramic.MenuItemRole.SHOW_ALL;
                 };
+                // Port addition (ADD-012): the system's own shortcuts for
+                // Hide and Hide Others when the action has no binding
+                if (result.key == null && osAction != null) {
+                    switch osAction {
+                        case Hide:
+                            result.key = 'h';
+                            result.modifiers = ceramic.KeyModifiers.META;
+                        case HideOthers:
+                            result.key = 'h';
+                            result.modifiers = (ceramic.KeyModifiers.META : Int) | (ceramic.KeyModifiers.ALT : Int);
+                        case _:
+                    }
+                }
                 result.checked = checked;
                 result.enabled = !disabled;
                 result.data = action;

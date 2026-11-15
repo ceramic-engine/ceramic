@@ -115,6 +115,17 @@ cityscape.nls.loadJson(Assets.text('editor-fr.json'));
 
 Keys the focused editor does not handle go on to the key bindings of its ancestors, so app shortcuts keep working around an editor.
 
+The editor's keybindings become Glaze bindings in the `CityscapeEditor` key context. Glaze takes the binding added last, so the order decides who wins a chord that the application also binds in that context. By default the editor binds its keys when it is first drawn, after the bindings an application makes at startup: the editor wins. To let the application win, bind the editor's keys first:
+
+```haxe
+context.bindKeys(cx);                 // the editor's keybindings, now
+cx.bindKeys([new KeyBinding('cmd-d', new Duplicate(), 'CityscapeEditor')]);   // the application's, after: they win
+```
+
+`context` is the `Cityscape` context of the editors (`Cityscape.defaultContext` when none is given). Keybindings added later with `addKeybindingRule` or `addCommand` are bound when they are added.
+
+**Focus and the view cache.** The editor paints in a view that a window keeps in its cache. It listens to the focus entering and leaving it and records its focus and layout as dependencies of that view (`Window.recordViewDependency`), so a dialog or a field taking the focus never leaves the editor's input handler behind, and options given through the `options` prop are applied in the frame of the render that gives them (the editor renders when their content changed).
+
 Semantic tokens (`context.registerDocumentSemanticTokensProvider`, `registerDocumentRangeSemanticTokensProvider`) color the identifiers over the TextMate tokens when `editor.semanticHighlighting.enabled` is on (`semanticHighlighting: {enabled: true}` in the options, or a VS Code theme with `"semanticHighlighting": true`); a VS Code theme styles them with its `semanticTokenColors`, else through its TextMate rules like VS Code. Rename (F2) asks the rename providers (`context.registerRenameProvider`) and shows Monaco's rename input at the symbol.
 
 Models are tokenized in the background with one time budget per frame for all the models of the context (`cityscape.backgroundScheduler.budgetMs`), the visible lines first.
