@@ -367,6 +367,10 @@ class Main {
         if (app.settings.windowBorderless)
             config.window.borderless = true;
         config.window.startsHidden = app.settings.windowStartsHidden;
+        #if clay_sdl
+        // Read when SDL starts (SDL_HINT_MAC_SCROLL_MOMENTUM, macOS)
+        config.runtime.scrollMomentum = app.settings.scrollMomentum;
+        #end
         config.window.titleBarStyle = (app.settings.titleBarStyle:Int);
         config.window.titleBarButtonsX = app.settings.trafficLightX;
         config.window.titleBarButtonsY = app.settings.trafficLightY;

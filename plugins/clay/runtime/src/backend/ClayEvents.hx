@@ -433,7 +433,11 @@ class ClayEvents extends clay.Events {
      */
     override function mouseScroll(deltaX:Float, deltaY:Float, unit:Int, timestamp:Float, windowId:Int) {
 
+        // The phase of the gesture (macOS native builds), read by
+        // ceramic.Screen through getMouseScrollPhase() while the event is emitted
+        @:privateAccess backend.screen.mouseScrollPhase = Clay.app.input.mouseScrollPhase;
         backend.screen.emitMouseScroll(deltaX, deltaY, unit);
+        @:privateAccess backend.screen.mouseScrollPhase = ceramic.ScrollPhase.NONE;
 
     }
 

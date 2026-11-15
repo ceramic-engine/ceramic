@@ -440,6 +440,22 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    /**
+     * Phase of the scroll gesture of the `mouseScroll` event being emitted
+     * (`NONE` outside of one). macOS native builds report the phases of
+     * trackpad and Magic Mouse gestures (clay's `linc_sdl_scroll_mac.mm`).
+     * Elsewhere it is always `NONE`: browsers (`WheelEvent`), Windows wheel
+     * messages, X11 and Wayland events as SDL gives them do not carry one.
+     */
+    public function getMouseScrollPhase():ceramic.ScrollPhase {
+
+        return mouseScrollPhase;
+
+    }
+
+    /** Set by `ClayEvents.mouseScroll` around the emission of `mouseScroll`. */
+    var mouseScrollPhase:ceramic.ScrollPhase = ceramic.ScrollPhase.NONE;
+
     static function toClayMenuItem(item:ceramic.MenuItem):clay.MenuItemSpec {
 
         return {

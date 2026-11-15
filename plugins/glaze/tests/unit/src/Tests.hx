@@ -51,6 +51,7 @@ class Tests {
         runner.add(new tests.TouchGestureTest());
         runner.add(new tests.TouchWindowTest());
         runner.add(new tests.GlazeInputTouchTest());
+        runner.add(new tests.GlazeInputScrollPhaseTest());
         runner.add(new tests.BrowserFilesTest());
         runner.add(new tests.kit.InputTouchTest());
         runner.add(new tests.kit.TouchSelectionIntegrationTest());

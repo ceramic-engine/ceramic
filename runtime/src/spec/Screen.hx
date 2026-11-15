@@ -236,6 +236,12 @@ interface Screen {
     function getAutoHideScrollbars():Bool;
 
     /**
+     * Phase of the scroll gesture of the `mouseScroll` event being emitted
+     * (`NONE` outside of one, and on platforms that do not report phases).
+     */
+    function getMouseScrollPhase():ceramic.ScrollPhase;
+
+    /**
      * Shows or hides the mouse cursor while it is over the app.
      * Has no effect on platforms without a mouse cursor.
      * 

@@ -440,6 +440,27 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         autoHideScrollbars = autoHide;
     }
 
+    var mouseScrollPhase:ceramic.ScrollPhase = ceramic.ScrollPhase.NONE;
+
+    /**
+     * Phase of the `mouseScroll` event being emitted: `NONE`, unless it is
+     * emitted by `emitMouseScrollWithPhase` (tests feed the phases of a
+     * native platform this way).
+     */
+    public function getMouseScrollPhase():ceramic.ScrollPhase {
+        return mouseScrollPhase;
+    }
+
+    /**
+     * Test support: emits `mouseScroll` as a backend that reports the phase
+     * of the scroll gesture does (clay on macOS).
+     */
+    public function emitMouseScrollWithPhase(deltaX:Float, deltaY:Float, unit:ceramic.ScrollUnit, phase:ceramic.ScrollPhase):Void {
+        mouseScrollPhase = phase;
+        emitMouseScroll(deltaX, deltaY, unit);
+        mouseScrollPhase = ceramic.ScrollPhase.NONE;
+    }
+
     public function setCursorVisible(visible:Bool):Void {
 
         //

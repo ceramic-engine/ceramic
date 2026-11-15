@@ -552,6 +552,18 @@ class InitSettings {
     }
 
     /**
+     * macOS native builds: whether trackpad and Magic Mouse scrolling keeps
+     * its momentum after the fingers leave the surface. Applies at launch.
+     */
+    public var scrollMomentum(get,set):Bool;
+    inline function get_scrollMomentum():Bool {
+        return settings.scrollMomentum;
+    }
+    inline function set_scrollMomentum(scrollMomentum:Bool):Bool {
+        return @:privateAccess settings.scrollMomentum = scrollMomentum;
+    }
+
+    /**
      * How the title bar of the window is shown (macOS native builds).
      */
     public var titleBarStyle(get,set):TitleBarStyle;

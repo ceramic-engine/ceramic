@@ -344,8 +344,20 @@ class Screen extends Entity implements Observable implements RenderTarget {
      * or in lines when it is `LINES` (notched mouse wheels). Unlike
      * `mouseWheel`, nothing is scaled or rounded, so an app can match the
      * system's native scrolling speed. Desktop and web backends emit it.
+     * `mouseScrollPhase` tells, while the event is emitted, the phase of the
+     * gesture it belongs to (macOS native builds only, `NONE` elsewhere).
+     * On macOS, events of zero deltas are emitted too when they carry a
+     * phase (the fingers touch the trackpad, a gesture or its momentum ends).
      */
     @event function mouseScroll(deltaX:Float, deltaY:Float, unit:ScrollUnit);
+
+    /**
+     * Phase of the scroll gesture (trackpad, Magic Mouse) of the
+     * `mouseScroll` event being emitted, `NONE` outside of a `mouseScroll`
+     * event. Only macOS native builds report phases: every other platform
+     * gives `NONE` (see `ScrollPhase`).
+     */
+    public var mouseScrollPhase(default, null):ScrollPhase = ScrollPhase.NONE;
     @event function mouseMove(x:Float, y:Float);
 
     // Touch events
@@ -637,8 +649,11 @@ class Screen extends Entity implements Observable implements RenderTarget {
             });
         });
         app.backend.screen.onMouseScroll(this, function(deltaX, deltaY, unit) {
+            final phase = app.backend.screen.getMouseScrollPhase();
             app.beginUpdateCallbacks.push(function() {
+                mouseScrollPhase = phase;
                 emitMouseScroll(deltaX, deltaY, unit);
+                mouseScrollPhase = ScrollPhase.NONE;
             });
         });
 

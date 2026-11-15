@@ -737,6 +737,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         return false;
     }
 
+    /**
+     * Always `NONE`: Unity's Input System gives the scroll deltas without
+     * the phase of the gesture.
+     */
+    public function getMouseScrollPhase():ceramic.ScrollPhase {
+        return ceramic.ScrollPhase.NONE;
+    }
+
     #if !no_backend_docs
     /**
      * Shows or hides the mouse cursor.

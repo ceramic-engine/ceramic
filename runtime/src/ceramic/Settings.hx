@@ -632,6 +632,21 @@ class Settings implements Observable {
     public var windowStartsHidden(default,null):Bool = false;
 
     /**
+     * macOS native builds: whether trackpad and Magic Mouse scrolling keeps
+     * its momentum after the fingers leave the surface (the scroll events
+     * the system sends then, with the `MOMENTUM_*` phases of
+     * `Screen.mouseScrollPhase`), like other macOS apps. When false, a
+     * scroll stops when the fingers leave.
+     *
+     * An init setting: it applies when the app launches (SDL reads it once,
+     * when it starts) and cannot change afterwards. Other platforms ignore
+     * it (browsers and the other systems apply their own momentum, or none).
+     *
+     * Default: true
+     */
+    public var scrollMomentum(default,null):Bool = true;
+
+    /**
      * Root directory path for loading assets.
      *
      * All asset loading is relative to this path. Can be:

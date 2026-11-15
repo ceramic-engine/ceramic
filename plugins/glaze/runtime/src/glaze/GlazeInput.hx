@@ -23,7 +23,9 @@ import ceramic.KeyModifiers;
  * - Click counts follow GPUI's web platform: a press within 400ms and 5px of
  *   the previous one increments the count.
  * - Wheel deltas are pixels; Ceramic's positive y scrolls down, GPUI's
- *   positive y scrolls up, so deltas are negated.
+ *   positive y scrolls up, so deltas are negated. The touch phase of a
+ *   scroll comes from `screen.mouseScrollPhase` (macOS native builds), like
+ *   GPUI's macOS platform; it is `Moved` elsewhere (`touchPhaseOf`).
  * - Touches become raw `TouchEvent`s, like GPUI's web platform turns touch
  *   pointer events into `PlatformInput::Touch` (events.rs:236-600): GPUI's
  *   gesture recognizer in the window makes taps, pans with momentum, long
@@ -349,7 +351,24 @@ class GlazeInput extends ceramic.Entity {
             deltaX /= zoom;
             deltaY /= zoom;
         }
-        window.dispatchEvent(new ScrollEvent(position, scrollDeltaOf(deltaX, deltaY, unit), currentModifiers(), Moved));
+        window.dispatchEvent(new ScrollEvent(position, scrollDeltaOf(deltaX, deltaY, unit), currentModifiers(), touchPhaseOf(screen.mouseScrollPhase)));
+    }
+
+    /**
+     * GPUI's `TouchPhase` for the phase of a Ceramic `mouseScroll`, like
+     * GPUI's macOS platform reads `NSEvent.phase` (gpui_macos events.rs
+     * 262-267): may begin and began are `Started`, ended is `Ended`,
+     * everything else is `Moved`. GPUI ignores `momentumPhase`, so momentum
+     * events (whose `phase` is none) are `Moved`, and so is a cancelled
+     * gesture. Platforms without phases (`ScrollPhase.NONE`: the web,
+     * Windows, Linux, a mouse wheel) give `Moved`, as before.
+     */
+    public static function touchPhaseOf(phase:ceramic.ScrollPhase):TouchPhase {
+        return switch phase {
+            case GESTURE_MAY_BEGIN | GESTURE_BEGAN: Started;
+            case GESTURE_ENDED: Ended;
+            case _: Moved;
+        }
     }
 
     /** GPUI's `ScrollDelta` for a Ceramic `mouseScroll` (see `handleMouseScroll`). */

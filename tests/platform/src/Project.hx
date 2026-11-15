@@ -6,6 +6,8 @@ import ceramic.Files;
 import ceramic.InitSettings;
 import ceramic.Path;
 import ceramic.Platform;
+import ceramic.ScrollPhase;
+import ceramic.ScrollUnit;
 import ceramic.Settings;
 import ceramic.TitleBarStyle;
 import tracker.Model;
@@ -34,6 +36,9 @@ class Project extends Entity {
     var model:CheckModel = null;
 
     var changesets = 0;
+
+    /** `mouseScroll` events seen: `phase deltaX,deltaY unit`. */
+    var scrolls:Array<String> = [];
 
     /** Second native run: only reads back what the first one saved when it quit. */
     var readBackToken:String = null;
@@ -75,6 +80,9 @@ class Project extends Entity {
         model.serializer.onChangeset(this, _ -> changesets++);
 
         commonChecks();
+        App.app.screen.onMouseScroll(this, (deltaX, deltaY, unit) -> {
+            scrolls.push(App.app.screen.mouseScrollPhase.toString() + ' ' + Math.round(deltaX) + ',' + Math.round(deltaY) + ' ' + (unit == ScrollUnit.LINES ? 'lines' : 'pixels'));
+        });
 
         #if headless
         steps = headlessSteps();
@@ -211,6 +219,13 @@ class Project extends Entity {
         Files.deleteRecursive(dir);
         #end
 
+        // Scroll phases: none outside of a mouseScroll event, momentum on by default
+        equals('NONE', app.screen.mouseScrollPhase.toString(), 'no scroll phase outside of a mouseScroll event');
+        check(app.settings.scrollMomentum, 'scrollMomentum is true by default');
+        check(@:privateAccess new Settings().scrollMomentum, 'scrollMomentum default of a new Settings');
+        check(ScrollPhase.GESTURE_ENDED.isGesture() && !ScrollPhase.GESTURE_ENDED.isMomentum(), 'GESTURE_ENDED is a gesture phase');
+        check(ScrollPhase.MOMENTUM.isMomentum() && !ScrollPhase.NONE.isGesture() && !ScrollPhase.NONE.isMomentum(), 'MOMENTUM is a momentum phase, NONE neither');
+
         // Tracker: the terminate event serializes the pending changes at once
         final before = changesets;
         model.value = 'changed';
@@ -302,6 +317,22 @@ class Project extends Entity {
                 equals(-1, screen.windowTitleBarButtonsX, 'buttons x changed');
                 settings.windowBorderless = false;
                 check(!screen.windowBorderless, 'borderless removed');
+
+                // Scroll phases: none from a plain backend event, the phase
+                // given by a backend that reports one, read while emitted
+                equals('NONE', screen.getMouseScrollPhase().toString(), 'headless backend phase at rest');
+                @:privateAccess screen.emitMouseScroll(0, 3, ScrollUnit.LINES);
+                screen.emitMouseScrollWithPhase(0, 0, ScrollUnit.PIXELS, ScrollPhase.GESTURE_MAY_BEGIN);
+                screen.emitMouseScrollWithPhase(1, -4, ScrollUnit.PIXELS, ScrollPhase.GESTURE_BEGAN);
+                screen.emitMouseScrollWithPhase(0, 0, ScrollUnit.PIXELS, ScrollPhase.MOMENTUM_ENDED);
+                equals('NONE', screen.getMouseScrollPhase().toString(), 'headless backend phase reset after the event');
+                return true;
+            },
+            () -> {
+                // Screen events are emitted at the start of the next update
+                if (scrolls.length < 4) return false;
+                equals('NONE 0,3 lines|GESTURE_MAY_BEGIN 0,0 pixels|GESTURE_BEGAN 1,-4 pixels|MOMENTUM_ENDED 0,0 pixels', scrolls.join('|'), 'headless scroll phases');
+                equals('NONE', app.screen.mouseScrollPhase.toString(), 'no scroll phase after the events');
                 return true;
             }
         ];
@@ -334,8 +365,43 @@ class Project extends Entity {
         final screen = app.screen;
         final runtime = clay.Clay.app.runtime;
         var defaultClose:String = null;
+        var scrollWaited = 0;
 
         return [
+            () -> {
+                // Scroll phases: events posted to this process only, with the
+                // phase fields of CoreGraphics, handed to the hidden window
+                check(clay.Clay.app.config.runtime.scrollMomentum, 'scrollMomentum given to clay');
+                final hint:String = untyped __cpp__('::String(SDL_GetHint("SDL_MAC_SCROLL_MOMENTUM"))');
+                equals('1', hint, 'momentum hint set from settings.scrollMomentum');
+                final window = @:privateAccess runtime.window;
+                final post = (phase:Int, momentum:Int, dy:Int, pixels:Bool) -> {
+                    check(clay.sdl.SDL.scrollPhaseTestPost(window, phase, momentum, 0, dy, pixels), 'post scroll $phase $momentum $dy');
+                };
+                // A notched wheel (no phase), then a trackpad gesture and its momentum
+                post(0, 0, 1, false);
+                post(128, 0, 0, true); // kCGScrollPhaseMayBegin
+                post(1, 0, 5, true);   // kCGScrollPhaseBegan
+                post(2, 0, 7, true);   // kCGScrollPhaseChanged
+                post(4, 0, 0, true);   // kCGScrollPhaseEnded
+                post(0, 1, 3, true);   // kCGMomentumScrollPhaseBegin
+                post(0, 2, 2, true);   // kCGMomentumScrollPhaseContinue
+                post(0, 3, 0, true);   // kCGMomentumScrollPhaseEnd
+                return true;
+            },
+            () -> {
+                scrollWaited++;
+                if (scrolls.length < 8 && scrollWaited < 120) return false;
+                equals(8, clay.sdl.SDL.scrollPhaseTestDelivered(), 'posted scroll events reached the monitor');
+                app.logger.info('platform: scrolls ' + scrolls.join('|'));
+                equals(
+                    'NONE 0,-1 lines|GESTURE_MAY_BEGIN 0,0 pixels|GESTURE_BEGAN 0,-5 pixels|GESTURE 0,-7 pixels|GESTURE_ENDED 0,0 pixels'
+                    + '|MOMENTUM_BEGAN 0,-3 pixels|MOMENTUM 0,-2 pixels|MOMENTUM_ENDED 0,0 pixels',
+                    scrolls.join('|'), 'scroll phases from posted events'
+                );
+                equals('NONE', screen.mouseScrollPhase.toString(), 'no scroll phase after the events');
+                return true;
+            },
             () -> {
                 app.logger.info('platform: window at ${settings.windowX},${settings.windowY}, title bar: ' + describe());
                 final bounds = screen.displayBounds();
