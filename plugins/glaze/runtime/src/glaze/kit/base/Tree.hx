@@ -2,7 +2,7 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Additions without upstream equivalent (KIT-004 in docs/DEVIATIONS.md): `TreeItem.folder`, `setItems` keeping the
-// selection, `toggleOnClick`, `navigationKeys`.
+// selection, `toggleOnClick`, `navigationKeys`. KIT-022: `rowHeight` (rows of different heights).
 package glaze.kit.base;
 
 import glaze.AnyElement;
@@ -20,6 +20,7 @@ import glaze.MouseButton;
 import glaze.Range;
 import glaze.Render;
 import glaze.ScrollStrategy;
+import glaze.Size;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.UniformListScrollHandle;
@@ -30,6 +31,8 @@ import glaze.kit.base.Actions.SelectDown;
 import glaze.kit.base.Actions.SelectLeft;
 import glaze.kit.base.Actions.SelectRight;
 import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.Scrollbar.ScrollbarHandle;
+import glaze.kit.base.VirtualList.VirtualListScrollHandle;
 
 import glaze.Prelude.*;
 
@@ -278,6 +281,15 @@ class TreeState extends Model implements Render {
     /** See `Tree.navigationKeys`. */
     var navigationKeys:Bool = false;
 
+    /** See `Tree.rowHeight`. */
+    var rowHeight:Null<(ix:Int, entry:TreeEntry) -> Float> = null;
+
+    /** The scroll handle of the list of rows of different heights (`Tree.rowHeight`). */
+    final rowScrollHandleValue:VirtualListScrollHandle = new VirtualListScrollHandle();
+
+    /** The row sizes given to the list last, reused while the heights do not change. */
+    var rowSizes:Array<Size> = [];
+
     public function new(cx:AppContext) {
         super();
         focusHandle = (cx : App).focusHandle();
@@ -351,8 +363,26 @@ class TreeState extends Model implements Render {
         return scrollHandleValue;
     }
 
+    /**
+     * The scroll handle of the list of rows of different heights, the one
+     * in use while `Tree.rowHeight` is set (`scrollHandle()` is then idle).
+     */
+    public inline function rowScrollHandle():VirtualListScrollHandle {
+        return rowScrollHandleValue;
+    }
+
+    /** The handle of the list in use, for a scrollbar: `rowScrollHandle()` with `Tree.rowHeight`, else `scrollHandle()`. */
+    public function scrollbarHandle():ScrollbarHandle {
+        return rowHeight != null ? (rowScrollHandleValue : ScrollbarHandle) : (scrollHandleValue : ScrollbarHandle);
+    }
+
     public function scrollToItem(ix:Int, strategy:ScrollStrategy):Void {
-        scrollHandleValue.scrollToItem(ix, strategy);
+        if (rowHeight != null) {
+            rowScrollHandleValue.scrollToItem(ix, strategy);
+        }
+        else {
+            scrollHandleValue.scrollToItem(ix, strategy);
+        }
     }
 
     public function indexOf(id:String):Null<Int> {
@@ -499,12 +529,21 @@ class TreeState extends Model implements Render {
 
     function select(ix:Int, strategy:ScrollStrategy, cx:Context<Dynamic>):Void {
         selectedIx = ix;
-        scrollHandleValue.scrollToItem(ix, strategy);
+        scrollToItem(ix, strategy);
         cx.notify();
     }
 
     /** How many entries fit in the list, less one (ten before the first layout). */
     function pageSize():Int {
+        if (this.rowHeight != null) {
+            // Rows of different heights: their mean height
+            if (entries.length == 0) return 10;
+            final viewport:Float = rowScrollHandleValue.bounds().size.height;
+            final mean:Float = rowScrollHandleValue.contentSize().height / entries.length;
+            if (mean <= 0. || viewport <= 0.) return 10;
+            final rows = Math.floor(viewport / mean) - 1;
+            return rows > 1 ? rows : 1;
+        }
         final size = scrollHandleValue.state.lastItemSize;
         if (size == null || entries.length == 0) return 10;
         final viewport:Float = size.item.height;
@@ -554,7 +593,7 @@ class TreeState extends Model implements Render {
         var ix = selectedIx != null ? selectedIx : 0;
         ix = ix > 0 ? ix - 1 : (entries.length > 0 ? entries.length - 1 : 0);
         selectedIx = ix;
-        scrollHandleValue.scrollToItem(ix, ScrollStrategy.Top);
+        scrollToItem(ix, ScrollStrategy.Top);
         cx.notify();
     }
 
@@ -562,7 +601,7 @@ class TreeState extends Model implements Render {
         var ix = selectedIx != null ? selectedIx : 0;
         ix = ix + 1 < entries.length ? ix + 1 : 0;
         selectedIx = ix;
-        scrollHandleValue.scrollToItem(ix, ScrollStrategy.Bottom);
+        scrollToItem(ix, ScrollStrategy.Bottom);
         cx.notify();
     }
 
@@ -603,6 +642,23 @@ class TreeState extends Model implements Render {
             }
             return items;
         });
+        final heights = rowHeight;
+        if (heights != null) {
+            // KIT-022: rows of different heights, known before layout, so
+            // the list stays virtual (only the rows in view are built).
+            final previous = rowSizes;
+            final sizes:Array<Size> = [];
+            for (ix in 0...entries.length) {
+                final height = heights(ix, entries[ix]);
+                final kept = ix < previous.length ? previous[ix] : null;
+                sizes.push(kept != null && kept.height == height ? kept : new Size(0., height));
+            }
+            rowSizes = sizes;
+            return glaze.kit.base.VirtualList.vVirtualList(cx.entity(), "entries", sizes,
+                    (_:TreeState, start:Int, end:Int, window:Window, cx:Context<TreeState>) -> process(new Range(start, end), window, cx.app))
+                .trackScroll(rowScrollHandleValue)
+                .refineStyle(listStyle);
+        }
         return uniformList("entries", entries.length, (start, end, window, app) -> process(new Range(start, end), window, app))
             .trackScroll(scrollHandleValue)
             .refineStyle(listStyle);
@@ -648,6 +704,17 @@ class Tree extends Component implements Styled {
      */
     @prop var navigationKeys:Bool = false;
 
+    /**
+     * The height of each row, for rows of different heights (KIT-022). Null
+     * by default: every row has the height of the first one, as in gpui-kit
+     * (a uniform list). When set, the function gives the height of the row
+     * of an entry in pixels, the content of the row is laid out in exactly
+     * that height, and the list stays virtual. The scroll handle in use is
+     * then `TreeState.rowScrollHandle()` (`TreeState.scrollbarHandle()`
+     * gives the one in use either way).
+     */
+    @prop var rowHeight:Null<(ix:Int, entry:TreeEntry) -> Float> = null;
+
     public function new(state:Entity<TreeState>) {
         super();
         id = ElementId.Name('tree-' + state.entityId());
@@ -664,7 +731,9 @@ class Tree extends Component implements Styled {
         final listStyle = this.listStyle;
         final toggleOnClick = this.toggleOnClick;
         final navigationKeys = this.navigationKeys;
+        final rowHeight = this.rowHeight;
         state.update(cx, (state, _) -> {
+            state.rowHeight = rowHeight;
             state.renderItem = renderItem;
             state.listStyle = listStyle;
             state.toggleOnClick = toggleOnClick;

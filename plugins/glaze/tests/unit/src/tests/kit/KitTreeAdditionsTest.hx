@@ -512,6 +512,98 @@ class KitTreeAdditionsTest extends KitAdditionsTestCase {
         assertEquals('', drops.join(','));
     }
 
+
+/// KIT-022: rows of different heights
+
+    function tallFolders(tree:Tree):Tree {
+        return tree.rowHeight((_, entry) -> entry.isFolder() ? 25. : 23.5);
+    }
+
+    function testRowsTakeTheHeightTheHookGives() {
+        newTree([
+            new TreeItem('src', 'src').child(new TreeItem('main', 'main.lor')).child(new TreeItem('lib', 'lib.lor')).expanded(true),
+            new TreeItem('empty', 'empty').folder(true),
+            new TreeItem('readme', 'readme'),
+        ]);
+        final cx = show(tallFolders);
+        final tops = [for (id in ['src', 'main', 'lib', 'empty', 'readme']) boundsOf(cx, 'row-$id').origin.y];
+        // folder 25, file 23.5, file 23.5, folder 25: each row starts where the one before ends
+        assertFloatEquals(25., tops[1] - tops[0], 0.001);
+        assertFloatEquals(23.5, tops[2] - tops[1], 0.001);
+        assertFloatEquals(23.5, tops[3] - tops[2], 0.001);
+        assertFloatEquals(25., tops[4] - tops[3], 0.001);
+        // the list in use is the one of `rowScrollHandle`: the uniform list was never laid out
+        assertTrue(state().scrollHandle().state.lastItemSize == null);
+        assertFloatEquals(240., state().rowScrollHandle().bounds().size.height, 0.001);
+        // a click still selects and toggles
+        click(cx, 'readme');
+        assertEquals(4, state().selectedIndex());
+        click(cx, 'src');
+        assertFalse(state().entry(0).isExpanded());
+        assertFloatEquals(25., boundsOf(cx, 'row-empty').origin.y - boundsOf(cx, 'row-src').origin.y, 0.001);
+    }
+
+    function testWithoutTheHookRowsAreUniformAsBefore() {
+        newTree(project());
+        final plain = show();
+        final plainTops = [for (id in ['src', 'empty', 'readme']) boundsOf(plain, 'row-$id').origin.y];
+        final plainSignature = sceneSignature(plain);
+        newTree(project());
+        final unset = show(tree -> tree.rowHeight(null));
+        assertEquals(plainSignature, sceneSignature(unset));
+        assertFloatEquals(plainTops[1] - plainTops[0], plainTops[2] - plainTops[1], 0.001);
+        assertEquals(0., state().rowScrollHandle().contentSize().height);
+    }
+
+    function testRowsOfDifferentHeightsStayVirtual() {
+        final items = [for (i in 0...1000) i % 10 == 0 ? new TreeItem('n$i', 'folder $i').folder(true) : new TreeItem('n$i', 'file $i')];
+        newTree(items);
+        var built = 0;
+        final cx = open((_, _) -> {
+            final tree = Tree.component(tree, (ix, entry, _, _, _) -> {
+                built++;
+                return new ListItem(ElementId.NamedInteger('file', ix)).child(probe('row-' + entry.item().id, div().child(entry.item().label)));
+            }).navigationKeys(true);
+            return div().w(px(300.)).h(px(240.)).child(tallFolders(tree));
+        }, 480, 320, true);
+        cx.update((window, app) -> tree.update(app, (tree, cx) -> tree.focus(window, cx)));
+        built = 0;
+        frame(cx);
+        // 240 px hold about ten rows: the measured row, the rows in view and
+        // the overdraw, far from the thousand entries (frame() draws twice)
+        assertTrue(built > 0 && built < 60, 'rows built: $built');
+        final area = boundsOf(cx, 'row-n0');
+        assertTrue(area != null);
+
+        // End selects the last row and brings it into view, at the bottom
+        cx.simulateKeystrokes('end');
+        frame(cx);
+        assertEquals(999, state().selectedIndex());
+        final total = 100 * 25. + 900 * 23.5;
+        assertFloatEquals(total, state().rowScrollHandle().contentSize().height, 0.01);
+        assertFloatEquals(-(total - 240.), state().rowScrollHandle().offset().y, 0.01);
+        built = 0;
+        frame(cx);
+        assertTrue(built > 0 && built < 60, 'rows built after End: $built');
+
+        // scrollToItem and revealItem go to the list in use
+        cx.update((_, app) -> tree.update(app, (tree, cx) -> {
+            tree.scrollToItem(500, glaze.ScrollStrategy.Top);
+            cx.notify();
+        }));
+        frame(cx);
+        // row 500 starts after 50 folders and 450 files
+        assertFloatEquals(-(50 * 25. + 450 * 23.5), state().rowScrollHandle().offset().y, 0.01);
+        // PageUp moves by the rows that fit, counted with the mean height
+        cx.simulateKeystrokes('home');
+        frame(cx);
+        assertEquals(0, state().selectedIndex());
+        assertEquals(0., state().rowScrollHandle().offset().y);
+        cx.simulateKeystrokes('pagedown');
+        frame(cx);
+        assertEquals(Math.floor(240. / (total / 1000.)) - 1, state().selectedIndex());
+    }
+
 }
 
 private class DraggedFile {

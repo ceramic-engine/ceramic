@@ -107,6 +107,48 @@ class KitStyleHooksTest extends TestCase {
         assertEquals(0, redGlyphs());
     }
 
+    function openSelect(icon:Null<glaze.kit.Icon>):Void {
+        var state:Null<Entity<glaze.kit.select.SelectState<String>>> = null;
+        open((window, cx) -> {
+            if (state == null) {
+                state = cx.newEntity((c:Context<glaze.kit.select.SelectState<String>>) -> new glaze.kit.select.SelectState<String>(
+                    new glaze.kit.searchablelist.SearchableVec<String>(['Rust', 'Go']), new glaze.kit.base.IndexPath(1), window, c));
+            }
+            final select = new glaze.kit.select.Select(state);
+            if (icon != null) select.icon(icon);
+            return div().p4().w(px(200)).child(select);
+        });
+    }
+
+    function glyphsColored(color:Hsla):Int {
+        var count = 0;
+        for (sprite in window.renderedScene().monochromeSprites) {
+            if (Math.abs(sprite.colorH - color.h) < 0.001 && Math.abs(sprite.colorS - color.s) < 0.001 && Math.abs(sprite.colorL - color.l) < 0.001
+                && Math.abs(sprite.colorA - color.a) < 0.001) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /** KIT-024: the trailing icon of a `Select` keeps a color of its own, else it is muted as in gpui-kit. */
+    function testSelectKeepsTheColorOfAGivenIcon() {
+        openSelect(glaze.kit.Icon.component(glaze.kit.IconName.ChevronDown).textColor(red()));
+        assertEquals(1, redGlyphs());
+        final muted = app.update(cx -> Theme.global(cx).mutedForeground);
+        assertEquals(0, glyphsColored(muted));
+        window.destroy();
+        window = null;
+        // an icon without a color, and the default caret: muted
+        openSelect(glaze.kit.Icon.component(glaze.kit.IconName.ChevronDown));
+        assertEquals(0, redGlyphs());
+        assertEquals(1, glyphsColored(muted));
+        window.destroy();
+        window = null;
+        openSelect(null);
+        assertEquals(1, glyphsColored(muted));
+    }
+
     /** `Scrollable.scrollbarStyles`: the thumb of the scrollbar in the given look. */
     function testScrollableScrollbarStyles() {
         open((window, cx) -> {

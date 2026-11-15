@@ -29,6 +29,17 @@ import glaze.scene.Scene;
  */
 class TextPainter {
 
+    /**
+     * Port addition without GPUI equivalent: when set, called for every
+     * line of text that is painted (`ShapedLine.paint`, `WrappedLine.paint`
+     * and the kit's animated rich text), with the text, the origin of the
+     * line in logical pixels, its layout (font size, width, runs), the
+     * line height, the decoration runs (colors) and the number of wrap
+     * boundaries (0 for a single visual line). A tool for tests and
+     * measuring harnesses: null by default, nothing is called or allocated.
+     */
+    public static var lineObserver:Null<(text:String, origin:Point, layout:LineLayout, lineHeight:Float, decorationRuns:Array<DecorationRun>, wrapBoundaries:Int, painter:TextPainter) -> Void> = null;
+
     /** Scene receiving the primitives */
     public var scene:Scene;
 

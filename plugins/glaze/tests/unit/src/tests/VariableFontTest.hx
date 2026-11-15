@@ -298,6 +298,13 @@ class VariableFontTest extends testing.TestCase {
         assertFloatEquals(-12, base.tracking(13), 1e-9);
         assertFloatEquals(8 * (small.advance(n) - 12) * 13 / 2048, width(ts, text, 13, id), 0.001);
         assertFloatEquals(8 * (base.advance(n) + 28) * 28 / 2048, width(ts, text, 28, id), 0.001);
+        // between two sizes of the table: interpolated, then truncated toward
+        // zero to a whole font unit, as CoreText does: -49 at 16.8 px (-49.6
+        // interpolated), -26 at 14.45 px (-26.5), +6 at 11.45 px (6.6)
+        assertFloatEquals(-49.6, base.tracking(16.8), 1e-6);
+        assertFloatEquals(8 * (small.advance(n) - 49) * 16.8 / 2048, width(ts, text, 16.8, id), 0.001);
+        assertFloatEquals(8 * (small.advance(n) - 26) * 14.45 / 2048, width(ts, text, 14.45, id), 0.001);
+        assertFloatEquals(8 * (small.advance(n) + 6) * 11.45 / 2048, width(ts, text, 11.45, id), 0.001);
 
         // as a fallback of another font (the Apple logo, U+F8FF, is in no bundled
         // font), the system font is measured and rasterized at the same optical size

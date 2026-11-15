@@ -125,6 +125,105 @@ class KitTitleBarAdditionsTest extends KitAdditionsTestCase {
         assertEquals('minimize,zoom', ops.calls.join(','));
     }
 
+    /** Bounds of the control buttons, left to right. */
+    function controlBounds(cx:VisualTestContext):Array<glaze.Bounds> {
+        return cx.update((window, _) -> [for (entry in window.windowControlHitboxes()) if (entry.area != Drag) entry.hitbox.bounds]);
+    }
+
+    /** The glyphs drawn in the control buttons: bounds in logical pixels and color. */
+    function controlGlyphs(cx:VisualTestContext):Array<{bounds:glaze.Bounds, color:glaze.Hsla}> {
+        final buttons = controlBounds(cx);
+        return cx.update((window, _) -> {
+            final scale = window.scaleFactor();
+            final glyphs = [];
+            for (sprite in window.renderedScene().monochromeSprites) {
+                final bounds = new glaze.Bounds(new Point(sprite.boundsX / scale, sprite.boundsY / scale),
+                    new glaze.Size(sprite.boundsWidth / scale, sprite.boundsHeight / scale));
+                for (button in buttons) {
+                    if (button.contains(bounds.center())) {
+                        glyphs.push({bounds: bounds, color: new glaze.Hsla(sprite.colorH, sprite.colorS, sprite.colorL, sprite.colorA)});
+                        break;
+                    }
+                }
+            }
+            return glyphs;
+        });
+    }
+
+    function testControlHeightColorAndIconSize() {
+        OperatingSystem.current = OperatingSystem.Mac;
+        // by default: as high as the bar (34 px less its border), the theme's foreground, 14 px glyphs
+        final plain = titleBar(bar -> bar.platform(TitleBarPlatform.Windows));
+        final foreground = plain.update((_, app) -> glaze.kit.theme.Theme.global(app).foreground);
+        for (bounds in controlBounds(plain)) {
+            assertEquals(0., bounds.top());
+            assertEquals(33., bounds.size.height);
+        }
+        final plainGlyphs = controlGlyphs(plain);
+        assertEquals(3, plainGlyphs.length);
+        for (glyph in plainGlyphs) {
+            assertFloatEquals(14., glyph.bounds.size.width, 0.01);
+            assertFloatEquals(14., glyph.bounds.size.height, 0.01);
+            assertTrue(sameColor(foreground, glyph.color), 'foreground at rest');
+        }
+        final plainSignature = sceneSignature(plain);
+        // options left null draw the same frame
+        final unset = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).controlHeight(null).controlColor(null).controlIconSize(null));
+        assertEquals(plainSignature, sceneSignature(unset));
+
+        // 46 x 24 buttons centered in the 33 px of the bar, 12 px glyphs of a given color
+        final color:glaze.Hsla = glaze.Hsla.fromRgba(glaze.Prelude.rgb(0x336699));
+        final ops = new TitleBarOperations();
+        final cx = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).controlWidth(px(46.)).controlHeight(px(24.)).controlColor(color).controlIconSize(px(12.)), ops);
+        final lefts = [];
+        for (bounds in controlBounds(cx)) {
+            lefts.push(bounds.left());
+            assertEquals(4.5, bounds.top());
+            assertEquals(24., bounds.size.height);
+            assertEquals(46., bounds.size.width);
+        }
+        assertEquals('462,508,554', lefts.join(','));
+        final glyphs = controlGlyphs(cx);
+        assertEquals(3, glyphs.length);
+        for (glyph in glyphs) {
+            assertFloatEquals(12., glyph.bounds.size.width, 0.01);
+            assertFloatEquals(12., glyph.bounds.size.height, 0.01);
+            assertFloatEquals(16.5, glyph.bounds.center().y, 0.01);
+            assertTrue(sameColor(color, glyph.color), 'given color at rest');
+        }
+        // the buttons still act, and the color under the pointer is the theme's
+        cx.simulateClick(new Point(470., 17.));
+        assertEquals('minimize', ops.calls.join(','));
+        cx.simulateMouseMove(new Point(300., 200.));
+        cx.simulateMouseMove(new Point(472., 15.));
+        for (_ in 0...2) {
+            cx.runUntilParked();
+            cx.update((window, _) -> {
+                window.refresh();
+                window.draw();
+            });
+        }
+        final hoverColor = cx.update((_, app) -> glaze.kit.theme.Theme.global(app).secondaryForeground);
+        var under = 0;
+        var others = 0;
+        for (glyph in controlGlyphs(cx)) {
+            if (glyph.bounds.center().x < 508.) {
+                under++;
+                assertTrue(sameColor(hoverColor, glyph.color), 'theme color under the pointer');
+            }
+            else {
+                others++;
+                assertTrue(sameColor(color, glyph.color), 'given color at rest');
+            }
+        }
+        assertEquals(1, under);
+        assertEquals(2, others);
+    }
+
+    static function sameColor(a:glaze.Hsla, b:glaze.Hsla):Bool {
+        return Math.abs(a.h - b.h) < 0.0001 && Math.abs(a.s - b.s) < 0.0001 && Math.abs(a.l - b.l) < 0.0001 && Math.abs(a.a - b.a) < 0.0001;
+    }
+
     function testTheFullscreenPaddingIsForTheDefaultLeftPadding() {
         OperatingSystem.current = OperatingSystem.Mac;
         final settings = ceramic.App.app.settings;

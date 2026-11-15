@@ -105,6 +105,7 @@ class ShapedLine {
      * Paint the line of text. `alignWidth` is null to use the width of the line.
      */
     public function paint(origin:Point, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, painter:TextPainter):Void {
+        if (TextPainter.lineObserver != null) TextPainter.lineObserver(text, origin, layout, lineHeight, decorationRuns, 0, painter);
         LinePaint.paintLine(origin, layout, lineHeight, align, alignWidth, decorationRuns, null, painter, null);
     }
 
@@ -113,6 +114,7 @@ class ShapedLine {
      * byte range start and end, the origin, the width and the style).
      */
     public function paintWithUnderlineHandler(origin:Point, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, painter:TextPainter, paintUnderline:UnderlineHandler):Void {
+        if (TextPainter.lineObserver != null) TextPainter.lineObserver(text, origin, layout, lineHeight, decorationRuns, 0, painter);
         LinePaint.paintLine(origin, layout, lineHeight, align, alignWidth, decorationRuns, null, painter, paintUnderline);
     }
 
@@ -125,6 +127,7 @@ class ShapedLine {
 
     /** `paint` with an alignment width that is known (a `Null<Float>` argument is boxed on hxcpp) */
     public function paintAligned(origin:Point, lineHeight:Pixels, align:TextAlign, alignWidth:Float, painter:TextPainter):Void {
+        if (TextPainter.lineObserver != null) TextPainter.lineObserver(text, origin, layout, lineHeight, decorationRuns, 0, painter);
         LinePaint.paintLineAligned(origin, layout, lineHeight, align, alignWidth, decorationRuns, null, painter, null);
     }
 

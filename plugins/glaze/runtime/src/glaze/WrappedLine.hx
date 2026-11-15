@@ -78,6 +78,7 @@ class WrappedLine {
     }
 
     public function paint(origin:Point, lineHeight:Pixels, align:TextAlign, bounds:Null<Bounds>, painter:TextPainter):Void {
+        if (TextPainter.lineObserver != null) TextPainter.lineObserver(text, origin, layout.unwrappedLayout, lineHeight, decorationRuns, layout.wrapBoundaries.length, painter);
         LinePaint.paintLineAligned(origin, layout.unwrappedLayout, lineHeight, align, alignWidthOf(bounds), decorationRuns, layout.wrapBoundaries, painter, null);
     }
 

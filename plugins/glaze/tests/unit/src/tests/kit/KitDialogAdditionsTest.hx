@@ -170,4 +170,27 @@ class KitDialogAdditionsTest extends KitAdditionsTestCase {
         assertEquals(surface.left() + 16. + 1., header.left());
     }
 
+    /** KIT-026: `bodyGap` sets the space between the header and what follows; 8 px by default. */
+    function testBodyGapSetsTheSpaceUnderTheHeader() {
+        final build = (gap:Null<Float>) -> dialog(d -> {
+            d.header(probe('header', div().h(px(24.)).child('Back'))).child(probe('body', div().h(px(50.)).wFull()));
+            return gap != null ? d.bodyGap(px(gap)) : d;
+        });
+        final plain = build(null);
+        assertEquals(8., boundsOf(plain, 'body').top() - boundsOf(plain, 'header').bottom());
+        final plainHeight = surface(plain).size.height;
+        final plainSignature = sceneSignature(plain);
+
+        final none = build(0.);
+        assertEquals(0., boundsOf(none, 'body').top() - boundsOf(none, 'header').bottom());
+        assertEquals(plainHeight - 8., surface(none).size.height);
+        assertEquals(boundsOf(plain, 'header').top() - surface(plain).top(), boundsOf(none, 'header').top() - surface(none).top());
+
+        final wide = build(20.);
+        assertEquals(20., boundsOf(wide, 'body').top() - boundsOf(wide, 'header').bottom());
+
+        // the default gap given explicitly draws the same frame
+        assertEquals(plainSignature, sceneSignature(build(8.)));
+    }
+
 }

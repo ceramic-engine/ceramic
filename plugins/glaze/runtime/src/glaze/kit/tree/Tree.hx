@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Additions without upstream equivalent (KIT-004 in docs/DEVIATIONS.md): `toggleOnClick`, `navigationKeys`,
 // drag and drop of the rows (`dragEntries`, `dropOnEntries`, `dropOnRoot`, the drop target styles).
+// KIT-022: `rowHeight` (rows of different heights).
 package glaze.kit.tree;
 
 import glaze.App;
@@ -70,6 +71,9 @@ class Tree extends Component implements Styled {
 
     /** See `glaze.kit.base.Tree.navigationKeys`. */
     @prop var navigationKeys:Bool = false;
+
+    /** See `glaze.kit.base.Tree.rowHeight` (KIT-022): null by default, a uniform list. */
+    @prop var rowHeight:Null<(ix:Int, entry:TreeEntry) -> Float> = null;
 
     var dragValue:Null<(Int, TreeEntry) -> Dynamic> = null;
 
@@ -207,7 +211,8 @@ class Tree extends Component implements Styled {
         final state = this.state;
         final renderItem = this.renderItem;
         final contextMenuBuilder = this.contextMenu;
-        final scrollHandle = state.read(cx).scrollHandle();
+        // KIT-022: the handle of the list this frame builds
+        final scrollHandle:glaze.kit.base.Scrollbar.ScrollbarHandle = rowHeight != null ? state.read(cx).rowScrollHandle() : state.read(cx).scrollHandle();
 
         final theme = glaze.kit.theme.Theme.global(cx);
         final dragValue = this.dragValue;
@@ -232,6 +237,7 @@ class Tree extends Component implements Styled {
         final tree = new BaseTree(state)
             .toggleOnClick(toggleOnClick)
             .navigationKeys(navigationKeys)
+            .rowHeight(rowHeight)
             .item((ix, entry, entryState, window, cx) -> {
                 // Capture only the id: cloning the entry would deep-clone
                 // its whole subtree for every visible row on every frame.

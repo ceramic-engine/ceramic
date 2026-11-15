@@ -768,6 +768,15 @@ class Window implements WindowInvalidator {
     public var autoDraw:Bool;
 
     /**
+     * How the measured width of a text is rounded up (port addition
+     * without GPUI equivalent, ADD-015): `WholePixel` by default, GPUI's
+     * rule. With `DevicePixel`, what follows a text in a row starts at most
+     * one device pixel after the end of the text instead of at most one
+     * logical pixel. Set it before the window draws, or call `refresh()`.
+     */
+    public var textWidthSnap:TextWidthSnap = TextWidthSnap.WholePixel;
+
+    /**
      * `true` when the window needs to be drawn again.
      */
     public var dirty(default, null):Bool = true;

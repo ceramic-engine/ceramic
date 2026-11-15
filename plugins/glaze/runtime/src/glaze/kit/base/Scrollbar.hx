@@ -1365,6 +1365,11 @@ class Scrollbar extends Element {
         return appearance != null ? appearance.resolvedThumbWidth() : THUMB_WIDTH;
     }
 
+    /** KIT-025: the default thumb inset, the appearance's when it gives one. */
+    static function thumbInsetOf(appearance:Null<ScrollbarAppearance>, fallback:Float):Float {
+        return appearance != null && appearance.thumbInset != null ? appearance.thumbInset : fallback;
+    }
+
     /** DEV-023: the default hovered and dragged thumb width, the appearance's when it has one. */
     static function activeThumbWidth(appearance:Null<ScrollbarAppearance>):Float {
         return appearance != null ? appearance.resolvedGrownThumbWidth() : THUMB_ACTIVE_WIDTH;
@@ -1375,7 +1380,7 @@ class Scrollbar extends Element {
         final global = baseTheme(cx).scrollbar.styles();
         final appearance = effectiveAppearance(cx);
         return resolved(cx, _styles._trackActive, global._trackActive, _styles._thumbActive, global._thumbActive,
-            thumbDefaults(thumbDefaultBackground(cx, 0.55), activeThumbWidth(appearance), THUMB_ACTIVE_INSET, THUMB_ACTIVE_RADIUS), appearance);
+            thumbDefaults(thumbDefaultBackground(cx, 0.55), activeThumbWidth(appearance), thumbInsetOf(appearance, THUMB_ACTIVE_INSET), THUMB_ACTIVE_RADIUS), appearance);
     }
 
     @:allow(glaze.kit.base)
@@ -1383,7 +1388,7 @@ class Scrollbar extends Element {
         final global = baseTheme(cx).scrollbar.styles();
         final appearance = effectiveAppearance(cx);
         return resolved(cx, _styles._trackActive, global._trackActive, _styles._thumbHover, global._thumbHover,
-            thumbDefaults(thumbDefaultBackground(cx, 0.55), activeThumbWidth(appearance), THUMB_ACTIVE_INSET, THUMB_ACTIVE_RADIUS), appearance);
+            thumbDefaults(thumbDefaultBackground(cx, 0.55), activeThumbWidth(appearance), thumbInsetOf(appearance, THUMB_ACTIVE_INSET), THUMB_ACTIVE_RADIUS), appearance);
     }
 
     @:allow(glaze.kit.base)
@@ -1391,7 +1396,7 @@ class Scrollbar extends Element {
         final global = baseTheme(cx).scrollbar.styles();
         final appearance = effectiveAppearance(cx);
         return resolved(cx, _styles._trackHover, global._trackHover, _styles._thumb, global._thumb,
-            thumbDefaults(thumbDefaultBackground(cx, 0.35), restingThumbWidth(appearance), THUMB_INSET, THUMB_RADIUS), appearance);
+            thumbDefaults(thumbDefaultBackground(cx, 0.35), restingThumbWidth(appearance), thumbInsetOf(appearance, THUMB_INSET), THUMB_RADIUS), appearance);
     }
 
     @:allow(glaze.kit.base)
@@ -1399,7 +1404,7 @@ class Scrollbar extends Element {
         final global = baseTheme(cx).scrollbar.styles();
         final appearance = effectiveAppearance(cx);
         return resolved(cx, _styles._track, global._track, _styles._thumb, global._thumb,
-            thumbDefaults(thumbDefaultBackground(cx, 0.35), restingThumbWidth(appearance), THUMB_INSET, THUMB_RADIUS), appearance);
+            thumbDefaults(thumbDefaultBackground(cx, 0.35), restingThumbWidth(appearance), thumbInsetOf(appearance, THUMB_INSET), THUMB_RADIUS), appearance);
     }
 
     @:allow(glaze.kit.base)

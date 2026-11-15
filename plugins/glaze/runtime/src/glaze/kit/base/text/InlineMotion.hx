@@ -432,6 +432,7 @@ class InlineMotionFragment extends glaze.Element {
     }
 
     function paintGlyphs(line:ShapedLine, bounds:Bounds, window:Window, place:(Int, GlyphPlace) -> {matrix:Null<TransformationMatrix>, opacity:Float}):Void {
+        if (glaze.TextPainter.lineObserver != null) glaze.TextPainter.lineObserver(line.text, bounds.origin, line.layout, bounds.size.height, line.decorationRuns, 0, null);
         final ascent:Float = line.ascent();
         final descent:Float = line.descent();
         // The glyphs are centered in the fragment's box, like a text line in its line height.

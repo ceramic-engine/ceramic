@@ -624,6 +624,56 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** `KitPopupAdditionsTest`: no quad of the caller's color by default, the label filled with it and without vertical padding with `labelStyle`.
 - **Upstream.** Not proposed.
 
+### KIT-022: Tree, rows of different heights
+
+- **Component.** gpui-kit `Tree` (`crates/base/src/tree.rs`, `crates/component/src/tree.rs`). Port: `runtime/src/glaze/kit/base/Tree.hx`, `runtime/src/glaze/kit/tree/Tree.hx`.
+- **Behaviour of the original.** The rows are a uniform list: every row has the height of the first one.
+- **Addition.** `Tree.rowHeight((ix, entry) -> height)` (Base and component) gives each row its height in pixels. The rows are then a `VirtualList` with these sizes (only the rows in view are built), scrolled through `TreeState.rowScrollHandle()`; `TreeState.scrollbarHandle()` gives the handle of the list in use, and `scrollToItem`, `revealItem`, the selection keys and the page keys (which count rows with their mean height) follow it. The content of a row is laid out in exactly the height given.
+- **Default.** Unchanged: without `rowHeight` the tree is the uniform list of gpui-kit, on `scrollHandle()`.
+- **Scope.** None.
+- **Tests.** `KitTreeAdditionsTest`: rows of 25 and 23.5 px stacked without a gap, click and toggle, the same frame without the hook, a thousand rows of which fewer than sixty are built per frame, End, Home, PageDown and `scrollToItem` on the list in use.
+- **Upstream.** Not proposed.
+
+### KIT-023: TitleBar, height, resting color and glyph size of the window buttons
+
+- **Component.** gpui-kit `TitleBar` (`crates/component/src/title_bar.rs`). Port: `runtime/src/glaze/kit/TitleBar.hx`.
+- **Behaviour of the original.** A window control button is as high as the bar, its glyph is the small icon size (14 px) in the theme's `foreground`.
+- **Addition.** `TitleBar.controlHeight(px)` (a shorter button is centered in the bar), `controlColor(color)` (the glyph at rest; the hover and pressed colors are unchanged) and `controlIconSize(px)`.
+- **Default.** Unchanged: the three options are null.
+- **Scope.** None.
+- **Tests.** `KitTitleBarAdditionsTest`: the default sizes and color, the same frame with the options left null, 46 x 24 buttons centered with 12 px glyphs of the given color, the buttons still act, the theme's color under the pointer.
+- **Upstream.** Not proposed.
+
+### KIT-024: Select, a trailing icon keeps its own color
+
+- **Component.** gpui-kit `Select` (`crates/component/src/select.rs`). Port: `runtime/src/glaze/kit/select/SelectState.hx`.
+- **Behaviour of the original.** The trailing icon given with `Select.icon` is recolored with the theme's `muted_foreground`, whatever color it was given.
+- **Addition.** An icon given with a color of its own (`Icon.textColor`) keeps it.
+- **Default.** Unchanged for an icon without a color and for the default caret: muted.
+- **Scope.** A `Select` whose icon was given a color that gpui-kit ignores now shows that color. None in the golden (its custom icon has no color).
+- **Tests.** `KitStyleHooksTest.testSelectKeepsTheColorOfAGivenIcon`.
+- **Upstream.** Not proposed.
+
+### KIT-025: scrollbar thumb inset in the appearance
+
+- **Component.** Port only (DEV-023): `runtime/src/glaze/kit/base/ScrollbarAppearance.hx`, `Scrollbar.hx`.
+- **Behaviour of the original.** The thumb stays 4 px from the edge of its 16 px band and from the two ends of the track (`THUMB_INSET`); only a scrollbar's own `ScrollbarStyles` can change it.
+- **Addition.** `ScrollbarAppearance.withThumbInset(inset)` (and the `thumbInset` field): the default inset of the thumbs, per scrollbar or globally through `Theme.setScrollbarAppearance`. 0 draws the thumb at the edge of its band, from one end of the track to the other, like a browser's scrollbar.
+- **Default.** Unchanged: `thumbInset` is null (4 px) in every preset, the `gpuiKit()` one included. Explicit `ScrollbarStyles` insets still win.
+- **Scope.** None.
+- **Tests.** `ScrollbarAppearanceTest.testThumbInsetPlacesTheThumbInItsBand`.
+- **Upstream.** Not proposed.
+
+### KIT-026: Dialog, the gap between header and body
+
+- **Component.** gpui-kit `Dialog` (`crates/component/src/dialog/dialog.rs`). Port: `runtime/src/glaze/kit/dialog/Dialog.hx`.
+- **Behaviour of the original.** The header, the title, the content and the scrolling body are stacked 8 px apart (`gap_y_2`).
+- **Addition.** `Dialog.bodyGap(px)` sets that space; 0 puts a scrolling body right under the header, so what scrolls under the header disappears at its bottom edge.
+- **Default.** Unchanged: 8 px.
+- **Scope.** None.
+- **Tests.** `KitDialogAdditionsTest.testBodyGapSetsTheSpaceUnderTheHeader`.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.
@@ -772,11 +822,33 @@ Features Glaze adds to GPUI's API. Each one is off or neutral by default: an int
   an `opsz` axis is shaped and rasterized with the instance of the font size, and the `trak` tracking
   of a variable face is added to its advances. With system families, `system-ui`, `-apple-system`,
   `BlinkMacSystemFont` and `.AppleSystemUIFont` are the system font of macOS and `ui-monospace` is
-  SF Mono, like in a browser.
+  SF Mono, like in Safari (Chromium does not know that name and falls through to the next family).
 - **Default.** Static fonts are not concerned; `.SystemUIFont` and the substitutes of well known names
   are unchanged; nothing applies without system families unless a variable font file is added.
+- **Tracking between two sizes of the table.** The value is interpolated, then truncated toward
+  zero to a whole font unit, as CoreText does, and WebKit with it (-49 at 16.8 px where the
+  interpolation gives -49.6, -26 at 14.45 px for -26.5, +6 at 11.45 px for 6.6). HarfBuzz and
+  Chromium round half up instead (measured on Chromium 130: -50 at 16.8 px), so a Chromium view is
+  up to one font unit per glyph narrower.
 - **Scope.** None in the golden (no variable font, no system families).
 - **Tests.** `VariableFontTest` (9 tests), `ttf` `VariationTests` against fontTools.
+
+### ADD-015: the measured width of a text can stop at a device pixel
+
+- **Component.** Port only: `runtime/src/glaze/TextWidthSnap.hx`, `Window.textWidthSnap`, `TextLayout.hx`.
+- **Behaviour of GPUI.** The measured width of a text is rounded up to a whole logical pixel
+  (`elements/text.rs:772`, `size.width.max(line_size.width).ceil()`), then every measured leaf is
+  rounded up to a device pixel (`taffy.rs:273` and `423`), line heights are snapped to a device pixel
+  (`elements/text.rs:643`, `window.pixel_snap`) and box edges are rounded to device pixels after layout
+  (`taffy.rs`, `layout_bounds`). The port does the same (`TextLayout.hx`, `TaffyLayoutEngine.hx`).
+- **What it does.** `window.textWidthSnap = TextWidthSnap.DevicePixel` leaves the first rounding out:
+  the box of a text is rounded up to a device pixel only (half a logical pixel at a scale factor of
+  2). It is still at least as wide as its text and a whole number of device pixels wide, so the
+  rounding of its edges cannot make it narrower than the text (no wrap or truncation appears).
+- **Default.** `WholePixel`: GPUI's rule. At a scale factor of 1 the two values give the same sizes.
+- **Scope.** None unless set. Not concerned in either mode: line heights, the kit's rich text
+  (`InlineFlow` never rounded its fragments to whole pixels), text inputs.
+- **Tests.** `TextElementTest.testTextWidthSnap`.
 
 ## Decision policy
 

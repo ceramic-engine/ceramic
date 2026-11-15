@@ -148,6 +148,10 @@ class CeramicTextSystem implements PlatformTextSystem {
      * macOS (at 13 px the system font is tightened by 12/2048 em per
      * glyph, at 17 px by 52/2048 em). True by default; static fonts are
      * never tracked. Set it before laying out text.
+     *
+     * Between two sizes of the table the value is interpolated, then
+     * rounded to a whole font unit (half up), as HarfBuzz and Chromium do:
+     * at 16.8 px the system font is tightened by 50/2048 em, not 49.6.
      */
     public var variableFontTracking:Bool = true;
 
@@ -1458,9 +1462,12 @@ class CeramicTextSystem implements PlatformTextSystem {
         for (ttfRun in shaped.runs) {
             final face = ttfRun.font;
             final unitsPerEm = face.unitsPerEm;
-            // Tracking of a variable font (`trak`), in font units per glyph
-            final tracking = variableFonts && variableFontTracking && face.baseFont.isVariable && faces.indexOf(face.baseFont) != -1
+            // Tracking of a variable font (`trak`), in whole font units per glyph:
+            // the interpolated value is truncated toward zero, as CoreText (and
+            // WebKit on top of it) do for the macOS system font
+            final rawTracking = variableFonts && variableFontTracking && face.baseFont.isVariable && faces.indexOf(face.baseFont) != -1
                 ? face.tracking(fontSize) : 0.0;
+            final tracking = rawTracking < 0 ? Math.fceil(rawTracking) : Math.ffloor(rawTracking);
             for (g in ttfRun.glyphs) {
                 while (spanIndex < spanStarts.length - 1 && g.index >= spanEnds[spanIndex])
                     spanIndex++;

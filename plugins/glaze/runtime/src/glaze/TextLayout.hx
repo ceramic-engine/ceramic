@@ -248,9 +248,19 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
 
         var width:Float = 0;
         var height:Float = 0;
-        for (line in lines) {
-            height += line.sizeHeight(lineHeight);
-            width = Math.fceil(Math.max(width, line.width()));
+        if (window.textWidthSnap == TextWidthSnap.WholePixel) {
+            for (line in lines) {
+                height += line.sizeHeight(lineHeight);
+                width = Math.fceil(Math.max(width, line.width()));
+            }
+        }
+        else {
+            // Addition (ADD-015): the width keeps its fraction here; the
+            // layout engine rounds every measured leaf up to a device pixel.
+            for (line in lines) {
+                height += line.sizeHeight(lineHeight);
+                width = Math.max(width, line.width());
+            }
         }
         // Sizes are immutable: the last one is kept when it is the same
         final previous = this.size;

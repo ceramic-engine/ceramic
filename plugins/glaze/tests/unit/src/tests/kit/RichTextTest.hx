@@ -259,6 +259,34 @@ class RichTextTest extends TestCase {
         assertEquals('aaaa bbbb  |cccc', [for (f in hanging) f.text].join('|'));
     }
 
+    function testPreWrapHangsOneSpaceWhenTheLineFitsToAHundredthOfAPixel() {
+        // The recorded shape: the words fill the column to a fraction of a
+        // pixel and one space follows. The space hangs, the word stays.
+        final fit = shapedWidth('aaaa bbbb', 16.);
+        final rich = RichText.component('pre-fit').whiteSpace(PreWrap).spans([RichSpan.text('aaaa bbbb cccc dddd')]);
+        assertEquals('aaaa bbbb |cccc |dddd', [for (f in texts(layout(rich, fit + 0.01, true))) f.text].join('|'));
+        // The words themselves must fit: a hundredth of a pixel too narrow wraps a word earlier.
+        assertEquals('aaaa |bbbb |cccc |dddd', [for (f in texts(layout(rich, fit - 0.01, true))) f.text].join('|'));
+        // Styled runs on both sides of the wrap hang the same way.
+        final styled = RichText.component('pre-fit-styled').whiteSpace(PreWrap).spans([
+            RichSpan.text('aaaa '),
+            RichSpan.text('bbbb', new RichTextStyle().opacity(0.5)),
+            RichSpan.text(' cccc'),
+        ]);
+        final lines = new Map<Int, String>();
+        final order:Array<Int> = [];
+        for (f in texts(layout(styled, fit + 0.5, true))) {
+            final y = Math.round(f.origin.y);
+            if (!lines.exists(y)) {
+                lines.set(y, '');
+                order.push(y);
+            }
+            lines.set(y, lines.get(y) + f.text);
+        }
+        assertEquals(2, order.length);
+        assertEquals('cccc', lines.get(order[1]));
+    }
+
     function testTextAlignMovesTheLines() {
         final lefts = (align:glaze.TextAlign) -> {
             final cx = open((_, _) -> div().w(px(300.)).child(RichText.component('aligned').textAlign(align).spans([

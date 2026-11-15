@@ -102,6 +102,54 @@ class TextElementTest extends TestCase {
         }
     }
 
+    /**
+     * ADD-015: by default the box of a text is a whole number of logical
+     * pixels wide (GPUI); with `DevicePixel` it stops at the next device
+     * pixel, so what follows starts closer to the end of the text.
+     */
+    function testTextWidthSnap() {
+        final widths = (snap:Null<glaze.TextWidthSnap>) -> {
+            final layouts:Array<TextLayout> = [];
+            open((window, cx) -> {
+                final row = div().flex().fontFamily('Inter').textSize(px(13)).lineHeight(px(20));
+                layouts.resize(0);
+                for (word in ['Play', 'Export', 'CoffeeShop.lor', 'il']) {
+                    final styled = new StyledText(word);
+                    layouts.push(styled.layout());
+                    row.child(styled);
+                }
+                return row;
+            });
+            if (snap != null) window.textWidthSnap = snap;
+            window.draw();
+            final result = [for (layout in layouts) {box: layout.bounds().size.width, x: layout.bounds().origin.x, text: layout.lineLayouts()[0].width()}];
+            window.destroy();
+            window = null;
+            return result;
+        };
+        final whole = widths(null);
+        final same = widths(glaze.TextWidthSnap.WholePixel);
+        final device = widths(glaze.TextWidthSnap.DevicePixel);
+        var fractional = 0;
+        var x = 0.;
+        for (i in 0...whole.length) {
+            // the default: GPUI's whole pixel, each text after the box before it
+            assertEquals(Math.fceil(whole[i].text), whole[i].box);
+            assertEquals(whole[i].box, same[i].box);
+            assertEquals(whole[i].x, same[i].x);
+            // the scale factor of the window is 2: half pixels
+            assertFloatEquals(whole[i].text, device[i].text, 0.0001);
+            assertEquals(Math.fceil(device[i].text * 2.) / 2., device[i].box);
+            assertEquals(x, device[i].x);
+            assertTrue(device[i].box >= device[i].text && device[i].box <= whole[i].box);
+            if (device[i].box < whole[i].box) fractional++;
+            x += device[i].box;
+        }
+        assertTrue(fractional > 0, 'at least one text ends in the first half of a pixel');
+        // the texts still fit their boxes: one line each, nothing wrapped
+        assertTrue(x <= whole[3].x + whole[3].box);
+    }
+
     function testTextWrapsAtTheWidthOfItsParent() {
         var layout:TextLayout = null;
         open((window, cx) -> {

@@ -51,6 +51,11 @@ enum abstract ScrollbarTransition(Int) from Int to Int {
  *   the kit theme's `radius`, as in gpui-kit. A scrollbar's own
  *   `ScrollbarStyles` radius still wins, and a theme whose radius is zero
  *   still squares the thumb.
+ * - `thumbInset`: how far the thumb stays from the edge of its band and
+ *   from the two ends of the track, in pixels; null by default for the 4
+ *   pixels of gpui-kit. `withThumbInset(0.)` draws the thumb at the edge
+ *   of the band, like a browser's scrollbar. A scrollbar's own
+ *   `ScrollbarStyles` inset still wins.
  *
  * The global default is the kit theme's `scrollbarAppearance`
  * (`Theme.setScrollbarAppearance(appearance, cx)` changes it at runtime),
@@ -115,6 +120,12 @@ class ScrollbarAppearance {
     public var thumbRadius(default, null):Null<Float> = FULL_RADIUS;
 
     /**
+     * How far the thumb stays from the edge of its band and from the ends
+     * of the track, in pixels; null for gpui-kit's 4 pixels.
+     */
+    public var thumbInset(default, null):Null<Float> = null;
+
+    /**
      * An appearance with the default thumb (`DEFAULT_THUMB_WIDTH`, fully
      * rounded); `withThumbWidth` and `withThumbRadius` change it.
      */
@@ -129,6 +140,7 @@ class ScrollbarAppearance {
         final result = new ScrollbarAppearance(transition, thumbGrowth, showDuration, hideDuration);
         result.thumbWidth = thumbWidth;
         result.thumbRadius = thumbRadius;
+        result.thumbInset = thumbInset;
         return result;
     }
 
@@ -233,6 +245,17 @@ class ScrollbarAppearance {
         return result;
     }
 
+    /**
+     * A copy whose thumb stays `inset` pixels from the edge of its band and
+     * from the ends of the track (0: at the edge; null: gpui-kit's 4
+     * pixels, the default).
+     */
+    public function withThumbInset(inset:Null<Float>):ScrollbarAppearance {
+        final result = copy();
+        result.thumbInset = inset;
+        return result;
+    }
+
     /** The resting thumb width in effect, in pixels. */
     public function resolvedThumbWidth():Float {
         return thumbWidth != null ? thumbWidth : GPUI_KIT_THUMB_WIDTH;
@@ -273,7 +296,8 @@ class ScrollbarAppearance {
             && showDuration == other.showDuration
             && hideDuration == other.hideDuration
             && thumbWidth == other.thumbWidth
-            && thumbRadius == other.thumbRadius;
+            && thumbRadius == other.thumbRadius
+            && thumbInset == other.thumbInset;
     }
 
     public function toString():String {
@@ -282,7 +306,7 @@ class ScrollbarAppearance {
             case GpuiKit: 'GpuiKit';
             case _: 'Fade';
         }
-        return 'ScrollbarAppearance($name, thumbGrowth: $thumbGrowth, show: ${resolvedShowDuration()}, hide: ${resolvedHideDuration()}, thumbWidth: $thumbWidth, thumbRadius: $thumbRadius)';
+        return 'ScrollbarAppearance($name, thumbGrowth: $thumbGrowth, show: ${resolvedShowDuration()}, hide: ${resolvedHideDuration()}, thumbWidth: $thumbWidth, thumbRadius: $thumbRadius${thumbInset != null ? ', thumbInset: $thumbInset' : ''})';
     }
 
 }

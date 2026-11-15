@@ -538,7 +538,10 @@ class SelectState<I> extends Model implements Render {
                 case null:
                     (Caret.component(state.size).textColor(theme.mutedForeground) : IntoElement);
                 case icon:
-                    (icon.clone().xsmall().textColor(theme.mutedForeground) : IntoElement);
+                    // Addition (KIT-024): an icon given with a color of its own
+                    // keeps it; gpui-kit recolors every icon.
+                    final own = icon.clone().xsmall();
+                    (own.textColorProp != null ? own : own.textColor(theme.mutedForeground) : IntoElement);
             }
 
             inner.child(iconElement);

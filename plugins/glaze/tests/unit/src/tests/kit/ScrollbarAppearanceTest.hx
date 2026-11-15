@@ -546,6 +546,65 @@ class ScrollbarAppearanceTest extends TestCase {
         assertEquals(6., g.thumbWidth());
     }
 
+    /** KIT-025: `thumbInset` moves the thumb to the edge of its band; null keeps gpui-kit's 4 px. */
+    function testThumbInsetPlacesTheThumbInItsBand() {
+        assertEquals(null, ScrollbarAppearance.defaultValue().thumbInset);
+        assertEquals(null, ScrollbarAppearance.gpuiKit().thumbInset);
+        final edge = ScrollbarAppearance.fade().withThumbInset(0.);
+        assertEquals(0., edge.thumbInset);
+        assertEquals(0., edge.withThumbWidth(6.).withDuration(0.2).thumbInset, 'kept by the other builders');
+        assertFalse(edge.equals(ScrollbarAppearance.fade()));
+        assertTrue(edge.withThumbInset(null).equals(ScrollbarAppearance.fade()));
+
+        // default: 4 px from the right edge and from the top of the 100 px track
+        final plain = harness(Always);
+        assertEquals(88., plain.thumbX());
+        assertEquals(4., plain.thumbY());
+        final plainLength = plain.thumbLength();
+
+        // at the edge of the band: x 92 to 100, starting at the top, 8 px longer
+        final h = harness(Always, edge);
+        assertEquals(8., h.thumbWidth());
+        assertEquals(92., h.thumbX());
+        assertEquals(100., h.thumbX() + h.thumbWidth());
+        assertEquals(0., h.thumbY());
+        assertEquals(plainLength + 8., h.thumbLength());
+        app.update(cx -> {
+            final scrollbar = h.scrollbar;
+            for (style in [@:privateAccess scrollbar.styleForNormal(cx), @:privateAccess scrollbar.styleForHoveredBar(cx), @:privateAccess scrollbar.styleForHoveredThumb(cx)]) {
+                assertEquals(0., style.inset);
+            }
+            return null;
+        });
+
+        // globally, through the theme
+        app.update(cx -> {
+            setAppearance(ScrollbarAppearance.fade().withThumbInset(1.), cx);
+            return null;
+        });
+        final themed = harness(Always);
+        assertEquals(91., themed.thumbX());
+        assertEquals(1., themed.thumbY());
+
+        // a scrollbar's own style still wins
+        final own = new AppearanceHarness();
+        final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> {
+            final scrollbar = new Scrollbar(own.handle).axis(Vertical).mode(Always).appearance(edge)
+                .styles(styles -> styles.thumb(style -> style.inset(2.)));
+            own.scrollbar = scrollbar;
+            return div()
+                .relative()
+                .size(px(100.))
+                .child(div().id('content').size(px(100.)).overflowYScroll().trackScroll(own.handle).child(div().wFull().h(px(500.))))
+                .child(scrollbar);
+        }));
+        own.cx = opened.cx;
+        own.app = app;
+        contexts.push(opened.cx);
+        draw(opened.cx);
+        assertEquals(90., own.thumbX());
+    }
+
     function testExplicitStylesWinOverTheAppearanceThumb() {
         final h = new AppearanceHarness();
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> {
@@ -633,6 +692,14 @@ private class AppearanceHarness {
 
     public function thumbX():Float {
         return state().thumbFillBounds.origin.x;
+    }
+
+    public function thumbY():Float {
+        return state().thumbFillBounds.origin.y;
+    }
+
+    public function thumbLength():Float {
+        return state().thumbFillBounds.size.height;
     }
 
     /** The resolved thumb radius, before the paint clamps it. */

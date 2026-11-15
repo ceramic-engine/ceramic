@@ -2,7 +2,7 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Additions without upstream equivalent (KIT-005 in docs/DEVIATIONS.md): `TitleBar.platform`, click handlers on the
-// window control buttons of the Windows look.
+// window control buttons of the Windows look. KIT-023: `controlHeight`, `controlColor`, `controlIconSize`.
 package glaze.kit;
 
 import glaze.AnyElement;
@@ -149,6 +149,26 @@ class TitleBar extends Component implements Styled implements ParentElement {
     @prop var controlWidth:Null<Pixels> = null;
 
     /**
+     * The height of each window control button. Null by default: the
+     * height of the bar. A shorter button is centered in the bar
+     * (addition, KIT-023).
+     */
+    @prop var controlHeight:Null<Pixels> = null;
+
+    /**
+     * The color of the glyphs of the window control buttons at rest. Null
+     * by default: the theme's `foreground`. The colors under the pointer
+     * and while pressed are unchanged (addition, KIT-023).
+     */
+    @prop var controlColor:Null<Hsla> = null;
+
+    /**
+     * The size of the glyphs of the window control buttons. Null by
+     * default: the small icon size, 14 px (addition, KIT-023).
+     */
+    @prop var controlIconSize:Null<Pixels> = null;
+
+    /**
      * Create a new TitleBar.
      */
     public function new() {
@@ -282,7 +302,7 @@ class TitleBar extends Component implements Styled implements ParentElement {
         inner.extend(childElements);
         bar.child(inner)
             .child(windowControls
-                ? WindowControls.component(onCloseWindowHandler, platform, controlClicks, controlWidth)
+                ? WindowControls.component(onCloseWindowHandler, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize)
                 : div().id('window-controls'));
 
         return div().flexShrink0().child(bar);
@@ -380,12 +400,22 @@ private class ControlIconElement extends Component {
 
     final controlWidth:Null<Pixels>;
 
-    public function new(icon:ControlIcon, ?platform:TitleBarPlatform, controlClicks:Bool = true, ?controlWidth:Pixels) {
+    final controlHeight:Null<Pixels>;
+
+    final controlColor:Null<Hsla>;
+
+    final controlIconSize:Null<Pixels>;
+
+    public function new(icon:ControlIcon, ?platform:TitleBarPlatform, controlClicks:Bool = true, ?controlWidth:Pixels, ?controlHeight:Pixels, ?controlColor:Hsla,
+            ?controlIconSize:Pixels) {
         super();
         this.icon = icon;
         this.platform = platform;
         this.controlClicks = controlClicks;
         this.controlWidth = controlWidth;
+        this.controlHeight = controlHeight;
+        this.controlColor = controlColor;
+        this.controlIconSize = controlIconSize;
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -403,13 +433,15 @@ private class ControlIconElement extends Component {
         final root = div()
             .id(ControlIconTools.id(icon))
             .flex()
-            .w(controlWidth != null ? controlWidth : TitleBar.TITLE_BAR_HEIGHT)
-            .hFull()
+            .w(controlWidth != null ? controlWidth : TitleBar.TITLE_BAR_HEIGHT);
+        // Addition (KIT-023): a button of a given height, centered by the row
+        if (controlHeight != null) root.h(controlHeight) else root.hFull();
+        root
             .flexShrink0()
             .justifyCenter()
             .contentCenter()
             .itemsCenter()
-            .textColor(Theme.global(cx).foreground)
+            .textColor(controlColor != null ? controlColor : Theme.global(cx).foreground)
             .hover(style -> style.bg(hoverBg).textColor(hoverFg))
             .active(style -> style.bg(activeBg).textColor(hoverFg));
         if (isWindows) {
@@ -442,7 +474,8 @@ private class ControlIconElement extends Component {
                     }
                 });
         }
-        return root.child(Icon.component(ControlIconTools.icon(icon)).small());
+        final glyph = Icon.component(ControlIconTools.icon(icon));
+        return root.child(controlIconSize != null ? glyph.withSize(controlIconSize) : glyph.small());
     }
 
 }
@@ -462,18 +495,31 @@ private class WindowControls extends Component {
 
     final controlWidth:Null<Pixels>;
 
-    public function new(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>, ?platform:TitleBarPlatform, controlClicks:Bool = true, ?controlWidth:Pixels) {
+    final controlHeight:Null<Pixels>;
+
+    final controlColor:Null<Hsla>;
+
+    final controlIconSize:Null<Pixels>;
+
+    public function new(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>, ?platform:TitleBarPlatform, controlClicks:Bool = true, ?controlWidth:Pixels,
+            ?controlHeight:Pixels, ?controlColor:Hsla, ?controlIconSize:Pixels) {
         super();
         this.onCloseWindow = onCloseWindow;
         this.platform = platform;
         this.controlClicks = controlClicks;
         this.controlWidth = controlWidth;
+        this.controlHeight = controlHeight;
+        this.controlColor = controlColor;
+        this.controlIconSize = controlIconSize;
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final platform = this.platform;
         final controlClicks = this.controlClicks;
         final controlWidth = this.controlWidth;
+        final controlHeight = this.controlHeight;
+        final controlColor = this.controlColor;
+        final controlIconSize = this.controlIconSize;
         if (@:privateAccess TitleBar.isMacos(platform) || @:privateAccess TitleBar.isWebLook(platform)) {
             return div().id('window-controls');
         }
@@ -506,12 +552,12 @@ private class WindowControls extends Component {
             .flexShrink0()
             .hFull();
         if (supported.minimize) {
-            controls.child(ControlIconElement.component(Minimize, platform, controlClicks, controlWidth));
+            controls.child(ControlIconElement.component(Minimize, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize));
         }
         if (supported.maximize) {
-            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize, platform, controlClicks, controlWidth));
+            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize));
         }
-        return controls.child(ControlIconElement.component(Close(onCloseWindow), platform, controlClicks, controlWidth));
+        return controls.child(ControlIconElement.component(Close(onCloseWindow), platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize));
     }
 
 }

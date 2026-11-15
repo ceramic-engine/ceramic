@@ -2,7 +2,7 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Additions without upstream equivalent (KIT-006 in docs/DEVIATIONS.md): `maxH`, `maxHRatio`, `overlayCloseOnClick`,
-// a public `header`.
+// a public `header`. KIT-026: `bodyGap`.
 package glaze.kit.dialog;
 
 import glaze.Action;
@@ -228,6 +228,7 @@ class DialogProps {
     var maxHeight:Null<Pixels> = null;
     var maxHeightRatio:Null<Float> = null;
     var overlayCloseOnClick:Bool = false;
+    var bodyGap:Null<Pixels> = null;
 
     public function new() {}
 
@@ -246,6 +247,7 @@ class DialogProps {
         props.maxHeight = maxHeight;
         props.maxHeightRatio = maxHeightRatio;
         props.overlayCloseOnClick = overlayCloseOnClick;
+        props.bodyGap = bodyGap;
         return props;
     }
 
@@ -580,6 +582,18 @@ class Dialog extends Component implements Styled implements ParentElement {
     }
 
     /**
+     * Set the space between the parts stacked in the dialog: the header,
+     * the title, the content and the scrolling body (addition, KIT-026).
+     * 8 px by default, as in gpui-kit; `bodyGap(px(0.))` puts the body
+     * right under the header, so a scrolling body starts at the header's
+     * bottom edge.
+     */
+    public function bodyGap(gap:Pixels):Dialog {
+        props.bodyGap = gap;
+        return this;
+    }
+
+    /**
      * Set the maximum height of the dialog as a part of the viewport height
      * (`0.85` for 85 %), under the same limit as `maxH`. With both, the
      * smaller wins.
@@ -830,8 +844,9 @@ class Dialog extends Component implements Styled implements ParentElement {
 
         final body = vFlex()
             .flex1()
-            .overflowHidden()
-            .gapY2();
+            .overflowHidden();
+        // Addition (KIT-026): the caller's gap between header, title, content and body
+        if (props.bodyGap != null) body.gapY(glaze.Prelude.px(props.bodyGap)) else body.gapY2();
         if (headerElement != null) {
             body.child(div()
                 .pl(glaze.Prelude.px(paddingLeft))
