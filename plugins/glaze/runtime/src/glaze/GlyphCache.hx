@@ -1,6 +1,6 @@
 package glaze;
 
-import haxe.ds.IntMap;
+import ceramic.GenericIntMap;
 import haxe.io.FPHelper;
 
 /**
@@ -8,29 +8,25 @@ import haxe.io.FPHelper;
  *
  * Rust hashes `RenderGlyphParams` in `FxHashMap`s (raster bounds of the
  * `TextSystem`, atlas tiles). Building a string key for every glyph painted
- * every frame would allocate, so this map nests `IntMap`s: font id, then the
- * exact `f32` bits of the font size and of the scale factor, then the glyph
- * id combined with the subpixel variant, emoji, subpixel rendering and
- * dilation fields.
+ * every frame would allocate, so this map nests `GenericIntMap`s: font id,
+ * then the exact `f32` bits of the font size and of the scale factor, then
+ * the glyph id combined with the subpixel variant, emoji, subpixel rendering
+ * and dilation fields.
+ *
+ * `@:generic`, like `GenericIntMap`: each value type gets its own class, so
+ * a lookup returns the value with its type (on hxcpp, no `Dynamic` return
+ * and no call into the hxcpp library's `IntMap`; about 7 to 10 % of the
+ * Cityscape text scenarios).
  */
+@:generic
 class GlyphCache<T> {
 
-    final fonts:IntMap<IntMap<IntMap<IntMap<T>>>> = new IntMap();
+    final fonts:GenericIntMap<GenericIntMap<GenericIntMap<GenericIntMap<T>>>> = new GenericIntMap();
 
     /** Number of entries */
     public var size(default, null):Int = 0;
 
     public function new() {}
-
-    static inline function innerKey(params:RenderGlyphParams):Int {
-        final key = ((((((params.glyphId:Int) * 4 + params.subpixelVariantX) * 2 + params.subpixelVariantY) * 2 + (params.isEmoji ? 1 : 0)) * 2 + (params.subpixelRendering ? 1 : 0)) * 16) + params.dilation;
-        // Rotated right by 8 bits (a bijection, so keys stay distinct): the
-        // glyph id ends up in the low bits. hxcpp's IntMap uses the key as
-        // its own hash and picks the bucket from the low bits, where the
-        // variant fields are almost always the same, so every glyph of a
-        // font size fell in a few buckets (a long chain walk per lookup).
-        return (key >>> 8) | (key << 24);
-    }
 
     /**
      * The innermost map found by the last `get`, with the font id, font size
@@ -41,7 +37,7 @@ class GlyphCache<T> {
      * always has the same `f32` bits as the outer keys (`0.0` and `-0.0`
      * are equal numbers but different keys; NaN never compares equal).
      */
-    var lastGlyphs:Null<IntMap<T>> = null;
+    var lastGlyphs:Null<GenericIntMap<T>> = null;
     var lastFontId:Int = 0;
     var lastFontSize:Float = 0;
     var lastScaleFactor:Float = 0;
@@ -51,7 +47,7 @@ class GlyphCache<T> {
         final scaleFactor:Float = params.scaleFactor;
         final lastGlyphs = this.lastGlyphs;
         if (lastGlyphs != null && (params.fontId:Int) == lastFontId && fontSize == lastFontSize && scaleFactor == lastScaleFactor) {
-            return lastGlyphs.get(innerKey(params));
+            return lastGlyphs.get(GlyphCacheKey.innerKey(params));
         }
         final sizes = fonts.get(params.fontId);
         if (sizes == null) return null;
@@ -65,28 +61,28 @@ class GlyphCache<T> {
             lastFontSize = fontSize;
             lastScaleFactor = scaleFactor;
         }
-        return glyphs.get(innerKey(params));
+        return glyphs.get(GlyphCacheKey.innerKey(params));
     }
 
     public function set(params:RenderGlyphParams, value:T):Void {
         var sizes = fonts.get(params.fontId);
         if (sizes == null) {
-            sizes = new IntMap();
+            sizes = new GenericIntMap();
             fonts.set(params.fontId, sizes);
         }
         final sizeKey = FPHelper.floatToI32(params.fontSize);
         var scales = sizes.get(sizeKey);
         if (scales == null) {
-            scales = new IntMap();
+            scales = new GenericIntMap();
             sizes.set(sizeKey, scales);
         }
         final scaleKey = FPHelper.floatToI32(params.scaleFactor);
         var glyphs = scales.get(scaleKey);
         if (glyphs == null) {
-            glyphs = new IntMap();
+            glyphs = new GenericIntMap();
             scales.set(scaleKey, glyphs);
         }
-        final key = innerKey(params);
+        final key = GlyphCacheKey.innerKey(params);
         if (!glyphs.exists(key))
             size++;
         glyphs.set(key, value);
@@ -99,7 +95,7 @@ class GlyphCache<T> {
         if (scales == null) return false;
         final glyphs = scales.get(FPHelper.floatToI32(params.scaleFactor));
         if (glyphs == null) return false;
-        if (glyphs.remove(innerKey(params))) {
+        if (glyphs.remove(GlyphCacheKey.innerKey(params))) {
             size--;
             return true;
         }
@@ -110,6 +106,23 @@ class GlyphCache<T> {
         fonts.clear();
         lastGlyphs = null;
         size = 0;
+    }
+
+}
+
+/**
+ * Inner key of `GlyphCache` (a `@:generic` class can't have static fields).
+ */
+private class GlyphCacheKey {
+
+    public static inline function innerKey(params:RenderGlyphParams):Int {
+        final key = ((((((params.glyphId:Int) * 4 + params.subpixelVariantX) * 2 + params.subpixelVariantY) * 2 + (params.isEmoji ? 1 : 0)) * 2 + (params.subpixelRendering ? 1 : 0)) * 16) + params.dilation;
+        // Rotated right by 8 bits (a bijection, so keys stay distinct): the
+        // glyph id ends up in the low bits. hxcpp's IntMap, used before
+        // GenericIntMap, took the key as its own hash and picked the bucket
+        // from the low bits, where the variant fields are almost always the
+        // same. GenericIntMap mixes its keys, the rotation stays harmless.
+        return (key >>> 8) | (key << 24);
     }
 
 }

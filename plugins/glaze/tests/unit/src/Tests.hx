@@ -52,7 +52,7 @@ class Tests {
         runner.add(new tests.TouchWindowTest());
         runner.add(new tests.GlazeInputTouchTest());
         // Feeds scroll phases through the headless backend only
-        #if !clay
+        #if headless
         runner.add(new tests.GlazeInputScrollPhaseTest());
         #end
         runner.add(new tests.BrowserFilesTest());
@@ -69,6 +69,7 @@ class Tests {
         runner.add(new tests.CeramicInputHelpersTest());
         runner.add(new tests.CeramicFocusKeyboardTest());
         runner.add(new tests.CeramicUnityScreenTest());
+        runner.add(new tests.CeramicGenericIntMapTest());
         // GPUI's inspector (define glaze_inspector)
         #if glaze_inspector
         runner.add(new tests.InspectorTest());
