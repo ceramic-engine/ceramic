@@ -248,4 +248,45 @@ class TextSystemTest extends TestCase {
         assertEquals(expected - 1, cache.size);
     }
 
+    /**
+     * `GlyphCache.get` remembers the inner map of its last lookup: lookups
+     * that alternate fonts, sizes and scales, sizes equal as `f32` only,
+     * zero sizes and `clear` keep the answers of the nested maps.
+     */
+    function testGlyphCacheLastLookup() {
+        final cache = new glaze.GlyphCache<Int>();
+        cache.set(new RenderGlyphParams(1, 7, 14, 0, 0, 2), 1);
+        cache.set(new RenderGlyphParams(1, 7, 15, 0, 0, 2), 2);
+        cache.set(new RenderGlyphParams(2, 7, 14, 0, 0, 2), 3);
+        cache.set(new RenderGlyphParams(1, 7, 14, 0, 0, 1), 4);
+        cache.set(new RenderGlyphParams(1, 7, 0, 0, 0, 2), 5);
+        for (round in 0...2) {
+            assertEquals(1, cache.get(new RenderGlyphParams(1, 7, 14, 0, 0, 2)));
+            assertEquals(1, cache.get(new RenderGlyphParams(1, 7, 14, 0, 0, 2)));
+            assertEquals(null, cache.get(new RenderGlyphParams(1, 8, 14, 0, 0, 2)));
+            assertEquals(2, cache.get(new RenderGlyphParams(1, 7, 15, 0, 0, 2)));
+            assertEquals(3, cache.get(new RenderGlyphParams(2, 7, 14, 0, 0, 2)));
+            assertEquals(4, cache.get(new RenderGlyphParams(1, 7, 14, 0, 0, 1)));
+            assertEquals(null, cache.get(new RenderGlyphParams(3, 7, 14, 0, 0, 1)));
+            assertEquals(4, cache.get(new RenderGlyphParams(1, 7, 14, 0, 0, 1)));
+            assertEquals(5, cache.get(new RenderGlyphParams(1, 7, 0, 0, 0, 2)));
+            // -0.0 is another f32 key than 0.0
+            assertEquals(null, cache.get(new RenderGlyphParams(1, 7, -0.0, 0, 0, 2)));
+            assertEquals(5, cache.get(new RenderGlyphParams(1, 7, 0, 0, 0, 2)));
+            // a size that only rounds to 14 as f32 finds the same entry
+            assertEquals(1, cache.get(new RenderGlyphParams(1, 7, 14 + 1e-9, 0, 0, 2)));
+            assertEquals(1, cache.get(new RenderGlyphParams(1, 7, 14, 0, 0, 2)));
+            assertEquals(1, cache.get(new RenderGlyphParams(1, 7, 14 + 1e-9, 0, 0, 2)));
+            // a glyph added to a map already remembered
+            cache.set(new RenderGlyphParams(1, 9, 14, 0, 0, 2), 6 + round);
+            assertEquals(6 + round, cache.get(new RenderGlyphParams(1, 9, 14, 0, 0, 2)));
+            assertTrue(cache.remove(new RenderGlyphParams(1, 9, 14, 0, 0, 2)));
+            assertEquals(null, cache.get(new RenderGlyphParams(1, 9, 14, 0, 0, 2)));
+        }
+        cache.clear();
+        assertEquals(null, cache.get(new RenderGlyphParams(1, 7, 14, 0, 0, 2)));
+        cache.set(new RenderGlyphParams(1, 7, 14, 0, 0, 2), 9);
+        assertEquals(9, cache.get(new RenderGlyphParams(1, 7, 14, 0, 0, 2)));
+    }
+
 }

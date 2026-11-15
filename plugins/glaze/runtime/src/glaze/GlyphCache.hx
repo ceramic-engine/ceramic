@@ -32,13 +32,39 @@ class GlyphCache<T> {
         return (key >>> 8) | (key << 24);
     }
 
+    /**
+     * The innermost map found by the last `get`, with the font id, font size
+     * and scale factor that led to it: the glyphs of a line share them, so
+     * most lookups skip the three outer maps. Only an existing map is kept;
+     * maps are never removed from `fonts` except by `clear`, which forgets
+     * it. Sizes are compared as numbers and zero is never kept, so a hit
+     * always has the same `f32` bits as the outer keys (`0.0` and `-0.0`
+     * are equal numbers but different keys; NaN never compares equal).
+     */
+    var lastGlyphs:Null<IntMap<T>> = null;
+    var lastFontId:Int = 0;
+    var lastFontSize:Float = 0;
+    var lastScaleFactor:Float = 0;
+
     public function get(params:RenderGlyphParams):Null<T> {
+        final fontSize:Float = params.fontSize;
+        final scaleFactor:Float = params.scaleFactor;
+        final lastGlyphs = this.lastGlyphs;
+        if (lastGlyphs != null && (params.fontId:Int) == lastFontId && fontSize == lastFontSize && scaleFactor == lastScaleFactor) {
+            return lastGlyphs.get(innerKey(params));
+        }
         final sizes = fonts.get(params.fontId);
         if (sizes == null) return null;
-        final scales = sizes.get(FPHelper.floatToI32(params.fontSize));
+        final scales = sizes.get(FPHelper.floatToI32(fontSize));
         if (scales == null) return null;
-        final glyphs = scales.get(FPHelper.floatToI32(params.scaleFactor));
+        final glyphs = scales.get(FPHelper.floatToI32(scaleFactor));
         if (glyphs == null) return null;
+        if (fontSize != 0 && scaleFactor != 0) {
+            this.lastGlyphs = glyphs;
+            lastFontId = params.fontId;
+            lastFontSize = fontSize;
+            lastScaleFactor = scaleFactor;
+        }
         return glyphs.get(innerKey(params));
     }
 
@@ -82,6 +108,7 @@ class GlyphCache<T> {
 
     public function clear():Void {
         fonts.clear();
+        lastGlyphs = null;
         size = 0;
     }
 

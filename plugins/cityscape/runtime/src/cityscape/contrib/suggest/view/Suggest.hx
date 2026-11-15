@@ -99,8 +99,12 @@ class CompletionItem {
         // validate label
         var isInvalid = this.textLabel == null || this.textLabel.length == 0;
 
-        this.sortTextLow = completion.sortText != null && completion.sortText.length > 0 ? completion.sortText.toLowerCase() : completion.sortText;
-        this.filterTextLow = completion.filterText != null && completion.filterText.length > 0 ? completion.filterText.toLowerCase() : completion.filterText;
+        // Each field of the anonymous structure read once (a dynamic field
+        // lookup each on hxcpp)
+        final sortText = completion.sortText;
+        final filterText = completion.filterText;
+        this.sortTextLow = sortText != null && sortText.length > 0 ? sortText.toLowerCase() : sortText;
+        this.filterTextLow = filterText != null && filterText.length > 0 ? filterText.toLowerCase() : filterText;
 
         // normalize ranges
         final range:Any = completion.range;
@@ -117,15 +121,17 @@ class CompletionItem {
         }
         else {
             final ranges:CompletionItemRanges = range;
-            this.editStart = new Position(ranges.insert.startLineNumber, ranges.insert.startColumn);
-            this.editInsertEnd = new Position(ranges.insert.endLineNumber, ranges.insert.endColumn);
-            this.editReplaceEnd = new Position(ranges.replace.endLineNumber, ranges.replace.endColumn);
+            final insert = ranges.insert;
+            final replace = ranges.replace;
+            this.editStart = new Position(insert.startLineNumber, insert.startColumn);
+            this.editInsertEnd = new Position(insert.endLineNumber, insert.endColumn);
+            this.editReplaceEnd = new Position(replace.endLineNumber, replace.endColumn);
 
             // validate ranges
             isInvalid = isInvalid
-                || Range.spansMultipleLines(ranges.insert) || Range.spansMultipleLines(ranges.replace)
-                || ranges.insert.startLineNumber != position.lineNumber || ranges.replace.startLineNumber != position.lineNumber
-                || ranges.insert.startColumn != ranges.replace.startColumn;
+                || Range.spansMultipleLines(insert) || Range.spansMultipleLines(replace)
+                || insert.startLineNumber != position.lineNumber || replace.startLineNumber != position.lineNumber
+                || insert.startColumn != replace.startColumn;
         }
         this.isInvalid = isInvalid;
 

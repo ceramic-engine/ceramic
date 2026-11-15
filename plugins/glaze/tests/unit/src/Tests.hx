@@ -51,7 +51,10 @@ class Tests {
         runner.add(new tests.TouchGestureTest());
         runner.add(new tests.TouchWindowTest());
         runner.add(new tests.GlazeInputTouchTest());
+        // Feeds scroll phases through the headless backend only
+        #if !clay
         runner.add(new tests.GlazeInputScrollPhaseTest());
+        #end
         runner.add(new tests.BrowserFilesTest());
         runner.add(new tests.kit.InputTouchTest());
         runner.add(new tests.kit.TouchSelectionIntegrationTest());

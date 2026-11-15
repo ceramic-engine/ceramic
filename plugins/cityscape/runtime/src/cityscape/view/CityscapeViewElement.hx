@@ -812,6 +812,11 @@ class CityscapeViewElement extends Element {
                 final numberFont = state.numberFont(v, fontInfo, textSystem.textSystem.fontGeneration);
                 final lineCount = viewModel.model.getLineCount();
                 final coordinates = viewModel.coordinatesConverter;
+                // Fields of anonymous structures read once (a dynamic field
+                // lookup each on hxcpp), not once per line
+                final renderFn = lineNumbers.renderFn;
+                final renderType = lineNumbers.renderType;
+                final numbersRight:Float = originX + layoutInfo.lineNumbersLeft + layoutInfo.lineNumbersWidth;
                 for (ln in startLine...endLine + 1) {
                     final line = lines[ln - startLine];
                     if (line.modelLineNumber == -1) {
@@ -825,12 +830,12 @@ class CityscapeViewElement extends Element {
                     final modelLineNumber = line.modelLineNumber;
                     // `null`: the plain number (built only when its label is not cached)
                     var label:Null<String> = null;
-                    if (lineNumbers.renderFn != null) {
-                        label = lineNumbers.renderFn(modelLineNumber);
-                    } else if (lineNumbers.renderType == RenderLineNumbersType.Relative) {
+                    if (renderFn != null) {
+                        label = renderFn(modelLineNumber);
+                    } else if (renderType == RenderLineNumbersType.Relative) {
                         final diff = Std.int(Math.abs(primaryModelLineNumber - modelLineNumber));
                         label = diff == 0 ? '' + modelLineNumber : '' + diff;
-                    } else if (lineNumbers.renderType == RenderLineNumbersType.Interval) {
+                    } else if (renderType == RenderLineNumbersType.Interval) {
                         label = (primaryModelLineNumber == modelLineNumber || modelLineNumber % 10 == 0 || modelLineNumber == lineCount) ? null : '';
                     }
                     if (label != null && label.length == 0) {
@@ -854,7 +859,7 @@ class CityscapeViewElement extends Element {
                     }
                     final shaped = state.lineNumberLabel(textSystem, modelLineNumber, label, fontInfo.fontSize, numberFont, color);
                     final labelWidth:Float = shaped.width();
-                    final x:Float = originX + layoutInfo.lineNumbersLeft + layoutInfo.lineNumbersWidth - labelWidth;
+                    final x:Float = numbersRight - labelWidth;
                     shaped.paint(new Point(x, lineTop(ln)), lineHeight, TextAlign.Left, null, numberPainter);
                 }
                 state.trimLineNumberLabels(startLine, endLine);
