@@ -1,6 +1,7 @@
 package ceramic;
 
-import haxe.crypto.Md5;
+// ceramic.Md5: same hashes as haxe.crypto.Md5, with GC safe points (large strings,
+// hashed on background threads by the tracker autosave)
 import ceramic.Utils;
 import ceramic.Shortcuts.*;
 
