@@ -462,6 +462,140 @@ class InitSettings {
     }
 
     /**
+     * Horizontal position of the window at startup, in desktop coordinates
+     * (`Settings.WINDOW_POSITION_UNDEFINED`, the default: chosen by the system).
+     * @see Settings.windowX
+     */
+    public var windowX(get,set):Int;
+    inline function get_windowX():Int {
+        return settings.windowX;
+    }
+    inline function set_windowX(windowX:Int):Int {
+        return settings.windowX = windowX;
+    }
+
+    /**
+     * Vertical position of the window at startup, in desktop coordinates
+     * (`Settings.WINDOW_POSITION_UNDEFINED`, the default: chosen by the system).
+     * @see Settings.windowY
+     */
+    public var windowY(get,set):Int;
+    inline function get_windowY():Int {
+        return settings.windowY;
+    }
+    inline function set_windowY(windowY:Int):Int {
+        return settings.windowY = windowY;
+    }
+
+    /**
+     * Window position at startup. Same as assigning `windowX` and `windowY`.
+     * @param windowX Horizontal position of the window
+     * @param windowY Vertical position of the window
+     */
+    inline public function windowPosition(windowX:Int, windowY:Int):Void {
+        settings.windowPosition(windowX, windowY);
+    }
+
+    /**
+     * Smallest width the user can give to the window (0: no minimum).
+     */
+    public var windowMinWidth(get,set):Int;
+    inline function get_windowMinWidth():Int {
+        return settings.windowMinWidth;
+    }
+    inline function set_windowMinWidth(windowMinWidth:Int):Int {
+        return settings.windowMinWidth = windowMinWidth;
+    }
+
+    /**
+     * Smallest height the user can give to the window (0: no minimum).
+     */
+    public var windowMinHeight(get,set):Int;
+    inline function get_windowMinHeight():Int {
+        return settings.windowMinHeight;
+    }
+    inline function set_windowMinHeight(windowMinHeight:Int):Int {
+        return settings.windowMinHeight = windowMinHeight;
+    }
+
+    /**
+     * Minimum window width and height. Same as assigning `windowMinWidth`
+     * and `windowMinHeight`.
+     * @param windowMinWidth Minimum window width
+     * @param windowMinHeight Minimum window height
+     */
+    inline public function windowMinSize(windowMinWidth:Int, windowMinHeight:Int):Void {
+        settings.windowMinSize(windowMinWidth, windowMinHeight);
+    }
+
+    /**
+     * Whether the window has no border and no title bar of the system.
+     */
+    public var windowBorderless(get,set):Bool;
+    inline function get_windowBorderless():Bool {
+        return settings.windowBorderless;
+    }
+    inline function set_windowBorderless(windowBorderless:Bool):Bool {
+        return settings.windowBorderless = windowBorderless;
+    }
+
+    /**
+     * Whether the window is created hidden and shown after the first frame
+     * presented once the app is ready.
+     */
+    public var windowStartsHidden(get,set):Bool;
+    inline function get_windowStartsHidden():Bool {
+        return settings.windowStartsHidden;
+    }
+    inline function set_windowStartsHidden(windowStartsHidden:Bool):Bool {
+        return @:privateAccess settings.windowStartsHidden = windowStartsHidden;
+    }
+
+    /**
+     * How the title bar of the window is shown (macOS native builds).
+     */
+    public var titleBarStyle(get,set):TitleBarStyle;
+    inline function get_titleBarStyle():TitleBarStyle {
+        return settings.titleBarStyle;
+    }
+    inline function set_titleBarStyle(titleBarStyle:TitleBarStyle):TitleBarStyle {
+        return settings.titleBarStyle = titleBarStyle;
+    }
+
+    /**
+     * Left of the close button of an `OVERLAY` title bar from the left edge
+     * of the window (negative: the place the system gives).
+     */
+    public var trafficLightX(get,set):Float;
+    inline function get_trafficLightX():Float {
+        return settings.trafficLightX;
+    }
+    inline function set_trafficLightX(trafficLightX:Float):Float {
+        return settings.trafficLightX = trafficLightX;
+    }
+
+    /**
+     * Top of the window buttons of an `OVERLAY` title bar from the top edge
+     * of the window (negative: the place the system gives).
+     */
+    public var trafficLightY(get,set):Float;
+    inline function get_trafficLightY():Float {
+        return settings.trafficLightY;
+    }
+    inline function set_trafficLightY(trafficLightY:Float):Float {
+        return settings.trafficLightY = trafficLightY;
+    }
+
+    /**
+     * Position of the window buttons of an `OVERLAY` title bar on macOS.
+     * @param trafficLightX Left of the close button from the left edge of the window
+     * @param trafficLightY Top of the buttons from the top edge of the window
+     */
+    inline public function trafficLightPosition(trafficLightX:Float, trafficLightY:Float):Void {
+        settings.trafficLightPosition(trafficLightX, trafficLightY);
+    }
+
+    /**
      * Whether the window can be resized or not.
      */
     public var resizable(get,set):Bool;

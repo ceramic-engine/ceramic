@@ -116,6 +116,114 @@ class Settings implements Observable {
     }
 
     /**
+     * Value of `windowX` and `windowY` when the position of the window is
+     * left to the system.
+     */
+    public static inline final WINDOW_POSITION_UNDEFINED:Int = 0x1FFF0000;
+
+    /**
+     * Horizontal position of the window (the left of its content area), in
+     * the desktop coordinates of the system: points on macOS and Wayland,
+     * pixels on Windows and X11 (see `screen.windowDesktopScale`). Negative
+     * values are valid (a display on the left of the main one).
+     * At startup, this is the requested position, the system choosing it when
+     * set to `WINDOW_POSITION_UNDEFINED` (default).
+     * Once the app is running, it follows the actual position of the window
+     * (when the user moves it for instance) and can be changed to move the window.
+     * Changing it has no effect on mobile, in a web browser, with Unity, or
+     * while fullscreen. Use `screen.displayBounds()` to keep a restored
+     * position inside the display.
+     */
+    @observe public var windowX:Int = WINDOW_POSITION_UNDEFINED;
+
+    /**
+     * Vertical position of the window (the top of its content area).
+     * See `windowX`.
+     */
+    @observe public var windowY:Int = WINDOW_POSITION_UNDEFINED;
+
+    /**
+     * Window position. Same as assigning `windowX` and `windowY`:
+     * sets the window position at startup, and moves the window once the app is running.
+     * @param windowX Horizontal position of the window
+     * @param windowY Vertical position of the window
+     */
+    inline public function windowPosition(windowX:Int, windowY:Int):Void {
+        this.windowX = windowX;
+        this.windowY = windowY;
+    }
+
+    /**
+     * Smallest width the user can give to the window, in the same unit as
+     * `windowWidth` (0, the default: no minimum). Can be set at startup and
+     * changed while the app is running. Desktop native builds only.
+     */
+    @observe public var windowMinWidth:Int = 0;
+
+    /**
+     * Smallest height the user can give to the window, in the same unit as
+     * `windowHeight` (0, the default: no minimum). Can be set at startup and
+     * changed while the app is running. Desktop native builds only.
+     */
+    @observe public var windowMinHeight:Int = 0;
+
+    /**
+     * Minimum window width and height. Same as assigning `windowMinWidth`
+     * and `windowMinHeight`.
+     * @param windowMinWidth Minimum window width
+     * @param windowMinHeight Minimum window height
+     */
+    inline public function windowMinSize(windowMinWidth:Int, windowMinHeight:Int):Void {
+        this.windowMinWidth = windowMinWidth;
+        this.windowMinHeight = windowMinHeight;
+    }
+
+    /**
+     * Whether the window has no border and no title bar of the system
+     * (default: false). Can be set at startup and changed while the app is
+     * running. An app that draws its own title bar and borders gives the
+     * regions that move and resize the window with `screen.setWindowHitRegions`.
+     * Desktop native builds only.
+     */
+    @observe public var windowBorderless:Bool = false;
+
+    /**
+     * How the title bar of the window is shown (default: `DEFAULT`, the
+     * title bar of the system). `OVERLAY` extends the content under a
+     * transparent title bar with a hidden title, keeping the window buttons.
+     * Can be set at startup and changed while the app is running.
+     * macOS native builds only: ignored elsewhere.
+     */
+    @observe public var titleBarStyle:TitleBarStyle = TitleBarStyle.DEFAULT;
+
+    /**
+     * With `titleBarStyle` set to `OVERLAY` on macOS: distance from the left
+     * edge of the window to the left of the close button, in points.
+     * Negative (default): the place the system gives.
+     */
+    @observe public var trafficLightX:Float = -1;
+
+    /**
+     * With `titleBarStyle` set to `OVERLAY` on macOS: distance from the top
+     * edge of the window to the top of the window buttons, in points.
+     * Negative (default): the place the system gives.
+     */
+    @observe public var trafficLightY:Float = -1;
+
+    /**
+     * Position of the window buttons (close, minimize, zoom) of an `OVERLAY`
+     * title bar on macOS. Same as assigning `trafficLightX` and
+     * `trafficLightY`. The position is kept when the window is resized or
+     * leaves fullscreen.
+     * @param trafficLightX Left of the close button from the left edge of the window
+     * @param trafficLightY Top of the buttons from the top edge of the window
+     */
+    inline public function trafficLightPosition(trafficLightX:Float, trafficLightY:Float):Void {
+        this.trafficLightX = trafficLightX;
+        this.trafficLightY = trafficLightY;
+    }
+
+    /**
      * Target density. Affects the quality of textures
      * being loaded. Changing it at runtime will update
      * texture quality if needed.
@@ -510,6 +618,18 @@ class Settings implements Observable {
      * Default: false (fixed window size)
      */
     public var resizable(default,null):Bool = false;
+
+    /**
+     * When true, the window is created hidden and shown right after the
+     * first frame presented once the app is ready, so that the user never
+     * sees an empty or half drawn window at launch.
+     *
+     * Only applies to desktop native builds. Hidden test windows
+     * (`clay_sdl_headless`) stay hidden.
+     *
+     * Default: false (the window is visible as soon as it is created)
+     */
+    public var windowStartsHidden(default,null):Bool = false;
 
     /**
      * Root directory path for loading assets.

@@ -539,6 +539,39 @@ class Files {
     }
 
     /**
+     * Renames (or moves) a file or a directory.
+     *
+     * @param from Current path of the file or directory
+     * @param to New path (its parent directory must exist)
+     * @throws If `from` doesn't exist or cannot be renamed to `to`
+     */
+    public static function rename(from:String, to:String):Void {
+
+        #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
+
+        sys.FileSystem.rename(from, to);
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = Platform.nodeRequire('fs');
+
+        if (fs == null) {
+            log.warning('rename() is not supported on this target without fs module');
+            return;
+        }
+        else {
+            fs.renameSync(from, to);
+        }
+
+        #else
+
+        log.warning('rename() is not supported on this target');
+
+        #end
+
+    }
+
+    /**
      * Deletes a single file.
      * 
      * @param path Path to the file to delete

@@ -70,6 +70,19 @@ class Info #if !completion implements spec.Info #end {
         #end
     }
 
+    /**
+     * Preferred locales of the user as BCP 47 tags, most wanted first:
+     * `SDL_GetPreferredLocales` on native builds, `navigator.languages` on
+     * the web.
+     */
+    public function systemLocales():Array<String> {
+        #if macro
+        return [];
+        #else
+        return clay.Clay.app.runtime.preferredLocales();
+        #end
+    }
+
     inline public function imageExtensions():Array<String> {
         return ['png', 'jpg', 'jpeg'];
     }

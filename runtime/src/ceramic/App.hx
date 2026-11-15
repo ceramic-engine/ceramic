@@ -581,6 +581,18 @@ class App extends Entity {
 /// Properties
 
     /**
+     * Preferred locales of the user, as BCP 47 language tags (`fr-FR`,
+     * `en`), most wanted first: the list of the system on native builds
+     * (`SDL_GetPreferredLocales`), `navigator.languages` on the web. Empty
+     * where the platform does not tell (headless, Unity for now). Read from
+     * the system at each call: available once the backend is ready.
+     */
+    public var systemLocales(get,never):Array<String>;
+    function get_systemLocales():Array<String> {
+        return backend.info.systemLocales();
+    }
+
+    /**
      * Computed fps of the app. Read only.
      * Value is automatically computed from last second of frame updates.
      */
@@ -871,6 +883,10 @@ class App extends Entity {
 
         Tracker.backend = new TrackerBackend();
 
+        // Models saved with `tracker.SaveModel.autoSaveAsKey` write their last state
+        // when the app terminates
+        onTerminate(this, flushTrackerSaves);
+
         settings = new Settings();
 
         // Default the window title to the app display name from ceramic.yml
@@ -890,6 +906,27 @@ class App extends Entity {
         backend = new Backend();
         backend.onceReady(this, backendReady);
         backend.init(this);
+
+    }
+
+    /**
+     * Writes the last state of the auto saved tracker models when the app
+     * terminates. The terminate event can come from another thread on some
+     * platforms: models are only read from the main thread, so nothing is
+     * done there.
+     */
+    function flushTrackerSaves():Void {
+
+        if (!Runner.currentIsMainThread()) return;
+
+        try {
+            if (!Tracker.backend.flushSaves()) {
+                log.warning('Some tracker saves were still being written when the app terminated');
+            }
+        }
+        catch (e:Dynamic) {
+            log.error('Failed to save tracker models on terminate: ' + e);
+        }
 
     }
 

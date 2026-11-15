@@ -266,6 +266,15 @@ class Main {
         #end
         app = @:privateAccess ceramic.App.app;
 
+        if (app.settings.windowStartsHidden) {
+            // The window is created hidden: show it after the first frame
+            // presented once the app is ready (nothing to do on the web)
+            app.onceReady(null, function() {
+                Clay.app.runtime.showWindowAfterNextFrame();
+                app.requestRender();
+            });
+        }
+
         #if (web && plugin_bridge)
         ceramic.Bridge.shared.onReceive(null, (event, data) -> {
             switch event {
@@ -348,6 +357,19 @@ class Main {
             config.window.height = app.settings.windowHeight;
         else if (app.settings.targetHeight > 0)
             config.window.height = app.settings.targetHeight;
+
+        if (app.settings.windowX != ceramic.Settings.WINDOW_POSITION_UNDEFINED)
+            config.window.x = app.settings.windowX;
+        if (app.settings.windowY != ceramic.Settings.WINDOW_POSITION_UNDEFINED)
+            config.window.y = app.settings.windowY;
+        config.window.minWidth = app.settings.windowMinWidth;
+        config.window.minHeight = app.settings.windowMinHeight;
+        if (app.settings.windowBorderless)
+            config.window.borderless = true;
+        config.window.startsHidden = app.settings.windowStartsHidden;
+        config.window.titleBarStyle = (app.settings.titleBarStyle:Int);
+        config.window.titleBarButtonsX = app.settings.trafficLightX;
+        config.window.titleBarButtonsY = app.settings.trafficLightY;
 
         config.window.fullscreen = app.settings.fullscreen;
         config.window.resizable = app.settings.resizable;

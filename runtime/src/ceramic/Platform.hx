@@ -478,6 +478,116 @@ class Platform {
 
     }
 
+    /**
+     * Shows the given file or directory in the file manager of the system,
+     * selected in the window of its parent directory: Finder on macOS
+     * (`open -R`), Explorer on Windows (`explorer /select,`), and on Linux
+     * the file manager that implements `org.freedesktop.FileManager1`
+     * (asked through `dbus-send`), else the parent directory is opened with
+     * `xdg-open`. Asynchronous. Does nothing on mobile and in a web browser.
+     *
+     * @param path Absolute path of the file or directory to reveal
+     * @param done (optional) Called with `true` when a command accepted the request
+     */
+    public static function revealInFileManager(path:String, ?done:(success:Bool)->Void):Void {
+
+        final commands = revealInFileManagerCommands(path, app.backend.info.operatingSystem());
+
+        #if (ios || tvos || android)
+
+        if (done != null) done(false);
+
+        #elseif ((web && ceramic_use_electron) || node || nodejs || hxnodejs)
+
+        var index = 0;
+        var next:()->Void = null;
+        next = function() {
+            if (index >= commands.length) {
+                if (done != null) done(false);
+                return;
+            }
+            final command = commands[index++];
+            exec(command[0], command.slice(1), function(code, stdout, stderr) {
+                // Explorer returns 1 even when it shows the file
+                if (code == 0 || command[0] == 'explorer.exe') {
+                    if (done != null) done(true);
+                }
+                else {
+                    next();
+                }
+            });
+        };
+        next();
+
+        #elseif sys
+
+        if (commands.length == 0) {
+            if (done != null) done(false);
+            return;
+        }
+
+        Runner.runInBackground(() -> {
+
+            var success = false;
+            for (command in commands) {
+                try {
+                    final code = Sys.command(command[0], command.slice(1));
+                    // Explorer returns 1 even when it shows the file
+                    if (code == 0 || command[0] == 'explorer.exe') {
+                        success = true;
+                        break;
+                    }
+                }
+                catch (e:Dynamic) {}
+            }
+
+            if (done != null) {
+                Runner.runInMain(() -> {
+                    done(success);
+                });
+            }
+
+        });
+
+        #else
+
+        if (done != null) done(false);
+
+        #end
+
+    }
+
+    /**
+     * The commands `revealInFileManager` runs for the given operating system
+     * (`mac`, `windows` or `linux`, as given by `app.backend.info.operatingSystem()`),
+     * in order, stopping at the first one that succeeds: each entry is the
+     * command followed by its arguments. Empty for other systems.
+     */
+    public static function revealInFileManagerCommands(path:String, operatingSystem:String):Array<Array<String>> {
+
+        return switch operatingSystem {
+            case 'mac':
+                [['open', '-R', path]];
+            case 'windows':
+                [['explorer.exe', '/select,' + StringTools.replace(path, '/', '\\')]];
+            case 'linux':
+                final segments = StringTools.replace(path, '\\', '/').split('/');
+                final uri = 'file://' + [for (segment in segments) StringTools.urlEncode(segment)].join('/');
+                final parent = Path.directory(path);
+                [
+                    [
+                        'dbus-send', '--session', '--print-reply', '--dest=org.freedesktop.FileManager1',
+                        '--type=method_call', '/org/freedesktop/FileManager1',
+                        'org.freedesktop.FileManager1.ShowItems', 'array:string:' + uri, 'string:'
+                    ],
+                    ['xdg-open', parent != null && parent != '' ? parent : '/']
+                ];
+            case _:
+                [];
+        }
+
+    }
+
     private static var _isWindowsValue:Int = 0;
     private static var _execDidLogError:Bool = false;
 

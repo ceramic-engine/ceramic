@@ -125,6 +125,13 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @event function windowFocusChange(focused:Bool);
 
     /**
+     * Fired when the window moved (native desktop builds).
+     * @param x Horizontal position of the window in desktop coordinates
+     * @param y Vertical position of the window in desktop coordinates
+     */
+    @event function windowMove(x:Int, y:Int);
+
+    /**
      * Fired when an item of the menu bar is chosen (macOS native builds).
      * @param id The `id` of the item
      */
@@ -290,6 +297,55 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         #end
 
         return Clay.app.runtime.setWindowSize(width, height);
+
+    }
+
+    public function getWindowX():Int {
+
+        return Clay.app.runtime.windowPositionX();
+
+    }
+
+    public function getWindowY():Int {
+
+        return Clay.app.runtime.windowPositionY();
+
+    }
+
+    public function setWindowPosition(x:Int, y:Int):Bool {
+
+        return Clay.app.runtime.setWindowPosition(x, y);
+
+    }
+
+    public function getWindowDisplayBounds(result:Array<Int>):Bool {
+
+        return Clay.app.runtime.windowDisplayUsableBounds(result);
+
+    }
+
+    public function getWindowDesktopScale():Float {
+
+        return Clay.app.runtime.windowDesktopScale();
+
+    }
+
+    public function setWindowMinSize(width:Int, height:Int):Void {
+
+        Clay.app.runtime.setWindowMinimumSize(width, height);
+
+    }
+
+    public function setWindowBorderless(borderless:Bool):Void {
+
+        Clay.app.runtime.setWindowBorderless(borderless);
+
+    }
+
+    /** Overlay title bar on macOS (`Clay.app.runtime.setWindowTitleBarStyle`); nothing elsewhere. */
+    public function setWindowTitleBarStyle(style:ceramic.TitleBarStyle, buttonsX:Float, buttonsY:Float):Void {
+
+        Clay.app.runtime.setWindowTitleBarStyle((style:Int), buttonsX, buttonsY);
 
     }
 

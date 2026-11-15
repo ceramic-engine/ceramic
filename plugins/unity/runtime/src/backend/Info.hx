@@ -126,4 +126,9 @@ class Info #if !completion implements spec.Info #end {
         return ['shader'];
     }
 
+    /** The Unity backend does not read the locales of the system for now: empty. */
+    public function systemLocales():Array<String> {
+        return [];
+    }
+
 }

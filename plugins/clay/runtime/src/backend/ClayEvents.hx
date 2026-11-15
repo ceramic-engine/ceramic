@@ -1177,6 +1177,10 @@ class ClayEvents extends clay.Events {
             case HIDDEN:
             case EXPOSED:
             case MOVED:
+                #if !web
+                // (on the web this event is about the canvas in its page)
+                backend.screen.emitWindowMove(x, y);
+                #end
             case RESIZED:
             case SIZE_CHANGED:
             case MINIMIZED:

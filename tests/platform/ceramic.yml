@@ -1,0 +1,10 @@
+app:
+    package: ceramic.tests.platform
+    name: platform
+    displayName: platform
+    author: Ceramic
+    version: '1.0'
+
+    defines:
+        # Native runs use a hidden SDL window (nothing on screen)
+        - clay_sdl_headless

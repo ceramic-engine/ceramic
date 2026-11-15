@@ -149,6 +149,47 @@ class BackgroundQueue extends Entity {
     }
 
     #if (cpp || cs)
+    var running:Bool = false;
+    #end
+
+    /**
+     * Blocks the calling thread until every scheduled function has run (or
+     * `timeout` seconds have passed), for work that must be finished before
+     * the app ends. On targets without background threads, the pending
+     * immediate callbacks are run instead.
+     *
+     * Must not be called from a function scheduled on this queue.
+     *
+     * @param timeout Maximum time to wait, in seconds
+     * @return `true` if nothing is left to run, `false` if the wait timed out
+     */
+    public function flush(timeout:Float = 5.0):Bool {
+
+        #if (cpp || cs)
+
+        if (!runsInBackground) return true;
+
+        final start = Sys.time();
+        while (true) {
+            mutex.acquire();
+            final idle = pending.length == 0 && !running;
+            mutex.release();
+            if (idle) return true;
+            if (Sys.time() - start > timeout) return false;
+            Sys.sleep(0.001);
+        }
+        return true;
+
+        #else
+
+        ceramic.App.app.flushImmediate();
+        return true;
+
+        #end
+
+    }
+
+    #if (cpp || cs)
 
     /**
      * The main loop of the background thread.
@@ -177,11 +218,17 @@ class BackgroundQueue extends Entity {
 
             mutex.acquire();
             if (pending.length > 0) {
-                var fn = pending.pop();
+                // First scheduled, first run
+                var fn = pending.shift();
+                running = true;
                 mutex.release();
 
                 shouldSleep = false;
                 fn();
+
+                mutex.acquire();
+                running = false;
+                mutex.release();
             }
             else {
                 mutex.release();

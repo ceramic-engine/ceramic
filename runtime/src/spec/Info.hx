@@ -39,6 +39,12 @@ interface Info {
      */
     function operatingSystem():String;
 
+    /**
+     * Preferred locales of the user as BCP 47 language tags (`fr-FR`, `en`),
+     * most wanted first. Empty where the platform does not tell.
+     */
+    function systemLocales():Array<String>;
+
 /// Assets
 
     /**

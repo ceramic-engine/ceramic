@@ -286,6 +286,24 @@ class Screen extends Entity implements Observable implements RenderTarget {
     private var syncingWindowSize:Bool = false;
 
     /**
+     * `true` when the window position of the settings was changed
+     * and still needs to be applied to the actual window.
+     */
+    private var windowPositionDirty:Bool = false;
+
+    /**
+     * `true` while the window position of the settings is being updated
+     * from the actual window position (not a request to move the window).
+     */
+    private var syncingWindowPosition:Bool = false;
+
+    private var windowMinSizeDirty:Bool = false;
+
+    private var windowTitleBarDirty:Bool = false;
+
+    private var displayBoundsValues:Array<Int> = [0, 0, 0, 0];
+
+    /**
      * Whether the screen is between a `pointer down` and an `pointer up` event or not.
      */
     public var isPointerDown(get,null):Bool;
@@ -450,6 +468,58 @@ class Screen extends Entity implements Observable implements RenderTarget {
             #if debug log.info('Setting windowHeight=$windowHeight'); #end
             requestWindowSize();
         });
+        settings.onWindowXChange(this, function(windowX, prevWindowX) {
+            if (syncingWindowPosition) return;
+            #if debug log.info('Setting windowX=$windowX'); #end
+            requestWindowPosition();
+        });
+        settings.onWindowYChange(this, function(windowY, prevWindowY) {
+            if (syncingWindowPosition) return;
+            #if debug log.info('Setting windowY=$windowY'); #end
+            requestWindowPosition();
+        });
+        settings.onWindowMinWidthChange(this, function(windowMinWidth, prevWindowMinWidth) {
+            requestWindowMinSize();
+        });
+        settings.onWindowMinHeightChange(this, function(windowMinHeight, prevWindowMinHeight) {
+            requestWindowMinSize();
+        });
+        settings.onWindowBorderlessChange(this, function(windowBorderless, prevWindowBorderless) {
+            #if debug log.info('Setting windowBorderless=$windowBorderless'); #end
+            app.backend.screen.setWindowBorderless(windowBorderless);
+            app.requestRender();
+        });
+        settings.onTitleBarStyleChange(this, function(titleBarStyle, prevTitleBarStyle) {
+            requestWindowTitleBar();
+        });
+        settings.onTrafficLightXChange(this, function(trafficLightX, prevTrafficLightX) {
+            requestWindowTitleBar();
+        });
+        settings.onTrafficLightYChange(this, function(trafficLightY, prevTrafficLightY) {
+            requestWindowTitleBar();
+        });
+
+        // The position asked at startup was given to the window when it was
+        // created (where the backend has one): settings now follow the window
+        app.backend.screen.onWindowMove(this, function(x, y) {
+            syncWindowPosition();
+        });
+        // (a backend that accepts a position has one to read: the settings
+        // then hold the actual position, else they are left as they are)
+        windowPositionDirty = true;
+        applyWindowPosition();
+        if (settings.windowMinWidth > 0 || settings.windowMinHeight > 0) {
+            windowMinSizeDirty = true;
+            applyWindowMinSize();
+        }
+        if (settings.windowBorderless) {
+            app.backend.screen.setWindowBorderless(true);
+        }
+        if (settings.titleBarStyle != TitleBarStyle.DEFAULT) {
+            windowTitleBarDirty = true;
+            applyWindowTitleBar();
+        }
+
         settings.onCursorVisibleChange(this, function(cursorVisible, prevCursorVisible) {
             #if debug log.info('Setting cursorVisible=$cursorVisible'); #end
             app.backend.screen.setCursorVisible(cursorVisible);
@@ -880,6 +950,92 @@ class Screen extends Entity implements Observable implements RenderTarget {
         settings.windowWidth = windowWidth;
         settings.windowHeight = windowHeight;
         syncingWindowSize = false;
+
+    }
+
+    /**
+     * Called when the window position changed in settings (not from the actual window).
+     * The window is moved once, even if both `windowX` and `windowY` have changed.
+     */
+    function requestWindowPosition():Void {
+
+        if (windowPositionDirty) return;
+        windowPositionDirty = true;
+
+        app.onceImmediate(this, applyWindowPosition);
+
+    }
+
+    function applyWindowPosition():Void {
+
+        if (!windowPositionDirty) return;
+        windowPositionDirty = false;
+
+        // An axis left to the system keeps its current value
+        var x = settings.windowX;
+        var y = settings.windowY;
+        if (x == Settings.WINDOW_POSITION_UNDEFINED) x = app.backend.screen.getWindowX();
+        if (y == Settings.WINDOW_POSITION_UNDEFINED) y = app.backend.screen.getWindowY();
+
+        if (app.backend.screen.setWindowPosition(x, y)) {
+            // The system may have put the window somewhere else
+            syncWindowPosition();
+            app.requestRender();
+        }
+
+    }
+
+    /**
+     * Updates the window position of the settings from the actual window position.
+     */
+    function syncWindowPosition():Void {
+
+        syncingWindowPosition = true;
+        settings.windowX = app.backend.screen.getWindowX();
+        settings.windowY = app.backend.screen.getWindowY();
+        syncingWindowPosition = false;
+
+    }
+
+    function requestWindowMinSize():Void {
+
+        if (windowMinSizeDirty) return;
+        windowMinSizeDirty = true;
+
+        app.onceImmediate(this, applyWindowMinSize);
+
+    }
+
+    function applyWindowMinSize():Void {
+
+        if (!windowMinSizeDirty) return;
+        windowMinSizeDirty = false;
+
+        #if debug log.info('Setting windowMinSize=${settings.windowMinWidth},${settings.windowMinHeight}'); #end
+        app.backend.screen.setWindowMinSize(
+            settings.windowMinWidth > 0 ? settings.windowMinWidth : 0,
+            settings.windowMinHeight > 0 ? settings.windowMinHeight : 0
+        );
+
+    }
+
+    function requestWindowTitleBar():Void {
+
+        if (windowTitleBarDirty) return;
+        windowTitleBarDirty = true;
+
+        app.onceImmediate(this, applyWindowTitleBar);
+
+    }
+
+    function applyWindowTitleBar():Void {
+
+        if (!windowTitleBarDirty) return;
+        windowTitleBarDirty = false;
+
+        #if debug log.info('Setting titleBarStyle=${settings.titleBarStyle} trafficLight=${settings.trafficLightX},${settings.trafficLightY}'); #end
+        app.backend.screen.setWindowTitleBarStyle(settings.titleBarStyle, settings.trafficLightX, settings.trafficLightY);
+        app.requestRender();
 
     }
 
@@ -2168,6 +2324,49 @@ class Screen extends Entity implements Observable implements RenderTarget {
     public var windowMaximized(get, never):Bool;
     function get_windowMaximized():Bool {
         return app.backend.screen.isWindowMaximized();
+    }
+
+    /**
+     * The usable bounds of the display the window is on (the display
+     * without the menu bar, the dock or the task bar), in the desktop
+     * coordinates of the system, the unit of `settings.windowX` and
+     * `settings.windowY`: an app clamps a restored window position with it.
+     * The size of the window in that unit is `settings.windowWidth` and
+     * `settings.windowHeight` multiplied by `windowDesktopScale`.
+     *
+     * @param result A rect to fill and return (a new one when not given)
+     * @return The bounds, with a width and a height of 0 where the platform
+     *         does not tell (web, mobile, headless, Unity)
+     */
+    public function displayBounds(?result:Rect):Rect {
+
+        if (result == null) result = new Rect();
+        if (app.backend.screen.getWindowDisplayBounds(displayBoundsValues)) {
+            result.x = displayBoundsValues[0];
+            result.y = displayBoundsValues[1];
+            result.width = displayBoundsValues[2];
+            result.height = displayBoundsValues[3];
+        }
+        else {
+            result.x = 0;
+            result.y = 0;
+            result.width = 0;
+            result.height = 0;
+        }
+        return result;
+
+    }
+
+    /**
+     * Number of desktop coordinate units (the unit of `settings.windowX`,
+     * `settings.windowY` and `displayBounds()`) per unit of
+     * `settings.windowWidth` and `settings.windowHeight`: 1 where the system
+     * counts in points (macOS, Wayland), the display scale where it counts
+     * in pixels (Windows, X11). 1 where the platform does not tell.
+     */
+    public var windowDesktopScale(get, never):Float;
+    function get_windowDesktopScale():Float {
+        return app.backend.screen.getWindowDesktopScale();
     }
 
     /**

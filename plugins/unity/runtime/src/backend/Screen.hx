@@ -338,6 +338,13 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @event function windowFocusChange(focused:Bool);
 
     /**
+     * Fired when the window moved. Not fired by the Unity backend for now.
+     * @param x Horizontal position of the window in desktop coordinates
+     * @param y Vertical position of the window in desktop coordinates
+     */
+    @event function windowMove(x:Int, y:Int);
+
+    /**
      * Fired when an item of the menu bar is chosen. Not fired by the Unity
      * backend (no menu bar).
      * @param id The `id` of the item
@@ -503,6 +510,40 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         return true;
 
     }
+
+    /** Not available on Unity: 0. */
+    public function getWindowX():Int {
+        return 0;
+    }
+
+    /** Not available on Unity: 0. */
+    public function getWindowY():Int {
+        return 0;
+    }
+
+    /** Not available on Unity: does nothing and returns `false`. */
+    public function setWindowPosition(x:Int, y:Int):Bool {
+        return false;
+    }
+
+    /** Not available on Unity: `false`. */
+    public function getWindowDisplayBounds(result:Array<Int>):Bool {
+        return false;
+    }
+
+    /** Not available on Unity: 1. */
+    public function getWindowDesktopScale():Float {
+        return 1.0;
+    }
+
+    /** Not available on Unity: does nothing. */
+    public function setWindowMinSize(width:Int, height:Int):Void {}
+
+    /** Not available on Unity: does nothing. */
+    public function setWindowBorderless(borderless:Bool):Void {}
+
+    /** Not available on Unity: does nothing. */
+    public function setWindowTitleBarStyle(style:ceramic.TitleBarStyle, buttonsX:Float, buttonsY:Float):Void {}
 
     public function minimizeWindow():Void {}
 

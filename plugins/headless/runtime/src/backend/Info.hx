@@ -56,6 +56,11 @@ class Info #if !completion implements spec.Info #end {
         #end
     }
 
+    /** The headless backend does not read the locales of the system: empty. */
+    public function systemLocales():Array<String> {
+        return [];
+    }
+
     inline public function storageDirectory():String {
         return null;
     }

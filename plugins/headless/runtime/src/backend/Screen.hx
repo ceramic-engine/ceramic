@@ -136,6 +136,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @event function windowFocusChange(focused:Bool);
 
     /**
+     * Fired when the window moved. Never fired by the headless backend:
+     * tests emit it to simulate a window moved by the user.
+     * @param x Horizontal position of the window in desktop coordinates
+     * @param y Vertical position of the window in desktop coordinates
+     */
+    @event function windowMove(x:Int, y:Int);
+
+    /**
      * Fired when an item of the menu bar is chosen. Never fired by the
      * headless backend: tests emit it to simulate a click in a native menu.
      * @param id The `id` of the item
@@ -278,6 +286,77 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
         return false;
 
+    }
+
+    var windowX:Int = 0;
+
+    var windowY:Int = 0;
+
+    /** Position last given to `setWindowPosition` or to a simulated `windowMove` (0 before). */
+    public function getWindowX():Int {
+        return windowX;
+    }
+
+    /** Position last given to `setWindowPosition` or to a simulated `windowMove` (0 before). */
+    public function getWindowY():Int {
+        return windowY;
+    }
+
+    /** No window: keeps the position for tests and accepts it. */
+    public function setWindowPosition(x:Int, y:Int):Bool {
+        windowX = x;
+        windowY = y;
+        return true;
+    }
+
+    function willEmitWindowMove(x:Int, y:Int):Void {
+        windowX = x;
+        windowY = y;
+    }
+
+    /** No display: `false`. */
+    public function getWindowDisplayBounds(result:Array<Int>):Bool {
+        return false;
+    }
+
+    public function getWindowDesktopScale():Float {
+        return 1.0;
+    }
+
+    /** Minimum size last given to `setWindowMinSize`, for tests (0 before). */
+    public var windowMinWidth(default, null):Int = 0;
+
+    /** Minimum size last given to `setWindowMinSize`, for tests (0 before). */
+    public var windowMinHeight(default, null):Int = 0;
+
+    /** No window: keeps the values for tests. */
+    public function setWindowMinSize(width:Int, height:Int):Void {
+        windowMinWidth = width;
+        windowMinHeight = height;
+    }
+
+    /** Value last given to `setWindowBorderless`, for tests (false before). */
+    public var windowBorderless(default, null):Bool = false;
+
+    /** No window: keeps the value for tests. */
+    public function setWindowBorderless(borderless:Bool):Void {
+        windowBorderless = borderless;
+    }
+
+    /** Style last given to `setWindowTitleBarStyle`, for tests. */
+    public var windowTitleBarStyle(default, null):ceramic.TitleBarStyle = ceramic.TitleBarStyle.DEFAULT;
+
+    /** Buttons position last given to `setWindowTitleBarStyle`, for tests. */
+    public var windowTitleBarButtonsX(default, null):Float = -1;
+
+    /** Buttons position last given to `setWindowTitleBarStyle`, for tests. */
+    public var windowTitleBarButtonsY(default, null):Float = -1;
+
+    /** No window: keeps the values for tests. */
+    public function setWindowTitleBarStyle(style:ceramic.TitleBarStyle, buttonsX:Float, buttonsY:Float):Void {
+        windowTitleBarStyle = style;
+        windowTitleBarButtonsX = buttonsX;
+        windowTitleBarButtonsY = buttonsY;
     }
 
     public function minimizeWindow():Void {}

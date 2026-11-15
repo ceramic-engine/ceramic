@@ -88,6 +88,68 @@ interface Screen {
     function setWindowSize(width:Int, height:Int):Bool;
 
     /**
+     * Horizontal position of the window (the left of its content area) in
+     * the desktop coordinates of the system (points on macOS and Wayland,
+     * pixels on Windows and X11); 0 where the platform does not tell.
+     * Backends that have a window position emit `windowMove(x, y)` when it
+     * changes.
+     */
+    function getWindowX():Int;
+
+    /**
+     * Vertical position of the window in desktop coordinates, see `getWindowX()`.
+     */
+    function getWindowY():Int;
+
+    /**
+     * Moves the window to the given position in desktop coordinates.
+     *
+     * @return `true` if the request was accepted (`getWindowX()` and
+     *         `getWindowY()` then give the actual position), `false` if it
+     *         has no effect (no movable window on this platform, fullscreen,
+     *         refused by the system)
+     */
+    function setWindowPosition(x:Int, y:Int):Bool;
+
+    /**
+     * Writes into `result` the usable bounds (`x, y, width, height`, without
+     * the menu bar, the dock or the task bar) of the display the window is
+     * on, in desktop coordinates.
+     *
+     * @return `false` where the platform does not tell (`result` is left as is)
+     */
+    function getWindowDisplayBounds(result:Array<Int>):Bool;
+
+    /**
+     * Number of desktop coordinate units per logical unit of the window
+     * size: 1 where the system counts in points, the display scale where it
+     * counts in pixels (Windows, X11). 1 where the platform does not tell.
+     */
+    function getWindowDesktopScale():Float;
+
+    /**
+     * Sets the smallest size the user can give to the window, in logical
+     * units (0 removes the minimum on that axis). Does nothing where the
+     * platform has no resizable window.
+     */
+    function setWindowMinSize(width:Int, height:Int):Void;
+
+    /**
+     * Removes or restores the border and title bar of the system around the
+     * window. Does nothing where the platform has no such window.
+     */
+    function setWindowBorderless(borderless:Bool):Void;
+
+    /**
+     * Sets how the title bar of the window is shown, and where the window
+     * buttons of an overlay title bar are (distances from the left and top
+     * edges of the window, negative: the place the system gives). Does
+     * nothing where the platform has no overlay title bar (everything but
+     * macOS native builds for now).
+     */
+    function setWindowTitleBarStyle(style:ceramic.TitleBarStyle, buttonsX:Float, buttonsY:Float):Void;
+
+    /**
      * Minimizes the window (does nothing where windows cannot be minimized:
      * web, mobile, headless).
      */

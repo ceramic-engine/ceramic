@@ -47,6 +47,23 @@ class TrackerBackend {
     }
 
     /**
+     * Writes now the last state of every model saved with
+     * `tracker.SaveModel.autoSaveAsKey`: their pending changes are
+     * serialized without waiting for the next check interval, then the call
+     * blocks until the scheduled writes are done (or `timeout` seconds have
+     * passed). Called by the app when it terminates. Main thread only.
+     *
+     * @param timeout Maximum time to wait for the writes, in seconds
+     * @return `true` if everything was written
+     */
+    public function flushSaves(timeout:Float = 5.0):Bool {
+
+        tracker.SaveModel.synchronizeAutoSaved();
+        return backgroundQueue.flush(timeout);
+
+    }
+
+    /**
      * Schedules a callback to run on the next frame or event loop iteration.
      * 
      * The callback is queued and will be executed during the next update cycle.
