@@ -1322,13 +1322,31 @@ class CeramicTextSystem implements PlatformTextSystem {
             if (c <= 0x7F || coverageChecked.exists(c))
                 continue;
             coverageChecked.set(c, true);
-            if (anyFaceCovers(c, system))
-                continue;
             final count = system.faces.length;
-            system.loadFaceFor(c);
+            if (anyFaceCovers(c, system)) {
+                // A system file that was probed and left unread may map the
+                // character and come before the system faces read so far
+                if (!addedTextFaceCovers(c) && system.loadSkippedFor(c))
+                    fallbackGeneration++;
+                continue;
+            }
+            // First the files already tried for other characters, which
+            // were left unread because they did not map those
+            system.loadSkippedFor(c);
+            if (system.faces.length == count || !anyFaceCovers(c, system))
+                system.loadFaceFor(c);
             if (system.faces.length != count)
                 fallbackGeneration++;
         }
+    }
+
+    /** Whether an added face (not a system one) without color glyphs maps the character */
+    function addedTextFaceCovers(c:Int):Bool {
+        for (f in faces) {
+            if (f.glyphForChar(c) != 0 && !f.hasColorGlyphs)
+                return true;
+        }
+        return false;
     }
 
     /** Key of `coverageChecked` for the color coverage of a code point */

@@ -15,9 +15,18 @@ using StringTools;
  *
  * Font files are read through `ceramic.Files`, lazily: nothing is read until
  * a character is missing from every loaded face, and then only the files
- * listed for the kind of that character, in order, until one covers it. A
- * file is read once (whether it covers the character or not) and all its
- * faces are kept.
+ * listed for the kind of that character, in order, until one covers it.
+ *
+ * A candidate file is first probed: only the character maps (`cmap`
+ * tables) of its faces are read, a few hundred KB at most. The file itself
+ * is read, and all its faces kept, only when one of its faces maps the
+ * character. A file that maps nothing asked so far costs its character
+ * maps only: a character that no system font has (U+2E31, which a code
+ * editor measures for its rendering of white space) used to read every
+ * candidate file and keep them all, 200 MB on macOS. The faces end up in
+ * the same order as when every tried file was read: a probed file keeps
+ * the rank of its first try, and it is read later if a character needs it
+ * (`loadSkippedFor()`).
  *
  * Emoji come from the emoji font of the platform (Apple Color Emoji, Segoe
  * UI Emoji, Noto Color Emoji: `sbix`, `COLR` and `CBDT` color glyphs, see
@@ -43,7 +52,11 @@ class SystemFontFallback {
     /** Faces loaded so far, in the order they should be tried */
     public final faces:Array<ttf.Font> = [];
 
-    /** Rank of the file of each face in `faces` (load order) */
+    /**
+     * Rank of the file of each face in `faces`: the order in which the
+     * files were first tried (probed or read). Faces of a lower rank are
+     * preferred.
+     */
     public final fileRanks:Array<Int> = [];
 
     /** Paths of the files read so far */
@@ -64,6 +77,28 @@ class SystemFontFallback {
     var emojiTried:Bool = false;
 
     final triedPaths:Map<String, Bool> = new Map();
+
+    /** Rank of each file tried so far (see `fileRanks`) */
+    final pathRanks:Map<String, Int> = new Map();
+
+    var nextRank:Int = 0;
+
+    /**
+     * Character maps of the files that were probed and not read yet
+     * (see `probe()`), with their paths in the order of their ranks.
+     */
+    final skippedCmaps:Map<String, Array<ttf.Cmap>> = new Map();
+
+    final skippedPaths:Array<String> = [];
+
+    /** Total size of the character maps read by the probes, in bytes */
+    public var probedBytes(default, null):Float = 0;
+
+    /**
+     * False to read every tried file whole, as before the probes existed
+     * (for comparisons and tests).
+     */
+    public var probeBeforeLoading:Bool = true;
 
     var candidates:Null<Candidates> = null;
 
@@ -107,11 +142,175 @@ class SystemFontFallback {
         for (path in paths) {
             if (triedPaths.exists(path))
                 continue;
+            if (!wantsFile(path, codePoint))
+                continue;
             triedPaths.set(path, true);
             if (loadFile(path, codePoint))
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Whether the file at `path` must be read for `codePoint`: true unless
+     * its character maps could be read and none maps the code point. The
+     * file then stays unread (and untried), with its rank and its character
+     * maps kept for the next code points.
+     */
+    function wantsFile(path:String, codePoint:Int):Bool {
+        if (!probeBeforeLoading)
+            return true;
+        var cmaps = skippedCmaps.get(path);
+        if (cmaps == null) {
+            cmaps = probe(path);
+            if (cmaps == null)
+                return true;
+            if (!pathRanks.exists(path))
+                pathRanks.set(path, nextRank++);
+            skippedCmaps.set(path, cmaps);
+            skippedPaths.push(path);
+        }
+        if (!cmapsCover(cmaps, codePoint))
+            return false;
+        skippedCmaps.remove(path);
+        skippedPaths.remove(path);
+        return true;
+    }
+
+    static function cmapsCover(cmaps:Array<ttf.Cmap>, codePoint:Int):Bool {
+        for (cmap in cmaps) {
+            if (cmap.glyphId(codePoint) != 0)
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reads the files that were probed and skipped, in the order of their
+     * ranks, when one of their faces maps `codePoint` and comes before
+     * every face read so far that maps it (`covered`, with their ranks):
+     * such a file would have been read before them without the probes, so
+     * its faces are preferred. Returns true if faces were added.
+     */
+    public function loadSkippedFor(codePoint:Int):Bool {
+        if (skippedPaths.length == 0)
+            return false;
+        // Lowest rank among the read faces mapping the code point (text
+        // faces: a color font is not enough, see `CeramicTextSystem`)
+        var best = -1;
+        for (i in 0...faces.length) {
+            if (!faces[i].hasColorGlyphs && faces[i].glyphForChar(codePoint) != 0) {
+                if (best == -1 || fileRanks[i] < best)
+                    best = fileRanks[i];
+            }
+        }
+        var added = false;
+        var i = 0;
+        while (i < skippedPaths.length) {
+            final path = skippedPaths[i];
+            final rank:Int = pathRanks.get(path);
+            if (best != -1 && rank > best)
+                break;
+            final cmaps = skippedCmaps.get(path);
+            if (cmaps == null || !cmapsCover(cmaps, codePoint)) {
+                i++;
+                continue;
+            }
+            skippedCmaps.remove(path);
+            skippedPaths.splice(i, 1);
+            triedPaths.set(path, true);
+            final count = faces.length;
+            final covers = loadFile(path, codePoint);
+            if (faces.length != count)
+                added = true;
+            if (covers)
+                break;
+        }
+        return added;
+    }
+
+    /** Largest character map a probe reads, in bytes */
+    static inline final MAX_PROBED_CMAP = 4 * 1024 * 1024;
+
+    /**
+     * The character maps of the faces of a font file, read without reading
+     * the file (the same map shared by several faces of a collection is
+     * read once). Null when the file does not exist or cannot be probed:
+     * the caller then reads it whole, which decides.
+     */
+    function probe(path:String):Null<Array<ttf.Cmap>> {
+        final start = haxe.Timer.stamp();
+        var result:Null<Array<ttf.Cmap>> = null;
+        try {
+            result = probeUnsafe(path);
+        }
+        catch (e:Dynamic) {
+            result = null;
+        }
+        loadTime += haxe.Timer.stamp() - start;
+        return result;
+    }
+
+    function probeUnsafe(path:String):Null<Array<ttf.Cmap>> {
+        if (!ceramic.Files.exists(path))
+            return null;
+        final header = ceramic.Files.getBytesRange(path, 0, 12);
+        if (header == null || header.length < 12)
+            return null;
+        final count = ttf.Font.faceCount(header);
+        if (count <= 0 || count > 256)
+            return null;
+        final directories:Array<Int> = [];
+        if (count == 1 && be32(header, 0) != 0x74746366) {
+            directories.push(0);
+        }
+        else {
+            final entries = ceramic.Files.getBytesRange(path, 12, count * 4);
+            if (entries == null || entries.length < count * 4)
+                return null;
+            for (i in 0...count)
+                directories.push(be32(entries, i * 4));
+        }
+        final cmaps:Array<ttf.Cmap> = [];
+        final seenOffsets:Array<Int> = [];
+        for (directory in directories) {
+            if (directory < 0)
+                return null;
+            final dirHeader = ceramic.Files.getBytesRange(path, directory, 12);
+            if (dirHeader == null || dirHeader.length < 12)
+                return null;
+            final numTables = (dirHeader.get(4) << 8) | dirHeader.get(5);
+            final records = ceramic.Files.getBytesRange(path, directory + 12, numTables * 16);
+            if (records == null || records.length < numTables * 16)
+                return null;
+            var offset = -1;
+            var length = 0;
+            for (i in 0...numTables) {
+                if (be32(records, i * 16) == 0x636D6170) { // 'cmap'
+                    offset = be32(records, i * 16 + 8);
+                    length = be32(records, i * 16 + 12);
+                    break;
+                }
+            }
+            // A face without a character map maps nothing
+            if (offset < 0 || length <= 0)
+                continue;
+            if (length > MAX_PROBED_CMAP)
+                return null;
+            if (seenOffsets.indexOf(offset) != -1)
+                continue;
+            seenOffsets.push(offset);
+            final bytes = ceramic.Files.getBytesRange(path, offset, length);
+            if (bytes == null || bytes.length < length)
+                return null;
+            probedBytes += length;
+            cmaps.push(new ttf.Cmap(bytes, 0, length));
+        }
+        return cmaps;
+    }
+
+    static inline function be32(bytes:Bytes, pos:Int):Int {
+        return (bytes.get(pos) << 24) | (bytes.get(pos + 1) << 16) | (bytes.get(pos + 2) << 8) | bytes.get(pos + 3);
     }
 
     /** The face preferred for each script kind and code point, once found */
@@ -140,16 +339,17 @@ class SystemFontFallback {
         }
         var result:Null<ttf.Font> = null;
         for (path in paths) {
-            var rank = loadedPaths.indexOf(path);
-            if (rank == -1) {
+            if (loadedPaths.indexOf(path) == -1) {
                 if (triedPaths.exists(path))
+                    continue;
+                if (!wantsFile(path, codePoint))
                     continue;
                 triedPaths.set(path, true);
                 loadFile(path, codePoint);
-                rank = loadedPaths.indexOf(path);
-                if (rank == -1)
+                if (loadedPaths.indexOf(path) == -1)
                     continue;
             }
+            final rank:Int = pathRanks.get(path);
             for (i in 0...faces.length) {
                 if (fileRanks[i] == rank && faces[i].glyphForChar(codePoint) != 0) {
                     result = faces[i];
@@ -185,9 +385,11 @@ class SystemFontFallback {
             if (face == null || face.numGlyphs <= 1)
                 continue;
             loadedPaths.push(path);
+            if (!pathRanks.exists(path))
+                pathRanks.set(path, nextRank++);
             emojiFaces.push(face);
             faces.push(face);
-            fileRanks.push(loadedPaths.length - 1);
+            fileRanks.push(pathRanks.get(path));
             return true;
         }
         return false;
@@ -255,12 +457,20 @@ class SystemFontFallback {
         // Noto Sans CJK SC before Noto Sans CJK JP...)
         final tags = regionTags(cjkLocale);
         final preferred = [for (f in visible) if (hasRegionTag(f, tags)) f];
-        final rank = loadedPaths.length - 1;
+        if (!pathRanks.exists(path))
+            pathRanks.set(path, nextRank++);
+        final rank:Int = pathRanks.get(path);
+        // After the faces of the files of a lower rank (a file read late by
+        // `loadSkippedFor()` goes where it would have been read at first)
+        var at = faces.length;
+        while (at > 0 && fileRanks[at - 1] > rank)
+            at--;
         var covers = false;
         for (list in [preferred, [for (f in visible) if (preferred.indexOf(f) == -1) f]]) {
             for (f in list) {
-                faces.push(f);
-                fileRanks.push(rank);
+                faces.insert(at, f);
+                fileRanks.insert(at, rank);
+                at++;
                 if (f.glyphForChar(codePoint) != 0)
                     covers = true;
             }

@@ -128,6 +128,69 @@ class SystemFontFallbackTest extends TestCase {
             + '${Math.round(p.systemFallback.loadedBytes / 1048576)} MB read in ${Math.round(p.systemFallback.loadTime * 1000)} ms');
     }
 
+    function testUnmappedCharacterReadsNoFontFile() {
+        if (!hasMacFonts())
+            return;
+        // U+2E31 (word separator middle dot, measured by code editors for
+        // their rendering of white space) is in no font of macOS: the
+        // candidate files are probed (character maps only), none is read
+        final p = platform(true);
+        final line = layout(p, 'a\u2E31b');
+        assertEquals(0, glyphAt(line, 1).glyphId);
+        assertEquals(0, p.systemFallback.loadedPaths.length);
+        assertEquals(0, p.systemFallback.faces.length);
+        assertEquals(0.0, p.systemFallback.loadedBytes);
+        assertTrue(p.systemFallback.probedBytes > 0, 'character maps were read');
+        assertTrue(p.systemFallback.probedBytes < 8 * 1048576, 'probes read ${p.systemFallback.probedBytes} bytes');
+        trace('System fallback probes for U+2E31: ${Math.round(p.systemFallback.probedBytes / 1024)} KB of character maps read in '
+            + '${Math.round(p.systemFallback.loadTime * 1000)} ms, no file read');
+        // The files left unread still serve the next characters
+        assertSystemGlyphs(p, 'Snow ☃');
+        assertTrue(p.systemFallback.loadedPaths.length >= 1);
+    }
+
+    function testProbesGiveTheSameGlyphsAsWholeReads() {
+        if (!hasMacFonts())
+            return;
+        // Reference: every tried file read whole (the behaviour before the
+        // probes). The same texts in the same order must get the same
+        // glyphs from the same faces, with fewer files read.
+        final whole = platform(true);
+        whole.systemFallback.probeBeforeLoading = false;
+        final probed = platform(true);
+        final texts = [
+            'a\u2E31b', 'full ｍ width', 'Snow ☃ chess ♞♔', 'Hello 世界，这是', 'あいうえお カタカナ', '가나다',
+            'apple \uF8FF logo', 'arrows ⇄ ⟲ ✓ ✗ ★', 'again ｍ ☃ 世 あ 가 \u2E31', 'ελληνικά кириллица עברית'
+        ];
+        for (family in ['Inter', 'JetBrains Mono']) {
+            for (text in texts) {
+                final expected = layout(whole, text, family);
+                final actual = layout(probed, text, family);
+                final d = new glaze.util.Utf8.Utf8Text(text);
+                for (k in 0...d.count) {
+                    final index = d.byteOffsets[k];
+                    final e = glyphAt(expected, index);
+                    final a = glyphAt(actual, index);
+                    final label = 'U+${StringTools.hex(d.codePoints[k], 4)} of "$text" in $family';
+                    assertEquals(e == null, a == null, label);
+                    if (e == null || a == null)
+                        continue;
+                    assertEquals(e.glyphId, a.glyphId, 'glyph of $label');
+                    assertEquals(whole.ttfFont(e.fontId).postScriptName, probed.ttfFont(a.fontId).postScriptName, 'face of $label');
+                }
+                assertEquals(expected.width, actual.width, 'width of "$text" in $family');
+            }
+        }
+        for (path in probed.systemFallback.loadedPaths)
+            assertTrue(whole.systemFallback.loadedPaths.indexOf(path) != -1, '$path is also read without probes');
+        assertTrue(probed.systemFallback.loadedPaths.length < whole.systemFallback.loadedPaths.length,
+            '${probed.systemFallback.loadedPaths.length} files read with probes, ${whole.systemFallback.loadedPaths.length} without');
+        assertTrue(probed.systemFallback.loadedBytes < whole.systemFallback.loadedBytes);
+        trace('System fallback with probes: ${probed.systemFallback.loadedPaths.length} files, '
+            + '${Math.round(probed.systemFallback.loadedBytes / 1048576)} MB read; without: ${whole.systemFallback.loadedPaths.length} files, '
+            + '${Math.round(whole.systemFallback.loadedBytes / 1048576)} MB');
+    }
+
     function testCjkInMonospaceText() {
         if (!hasMacFonts())
             return;
