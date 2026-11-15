@@ -263,7 +263,7 @@ ${libsHxml.join('\n')}
 -lib clay
 -cp ' + clayOpenGLPathRelative + '
 -cp ' + clayMiniaudioPathRelative + '
--D clay_app_id=' + Json.stringify(project.app.name) + '
+-D clay_app_id=' + Json.stringify(project.app.name) + '${storageNameHxml(project.app.storageName)}
 ${haxeflagsHxml.join('\n')}
 ').ltrim();
 
@@ -327,6 +327,28 @@ ${haxeflagsHxml.join('\n')}
 
             print('Updated clay hxml at: $hxmlPath');
         }
+
+    }
+
+    /**
+     * Returns the build file line that sets the `clay_app_storage_name` define from
+     * the optional `storageName` key of the `app:` section of `ceramic.yml`, or an
+     * empty string when the key is not set (or empty), which keeps the app storage
+     * folder derived from the app identifier.
+     *
+     * With `storageName: com.example.game` the storage folder is named exactly
+     * `com.example.game` (the name is not split at its dots).
+     */
+    public static function storageNameHxml(storageName:Dynamic):String {
+
+        if (storageName == null)
+            return '';
+
+        final name = Std.string(storageName).trim();
+        if (name.length == 0)
+            return '';
+
+        return '\n-D clay_app_storage_name=' + Json.stringify(name);
 
     }
 

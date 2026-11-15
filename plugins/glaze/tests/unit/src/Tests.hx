@@ -38,6 +38,7 @@ class Tests {
         runner.add(new tests.FontSmoothingTest());
         runner.add(new tests.WholeRunShapingTest());
         runner.add(new tests.SystemFontFamiliesTest());
+        runner.add(new tests.VariableFontTest());
         runner.add(new tests.LineWrapperTest());
         runner.add(new tests.LetterSpacingTest());
         runner.add(new tests.SystemFontFallbackTest());
@@ -98,6 +99,7 @@ class Tests {
         runner.add(new tests.ComponentOwnerTest());
         runner.add(new tests.ComponentNotifyTest());
         runner.add(new tests.CacheVerificationTest());
+        runner.add(new tests.EntitiesMadeWhileDrawnTest());
         // gpui-kit (waves 1 and 2)
         runner.add(new tests.kit.BaseRootTest());
         runner.add(new tests.kit.FrameScheduleTest());
@@ -236,6 +238,7 @@ class Tests {
         runner.add(new tests.kit.TextInlineObjectTest());
         runner.add(new tests.kit.TextInlineFlowTest());
         runner.add(new tests.kit.RichTextTest());
+        runner.add(new tests.kit.RichTextSelectionTest());
         runner.add(new tests.kit.TextHtml5MinifyTest());
         runner.add(new tests.kit.TextFormatHtmlTest());
         runner.add(new tests.kit.TextDataUrlTest());

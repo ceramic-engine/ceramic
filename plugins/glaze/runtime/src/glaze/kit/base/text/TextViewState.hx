@@ -118,6 +118,8 @@ class TextViewState extends Model implements Render {
     @:allow(glaze.kit.base.text) final selectionAdapter:TextViewSelectionAdapter;
 
     @:allow(glaze.kit.base.text) var parsedContent:ParsedContent = new ParsedContent();
+    /** Addition: set for the state of a single paragraph (`singleFlow`), `null` for every text view. */
+    @:allow(glaze.kit.base.text) var flowSelection:Null<InlineFlowSelection> = null;
     @:allow(glaze.kit.base.text) final streamFade:StreamFadeTracker = new StreamFadeTracker();
     var fadeTick:Null<glaze.Task<glaze.Unit>> = null;
     /**
@@ -155,6 +157,21 @@ class TextViewState extends Model implements Render {
     /** Create a HTML TextViewState. */
     public static function html(text:String, cx:Context<TextViewState>):TextViewState {
         return new TextViewState(Html, text, cx);
+    }
+
+    /**
+     * Addition (not in gpui-kit): the state of one selectable paragraph that
+     * is not a parsed document (the kit's `RichText`, through
+     * `InlineSelectionScope`). It parses and renders nothing; the text
+     * leaves of the paragraph find it like the state of a markdown view, and
+     * what it copies comes from `InlineFlowSelection`.
+     */
+    @:allow(glaze.kit.base.text)
+    static function singleFlow(cx:Context<TextViewState>):TextViewState {
+        final state = new TextViewState(Markdown, '', cx);
+        state.flowSelection = new InlineFlowSelection();
+        state.selectable = true;
+        return state;
     }
 
     /** Create a new TextViewState. */
@@ -374,6 +391,15 @@ class TextViewState extends Model implements Render {
      */
     @:allow(glaze.kit.base.text)
     function selectedTextIn(blocks:Null<Array<Int>>):String {
+        final flow = flowSelection;
+        if (flow != null) {
+            // Addition: a single paragraph has no document to walk.
+            if (_selectAll) {
+                return flow.text();
+            }
+            return selectedTextOverride != null ? selectedTextOverride : flow.selectedText();
+        }
+
         final format = effectiveFormat();
 
         if (_selectAll) {
@@ -709,6 +735,23 @@ class TextViewState extends Model implements Render {
         // (virtualized) views that won't repaint don't leak stale selection
         // text into a new cross-view copy.
         @:privateAccess parsedContent.document.clearSelection();
+        if (flowSelection != null) {
+            flowSelection.clearSelection();
+        }
+    }
+
+    /**
+     * Addition: the text of the single paragraph of this state changed
+     * (`singleFlow`). As when the text of a view is replaced, what was
+     * selected is no longer there.
+     */
+    @:allow(glaze.kit.base.text)
+    function flowTextChanged(cx:App):Void {
+        selectionRevision = selectionRevision + 1;
+        selectionAdapter.clearCopyProjections(cx);
+        if (!_isSelecting) {
+            resetSelectionAndAdapter(cx);
+        }
     }
 
     function resetSelectionAndAdapter(cx:App):Void {
@@ -888,6 +931,46 @@ class TextViewState extends Model implements Render {
         return {request: request, block: revealBlock};
     }
 
+    /**
+     * The content of the view was given its bounds in prepaint: records
+     * them, and clears a window selection that the new layout or text made
+     * stale. (The body of the `on_prepaint` closure of Rust's `render`, as a
+     * function so that `InlineSelectionScope` runs the same code.)
+     */
+    @:allow(glaze.kit.base.text)
+    static function contentPrepainted(state:Entity<TextViewState>, bounds:Bounds, window:Window, cx:App):Void {
+        final current = state.read(cx);
+        final hasSelectionSnapshot = current.selectionAdapter.hasSelectionSnapshot(cx);
+        final preserveWidthSelection = !current._isSelecting
+            && current.bounds().size.width != bounds.size.width
+            && (hasSelectionSnapshot || current.hasViewSelection());
+        final sizeChanged = !current.bounds().size.equals(bounds.size);
+        final selectionInvolvesView = current.selectionAdapter.isPartOfWindowSelection(cx);
+        final isSelecting = current._isSelecting;
+        // A measurement prepaint must not consume compatibility before
+        // the same entity's visible column prepaints.
+        final compatibleLayoutUpdate = current.compatibleLayoutUpdate
+            || preserveWidthSelection
+            || current.preserveInlineSelection;
+        var revisionChanged = false;
+        state.update(cx, (state, cx) -> {
+            revisionChanged = state.selectionAdapter.updateLayoutRevision(state.selectionRevision, state._isSelecting);
+            if (preserveWidthSelection) {
+                // ListState already remeasures width changes. Arm
+                // logical retention before inline paint without
+                // invalidating rows again.
+                state.preserveInlineSelection = true;
+            }
+            state.updateBounds(bounds, cx.app);
+            state.compatibleLayoutUpdate = false;
+        });
+        if (!isSelecting
+            && ((sizeChanged && selectionInvolvesView && !compatibleLayoutUpdate)
+                || (revisionChanged && hasSelectionSnapshot))) {
+            TextSelection.clear(window, cx);
+        }
+    }
+
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final cx:Context<TextViewState> = cast cx;
         final textStyle = window.textStyle();
@@ -944,38 +1027,7 @@ class TextViewState extends Model implements Render {
                     return el.child(vFlex().gap1().child('Failed to parse content').child(parsedError));
                 }
             })
-            .onPrepaint((bounds, window, cx) -> {
-                final current = state.read(cx);
-                final hasSelectionSnapshot = current.selectionAdapter.hasSelectionSnapshot(cx);
-                final preserveWidthSelection = !current._isSelecting
-                    && current.bounds().size.width != bounds.size.width
-                    && (hasSelectionSnapshot || current.hasViewSelection());
-                final sizeChanged = !current.bounds().size.equals(bounds.size);
-                final selectionInvolvesView = current.selectionAdapter.isPartOfWindowSelection(cx);
-                final isSelecting = current._isSelecting;
-                // A measurement prepaint must not consume compatibility before
-                // the same entity's visible column prepaints.
-                final compatibleLayoutUpdate = current.compatibleLayoutUpdate
-                    || preserveWidthSelection
-                    || current.preserveInlineSelection;
-                var revisionChanged = false;
-                state.update(cx, (state, cx) -> {
-                    revisionChanged = state.selectionAdapter.updateLayoutRevision(state.selectionRevision, state._isSelecting);
-                    if (preserveWidthSelection) {
-                        // ListState already remeasures width changes. Arm
-                        // logical retention before inline paint without
-                        // invalidating rows again.
-                        state.preserveInlineSelection = true;
-                    }
-                    state.updateBounds(bounds, cx.app);
-                    state.compatibleLayoutUpdate = false;
-                });
-                if (!isSelecting
-                    && ((sizeChanged && selectionInvolvesView && !compatibleLayoutUpdate)
-                        || (revisionChanged && hasSelectionSnapshot))) {
-                    TextSelection.clear(window, cx);
-                }
-            });
+            .onPrepaint((bounds, window, cx) -> contentPrepainted(state, bounds, window, cx));
         // After `renderRoot`, which resets the list when the block count
         // changed other than by an append, and with it the scroll position.
         if (reveal.block != null) {

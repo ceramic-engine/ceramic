@@ -32,8 +32,21 @@ using StringTools;
  *   files. The browser's own fonts only draw the graphemes no added font
  *   has (the Canvas fallback).
  *
- * Not loaded: fonts the `ttf` library cannot draw (Apple's `hvgl` outlines),
- * and variable fonts give their default instance only.
+ * Variable fonts (the system font of macOS, `SFNS.ttf`, `SFNSItalic.ttf`
+ * and `SFNSMono.ttf`: weight and optical size axes) are loaded like the
+ * others: `CeramicTextSystem` makes the instance of each weight and size.
+ *
+ * The system fonts of macOS have hidden family names (`System Font`,
+ * `.SF NS Mono`). `aliasFamily()` gives them the names an application
+ * uses, the ones a browser resolves the same way: `system-ui`,
+ * `-apple-system`, `BlinkMacSystemFont`, `.AppleSystemUIFont` for the
+ * interface font and `ui-monospace` for SF Mono. `SF Pro`, `SF Pro Text`
+ * and `SF Mono` are the names of fonts that are not installed by default
+ * (a browser asked for them takes the next family of its list): they
+ * stand for the system fonts only when `appleFamilyAliases` is set and
+ * no installed family has the name.
+ *
+ * Not loaded: fonts the `ttf` library cannot draw (Apple's `hvgl` outlines).
  */
 class SystemFontFamilies {
 
@@ -48,6 +61,55 @@ class SystemFontFamilies {
 
     /** Total time spent listing and indexing, in seconds */
     public var indexTime(default, null):Float = 0;
+
+    /**
+     * Whether `SF Pro`, `SF Pro Text` and `SF Mono` stand for the system
+     * fonts when no installed family has these names (false by default:
+     * like in a browser, a list of families goes on to its next name).
+     */
+    public var appleFamilyAliases:Bool = false;
+
+    /** Names (lowercase) of the interface font of the system */
+    static final SYSTEM_UI_NAMES = ['system-ui', '-apple-system', 'blinkmacsystemfont', '.applesystemuifont'];
+
+    /** Names (lowercase) of the monospace interface font of the system */
+    static final SYSTEM_MONOSPACE_NAMES = ['ui-monospace'];
+
+    /** Installed families behind the interface font names, first found (macOS: `SFNS.ttf` and `SFNSItalic.ttf`) */
+    static final SYSTEM_UI_FAMILIES = ['System Font'];
+
+    /** Installed families behind the monospace interface font names (macOS: `SFNSMono.ttf` and `SFNSMonoItalic.ttf`) */
+    static final SYSTEM_MONOSPACE_FAMILIES = ['.SF NS Mono'];
+
+    /**
+     * The installed family a system font name stands for (`system-ui`,
+     * `ui-monospace`..., case insensitive), or null: the name is not one
+     * of them, or the family is not installed (not macOS).
+     */
+    public function aliasFamily(name:String):Null<String> {
+        final lower = name.toLowerCase();
+        var candidates:Null<Array<String>> = null;
+        if (SYSTEM_UI_NAMES.indexOf(lower) != -1)
+            candidates = SYSTEM_UI_FAMILIES;
+        else if (SYSTEM_MONOSPACE_NAMES.indexOf(lower) != -1)
+            candidates = SYSTEM_MONOSPACE_FAMILIES;
+        else if (appleFamilyAliases) {
+            if (lower == 'sf pro' || lower == 'sf pro text')
+                candidates = SYSTEM_UI_FAMILIES;
+            else if (lower == 'sf mono')
+                candidates = SYSTEM_MONOSPACE_FAMILIES;
+            if (candidates != null && ensureIndex().exists(lower))
+                return null;
+        }
+        if (candidates == null)
+            return null;
+        final index = ensureIndex();
+        for (family in candidates) {
+            if (index.exists(family.toLowerCase()))
+                return family;
+        }
+        return null;
+    }
 
     public function new(?directories:Array<String>) {
         this.directories = directories;

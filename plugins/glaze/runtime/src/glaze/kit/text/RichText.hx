@@ -25,11 +25,13 @@ import glaze.Window;
 import glaze.kit.base.text.InlineElement;
 import glaze.kit.base.text.InlineFlow;
 import glaze.kit.base.text.InlineFlow.InlineFlowItem;
+import glaze.kit.base.text.InlineFlowSelection;
 import glaze.kit.base.text.InlineHighlight;
 import glaze.kit.base.text.InlineMotion;
 import glaze.kit.base.text.InlineMotion.InlineAnimation;
 import glaze.kit.base.text.InlineMotion.InlineTextTransform;
 import glaze.kit.base.text.InlineNode.SharedFlag;
+import glaze.kit.base.text.InlineSelectionScope;
 import glaze.kit.base.text.InlineState;
 import glaze.kit.base.text.LinkMark;
 import glaze.kit.base.text.RangedHighlight;
@@ -391,9 +393,19 @@ class RichText extends Component implements Styled {
     @prop var textAlign:TextAlign = TextAlign.Left;
 
     /**
-     * Whether the text can be selected, `false` by default. Selection is
-     * the markdown view's: it works for a `RichText` placed inside a
-     * selectable `TextView` scope only.
+     * Whether the text can be selected, `false` by default: a drag, a
+     * double click (word), a triple click (line), a shift click, select all
+     * and copy when the paragraph has the focus (it takes it when a
+     * selection starts in it), and the touch handles. What is copied is the
+     * plain text as shown, with its line breaks (`RichSpan.lineBreak()`,
+     * the newlines of `PreWrap`); elements are left out.
+     *
+     * The selection is the one of the markdown view (`TextView`): it needs
+     * the kit's `Root` at the root of the window, and a selection can run
+     * from a selectable `RichText` into a `TextView` or another `RichText`.
+     * A span with a `transformation` or an `animation` is not selectable:
+     * no selection starts or shows in it, and it is copied only when the
+     * selection runs over it from the text before to the text after.
      */
     @prop var selectable:Bool = false;
 
@@ -422,7 +434,7 @@ class RichText extends Component implements Styled {
 
     /** The text of the spans as it is shown (white space rule and case applied), elements left out. */
     public function plainText():String {
-        final built = build();
+        final built = build(null);
         final out = new StringBuf();
         for (item in built) {
             switch item {
@@ -433,7 +445,8 @@ class RichText extends Component implements Styled {
         return out.toString();
     }
 
-    function build():Array<InlineFlowItem> {
+    /** The items of the paragraph; `selection` gives the text items their states when the text is selectable. */
+    function build(?selection:InlineFlowSelection):Array<InlineFlowItem> {
         final collapse = whiteSpace != PreWrap;
         final items:Array<InlineFlowItem> = [];
         var text = new StringBuf();
@@ -446,7 +459,8 @@ class RichText extends Component implements Styled {
 
         function flush():Void {
             if (length > 0) {
-                items.push(InlineFlowItem.Text(new InlineState(), text.toString(), links, highlights, [], null));
+                final content = text.toString();
+                items.push(InlineFlowItem.Text(selection != null ? selection.itemState(content) : new InlineState(), content, links, highlights, [], null));
             }
             text = new StringBuf();
             length = 0;
@@ -507,12 +521,22 @@ class RichText extends Component implements Styled {
 
     public function render(window:Window, cx:App):IntoElement {
         final handler = linkHandler;
-        final flow = new InlineFlow(id, build(), handler != null ? (url, _, window, cx) -> handler(url, window, cx) : null)
+        final selection = selectable ? InlineSelectionScope.useState(window, id, cx) : null;
+        final items = if (selection != null) {
+            final built = build(InlineSelectionScope.beginItems(selection, cx));
+            InlineSelectionScope.endItems(selection, cx);
+            built;
+        }
+        else {
+            build(null);
+        }
+        final flow = new InlineFlow(id, items, handler != null ? (url, _, window, cx) -> handler(url, window, cx) : null)
             .textAlign(textAlign)
             .preWrap(whiteSpace == PreWrap);
         final container = div().minW0();
         if (whiteSpace == NoWrap) container.whitespaceNowrap();
-        return container.refineStyle(richStyle).child(flow);
+        container.refineStyle(richStyle).child(flow);
+        return selection != null ? InlineSelectionScope.wrap(selection, container, cx) : container;
     }
 
 }

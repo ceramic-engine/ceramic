@@ -6348,6 +6348,9 @@ class Window implements WindowInvalidator {
 
     final inPlaceOracleNames:Array<String> = [];
 
+    /** What the views had accessed before the full frame of `verifyInPlaceFrame` rendered them */
+    final inPlaceAccessedBefore:AccessedEntities = new AccessedEntities();
+
     /**
      * `glaze_verify_cache`: right after a frame drawn in place, a full frame
      * is drawn the usual way (every view renders, see `verifyCache`, except
@@ -6368,6 +6371,24 @@ class Window implements WindowInvalidator {
                 : Type.getClassName(Type.getClass(model)));
         }
         final live = liveEntities.ids.copy();
+        // What every view accessed when it last rendered. A view reused by
+        // the frame drawn in place keeps that set (Rust: `extend_accessed`
+        // in view.rs), while the full frame renders it for real and records
+        // what it accesses now. The two differ when a view made or read an
+        // entity only in the render that made one of its children (a
+        // component is made, and runs `init`, while its holder is drawn):
+        // GPUI keeps tracking such an entity until the view renders again,
+        // so it is not a difference of the frame drawn in place
+        final accessedBefore = inPlaceAccessedBefore;
+        accessedBefore.clear();
+        for (i in 0...trackerIds.length) {
+            final tracker = trackers.get(trackerIds[i]);
+            if (tracker != null) {
+                for (entityId in tracker.accessed.ids) {
+                    accessedBefore.add(entityId);
+                }
+            }
+        }
         // Accessed outside of any view by the frame drawn in place (its
         // focus listeners): the full frame dispatches no focus change
         final outsideViews = lastFrameAccessed.ids.copy();
@@ -6389,7 +6410,7 @@ class Window implements WindowInvalidator {
             // The views rendered in place are reused by the full frame: those
             // they rendered without drawing (measured, like the first item
             // of a uniform list) are tracked in place only
-            final extra = [for (entityId in live) if (!liveEntities.contains(entityId) && !amendedViews.exists(entityId) && outsideViews.indexOf(entityId) == -1) entityId];
+            final extra = [for (entityId in live) if (!liveEntities.contains(entityId) && !amendedViews.exists(entityId) && outsideViews.indexOf(entityId) == -1 && !accessedBefore.contains(entityId)) entityId];
             final missing = [for (entityId in liveEntities.ids) if (live.indexOf(entityId) == -1) entityId];
             if (extra.length > 0 || missing.length > 0) {
                 reportInPlaceDifference('tracked entities: only in place $extra, only in the full frame $missing');

@@ -41,6 +41,15 @@ class TextFixtures {
     }
 
     /**
+     * `VarTest.ttf`, the synthetic variable font of the ttf library's
+     * tests (family `VarTest`, axes `wght` and `wdth`, glyphs A to D).
+     */
+    public static function variableBytes():haxe.io.Bytes {
+        embedFonts();
+        return haxe.Resource.getBytes('glaze-test-font-variable');
+    }
+
+    /**
      * A text system over `CeramicTextSystem` loaded with the reference fonts,
      * like the dump (`.SystemUIFont` is Inter).
      */
@@ -89,7 +98,8 @@ class TextFixtures {
         final file = Context.getPosInfos(Context.currentPos()).file;
         final dir = haxe.io.Path.directory(sys.FileSystem.fullPath(file));
         final fonts = haxe.io.Path.normalize(dir + '/../../../../../../git/ttf/test/fonts');
-        for (entry in [['glaze-test-font-inter', 'Inter-Regular.ttf'], ['glaze-test-font-mono', 'JetBrainsMono-Regular.ttf']]) {
+        for (entry in [['glaze-test-font-inter', 'Inter-Regular.ttf'], ['glaze-test-font-mono', 'JetBrainsMono-Regular.ttf'],
+            ['glaze-test-font-variable', 'VarTest.ttf']]) {
             final path = fonts + '/' + entry[1];
             if (!sys.FileSystem.exists(path))
                 Context.error('Missing test font: $path', Context.currentPos());

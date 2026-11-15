@@ -73,6 +73,21 @@ import ttf.shape.Shaper;
  * italic of a family without italic face can be synthesized
  * (`Font.synthesizeStyle`), see `GlyphEffects`.
  *
+ * Variable fonts (`variableFonts`, an addition to GPUI's text system,
+ * whose font database only has static faces): a face with a `wght` axis
+ * gives every `FontWeight` through an instance (`ttf.Font.instanceForWeight`,
+ * one font id per weight), italic through the italic file of the family or
+ * its `ital` or `slnt` axis, and a face with an `opsz` axis is drawn and
+ * measured with the instance of the font size (in points, quantized to
+ * half a point), like CoreText does for the system font of macOS. The
+ * tracking table of such a font (`trak`) is added to its advances
+ * (`variableFontTracking`). Font ids, and so the keys of the glyph atlas
+ * and of the layout caches, differ by weight; the font size is part of
+ * those keys already. Static fonts are not concerned, and neither are the
+ * faces of the system fallback (`SystemFontFallback`), which keep their
+ * default instance: only the faces of the font database (added fonts and
+ * families loaded by name) are sized and tracked.
+ *
  * Not supported: subpixel (LCD) masks, complex scripts and
  * bidirectional text (see the `ttf` library).
  */
@@ -118,6 +133,26 @@ class CeramicTextSystem implements PlatformTextSystem {
 
     /** The synthetic oblique font id of a loaded font id */
     final syntheticObliqueIds:Map<Int, Int> = new Map();
+
+    /**
+     * Whether variable fonts give their weights, italic and optical sizes
+     * through instances (true by default). When false a variable font is
+     * its default instance only, like a static font. Set it before
+     * resolving fonts.
+     */
+    public var variableFonts:Bool = true;
+
+    /**
+     * Whether the tracking table (`trak`) of a variable font is added to
+     * the advance of its glyphs, like CoreText does for the system font of
+     * macOS (at 13 px the system font is tightened by 12/2048 em per
+     * glyph, at 17 px by 52/2048 em). True by default; static fonts are
+     * never tracked. Set it before laying out text.
+     */
+    public var variableFontTracking:Bool = true;
+
+    /** The font id of a weight and style of a variable loaded font id */
+    final variationIds:Map<String, Int> = new Map();
 
     /**
      * How glyphs are rasterized (see `FontSmoothing`): `Dense` by default
@@ -204,9 +239,22 @@ class CeramicTextSystem implements PlatformTextSystem {
      */
     function loadSystemFamily(name:String):Null<String> {
         final families = systemFamilies;
-        if (families == null || name.length == 0 || name.charAt(0) == '.')
+        if (families == null || name.length == 0)
             return null;
         final lower = name.toLowerCase();
+        // the names of the system fonts (`system-ui`, `ui-monospace`...):
+        // their installed family, whose own name is hidden
+        final alias = families.aliasFamily(lower);
+        if (alias != null) {
+            final aliasKey = '\x00alias:' + lower;
+            if (systemFamilyNames.exists(aliasKey))
+                return systemFamilyNames.get(aliasKey);
+            final result = loadInstalledFamily(alias);
+            systemFamilyNames.set(aliasKey, result);
+            return result;
+        }
+        if (name.charAt(0) == '.')
+            return null;
         if (systemFamilyNames.exists(lower))
             return systemFamilyNames.get(lower);
         if (lower == 'monospace') {
@@ -221,11 +269,30 @@ class CeramicTextSystem implements PlatformTextSystem {
             systemFamilyNames.set(lower, result);
             return result;
         }
+        final result = loadInstalledFamily(name);
+        systemFamilyNames.set(lower, result);
+        return result;
+    }
+
+    /** Family names (lowercase) read from the system to the family name of their faces */
+    final installedFamilyNames:Map<String, Null<String>> = new Map();
+
+    /**
+     * Adds the faces of the installed family `name` and returns the family
+     * name its faces give, or null when it is not installed.
+     */
+    function loadInstalledFamily(name:String):Null<String> {
+        final families = systemFamilies;
+        if (families == null)
+            return null;
+        final lower = name.toLowerCase();
+        if (installedFamilyNames.exists(lower))
+            return installedFamilyNames.get(lower);
         final added = families.loadFamily(name);
         for (face in added)
             addFace(face);
         final result = added.length > 0 ? added[0].familyName : null;
-        systemFamilyNames.set(lower, result);
+        installedFamilyNames.set(lower, result);
         return result;
     }
 
@@ -353,6 +420,8 @@ class CeramicTextSystem implements PlatformTextSystem {
         var fontId = candidates[ix];
         if (CanvasFallbackText.isCanvasFontId(fontId))
             throw 'native font ID space exhausted';
+        if (variableFonts && loadedFonts[fontId].face.isVariable)
+            fontId = variationId(fontId, font);
         final face = loadedFonts[fontId].face;
         if (font.synthesizeStyle && !face.italic && (font.style == Italic || font.style == Oblique) && !loadedFonts[fontId].isKnownEmojiFont) {
             // the family has no italic face: the upright one, slanted
@@ -372,6 +441,53 @@ class CeramicTextSystem implements PlatformTextSystem {
         return fontId;
     }
 
+    /**
+     * The font id of a variable loaded font at the weight and style of
+     * `font`: the instance of its weight (`ttf.Font.coordsForWeight`: the
+     * named instances of the font when it names its weights, else the
+     * `wght` axis, clamped), slanted with the `ital` or `slnt` axis when an
+     * italic is asked for and the face is upright. The loaded font itself
+     * when that is its default instance.
+     */
+    function variationId(fontId:Int, font:Font):Int {
+        final base = loadedFonts[fontId];
+        final face = base.face;
+        final weight:Float = font.weight;
+        final italic = (font.style == Italic || font.style == Oblique) && !face.italic;
+        final key = fontId + ':' + weight + (italic ? ':i' : ':n');
+        final existing = variationIds.get(key);
+        if (existing != null) {
+            loadedFonts[existing].userFallbackChain = base.userFallbackChain;
+            return existing;
+        }
+        final coords = face.coordsForWeight(weight);
+        if (italic) {
+            final ital = face.axisIndex('ital');
+            final slnt = face.axisIndex('slnt');
+            if (ital >= 0)
+                coords[ital] = face.axes[ital].maxValue;
+            else if (slnt >= 0 && face.axes[slnt].minValue < 0)
+                coords[slnt] = face.axes[slnt].minValue;
+        }
+        final instance = face.instanceAt(coords);
+        var id = fontId;
+        if (instance != face) {
+            id = loadedFonts.length;
+            loadedFonts.push(new LoadedFont(instance, base.features, base.isKnownEmojiFont, base.userFallbackChain));
+        }
+        variationIds.set(key, id);
+        return id;
+    }
+
+    /**
+     * The face of a loaded font at a font size: the instance of its optical
+     * size axis (`opsz`, the size in points clamped to the axis and
+     * quantized to half a point), or its face when it has no such axis.
+     */
+    inline function sizedFace(loaded:LoadedFont, fontSize:Float):ttf.Font {
+        return loaded.opszAxis < 0 || !variableFonts ? loaded.face : loaded.sizedFace(fontSize);
+    }
+
     /** The whole run shaping font id of a loaded font id */
     final wholeRunIds:Map<Int, Int> = new Map();
 
@@ -386,6 +502,7 @@ class CeramicTextSystem implements PlatformTextSystem {
         final base = loadedFonts[fontId];
         final loaded = new LoadedFont(base.face, base.features, base.isKnownEmojiFont, base.userFallbackChain);
         loaded.obliqueSkew = base.obliqueSkew;
+        loaded.opszAxis = base.opszAxis;
         loaded.wholeRuns = true;
         final id = loadedFonts.length;
         loadedFonts.push(loaded);
@@ -409,6 +526,7 @@ class CeramicTextSystem implements PlatformTextSystem {
         final loaded = new LoadedFont(base.face, base.features, base.isKnownEmojiFont, base.userFallbackChain);
         loaded.obliqueSkew = base.obliqueSkew;
         loaded.wholeRuns = base.wholeRuns;
+        loaded.opszAxis = base.opszAxis;
         loaded.preferColorEmoji = true;
         final id = loadedFonts.length;
         loadedFonts.push(loaded);
@@ -488,6 +606,7 @@ class CeramicTextSystem implements PlatformTextSystem {
         final base = loadedFonts[fontId];
         final loaded = new LoadedFont(base.face, base.features, base.isKnownEmojiFont, base.userFallbackChain);
         loaded.obliqueSkew = 0.25;
+        loaded.opszAxis = base.opszAxis;
         final id = loadedFonts.length;
         loadedFonts.push(loaded);
         syntheticObliqueIds.set(fontId, id);
@@ -682,7 +801,11 @@ class CeramicTextSystem implements PlatformTextSystem {
                 return i;
         }
         final fontId = loadedFonts.length;
-        loadedFonts.push(new LoadedFont(face, Features.DEFAULT, isKnownEmojiFont(face.postScriptName), []));
+        final loaded = new LoadedFont(face, Features.DEFAULT, isKnownEmojiFont(face.postScriptName), []);
+        // a face of the system fallback keeps its default optical size
+        if (loaded.opszAxis >= 0 && faces.indexOf(face.baseFont) == -1)
+            loaded.opszAxis = -1;
+        loadedFonts.push(loaded);
         return fontId;
     }
 
@@ -753,7 +876,7 @@ class CeramicTextSystem implements PlatformTextSystem {
     public function glyphRasterBounds(params:RenderGlyphParams):Bounds {
         if (canvas.canvasFont(params.fontId) != null)
             return canvas.glyphRasterBounds(params);
-        final face = loadedFonts[params.fontId].face;
+        final face = sizedFace(loadedFonts[params.fontId], params.fontSize);
         if (params.isEmoji) {
             final color = face.color();
             if (color != null && color.bounds(params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), colorBitmap))
@@ -783,7 +906,7 @@ class CeramicTextSystem implements PlatformTextSystem {
             throw 'glyph bounds are empty';
         if (params.subpixelRendering)
             throw 'subpixel rendering is not supported';
-        final face = loadedFonts[params.fontId].face;
+        final face = sizedFace(loadedFonts[params.fontId], params.fontSize);
         if (params.isEmoji)
             return rasterizeColorGlyph(face, params, rasterBounds);
         final b = setupEffects(params)
@@ -1001,6 +1124,8 @@ class CeramicTextSystem implements PlatformTextSystem {
      * `face`.
      */
     function databaseFallbacks(face:ttf.Font):Array<ttf.Font> {
+        if (face.isInstance)
+            return instanceFallbacks(face);
         final faceIndex = faces.indexOf(face);
         var list = fallbackLists.get(faceIndex);
         if (list == null || fallbackListGenerations.get(faceIndex) != fallbackGeneration) {
@@ -1037,6 +1162,129 @@ class CeramicTextSystem implements PlatformTextSystem {
             fallbackListGenerations.set(faceIndex, fallbackGeneration);
         }
         return list;
+    }
+
+    final instanceFallbackLists:haxe.ds.ObjectMap<ttf.Font, Array<ttf.Font>> = new haxe.ds.ObjectMap();
+
+    final instanceFallbackGenerations:haxe.ds.ObjectMap<ttf.Font, Int> = new haxe.ds.ObjectMap();
+
+    /**
+     * `databaseFallbacks` for an instance of a variable font: every face
+     * but its base font, then the system fallback faces ordered the same
+     * way, by how close they are to the weight and style of the instance
+     * (the fallback of a semibold instance is the semibold of the fallback
+     * family).
+     */
+    function instanceFallbacks(face:ttf.Font):Array<ttf.Font> {
+        var list = instanceFallbackLists.get(face);
+        if (list == null || instanceFallbackGenerations.get(face) != fallbackGeneration) {
+            final base = face.baseFont;
+            list = [for (f in faces) if (f != base) f];
+            final system = systemFallback;
+            if (system != null && system.faces.length > 0) {
+                final order = [for (i in 0...system.faces.length) i];
+                inline function distance(f:ttf.Font):Int {
+                    return Std.int(Math.abs(f.weight - face.weight)) + (f.italic != face.italic ? 1000 : 0);
+                }
+                // Stable: insertion sort on (file rank, distance)
+                for (i in 1...order.length) {
+                    final v = order[i];
+                    final rank = system.fileRanks[v];
+                    final dist = distance(system.faces[v]);
+                    var j = i - 1;
+                    while (j >= 0) {
+                        final o = order[j];
+                        final oRank = system.fileRanks[o];
+                        if (oRank < rank || (oRank == rank && distance(system.faces[o]) <= dist))
+                            break;
+                        order[j + 1] = o;
+                        j--;
+                    }
+                    order[j + 1] = v;
+                }
+                for (i in order) {
+                    final f = system.faces[i];
+                    if (f != base)
+                        list.push(f);
+                }
+            }
+            instanceFallbackLists.set(face, list);
+            instanceFallbackGenerations.set(face, fallbackGeneration);
+        }
+        return list;
+    }
+
+    final sizedFallbackLists:haxe.ds.ObjectMap<Array<ttf.Font>, Map<Int, Array<ttf.Font>>> = new haxe.ds.ObjectMap();
+
+    var sizedFallbackGeneration:Int = -1;
+
+    /**
+     * A fallback list at a font size: its faces of the font database that
+     * have an optical size axis are replaced by their instance of that
+     * size, so a fallback glyph is measured with the instance it is
+     * rasterized from (`sizedFace`). The faces of the system fallback are
+     * left as they are. The list itself when no face is concerned (every
+     * list of static fonts).
+     */
+    function sizedFallbacks(list:Array<ttf.Font>, fontSize:Float):Array<ttf.Font> {
+        if (!variableFonts)
+            return list;
+        // the words of a line usually share their list and their size
+        if (list == lastSizedList && fontSize == lastSizedSize && sizedFallbackGeneration == fallbackGeneration)
+            return lastSizedResult;
+        final result = sizedFallbacksUncached(list, fontSize);
+        lastSizedList = list;
+        lastSizedSize = fontSize;
+        lastSizedResult = result;
+        return result;
+    }
+
+    var lastSizedList:Null<Array<ttf.Font>> = null;
+
+    var lastSizedSize:Float = -1;
+
+    var lastSizedResult:Null<Array<ttf.Font>> = null;
+
+    function sizedFallbacksUncached(list:Array<ttf.Font>, fontSize:Float):Array<ttf.Font> {
+        if (sizedFallbackGeneration != fallbackGeneration) {
+            sizedFallbackLists.clear();
+            sizedFallbackGeneration = fallbackGeneration;
+        }
+        var bySize = sizedFallbackLists.get(list);
+        if (bySize == null) {
+            var any = false;
+            for (f in list) {
+                if (f.axisIndex('opsz') >= 0 && faces.indexOf(f.baseFont) != -1) {
+                    any = true;
+                    break;
+                }
+            }
+            bySize = new Map();
+            // -1: the list has no face with an optical size
+            if (!any)
+                bySize.set(-1, list);
+            sizedFallbackLists.set(list, bySize);
+        }
+        if (bySize.exists(-1))
+            return list;
+        final key = Math.round(fontSize * 2);
+        var result = bySize.get(key);
+        if (result == null) {
+            result = [];
+            for (f in list) {
+                final opsz = f.axisIndex('opsz');
+                if (opsz >= 0 && faces.indexOf(f.baseFont) != -1) {
+                    final coords = f.variationCoords();
+                    coords[opsz] = Math.round(f.axes[opsz].clamp(fontSize) * 2) / 2;
+                    result.push(f.instanceAt(coords));
+                }
+                else {
+                    result.push(f);
+                }
+            }
+            bySize.set(key, result);
+        }
+        return result;
     }
 
     /** Code points whose coverage was checked (covered, or covered by no system font) */
@@ -1115,7 +1363,11 @@ class CeramicTextSystem implements PlatformTextSystem {
         return false;
     }
 
+    /** Font size of the line being laid out (`addWord` picks the optical size instances with it) */
+    var layoutFontSize:Float = 0;
+
     function layoutLineNoSeparators(text:String, fontSize:Pixels, fontRuns:Array<FontRun>):LineLayout {
+        layoutFontSize = fontSize;
         final d = decoded.reset(text);
         final colorEmoji = anyColorEmojiRun(fontRuns);
         if (systemFallback != null)
@@ -1188,16 +1440,23 @@ class CeramicTextSystem implements PlatformTextSystem {
         for (ttfRun in shaped.runs) {
             final face = ttfRun.font;
             final unitsPerEm = face.unitsPerEm;
+            // Tracking of a variable font (`trak`), in font units per glyph
+            final tracking = variableFonts && variableFontTracking && face.baseFont.isVariable && faces.indexOf(face.baseFont) != -1
+                ? face.tracking(fontSize) : 0.0;
             for (g in ttfRun.glyphs) {
                 while (spanIndex < spanStarts.length - 1 && g.index >= spanEnds[spanIndex])
                     spanIndex++;
                 while (spanIndex > 0 && g.index < spanStarts[spanIndex])
                     spanIndex--;
                 final spanFontId = spanFontIds[spanIndex];
-                final fontId = loadedFonts[spanFontId].face == face ? spanFontId : fontIdForFace(face);
+                final spanLoaded = loadedFonts[spanFontId];
+                final fontId = (spanLoaded.face == face || (spanLoaded.opszAxis >= 0 && sizedFace(spanLoaded, fontSize) == face))
+                    ? spanFontId : fontIdForFace(face);
                 final loaded = loadedFonts[fontId];
 
-                var advance = f32(g.advanceUnits / unitsPerEm);
+                var advance = tracking != 0 && g.advanceUnits != 0
+                    ? f32((g.advanceUnits + tracking) / unitsPerEm)
+                    : f32(g.advanceUnits / unitsPerEm);
                 if (hasTab && d.codePointAtByte(g.index) == '\t'.code) {
                     // Tabs are shaped as spaces, then advance to the next tab stop
                     final tabXAdvance = f32(TAB_WIDTH * advance);
@@ -1500,7 +1759,8 @@ class CeramicTextSystem implements PlatformTextSystem {
             if (runStart >= runEnd)
                 continue;
             final loaded = loadedFonts[spanFontIds[s]];
-            shapeRuns.push(new ttf.shape.FontRun(runEnd - runStart, loaded.face, databaseFallbacks(loaded.face), loaded.features));
+            shapeRuns.push(new ttf.shape.FontRun(runEnd - runStart, sizedFace(loaded, layoutFontSize),
+                sizedFallbacks(databaseFallbacks(loaded.face), layoutFontSize), loaded.features));
         }
     }
 
@@ -1566,11 +1826,55 @@ private class LoadedFont {
     /** Emoji drawn with a color font (`Font.preferColorEmoji`) */
     public var preferColorEmoji:Bool = false;
 
+    /**
+     * Index of the optical size axis (`opsz`) of a variable face, -1 without
+     * one or when the face keeps its default optical size (a face of the
+     * system fallback)
+     */
+    public var opszAxis:Int;
+
+    /** Instances of the face by optical size (keys in half points) */
+    var sizedFaces:Null<Map<Int, ttf.Font>> = null;
+
+    var lastSizeKey:Int = -1;
+
+    var lastSizedFace:Null<ttf.Font> = null;
+
     public function new(face:ttf.Font, features:Features, isKnownEmojiFont:Bool, userFallbackChain:Array<Int>) {
         this.face = face;
         this.features = features;
         this.isKnownEmojiFont = isKnownEmojiFont;
         this.userFallbackChain = userFallbackChain;
+        this.opszAxis = face.axisIndex('opsz');
+    }
+
+    /**
+     * The instance of the face at the optical size of a font size (in
+     * points, clamped to the axis, quantized to half a point): the other
+     * axes keep the coordinates of the face.
+     */
+    public function sizedFace(fontSize:Float):ttf.Font {
+        if (opszAxis < 0)
+            return face;
+        final axis = face.axes[opszAxis];
+        final key = Math.round(axis.clamp(fontSize) * 2);
+        if (key == lastSizeKey)
+            return lastSizedFace;
+        var sized = sizedFaces;
+        if (sized == null) {
+            sized = new Map();
+            sizedFaces = sized;
+        }
+        var result = sized.get(key);
+        if (result == null) {
+            final coords = face.variationCoords();
+            coords[opszAxis] = key / 2;
+            result = face.instanceAt(coords);
+            sized.set(key, result);
+        }
+        lastSizeKey = key;
+        lastSizedFace = result;
+        return result;
     }
 
 }

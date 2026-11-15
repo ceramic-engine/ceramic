@@ -752,6 +752,32 @@ Features Glaze adds to GPUI's API. Each one is off or neutral by default: an int
 - **Default.** GPUI's six roles are unchanged.
 - **Tests.** `AppMenuBarTest.testHideRolesOfTheApplicationMenu` (roles, default shortcuts, a binding winning). The native part was checked for syntax only (`clang -fsyntax-only`), not run.
 
+### ADD-013: selection in a standalone `RichText`
+
+- **Component.** gpui-base's text selection of the markdown view (`crates/base/src/text/state.rs`, `text_view.rs`, `selection_adapter.rs`, `inline.rs`). Port: `runtime/src/glaze/kit/base/text/TextViewState.hx`, `InlineSelectionScope.hx` (new), `InlineFlowSelection.hx` (new), `runtime/src/glaze/kit/text/RichText.hx`.
+- **Behaviour of the original.** Text is selectable inside a `TextView` only: the text leaves read the state of the view while it prepaints and paints, and the copied text comes from a walk of the parsed document.
+- **What it does.** `RichText.selectable(true)` wraps the paragraph in an `InlineSelectionScope`, which does for one `InlineFlow` the selectable half of the `TextView` element: a `TextViewState` made by `TextViewState.singleFlow` (no document, `selectable` on) is on the state stack while the paragraph prepaints and paints, its selection adapter registers with the window selection layer, and the container takes the focus handle, the `TextView` key context and the copy and select all actions. Nothing of the selection is written twice: drag, shift click, multi clicks, touch handles, auto focus and clipboard are the code of the markdown view. `TextViewState` gains `flowSelection` (null for every text view): when set, `selectedTextIn` reads the selected text from the item states of the flow (`InlineFlowSelection`, the counterpart of `Paragraph.selectedText`), `resetSelection` clears them, and `flowTextChanged` drops a selection whose text changed. The body of the prepaint closure of `TextViewState.render` moved, unchanged, to `TextViewState.contentPrepainted`, which the scope calls too.
+- **Default.** `selectable` is false: the `RichText` renders the same elements as before. A `TextView` never has a `flowSelection`, so its paths are the ones of gpui-kit.
+- **Limits.** A transformed or animated span is painted by `InlineMotionFragment` (ADD-008), not by the text leaf: it shows no selection, no selection starts in it, and its text is copied only when the selection covers text on both sides of it in the same text item. Inline elements (`RichSpan.element`) are not copied. Inside a selectable `TextView` the scope steps aside and the view selects the paragraph. The selection needs the kit's `Root`, as for `TextView`.
+- **Scope.** None in the golden (no scene has a selectable `RichText`).
+- **Tests.** `RichTextSelectionTest` (16 tests); the ported selection tests (`TextWindowSelectionTest`, `TextViewTest`, `TextSelectionTest`, `BaseTextSelectionTest`, `TextInlineTest`, `TextViewStateTest`) are untouched.
+
+### ADD-014: variable fonts and the system font of macOS
+
+- **Component.** Port only: `platform/CeramicTextSystem.hx` (`variableFonts`, `variableFontTracking`,
+  `variationId`, `sizedFace`), `platform/SystemFontFamilies.hx` (`aliasFamily`, `appleFamilyAliases`),
+  on top of `ttf.Font.instance()`.
+- **What it does.** A face with a `wght` axis gives every font weight through an instance (one font
+  id per weight), italic through the italic file of its family or its `ital` / `slnt` axis, a face with
+  an `opsz` axis is shaped and rasterized with the instance of the font size, and the `trak` tracking
+  of a variable face is added to its advances. With system families, `system-ui`, `-apple-system`,
+  `BlinkMacSystemFont` and `.AppleSystemUIFont` are the system font of macOS and `ui-monospace` is
+  SF Mono, like in a browser.
+- **Default.** Static fonts are not concerned; `.SystemUIFont` and the substitutes of well known names
+  are unchanged; nothing applies without system families unless a variable font file is added.
+- **Scope.** None in the golden (no variable font, no system families).
+- **Tests.** `VariableFontTest` (9 tests), `ttf` `VariationTests` against fontTools.
+
 ## Decision policy
 
 Decided by the owner on 2026-10-29:
