@@ -233,6 +233,7 @@ class Tests {
         runner.add(new tests.kit.TextInlineTest());
         runner.add(new tests.kit.TextInlineObjectTest());
         runner.add(new tests.kit.TextInlineFlowTest());
+        runner.add(new tests.kit.RichTextTest());
         runner.add(new tests.kit.TextHtml5MinifyTest());
         runner.add(new tests.kit.TextFormatHtmlTest());
         runner.add(new tests.kit.TextDataUrlTest());

@@ -1,6 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/inline_flow.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Additions without upstream equivalent (rich text, G12): `textAlign`, `preWrap`, generic boxes, spans measured
+// apart for wrapping (size, letter spacing, box, per character animation), transformed and animated fragments
+// (`InlineMotion.hx`). A flow that uses none of them runs gpui-kit's arithmetic unchanged.
 package glaze.kit.base.text;
 
 import glaze.AbsoluteLength;
@@ -113,6 +116,31 @@ class InlineFlow extends glaze.Element {
     /** Rust `PrepaintState`. */
     var paintItems:Array<FlowPaintItem> = [];
 
+    var textAlign_:glaze.TextAlign = Left;
+
+    var preWrap_:Bool = false;
+
+    /**
+     * Aligns the lines of the flow in its width (addition). With an
+     * alignment other than `Left`, a wrapped flow takes the whole width it
+     * wraps at.
+     */
+    public function textAlign(align:glaze.TextAlign):InlineFlow {
+        textAlign_ = align;
+        return this;
+    }
+
+    /**
+     * The `pre-wrap` white space rule (addition): spaces and newlines are
+     * kept and lines wrap between words, as the flow already does, and the
+     * spaces that end a wrapped line hang past the width instead of taking
+     * the last word to the next line.
+     */
+    public function preWrap(preWrap:Bool):InlineFlow {
+        preWrap_ = preWrap;
+        return this;
+    }
+
     public function new(id:ElementIdArg, items:Array<InlineFlowItem>, linkClickHandler:Null<LinkClickHandler>) {
         this.id = id;
         this.items = items;
@@ -177,7 +205,9 @@ class InlineFlow extends glaze.Element {
                 }
         ];
         final objects = prepareObjects(measureItems, typography.textStyle, window, cx);
-        frameState.setKey(new FlowLayoutKey(measureItems, imageSizes, typography));
+        final preWrap = preWrap_;
+        final align = textAlign_;
+        frameState.setKey(new FlowLayoutKey(measureItems, imageSizes, typography, preWrap));
         final layoutState = new InlineFlowLayoutState(typography, frameState);
         this.layoutState = layoutState;
 
@@ -192,21 +222,25 @@ class InlineFlow extends glaze.Element {
                 null;
             };
             final state = frameState;
+            // An aligned flow fills the width it wraps at, so its lines have room to move in.
+            inline function measured(size:Size):Size {
+                return align != glaze.TextAlign.Left && wrapWidth != null && wrapWidth > size.width ? new Size(wrapWidth, size.height) : size;
+            }
             final cached = state.layoutAt(wrapWidth);
             if (cached != null) {
                 layoutState.current = cached;
-                return cached.size;
+                return measured(cached.size);
             }
             final key = state.key;
             final layout = window.withRemSize(typography.remSize, window -> {
                 window.withTextStyle(typography.textStyle.subtract(new TextStyleRefinement()), window -> {
-                    layoutMeasuredFlow(key.items, key.imageSizes, objects, typography.textStyle, wrapWidth, window, cx);
+                    layoutMeasuredFlow(key.items, key.imageSizes, objects, typography.textStyle, wrapWidth, window, cx, preWrap);
                 });
             });
             final size = layout.size;
             layoutState.current = layout;
             state.pushLayout(layout);
-            return size;
+            return measured(size);
         });
     }
 
@@ -308,8 +342,14 @@ class InlineFlow extends glaze.Element {
             return overlays;
         }
 
+        // Addition: the lines of an aligned flow are moved in its width. The
+        // fragments of one line share the top of their selection bounds.
+        final shifts:Null<Array<Float>> = textAlign_ != glaze.TextAlign.Left ? alignmentShifts(layout, bounds.size.width, textAlign_) : null;
+        final layoutOrigin = bounds.origin;
+
         var textFragmentCount = 0;
         for (fragmentIx in 0...layout.fragments.length) {
+            final bounds = shifts != null ? new Bounds(new Point(layoutOrigin.x + shifts[fragmentIx], layoutOrigin.y), bounds.size) : bounds;
             switch layout.fragments[fragmentIx] {
                 case Object(itemIx, origin, object, selectionBounds):
                     switch items[itemIx] {
@@ -331,12 +371,32 @@ class InlineFlow extends glaze.Element {
                 case Text(itemIx, origin, fragmentSize, sourceRange, fontSize, text, links, highlights, selectionBounds, codeBackground):
                     switch items[itemIx] {
                         case Text(sourceState, _, _, _, backgrounds, reveal):
+                            final insets = InlineHighlight.codeInsetsOf(highlights, fontSize, window.remSize());
+                            final background = codeBackground != null ? codeBackground.offset(bounds.origin) : null;
+                            // Addition: a transformed or animated span paints its glyphs itself.
+                            var rich:Null<InlineHighlight> = null;
+                            for (h in highlights) {
+                                if (h.highlight.transformation != null || h.highlight.animation != null) {
+                                    rich = h.highlight;
+                                    break;
+                                }
+                            }
+                            if (rich != null) {
+                                final runs = InlineHighlight.textRuns(Utf8.byteLength(text), textStyle, highlights, fontSize);
+                                final glyphOrigin = bounds.origin.add(origin).add(new Point(insets.left, insets.top));
+                                final glyphSize = new Size(f32(f32(fragmentSize.width - insets.left) - insets.right),
+                                    f32(f32(fragmentSize.height - insets.top) - insets.bottom));
+                                final element = new InlineMotion.InlineMotionFragment(text, fontSize, runs, glyphOrigin, glyphSize, background,
+                                    background != null && background.generic, Theme.global(cx).tokens.radius.sm, rich.transformation, rich.animation,
+                                    frameState.motionClock, 1.).intoAnyElement();
+                                element.prepaintAsRoot(glyphOrigin, new SizeOf<AvailableSpace>(Definite(glyphSize.width), Definite(glyphSize.height)), window, cx);
+                                elements.push(new FlowPaintItem(element, null, []));
+                                continue;
+                            }
                             final state = frameState.fragmentState(textFragmentCount);
                             textFragmentCount += 1;
                             state.setText(text);
 
-                            final insets = InlineHighlight.codeInsetsOf(highlights, fontSize, window.remSize());
-                            final background = codeBackground != null ? codeBackground.offset(bounds.origin) : null;
                             // The fragment's typography: the flow's style at the
                             // fragment's size, on one line. Fragments are already
                             // wrapped, so this leaf must not wrap independently.
@@ -405,10 +465,13 @@ class InlineFlow extends glaze.Element {
             final code = item.background;
             if (code != null) {
                 final style = new Style();
-                style.cornerRadiusTopLeft = AbsoluteLength.Pixels(radius);
-                style.cornerRadiusTopRight = AbsoluteLength.Pixels(radius);
-                style.cornerRadiusBottomLeft = AbsoluteLength.Pixels(radius);
-                style.cornerRadiusBottomRight = AbsoluteLength.Pixels(radius);
+                // A generic box takes its corners from its own style.
+                if (!code.generic) {
+                    style.cornerRadiusTopLeft = AbsoluteLength.Pixels(radius);
+                    style.cornerRadiusTopRight = AbsoluteLength.Pixels(radius);
+                    style.cornerRadiusBottomLeft = AbsoluteLength.Pixels(radius);
+                    style.cornerRadiusBottomRight = AbsoluteLength.Pixels(radius);
+                }
                 style.refine(code.style);
                 style.paint(code.bounds, window, cx, (_, _) -> {});
             }
@@ -417,6 +480,41 @@ class InlineFlow extends glaze.Element {
                 window.paintQuad(glaze.Prelude.fill(overlay.bounds, overlay.color));
             }
         }
+    }
+
+    /**
+     * How far each fragment of `layout` moves to the right to align its line
+     * in `width` (one entry per fragment).
+     */
+    static function alignmentShifts(layout:InlineFlowLayout, width:Float, align:glaze.TextAlign):Array<Float> {
+        final lefts:Array<Float> = [];
+        final rights:Array<Float> = [];
+        for (fragment in layout.fragments) {
+            final selection = switch fragment {
+                case Object(_, _, _, selectionBounds): selectionBounds;
+                case Text(_, _, _, _, _, _, _, _, selectionBounds, _): selectionBounds;
+                case Image(_, origin, size): new Bounds(origin, size);
+            };
+            lefts.push(selection.left());
+            rights.push(selection.right());
+        }
+        final shifts:Array<Float> = [];
+        var start = 0;
+        while (start < lefts.length) {
+            var end = start;
+            var right:Float = 0;
+            // On one line each fragment starts where the one before it ends;
+            // a new line starts back at the left.
+            while (end < lefts.length && (end == start || lefts[end] >= rights[end - 1])) {
+                right = rights[end];
+                end++;
+            }
+            final free = Math.max(f32(width - right), 0);
+            final shift = align == glaze.TextAlign.Center ? f32(free / 2.) : free;
+            for (_ in start...end) shifts.push(shift);
+            start = end;
+        }
+        return shifts;
     }
 
     /** Intrinsic width for table sizing, using the same objects and wrapping inputs as painting. */
@@ -465,7 +563,7 @@ class InlineFlow extends glaze.Element {
     }
 
     static function layoutMeasuredFlow(items:Array<MeasureItem>, imageSizes:Array<Null<Size>>, preparedObjects:Array<Null<MeasuredInlineObject>>,
-            textStyle:TextStyle, wrapWidth:Null<Pixels>, window:Window, cx:App):InlineFlowLayout {
+            textStyle:TextStyle, wrapWidth:Null<Pixels>, window:Window, cx:App, preWrap:Bool = false):InlineFlowLayout {
         FLOW_LAYOUTS += 1;
         final remSize = window.remSize();
         final lineHeight = plainLineHeight(textStyle, remSize, window);
@@ -478,7 +576,7 @@ class InlineFlow extends glaze.Element {
         }
 
         final objects = [for (object in preparedObjects) object != null ? object.fitText(wrapWidth) : null];
-        final lineRanges = lineRanges(items, imageSizes, objects, textStyle, wrapWidth, window);
+        final lineRanges = lineRanges(items, imageSizes, objects, textStyle, wrapWidth, window, preWrap);
         final fontSize:Pixels = textStyle.fontSize.toPixels(remSize);
         final fragments:Array<PositionedFragment> = [];
         final emptyLines:Array<EmptyLine> = [];
@@ -531,13 +629,18 @@ class InlineFlow extends glaze.Element {
                             final subtext = Utf8.substring(text, start, end);
                             final highlights = sliceRanges(highlights, h -> h.range, start, end, (range, h) -> new RangedHighlight(range, h.highlight.clone()));
                             final links = sliceRanges(links, l -> l.range, start, end, (range, l) -> new RangedLink(range, l.link.clone()));
-                            final runs = InlineHighlight.textRuns(Utf8.byteLength(subtext), textStyle, highlights);
                             final segmentFontSize = f32(fontSize * scale);
+                            final runs = InlineHighlight.textRuns(Utf8.byteLength(subtext), textStyle, highlights, segmentFontSize);
                             final shapedLine = shapeLine(subtext, segmentFontSize, runs, window);
                             var isCode = false;
+                            var isBox = false;
                             for (h in highlights) {
                                 if (h.highlight.fontSizeScale != null) {
                                     isCode = true;
+                                    break;
+                                }
+                                if (h.highlight.box != null) {
+                                    isBox = true;
                                     break;
                                 }
                             }
@@ -552,7 +655,9 @@ class InlineFlow extends glaze.Element {
                             // painted independently.
                             final glyphSize = new Size(width, f32(f32(f32(shapedLine.ascent() + shapedLine.descent()) + insets.top) + insets.bottom));
                             final baseline = f32(shapedLine.ascent() + insets.top);
-                            final codeBackground = isCode ? codeBackground(shapedLine, runs, segmentFontSize, highlights, glyphSize, baseline, window) : null;
+                            final codeBackground = isCode
+                                ? codeBackground(shapedLine, runs, segmentFontSize, highlights, glyphSize, baseline, window)
+                                : (isBox ? boxBackground(highlights, segmentFontSize, glyphSize, window) : null);
                             lineAscent = Math.max(lineAscent, f32(baseline - bodyOverflowAbove));
                             lineDescent = Math.max(lineDescent, f32(f32(glyphSize.height - baseline) - bodyOverflowBelow));
                             lineWidth = f32(lineWidth + width);
@@ -679,8 +784,64 @@ class InlineFlow extends glaze.Element {
             style);
     }
 
+    /**
+     * The box of a generic boxed span (addition), relative to the fragment:
+     * the glyph box with its paddings and borders, inside the margins. Like
+     * the code chip, it takes the background color out of `highlights`.
+     */
+    static function boxBackground(highlights:Array<RangedHighlight>, fontSize:Pixels, fragmentSize:Size, window:Window):Null<CodeBox> {
+        var owner:Null<InlineHighlight> = null;
+        for (h in highlights) {
+            if (h.highlight.box != null) {
+                owner = h.highlight;
+                break;
+            }
+        }
+        if (owner == null) {
+            return null;
+        }
+        final style = owner.box.clone();
+        if (style.background == null && owner.style.backgroundColor != null) {
+            style.background = glaze.Background.fromHsla(owner.style.backgroundColor);
+        }
+        for (h in highlights) {
+            h.highlight.style.backgroundColor = null;
+        }
+        if (owner.opacity != null) {
+            if (style.background != null) style.background = style.background.opacity(owner.opacity);
+            if (style.borderColor != null) style.borderColor = style.borderColor.opacity(owner.opacity);
+        }
+        final margins = owner.boxMargins(fontSize, window.remSize());
+        return new CodeBox(new Bounds(new Point(margins.left, 0), new Size(f32(f32(fragmentSize.width - margins.left) - margins.right), fragmentSize.height)),
+            style, true);
+    }
+
+    /** `end` moved back over the spaces that end `start..end` of the flow's text. */
+    static function trimTrailingSpaces(items:Array<MeasureItem>, start:Int, end:Int):Int {
+        var itemStart = 0;
+        final bounds:Array<Int> = [];
+        final texts:Array<Null<haxe.io.Bytes>> = [];
+        for (item in items) {
+            bounds.push(itemStart);
+            texts.push(switch item {
+                case Text(text, _, _): haxe.io.Bytes.ofString(text);
+                case _: null;
+            });
+            itemStart += MeasureItemTools.len(item);
+        }
+        var at = end;
+        while (at > start) {
+            var ix = bounds.length - 1;
+            while (ix > 0 && bounds[ix] > at - 1) ix--;
+            final bytes = texts[ix];
+            if (bytes == null || bytes.get(at - 1 - bounds[ix]) != ' '.code) break;
+            at--;
+        }
+        return at;
+    }
+
     static function lineRanges(items:Array<MeasureItem>, imageSizes:Array<Null<Size>>, objects:Array<Null<MeasuredInlineObject>>, textStyle:TextStyle,
-            wrapWidth:Null<Pixels>, window:Window):Array<Range> {
+            wrapWidth:Null<Pixels>, window:Window, preWrap:Bool = false):Array<Range> {
         var totalLen = 0;
         for (item in items) {
             totalLen += MeasureItemTools.len(item);
@@ -759,7 +920,25 @@ class InlineFlow extends glaze.Element {
                 final rest = fragmentsFrom(wrapFragments, start - hardLine.start);
                 var budget:Float = wrapWidth;
                 var end = nextWrap(wrapper, rest, budget, start, hardLine.end);
-                var overflow = f32(spansWidth(spans, new Range(start, end)) - wrapWidth);
+                // Addition (`preWrap`): the spaces that end the line hang past the width.
+                inline function inked(end:Int):Int {
+                    return preWrap ? trimTrailingSpaces(items, start, end) : end;
+                }
+                if (preWrap && end < hardLine.end) {
+                    // The wrapper counts the spaces that end a line and breaks a
+                    // word early: take the following words while the line fits
+                    // without those spaces.
+                    var wider:Float = budget;
+                    var tries = 0;
+                    while (end < hardLine.end && tries++ < 64) {
+                        wider = f32(wider + Math.max(fontSize, 8.));
+                        final further = nextWrap(wrapper, rest, wider, start, hardLine.end);
+                        if (further <= end) continue;
+                        if (spansWidth(spans, new Range(start, inked(further))) > wrapWidth) break;
+                        end = further;
+                    }
+                }
+                var overflow = f32(spansWidth(spans, new Range(start, inked(end))) - wrapWidth);
                 // Shrink the wrapper's budget by the overflow until it breaks earlier,
                 // doubling the step while the break stays put. A single glyph wider
                 // than the line keeps its line and overflows as before.
@@ -772,7 +951,7 @@ class InlineFlow extends glaze.Element {
                     final tighter = nextWrap(wrapper, rest, budget, start, hardLine.end);
                     if (tighter < end) {
                         end = tighter;
-                        overflow = f32(spansWidth(spans, new Range(start, end)) - wrapWidth);
+                        overflow = f32(spansWidth(spans, new Range(start, inked(end))) - wrapWidth);
                         step = overflow;
                     }
                     else {
@@ -864,7 +1043,7 @@ class InlineFlow extends glaze.Element {
                                 continue;
                             }
                             final highlights = sliceRanges(highlights, h -> h.range, start, end, (range, h) -> new RangedHighlight(range, h.highlight.clone()));
-                            final runs = InlineHighlight.textRuns(end - start, textStyle, highlights);
+                            final runs = InlineHighlight.textRuns(end - start, textStyle, highlights, f32(fontSize * scale));
                             final line = shapeLine(Utf8.substring(text, start, end), f32(fontSize * scale), runs, window);
                             final insets = InlineHighlight.codeInsetsOf(highlights, f32(fontSize * scale), window.remSize());
                             final padding = f32(insets.left + insets.right);
@@ -923,7 +1102,7 @@ class InlineFlow extends glaze.Element {
         for (item in highlights) {
             final highlightRange = item.range;
             final highlight = item.highlight;
-            if (highlight.fontFamily == null) {
+            if (highlight.fontFamily == null && !highlight.measuresApart()) {
                 continue;
             }
             final start = highlightRange.start > cursor ? highlightRange.start : cursor;
@@ -939,19 +1118,22 @@ class InlineFlow extends glaze.Element {
             final measuredFontSize = highlight.fontSize(fontSize, remSize);
             function measure(text:String):Float {
                 final len = Utf8.byteLength(text);
-                final runs = InlineHighlight.textRuns(len, textStyle, [new RangedHighlight(new Range(0, len), highlight.clone())]);
+                final runs = InlineHighlight.textRuns(len, textStyle, [new RangedHighlight(new Range(0, len), highlight.clone())], measuredFontSize);
                 return window.textSystem().layoutLine(text, measuredFontSize, runs).width;
             }
             final insets = highlight.codeInsets(measuredFontSize, remSize);
             final padding = f32(insets.left + insets.right);
             final width = f32(measure(span) + padding);
-            if (width <= wrapWidth) {
+            // Additions: a boxed span is one piece whatever its width, and the
+            // words of a span animated per character are never cut.
+            final wholeWords = highlight.animation != null && highlight.animation.isPerCharacter();
+            if (width <= wrapWidth || highlight.box != null) {
                 fragments.push(WrapFragment.Element(width, Utf8.byteLength(span)));
             }
             else {
                 for (word in UnicodeSegmentation.splitWordBounds(span)) {
                     final width = f32(measure(word) + padding);
-                    if (width <= wrapWidth) {
+                    if (width <= wrapWidth || wholeWords) {
                         fragments.push(WrapFragment.Element(width, Utf8.byteLength(word)));
                     }
                     else {
@@ -1116,6 +1298,9 @@ class InlineFlowFrameState {
      */
     var layouts:Array<InlineFlowLayout> = [];
 
+    /** When the animated spans of the flow were first painted (addition). */
+    final motionClock:InlineMotion.InlineMotionClock = new InlineMotion.InlineMotionClock();
+
     public function new() {}
 
     function fragmentState(fragmentIx:Int):InlineState {
@@ -1171,10 +1356,13 @@ private class FlowLayoutKey {
 
     public final typography:InlineFlowTypography;
 
-    public function new(items:Array<MeasureItem>, imageSizes:Array<Null<Size>>, typography:InlineFlowTypography) {
+    public final preWrap:Bool;
+
+    public function new(items:Array<MeasureItem>, imageSizes:Array<Null<Size>>, typography:InlineFlowTypography, preWrap:Bool = false) {
         this.items = items;
         this.imageSizes = imageSizes;
         this.typography = typography;
+        this.preWrap = preWrap;
     }
 
     public function matches(other:FlowLayoutKey):Bool {
@@ -1196,7 +1384,7 @@ private class FlowLayoutKey {
                 return false;
             }
         }
-        return typography.equals(other.typography);
+        return typography.equals(other.typography) && preWrap == other.preWrap;
     }
 
 }
@@ -1389,13 +1577,17 @@ class CodeBox {
 
     public final style:StyleRefinement;
 
-    public function new(bounds:Bounds, style:StyleRefinement) {
+    /** Whether this is the box of a generic boxed span (addition), which rounds its own corners. */
+    public final generic:Bool;
+
+    public function new(bounds:Bounds, style:StyleRefinement, generic:Bool = false) {
         this.bounds = bounds;
         this.style = style;
+        this.generic = generic;
     }
 
     public function offset(by:Point):CodeBox {
-        return new CodeBox(new Bounds(by.add(bounds.origin), bounds.size), style);
+        return new CodeBox(new Bounds(by.add(bounds.origin), bounds.size), style, generic);
     }
 
 }

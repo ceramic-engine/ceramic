@@ -72,6 +72,7 @@ class StoryState {
             case 'FormStory': StoryMeta.optional(story.stories.FormStory);
             case 'NotificationStory': StoryMeta.optional(story.stories.NotificationStory);
             case 'ThemeColorsStory': StoryMeta.optional(story.stories.ThemeColorsStory);
+            case 'RichTextStory': StoryMeta.optional(story.stories.RichTextStory);
             case _: null;
         }
         if (meta == null) throw 'Invalid story klass: $storyKlass';

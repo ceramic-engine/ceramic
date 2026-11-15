@@ -194,6 +194,7 @@ class Gallery extends Model implements Render {
         // Pages of the Haxe port without a gpui-kit equivalent (story app only)
         if (portStories) {
             add(StoryMeta.optional(story.stories.CeramicVisualStory));
+            add(StoryMeta.optional(story.stories.RichTextStory));
         }
 
         this.searchInput = searchInput;

@@ -414,6 +414,38 @@ Glaze draws text with its own text system: fonts are TTF, OTF or TTC files added
 
 `Font.synthesizeStyle` (off by default, like GPUI) draws the italic of a family without an italic face as a slanted upright face, like a browser. `Font.wholeRunShaping` (off by default, like GPUI) shapes a line whose runs all use such fonts in one piece, like a browser, instead of word by word like GPUI's cosmic-text: kerning and contextual features then apply across the line break opportunities (between CJK characters, after a hyphen), in the fallback fonts too. On the web, the graphemes the browser draws for such a font (the Canvas2D fallback: CJK, emoji) are measured as whole runs, so the kerning between them applies too, and a grapheme that the font or one of its fallbacks maps as text keeps that glyph (emoji presentation does not force the emoji font, like the native text system). `Font.preferColorEmoji` (off by default, like GPUI) draws every emoji (Unicode's `Extended_Pictographic`, unless followed by U+FE0E) with a color emoji font, even where a font of the list has a text glyph for it: the bundled or system emoji font natively, the browser's emoji font on the web.
 
+### Rich text
+
+`RichText` (in `glaze.kit.text`) is a paragraph of typed spans: families, weights and sizes on one baseline, colors, decorations, letter spacing, upper or lower case, boxes (pills), inline elements, links, and spans animated as a whole or character by character. It is the paragraph engine of the markdown view (`TextView`), without any markup: you give spans and styles.
+
+```haxe
+final shout = new RichTextStyle().textTransform(Uppercase).letterSpacing(Em(0.03)).fontWeight(FontWeight.BOLD);
+final tag = new RichTextStyle().fontSize(Relative(0.85))
+    .box(StyleBuilder.build(s -> s.px(px(6)).border1().borderColor(theme.border).rounded(px(9))));
+final wave = new RichTextStyle().animation(RichTextAnimation.of([
+        new Keyframe(0.0, MotionTransform.identity()),
+        new Keyframe(0.5, new MotionTransform(new Point(0, -0.12), new Point(1, 1), 0, 1)),
+        new Keyframe(1.0, MotionTransform.identity()),
+    ], new Timing(1.2).ease(Easing.EaseInOut).iterations(Infinite))
+    .translationInEm()                              // the keyframes move by parts of an em
+    .perCharacter(new Stagger(0.09, First), true)); // each character 90 ms ahead of the next
+
+RichText.component('line')
+    .textSize(px(16))
+    .textAlign(TextAlign.Left)
+    .whiteSpace(PreWrap)
+    .spans([
+        RichSpan.text('Hello '),
+        RichSpan.text('everyone', wave),
+        RichSpan.text(', listen ', shout),
+        RichSpan.box('happy', tag),
+        RichSpan.lineBreak(),
+        RichSpan.element(Icon.component(IconName.Heart).size4()),
+    ])
+```
+
+A style left unset is inherited from the text style around the component. `RichTextStyle.merge(other)` layers two styles. An animation is keyframes of `MotionTransform` (translation, scale, rotation, opacity) with a `Timing` from `glaze.kit.base.motion`: `perRun()` (the default) moves the span in one piece with its box, `perCharacter(stagger)` animates each character, whose words are then never cut by a line end. An animated span never lays the paragraph out again, asks for frames only while it is visible, and stands still under reduced motion (`cx.setReduceMotion(true)`). See ADD-008 in [docs/DEVIATIONS.md](docs/DEVIATIONS.md).
+
 ## Additions to GPUI
 
 These features have no equivalent in GPUI. They change nothing unless used. [docs/DEVIATIONS.md](docs/DEVIATIONS.md) has the details (entries `ADD-nnn`).
