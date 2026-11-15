@@ -154,6 +154,9 @@ class StyleRefinement {
     /** The grid location of this element */
     public var gridLocation:Null<GridLocation> = null;
 
+    /** See `Style.transformation` (port addition) */
+    public var transformation:Null<Transformation> = null;
+
     /** What layout strategy should be used? */
     public var display(default, set):Display = Block;
     inline function set_display(value:Display):Display {
@@ -404,6 +407,7 @@ class StyleRefinement {
         if (refinement.gridCols != null) gridCols = refinement.gridCols;
         if (refinement.gridRows != null) gridRows = refinement.gridRows;
         if (refinement.gridLocation != null) gridLocation = refinement.gridLocation.clone();
+        if (refinement.transformation != null) transformation = refinement.transformation;
     }
 
     public function clone():StyleRefinement {
@@ -478,7 +482,8 @@ class StyleRefinement {
             && (text == null ? other.text == null || !other.text.isSome() : text.equals(other.text))
             && (gridCols == null ? other.gridCols == null : other.gridCols != null && gridCols.equals(other.gridCols))
             && (gridRows == null ? other.gridRows == null : other.gridRows != null && gridRows.equals(other.gridRows))
-            && (gridLocation == null ? other.gridLocation == null : other.gridLocation != null && gridLocation.equals(other.gridLocation));
+            && (gridLocation == null ? other.gridLocation == null : other.gridLocation != null && gridLocation.equals(other.gridLocation))
+            && (transformation == null ? other.transformation == null : other.transformation != null && transformation.equals(other.transformation));
     }
 
 }

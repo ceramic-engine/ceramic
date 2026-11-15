@@ -661,6 +661,20 @@ class ThemeConfigColors {
     public var tabForeground:Null<String> = null;
 
     /**
+     * Background of an inactive tab under the pointer (addition without
+     * upstream equivalent).
+     */
+    // `tab.hover.background`
+    public var tabHover:Null<String> = null;
+
+    /**
+     * Text color of an inactive tab under the pointer (addition without
+     * upstream equivalent).
+     */
+    // `tab.hover.foreground`
+    public var tabHoverForeground:Null<String> = null;
+
+    /**
      * Table background color.
      */
     // `table.background`
@@ -1120,6 +1134,8 @@ class ThemeConfigColors {
         result.tabBar = JsonValue.optString(json, 'tab_bar.background');
         result.tabBarSegmented = JsonValue.optString(json, 'tab_bar.segmented.background');
         result.tabForeground = JsonValue.optString(json, 'tab.foreground');
+        result.tabHover = JsonValue.optString(json, 'tab.hover.background');
+        result.tabHoverForeground = JsonValue.optString(json, 'tab.hover.foreground');
         result.table = JsonValue.optString(json, 'table.background');
         result.tableActive = JsonValue.optString(json, 'table.active.background');
         result.tableActiveBorder = JsonValue.optString(json, 'table.active.border');
@@ -1270,6 +1286,10 @@ class ThemeConfigColors {
         Reflect.setField(json, 'tab_bar.background', tabBar);
         Reflect.setField(json, 'tab_bar.segmented.background', tabBarSegmented);
         Reflect.setField(json, 'tab.foreground', tabForeground);
+        // Additions without upstream equivalent: written only when set, so a
+        // theme that does not use them serializes as before.
+        if (tabHover != null) Reflect.setField(json, 'tab.hover.background', tabHover);
+        if (tabHoverForeground != null) Reflect.setField(json, 'tab.hover.foreground', tabHoverForeground);
         Reflect.setField(json, 'table.background', table);
         Reflect.setField(json, 'table.active.background', tableActive);
         Reflect.setField(json, 'table.active.border', tableActiveBorder);

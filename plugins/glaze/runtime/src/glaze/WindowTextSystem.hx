@@ -174,10 +174,11 @@ class WindowTextSystem {
                     final fontRun = fontRunPool[0];
                     fontRun.len = lineLen;
                     fontRun.fontId = fontId;
+                    fontRun.letterSpacing = wholeRun.letterSpacing;
                     fontRuns.push(fontRun);
                 }
                 else {
-                    final fontRun = new FontRun(lineLen, fontId);
+                    final fontRun = new FontRun(lineLen, fontId, wholeRun.letterSpacing);
                     fontRunPool.push(fontRun);
                     fontRuns.push(fontRun);
                 }
@@ -214,7 +215,8 @@ class WindowTextSystem {
 
                 final fontId = textSystem.resolveFont(run.font);
                 final lastFontRun = fontRuns.length > 0 ? fontRuns[fontRuns.length - 1] : null;
-                if (lastFontRun != null && (fontId:Int) == (lastFontRun.fontId:Int) && !decorationChanged) {
+                if (lastFontRun != null && (fontId:Int) == (lastFontRun.fontId:Int) && !decorationChanged
+                    && lastFontRun.letterSpacing == run.letterSpacing) {
                     lastFontRun.len += runLenWithinLine;
                 }
                 else {
@@ -223,10 +225,11 @@ class WindowTextSystem {
                         final fontRun = fontRunPool[index];
                         fontRun.len = runLenWithinLine;
                         fontRun.fontId = fontId;
+                        fontRun.letterSpacing = run.letterSpacing;
                         fontRuns.push(fontRun);
                     }
                     else {
-                        final fontRun = new FontRun(runLenWithinLine, fontId);
+                        final fontRun = new FontRun(runLenWithinLine, fontId, run.letterSpacing);
                         fontRunPool.push(fontRun);
                         fontRuns.push(fontRun);
                     }
@@ -322,11 +325,12 @@ class WindowTextSystem {
 
             final fontId = textSystem.resolveFont(run.font);
             final lastFontRun = fontRuns.length > 0 ? fontRuns[fontRuns.length - 1] : null;
-            if (lastFontRun != null && (fontId:Int) == (lastFontRun.fontId:Int) && !decorationChanged) {
+            if (lastFontRun != null && (fontId:Int) == (lastFontRun.fontId:Int) && !decorationChanged
+                && lastFontRun.letterSpacing == run.letterSpacing) {
                 lastFontRun.len += run.len;
             }
             else {
-                fontRuns.push(new FontRun(run.len, fontId));
+                fontRuns.push(new FontRun(run.len, fontId, run.letterSpacing));
             }
         }
 
@@ -407,8 +411,8 @@ class WindowTextSystem {
         return textSystem.emAdvance(fontId, fontSize);
     }
 
-    public inline function lineWrapper(font:Font, fontSize:Pixels):LineWrapper {
-        return textSystem.lineWrapper(font, fontSize);
+    public inline function lineWrapper(font:Font, fontSize:Pixels, letterSpacing:Float = 0.0):LineWrapper {
+        return textSystem.lineWrapper(font, fontSize, letterSpacing);
     }
 
 }

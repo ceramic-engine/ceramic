@@ -75,6 +75,8 @@ class StyleRefinementOps {
 
     static function gridTemplateEq(a:GridTemplate, b:GridTemplate):Bool return a.equals(b);
 
+    static function transformationEq(a:Transformation, b:Transformation):Bool return a.equals(b);
+
     static function gridLocationEq(a:GridLocation, b:GridLocation):Bool return a.equals(b);
 
     /** Rust `refinement.f.is_some() && self.f != refinement.f` is false */
@@ -130,7 +132,8 @@ class StyleRefinementOps {
             && textIsSupersetOf(self.text, refinement.text)
             && covers(self.gridCols, refinement.gridCols, gridTemplateEq)
             && covers(self.gridRows, refinement.gridRows, gridTemplateEq)
-            && covers(self.gridLocation, refinement.gridLocation, gridLocationEq);
+            && covers(self.gridLocation, refinement.gridLocation, gridLocationEq)
+            && covers(self.transformation, refinement.transformation, transformationEq);
     }
 
     /**
@@ -195,6 +198,7 @@ class StyleRefinementOps {
         result.gridCols = minus(self.gridCols, refinement.gridCols, gridTemplateEq);
         result.gridRows = minus(self.gridRows, refinement.gridRows, gridTemplateEq);
         result.gridLocation = minus(self.gridLocation, refinement.gridLocation, gridLocationEq);
+        result.transformation = minus(self.transformation, refinement.transformation, transformationEq);
         return result;
     }
 
@@ -244,7 +248,8 @@ class StyleRefinementOps {
             && covers(a.backgroundColor, refinement.backgroundColor, hslaEq)
             && covers(a.underline, refinement.underline, underlineEq)
             && covers(a.strikethrough, refinement.strikethrough, strikethroughEq)
-            && covers(a.textOverflow, refinement.textOverflow, overflowEq);
+            && covers(a.textOverflow, refinement.textOverflow, overflowEq)
+            && covers(a.letterSpacing, refinement.letterSpacing, definiteEq);
     }
 
     /** `TextStyleRefinement::subtract` (`null` is the empty refinement) */
@@ -267,6 +272,7 @@ class StyleRefinementOps {
         result.textOverflow = minus(a.textOverflow, b.textOverflow, overflowEq);
         if (a.has(TextStyleRefinement.TEXT_ALIGN) && !textFieldEq(a, b, TextStyleRefinement.TEXT_ALIGN)) result.textAlign = a.textAlign;
         if (a.has(TextStyleRefinement.LINE_CLAMP) && !textFieldEq(a, b, TextStyleRefinement.LINE_CLAMP)) result.lineClamp = a.lineClamp;
+        result.letterSpacing = minus(a.letterSpacing, b.letterSpacing, definiteEq);
         return result;
     }
 

@@ -49,6 +49,14 @@ class BaseTab extends Component implements Styled implements ParentElement {
 
     var semanticStyles:TabStyles = new TabStyles();
 
+    /**
+     * A style refined last, over the state styles (addition without upstream
+     * equivalent, set by the component `Tab` to replay its caller's style).
+     * Its `flex_shrink` is left out: the tab keeps its own.
+     */
+    @:allow(glaze.kit)
+    var finalStyle:Null<StyleRefinement> = null;
+
     @prop var selected:Bool = false;
 
     @prop var disabled:Bool = false;
@@ -139,6 +147,12 @@ class BaseTab extends Component implements Styled implements ParentElement {
         }
         element.extend(childElements);
         element.refineStyle(style);
+        final finalStyle = this.finalStyle;
+        if (finalStyle != null) {
+            final flexShrink = element.style().flexShrink;
+            element.refineStyle(finalStyle);
+            element.style().flexShrink = flexShrink;
+        }
         a11y.disabled = disabled;
         return element;
     }

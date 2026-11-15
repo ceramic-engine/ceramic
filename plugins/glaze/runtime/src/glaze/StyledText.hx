@@ -66,19 +66,19 @@ class StyledText extends Element {
         return this;
     }
 
-    static function computeRuns(text:String, defaultStyle:TextStyle, highlights:Array<TextHighlight>):Array<TextRun> {
+    static function computeRuns(text:String, defaultStyle:TextStyle, highlights:Array<TextHighlight>, remSize:Float = 16.0):Array<TextRun> {
         final runs:Array<TextRun> = [];
         var ix = 0;
         for (highlight in highlights) {
             if (ix < highlight.start) {
-                runs.push(defaultStyle.toRun(highlight.start - ix));
+                runs.push(defaultStyle.toRun(highlight.start - ix, remSize));
             }
-            runs.push(defaultStyle.clone().highlight(highlight.style).toRun(highlight.end - highlight.start));
+            runs.push(defaultStyle.clone().highlight(highlight.style).toRun(highlight.end - highlight.start, remSize));
             ix = highlight.end;
         }
         final len = Utf8.byteLength(text);
         if (ix < len) {
-            runs.push(defaultStyle.toRun(len - ix));
+            runs.push(defaultStyle.toRun(len - ix, remSize));
         }
         return runs;
     }
@@ -141,13 +141,13 @@ class StyledText extends Element {
         var runs = this.runs;
         this.runs = null;
         if (runs == null && delayedHighlights != null) {
-            runs = computeRuns(textValue, window.currentTextStyle(), delayedHighlights);
+            runs = computeRuns(textValue, window.currentTextStyle(), delayedHighlights, window.remSize());
             delayedHighlights = null;
         }
 
         if (fontFamilyOverrides != null) {
             if (runs == null)
-                runs = [window.currentTextStyle().toRun(Utf8.byteLength(textValue))];
+                runs = [window.currentTextStyle().toRun(Utf8.byteLength(textValue), window.remSize())];
             else
                 runs = runs.copy();
             applyFontFamilyOverrides(runs, fontFamilyOverrides);

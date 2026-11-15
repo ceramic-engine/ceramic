@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dialog.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Addition without upstream equivalent (KIT-006 in docs/DEVIATIONS.md): `closeOnBackdropClick`.
 package glaze.kit.base;
 
 import glaze.AnyElement;
@@ -155,6 +156,15 @@ class Dialog extends Component implements Styled implements ParentElement {
     @prop var closeOnEscape:Bool = true;
 
     @prop var closeOnBackdropPress:Bool = true;
+
+    /**
+     * Whether a backdrop dismissal waits for a whole click: the left button
+     * pressed and released on the backdrop, instead of the press alone
+     * (default false). A press inside the popup released over the backdrop,
+     * the end of a text selection for example, then leaves the dialog open.
+     * Only read when `closeOnBackdropPress` allows the dismissal.
+     */
+    @prop var closeOnBackdropClick:Bool = false;
 
     var topmost:Bool = true;
 
@@ -329,7 +339,26 @@ class Dialog extends Component implements Styled implements ParentElement {
             final cancel = onCancel;
             final closed = onClose;
             final requestClose = requestClose;
-            trapped.child(div()
+            final onClick = closeOnBackdropClick;
+            final backdrop = div();
+            if (onClick) {
+                // A click needs an element with an identity. It is the left
+                // button pressed and released on the backdrop itself: the
+                // popup occludes it, so neither end may be over the popup.
+                backdrop.id('dialog-backdrop-click').onClick((click, window, cx) -> {
+                    final position = glaze.ClickEvent.ClickEventTools.position(click);
+                    if (position != null && position.y < dismissBelowY) {
+                        return;
+                    }
+                    final event = DialogKeys.defaultClickEvent();
+                    if (overlayClosable && cancel(event, window, cx)) {
+                        DialogKeys.requestOpenChange(backdropHandle, backdropChange, false, DialogChangeReason.BackdropPress, window, cx);
+                        requestClose(false, window, cx);
+                        closed(event, window, cx);
+                    }
+                });
+            }
+            trapped.child(backdrop
                 // The backdrop covers the host, so a caller's
                 // `absolute()` surface has a box to fill.
                 .absolute()
@@ -340,6 +369,9 @@ class Dialog extends Component implements Styled implements ParentElement {
                     }
                     final button = event.button;
                     cx.stopPropagation();
+                    if (onClick) {
+                        return;
+                    }
                     final event = DialogKeys.defaultClickEvent();
                     if (button == MouseButton.Left && overlayClosable && cancel(event, window, cx)) {
                         DialogKeys.requestOpenChange(backdropHandle, backdropChange, false, DialogChangeReason.BackdropPress, window, cx);

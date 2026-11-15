@@ -65,7 +65,7 @@ class CeramicWindowOperations implements PlatformWindowOperations {
     }
 
     public function showWindowMenu(position:Point):Void {
-        window.renderable.visualToScreen(position.x, position.y, point);
+        window.windowToScreen(position.x, position.y, point);
         ceramic.App.app.screen.showWindowMenu(point.x, point.y);
     }
 
@@ -87,20 +87,82 @@ class CeramicWindowOperations implements PlatformWindowOperations {
 
     /**
      * The hit regions of `window` in screen coordinates, flat as
-     * `ceramic.Screen.setWindowHitRegions` takes them: the drag areas of its
-     * window controls, then (resizable, not maximized) its resize zones
-     * (`Window.nativeResizeZones`).
+     * `ceramic.Screen.setWindowHitRegions` takes them (the last matching
+     * region wins), in this order:
+     *
+     * - back to front, the drag areas of its window controls
+     *   (`WindowControlArea.Drag`, kind `DRAGGABLE`) and, above a drag area,
+     *   the elements that must keep receiving the presses (kind `NORMAL`):
+     *   those with a listener of the left button (mouse down, mouse up, click,
+     *   drag), those that block the mouse (`occlude()`,
+     *   `blockMouseExceptScroll()`), the other window control areas (close,
+     *   maximize, minimize: `ceramic.WindowHitKind` has no kind for them, so
+     *   the app handles their clicks) and those marked `noWindowDrag()`.
+     *   Each one is clipped to its content mask. A drag area drawn above such
+     *   an element is draggable again.
+     * - then (resizable, not maximized) its resize zones
+     *   (`Window.nativeResizeZones`).
+     *
+     * The list is read from the hitboxes of the last frame, so the areas of
+     * a view reused from the cache are kept.
      */
     public static function hitRegions(window:Window, screenPoint:ceramic.Point):Array<Float> {
         final regions:Array<Float> = [];
-        for (control in window.windowControlHitboxes()) {
-            if (control.area != WindowControlArea.Drag)
+        final hitboxes = window.renderedHitboxes();
+        // The drag areas met so far, flat as x, y, width, height (allocated
+        // with the first one only)
+        var drags:Null<Array<Float>> = null;
+        for (index in 0...hitboxes.length) {
+            final hitbox = hitboxes[index];
+            final role = hitbox.windowDragRole;
+            final hole = role == Hitbox.WINDOW_DRAG_HOLE || hitbox.behavior != HitboxBehavior.Normal;
+            if (role != Hitbox.WINDOW_DRAG_AREA && (drags == null || !hole))
                 continue;
-            final hitbox = control.hitbox;
-            final bounds = hitbox.bounds.intersect(hitbox.contentMask.bounds);
-            if (bounds.size.width <= 0 || bounds.size.height <= 0)
+            // The bounds clipped to the content mask, without allocating
+            final b = hitbox.bounds;
+            final m = hitbox.contentMask.bounds;
+            var x = Math.max(b.origin.x, m.origin.x);
+            var y = Math.max(b.origin.y, m.origin.y);
+            var w = Math.min(b.origin.x + b.size.width, m.origin.x + m.size.width) - x;
+            var h = Math.min(b.origin.y + b.size.height, m.origin.y + m.size.height) - y;
+            if (w <= 0 || h <= 0)
                 continue;
-            pushRegion(window, regions, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height, WindowHitKind.DRAGGABLE, screenPoint);
+            final t = hitbox.transform;
+            if (t != null) {
+                // Inside an element transformation: where the hitbox is drawn
+                final ax = x * t.m00 + t.tx;
+                final bx = (x + w) * t.m00 + t.tx;
+                final ay = y * t.m11 + t.ty;
+                final by = (y + h) * t.m11 + t.ty;
+                x = Math.min(ax, bx);
+                y = Math.min(ay, by);
+                w = Math.abs(bx - ax);
+                h = Math.abs(by - ay);
+                if (w <= 0 || h <= 0)
+                    continue;
+            }
+            if (role == Hitbox.WINDOW_DRAG_AREA) {
+                if (drags == null) drags = [];
+                drags.push(x);
+                drags.push(y);
+                drags.push(w);
+                drags.push(h);
+                pushRegion(window, regions, x, y, w, h, WindowHitKind.DRAGGABLE, screenPoint);
+            }
+            else {
+                // Only where it covers a drag area drawn before it
+                var covers = false;
+                var i = 0;
+                while (i < drags.length) {
+                    if (x < drags[i] + drags[i + 2] && drags[i] < x + w && y < drags[i + 1] + drags[i + 3] && drags[i + 1] < y + h) {
+                        covers = true;
+                        break;
+                    }
+                    i += 4;
+                }
+                if (covers)
+                    pushRegion(window, regions, x, y, w, h, WindowHitKind.NORMAL, screenPoint);
+            }
         }
         final zones = window.nativeResizeZones;
         if (zones != null && window.isResizable() && !window.isMaximized()) {
@@ -114,10 +176,10 @@ class CeramicWindowOperations implements PlatformWindowOperations {
     }
 
     static function pushRegion(window:Window, regions:Array<Float>, x:Float, y:Float, w:Float, h:Float, kind:WindowHitKind, p:ceramic.Point):Void {
-        window.renderable.visualToScreen(x, y, p);
+        window.windowToScreen(x, y, p);
         final x0 = p.x;
         final y0 = p.y;
-        window.renderable.visualToScreen(x + w, y + h, p);
+        window.windowToScreen(x + w, y + h, p);
         regions.push(Math.min(x0, p.x));
         regions.push(Math.min(y0, p.y));
         regions.push(Math.abs(p.x - x0));

@@ -2,6 +2,7 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified during the initial port: deviation DEV-022 (a panel laid out at PANEL_MIN_SIZE does not notify every frame). See docs/DEVIATIONS.md.
+// Addition without upstream equivalent (KIT-003 in docs/DEVIATIONS.md): shrink priorities (`adjustByPriority`).
 package glaze.kit.base.resizable;
 
 import glaze.Axis;
@@ -383,6 +384,8 @@ class ResizableState extends Model {
 
         for (i in 0...oldSizes.length) {
             panels[i].size = newSizes[i];
+            // The sizes are now the user's: nothing to give back later.
+            panels[i].restoreSize = null;
         }
         sizesValue = newSizes;
         notifyChanged(cx);
@@ -404,6 +407,13 @@ class ResizableState extends Model {
         // already fits the container, so there is nothing here to adjust.
         for (panel in panels) {
             if (panel.size == null) return;
+        }
+
+        for (panel in panels) {
+            if (panel.shrinkPriority != null) {
+                adjustByPriority(cx);
+                return;
+            }
         }
 
         // Fixed panels keep their size; the other panels share what is left
@@ -440,6 +450,107 @@ class ResizableState extends Model {
         notifyChanged(cx);
     }
 
+    /**
+     * `adjustToContainerSize` for a group with shrink priorities (addition
+     * without upstream equivalent).
+     *
+     * A container smaller than the panels takes the missing space from the
+     * panels of the highest priority first, each down to the start of its
+     * size range, then from the next priority. A fixed panel without a
+     * priority is left alone. A container larger than the panels first
+     * gives back what the fixed panels gave, the lowest priority first,
+     * then shares the rest among the panels that are not fixed, in
+     * proportion to their sizes.
+     */
+    function adjustByPriority(cx:Context<ResizableState>):Void {
+        final count = panels.length < sizesValue.length ? panels.length : sizesValue.length;
+        var total = 0.;
+        for (i in 0...count) total = f32(total + sizesValue[i]);
+        if (!Math.isFinite(total)) {
+            return;
+        }
+        final container:Float = containerSize();
+        var changed = false;
+
+        if (total > container) {
+            var missing = f32(total - container);
+            // The priorities in use, highest first.
+            final priorities:Array<Int> = [];
+            for (i in 0...count) {
+                final panel = panels[i];
+                if (panel.fixed && panel.shrinkPriority == null) continue;
+                final priority = panel.shrinkPriority != null ? panel.shrinkPriority : 0;
+                if (priorities.indexOf(priority) == -1) priorities.push(priority);
+            }
+            priorities.sort((a, b) -> b - a);
+            for (priority in priorities) {
+                if (missing <= 0.) break;
+                final members = [for (i in 0...count) if (!(panels[i].fixed && panels[i].shrinkPriority == null)
+                    && (panels[i].shrinkPriority != null ? panels[i].shrinkPriority : 0) == priority) i];
+                // Proportional to the sizes; a panel that reaches its minimum
+                // leaves the rest to the others of its rank.
+                var guard = members.length + 1;
+                while (missing > 0. && guard-- > 0) {
+                    var shrinkable = 0.;
+                    for (i in members) {
+                        if (sizesValue[i] > panels[i].sizeRange.start) shrinkable = f32(shrinkable + sizesValue[i]);
+                    }
+                    if (shrinkable <= 0.) break;
+                    final wanted = missing;
+                    for (i in members) {
+                        final size:Float = sizesValue[i];
+                        final min:Float = panels[i].sizeRange.start;
+                        if (size <= min) continue;
+                        final take = MathUtil.min(f32(wanted * f32(size / shrinkable)), f32(size - min));
+                        if (take <= 0.) continue;
+                        if (panels[i].fixed && panels[i].restoreSize == null) panels[i].restoreSize = size;
+                        sizesValue[i] = f32(size - take);
+                        panels[i].size = sizesValue[i];
+                        missing = f32(missing - take);
+                        changed = true;
+                    }
+                    // What is left is a rounding remainder.
+                    if (missing < 0.01) missing = 0.;
+                }
+            }
+        } else if (total < container) {
+            var extra = f32(container - total);
+            // Give back what was taken, the panel that shrank last first.
+            final owed = [for (i in 0...count) if (panels[i].restoreSize != null) i];
+            owed.sort((a, b) -> {
+                final pa = panels[a].shrinkPriority != null ? panels[a].shrinkPriority : 0;
+                final pb = panels[b].shrinkPriority != null ? panels[b].shrinkPriority : 0;
+                return pa != pb ? pa - pb : a - b;
+            });
+            for (i in owed) {
+                if (extra <= 0.) break;
+                final size:Float = sizesValue[i];
+                final give = MathUtil.min(extra, MathUtil.max(f32(panels[i].restoreSize - size), 0.));
+                sizesValue[i] = f32(size + give);
+                panels[i].size = sizesValue[i];
+                if (sizesValue[i] >= panels[i].restoreSize) panels[i].restoreSize = null;
+                extra = f32(extra - give);
+                if (give > 0.) changed = true;
+            }
+            if (extra > 0.) {
+                var flexible = 0.;
+                for (i in 0...count) if (!panels[i].fixed) flexible = f32(flexible + sizesValue[i]);
+                if (flexible > 0.) {
+                    for (i in 0...count) {
+                        if (panels[i].fixed) continue;
+                        sizesValue[i] = f32(sizesValue[i] + f32(extra * f32(sizesValue[i] / flexible)));
+                        panels[i].size = sizesValue[i];
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        if (changed) {
+            notifyChanged(cx);
+        }
+    }
+
 }
 
 /**
@@ -458,6 +569,17 @@ class ResizablePanelState {
      * See `ResizablePanel.fixed`.
      */
     var fixed:Bool = false;
+
+    /**
+     * See `ResizablePanel.shrinkPriority`.
+     */
+    var shrinkPriority:Null<Int> = null;
+
+    /**
+     * The size a fixed panel had before a shrinking container took some of
+     * it, given back when the container grows; `null` when nothing is owed.
+     */
+    var restoreSize:Null<Float> = null;
 
     public function new() {}
 

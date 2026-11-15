@@ -6,7 +6,7 @@ package tests.kit;
 
 import glaze.App;
 import glaze.TestDispatcher;
-import glaze.Svg.Transformation;
+import glaze.Transformation;
 import glaze.kit.Icon;
 import glaze.kit.IconName;
 import glaze.kit.Size;

@@ -50,7 +50,7 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
 
     static inline final RUN_SLOTS = 64;
 
-    static function defaultRuns(style:TextStyle, len:Int):Array<TextRun> {
+    static function defaultRuns(style:TextStyle, len:Int, letterSpacing:Float):Array<TextRun> {
         // 4 ways per length slot (texts of one length in several styles)
         final base = (len & (RUN_SLOTS - 1)) * 4;
         for (way in 0...4) {
@@ -64,11 +64,14 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
                 && (font.weight:Float) == (style.fontWeight:Float) && font.style == style.fontStyle
                 && run.color.equals(style.color) && TextRun.sameColor(run.backgroundColor, style.backgroundColor)
                 && TextRun.sameUnderline(run.underline, style.underline)
-                && TextRun.sameStrikethrough(run.strikethrough, style.strikethrough)) {
+                && TextRun.sameStrikethrough(run.strikethrough, style.strikethrough)
+                && run.letterSpacing == letterSpacing) {
                 return cached;
             }
         }
-        final runs = [style.toRun(len)];
+        final run = style.toRun(len);
+        run.letterSpacing = letterSpacing;
+        final runs = [run];
         final way = recentRunsNext[len & (RUN_SLOTS - 1)];
         recentRunsNext[len & (RUN_SLOTS - 1)] = (way + 1) & 3;
         recentRuns[base + way] = runs;
@@ -83,7 +86,10 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
         final fontSize = textStyle.fontSize.toPixels(window.remSize());
         final lineHeight = window.pixelSnap(textStyle.lineHeight.toPixelsOf(fontSize, window.remSize()));
 
-        final runs:Array<TextRun> = runs != null ? runs : defaultRuns(textStyle, Utf8.byteLength(text));
+        // Port addition: the letter spacing of the style, in pixels (0 by default)
+        final letterSpacing:Float = textStyle.letterSpacing != null ? textStyle.letterSpacing.toPixelsOf(fontSize, window.remSize()) : 0.0;
+
+        final runs:Array<TextRun> = runs != null ? runs : defaultRuns(textStyle, Utf8.byteLength(text), letterSpacing);
 
         // The measure is this object (`measureNode`), with the values it reads
         // kept here: no closure and no node context per text node
@@ -92,6 +98,7 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
         pendingStyle = textStyle;
         pendingFontSize = fontSize;
         pendingLineHeight = lineHeight;
+        pendingLetterSpacing = letterSpacing;
         return @:privateAccess window.requestMeasuredNode(@:privateAccess glaze.Style.sharedDefaultStyle(), this);
     }
 
@@ -104,6 +111,8 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
     var pendingFontSize:Float = 0.0;
 
     var pendingLineHeight:Float = 0.0;
+
+    var pendingLetterSpacing:Float = 0.0;
 
     @:noCompletion
     override function measureNode(knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App):Size {
@@ -184,7 +193,7 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
             return this.size;
         }
 
-        final lineWrapper = @:privateAccess cx.textSystem().lineWrapperOfStyle(textStyle, fontSize);
+        final lineWrapper = @:privateAccess cx.textSystem().lineWrapperOfStyle(textStyle, fontSize, pendingLetterSpacing);
         var finalText = text;
         var finalRuns = runs;
         // The unclipped shaping of a text that fits: the same call as

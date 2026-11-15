@@ -2,6 +2,8 @@
 // DragPanel, ResizablePanelGroup, ResizePanelGroupElement)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Additions without upstream equivalent (KIT-003 in docs/DEVIATIONS.md): `onResizing`, shrink priorities,
+// no handle before the first visible panel.
 package glaze.kit.base.resizable;
 
 import glaze.App;
@@ -84,6 +86,12 @@ class ResizablePanelGroup extends Component {
      * Set the callback to be called when the panels are resized.
      */
     @prop var onResize:(Entity<ResizableState>, Window, App) -> Void = (_, _, _) -> {};
+
+    /**
+     * Set the callback to be called on every move of a handle drag, after
+     * the sizes changed (`onResize` is called once, when the drag ends).
+     */
+    @prop var onResizing:Null<(Entity<ResizableState>, Window, App) -> Void> = null;
 
     var handleAppearance:Null<ResizeHandleRenderer> = null;
 
@@ -172,12 +180,18 @@ class ResizablePanelGroup extends Component {
                 case Vertical: container.w(sizeValue);
             }
         }
+        var visibleBefore = false;
+        final panelStates = state.read(cx).panels;
         for (ix in 0...childPanels.length) {
             final panel = childPanels[ix];
             panel.panelIx = ix;
             panel.axis = axis;
             panel.state = state;
             panel.handleAppearance = handleAppearance;
+            panel.leadingHandle = visibleBefore;
+            if (@:privateAccess panel.visibleProp) visibleBefore = true;
+            // Read when the container changes size; not a change to draw.
+            if (ix < panelStates.length) panelStates[ix].shrinkPriority = panel.shrinkPriorityValue;
             container.child(panel);
         }
         container.onPrepaint((bounds, window, cx) -> {
@@ -205,7 +219,7 @@ class ResizablePanelGroup extends Component {
                 }
             });
         });
-        container.child(new ResizePanelGroupElement(state, axis, onResize));
+        container.child(new ResizePanelGroupElement(state, axis, onResize, onResizing));
         return container;
     }
 
@@ -241,12 +255,15 @@ class ResizePanelGroupElement extends Element {
 
     final onResize:(Entity<ResizableState>, Window, App) -> Void;
 
+    final onResizing:Null<(Entity<ResizableState>, Window, App) -> Void>;
+
     final axis:Axis;
 
-    public function new(state:Entity<ResizableState>, axis:Axis, onResize:(Entity<ResizableState>, Window, App) -> Void) {
+    public function new(state:Entity<ResizableState>, axis:Axis, onResize:(Entity<ResizableState>, Window, App) -> Void, ?onResizing:(Entity<ResizableState>, Window, App) -> Void) {
         this.state = state;
         this.axis = axis;
         this.onResize = onResize;
+        this.onResizing = onResizing;
     }
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
@@ -258,6 +275,7 @@ class ResizePanelGroupElement extends Element {
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final state = this.state;
         final axis = this.axis;
+        final onResizing = this.onResizing;
         window.onMouseEvent(MouseMove, (event, phase, window, cx) -> {
             if (!phase.bubble()) {
                 return;
@@ -280,6 +298,7 @@ class ResizePanelGroupElement extends Element {
                 }
                 state.notifyChanged(cx);
             });
+            if (onResizing != null) onResizing(state, window, cx);
         });
 
         // When any mouse up, stop dragging

@@ -7,9 +7,12 @@ package glaze;
  * An area of the window that the platform treats as one of its own window
  * controls (Windows hit testing of the non client area).
  *
- * The port has no platform window: elements record their area
- * (`Div.windowControlArea`) and the window keeps the hitboxes of the last
- * frame (`Window.windowControlHitboxes`), but nothing consumes them yet.
+ * Elements record their area (`Div.windowControlArea`) and the window keeps
+ * the hitboxes of the last frame (`Window.windowControlHitboxes`). On native
+ * targets the `Drag` areas are published to the operating system, which
+ * moves the window from them, with holes where interactive elements are
+ * drawn above them (`CeramicWindowOperations.hitRegions`). The other areas
+ * are such holes: the app handles their clicks.
  */
 enum abstract WindowControlArea(Int) {
 

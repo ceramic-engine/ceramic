@@ -154,6 +154,51 @@ class Path {
     }
 
     /**
+     * A copy of this path scaled then moved (x' = x * scaleX + translateX,
+     * y' = y * scaleY + translateY), for a path painted inside an element
+     * transformation (`Window.withElementTransform`, port addition). The
+     * stroke of a stroked path is scaled with its triangles.
+     */
+    public function transformed(scaleX:Float, scaleY:Float, translateX:Float, translateY:Float):Path {
+        inline function mx(x:Float):Float return SpringMath.f32(x * scaleX + translateX);
+        inline function my(y:Float):Float return SpringMath.f32(y * scaleY + translateY);
+        final result = new Path(new Point(mx(start.x), my(start.y)));
+        result.current = new Point(mx(current.x), my(current.y));
+        result.contourCount = contourCount;
+        for (vertex in vertices) {
+            final position = vertex.xyPosition;
+            result.vertices.push(new PathVertex(new Point(mx(position.x), my(position.y)), vertex.s, vertex.t));
+        }
+        final polygons = fillPolygons;
+        if (polygons != null) {
+            final mapped:Array<Array<Float>> = [];
+            for (polygon in polygons) {
+                final points:Array<Float> = [];
+                var i = 0;
+                while (i + 1 < polygon.length) {
+                    points.push(mx(polygon[i]));
+                    points.push(my(polygon[i + 1]));
+                    i += 2;
+                }
+                mapped.push(points);
+            }
+            result.fillPolygons = mapped;
+        }
+        result.fillRule = fillRule;
+        result.stroke = stroke;
+        final ax = boundsLeft * scaleX + translateX;
+        final bx = (boundsLeft + boundsWidth) * scaleX + translateX;
+        final ay = boundsTop * scaleY + translateY;
+        final by = (boundsTop + boundsHeight) * scaleY + translateY;
+        result.boundsLeft = SpringMath.f32(Math.min(ax, bx));
+        result.boundsTop = SpringMath.f32(Math.min(ay, by));
+        result.boundsWidth = SpringMath.f32(Math.abs(bx - ax));
+        result.boundsHeight = SpringMath.f32(Math.abs(by - ay));
+        result.boundsObject = null;
+        return result;
+    }
+
+    /**
      * Returns the bounds clipped by the content mask.
      */
     public function clippedBounds():Bounds {

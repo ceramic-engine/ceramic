@@ -1,6 +1,8 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/resizable/panel.rs (ResizablePanel)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Additions without upstream equivalent (KIT-003 in docs/DEVIATIONS.md): `shrinkPriority`, no handle on the
+// first visible panel of a group.
 package glaze.kit.base.resizable;
 
 import glaze.AnyElement;
@@ -78,6 +80,16 @@ class ResizablePanel extends Component implements Styled implements ParentElemen
 
     var fixedValue:Bool = false;
 
+    @:allow(glaze.kit.base.resizable)
+    var shrinkPriorityValue:Null<Int> = null;
+
+    /**
+     * Whether a visible panel comes before this one in the group: only then
+     * does the panel carry the handle of its leading edge.
+     */
+    @:allow(glaze.kit.base.resizable)
+    var leadingHandle:Bool = true;
+
     /**
      * Create a new resizable panel (see `Resizable.resizablePanel()`).
      */
@@ -104,6 +116,23 @@ class ResizablePanel extends Component implements Styled implements ParentElemen
      */
     public function fixed():ResizablePanel {
         fixedValue = true;
+        return this;
+    }
+
+    /**
+     * Set the order in which the panels give up space when the group's
+     * container shrinks: the panels with the highest priority shrink first,
+     * down to the start of their size range, then those of the next
+     * priority. Panels of the same priority shrink in proportion to their
+     * sizes. A `fixed()` panel with a priority takes part at its rank (and
+     * gets back what it gave when the container grows again); a fixed panel
+     * without one never shrinks.
+     *
+     * Without any priority in a group, the panels share the difference in
+     * proportion to their sizes, as gpui-kit does.
+     */
+    public function shrinkPriority(priority:Int):ResizablePanel {
+        shrinkPriorityValue = priority;
         return this;
     }
 
@@ -177,9 +206,12 @@ class ResizablePanel extends Component implements Styled implements ParentElemen
             state.update(cx, (state, cx) -> state.updatePanelSize(panelIx, bounds, sizeRange, fixed, cx));
         });
         el.extend(childElements);
-        if (panelIx > 0) {
+        // Without a visible panel before this one there is nothing on the
+        // other side of the handle to resize.
+        if (panelIx > 0 && leadingHandle) {
             final ix = panelIx - 1;
             final handle = ResizeHandle.resizeHandle(ElementId.NamedInteger('resizable-handle', ix), axis);
+            handle.index = ix;
             if (handleAppearance != null) handle.withAppearance(handleAppearance);
             handle.onDrag(new DragPanel(), (_, _, _, cx) -> {
                 cx.stopPropagation();

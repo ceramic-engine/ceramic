@@ -560,6 +560,20 @@ class ThemeColor {
     public var tabForeground:Hsla = ZERO;
 
     /**
+     * Background of an inactive tab under the pointer, read by
+     * `TabVariant.Custom` (addition without upstream equivalent, so not in
+     * `FIELD_NAMES`). Falls back to the tab background.
+     */
+    public var tabHover:Hsla = ZERO;
+
+    /**
+     * Text color of an inactive tab under the pointer (addition without
+     * upstream equivalent, so not in `FIELD_NAMES`). Falls back to the active
+     * tab text color, the hover color upstream uses.
+     */
+    public var tabHoverForeground:Hsla = ZERO;
+
+    /**
      * Table background color.
      */
     public var table:Hsla = ZERO;
@@ -837,6 +851,8 @@ class ThemeColor {
         tabBar = other.tabBar;
         tabBarSegmented = other.tabBarSegmented;
         tabForeground = other.tabForeground;
+        tabHover = other.tabHover;
+        tabHoverForeground = other.tabHoverForeground;
         table = other.table;
         tableActive = other.tableActive;
         tableActiveBorder = other.tableActiveBorder;
@@ -996,6 +1012,8 @@ class ThemeColor {
             && tabBar.equals(other.tabBar)
             && tabBarSegmented.equals(other.tabBarSegmented)
             && tabForeground.equals(other.tabForeground)
+            && tabHover.equals(other.tabHover)
+            && tabHoverForeground.equals(other.tabHoverForeground)
             && table.equals(other.table)
             && tableActive.equals(other.tableActive)
             && tableActiveBorder.equals(other.tableActiveBorder)
@@ -1811,6 +1829,16 @@ class ThemeColor {
         // apply_color!(tab_foreground, fallback = self.foreground);
         tabForeground = applyColorValue(colors.tabForeground, foreground);
         tokens.tabForeground = ThemeToken.fromHsla(tabForeground);
+        // Additions without upstream equivalent: `tab.hover.background`
+        // (fallback = tokens.tab) and `tab.hover.foreground` (fallback =
+        // self.tab_active_foreground).
+        {
+            final token = applyBackgroundValue(colors.tabHover, tokens.tab);
+            tabHover = token.color;
+            tokens.tabHover = token;
+        }
+        tabHoverForeground = applyColorValue(colors.tabHoverForeground, tabActiveForeground);
+        tokens.tabHoverForeground = ThemeToken.fromHsla(tabHoverForeground);
         // apply_background_color!(table, fallback = tokens.list);
         {
             final token = applyBackgroundValue(colors.table, tokens.list);

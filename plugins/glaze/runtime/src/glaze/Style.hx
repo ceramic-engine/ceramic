@@ -226,6 +226,13 @@ class Style {
     public var gridLocation:Null<GridLocation> = null;
 
     /**
+     * The transformation the element and its children are drawn with
+     * (translation and scale, see `Styled.transformation`), null for none.
+     * Port addition without GPUI equivalent.
+     */
+    public var transformation:Null<Transformation> = null;
+
+    /**
      * Creates the default style (Rust `Style::default()`).
      */
     static var sharedDefault:Null<Style> = null;
@@ -325,6 +332,7 @@ class Style {
         if (refinement.gridCols != null) gridCols = refinement.gridCols;
         if (refinement.gridRows != null) gridRows = refinement.gridRows;
         if (refinement.gridLocation != null) gridLocation = refinement.gridLocation.clone();
+        if (refinement.transformation != null) transformation = refinement.transformation;
     }
 
     /**

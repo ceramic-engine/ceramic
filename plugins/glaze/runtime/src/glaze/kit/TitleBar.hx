@@ -1,6 +1,8 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/title_bar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Additions without upstream equivalent (KIT-005 in docs/DEVIATIONS.md): `TitleBar.platform`, click handlers on the
+// window control buttons of the Windows look.
 package glaze.kit;
 
 import glaze.AnyElement;
@@ -67,21 +69,25 @@ class TitleBar extends Component implements Styled implements ParentElement {
      */
     public static var isWeb:Bool = #if ((js && !node) || unity) true #else false #end;
 
-    static inline function isLinux():Bool {
-        return !isWeb && OperatingSystem.current == Linux;
+    static inline function isLinux(?platform:TitleBarPlatform):Bool {
+        return platform != null ? platform == Linux : !isWeb && OperatingSystem.current == Linux;
     }
 
-    static inline function isWindows():Bool {
-        return !isWeb && OperatingSystem.current == Windows;
+    static inline function isWindows(?platform:TitleBarPlatform):Bool {
+        return platform != null ? platform == Windows : !isWeb && OperatingSystem.current == Windows;
     }
 
-    static inline function isMacos():Bool {
-        return !isWeb && OperatingSystem.current == Mac;
+    static inline function isMacos(?platform:TitleBarPlatform):Bool {
+        return platform != null ? platform == Mac : !isWeb && OperatingSystem.current == Mac;
+    }
+
+    static inline function isWebLook(?platform:TitleBarPlatform):Bool {
+        return platform != null ? platform == Web : isWeb;
     }
 
     /** 80px on macOS, 12px elsewhere (Rust `TITLE_BAR_LEFT_PADDING`). */
-    static function titleBarLeftPadding():Pixels {
-        return isMacos() ? glaze.Prelude.px(80.) : glaze.Prelude.px(12.);
+    static function titleBarLeftPadding(?platform:TitleBarPlatform):Pixels {
+        return isMacos(platform) ? glaze.Prelude.px(80.) : glaze.Prelude.px(12.);
     }
 
     @:allow(tests)
@@ -116,6 +122,17 @@ class TitleBar extends Component implements Styled implements ParentElement {
 
     var onCloseWindowHandler:Null<(ClickEvent, Window, App) -> Void> = null;
 
+    var platformValue:Null<TitleBarPlatform> = null;
+
+    /**
+     * Whether the window control buttons of the Windows look handle their
+     * clicks themselves (minimize, maximize or restore, close), default
+     * true. Ceramic does not hand the window control areas to the system,
+     * so without the handlers the buttons do nothing. Turn it off on a
+     * platform layer that does act on the control areas.
+     */
+    @prop var controlClicks:Bool = true;
+
     /**
      * Create a new TitleBar.
      */
@@ -135,9 +152,21 @@ class TitleBar extends Component implements Styled implements ParentElement {
      * Linux only, this will do nothing on other platforms.
      */
     public function onCloseWindow(f:(ClickEvent, Window, App) -> Void):TitleBar {
-        if (isLinux()) {
-            onCloseWindowHandler = f;
-        }
+        // Kept whatever the platform: `platform` may be set after this
+        // call. `render` uses it on the looks that handle their clicks.
+        onCloseWindowHandler = f;
+        return this;
+    }
+
+    /**
+     * Sets the look and behaviour of this title bar, instead of those of
+     * the operating system the app runs on (`OperatingSystem.current`,
+     * which also decides the key bindings of the whole app, and
+     * `TitleBar.isWeb`): the Windows or Linux title bar can be shown and
+     * tested on a Mac. `null` (the default) follows the operating system.
+     */
+    public function platform(platform:Null<TitleBarPlatform>):TitleBar {
+        platformValue = platform;
         return this;
     }
 
@@ -165,9 +194,14 @@ class TitleBar extends Component implements Styled implements ParentElement {
             case Client(_): true;
             case Server: false;
         };
-        final isWeb = TitleBar.isWeb;
-        final isLinux = TitleBar.isLinux();
-        final isMacos = TitleBar.isMacos();
+        final platform = platformValue;
+        final isWeb = TitleBar.isWebLook(platform);
+        final isLinux = TitleBar.isLinux(platform);
+        final isMacos = TitleBar.isMacos(platform);
+        final isWindows = TitleBar.isWindows(platform);
+        // Rust keeps the handler on Linux only; the Windows look uses it too
+        // when its buttons handle their clicks.
+        final onCloseWindowHandler = isLinux || (isWindows && controlClicks) ? this.onCloseWindowHandler : null;
 
         final state = window.useState(cx, _ -> new TitleBarState());
 
@@ -178,7 +212,7 @@ class TitleBar extends Component implements Styled implements ParentElement {
             .itemsCenter()
             .justifyBetween()
             .h(TITLE_BAR_HEIGHT)
-            .pl(titleBarLeftPadding())
+            .pl(titleBarLeftPadding(platform))
             .borderB1()
             .borderColor(theme.titleBarBorder)
             .bg(defaultTitleBarBackground(theme.titleBar, theme.background))
@@ -229,7 +263,7 @@ class TitleBar extends Component implements Styled implements ParentElement {
         }
         inner.extend(childElements);
         bar.child(inner)
-            .child(WindowControls.component(onCloseWindowHandler));
+            .child(WindowControls.component(onCloseWindowHandler, platform, controlClicks));
 
         return div().flexShrink0().child(bar);
     }
@@ -320,14 +354,20 @@ private class ControlIconElement extends Component {
 
     final icon:ControlIcon;
 
-    public function new(icon:ControlIcon) {
+    final platform:Null<TitleBarPlatform>;
+
+    final controlClicks:Bool;
+
+    public function new(icon:ControlIcon, ?platform:TitleBarPlatform, controlClicks:Bool = true) {
         super();
         this.icon = icon;
+        this.platform = platform;
+        this.controlClicks = controlClicks;
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final isLinux = @:privateAccess TitleBar.isLinux();
-        final isWindows = @:privateAccess TitleBar.isWindows();
+        final isLinux = @:privateAccess TitleBar.isLinux(platform);
+        final isWindows = @:privateAccess TitleBar.isWindows(platform);
         final hoverFg = ControlIconTools.hoverFg(icon, cx);
         final hoverBg = ControlIconTools.hoverBg(icon, cx);
         final activeBg = ControlIconTools.activeBg(icon, cx);
@@ -352,7 +392,9 @@ private class ControlIconElement extends Component {
         if (isWindows) {
             root.windowControlArea(ControlIconTools.windowControlArea(icon));
         }
-        if (isLinux) {
+        // Addition: the buttons of the Windows look handle their clicks like
+        // those of Linux (no platform acts on the control areas).
+        if (isLinux || (isWindows && controlClicks)) {
             root.onMouseDown(Left, (_, window, cx) -> {
                 window.preventDefault();
                 cx.stopPropagation();
@@ -391,13 +433,21 @@ private class WindowControls extends Component {
 
     final onCloseWindow:Null<(ClickEvent, Window, App) -> Void>;
 
-    public function new(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>) {
+    final platform:Null<TitleBarPlatform>;
+
+    final controlClicks:Bool;
+
+    public function new(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>, ?platform:TitleBarPlatform, controlClicks:Bool = true) {
         super();
         this.onCloseWindow = onCloseWindow;
+        this.platform = platform;
+        this.controlClicks = controlClicks;
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        if (@:privateAccess TitleBar.isMacos() || TitleBar.isWeb) {
+        final platform = this.platform;
+        final controlClicks = this.controlClicks;
+        if (@:privateAccess TitleBar.isMacos(platform) || @:privateAccess TitleBar.isWebLook(platform)) {
             return div().id('window-controls');
         }
 
@@ -410,7 +460,7 @@ private class WindowControls extends Component {
         // requested. Skip ours unless this window is actually client-side
         // decorated, mirroring the `is_client_decorated` gating of the
         // title bar's window-menu overlay.
-        if (@:privateAccess TitleBar.isLinux()) {
+        if (@:privateAccess TitleBar.isLinux(platform)) {
             switch window.windowDecorations() {
                 case Client(_):
                 case Server:
@@ -429,12 +479,12 @@ private class WindowControls extends Component {
             .flexShrink0()
             .hFull();
         if (supported.minimize) {
-            controls.child(ControlIconElement.component(Minimize));
+            controls.child(ControlIconElement.component(Minimize, platform, controlClicks));
         }
         if (supported.maximize) {
-            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize));
+            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize, platform, controlClicks));
         }
-        return controls.child(ControlIconElement.component(Close(onCloseWindow)));
+        return controls.child(ControlIconElement.component(Close(onCloseWindow), platform, controlClicks));
     }
 
 }

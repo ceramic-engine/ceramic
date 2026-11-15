@@ -19,7 +19,7 @@ import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Svg;
-import glaze.Svg.Transformation;
+import glaze.Transformation;
 import glaze.Window;
 import glaze.kit.Size.IntoSize;
 import glaze.kit.theme.Theme;

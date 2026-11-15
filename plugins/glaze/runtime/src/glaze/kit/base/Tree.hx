@@ -1,6 +1,8 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/tree.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Additions without upstream equivalent (KIT-004 in docs/DEVIATIONS.md): `TreeItem.folder`, `setItems` keeping the
+// selection, `toggleOnClick`, `navigationKeys`.
 package glaze.kit.base;
 
 import glaze.AnyElement;
@@ -64,6 +66,9 @@ class TreeItem {
     @:allow(glaze.kit.base)
     var state:TreeItemState;
 
+    /** See `folder`. */
+    var folderValue:Null<Bool> = null;
+
     public function new(id:String, label:String) {
         this.id = id;
         this.label = label;
@@ -79,7 +84,19 @@ class TreeItem {
         final item = new TreeItem(id, label);
         item.children = [for (child in children) child.clone()];
         item.state = state;
+        item.folderValue = folderValue;
         return item;
+    }
+
+    /**
+     * Says whether the item is a folder, whatever its children: an empty
+     * folder stays a folder (it expands, collapses and reports it), and
+     * `folder(false)` makes an item with children a leaf. Without this call
+     * an item is a folder when it has children, as in gpui-kit.
+     */
+    public function folder(folder:Bool):TreeItem {
+        folderValue = folder;
+        return this;
     }
 
     public function child(child:TreeItem):TreeItem {
@@ -103,7 +120,7 @@ class TreeItem {
     }
 
     public inline function isFolder():Bool {
-        return children.length > 0;
+        return folderValue != null ? folderValue : children.length > 0;
     }
 
     public function isDisabled():Bool {
@@ -255,6 +272,12 @@ class TreeState extends Model implements Render {
 
     var listStyle:StyleRefinement = new StyleRefinement();
 
+    /** See `Tree.toggleOnClick`. */
+    var toggleOnClick:Bool = true;
+
+    /** See `Tree.navigationKeys`. */
+    var navigationKeys:Bool = false;
+
     public function new(cx:AppContext) {
         super();
         focusHandle = (cx : App).focusHandle();
@@ -265,10 +288,27 @@ class TreeState extends Model implements Render {
         return this;
     }
 
-    public function setItems(items:Array<TreeItem>, cx:Context<Dynamic>):Void {
+    /**
+     * Replaces the items. The selection is dropped, as in gpui-kit, unless
+     * `keepSelection` is true: the selected and the right clicked entries
+     * are then found again by their ids (and dropped when their item is gone
+     * or no longer visible).
+     */
+    public function setItems(items:Array<TreeItem>, cx:Context<Dynamic>, keepSelection:Bool = false):Void {
+        final selectedId = keepSelection && selectedIx != null && entry(selectedIx) != null ? entry(selectedIx).item().id : null;
+        final rightClickedId = keepSelection && rightClickedIx != null && entry(rightClickedIx) != null ? entry(rightClickedIx).item().id : null;
         replaceItems(items);
-        selectedIx = null;
-        rightClickedIx = null;
+        selectedIx = selectedId != null ? indexOf(selectedId) : null;
+        rightClickedIx = rightClickedId != null ? indexOf(rightClickedId) : null;
+        cx.notify();
+    }
+
+    /**
+     * Expands or collapses the folder at `ix`, like a click on it does
+     * (for a tree whose `toggleOnClick` is off).
+     */
+    public function toggleExpanded(ix:Int, cx:Context<Dynamic>):Void {
+        toggleExpand(ix, cx);
         cx.notify();
     }
 
@@ -437,8 +477,66 @@ class TreeState extends Model implements Render {
             if (entry != null && entry.isFolder() && entry.isExpanded()) {
                 toggleExpand(ix, cx);
                 cx.notify();
+            } else if (entry != null && navigationKeys) {
+                // On a leaf or a collapsed folder, left goes to the parent.
+                final parent = parentIndex(ix);
+                if (parent != null) select(parent, ScrollStrategy.Top, cx);
             }
         }
+    }
+
+    /** The index of the entry holding the entry at `ix`, `null` for a root. */
+    public function parentIndex(ix:Int):Null<Int> {
+        final entry = this.entry(ix);
+        if (entry == null) return null;
+        var i = ix - 1;
+        while (i >= 0) {
+            if (entries[i].depth() < entry.depth()) return i;
+            i--;
+        }
+        return null;
+    }
+
+    function select(ix:Int, strategy:ScrollStrategy, cx:Context<Dynamic>):Void {
+        selectedIx = ix;
+        scrollHandleValue.scrollToItem(ix, strategy);
+        cx.notify();
+    }
+
+    /** How many entries fit in the list, less one (ten before the first layout). */
+    function pageSize():Int {
+        final size = scrollHandleValue.state.lastItemSize;
+        if (size == null || entries.length == 0) return 10;
+        final viewport:Float = size.item.height;
+        final rowHeight:Float = size.contents.height / entries.length;
+        if (rowHeight <= 0. || viewport <= 0.) return 10;
+        final rows = Math.floor(viewport / rowHeight) - 1;
+        return rows > 1 ? rows : 1;
+    }
+
+    /**
+     * Home, End, PageUp and PageDown, when `navigationKeys` is on. Returns
+     * whether the key was one of them.
+     */
+    function onNavigationKey(key:String, cx:Context<Dynamic>):Bool {
+        if (!navigationKeys || entries.length == 0) return false;
+        final last = entries.length - 1;
+        final current = selectedIx != null ? selectedIx : 0;
+        switch key {
+            case 'home':
+                select(0, ScrollStrategy.Top, cx);
+            case 'end':
+                select(last, ScrollStrategy.Bottom, cx);
+            case 'pageup':
+                final ix = current - pageSize();
+                select(ix > 0 ? ix : 0, ScrollStrategy.Top, cx);
+            case 'pagedown':
+                final ix = current + pageSize();
+                select(ix < last ? ix : last, ScrollStrategy.Bottom, cx);
+            case _:
+                return false;
+        }
+        return true;
     }
 
     function onActionRight(_:SelectRight, _:Window, cx:Context<Dynamic>):Void {
@@ -468,9 +566,10 @@ class TreeState extends Model implements Render {
         cx.notify();
     }
 
-    function onEntryClick(ix:Int, cx:Context<Dynamic>):Void {
+    function onEntryClick(ix:Int, cx:Context<Dynamic>, clickCount:Int = 1):Void {
         selectedIx = ix;
-        toggleExpand(ix, cx);
+        // Without the toggle on a single click, a double click toggles.
+        if (toggleOnClick || clickCount == 2) toggleExpand(ix, cx);
         cx.notify();
     }
 
@@ -492,8 +591,8 @@ class TreeState extends Model implements Render {
                 if (!entry.isDisabled()) {
                     // Select and toggle on a full click, like `List` and `Table`
                     // rows, so a press that is dragged away leaves the entry alone.
-                    element.onClick(cx.listener((state:TreeState, _, _, cx) -> {
-                        state.onEntryClick(ix, cx);
+                    element.onClick(cx.listener((state:TreeState, event:glaze.ClickEvent, _, cx) -> {
+                        state.onEntryClick(ix, cx, glaze.ClickEvent.ClickEventTools.clickCount(event));
                     }))
                         .onMouseDown(MouseButton.Right, cx.listener((state:TreeState, _, _, cx) -> {
                             state.rightClickedIx = ix;
@@ -534,6 +633,21 @@ class Tree extends Component implements Styled {
     /** Supplies the application-owned content for each visible entry. */
     @prop var item:TreeRenderItem = (_, _, _, _, _) -> div().intoAnyElement();
 
+    /**
+     * Whether a single click on a folder expands or collapses it (default
+     * true, as in gpui-kit). When false a click only selects, and a double
+     * click, Enter, the left and right arrows or `TreeState.toggleExpanded`
+     * toggle.
+     */
+    @prop var toggleOnClick:Bool = true;
+
+    /**
+     * Whether Home, End, PageUp and PageDown move the selection, and the
+     * left arrow on a leaf or a collapsed folder selects its parent
+     * (default false, as in gpui-kit).
+     */
+    @prop var navigationKeys:Bool = false;
+
     public function new(state:Entity<TreeState>) {
         super();
         id = ElementId.Name('tree-' + state.entityId());
@@ -548,14 +662,26 @@ class Tree extends Component implements Styled {
         final focusHandle = state.read(cx).focusHandle;
         final renderItem = item;
         final listStyle = this.listStyle;
+        final toggleOnClick = this.toggleOnClick;
+        final navigationKeys = this.navigationKeys;
         state.update(cx, (state, _) -> {
             state.renderItem = renderItem;
             state.listStyle = listStyle;
+            state.toggleOnClick = toggleOnClick;
+            state.navigationKeys = navigationKeys;
         });
 
         final state = this.state;
+        final root = div();
+        if (navigationKeys) {
+            root.onKeyDown((event, _, cx) -> {
+                final keystroke = event.keystroke;
+                if (keystroke.modifiers.modified()) return;
+                if (state.update(cx, (s, cx) -> s.onNavigationKey(keystroke.key, cx))) cx.stopPropagation();
+            });
+        }
         // Rust `.role(Role::Tree)`: no accessibility tree in the port.
-        return div()
+        return root
             .id(id)
             .testSupport()
             .keyContext(TreeState.CONTEXT)

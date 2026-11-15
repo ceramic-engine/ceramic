@@ -2,6 +2,8 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: initial port deviations DEV-013 (icon-only tab width) and DEV-014 (disabled selected tab). See docs/DEVIATIONS.md.
+// Additions without upstream equivalent (KIT-001, KIT-002 in docs/DEVIATIONS.md): the caller's style replayed last,
+// `TabVariant.Custom`, `labelMaxWidth`, `hover`, `group`, `onHover`, `onDragMove`, `contextMenu`.
 package glaze.kit.tab;
 
 import glaze.AnyElement;
@@ -109,6 +111,25 @@ class Tab extends Component implements Styled implements ParentElement implement
     @:allow(glaze.kit.tab)
     var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
 
+    /**
+     * The caller's style. Kept apart from the element's own so that `render`
+     * replays it last, like `Button`: the caller's height, text size,
+     * background, corners win over the variant's.
+     */
+    final userStyle:StyleRefinement = new StyleRefinement();
+
+    /** The geometry of `TabVariant.Custom`, the bar's when `null`. */
+    @:allow(glaze.kit.tab)
+    var appearanceValue:Null<TabAppearance> = null;
+
+    /** The maximum width of the label alone, the bar's when `null`. */
+    @:allow(glaze.kit.tab)
+    var labelMaxWidthValue:Null<Pixels> = null;
+
+    var userHover:Null<(StyleBuilder) -> StyleBuilder> = null;
+
+    var contextMenuBuilder:Null<glaze.kit.menu.ContextMenu.MenuBuilder> = null;
+
     /** Create a new tab. */
     public function new() {
         super();
@@ -156,6 +177,74 @@ class Tab extends Component implements Styled implements ParentElement implement
 
     public function folder():Tab {
         variant = Folder;
+        return this;
+    }
+
+    /**
+     * Sets `TabVariant.Custom`: a rectangular tab colored by the tab tokens of
+     * the theme, with the geometry of `appearance` (that of `TabVariant.Tab`
+     * when omitted). Inside a `TabBar` the bar's variant applies, and the
+     * bar's appearance unless the tab has its own.
+     */
+    public function custom(?appearance:TabAppearance):Tab {
+        variant = Custom;
+        if (appearance != null) appearanceValue = appearance;
+        return this;
+    }
+
+    /**
+     * Sets the maximum width of the label alone: a longer label is truncated
+     * with an ellipsis, while the prefix, the suffix and the paddings keep
+     * their size (`TabBar.maxWidth` caps the whole tab instead). Does not
+     * apply to icon-only tabs.
+     */
+    public function labelMaxWidth(maxWidth:Null<Pixels>):Tab {
+        labelMaxWidthValue = maxWidth;
+        return this;
+    }
+
+    /**
+     * A style applied while the pointer is over the tab, after the variant's
+     * own hover style.
+     */
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Tab {
+        userHover = f;
+        return this;
+    }
+
+    /**
+     * Names the hover group of the tab, so that a child (a close button in
+     * the suffix for example) can style itself with `groupHover(name, ...)`
+     * while the pointer is over the tab.
+     */
+    public function group(name:String):Tab {
+        base.base.group(name);
+        return this;
+    }
+
+    /** Reports the pointer entering (`true`) and leaving (`false`) the tab. */
+    public function onHover(listener:(Bool, Window, App) -> Void):Tab {
+        base.base.onHover(listener);
+        return this;
+    }
+
+    /**
+     * Reports every move of a drag of type `type`, over this tab or not: the
+     * event carries the bounds of the tab and the pointer position, which
+     * tells on which half of the tab an insertion line goes.
+     */
+    public function onDragMove<T>(type:Class<T>, listener:(glaze.DragMoveEvent<T>, Window, App) -> Void):Tab {
+        base.base.onDragMove(type, listener);
+        return this;
+    }
+
+    /**
+     * Opens the menu `builder` fills on a right click (or a long press) on
+     * the tab. Unlike the `contextMenu` extension, the tab stays a `Tab`, so
+     * it can be given to a `TabBar`.
+     */
+    public function contextMenu(builder:(glaze.kit.menu.PopupMenu, Window, glaze.Context<glaze.kit.menu.PopupMenu>) -> glaze.kit.menu.PopupMenu):Tab {
+        contextMenuBuilder = builder;
         return this;
     }
 
@@ -271,7 +360,7 @@ class Tab extends Component implements Styled implements ParentElement implement
     }
 
     public inline function style():StyleRefinement {
-        return base.style();
+        return userStyle;
     }
 
     public function withSize(size:IntoSize):Tab {
@@ -293,8 +382,15 @@ class Tab extends Component implements Styled implements ParentElement implement
             hoverStyle = variant.disabled(this.selected, cx);
         }
         final tabBarPrefix = tabBarPrefixValue != null ? tabBarPrefixValue : false;
+        final custom = variant == Custom;
+        final appearance:Null<TabAppearance> = custom ? appearanceValue : null;
+        if (appearance != null && !appearance.sideBordersValue) {
+            for (style in [normalStyle, selectedStyle, disabledStyle, hoverStyle]) {
+                style.borders = new glaze.Edges(style.borders.top, 0., style.borders.bottom, 0.);
+            }
+        }
         if (!tabBarPrefix) {
-            if (ix == 0 && variant == TabVariant.Tab) {
+            if (ix == 0 && (variant == TabVariant.Tab || custom)) {
                 for (style in [normalStyle, selectedStyle, disabledStyle, hoverStyle]) {
                     style.borders = new glaze.Edges(style.borders.top, style.borders.right, style.borders.bottom, 0.);
                 }
@@ -303,10 +399,20 @@ class Tab extends Component implements Styled implements ParentElement implement
         final tabStyle = this.disabled ? disabledStyle : (this.selected ? selectedStyle : normalStyle);
         final radius = variant.radius(size, cx);
         final innerRadius = variant.innerRadius(size, cx);
-        final innerPaddings = variant.innerPaddings(size);
+        final innerPaddings:glaze.Edges = appearance != null && appearance.paddingsValue != null ? appearance.paddingsValue : variant.innerPaddings(size);
         final innerMargins = variant.innerMargins(size);
-        final innerHeight = variant.innerHeight(size);
-        final height = variant.height(size);
+        final height:Pixels = appearance != null && appearance.heightValue != null ? appearance.heightValue : variant.height(size);
+        // A custom height keeps the two pixels `TabVariant.Tab` leaves around its content.
+        final innerHeight:Pixels = appearance != null && appearance.heightValue != null
+            ? Math.max(f32(appearance.heightValue - 2.), 0.)
+            : variant.innerHeight(size);
+        final topRadius:Float = appearance != null ? appearance.topRadiusValue : 0.;
+        final labelMaxWidth = this.icon == null ? labelMaxWidthValue : null;
+        // The caller's own corners are not reset by the hover style.
+        final userCorners = topRadius > 0.
+            || userStyle.cornerRadiusTopLeft != null || userStyle.cornerRadiusTopRight != null
+            || userStyle.cornerRadiusBottomLeft != null || userStyle.cornerRadiusBottomRight != null;
+        final userHover = this.userHover;
         final ariaLabel = a11yLabel();
         final folder = variant == Folder;
         final metrics = new FolderTabMetrics(size, cx);
@@ -384,7 +490,13 @@ class Tab extends Component implements Styled implements ParentElement implement
                 // Text always takes its natural width, so it needs a box
                 // that is allowed to shrink to ellipsize inside of.
                 if (maxWidth != null) {
-                    innerContent.child(div().minW0().whitespaceNowrap().textEllipsis().child(label));
+                    final labelBox = div().minW0().whitespaceNowrap().textEllipsis();
+                    if (labelMaxWidth != null) labelBox.maxW(labelMaxWidth);
+                    innerContent.child(labelBox.child(label));
+                } else if (labelMaxWidth != null) {
+                    // The label alone is capped: the tab keeps its natural
+                    // width around it.
+                    innerContent.child(div().minW0().maxW(labelMaxWidth).whitespaceNowrap().textEllipsis().child(label));
                 } else {
                     innerContent.child(label);
                 }
@@ -442,6 +554,8 @@ class Tab extends Component implements Styled implements ParentElement implement
             case _: base.textSm();
         }
         base.rounded(radius);
+        if (appearance != null && appearance.textSizeValue != null) base.textSize(glaze.Prelude.px(appearance.textSizeValue));
+        if (topRadius > 0.) base.roundedTl(glaze.Prelude.px(topRadius)).roundedTr(glaze.Prelude.px(topRadius));
         if (folder) base.px(metrics.paddingX).pb(metrics.topPadding);
         if (!this.selected && !this.disabled) {
             base.textColor(normalStyle.fg)
@@ -459,16 +573,17 @@ class Tab extends Component implements Styled implements ParentElement implement
             // hover state while one is present. If the selected tab skipped it,
             // the stale state would keep hover colors after unselecting.
             if (selected || disabled) {
-                return s;
+                return userHover != null && !disabled ? userHover(s) : s;
             }
-            return s.textColor(hoverStyle.fg)
+            s.textColor(hoverStyle.fg)
                 .bg(hoverStyle.bg)
                 .borderL(glaze.Prelude.px(hoverStyle.borders.left))
                 .borderR(glaze.Prelude.px(hoverStyle.borders.right))
                 .borderT(glaze.Prelude.px(hoverStyle.borders.top))
                 .borderB(glaze.Prelude.px(hoverStyle.borders.bottom))
-                .borderColor(hoverStyle.borderColor)
-                .rounded(radius);
+                .borderColor(hoverStyle.borderColor);
+            if (!userCorners) s.rounded(radius);
+            return userHover != null ? userHover(s) : s;
         });
         if (folder && this.selected) {
             base.child(folderTabShape(metrics, theme.tokens.tabActive.background));
@@ -526,6 +641,14 @@ class Tab extends Component implements Styled implements ParentElement implement
         final onClick = onClickHandler;
         if (onClick != null) {
             base.onClick((event, window, cx) -> onClick(event, window, cx));
+        }
+        // The caller's style goes last, like `Button`'s, except its
+        // `flex_shrink`: a tab never shrinks (see `flexShrink0` above).
+        @:privateAccess base.finalStyle = userStyle;
+        final menuBuilder = contextMenuBuilder;
+        if (menuBuilder != null) {
+            // One element state per tab: the id carries the tab index.
+            return @:privateAccess new glaze.kit.menu.ContextMenu(ElementId.NamedInteger('tab-context-menu', ix), base).menu(menuBuilder);
         }
         return base;
     }

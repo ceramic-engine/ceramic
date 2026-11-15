@@ -23,6 +23,7 @@ class Tests {
         runner.add(new tests.WriteDuringRenderTest());
         runner.add(new tests.StyleTest());
         runner.add(new tests.LayoutTest());
+        runner.add(new tests.GridTemplateTracksTest());
         runner.add(new tests.WindowTest());
         runner.add(new tests.AnimationTest());
         runner.add(new tests.SpringTest());
@@ -38,6 +39,7 @@ class Tests {
         runner.add(new tests.WholeRunShapingTest());
         runner.add(new tests.SystemFontFamiliesTest());
         runner.add(new tests.LineWrapperTest());
+        runner.add(new tests.LetterSpacingTest());
         runner.add(new tests.SystemFontFallbackTest());
         runner.add(new tests.CanvasFallbackTest());
         runner.add(new tests.BundledEmojiFontTest());
@@ -52,7 +54,11 @@ class Tests {
         runner.add(new tests.kit.TouchSelectionIntegrationTest());
         runner.add(new tests.WindowFocusTest());
         runner.add(new tests.WindowScaleFactorTest());
+        runner.add(new tests.WindowZoomTest());
         runner.add(new tests.PlatformOperationsTest());
+        runner.add(new tests.WindowDragRegionsTest());
+        runner.add(new tests.ElementTransformTest());
+        runner.add(new tests.GlyphTransformationTest());
         runner.add(new tests.SystemNotificationsTest());
         runner.add(new tests.CeramicInputHelpersTest());
         runner.add(new tests.CeramicFocusKeyboardTest());
@@ -119,9 +125,11 @@ class Tests {
         runner.add(new tests.AppMenuBarTest());
         runner.add(new tests.PlatformAppearanceTest());
         runner.add(new tests.kit.ComponentMenuTest());
+        runner.add(new tests.kit.KitMenuAdditionsTest());
         // gpui-kit (wave 5: modals)
         runner.add(new tests.kit.BaseModalsTest());
         runner.add(new tests.kit.ComponentModalsTest());
+        runner.add(new tests.kit.KitDialogAdditionsTest());
         // gpui-kit (wave 5: popovers, tooltips, hover cards)
         runner.add(new tests.kit.BaseOverlaysTest());
         runner.add(new tests.kit.ComponentOverlaysTest());
@@ -179,14 +187,17 @@ class Tests {
         runner.add(new tests.kit.ColorPickerTest());
         // gpui-kit (wave 7: tabs)
         runner.add(new tests.kit.ComponentTabTest());
+        runner.add(new tests.kit.KitTabAdditionsTest());
         // gpui-kit (wave 7: accordion, collapsible, pagination, stepper, title bar, window border)
         runner.add(new tests.kit.BaseDisclosureTest());
         runner.add(new tests.kit.ComponentDisclosureTest());
         runner.add(new tests.kit.BaseNavigationTest());
         runner.add(new tests.kit.ComponentNavigationTest());
         runner.add(new tests.kit.ComponentWindowTest());
+        runner.add(new tests.kit.KitTitleBarAdditionsTest());
         // gpui-kit (wave 7: resizable panels)
         runner.add(new tests.kit.BaseResizableTest());
+        runner.add(new tests.kit.KitResizableAdditionsTest());
         runner.add(new tests.kit.ResizableIdleTest());
         // gpui-kit (wave 7: base dock)
         runner.add(new tests.kit.BaseDockLayoutTest());
@@ -201,6 +212,7 @@ class Tests {
         runner.add(new tests.kit.BaseTreeTest());
         runner.add(new tests.kit.BaseTableTest());
         runner.add(new tests.kit.ComponentTreeTest());
+        runner.add(new tests.kit.KitTreeAdditionsTest());
         runner.add(new tests.kit.ComponentTableTest());
         // gpui-kit (wave 9: plot, charts)
         runner.add(new tests.kit.PlotScaleTest());
@@ -256,6 +268,7 @@ class Tests {
         runner.add(new tests.kit.StoryGalleryTest());
         runner.add(new tests.kit.StoryPlatformTest());
         runner.add(new tests.kit.StoryInputCompletionTest());
+        runner.add(new tests.kit.KitSuggestInputTest());
         runner.add(new tests.kit.StoryListTest());
         // child(null) and null children are skipped (README, UI API)
         runner.add(new tests.kit.NullChildTest());

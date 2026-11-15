@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/resizable/resize_handle.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Addition without upstream equivalent (KIT-003 in docs/DEVIATIONS.md): `ResizeHandleContext.index`.
 package glaze.kit.base.resizable;
 
 import glaze.AnyElement;
@@ -51,11 +52,25 @@ class ResizeHandleContext {
 
     final stateValue:ResizeHandleState;
 
+    final indexValue:Null<Int>;
+
     @:allow(glaze.kit.base.resizable, tests)
-    function new(axis:Axis, edge:Null<HandleEdge>, state:ResizeHandleState) {
+    function new(axis:Axis, edge:Null<HandleEdge>, state:ResizeHandleState, ?index:Int) {
         this.axisValue = axis;
         this.edgeValue = edge;
         this.stateValue = state;
+        this.indexValue = index;
+    }
+
+    /**
+     * The position of the handle in its `ResizablePanelGroup`: `0` for the
+     * divider between the first two panels, `null` for a standalone handle.
+     * An appearance uses it to draw one divider of a group differently from
+     * the others (addition without upstream equivalent, KIT-003 in
+     * docs/DEVIATIONS.md).
+     */
+    public function index():Null<Int> {
+        return indexValue;
     }
 
     /**
@@ -211,6 +226,10 @@ class ResizeHandle<T> extends Element {
 
     var appearance:Null<ResizeHandleRenderer> = null;
 
+    /** See `ResizeHandleContext.index`. */
+    @:allow(glaze.kit.base.resizable)
+    var index:Null<Int> = null;
+
     /**
      * The band itself. Listeners a caller attaches land here, on the element
      * the pointer actually hits; base places and sizes it when it is laid out.
@@ -321,7 +340,7 @@ class ResizeHandle<T> extends Element {
             // container's own mask.
             var painted:Null<AnyElement> = null;
             if (appearance != null) {
-                painted = appearance(new ResizeHandleContext(axis, edge, state.get()), window, cx);
+                painted = appearance(new ResizeHandleContext(axis, edge, state.get(), index), window, cx);
             }
             if (painted == null) {
                 final line = div()

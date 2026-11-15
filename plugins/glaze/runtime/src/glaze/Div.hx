@@ -446,11 +446,25 @@ class Div extends Element implements Styled implements ParentElement {
 
     /**
      * Set the area of the window that this element acts as, for the
-     * platform's own window controls (Windows hit testing). The port records
-     * it (`Window.windowControlHitboxes`) without platform effect.
+     * platform's own window controls (Windows hit testing). On native
+     * targets a `Drag` area moves the window, except under the interactive
+     * elements drawn above it (see `CeramicWindowOperations.hitRegions`).
      */
     public function windowControlArea(area:WindowControlArea):Div {
         interactivity.windowControl = area;
+        return this;
+    }
+
+    /**
+     * Keeps the presses on this element for the app when it is drawn above
+     * a window drag area (`windowControlArea(Drag)`), even without a mouse
+     * listener: the native window is not moved from its bounds. Port
+     * addition without GPUI equivalent. Elements with a listener of the left
+     * button (`onClick`, `onMouseDown(Left, ...)`, `onDrag`...) and elements
+     * that block the mouse (`occlude()`) already behave this way.
+     */
+    public function noWindowDrag():Div {
+        interactivity.noWindowDrag = true;
         return this;
     }
 

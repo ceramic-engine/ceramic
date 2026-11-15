@@ -23,6 +23,71 @@ class Hitbox {
     /** Flags that specify hitbox behavior. */
     public final behavior:HitboxBehavior;
 
+    /**
+     * What the hitbox means for the drag regions published to the native
+     * window (port addition, see `CeramicWindowOperations.hitRegions`):
+     * `WINDOW_DRAG_NONE`, `WINDOW_DRAG_AREA` (a `WindowControlArea.Drag`
+     * element) or `WINDOW_DRAG_HOLE` (an element that must keep receiving
+     * the presses when it is drawn above a drag area). Set while the element
+     * paints; it travels with the hitbox when a cached view is reused.
+     */
+    public var windowDragRole:Int = WINDOW_DRAG_NONE;
+
+    public static inline final WINDOW_DRAG_NONE:Int = 0;
+
+    public static inline final WINDOW_DRAG_AREA:Int = 1;
+
+    public static inline final WINDOW_DRAG_HOLE:Int = 2;
+
+    /**
+     * The element transformation the hitbox was inserted in
+     * (`Window.withElementTransform`, port addition), null for nearly every
+     * hitbox. `bounds` and `contentMask` stay in the coordinates of the
+     * element (its layout): the hit tests bring the mouse position back
+     * into them, so the hitbox is hit where it is drawn.
+     */
+    public var transform:Null<TransformationMatrix> = null;
+
+    /**
+     * Whether the hitbox, as drawn, holds the window position `x, y` inside
+     * its content mask (what the hit test of the window checks).
+     */
+    public function hitAtWindow(x:Float, y:Float):Bool {
+        final t = transform;
+        if (t != null) {
+            if (t.m00 == 0 || t.m11 == 0)
+                return false;
+            x = (x - t.tx) / t.m00;
+            y = (y - t.ty) / t.m11;
+        }
+        final b = bounds;
+        final m = contentMask.bounds;
+        return x >= b.origin.x && x < b.origin.x + b.size.width && y >= b.origin.y && y < b.origin.y + b.size.height
+            && x >= m.origin.x && x < m.origin.x + m.size.width && y >= m.origin.y && y < m.origin.y + m.size.height;
+    }
+
+    /**
+     * A window position in the coordinates of the hitbox (`position` itself
+     * without a transformation).
+     */
+    public function toLocal(position:Point):Point {
+        final t = transform;
+        if (t == null || t.m00 == 0 || t.m11 == 0)
+            return position;
+        return new Point((position.x - t.tx) / t.m00, (position.y - t.ty) / t.m11);
+    }
+
+    /** Whether the bounds, as drawn, hold the window position (the content mask is not checked). */
+    public function boundsContainWindowPoint(position:Point):Bool {
+        return transform == null ? bounds.contains(position) : bounds.contains(toLocal(position));
+    }
+
+    /** The bounds as drawn, in window coordinates (`bounds` without a transformation). */
+    public function windowBounds():Bounds {
+        final t = transform;
+        return t == null ? bounds : t.mapBounds(bounds);
+    }
+
     public function new(id:Int, bounds:Bounds, contentMask:ContentMask, behavior:HitboxBehavior) {
         this.id = id;
         this.bounds = bounds;

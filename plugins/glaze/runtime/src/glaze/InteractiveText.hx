@@ -199,8 +199,10 @@ class InteractiveText extends Element {
                 // Use bounds instead of testing hitbox since this is called during prepaint.
                 final sourceBounds = hitbox.bounds;
                 final checkIsHoveredDuringPrepaint = (window:Window) -> {
-                    return textLayout.indexForPosition(window.mousePosition()).match(Ok(_))
-                        && sourceBounds.contains(window.mousePosition())
+                    // (a hitbox inside an element transformation is tested where it is drawn)
+                    final position = hitbox.transform == null ? window.mousePosition() : hitbox.toLocal(window.windowMousePosition());
+                    return textLayout.indexForPosition(position).match(Ok(_))
+                        && sourceBounds.contains(position)
                         && pendingMouseDown.value == null;
                 };
 

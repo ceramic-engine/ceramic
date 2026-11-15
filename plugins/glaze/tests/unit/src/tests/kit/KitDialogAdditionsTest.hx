@@ -1,0 +1,149 @@
+// New tests for the Haxe port of gpui-kit (no gpui-kit origin): the kit additions without upstream
+// equivalent (KIT-nnn in docs/DEVIATIONS.md). See NOTICE.md.
+package tests.kit;
+
+import glaze.App;
+import glaze.Bounds;
+import glaze.Modifiers;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Window;
+import glaze.kit.dialog.Dialog;
+import glaze.kit.theme.Theme;
+import testing.VisualTestContext;
+
+import glaze.Prelude.*;
+
+using glaze.kit.WindowExt;
+
+/**
+ * The dialog additions without upstream equivalent (KIT-006): a maximum
+ * height, an overlay that closes on a whole click, a public header.
+ */
+class KitDialogAdditionsTest extends KitAdditionsTestCase {
+
+    /** An 800 x 600 window with the dialog `build` configures. */
+    function dialog(build:(Dialog) -> Dialog):VisualTestContext {
+        app.update(cx -> cx.setReduceMotion(true));
+        final cx = open((_, _) -> div().sizeFull(), 800, 600, true);
+        cx.update((window, app) -> window.openDialog(app, (dialog, _, _) -> build(dialog)));
+        cx.runUntilParked();
+        draw(cx);
+        draw(cx);
+        return cx;
+    }
+
+    /** The bounds of the dialog surface: the bordered quad with the large radius. */
+    function surface(cx:VisualTestContext):Bounds {
+        final radius = cx.update((window, app) -> Theme.global(app).radiusLg * window.scaleFactor());
+        for (entry in quads(cx)) {
+            if (entry.quad.cornerRadiusTopLeft == radius && entry.quad.borderWidthTop > 0. && entry.quad.borderWidthLeft > 0.) return entry.bounds;
+        }
+        throw 'no dialog surface was painted';
+    }
+
+    function isOpen(cx:VisualTestContext):Bool {
+        return cx.update((window, app) -> window.hasActiveDialog(app));
+    }
+
+    function tall(dialog:Dialog):Dialog {
+        return dialog.title('Licenses').child(div().h(px(2000.)).w(px(10.)));
+    }
+
+    function press(cx:VisualTestContext, at:Point):Void {
+        cx.simulateEvent(new MouseDownEvent(Left, at, Modifiers.none(), 1, false));
+        draw(cx);
+    }
+
+    function release(cx:VisualTestContext, at:Point):Void {
+        cx.simulateEvent(new MouseUpEvent(Left, at, Modifiers.none(), 1));
+        cx.runUntilParked();
+        draw(cx);
+        draw(cx);
+    }
+
+    function testATallDialogStopsAtTheViewportMarginByDefault() {
+        final cx = dialog(tall);
+        final margin:Float = cx.update((_, app) -> (Theme.global(app).spacingTokens().lg : Float));
+        assertEquals(600. - margin * 2., surface(cx).size.height);
+    }
+
+    function testMaxHLimitsTheHeight() {
+        assertEquals(300., surface(dialog(d -> tall(d).maxH(px(300.)))).size.height);
+        // 85 % of the 600 px viewport.
+        assertEquals(510., surface(dialog(d -> tall(d).maxHRatio(0.85))).size.height);
+        // The smaller of the two wins, and the viewport margin over both.
+        assertEquals(200., surface(dialog(d -> tall(d).maxHRatio(0.85).maxH(px(200.)))).size.height);
+        final cx = dialog(d -> tall(d).maxH(px(5000.)).maxHRatio(2.));
+        final margin:Float = cx.update((_, app) -> (Theme.global(app).spacingTokens().lg : Float));
+        assertEquals(600. - margin * 2., surface(cx).size.height);
+    }
+
+    function testAShortDialogIsNotStretchedByAMaxHeight() {
+        final plain = surface(dialog(d -> d.title('Hello').child(div().h(px(50.)))));
+        final limited = surface(dialog(d -> d.title('Hello').child(div().h(px(50.))).maxH(px(400.)).maxHRatio(0.85)));
+        assertTrue(plain.equals(limited));
+    }
+
+    function testByDefaultAPressOnTheOverlayCloses() {
+        final cx = dialog(d -> d.title('Hello'));
+        assertTrue(isOpen(cx));
+        press(cx, new Point(20., 500.));
+        cx.runUntilParked();
+        draw(cx);
+        assertFalse(isOpen(cx));
+    }
+
+    function testWithOverlayCloseOnClickTheWholeClickMustBeOnTheOverlay() {
+        final overlay = new Point(20., 500.);
+        final cx = dialog(d -> d.title('Hello').child(div().h(px(100.))).overlayCloseOnClick(true));
+        final inside = surface(cx).center();
+
+        // The press alone does not close.
+        press(cx, overlay);
+        assertTrue(isOpen(cx));
+        // Released inside the dialog: still open.
+        release(cx, inside);
+        assertTrue(isOpen(cx));
+
+        // Pressed inside (a text selection), released on the overlay: still open.
+        press(cx, inside);
+        release(cx, overlay);
+        assertTrue(isOpen(cx));
+
+        // Another button on the overlay: still open.
+        cx.simulateEvent(new MouseDownEvent(Right, overlay, Modifiers.none(), 1, false));
+        cx.simulateEvent(new MouseUpEvent(Right, overlay, Modifiers.none(), 1));
+        cx.runUntilParked();
+        draw(cx);
+        assertTrue(isOpen(cx));
+
+        // Pressed and released on the overlay: closed.
+        press(cx, overlay);
+        release(cx, new Point(30., 510.));
+        assertFalse(isOpen(cx));
+    }
+
+    function testOverlayCloseOnClickStillObeysOverlayClosable() {
+        final overlay = new Point(20., 500.);
+        final cx = dialog(d -> d.title('Hello').overlayCloseOnClick(true).overlayClosable(false));
+        press(cx, overlay);
+        release(cx, overlay);
+        assertTrue(isOpen(cx));
+    }
+
+    function testAHeaderIsRenderedAboveTheTitle() {
+        final cx = dialog(d -> d
+            .header(probe('header', div().h(px(24.)).child('Back')))
+            .title(probe('title', div().child('Text styles'))));
+        final header = boundsOf(cx, 'header');
+        final title = boundsOf(cx, 'title');
+        final surface = surface(cx);
+        assertNotNull(header);
+        assertTrue(header.top() >= surface.top() && header.bottom() <= title.top(), 'header ${header.top()}..${header.bottom()}, title at ${title.top()}');
+        // Inside the dialog's horizontal paddings.
+        assertEquals(surface.left() + 16. + 1., header.left());
+    }
+
+}

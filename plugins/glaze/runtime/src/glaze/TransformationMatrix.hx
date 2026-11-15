@@ -70,6 +70,54 @@ class TransformationMatrix {
         );
     }
 
+    /**
+     * Whether the matrix only scales and translates (no rotation, no
+     * shear): rectangles stay upright rectangles. Port addition.
+     */
+    public inline function isAxisAligned():Bool {
+        return m01 == 0 && m10 == 0;
+    }
+
+    /**
+     * The matrix that undoes this one, or `null` when it cannot be undone
+     * (a zero scale). Port addition.
+     */
+    public function inverse():Null<TransformationMatrix> {
+        final det = m00 * m11 - m01 * m10;
+        if (det == 0 || !Math.isFinite(det))
+            return null;
+        final i00 = m11 / det;
+        final i01 = -m01 / det;
+        final i10 = -m10 / det;
+        final i11 = m00 / det;
+        return new TransformationMatrix(i00, i01, i10, i11, -(i00 * tx + i01 * ty), -(i10 * tx + i11 * ty));
+    }
+
+    /**
+     * The smallest upright bounds holding `bounds` once transformed (the
+     * transformed bounds themselves when the matrix is axis aligned). Port
+     * addition.
+     */
+    public function mapBounds(bounds:Bounds):Bounds {
+        final x0 = bounds.origin.x;
+        final y0 = bounds.origin.y;
+        final x1 = x0 + bounds.size.width;
+        final y1 = y0 + bounds.size.height;
+        final ax = m00 * x0 + m01 * y0 + tx;
+        final ay = m10 * x0 + m11 * y0 + ty;
+        final bx = m00 * x1 + m01 * y0 + tx;
+        final by = m10 * x1 + m11 * y0 + ty;
+        final cx = m00 * x1 + m01 * y1 + tx;
+        final cy = m10 * x1 + m11 * y1 + ty;
+        final dx = m00 * x0 + m01 * y1 + tx;
+        final dy = m10 * x0 + m11 * y1 + ty;
+        final left = Math.min(Math.min(ax, bx), Math.min(cx, dx));
+        final top = Math.min(Math.min(ay, by), Math.min(cy, dy));
+        final right = Math.max(Math.max(ax, bx), Math.max(cx, dx));
+        final bottom = Math.max(Math.max(ay, by), Math.max(cy, dy));
+        return new Bounds(new Point(left, top), new Size(right - left, bottom - top));
+    }
+
     /** Apply transformation to a point, mainly useful for debugging */
     public function apply(point:Point):Point {
         return new Point(tx + m00 * point.x + m01 * point.y, ty + m10 * point.x + m11 * point.y);

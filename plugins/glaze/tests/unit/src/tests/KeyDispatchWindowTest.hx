@@ -295,6 +295,44 @@ class KeyDispatchWindowTest extends TestCase {
         assertEquals(0, view.secondaryActionCount);
     }
 
+    /**
+     * Port addition (no GPUI equivalent): `App.setPendingInputTimeout`.
+     * The same scenario as above with a timeout of 1.5 seconds: nothing is
+     * replayed after GPUI's second, the shorter binding runs after 1.5.
+     */
+    function testPendingInputTimeoutCanBeChanged() {
+        final view = setupPendingInputTimeoutTest();
+        cx.update((_, cx) -> {
+            assertEquals(1.0, cx.pendingInputTimeout());
+            cx.setPendingInputTimeout(1.5);
+            assertEquals(1.5, cx.pendingInputTimeout());
+            assertRaises(() -> cx.setPendingInputTimeout(0));
+            assertRaises(() -> cx.setPendingInputTimeout(-1));
+            assertEquals(1.5, cx.pendingInputTimeout());
+        });
+        simulatePendingBinding();
+        cx.update((window, _) -> assertEquals(1.5, window.pendingInputTimeoutDuration()));
+
+        cx.advanceClock(1.0);
+        cx.runUntilParked();
+        cx.update((window, _) -> assertTrue(window.hasPendingKeystrokes()));
+        assertEquals(0, view.actionCount);
+
+        cx.advanceClock(0.5);
+        cx.runUntilParked();
+        cx.update((window, _) -> assertFalse(window.hasPendingKeystrokes()));
+        assertEquals(1, view.actionCount);
+        assertEquals(0, view.secondaryActionCount);
+
+        // Back to the default: one second again
+        cx.update((_, cx) -> cx.setPendingInputTimeout(Window.PENDING_INPUT_TIMEOUT));
+        simulatePendingBinding();
+        cx.update((window, _) -> assertEquals(1.0, window.pendingInputTimeoutDuration()));
+        cx.advanceClock(1.0);
+        cx.runUntilParked();
+        assertEquals(2, view.actionCount);
+    }
+
     function testRunningPendingInputTimeoutResetsWhenBindingAdvances() {
         final view = setupPendingInputTimeoutTest();
         simulatePendingBinding();

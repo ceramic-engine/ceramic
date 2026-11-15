@@ -95,6 +95,41 @@ class Prelude {
     }
 
     /**
+     * A grid track taking a share of the free space (CSS `1fr`), for
+     * `gridTemplateCols([...])` and `gridTemplateRows([...])` (port
+     * addition without GPUI equivalent, see `GridTrack`).
+     */
+    public static inline function fr(flex:Float):GridTrack {
+
+        return GridTrack.fr(flex);
+
+    }
+
+    /**
+     * A grid track between two sizes (CSS `minmax(min, max)`), for
+     * `gridTemplateCols([...])` and `gridTemplateRows([...])`.
+     */
+    public static inline function minmax(min:GridTrack, max:GridTrack):GridTrack {
+
+        return GridTrack.minmax(min, max);
+
+    }
+
+    /** A grid track sized by the min content of its items (CSS `min-content`). */
+    public static inline function minContent():GridTrack {
+
+        return GridTrack.minContent();
+
+    }
+
+    /** A grid track sized by the max content of its items (CSS `max-content`). */
+    public static inline function maxContent():GridTrack {
+
+        return GridTrack.maxContent();
+
+    }
+
+    /**
      * An automatic `Length`.
      */
     public static inline function auto():Length {

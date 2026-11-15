@@ -26,6 +26,17 @@ class ViewElementState {
     public var remSize:Float = 0;
     public var prepaintOpacity:Float = 1;
     public var paintOpacity:Float = 1;
+
+    /**
+     * Cache key (port addition): the element transformation the view was
+     * prepainted and painted in (`Window.withElementTransform`), null for none
+     */
+    public var transform:Null<TransformationMatrix> = null;
+    public var paintTransform:Null<TransformationMatrix> = null;
+
+    public static inline function sameTransform(a:Null<TransformationMatrix>, b:Null<TransformationMatrix>):Bool {
+        return a == b || (a != null && b != null && a.equals(b));
+    }
     public var groupHitboxes:Null<Array<Int>> = null;
     public var imageCache:Null<AnyImageCache> = null;
 
@@ -700,6 +711,7 @@ class ViewElement extends Element {
                 && state.contentMask.equals(window.contentMask())
                 && state.textStyle.equals(window.sharedCurrentTextStyle())
                 && state.prepaintOpacity == window.prepaintOpacity
+                && ViewElementState.sameTransform(state.transform, window.elementTransformOrNull())
                 && state.groupHitboxesEqual(window.prepaintGroupHitboxes)
                 && state.imageCache == window.currentImageCache();
         }
@@ -769,6 +781,7 @@ class ViewElement extends Element {
         state.textStyle = window.sharedCurrentTextStyle();
         state.remSize = window.remSize();
         state.prepaintOpacity = window.prepaintOpacity;
+        state.transform = window.elementTransformOrNull();
         state.recordGroupHitboxes(window.prepaintGroupHitboxes);
         state.imageCache = window.currentImageCache();
     }
@@ -798,6 +811,7 @@ class ViewElement extends Element {
             && state.contentMask.equals(contentMask)
             && state.textStyle.equals(textStyle)
             && state.prepaintOpacity == window.prepaintOpacity
+            && ViewElementState.sameTransform(state.transform, window.elementTransformOrNull())
             && state.groupHitboxesEqual(window.prepaintGroupHitboxes)
             && state.imageCache == window.currentImageCache()) {
             reusePrepaint(state, window);
@@ -866,6 +880,7 @@ class ViewElement extends Element {
             && existing.textStyle.equals(textStyle)
             && existing.remSize == window.remSize()
             && existing.prepaintOpacity == window.prepaintOpacity
+            && ViewElementState.sameTransform(existing.transform, window.elementTransformOrNull())
             && existing.groupHitboxesEqual(window.prepaintGroupHitboxes)
             && existing.imageCache == window.currentImageCache()
             && !window.isViewDirty(entityId)
@@ -988,16 +1003,19 @@ class ViewElement extends Element {
             // Compared with its cache when its cache was reusable; a view
             // rendered for real for another reason (dirty, moved) is left
             // out of the comparison of the views around it
-            final compare = verification != null && verification.compare && !hoverChanged && state.paintOpacity == window.currentElementOpacity();
+            final compare = verification != null && verification.compare && !hoverChanged && state.paintOpacity == window.currentElementOpacity()
+                && ViewElementState.sameTransform(state.paintTransform, window.elementTransformOrNull());
             window.endVerifyScope(scope, compare, viewName(), stateId);
             if (verification != null) {
                 verification.reset();
             }
             #end
             state.paintOpacity = window.currentElementOpacity();
+            state.paintTransform = window.elementTransformOrNull();
         }
         else {
-            if (state.paintOpacity != window.currentElementOpacity()) {
+            if (state.paintOpacity != window.currentElementOpacity()
+                || !ViewElementState.sameTransform(state.paintTransform, window.elementTransformOrNull())) {
                 // An ancestor painted with an opacity that did not show at
                 // prepaint (hover dependent): correct it on the next frame.
                 window.invalidateViewForNextFrame(entityId);

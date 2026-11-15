@@ -10,7 +10,7 @@ import glaze.Easing;
 import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.Svg;
-import glaze.Svg.Transformation;
+import glaze.Transformation;
 import glaze.Window;
 import glaze.kit.Icon;
 import glaze.kit.IconName;

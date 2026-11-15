@@ -449,6 +449,20 @@ class Interactivity {
     /** The window control area of the element (Rust `window_control`), see `windowControlArea`. */
     public var windowControl:Null<WindowControlArea> = null;
 
+    /**
+     * Whether the element keeps the presses when it is drawn above a window
+     * drag area (`Div.noWindowDrag`, port addition).
+     */
+    public var noWindowDrag:Bool = false;
+
+    /**
+     * Whether a listener of the left button was bound (mouse down or up on
+     * `Left` or on any button): with the click and drag listeners, what makes
+     * the element a hole in the window drag areas under it (port addition,
+     * see `CeramicWindowOperations.hitRegions`).
+     */
+    var listensToPrimaryButton:Bool = false;
+
     public var tabIndex:Null<Int> = null;
 
     public var tabGroup:Bool = false;
@@ -468,6 +482,7 @@ class Interactivity {
      * Bind the given callback to the mouse down event for the given mouse button, during the bubble phase.
      */
     public function onMouseDown(button:MouseButton, listener:MouseDownListener):Void {
+        if (button == Left) listensToPrimaryButton = true;
         if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             final event:MouseDownEvent = cast event;
@@ -481,6 +496,7 @@ class Interactivity {
      * Bind the given callback to the mouse down event for any button, during the capture phase.
      */
     public function captureAnyMouseDown(listener:MouseDownListener):Void {
+        listensToPrimaryButton = true;
         if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Capture && hitbox.isHovered(window)) {
@@ -493,6 +509,7 @@ class Interactivity {
      * Bind the given callback to the mouse down event for any button, during the bubble phase.
      */
     public function onAnyMouseDown(listener:MouseDownListener):Void {
+        listensToPrimaryButton = true;
         if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
@@ -505,6 +522,7 @@ class Interactivity {
      * Bind the given callback to the mouse up event for the given button, during the bubble phase.
      */
     public function onMouseUp(button:MouseButton, listener:MouseUpListener):Void {
+        if (button == Left) listensToPrimaryButton = true;
         if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             final event:MouseUpEvent = cast event;
@@ -518,6 +536,7 @@ class Interactivity {
      * Bind the given callback to the mouse up event for any button, during the capture phase.
      */
     public function captureAnyMouseUp(listener:MouseUpListener):Void {
+        listensToPrimaryButton = true;
         if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Capture && hitbox.isHovered(window)) {
@@ -530,6 +549,7 @@ class Interactivity {
      * Bind the given callback to the mouse up event for any button, during the bubble phase.
      */
     public function onAnyMouseUp(listener:MouseUpListener):Void {
+        listensToPrimaryButton = true;
         if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
@@ -971,6 +991,9 @@ class Interactivity {
                 }
             }
 
+            // Port addition: the element and its children drawn moved and scaled
+            prepaintTransform = style.transformation != null && pushStyleTransformation(style.transformation, bounds, window);
+
             final textStyle = style.textStyle();
             if (textStyle != null) window.pushTextStyle(textStyle);
             final mask = window.pushOverflowMask(style, bounds);
@@ -1014,6 +1037,32 @@ class Interactivity {
         if (prepaintTextStyle != null) window.popTextStyle();
         prepaintTextStyle = null;
         prepaintMask = false;
+        if (prepaintTransform) {
+            prepaintTransform = false;
+            window.popElementTransform();
+        }
+    }
+
+    var prepaintTransform:Bool = false;
+
+    var paintTransform:Bool = false;
+
+    static var rotationWarnings:Int = 0;
+
+    /**
+     * Pushes the element transformation of a `transformation()` style for an
+     * element drawn in `bounds` (port addition): translation and scale. A
+     * rotation is left out, with an error in debug builds: a whole element
+     * cannot be rotated (see `Styled.transformation`).
+     */
+    static function pushStyleTransformation(transformation:Transformation, bounds:Bounds, window:Window):Bool {
+        #if debug
+        if ((transformation.rotate:Float) != 0 && rotationWarnings < 5) {
+            rotationWarnings++;
+            ceramic.Shortcuts.log.error('Glaze: transformation() on an element only translates and scales, its rotation of ${transformation.rotate} radians is ignored (rotate glyphs with paintGlyph and icons with svg().withTransformation)');
+        }
+        #end
+        return window.pushElementTransform(transformation.intoElementMatrix(bounds));
     }
 
     function shouldInsertHitbox(style:Style, window:Window, cx:App):Bool {
@@ -1023,6 +1072,7 @@ class Interactivity {
         #end
         return hitboxBehavior != Normal
             || windowControl != null
+            || noWindowDrag
             || style.isSome(StyleRefinement.MOUSE_CURSOR)
             || group != null
             || scrollOffset != null
@@ -1150,6 +1200,9 @@ class Interactivity {
         paintHasOpacity = hasOpacity;
         paintPreviousOpacity = hasOpacity ? window.pushElementOpacity(style.opacity) : 0.0;
 
+        // Port addition: the element and its children drawn moved and scaled
+        paintTransform = style.transformation != null && pushStyleTransformation(style.transformation, bounds, window);
+
         paintCornerRadii = style.paintBackground(bounds, window, cx);
 
         final textStyle = style.textStyle();
@@ -1188,6 +1241,12 @@ class Interactivity {
 
             if (windowControl != null) {
                 window.insertWindowControlHitbox(windowControl, hitbox);
+            }
+            else if (noWindowDrag || listensToPrimaryButton || clickListeners != null || dragListener != null) {
+                // Port addition: an element that answers the left button
+                // keeps the presses when it sits above a window drag area
+                // (a hitbox that blocks the mouse does too, from its behavior)
+                hitbox.windowDragRole = Hitbox.WINDOW_DRAG_HOLE;
             }
 
             paintMouseListeners(hitbox, elementState, window, cx);
@@ -1235,6 +1294,11 @@ class Interactivity {
         paintTextStyle = null;
 
         style.paintBorder(bounds, paintCornerRadii, window, cx);
+
+        if (paintTransform) {
+            paintTransform = false;
+            window.popElementTransform();
+        }
 
         if (paintHasOpacity) window.popElementOpacity(paintPreviousOpacity);
     }
@@ -1486,7 +1550,9 @@ class Interactivity {
                 // Use bounds instead of testing hitbox since this is called during prepaint.
                 final sourceBounds = hitbox.bounds;
                 final checkIsHoveredDuringPrepaint = (window:Window) -> {
-                    return !window.lastInputWasKeyboard() && pendingMouseDown.value == null && sourceBounds.contains(window.mousePosition());
+                    // (a hitbox inside an element transformation is tested where it is drawn)
+                    return !window.lastInputWasKeyboard() && pendingMouseDown.value == null
+                        && (hitbox.transform == null ? sourceBounds.contains(window.mousePosition()) : hitbox.boundsContainWindowPoint(window.windowMousePosition()));
                 };
                 final checkIsHovered = (window:Window) -> {
                     return pendingMouseDown.value == null && hitbox.isHovered(window);

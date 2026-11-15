@@ -1,6 +1,8 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dialog/dialog.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Additions without upstream equivalent (KIT-006 in docs/DEVIATIONS.md): `maxH`, `maxHRatio`, `overlayCloseOnClick`,
+// a public `header`.
 package glaze.kit.dialog;
 
 import glaze.Action;
@@ -223,6 +225,10 @@ class DialogProps {
     var keyboard:Bool = true;
     var entrance:DialogEntrance = SlideDown;
 
+    var maxHeight:Null<Pixels> = null;
+    var maxHeightRatio:Null<Float> = null;
+    var overlayCloseOnClick:Bool = false;
+
     public function new() {}
 
     public function clone():DialogProps {
@@ -237,6 +243,9 @@ class DialogProps {
         props.overlayVisible = overlayVisible;
         props.keyboard = keyboard;
         props.entrance = entrance;
+        props.maxHeight = maxHeight;
+        props.maxHeightRatio = maxHeightRatio;
+        props.overlayCloseOnClick = overlayCloseOnClick;
         return props;
     }
 
@@ -279,6 +288,11 @@ private class BaseDialogRoot {
 
     public function closeOnBackdropPress(value:Bool):BaseDialogRoot {
         if (dialog != null) dialog.closeOnBackdropPress(value);
+        return this;
+    }
+
+    public function closeOnBackdropClick(value:Bool):BaseDialogRoot {
+        if (dialog != null) dialog.closeOnBackdropClick(value);
         return this;
     }
 
@@ -436,9 +450,10 @@ class Dialog extends Component implements Styled implements ParentElement {
     }
 
     /**
-     * Sets the header of the dialog, rendered above the title and content.
+     * Sets the header of the dialog, rendered above the title and content
+     * (a row with a back button and a title, for example).
      */
-    function header(header:IntoElement):Dialog {
+    public function header(header:IntoElement):Dialog {
         headerElement = header;
         return this;
     }
@@ -551,6 +566,38 @@ class Dialog extends Component implements Styled implements ParentElement {
     /** Set the maximum width of the dialog, defaults to null (shadows `Styled.maxW`). */
     public function maxW(maxWidth:Pixels):Dialog {
         props.maxWidth = maxWidth;
+        return this;
+    }
+
+    /**
+     * Set the maximum height of the dialog (shadows `Styled.maxH`, which the
+     * dialog overrides with its own limit). The dialog never gets taller
+     * than the viewport minus a margin on each side, whatever this value.
+     */
+    public function maxH(maxHeight:Pixels):Dialog {
+        props.maxHeight = maxHeight;
+        return this;
+    }
+
+    /**
+     * Set the maximum height of the dialog as a part of the viewport height
+     * (`0.85` for 85 %), under the same limit as `maxH`. With both, the
+     * smaller wins.
+     */
+    public function maxHRatio(ratio:Float):Dialog {
+        props.maxHeightRatio = ratio;
+        return this;
+    }
+
+    /**
+     * Set whether a click on the overlay closes the dialog only when the
+     * left button was pressed and released on the overlay, instead of on
+     * the press alone (defaults to `false`). A drag that starts inside the
+     * dialog and ends on the overlay then leaves it open. Only read when
+     * `overlayClosable` is true.
+     */
+    public function overlayCloseOnClick(onClick:Bool):Dialog {
+        props.overlayCloseOnClick = onClick;
         return this;
     }
 
@@ -710,7 +757,10 @@ class Dialog extends Component implements Styled implements ParentElement {
         final travel:Float = motionTokens.distanceShort.toPixels(window.remSize());
         final width:Float = Math.min(props.width, Math.max(f32(viewWidth - f32(margin * 2.)), 0.));
         final x:Float = f32(f32(viewWidth - width) / 2.);
-        final maxHeight:Float = Math.max(f32(f32(viewHeight - f32(margin * 2.)) - layerOffset), 0.);
+        var maxHeight:Float = Math.max(f32(f32(viewHeight - f32(margin * 2.)) - layerOffset), 0.);
+        // Additions: the caller's own limits, under the viewport's.
+        if (props.maxHeight != null) maxHeight = Math.min(maxHeight, Math.max(props.maxHeight, 0.));
+        if (props.maxHeightRatio != null) maxHeight = Math.min(maxHeight, Math.max(f32(viewHeight * props.maxHeightRatio), 0.));
 
         final baseSize = window.textStyle().fontSize;
         final remSize = window.remSize();
@@ -869,6 +919,7 @@ class Dialog extends Component implements Styled implements ParentElement {
             .focusHandle(focusHandle)
             .closeOnEscape(props.keyboard && !closing)
             .closeOnBackdropPress(props.overlayClosable && !closing)
+            .closeOnBackdropClick(props.overlayCloseOnClick)
             .dismissBelowY(TitleBar.TITLE_BAR_HEIGHT);
         if (props.overlay && !closing) {
             final backdrop = div()

@@ -15,8 +15,8 @@ import ceramic.KeyModifiers;
  *
  * - Mouse events go to the topmost window whose renderable is under the
  *   pointer (in reverse creation order), with coordinates converted to the
- *   window space with `renderable.screenToVisual()` (visual transform and
- *   window size: window space is logical pixels, density is handled by the
+ *   window space with `Window.screenToWindow()` (visual transform, window
+ *   size and zoom: window space is logical pixels, density is handled by the
  *   renderable's `sceneScale`). While a button is pressed, events keep going
  *   to the window it was pressed on. Moving from a window to another sends
  *   `MouseExitEvent` to the previous one.
@@ -234,7 +234,7 @@ class GlazeInput extends ceramic.Entity {
     }
 
     inline function toWindow(window:Window, x:Float, y:Float):Point {
-        window.renderable.screenToVisual(x, y, point);
+        window.screenToWindow(x, y, point);
         return new Point(point.x, point.y);
     }
 
@@ -342,6 +342,13 @@ class GlazeInput extends ceramic.Entity {
         if (window == null)
             return;
         final position = toWindow(window, screen.mouseX, screen.mouseY);
+        final zoom = window.zoom();
+        if (zoom != 1.0 && unit != ceramic.ScrollUnit.LINES) {
+            // A zoomed window (`Window.setZoom`): a distance on the screen is
+            // that distance divided by the zoom in the window
+            deltaX /= zoom;
+            deltaY /= zoom;
+        }
         window.dispatchEvent(new ScrollEvent(position, scrollDeltaOf(deltaX, deltaY, unit), currentModifiers(), Moved));
     }
 

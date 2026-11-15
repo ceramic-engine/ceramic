@@ -1033,8 +1033,16 @@ class VisualHost {
         if (proxy.parent != window.renderable) {
             window.renderable.add(proxy);
         }
-        proxy.pos(displayX - tileOffsetX * scaleX, displayY - tileOffsetY * scaleY);
-        proxy.scale(scaleX, scaleY);
+        final zoom = window.zoom();
+        if (zoom == 1.0) {
+            proxy.pos(displayX - tileOffsetX * scaleX, displayY - tileOffsetY * scaleY);
+            proxy.scale(scaleX, scaleY);
+        }
+        else {
+            // The renderable is in Ceramic units: the window coordinates times the zoom
+            proxy.pos((displayX - tileOffsetX * scaleX) * zoom, (displayY - tileOffsetY * scaleY) * zoom);
+            proxy.scale(scaleX * zoom, scaleY * zoom);
+        }
         proxy.size(tileOffsetX + areaWidth, tileOffsetY + areaHeight);
         proxy.touchable = interactive;
         filter.touchable = interactive;
@@ -1056,7 +1064,7 @@ class VisualHost {
         final hitbox = this.hitbox;
         if (!attached || !interactive || window == null || hitbox == null || window.isDestroyed())
             return false;
-        window.renderable.screenToVisual(x, y, point);
+        window.screenToWindow(x, y, point);
         final px = point.x;
         final py = point.y;
         if (px < displayX || px >= displayX + displayWidth || py < displayY || py >= displayY + displayHeight)

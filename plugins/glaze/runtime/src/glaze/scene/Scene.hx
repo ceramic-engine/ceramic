@@ -419,9 +419,61 @@ class Scene {
 
     }
 
+    /**
+     * `assignOrder()` of a sprite with a transformation: its draw order and
+     * its clipping test use the bounds it is drawn in, the upright box
+     * around its transformed corners (like the renderer and the damage
+     * tracking place them), not its bounds before the transformation. Fix
+     * of a defect of the original: an icon scaled up or rotated was ordered
+     * and culled from its untransformed rectangle, so it could be dropped
+     * near the edge of its content mask or drawn under what it covers.
+     */
+    function assignOrderTransformed(sprite:MonochromeSprite):Bool {
+
+        final x0 = sprite.boundsX;
+        final y0 = sprite.boundsY;
+        final x1 = x0 + sprite.boundsWidth;
+        final y1 = y0 + sprite.boundsHeight;
+        final ax = sprite.transformM00 * x0 + sprite.transformM01 * y0 + sprite.transformTx;
+        final ay = sprite.transformM10 * x0 + sprite.transformM11 * y0 + sprite.transformTy;
+        final bx = sprite.transformM00 * x1 + sprite.transformM01 * y0 + sprite.transformTx;
+        final by = sprite.transformM10 * x1 + sprite.transformM11 * y0 + sprite.transformTy;
+        final cx = sprite.transformM00 * x1 + sprite.transformM01 * y1 + sprite.transformTx;
+        final cy = sprite.transformM10 * x1 + sprite.transformM11 * y1 + sprite.transformTy;
+        final dx = sprite.transformM00 * x0 + sprite.transformM01 * y1 + sprite.transformTx;
+        final dy = sprite.transformM10 * x0 + sprite.transformM11 * y1 + sprite.transformTy;
+        final boxLeft = Math.min(Math.min(ax, bx), Math.min(cx, dx));
+        final boxTop = Math.min(Math.min(ay, by), Math.min(cy, dy));
+        final boxRight = Math.max(Math.max(ax, bx), Math.max(cx, dx));
+        final boxBottom = Math.max(Math.max(ay, by), Math.max(cy, dy));
+        if (!(boxRight > boxLeft) || !(boxBottom > boxTop)) {
+            // Empty or not a number
+            return false;
+        }
+
+        final left = Math.max(boxLeft, sprite.contentMaskX);
+        final top = Math.max(boxTop, sprite.contentMaskY);
+        final right = Math.max(left, Math.min(glaze.SpringMath.f32(boxRight), glaze.SpringMath.f32(sprite.contentMaskX + sprite.contentMaskWidth)));
+        final bottom = Math.max(top, Math.min(glaze.SpringMath.f32(boxBottom), glaze.SpringMath.f32(sprite.contentMaskY + sprite.contentMaskHeight)));
+        final width = glaze.SpringMath.f32(right - left);
+        final height = glaze.SpringMath.f32(bottom - top);
+
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+
+        sprite.order = layerStack.length > 0
+            ? layerStack[layerStack.length - 1]
+            : primitiveBounds.insert(left, top, width, height);
+        sprite.seq = nextSeq++;
+
+        return true;
+
+    }
+
     public function commitMonochromeSprite(sprite:MonochromeSprite):Void {
 
-        if (assignOrder(sprite)) {
+        if (sprite.hasTransformation() ? assignOrderTransformed(sprite) : assignOrder(sprite)) {
             monochromeSprites.push(sprite);
             recordPrimitive(sprite);
         }

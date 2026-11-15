@@ -71,6 +71,15 @@ class TextStyle {
     /** The number of lines to display before truncating the text, `-1` for no limit */
     public var lineClamp:Int;
 
+    /**
+     * Space added after each character, in pixels, rems or as a fraction of
+     * the font size (`relative(0.05)` is 0.05 em), negative to tighten.
+     * `null` (the default) adds none. Port addition without GPUI equivalent
+     * (CSS `letter-spacing`): the space counts in the width of the text, in
+     * wrapping, in truncation and in the positions of the caret.
+     */
+    public var letterSpacing:Null<DefiniteLength>;
+
     static final DEFAULT_COLOR:Hsla = Hsla.black();
 
     static final DEFAULT_FONT_SIZE:AbsoluteLength = AbsoluteLength.Rems(1.0);
@@ -98,6 +107,7 @@ class TextStyle {
         textOverflow = null;
         textAlign = Left;
         lineClamp = -1;
+        letterSpacing = null;
     }
 
     /**
@@ -121,6 +131,7 @@ class TextStyle {
         if (refinement.textOverflow != null) textOverflow = refinement.textOverflow;
         if (refinement.has(TextStyleRefinement.TEXT_ALIGN)) textAlign = refinement.textAlign;
         if (refinement.has(TextStyleRefinement.LINE_CLAMP)) lineClamp = refinement.lineClamp;
+        if (refinement.letterSpacing != null) letterSpacing = refinement.letterSpacing;
     }
 
     /**
@@ -152,6 +163,7 @@ class TextStyle {
         if (!Type.enumEq(textOverflow, refinement.textOverflow)) result.textOverflow = textOverflow;
         if (!(refinement.has(TextStyleRefinement.TEXT_ALIGN) && textAlign == refinement.textAlign)) result.textAlign = textAlign;
         if (lineClamp != -1 && !(refinement.has(TextStyleRefinement.LINE_CLAMP) && refinement.lineClamp == lineClamp)) result.lineClamp = lineClamp;
+        if (!RefinementEq.definite(letterSpacing, refinement.letterSpacing)) result.letterSpacing = letterSpacing;
         return result;
     }
 
@@ -193,9 +205,23 @@ class TextStyle {
 
     /**
      * Convert this text style into a `TextRun`, for the given length of the text.
+     * `remSize` (port addition) only matters with a letter spacing: it
+     * converts a spacing or a font size given in rems (`window.remSize()`;
+     * 16 pixels when left out).
      */
-    public function toRun(len:Int):TextRun {
-        return new TextRun(len, font(), color, backgroundColor, underline, strikethrough);
+    public function toRun(len:Int, remSize:Float = 16.0):TextRun {
+        final run = new TextRun(len, font(), color, backgroundColor, underline, strikethrough);
+        if (letterSpacing != null) run.letterSpacing = letterSpacingInPixels(remSize);
+        return run;
+    }
+
+    /**
+     * The letter spacing in pixels (0 without one): a fraction is taken of
+     * the font size.
+     */
+    public function letterSpacingInPixels(remSize:Pixels):Pixels {
+        final spacing = letterSpacing;
+        return spacing == null ? 0.0 : spacing.toPixels(fontSize, remSize);
     }
 
     /**
@@ -273,6 +299,7 @@ class TextStyle {
         result.textOverflow = textOverflow;
         result.textAlign = textAlign;
         result.lineClamp = lineClamp;
+        result.letterSpacing = letterSpacing;
         return result;
     }
 
@@ -293,7 +320,8 @@ class TextStyle {
             && whiteSpace == other.whiteSpace
             && Type.enumEq(textOverflow, other.textOverflow)
             && textAlign == other.textAlign
-            && lineClamp == other.lineClamp;
+            && lineClamp == other.lineClamp
+            && RefinementEq.definite(letterSpacing, other.letterSpacing);
     }
 
 }

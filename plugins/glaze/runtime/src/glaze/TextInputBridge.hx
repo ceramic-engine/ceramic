@@ -317,12 +317,11 @@ class TextInputBridge implements PlatformTextInput {
     }
 
     function toScreen(bounds:Bounds):Bounds {
-        final renderable = window.renderable;
         final point = new ceramic.Point();
-        renderable.visualToScreen(bounds.origin.x, bounds.origin.y, point);
+        window.windowToScreen(bounds.origin.x, bounds.origin.y, point);
         final x0 = point.x;
         final y0 = point.y;
-        renderable.visualToScreen(bounds.origin.x + bounds.size.width, bounds.origin.y + bounds.size.height, point);
+        window.windowToScreen(bounds.origin.x + bounds.size.width, bounds.origin.y + bounds.size.height, point);
         return Bounds.fromCorners(new Point(x0, y0), new Point(point.x, point.y));
     }
 

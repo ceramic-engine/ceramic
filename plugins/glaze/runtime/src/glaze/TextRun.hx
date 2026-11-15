@@ -27,6 +27,13 @@ class TextRun {
     public var strikethrough:Null<StrikethroughStyle>;
 
     /**
+     * Space added after each character of the run, in pixels (port
+     * addition without GPUI equivalent, see `TextStyle.letterSpacing`).
+     * Zero by default.
+     */
+    public var letterSpacing:Float = 0.0;
+
+    /**
      * The decoration runs of a line made of this whole run, shared by the
      * text layouts that shape it (`WindowTextSystem.shapeTextWith`). Internal.
      */
@@ -42,7 +49,16 @@ class TextRun {
     }
 
     public function clone():TextRun {
-        return new TextRun(len, font, color, backgroundColor, underline, strikethrough);
+        final result = new TextRun(len, font, color, backgroundColor, underline, strikethrough);
+        result.letterSpacing = letterSpacing;
+        return result;
+    }
+
+    /** A copy of this run with another letter spacing, in pixels. */
+    public function withLetterSpacing(letterSpacing:Float):TextRun {
+        final result = clone();
+        result.letterSpacing = letterSpacing;
+        return result;
     }
 
     /** A copy of this run with another length. */
@@ -56,7 +72,8 @@ class TextRun {
         return other != null && len == other.len && font.equals(other.font) && color.equals(other.color)
             && TextRun.sameColor(backgroundColor, other.backgroundColor)
             && TextRun.sameUnderline(underline, other.underline)
-            && TextRun.sameStrikethrough(strikethrough, other.strikethrough);
+            && TextRun.sameStrikethrough(strikethrough, other.strikethrough)
+            && letterSpacing == other.letterSpacing;
     }
 
     public static inline function sameColor(a:Null<Hsla>, b:Null<Hsla>):Bool {

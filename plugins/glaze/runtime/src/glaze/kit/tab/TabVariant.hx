@@ -32,6 +32,15 @@ enum abstract TabVariant(Int) {
      */
     var Folder;
 
+    /**
+     * A rectangular tab like `Tab`, colored by the tab tokens of the theme
+     * (`tab.background` for inactive tabs, `tab.hover.background`,
+     * `tab.hover.foreground`, `tab.active.background`) and shaped by a
+     * `TabAppearance`. Addition without upstream equivalent (KIT-001 in
+     * docs/DEVIATIONS.md).
+     */
+    var Custom;
+
     /** The default, `Tab`. */
     public static inline function defaultValue():TabVariant {
         return Tab;
@@ -53,22 +62,22 @@ enum abstract TabVariant(Int) {
         final self:TabVariant = cast this;
         return switch size {
             case XSmall: switch self {
-                    case Tab | Outline | Pill: 18.;
+                    case Tab | Outline | Pill | Custom: 18.;
                     case Segmented | Folder: 16.;
                     case Underline: 20.;
                 }
             case Small: switch self {
-                    case Tab | Outline | Pill: 22.;
+                    case Tab | Outline | Pill | Custom: 22.;
                     case Segmented | Folder: 18.;
                     case Underline: 22.;
                 }
             case Large: switch self {
-                    case Tab | Outline | Pill: 36.;
+                    case Tab | Outline | Pill | Custom: 36.;
                     case Segmented | Folder: 28.;
                     case Underline: 32.;
                 }
             case _: switch self {
-                    case Tab: 30.;
+                    case Tab | Custom: 30.;
                     case Outline | Pill: 26.;
                     case Segmented | Folder: 24.;
                     case Underline: 26.;
@@ -136,6 +145,11 @@ enum abstract TabVariant(Int) {
             case Folder:
                 style.fg = theme.tabForeground;
                 style.bg = theme.transparent;
+            case Custom:
+                style.fg = theme.tabForeground;
+                style.bg = theme.tokens.tab.background;
+                style.borders = new Edges(0., 1., 0., 1.);
+                style.borderColor = theme.transparent;
         }
         return style;
     }
@@ -173,6 +187,11 @@ enum abstract TabVariant(Int) {
             case Folder:
                 style.fg = theme.tabActiveForeground;
                 style.bg = theme.transparent;
+            case Custom:
+                style.fg = theme.tabHoverForeground;
+                style.bg = theme.tokens.tabHover.background;
+                style.borders = new Edges(0., 1., 0., 1.);
+                style.borderColor = theme.transparent;
         }
         return style;
     }
@@ -210,6 +229,11 @@ enum abstract TabVariant(Int) {
             case Folder:
                 style.fg = theme.tabActiveForeground;
                 style.bg = theme.transparent;
+            case Custom:
+                style.fg = theme.tabActiveForeground;
+                style.bg = theme.tokens.tabActive.background;
+                style.borders = new Edges(0., 1., 0., 1.);
+                style.borderColor = theme.border;
         }
         return style;
     }
@@ -245,6 +269,11 @@ enum abstract TabVariant(Int) {
             case Folder:
                 style.fg = theme.mutedForeground;
                 style.bg = theme.transparent;
+            case Custom:
+                style.fg = theme.mutedForeground;
+                style.bg = selected ? theme.tokens.tabActive.background : theme.tokens.tab.background;
+                style.borderColor = selected ? theme.border : theme.transparent;
+                style.borders = new Edges(0., 1., 0., 1.);
         }
         return style;
     }

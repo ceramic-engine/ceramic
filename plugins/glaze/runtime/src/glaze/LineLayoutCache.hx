@@ -236,6 +236,8 @@ class LineLayoutCache {
         for (i in 0...runs.length) {
             final run = runs[i];
             h = mix(mix(h, run.len), (run.fontId:Int));
+            // (only with a letter spacing: the hash of the other runs is unchanged)
+            if (run.letterSpacing != 0.0) h = hashFloat(h, run.letterSpacing);
         }
         return h;
     }
@@ -332,7 +334,10 @@ class LineLayoutCache {
             return entry.layout;
         }
         else {
-            final layout = platformTextSystem.layoutLine(text, fontSize, runs);
+            var layout = platformTextSystem.layoutLine(text, fontSize, runs);
+            if (hasLetterSpacing(runs)) {
+                layout = withLetterSpacing(layout, runs);
+            }
 
             if (forceWidth != null) {
                 applyForceWidthToLayout(layout, forceWidth);
@@ -394,7 +399,10 @@ class LineLayoutCache {
         }
 
         final text = materializeText();
-        final layout = platformTextSystem.layoutLine(text, fontSize, runs);
+        var layout = platformTextSystem.layoutLine(text, fontSize, runs);
+        if (hasLetterSpacing(runs)) {
+            layout = withLetterSpacing(layout, runs);
+        }
 
         if (forceWidth != null) {
             applyForceWidthToLayout(layout, forceWidth);
@@ -418,6 +426,63 @@ class LineLayoutCache {
         olderFrame = new FrameCache();
         cachedFontGeneration = generation;
         return generation;
+    }
+
+    /** Whether a run adds space after its characters (`FontRun.letterSpacing`) */
+    static function hasLetterSpacing(runs:Array<FontRun>):Bool {
+        for (i in 0...runs.length) {
+            if (runs[i].letterSpacing != 0.0)
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * A copy of `layout` with the letter spacing of `runs` added after each
+     * character (port addition without GPUI equivalent). The shaped layout is
+     * not changed: the platform text system may share its glyphs.
+     *
+     * The glyphs of one character (same byte index: a base and its marks)
+     * move together, and the space after a character is the spacing of the
+     * run that holds it, the last character of the line included (like CSS
+     * `letter-spacing`): the width grows by the sum of the spacings.
+     */
+    public static function withLetterSpacing(layout:LineLayout, runs:Array<FontRun>):LineLayout {
+        final shapedRuns = layout.runs;
+        final newRuns:Array<ShapedRun> = [];
+        var shift = 0.0;
+        var previousIndex = -1;
+        var previousSpacing = 0.0;
+        var any = false;
+        // The font run holding the current byte index
+        var runIx = 0;
+        var runStart = 0;
+        for (r in 0...shapedRuns.length) {
+            final shapedRun = shapedRuns[r];
+            final glyphs = shapedRun.glyphs;
+            final newGlyphs:Array<ShapedGlyph> = [];
+            for (g in 0...glyphs.length) {
+                final glyph = glyphs[g];
+                final index = glyph.index;
+                if (!any || index != previousIndex) {
+                    shift += previousSpacing;
+                    previousIndex = index;
+                    any = true;
+                    if (index < runStart) {
+                        runIx = 0;
+                        runStart = 0;
+                    }
+                    while (runIx < runs.length - 1 && index >= runStart + runs[runIx].len) {
+                        runStart += runs[runIx].len;
+                        runIx++;
+                    }
+                    previousSpacing = runIx < runs.length ? runs[runIx].letterSpacing : 0.0;
+                }
+                newGlyphs.push(new ShapedGlyph(glyph.id, shift != 0.0 ? new Point(glyph.position.x + shift, glyph.position.y) : glyph.position, index, glyph.isEmoji));
+            }
+            newRuns.push(new ShapedRun(shapedRun.fontId, newGlyphs));
+        }
+        return new LineLayout(layout.fontSize, layout.width + shift + previousSpacing, layout.ascent, layout.descent, newRuns, layout.len);
     }
 
     /**
@@ -513,7 +578,7 @@ class LineCacheEntry {
 
     /** The entry keeps its own runs: callers may pass scratch runs they reuse */
     static function copyRuns(runs:Array<FontRun>):Array<FontRun> {
-        return [for (run in runs) new FontRun(run.len, run.fontId)];
+        return [for (run in runs) new FontRun(run.len, run.fontId, run.letterSpacing)];
     }
 
     static inline function sameOptional(a:Null<Float>, b:Null<Float>):Bool {
@@ -526,7 +591,7 @@ class LineCacheEntry {
         for (i in 0...a.length) {
             final ra = a[i];
             final rb = b[i];
-            if (ra.len != rb.len || (ra.fontId:Int) != (rb.fontId:Int))
+            if (ra.len != rb.len || (ra.fontId:Int) != (rb.fontId:Int) || ra.letterSpacing != rb.letterSpacing)
                 return false;
         }
         return true;

@@ -25,6 +25,13 @@ class LineWrapper {
 
     public var fontSize(default, null):Pixels;
 
+    /**
+     * Space added after each character, in pixels (port addition, see
+     * `TextStyle.letterSpacing`): part of every width this wrapper measures.
+     * Zero for the wrappers of `lineWrapper(font, fontSize)`.
+     */
+    public var letterSpacing(default, null):Float;
+
     /** Cached widths of ASCII characters (NaN when not computed yet) */
     final cachedAsciiCharWidths:Array<Float> = [for (_ in 0...128) Math.NaN];
 
@@ -33,10 +40,11 @@ class LineWrapper {
     final decoded:Utf8Text = new Utf8Text();
 
     @:allow(glaze.TextSystem)
-    function new(fontId:FontId, fontSize:Pixels, textSystem:TextSystem) {
+    function new(fontId:FontId, fontSize:Pixels, textSystem:TextSystem, letterSpacing:Float = 0.0) {
         this.textSystem = textSystem;
         this.fontId = fontId;
         this.fontSize = fontSize;
+        this.letterSpacing = letterSpacing;
     }
 
     /**
@@ -568,7 +576,8 @@ class LineWrapper {
             if (!Math.isNaN(cached)) {
                 return cached;
             }
-            final width = textSystem.layoutWidth(fontId, fontSize, c);
+            var width:Float = textSystem.layoutWidth(fontId, fontSize, c);
+            if (letterSpacing != 0.0) width += letterSpacing;
             cachedAsciiCharWidths[c] = width;
             return width;
         }
@@ -577,7 +586,8 @@ class LineWrapper {
             if (cached != null) {
                 return cached;
             }
-            final width = textSystem.layoutWidth(fontId, fontSize, c);
+            var width:Float = textSystem.layoutWidth(fontId, fontSize, c);
+            if (letterSpacing != 0.0) width += letterSpacing;
             cachedOtherCharWidths.set(c, width);
             return width;
         }

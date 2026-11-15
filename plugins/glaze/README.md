@@ -199,6 +199,73 @@ Theme.setScrollbarAppearance(ScrollbarAppearance.fade().withThumbRadius(null), c
 
 The define `glaze_scrollbar_appearance` (`fade`, `instant` or `gpuikit`) changes the default at compile time (Glaze's golden scenes use `gpuikit`, to compare with the real gpui-kit). One scrollbar can differ from the global setting: `Scrollbar.vertical(handle).appearance(ScrollbarAppearance.instant())`, or `div().overflowYScrollbar().scrollbarAppearance(ScrollbarAppearance.gpuiKit())`. When the bars are shown (on hover, while scrolling, always) is a separate setting, `Theme.setScrollbarMode`. With reduced motion (`cx.setReduceMotion(true)`), scrollbars show and hide at once. See DEV-023 in [docs/DEVIATIONS.md](docs/DEVIATIONS.md).
 
+### Additions to gpui-kit
+
+A few options of the kit have no equivalent in gpui-kit. Each one is off by default, so a component left alone looks and behaves like gpui-kit's. They are listed as KIT-nnn in [docs/DEVIATIONS.md](docs/DEVIATIONS.md).
+
+**Tabs.** A style set on a `Tab` wins over its variant, like on a `Button`: `Tab.component().h(px(34)).textSize(px(13)).bg(color)`, and `.hover(s -> s.bg(color))` for the pointer. `TabVariant.Custom` is a rectangular tab filled from the theme tokens `tab.background`, `tab.hover.background`, `tab.hover.foreground` and `tab.active.background`, with a geometry of your own:
+
+```haxe
+TabBar.component('documents')
+    .custom(new TabAppearance().topRadius(6).height(34).paddingX(12).textSize(13).sideBorders(false).bottomBorder(false))
+    .labelMaxWidth(px(120))      // the label alone is truncated, the close button keeps its place
+    .revealSelected(true)        // a tab selected by code is scrolled into view, not only a clicked one
+    .selectedIndex(current)
+    .children([for (doc in documents) Tab.component()
+        .label(doc.name)
+        .group('tab')            // the suffix can use groupHover('tab', ...)
+        .suffix(closeButton(doc))
+        .onHover((hovered, _, _) -> {})
+        .onDragMove(DraggedTab, (event, _, _) -> placeInsertionLine(event.bounds, event.event.position))
+        .contextMenu((menu, _, _) -> menu.item(PopupMenuItem.create('Close')))])
+```
+
+**Resizable panels.** `resizablePanel().shrinkPriority(n)` orders the panels that give up space when the window shrinks (highest first, each down to the start of its `sizeRange`; a `fixed()` panel with a priority gets its size back when the window grows again). `hResizable(id).onResizing((state, window, cx) -> ...)` follows a drag move by move, `onResize` still reports its end. A handle appearance can tell the dividers of a group apart with `handle.index()`. A group whose first panel is hidden no longer keeps a handle on its leading edge.
+
+```haxe
+hResizable('workspace')
+    .withHandleAppearance((handle, window, cx) -> handle.index() == 0 ? treeDivider(handle) : null)
+    .onResizing((state, _, cx) -> model.previewWidth = state.read(cx).sizes()[2])
+    .children([
+        resizablePanel().visible(model.treeVisible).size(px(220)).fixed().shrinkPriority(0).child(tree),
+        resizablePanel().sizeRange(new PixelsRange(px(200), Pixels.MAX)).shrinkPriority(2).child(editor),
+        resizablePanel().size(px(360)).fixed().shrinkPriority(1).sizeRange(new PixelsRange(px(150), Pixels.MAX)).child(player),
+    ])
+```
+
+**Tree.** `new TreeItem(id, label).folder(true)` is a folder even when it is empty. `state.setItems(items, cx, true)` keeps the selection by item id when the list is rebuilt. On a `Tree`, `.toggleOnClick(false)` makes a click select only (a double click, Enter and the arrows toggle), and `.navigationKeys(true)` adds Home, End, PageUp, PageDown and the left arrow going to the parent. Rows drag and drop with Glaze's own drags:
+
+```haxe
+Tree.component(state, renderRow)
+    .dragEntries((ix, entry) -> new DraggedFile(entry.item().id), (file, _, _, cx) -> preview(file, cx))
+    .dropOnEntries(DraggedFile, (file, ix, entry, _, _) -> move(file.id, entry.item().id),
+        (file, ix, entry, _, _) -> entry.isFolder() && entry.item().id != file.id)
+    .dropTargetStyle(s -> s.bg(theme.dropTarget))
+    .dropOnRoot(DraggedFile, (file, _, _) -> move(file.id, null))
+```
+
+**Title bar.** `TitleBar.component().platform(TitleBarPlatform.Windows)` gives one title bar the look and behaviour of another system (`Mac`, `Windows`, `Linux`, `Web`) without touching `OperatingSystem.current`, which also decides the key bindings: the Windows or Linux bar can be shown and tested on a Mac. On the Windows look, the minimize, maximize or restore, and close buttons act on the window themselves (`onCloseWindow` replaces the default close); `.controlClicks(false)` leaves them to a platform that handles the window control areas.
+
+**Dialog.** `dialog.maxH(px(480))` and `dialog.maxHRatio(0.85)` limit the height of a dialog (it scrolls its children beyond). `dialog.overlayCloseOnClick(true)` closes on a whole click of the overlay, press and release, so a text selection that ends outside the dialog does not close it. `dialog.header(element)` places a row above the title, for a back button.
+
+**App menu behind a button.** The menus declared once with `cx.setMenus(...)` feed the native menu bar on macOS and, where no menu bar shows, a drawn menu: `Button.component('menu').icon(IconName.Menu).appMenu()` (with `using glaze.kit.menu.DropdownMenu;`) opens every app menu as a submenu under the button. `menu.withAppMenus(window, cx)` and `menu.withMenuItems(items, window, cx)` do the same inside any `PopupMenu` builder (a context menu, a dropdown of your own).
+
+**Field with suggestions.** `SuggestInput` is a text field with a list of suggestions filtered by what is typed, where any text stays allowed, like an HTML `<input list>`: arrows move in the list, Enter picks the highlighted suggestion (or keeps the text as typed when none is), Escape closes the list.
+
+```haxe
+// once, where the view is created
+codes = cx.newEntity((c:Context<SuggestInputState>) -> new SuggestInputState(window, c)
+    .withPlaceholder('Language code', c)
+    .withSuggestions(['en', 'en-GB', 'fr', 'fr-CA']));
+cx.subscribe(codes, SuggestInputEvent, (view, _, event, cx) -> switch event {
+    case Change(value): view.code = value;
+    case Accept(value) | Submit(value): view.confirm(value);
+});
+
+// in render
+SuggestInput.component(codes).input(input -> input.small())
+```
+
 ### Code editor
 
 The code editor of Glaze is [Cityscape](../cityscape/README.md) (plugin `cityscape`), a port of Monaco, the editor of Visual Studio Code. It replaces gpui-kit's code editor (`Editor`, `EditorState`), which Glaze does not include: list both plugins in `ceramic.yml` and place a `CityscapeEditor` in your interface like any kit component. The kit's text inputs (`Input`, `Textarea`, `InputGroup`, `NumberInput`, `OtpInput`), rich text and `TextView` stay in Glaze.
@@ -346,6 +413,35 @@ Glaze draws text with its own text system: fonts are TTF, OTF or TTC files added
 - **Fonts of the system by name.** On macOS, a family that no added font provides (`Menlo`, a font the user installed) is read from the system font folders, all its faces, and drawn like an added font (`glaze.platform.SystemFontFamilies`, not on the web, TODO on Windows and Linux; define `glaze_no_system_fonts` to keep the added fonts only). `TextSystem.isFamilyAvailable(name)` tells whether a family is there, to pick the first of a CSS like list. Well known names that are not found keep their bundled substitutes. The generic family `monospace` is the default fixed font of browsers on the platform (Menlo on macOS) when the system fonts are on. Characters that no added font has come from the fonts of the system (`SystemFontFallback`), Han, kana and hangul from the font of their script in the system's list (kana in Hiragino Sans on macOS, even after Han text loaded Hiragino Sans GB).
 
 `Font.synthesizeStyle` (off by default, like GPUI) draws the italic of a family without an italic face as a slanted upright face, like a browser. `Font.wholeRunShaping` (off by default, like GPUI) shapes a line whose runs all use such fonts in one piece, like a browser, instead of word by word like GPUI's cosmic-text: kerning and contextual features then apply across the line break opportunities (between CJK characters, after a hyphen), in the fallback fonts too. On the web, the graphemes the browser draws for such a font (the Canvas2D fallback: CJK, emoji) are measured as whole runs, so the kerning between them applies too, and a grapheme that the font or one of its fallbacks maps as text keeps that glyph (emoji presentation does not force the emoji font, like the native text system). `Font.preferColorEmoji` (off by default, like GPUI) draws every emoji (Unicode's `Extended_Pictographic`, unless followed by U+FE0E) with a color emoji font, even where a font of the list has a text glyph for it: the bundled or system emoji font natively, the browser's emoji font on the web.
+
+## Additions to GPUI
+
+These features have no equivalent in GPUI. They change nothing unless used. [docs/DEVIATIONS.md](docs/DEVIATIONS.md) has the details (entries `ADD-nnn`).
+
+**Window drag areas with clickable content.** An element marked `windowControlArea(Drag)` (the kit's `TitleBar` does it) moves the native window when dragged. Elements drawn above it that answer the left button (`onClick`, `onMouseDown(Left, ...)`, `onDrag`...), that block the mouse (`occlude()`) or that are another window control area keep their presses: a button, a tab bar or a text field in a title bar works without anything to declare. `div().noWindowDrag()` does the same for an element without a listener, and `window.excludeFromWindowDrag(hitbox)` for a hitbox inserted by hand.
+
+**Letter spacing.** `div().trackingWider()` and its siblings (`trackingTighter`, `trackingTight`, `trackingNormal`, `trackingWide`, `trackingWidest`: Tailwind's values, in em) or `div().letterSpacing(px(1))` (pixels, rems, or `relative(0.05)` for 0.05 em) add space after each character of the text inside, like CSS `letter-spacing`. The space counts in the width of the text, in wrapping, in truncation and in the position of the caret. A text run can carry its own (`TextRun.letterSpacing`, in pixels), and `textSystem.lineWrapper(font, fontSize, letterSpacing)` measures with it.
+
+**Grid tracks.** `div().grid().gridTemplateCols([px(140), fr(1)])` and `gridTemplateRows([...])` take a list of tracks like CSS `grid-template-columns`: lengths in pixels or rems, `relative(0.25)` for a percentage, `fr(1)`, `auto()`, `minContent()`, `maxContent()` and `minmax(px(0), fr(1))`. `gridCols(n)` stays GPUI's `repeat(n, minmax(0, 1fr))`, and `colSpanFull()` makes an item span every column.
+
+```haxe
+div().grid().gapX2().gridTemplateCols([rems(6), minmax(px(0), fr(1)), maxContent(), auto()])
+```
+
+**Transformations.** `div().transformation(Transformation.scaled(size(1.03, 1.03)))` draws an element and its children scaled or moved without changing the layout, like CSS `transform`: the neighbours do not move, hover and clicks follow what is drawn, and the mouse positions given to the listeners inside are in the coordinates of their element. The pivot is the center of the element, `withOrigin(0, 0)` makes it the top left corner. Combine and animate it like any style:
+
+```haxe
+div().withAnimation('appear', new Animation(0.45).withEasing(Easing.ease),
+    (el, t) -> el.opacity(t).transformation(Transformation.translated(point(px(0.), px(4. * (1. - t))))))
+```
+
+Only translation and scale apply to an element (a rotation is ignored, with an error in debug builds); rotate icons with `svg().withTransformation(...)` and glyphs with `paintGlyph`. Popovers, menus and tooltips opened from a transformed element are not transformed. `Transformation.fromMotion(motionTransform)` converts the kit's `MotionTransform`, and an element written by hand uses `window.withElementTransform(matrix, w -> ...)`, with `window.currentElementTransform()` to read the current one. `TransformationMatrix` has `inverse()`, `isAxisAligned()` and `mapBounds(bounds)`.
+
+**Glyph transformations.** `window.paintGlyph(origin, fontId, glyphId, fontSize, color, matrix)` and `window.paintEmoji(origin, fontId, glyphId, fontSize, matrix)` draw one glyph moved, scaled or rotated around its origin on the baseline (`TransformationMatrix.unit().rotate(radians(0.02))`), for animated text. An emoji is moved and scaled, not rotated.
+
+**Key sequence delay.** `cx.setPendingInputTimeout(1.5)` sets how long the first keys of a sequence (`cmd-k cmd-s`) wait for the next one before they are replayed. 1 second by default, like GPUI.
+
+**Window zoom.** `window.setZoom(1.5)` (or `zoom: 1.5` in the window options) zooms the whole interface like a web page: the window keeps its size on the screen, its viewport becomes 1.5 times smaller in logical pixels, the interface is laid out again and everything is drawn 1.5 times larger, text rasterized at the new size. With a `Glaze` visual, the window is `ui.window`. `window.zoom()` reads it, `window.scaleFactor()` and `window.viewportSize()` answer with the zoom applied.
 
 ## Samples
 

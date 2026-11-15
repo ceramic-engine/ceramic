@@ -55,6 +55,32 @@ class TextPainter {
     /** Text rendering mode (`Window::text_rendering_mode`); subpixel sprites are not supported yet */
     public var textRenderingMode:TextRenderingMode = PlatformDefault;
 
+    /**
+     * Port addition without GPUI equivalent: when true, what the painter
+     * emits is mapped by the element transformation of the window
+     * (`Window.withElementTransform`: x' = x * transformScaleX +
+     * transformTranslateX, the same for y, in logical pixels), and
+     * `contentMaskBounds` is already in window coordinates. `Window.textPainter()`
+     * sets it; false by default.
+     */
+    public var transformActive:Bool = false;
+
+    public var transformScaleX:Float = 1.0;
+
+    public var transformScaleY:Float = 1.0;
+
+    public var transformTranslateX:Float = 0.0;
+
+    public var transformTranslateY:Float = 0.0;
+
+    public inline function setTransform(scaleX:Float, scaleY:Float, translateX:Float, translateY:Float):Void {
+        transformActive = true;
+        transformScaleX = scaleX;
+        transformScaleY = scaleY;
+        transformTranslateX = translateX;
+        transformTranslateY = translateY;
+    }
+
     final params:RenderGlyphParams = new RenderGlyphParams();
 
     var layerDepth:Int = 0;
@@ -106,6 +132,16 @@ class TextPainter {
 
     /** `pushLayer()` of the bounds `x, y, width, height` */
     public function pushLayerAt(x:Float, y:Float, width:Float, height:Float):Bool {
+        if (transformActive) {
+            final ax = x * transformScaleX + transformTranslateX;
+            final bx = (x + width) * transformScaleX + transformTranslateX;
+            final ay = y * transformScaleY + transformTranslateY;
+            final by = (y + height) * transformScaleY + transformTranslateY;
+            x = Math.min(ax, bx);
+            y = Math.min(ay, by);
+            width = Math.abs(bx - ax);
+            height = Math.abs(by - ay);
+        }
         final mask = contentMaskBounds;
         if (!pushCoverLayer(scene, x, y, width, height, mask.origin.x, mask.origin.y, mask.size.width, mask.size.height, scaleFactor))
             return false;
@@ -192,6 +228,10 @@ class TextPainter {
     /** `paintGlyph()` with the origin given as two floats */
     public function paintGlyphAt(x:Float, y:Float, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, color:Hsla):Void {
         snapContentMask();
+        if (transformActive) {
+            emitGlyphTransformed(scene, atlas, textSystem, params, scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, x, y, fontId, glyphId, fontSize, color, transformScaleX, transformScaleY, transformTranslateX, transformTranslateY, null);
+            return;
+        }
         emitGlyph(scene, atlas, textSystem, params, scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, x, y, fontId, glyphId, fontSize, color);
     }
 
@@ -204,7 +244,7 @@ class TextPainter {
      * content mask in scaled pixels, the origin is in logical pixels.
      * Returns false if nothing was painted (empty glyph).
      */
-    public static function emitGlyph(scene:Scene, atlas:PlatformAtlas, textSystem:TextSystem, params:RenderGlyphParams, scaleFactor:Float, elementOpacity:Float, maskX:Float, maskY:Float, maskW:Float, maskH:Float, originX:Float, originY:Float, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, color:Hsla):Bool {
+    public static function emitGlyph(scene:Scene, atlas:PlatformAtlas, textSystem:TextSystem, params:RenderGlyphParams, scaleFactor:Float, elementOpacity:Float, maskX:Float, maskY:Float, maskW:Float, maskH:Float, originX:Float, originY:Float, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, color:Hsla, stretchX:Float = 1.0, stretchY:Float = 1.0, ?transformation:TransformationMatrix):Bool {
         final glyphOriginX = originX * scaleFactor;
         final glyphOriginY = originY * scaleFactor;
 
@@ -238,12 +278,118 @@ class TextPainter {
         }
 
         final sprite = scene.nextMonochromeSprite();
-        sprite.setBounds(integerX + rasterBounds.origin.x, integerY + rasterBounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
+        if (stretchX == 1.0 && stretchY == 1.0) {
+            sprite.setBounds(integerX + rasterBounds.origin.x, integerY + rasterBounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
+        }
+        else {
+            // Port addition (`emitGlyphTransformed`): the raster stretched around the glyph origin
+            sprite.setBounds(
+                glyphOriginX + (integerX + rasterBounds.origin.x - glyphOriginX) * stretchX,
+                glyphOriginY + (integerY + rasterBounds.origin.y - glyphOriginY) * stretchY,
+                tile.bounds.size.width * stretchX,
+                tile.bounds.size.height * stretchY
+            );
+        }
         sprite.setContentMask(maskX, maskY, maskW, maskH);
         sprite.setColor(color.h, color.s, color.l, color.a * glaze.util.MathUtil.clamp(elementOpacity, 0.0, 1.0));
         sprite.setTile(tile.textureId.index, tile.bounds.origin.x, tile.bounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
+        if (transformation != null) {
+            // Port addition: scaled pixels, applied by the renderer to the corners of the sprite
+            sprite.setTransformation(transformation.m00, transformation.m01, transformation.m10, transformation.m11, transformation.tx, transformation.ty);
+        }
         scene.commitMonochromeSprite(sprite);
         return true;
+    }
+
+    /**
+     * The scale glyphs are rasterized at inside an element transformation
+     * of vertical scale `scale`: quarter steps (1, 1.25, 1.5...), at least
+     * 0.25. The rest of the scale stretches the sprite, so a scale that is
+     * animated does not rasterize every glyph again on every frame, and a
+     * scale close to 1 (a press pulse of 1.02) reuses the glyphs of the
+     * text at rest.
+     */
+    public static inline function glyphRasterScale(scale:Float):Float {
+        final quantized = Math.fround(scale * 4.0) / 4.0;
+        return quantized < 0.25 ? 0.25 : quantized;
+    }
+
+    /**
+     * `emitGlyph()` inside an element transformation (x' = x * scaleX +
+     * translateX, y' = y * scaleY + translateY, logical pixels) and, or, with
+     * a transformation of the glyph itself (`Window.paintGlyph`: logical
+     * pixels, around the glyph origin on the baseline, rotation allowed).
+     * Port addition without GPUI equivalent. The mask is the snapped content
+     * mask in window coordinates.
+     */
+    public static function emitGlyphTransformed(scene:Scene, atlas:PlatformAtlas, textSystem:TextSystem, params:RenderGlyphParams, scaleFactor:Float, elementOpacity:Float, maskX:Float, maskY:Float, maskW:Float, maskH:Float, originX:Float, originY:Float, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, color:Hsla, scaleX:Float, scaleY:Float, translateX:Float, translateY:Float, transformation:Null<TransformationMatrix>):Bool {
+        final ax = scaleX < 0 ? -scaleX : scaleX;
+        final ay = scaleY < 0 ? -scaleY : scaleY;
+        if (ax == 0 || ay == 0)
+            return false;
+        // The origin in window coordinates
+        final windowX = originX * scaleX + translateX;
+        final windowY = originY * scaleY + translateY;
+        var matrix:Null<TransformationMatrix> = null;
+        if (transformation != null && !transformation.isUnit()) {
+            matrix = glyphSpriteMatrix(transformation, windowX * scaleFactor, windowY * scaleFactor, scaleX, scaleY, scaleFactor);
+        }
+        if (ax == 1.0 && ay == 1.0) {
+            return emitGlyph(scene, atlas, textSystem, params, scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, windowX, windowY, fontId, glyphId, fontSize, color, 1.0, 1.0, matrix);
+        }
+        final raster = glyphRasterScale(ay);
+        return emitGlyph(scene, atlas, textSystem, params, scaleFactor * raster, elementOpacity, maskX, maskY, maskW, maskH, windowX / raster, windowY / raster, fontId, glyphId, fontSize, color, ax / raster, ay / raster, matrix);
+    }
+
+    /**
+     * The sprite matrix (scaled pixels) of a glyph transformation given in
+     * logical pixels around the glyph origin (`originX, originY` in scaled
+     * pixels, already inside the element transformation of scale `scaleX,
+     * scaleY`, which applies after the glyph's).
+     */
+    static function glyphSpriteMatrix(transformation:TransformationMatrix, originX:Float, originY:Float, scaleX:Float, scaleY:Float, scaleFactor:Float):TransformationMatrix {
+        // S * M * S^-1 for the linear part, S * t for the translation
+        final m00 = transformation.m00;
+        final m01 = transformation.m01 * scaleX / scaleY;
+        final m10 = transformation.m10 * scaleY / scaleX;
+        final m11 = transformation.m11;
+        final tx = transformation.tx * scaleX * scaleFactor;
+        final ty = transformation.ty * scaleY * scaleFactor;
+        // Around the origin: p' = o + L * (p - o) + t
+        return new TransformationMatrix(m00, m01, m10, m11, originX + tx - (m00 * originX + m01 * originY), originY + ty - (m10 * originX + m11 * originY));
+    }
+
+    /**
+     * `emitEmoji()` inside an element transformation and, or, with a
+     * transformation of the glyph. Color sprites have no matrix: of a glyph
+     * transformation, the translation and the scale are applied (the sprite
+     * is moved and stretched around the glyph origin), a rotation or a shear
+     * is ignored. Port addition without GPUI equivalent.
+     */
+    public static function emitEmojiTransformed(scene:Scene, atlas:PlatformAtlas, textSystem:TextSystem, params:RenderGlyphParams, scaleFactor:Float, elementOpacity:Float, maskX:Float, maskY:Float, maskW:Float, maskH:Float, originX:Float, originY:Float, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, scaleX:Float, scaleY:Float, translateX:Float, translateY:Float, transformation:Null<TransformationMatrix>):Bool {
+        final ax = scaleX < 0 ? -scaleX : scaleX;
+        final ay = scaleY < 0 ? -scaleY : scaleY;
+        if (ax == 0 || ay == 0)
+            return false;
+        var ax = ax;
+        var ay = ay;
+        if (transformation != null) {
+            originX += transformation.tx;
+            originY += transformation.ty;
+            if (transformation.isAxisAligned()) {
+                ax *= Math.abs(transformation.m00);
+                ay *= Math.abs(transformation.m11);
+                if (ax == 0 || ay == 0)
+                    return false;
+            }
+        }
+        final windowX = originX * scaleX + translateX;
+        final windowY = originY * scaleY + translateY;
+        if (ax == 1.0 && ay == 1.0) {
+            return emitEmoji(scene, atlas, textSystem, params, scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, windowX, windowY, fontId, glyphId, fontSize);
+        }
+        final raster = glyphRasterScale(ay);
+        return emitEmoji(scene, atlas, textSystem, params, scaleFactor * raster, elementOpacity, maskX, maskY, maskW, maskH, windowX / raster, windowY / raster, fontId, glyphId, fontSize, ax / raster, ay / raster);
     }
 
     /**
@@ -256,13 +402,17 @@ class TextPainter {
     /** `paintEmoji()` with the origin given as two floats */
     public function paintEmojiAt(x:Float, y:Float, fontId:FontId, glyphId:GlyphId, fontSize:Pixels):Void {
         snapContentMask();
+        if (transformActive) {
+            emitEmojiTransformed(scene, atlas, textSystem, params, scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, x, y, fontId, glyphId, fontSize, transformScaleX, transformScaleY, transformTranslateX, transformTranslateY, null);
+            return;
+        }
         emitEmoji(scene, atlas, textSystem, params, scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, x, y, fontId, glyphId, fontSize);
     }
 
     /**
      * Port of `Window::paint_emoji`: commits a `PolychromeSprite` (RGBA tile).
      */
-    public static function emitEmoji(scene:Scene, atlas:PlatformAtlas, textSystem:TextSystem, params:RenderGlyphParams, scaleFactor:Float, elementOpacity:Float, maskX:Float, maskY:Float, maskW:Float, maskH:Float, originX:Float, originY:Float, fontId:FontId, glyphId:GlyphId, fontSize:Pixels):Bool {
+    public static function emitEmoji(scene:Scene, atlas:PlatformAtlas, textSystem:TextSystem, params:RenderGlyphParams, scaleFactor:Float, elementOpacity:Float, maskX:Float, maskY:Float, maskW:Float, maskH:Float, originX:Float, originY:Float, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, stretchX:Float = 1.0, stretchY:Float = 1.0):Bool {
         final integerX = roundHalfTowardZero(originX * scaleFactor);
         final integerY = roundHalfTowardZero(originY * scaleFactor);
         params.set(fontId, glyphId, fontSize, 0, 0, scaleFactor, true, false, 0);
@@ -287,7 +437,20 @@ class TextPainter {
         }
 
         final sprite = scene.nextPolychromeSprite();
-        sprite.setBounds(integerX + rasterBounds.origin.x, integerY + rasterBounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
+        if (stretchX == 1.0 && stretchY == 1.0) {
+            sprite.setBounds(integerX + rasterBounds.origin.x, integerY + rasterBounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
+        }
+        else {
+            // Port addition (`emitEmojiTransformed`): the raster stretched around the glyph origin
+            final glyphOriginX = originX * scaleFactor;
+            final glyphOriginY = originY * scaleFactor;
+            sprite.setBounds(
+                glyphOriginX + (integerX + rasterBounds.origin.x - glyphOriginX) * stretchX,
+                glyphOriginY + (integerY + rasterBounds.origin.y - glyphOriginY) * stretchY,
+                tile.bounds.size.width * stretchX,
+                tile.bounds.size.height * stretchY
+            );
+        }
         sprite.setContentMask(maskX, maskY, maskW, maskH);
         sprite.setTile(tile.textureId.index, tile.bounds.origin.x, tile.bounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
         sprite.grayscale = false;
@@ -308,7 +471,14 @@ class TextPainter {
     /** `paintUnderline()` with the origin given as two floats */
     public function paintUnderlineAt(x:Float, y:Float, width:Float, style:UnderlineStyle):Void {
         snapContentMask();
-        final thickness = roundStrokeToDevicePixel(style.thickness, scaleFactor);
+        var styleThickness:Float = style.thickness;
+        if (transformActive) {
+            x = x * transformScaleX + transformTranslateX;
+            y = y * transformScaleY + transformTranslateY;
+            width *= Math.abs(transformScaleX);
+            styleThickness *= Math.abs(transformScaleY);
+        }
+        final thickness = roundStrokeToDevicePixel(styleThickness, scaleFactor);
         final height = style.wavy ? thickness * 3.0 : thickness;
         final underline = scene.nextUnderline();
         underline.setBounds(roundToDevicePixel(x, scaleFactor), roundToDevicePixel(y, scaleFactor), roundStrokeToDevicePixel(width, scaleFactor), height);
@@ -332,7 +502,14 @@ class TextPainter {
     /** `paintStrikethrough()` with the origin given as two floats */
     public function paintStrikethroughAt(x:Float, y:Float, width:Float, style:StrikethroughStyle):Void {
         snapContentMask();
-        final thickness = roundStrokeToDevicePixel(style.thickness, scaleFactor);
+        var styleThickness:Float = style.thickness;
+        if (transformActive) {
+            x = x * transformScaleX + transformTranslateX;
+            y = y * transformScaleY + transformTranslateY;
+            width *= Math.abs(transformScaleX);
+            styleThickness *= Math.abs(transformScaleY);
+        }
+        final thickness = roundStrokeToDevicePixel(styleThickness, scaleFactor);
         final underline = scene.nextUnderline();
         underline.setBounds(roundToDevicePixel(x, scaleFactor), roundToDevicePixel(y, scaleFactor), roundStrokeToDevicePixel(width, scaleFactor), thickness);
         underline.setContentMask(maskX, maskY, maskW, maskH);
@@ -359,6 +536,17 @@ class TextPainter {
         final alpha = color.a * glaze.util.MathUtil.clamp(elementOpacity, 0.0, 1.0);
         if (alpha == 0.0)
             return;
+        if (transformActive) {
+            // (with a `quadPainter`, the window maps the quad itself)
+            final ax = x * transformScaleX + transformTranslateX;
+            final bx = (x + width) * transformScaleX + transformTranslateX;
+            final ay = y * transformScaleY + transformTranslateY;
+            final by = (y + height) * transformScaleY + transformTranslateY;
+            x = Math.min(ax, bx);
+            y = Math.min(ay, by);
+            width = Math.abs(bx - ax);
+            height = Math.abs(by - ay);
+        }
         snapContentMask();
         final left = roundToDevicePixel(x, scaleFactor);
         final top = roundToDevicePixel(y, scaleFactor);

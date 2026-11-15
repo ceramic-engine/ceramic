@@ -20,6 +20,14 @@ class StyledValues {
     /** `relative(0.0)`, the flex basis of `flex1()` */
     public static final LENGTH_RELATIVE_ZERO:Length = Length.Definite(DefiniteLength.Fraction(0.0));
 
+    /** Tailwind's letter spacings, in em (`trackingTighter()`... `trackingWidest()`) */
+    public static final TRACKING_TIGHTER:DefiniteLength = DefiniteLength.Fraction(-0.05);
+    public static final TRACKING_TIGHT:DefiniteLength = DefiniteLength.Fraction(-0.025);
+    public static final TRACKING_NORMAL:DefiniteLength = DefiniteLength.Fraction(0.0);
+    public static final TRACKING_WIDE:DefiniteLength = DefiniteLength.Fraction(0.025);
+    public static final TRACKING_WIDER:DefiniteLength = DefiniteLength.Fraction(0.05);
+    public static final TRACKING_WIDEST:DefiniteLength = DefiniteLength.Fraction(0.1);
+
     public static final TEXT_XS:AbsoluteLength = AbsoluteLength.Rems(0.75);
     public static final TEXT_SM:AbsoluteLength = AbsoluteLength.Rems(0.875);
     public static final TEXT_BASE:AbsoluteLength = AbsoluteLength.Rems(1.0);

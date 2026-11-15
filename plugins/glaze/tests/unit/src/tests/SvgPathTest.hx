@@ -160,7 +160,7 @@ class SvgPathTest extends TestCase {
 
     function testSvgTransformationRotatesAroundItsCenter() {
         open((window, cx) -> div().p(px(10)).child(svg().path('icons/heart.svg').size(px(20)).textColor(red())
-            .withTransformation(glaze.Svg.Transformation.rotated(Math.PI / 2))));
+            .withTransformation(glaze.Transformation.rotated(Math.PI / 2))));
         window.draw();
         final sprite = window.renderedScene().monochromeSprites[0];
         assertTrue(sprite.hasTransformation());

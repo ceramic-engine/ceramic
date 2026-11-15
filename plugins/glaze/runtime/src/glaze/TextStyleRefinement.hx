@@ -46,6 +46,9 @@ class TextStyleRefinement {
     public var strikethrough:Null<StrikethroughStyle> = null;
     public var textOverflow:Null<TextOverflow> = null;
 
+    /** See `TextStyle.letterSpacing` (port addition) */
+    public var letterSpacing:Null<DefiniteLength> = null;
+
     public var fontWeight(default, set):FontWeight = FontWeight.NORMAL;
     inline function set_fontWeight(value:FontWeight):FontWeight {
         mask |= FONT_WEIGHT;
@@ -97,7 +100,7 @@ class TextStyleRefinement {
      */
     public function isSome():Bool {
         return mask != 0 || color != null || fontFamily != null || fontFeatures != null || fontFallbacks != null || fontSize != null || lineHeight != null
-            || backgroundColor != null || underline != null || strikethrough != null || textOverflow != null;
+            || backgroundColor != null || underline != null || strikethrough != null || textOverflow != null || letterSpacing != null;
     }
 
     /**
@@ -124,6 +127,7 @@ class TextStyleRefinement {
         if (refinement.textOverflow != null) textOverflow = refinement.textOverflow;
         if (refinement.has(TEXT_ALIGN)) textAlign = refinement.textAlign;
         if (refinement.has(LINE_CLAMP)) lineClamp = refinement.lineClamp;
+        if (refinement.letterSpacing != null) letterSpacing = refinement.letterSpacing;
     }
 
     public function clone():TextStyleRefinement {
@@ -153,7 +157,8 @@ class TextStyleRefinement {
             && RefinementEq.hsla(backgroundColor, other.backgroundColor)
             && (underline == null ? other.underline == null : other.underline != null && underline.equals(other.underline))
             && (strikethrough == null ? other.strikethrough == null : other.strikethrough != null && strikethrough.equals(other.strikethrough))
-            && (textOverflow == null ? other.textOverflow == null : other.textOverflow != null && Type.enumEq(textOverflow, other.textOverflow));
+            && (textOverflow == null ? other.textOverflow == null : other.textOverflow != null && Type.enumEq(textOverflow, other.textOverflow))
+            && RefinementEq.definite(letterSpacing, other.letterSpacing);
     }
 
 }

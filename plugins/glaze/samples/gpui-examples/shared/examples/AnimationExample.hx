@@ -19,7 +19,7 @@ import glaze.Render;
 import glaze.SpringAnimation;
 import glaze.SpringConfig;
 import glaze.Svg;
-import glaze.Svg.Transformation;
+import glaze.Transformation;
 import glaze.Window;
 
 import glaze.Prelude.*;

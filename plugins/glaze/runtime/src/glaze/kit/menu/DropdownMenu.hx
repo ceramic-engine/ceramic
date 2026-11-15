@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/menu/dropdown_menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Addition without upstream equivalent (KIT-007 in docs/DEVIATIONS.md): `appMenu`.
 package glaze.kit.menu;
 
 import glaze.Anchor;
@@ -44,6 +45,17 @@ class DropdownMenu {
         final id:Null<ElementId> = @:privateAccess self.id;
 
         return new DropdownMenuPopover(id != null ? id : ElementId.Integer(0), anchor, self, f);
+    }
+
+    /**
+     * Create a dropdown menu holding the menus of the application (those set
+     * with `cx.setMenus`), each as a submenu, anchored to the given corner
+     * of the button (TopLeft by default): the app menu behind a button, for
+     * the systems that show no menu bar. One definition of the menus then
+     * serves the native menu bar and this drawn menu.
+     */
+    public static function appMenu(self:Button, ?anchor:Anchor, ?skip:Array<String>):DropdownMenuPopover {
+        return dropdownMenuWithAnchor(self, anchor != null ? anchor : TopLeft, (menu, window, cx) -> menu.withAppMenus(window, cx, skip));
     }
 
 }

@@ -28,6 +28,12 @@ class WindowOptions {
     /** Size of a rem, in logical pixels */
     public var remSize:Float = 16;
 
+    /**
+     * Zoom of the whole interface, like the zoom of a web page (port
+     * addition without GPUI equivalent, see `Window.setZoom`): 1 by default.
+     */
+    public var zoom:Float = 1.0;
+
     /** Draw automatically from the `GlazeSystem` when the window is dirty */
     public var autoDraw:Bool = true;
 
@@ -157,6 +163,14 @@ class MouseListenerEntry {
     public final elementListener:Null<Interactivity.ElementMouseListener>;
 
     public final hitbox:Null<Hitbox>;
+
+    /**
+     * The element transformation the listener was registered in
+     * (`Window.withElementTransform`, port addition): it is called with the
+     * mouse positions in the coordinates of its element. Null for nearly
+     * every listener.
+     */
+    public var transform:Null<TransformationMatrix> = null;
 
     public function new(kind:PlatformInputKind, listener:Null<(PlatformInput, DispatchPhase, Window, App) -> Void>, elementListener:Null<Interactivity.ElementMouseListener>, hitbox:Null<Hitbox>) {
         this.kind = kind;
@@ -664,7 +678,7 @@ private class Frame {
         var i = hitboxes.length - 1;
         while (i >= 0) {
             final hitbox = hitboxes[i];
-            if (hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position)) {
+            if (hitbox.transform == null ? hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position) : hitbox.hitAtWindow(position.x, position.y)) {
                 hitTest.ids.push(hitbox.id);
                 if (!setHoverHitboxCount && hitbox.behavior == BlockMouseExceptScroll) {
                     hitTest.hoverHitboxCount = hitTest.ids.length;
@@ -1069,10 +1083,16 @@ class Window implements WindowInvalidator {
         this.autoDraw = options.autoDraw;
         this.viewCaching = options.viewCaching != null ? options.viewCaching : defaultViewCaching;
         fixedScaleFactor = options.scaleFactor;
-        _scaleFactor = platformScaleFactor();
+        if (options.zoom != 1.0) {
+            checkZoom(options.zoom);
+            _zoom = options.zoom;
+        }
+        applyPlatformScale();
         app.textSystem().setLayoutScaleFactor(_scaleFactor);
         _remSize = options.remSize;
-        _viewportSize = new Size(options.width, options.height);
+        outerWidth = options.width;
+        outerHeight = options.height;
+        applyViewport();
         windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
         _active = options.active;
         _appearance = platformAppearance();
@@ -1084,7 +1104,7 @@ class Window implements WindowInvalidator {
 
         renderable = new SceneRenderable();
         renderable.size(options.width, options.height);
-        renderable.sceneScale = _scaleFactor;
+        renderable.sceneScale = presentScale;
         renderable.scene = renderedFrame.scene;
         if (options.renderToTexture != null) renderable.renderToTexture = options.renderToTexture;
 
@@ -1492,7 +1512,7 @@ class Window implements WindowInvalidator {
      */
     public function setScaleFactor(scaleFactor:Float):Void {
         fixedScaleFactor = scaleFactor;
-        _scaleFactor = scaleFactor;
+        applyPlatformScale();
         app.textSystem().setLayoutScaleFactor(_scaleFactor);
         refresh();
     }
@@ -1513,9 +1533,92 @@ class Window implements WindowInvalidator {
      * like GPUI's `on_resize` callback.
      */
     function handleScreenResize():Void {
-        if (!destroyed && platformScaleFactor() != _scaleFactor) {
+        if (!destroyed && platformScaleFactor() != presentScale) {
             boundsChanged();
         }
+    }
+
+/// Zoom (port addition without GPUI equivalent)
+
+    var _zoom:Float = 1.0;
+
+    /** The size of the window on the screen, in Ceramic units (the size of the renderable): the viewport times the zoom */
+    var outerWidth:Float = 0;
+
+    var outerHeight:Float = 0;
+
+    /**
+     * Device pixels per Ceramic unit: the scale the renderable presents the
+     * scene at. The scale factor of the window without its zoom.
+     */
+    var presentScale:Float = 1;
+
+    /** Takes the scale factor of the platform window, times the zoom */
+    inline function applyPlatformScale():Void {
+        presentScale = platformScaleFactor();
+        _scaleFactor = _zoom == 1.0 ? presentScale : presentScale * _zoom;
+    }
+
+    /** The viewport (logical pixels) of the size on the screen */
+    inline function applyViewport():Void {
+        _viewportSize = _zoom == 1.0 ? new Size(outerWidth, outerHeight) : new Size(outerWidth / _zoom, outerHeight / _zoom);
+    }
+
+    static function checkZoom(zoom:Float):Void {
+        if (!(zoom > 0) || !Math.isFinite(zoom))
+            throw 'The zoom of a window must be a positive number, got $zoom';
+    }
+
+    /**
+     * The zoom of the window (`setZoom`), 1 by default.
+     */
+    public inline function zoom():Float {
+        return _zoom;
+    }
+
+    /**
+     * Zooms the whole interface, like the zoom of a web page: a logical
+     * pixel becomes `zoom` times larger on the screen (the scale factor is
+     * the density of the screen times the zoom) and the viewport becomes
+     * `zoom` times smaller in logical pixels, so the interface is laid out
+     * again in fewer or more logical pixels and everything is drawn larger
+     * or smaller: text (rasterized at the new size, like after a change of
+     * density), images, icons, editors, popovers and menus. The window keeps
+     * its size on the screen. Mouse positions, the regions given to the
+     * platform (window drag, text input) and `visual()` elements follow.
+     *
+     * `scaleFactor()` and `viewportSize()` answer with the zoom applied;
+     * the bounds observers are called, like after a resize. Port addition
+     * without GPUI equivalent.
+     */
+    public function setZoom(zoom:Float):Void {
+        checkZoom(zoom);
+        if (zoom == _zoom)
+            return;
+        _zoom = zoom;
+        applyViewport();
+        boundsChanged();
+    }
+
+    /**
+     * Screen coordinates (Ceramic's) to window coordinates (logical
+     * pixels): through the transform of the renderable, then the zoom.
+     */
+    public function screenToWindow(x:Float, y:Float, point:ceramic.Point):Void {
+        renderable.screenToVisual(x, y, point);
+        if (_zoom != 1.0) {
+            point.x = point.x / _zoom;
+            point.y = point.y / _zoom;
+        }
+    }
+
+    /** Window coordinates (logical pixels) to screen coordinates (Ceramic's). */
+    public function windowToScreen(x:Float, y:Float, point:ceramic.Point):Void {
+        if (_zoom != 1.0) {
+            x *= _zoom;
+            y *= _zoom;
+        }
+        renderable.visualToScreen(x, y, point);
     }
 
     /**
@@ -1527,10 +1630,10 @@ class Window implements WindowInvalidator {
      * new scale; the renderable takes the scale of a frame when it shows it.
      */
     public function boundsChanged():Void {
-        _scaleFactor = platformScaleFactor();
+        applyPlatformScale();
         app.textSystem().setLayoutScaleFactor(_scaleFactor);
         windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
-        renderable.size(_viewportSize.width, _viewportSize.height);
+        renderable.size(outerWidth, outerHeight);
         refresh();
         boundsObservers.retain(0, callback -> callback(this, app));
     }
@@ -1546,7 +1649,10 @@ class Window implements WindowInvalidator {
      * Resizes the window (and its renderable), then redraws.
      */
     public function resize(width:Float, height:Float):Void {
-        _viewportSize = new Size(width, height);
+        // (the size on the screen: with a zoom, the viewport is that size divided by it)
+        outerWidth = width;
+        outerHeight = height;
+        applyViewport();
         boundsChanged();
     }
 
@@ -1634,6 +1740,22 @@ class Window implements WindowInvalidator {
         }
         drawing = true;
         drawingClean = !dirty;
+        // Port addition: no element transformation at the start of a frame
+        // (a draw that threw may have left one), and none of a mouse
+        // listener that draws
+        if (etActive || etStack.length > 0) {
+            etActive = false;
+            etSx = 1.0;
+            etSy = 1.0;
+            etTx = 0.0;
+            etTy = 0.0;
+            etMatrix = null;
+            etStack.resize(0);
+            etMatrixStack.resize(0);
+            etMappedMaskSource = null;
+        }
+        final drawListenerTransform = listenerTransform;
+        listenerTransform = null;
         final previousRecorder = accessRecorder;
         accessRecorder = this;
         accessedStack.resize(0);
@@ -1648,6 +1770,7 @@ class Window implements WindowInvalidator {
         catch (e:haxe.Exception) {
             closeOpenCaptures();
             accessRecorder = previousRecorder;
+            listenerTransform = drawListenerTransform;
             drawing = false;
             drawingClean = false;
             // The frame was not drawn: the next draw starts again from the whole tree
@@ -1662,6 +1785,7 @@ class Window implements WindowInvalidator {
             throw glaze.util.Exceptions.rethrow(e);
         }
         accessRecorder = previousRecorder;
+        listenerTransform = drawListenerTransform;
         drawing = false;
         drawingClean = false;
         // Focus listeners may move focus: draw again to render the new focus
@@ -1792,7 +1916,7 @@ class Window implements WindowInvalidator {
         // The scene is in device pixels at the scale it was drawn at: the
         // renderable takes both together, so a frame drawn before a scale
         // change is never shown at the new scale
-        renderable.sceneScale = _scaleFactor;
+        renderable.sceneScale = presentScale;
         renderable.scene = renderedFrame.scene;
         var focusBeforeListeners = _focus;
 
@@ -2932,6 +3056,363 @@ class Window implements WindowInvalidator {
         return elementOpacity;
     }
 
+/// Element transform (port addition without GPUI equivalent)
+
+    /*
+     * The transformation of the elements being prepainted or painted: every
+     * primitive, hitbox and content mask given by an element inside
+     * `withElementTransform` is in the element's own coordinates (its layout),
+     * and is mapped when it is emitted, x' = x * etSx + etTx, y' = y * etSy +
+     * etTy (logical pixels). Nested transformations compose (the parent's
+     * applies after the child's). Translation and scale only: nothing changes
+     * in the scene, the shaders, the renderer nor the damage tracking.
+     *
+     * Content masks stay upright rectangles: when a transformation is pushed,
+     * the current mask is brought into the inner coordinates, so the masks
+     * pushed inside intersect it there; a primitive is emitted with the
+     * current mask mapped back (`beginMappedPaint`).
+     */
+
+    /** Whether a transformation is active (the default path of every paint function tests this only) */
+    var etActive:Bool = false;
+
+    var etSx:Float = 1.0;
+
+    var etSy:Float = 1.0;
+
+    var etTx:Float = 0.0;
+
+    var etTy:Float = 0.0;
+
+    /** The current transformation as a matrix (null when none) */
+    var etMatrix:Null<TransformationMatrix> = null;
+
+    /** Saved `etSx, etSy, etTx, etTy` of the enclosing transformations */
+    final etStack:Array<Float> = [];
+
+    final etMatrixStack:Array<Null<TransformationMatrix>> = [];
+
+    /** The content mask last mapped to window coordinates, and its source (see `beginMappedPaint`) */
+    var etMappedMask:Null<ContentMask> = null;
+
+    var etMappedMaskSource:Null<ContentMask> = null;
+
+    static var etRotationWarnings:Int = 0;
+
+    /**
+     * Draws what `f` prepaints or paints moved and scaled by `matrix`
+     * (logical pixels, x' = m00 * x + tx, y' = m11 * y + ty), without
+     * changing the layout: the same form as `withElementOpacity`. Call it
+     * with the same matrix in the prepaint and in the paint phase: hitboxes
+     * inserted inside follow what is drawn, and the mouse positions given to
+     * the mouse listeners registered inside (and `mousePosition()`) are
+     * brought back into the coordinates of `f`.
+     *
+     * Only translation and scale: a matrix with a rotation or a shear is
+     * ignored (reported in debug builds). Deferred draws (popovers, menus,
+     * tooltips) are not transformed. `null` and the unit matrix change
+     * nothing. Port addition without GPUI equivalent.
+     */
+    public function withElementTransform<R>(matrix:Null<TransformationMatrix>, f:(Window) -> R):R {
+        if (!pushElementTransform(matrix))
+            return f(this);
+        final result = f(this);
+        popElementTransform();
+        return result;
+    }
+
+    /**
+     * Starts `withElementTransform` without a closure: returns true when the
+     * transformation was pushed, `popElementTransform()` must then be called.
+     */
+    public function pushElementTransform(matrix:Null<TransformationMatrix>):Bool {
+        if (matrix == null || matrix.isUnit())
+            return false;
+        if (!matrix.isAxisAligned()) {
+            #if debug
+            if (etRotationWarnings < 5) {
+                etRotationWarnings++;
+                ceramic.Shortcuts.log.error('Glaze: an element transformation can only translate and scale, the matrix $matrix is ignored (rotate glyphs with paintGlyph and icons with svg().withTransformation)');
+            }
+            #end
+            return false;
+        }
+        final sx = matrix.m00;
+        final sy = matrix.m11;
+        // The current mask, seen from inside the transformation
+        final outer = contentMask().bounds;
+        var inner:ContentMask;
+        if (sx == 0 || sy == 0 || !Math.isFinite(sx) || !Math.isFinite(sy) || !Math.isFinite(matrix.tx) || !Math.isFinite(matrix.ty)) {
+            // Nothing can be seen through a zero scale
+            inner = new ContentMask(new Bounds(new Point(0, 0), new Size(0, 0)));
+        }
+        else {
+            final ax = (outer.origin.x - matrix.tx) / sx;
+            final bx = (outer.origin.x + outer.size.width - matrix.tx) / sx;
+            final ay = (outer.origin.y - matrix.ty) / sy;
+            final by = (outer.origin.y + outer.size.height - matrix.ty) / sy;
+            final left = Math.min(ax, bx);
+            final top = Math.min(ay, by);
+            inner = new ContentMask(new Bounds(new Point(left, top), new Size(Math.max(ax, bx) - left, Math.max(ay, by) - top)));
+        }
+        etStack.push(etSx);
+        etStack.push(etSy);
+        etStack.push(etTx);
+        etStack.push(etTy);
+        etMatrixStack.push(etMatrix);
+        contentMaskStack.push(inner);
+        etTx = etSx * matrix.tx + etTx;
+        etTy = etSy * matrix.ty + etTy;
+        etSx = etSx * sx;
+        etSy = etSy * sy;
+        etMatrix = new TransformationMatrix(etSx, 0, 0, etSy, etTx, etTy);
+        etActive = true;
+        etMappedMaskSource = null;
+        return true;
+    }
+
+    public function popElementTransform():Void {
+        contentMaskStack.pop();
+        restoreElementTransform();
+    }
+
+    inline function restoreElementTransform():Void {
+        etMatrix = etMatrixStack.pop();
+        etTy = etStack.pop();
+        etTx = etStack.pop();
+        etSy = etStack.pop();
+        etSx = etStack.pop();
+        etActive = etMatrix != null;
+        etMappedMaskSource = null;
+    }
+
+    /**
+     * Replaces the current transformation by `total` (the whole
+     * transformation an element was drawn with, or null) without touching the
+     * content masks: for a view drawn again in the context it was drawn in
+     * (in place rendering). Undone by `leaveElementTransform()`.
+     */
+    @:allow(glaze)
+    function enterElementTransform(total:Null<TransformationMatrix>):Void {
+        etStack.push(etSx);
+        etStack.push(etSy);
+        etStack.push(etTx);
+        etStack.push(etTy);
+        etMatrixStack.push(etMatrix);
+        etMatrix = total;
+        if (total != null) {
+            etSx = total.m00;
+            etSy = total.m11;
+            etTx = total.tx;
+            etTy = total.ty;
+        }
+        else {
+            etSx = 1.0;
+            etSy = 1.0;
+            etTx = 0.0;
+            etTy = 0.0;
+        }
+        etActive = total != null;
+        etMappedMaskSource = null;
+    }
+
+    @:allow(glaze)
+    inline function leaveElementTransform():Void {
+        restoreElementTransform();
+    }
+
+    static final UNIT_TRANSFORM:TransformationMatrix = new TransformationMatrix();
+
+    /**
+     * The transformation the elements are drawn with at this point (the
+     * composition of the enclosing `withElementTransform`), in logical
+     * pixels; the unit matrix when there is none.
+     */
+    public inline function currentElementTransform():TransformationMatrix {
+        final matrix = etMatrix;
+        return matrix != null ? matrix : UNIT_TRANSFORM;
+    }
+
+    /** The current transformation, or null when there is none (the cache key of views, the transformation of hitboxes) */
+    @:allow(glaze)
+    inline function elementTransformOrNull():Null<TransformationMatrix> {
+        return etMatrix;
+    }
+
+    /** The scale applied to lengths that have one value for both axes (radii, blurs) */
+    inline function etScalar():Float {
+        final sx = etSx < 0 ? -etSx : etSx;
+        final sy = etSy < 0 ? -etSy : etSy;
+        return sx == sy ? sx : Math.sqrt(sx * sy);
+    }
+
+    // The rectangle last mapped by `etRect`
+    var etRX:Float = 0;
+    var etRY:Float = 0;
+    var etRW:Float = 0;
+    var etRH:Float = 0;
+
+    /** Maps a rectangle to window coordinates into `etRX, etRY, etRW, etRH` */
+    inline function etRect(x:Float, y:Float, width:Float, height:Float):Void {
+        final ax = x * etSx + etTx;
+        final bx = (x + width) * etSx + etTx;
+        final ay = y * etSy + etTy;
+        final by = (y + height) * etSy + etTy;
+        etRX = ax < bx ? ax : bx;
+        etRY = ay < by ? ay : by;
+        etRW = (ax < bx ? bx : ax) - etRX;
+        etRH = (ay < by ? by : ay) - etRY;
+    }
+
+    function etBounds(bounds:Bounds):Bounds {
+        etRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+        return new Bounds(new Point(etRX, etRY), new Size(etRW, etRH));
+    }
+
+    /**
+     * Before emitting primitives with mapped arguments: pushes the current
+     * content mask mapped to window coordinates and turns the transformation
+     * off, so the plain paint function can be called with mapped values.
+     */
+    function beginMappedPaint():Void {
+        final local = contentMask();
+        var mapped = etMappedMask;
+        if (mapped == null || etMappedMaskSource != local) {
+            final b = local.bounds;
+            mapped = new ContentMask(etBounds(b));
+            etMappedMask = mapped;
+            etMappedMaskSource = local;
+        }
+        contentMaskStack.push(mapped);
+        etActive = false;
+    }
+
+    inline function endMappedPaint():Void {
+        contentMaskStack.pop();
+        etActive = true;
+    }
+
+    function paintLayerTransformed<R>(bounds:Bounds, f:(Window) -> R):R {
+        final mask = contentMask().bounds;
+        etRect(mask.origin.x, mask.origin.y, mask.size.width, mask.size.height);
+        final mx = etRX;
+        final my = etRY;
+        final mw = etRW;
+        final mh = etRH;
+        etRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+        final pushed = TextPainter.pushCoverLayer(nextFrame.scene, etRX, etRY, etRW, etRH, mx, my, mw, mh, _scaleFactor);
+        final result = f(this);
+        if (pushed) {
+            nextFrame.scene.popLayer();
+        }
+        return result;
+    }
+
+    function paintShadowsTransformed(bounds:Bounds, cornerRadii:Corners, shadows:Array<BoxShadow>, inset:Bool):Void {
+        final s = etScalar();
+        final sx = etSx;
+        final sy = etSy;
+        final scaled:Array<BoxShadow> = [];
+        for (shadow in shadows) {
+            final copy = new BoxShadow(shadow.offset.x * sx, shadow.offset.y * sy, shadow.color);
+            copy.blurRadius = shadow.blurRadius * s;
+            copy.spreadRadius = shadow.spreadRadius * s;
+            copy.inset = shadow.inset;
+            scaled.push(copy);
+        }
+        final mappedBounds = etBounds(bounds);
+        beginMappedPaint();
+        paintShadows(mappedBounds, cornerRadii.scale(s), scaled, inset);
+        endMappedPaint();
+    }
+
+    function paintQuadAtTransformed(quad:PaintQuad, x:Float, y:Float, width:Float, height:Float):Void {
+        final s = etScalar();
+        final ax = etSx < 0 ? -etSx : etSx;
+        final ay = etSy < 0 ? -etSy : etSy;
+        final radii = quad.cornerRadii;
+        final top = quad.borderWidthTop;
+        final right = quad.borderWidthRight;
+        final bottom = quad.borderWidthBottom;
+        final left = quad.borderWidthLeft;
+        quad.cornerRadii = radii.scale(s);
+        quad.borderWidthTop = top * ay;
+        quad.borderWidthRight = right * ax;
+        quad.borderWidthBottom = bottom * ay;
+        quad.borderWidthLeft = left * ax;
+        etRect(x, y, width, height);
+        final mx = etRX;
+        final my = etRY;
+        final mw = etRW;
+        final mh = etRH;
+        beginMappedPaint();
+        paintQuadAt(quad, mx, my, mw, mh);
+        endMappedPaint();
+        quad.cornerRadii = radii;
+        quad.borderWidthTop = top;
+        quad.borderWidthRight = right;
+        quad.borderWidthBottom = bottom;
+        quad.borderWidthLeft = left;
+    }
+
+    function paintUnderlineTransformed(origin:Point, width:Pixels, style:UnderlineStyle):Void {
+        final ax = etSx < 0 ? -etSx : etSx;
+        final ay = etSy < 0 ? -etSy : etSy;
+        final mapped = new Point(origin.x * etSx + etTx, origin.y * etSy + etTy);
+        final scaled = new UnderlineStyle(style.thickness * ay, style.color, style.wavy);
+        beginMappedPaint();
+        paintUnderline(mapped, width * ax, scaled);
+        endMappedPaint();
+    }
+
+    function paintStrikethroughTransformed(origin:Point, width:Pixels, style:StrikethroughStyle):Void {
+        final ax = etSx < 0 ? -etSx : etSx;
+        final ay = etSy < 0 ? -etSy : etSy;
+        final mapped = new Point(origin.x * etSx + etTx, origin.y * etSy + etTy);
+        final scaled = new StrikethroughStyle(style.thickness * ay, style.color);
+        beginMappedPaint();
+        paintStrikethrough(mapped, width * ax, scaled);
+        endMappedPaint();
+    }
+
+    function paintSvgTransformed(bounds:Bounds, path:String, data:Null<haxe.io.Bytes>, transformation:Null<TransformationMatrix>, color:Hsla, cx:App):Void {
+        // The sprite keeps its untransformed bounds and tile (no new raster
+        // while a scale is animated); the element transformation is applied
+        // after the SVG's own, both in scaled pixels
+        final sf = _scaleFactor;
+        final element = new TransformationMatrix(etSx, 0, 0, etSy, etTx * sf, etTy * sf);
+        final matrix = transformation != null ? element.compose(transformation) : element;
+        beginMappedPaint();
+        paintSvg(bounds, path, data, matrix, color, cx);
+        endMappedPaint();
+    }
+
+    function paintImageTransformed(bounds:Bounds, imageBounds:Bounds, cornerRadii:Corners, data:RenderImage, frameIndex:Int, grayscale:Bool):Void {
+        final s = etScalar();
+        final mappedBounds = etBounds(bounds);
+        final mappedImageBounds = etBounds(imageBounds);
+        beginMappedPaint();
+        paintImage(mappedBounds, mappedImageBounds, cornerRadii.scale(s), data, frameIndex, grayscale);
+        endMappedPaint();
+    }
+
+    function paintTextureTransformed(bounds:Bounds, cornerRadii:Corners, texture:ceramic.Texture, tileX:Float, tileY:Float, tileWidth:Float, tileHeight:Float, grayscale:Bool):Void {
+        final s = etScalar();
+        final mappedBounds = etBounds(bounds);
+        beginMappedPaint();
+        paintTexture(mappedBounds, cornerRadii.scale(s), texture, tileX, tileY, tileWidth, tileHeight, grayscale);
+        endMappedPaint();
+    }
+
+    function paintPathTransformed(path:Path, color:IntoBackground):Void {
+        final mapped = path.transformed(etSx, etSy, etTx, etTy);
+        beginMappedPaint();
+        paintPath(mapped, color);
+        endMappedPaint();
+        path.contentMask = mapped.contentMask;
+        path.color = mapped.color;
+    }
+
 /// Snapping (scaled pixels)
 
     inline function snapStroke(value:Float):Float {
@@ -2990,6 +3471,8 @@ class Window implements WindowInvalidator {
      * of the window.
      */
     public function paintLayer<R>(bounds:Bounds, f:(Window) -> R):R {
+        if (etActive)
+            return paintLayerTransformed(bounds, f);
         final mask = contentMask().bounds;
         // In f32, like GPUI (see `TextPainter.pushCoverLayer`)
         final pushed = TextPainter.pushCoverLayer(nextFrame.scene, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height, mask.origin.x, mask.origin.y, mask.size.width, mask.size.height, _scaleFactor);
@@ -3019,6 +3502,10 @@ class Window implements WindowInvalidator {
     }
 
     function paintShadows(bounds:Bounds, cornerRadii:Corners, shadows:Array<BoxShadow>, inset:Bool):Void {
+        if (etActive) {
+            paintShadowsTransformed(bounds, cornerRadii, shadows, inset);
+            return;
+        }
         final scaleFactor = _scaleFactor;
         snapContentMask();
         final opacity = elementOpacity;
@@ -3105,6 +3592,10 @@ class Window implements WindowInvalidator {
      * (`scratchPaintQuad()`) need no `Bounds` per rectangle.
      */
     public function paintQuadAt(quad:PaintQuad, x:Float, y:Float, width:Float, height:Float):Void {
+        if (etActive) {
+            paintQuadAtTransformed(quad, x, y, width, height);
+            return;
+        }
         final opacity = clamp01(elementOpacity);
         final scaleFactor = _scaleFactor;
 
@@ -3249,6 +3740,10 @@ class Window implements WindowInvalidator {
      * Paint an underline into the scene for the next frame at the current z-index.
      */
     public function paintUnderline(origin:Point, width:Pixels, style:UnderlineStyle):Void {
+        if (etActive) {
+            paintUnderlineTransformed(origin, width, style);
+            return;
+        }
         final thickness = snapStroke(style.thickness);
         final height = style.wavy ? thickness * 3.0 : thickness;
         snapContentMask();
@@ -3268,6 +3763,10 @@ class Window implements WindowInvalidator {
      * Paint a strikethrough into the scene for the next frame at the current z-index.
      */
     public function paintStrikethrough(origin:Point, width:Pixels, style:StrikethroughStyle):Void {
+        if (etActive) {
+            paintStrikethroughTransformed(origin, width, style);
+            return;
+        }
         snapContentMask();
         final underline = nextFrame.scene.nextUnderline();
         underline.setBounds(roundToDevice(origin.x), roundToDevice(origin.y), snapStroke(width), snapStroke(style.thickness));
@@ -3303,7 +3802,18 @@ class Window implements WindowInvalidator {
         p.textSystem = windowTextSystem.textSystem;
         p.scaleFactor = _scaleFactor;
         p.elementOpacity = elementOpacity;
-        p.contentMaskBounds = contentMask().bounds;
+        if (etActive) {
+            // Port addition: the painter maps what it emits, with the mask
+            // already in window coordinates
+            beginMappedPaint();
+            p.contentMaskBounds = contentMask().bounds;
+            endMappedPaint();
+            p.setTransform(etSx, etSy, etTx, etTy);
+        }
+        else {
+            p.contentMaskBounds = contentMask().bounds;
+            p.transformActive = false;
+        }
         return p;
     }
 
@@ -3313,8 +3823,30 @@ class Window implements WindowInvalidator {
      * The y component of the origin is the baseline of the glyph.
      * You should generally prefer to use the `ShapedLine.paint()` or `WrappedLine.paint()` methods.
      * This method is only useful if you need to paint a single glyph that has already been shaped.
+     *
+     * `transformation` (port addition without GPUI equivalent) draws the
+     * glyph transformed around its origin on the baseline: a matrix in
+     * logical pixels (p' = origin + M * (p - origin) + translation), with
+     * translation, scale and rotation (`TransformationMatrix.unit()
+     * .rotate(radians(0.02))`). The glyph is rasterized as usual and its
+     * sprite is transformed by the renderer, like a rotated icon. Null by
+     * default: the glyph is painted as GPUI paints it.
      */
-    public function paintGlyph(origin:Point, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, color:Hsla):Void {
+    public function paintGlyph(origin:Point, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, color:Hsla, ?transformation:TransformationMatrix):Void {
+        if (etActive || transformation != null) {
+            // Port additions: an element transformation, a transformation of the glyph
+            if (etActive) {
+                beginMappedPaint();
+                snapContentMask();
+                endMappedPaint();
+                TextPainter.emitGlyphTransformed(nextFrame.scene, spriteAtlas, windowTextSystem.textSystem, glyphParams, _scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, origin.x, origin.y, fontId, glyphId, fontSize, color, etSx, etSy, etTx, etTy, transformation);
+            }
+            else {
+                snapContentMask();
+                TextPainter.emitGlyphTransformed(nextFrame.scene, spriteAtlas, windowTextSystem.textSystem, glyphParams, _scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, origin.x, origin.y, fontId, glyphId, fontSize, color, 1.0, 1.0, 0.0, 0.0, transformation);
+            }
+            return;
+        }
         snapContentMask();
         TextPainter.emitGlyph(nextFrame.scene, spriteAtlas, windowTextSystem.textSystem, glyphParams, _scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, origin.x, origin.y, fontId, glyphId, fontSize, color);
     }
@@ -3323,8 +3855,27 @@ class Window implements WindowInvalidator {
      * Paints an emoji glyph into the scene for the next frame at the current z-index.
      *
      * The y component of the origin is the baseline of the glyph.
+     *
+     * `transformation` (port addition, see `paintGlyph`): color sprites have
+     * no matrix, so the translation and the scale of the matrix are applied
+     * (the emoji is moved and stretched around its origin) and a rotation is
+     * ignored.
      */
-    public function paintEmoji(origin:Point, fontId:FontId, glyphId:GlyphId, fontSize:Pixels):Void {
+    public function paintEmoji(origin:Point, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, ?transformation:TransformationMatrix):Void {
+        if (etActive || transformation != null) {
+            // Port additions: an element transformation, a transformation of the glyph
+            if (etActive) {
+                beginMappedPaint();
+                snapContentMask();
+                endMappedPaint();
+                TextPainter.emitEmojiTransformed(nextFrame.scene, spriteAtlas, windowTextSystem.textSystem, glyphParams, _scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, origin.x, origin.y, fontId, glyphId, fontSize, etSx, etSy, etTx, etTy, transformation);
+            }
+            else {
+                snapContentMask();
+                TextPainter.emitEmojiTransformed(nextFrame.scene, spriteAtlas, windowTextSystem.textSystem, glyphParams, _scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, origin.x, origin.y, fontId, glyphId, fontSize, 1.0, 1.0, 0.0, 0.0, transformation);
+            }
+            return;
+        }
         snapContentMask();
         TextPainter.emitEmoji(nextFrame.scene, spriteAtlas, windowTextSystem.textSystem, glyphParams, _scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, origin.x, origin.y, fontId, glyphId, fontSize);
     }
@@ -3339,6 +3890,10 @@ class Window implements WindowInvalidator {
     var svgTileBuilder:Null<SvgTileBuilder> = null;
 
     public function paintSvg(bounds:Bounds, path:String, data:Null<haxe.io.Bytes>, transformation:Null<TransformationMatrix>, color:Hsla, cx:App):Void {
+        if (etActive) {
+            paintSvgTransformed(bounds, path, data, transformation, color, cx);
+            return;
+        }
         final elementOpacity = this.elementOpacity;
 
         // snap_bounds
@@ -3396,6 +3951,10 @@ class Window implements WindowInvalidator {
      * applied to `bounds`. Throws if `frameIndex` is not valid.
      */
     public function paintImage(bounds:Bounds, imageBounds:Bounds, cornerRadii:Corners, data:RenderImage, frameIndex:Int, grayscale:Bool):Void {
+        if (etActive) {
+            paintImageTransformed(bounds, imageBounds, cornerRadii, data, frameIndex, grayscale);
+            return;
+        }
         final visibleBounds = bounds.intersect(imageBounds);
         if (visibleBounds.size.width <= 0 || visibleBounds.size.height <= 0)
             return;
@@ -3477,6 +4036,10 @@ class Window implements WindowInvalidator {
      * Specific to the Haxe port.
      */
     public function paintTexture(bounds:Bounds, cornerRadii:Corners, texture:ceramic.Texture, tileX:Float, tileY:Float, tileWidth:Float, tileHeight:Float, grayscale:Bool = false):Void {
+        if (etActive) {
+            paintTextureTransformed(bounds, cornerRadii, texture, tileX, tileY, tileWidth, tileHeight, grayscale);
+            return;
+        }
         if (bounds.size.width <= 0 || bounds.size.height <= 0 || tileWidth <= 0 || tileHeight <= 0)
             return;
         if (texture == null || texture.destroyed)
@@ -3531,8 +4094,8 @@ class Window implements WindowInvalidator {
             final candidate = hitboxes[i];
             final b = candidate.bounds;
             final m = candidate.contentMask.bounds;
-            if (x >= b.origin.x && x < b.origin.x + b.size.width && y >= b.origin.y && y < b.origin.y + b.size.height
-                && x >= m.origin.x && x < m.origin.x + m.size.width && y >= m.origin.y && y < m.origin.y + m.size.height) {
+            if (candidate.transform != null ? candidate.hitAtWindow(x, y) : (x >= b.origin.x && x < b.origin.x + b.size.width && y >= b.origin.y && y < b.origin.y + b.size.height
+                && x >= m.origin.x && x < m.origin.x + m.size.width && y >= m.origin.y && y < m.origin.y + m.size.height)) {
                 if (candidate == hitbox || candidate.id == hitbox.id)
                     return true;
                 if (candidate.behavior != Normal)
@@ -3557,6 +4120,10 @@ class Window implements WindowInvalidator {
      * clipped by the content mask, like GPUI.
      */
     public function paintPath(path:Path, color:IntoBackground):Void {
+        if (etActive) {
+            paintPathTransformed(path, color);
+            return;
+        }
         final background:Background = color;
         final opacity = clamp01(elementOpacity);
         path.contentMask = contentMask();
@@ -4329,7 +4896,7 @@ class Window implements WindowInvalidator {
         var i = hitboxes.length - 1;
         while (i >= start) {
             final hitbox = hitboxes[i];
-            if (hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position)) {
+            if (hitbox.transform == null ? hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position) : hitbox.hitAtWindow(position.x, position.y)) {
                 if (hitbox.behavior == BlockMouse) {
                     return 2;
                 }
@@ -4375,7 +4942,7 @@ class Window implements WindowInvalidator {
         if (tooltipBounds != null || app.activeDrag != null || frame.hadDrag) {
             return false;
         }
-        if (frame.scaleFactor != _scaleFactor || renderable.sceneScale != _scaleFactor || frame.remSize != _remSize
+        if (frame.scaleFactor != _scaleFactor || renderable.sceneScale != presentScale || frame.remSize != _remSize
             || frame.viewportWidth != _viewportSize.width || frame.viewportHeight != _viewportSize.height
             || frame.windowActive != _active || windowTextSystem.fontGenerationChanged()) {
             return false;
@@ -4598,9 +5165,13 @@ class Window implements WindowInvalidator {
             elementOffsetStack.push(state.elementOffset);
             final savedPrepaintOpacity = prepaintOpacity;
             prepaintOpacity = state.prepaintOpacity;
+            // Port addition: the element transformation the view was drawn in
+            final inPlaceTransform = state.transform;
+            if (inPlaceTransform != null) enterElementTransform(inPlaceTransform);
             tree.setActiveNode(viewNode);
             element.prepaintInPlace(state, bounds, this, app);
             tree.resetStacks();
+            if (inPlaceTransform != null) leaveElementTransform();
             prepaintOpacity = savedPrepaintOpacity;
             elementOffsetStack.pop();
             contentMaskStack.pop();
@@ -4658,9 +5229,12 @@ class Window implements WindowInvalidator {
             contentMaskStack.push(state.paintContentMask);
             final savedOpacity = elementOpacity;
             elementOpacity = state.paintOpacity;
+            final inPlacePaintTransform = state.paintTransform;
+            if (inPlacePaintTransform != null) enterElementTransform(inPlacePaintTransform);
             tree.setActiveNode(viewNode);
             element.paintInPlace(state, this, app);
             tree.resetStacks();
+            if (inPlacePaintTransform != null) leaveElementTransform();
             elementOpacity = savedOpacity;
             contentMaskStack.pop();
             popTextStyle();
@@ -5062,7 +5636,7 @@ class Window implements WindowInvalidator {
     /** One step of `Frame.hitTest`: returns true when the hitbox blocks the ones below */
     inline function hitTestHitbox(hitbox:Hitbox, position:Point, hitTest:HitTest):Bool {
         var blocks = false;
-        if (hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position)) {
+        if (hitbox.transform == null ? hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position) : hitbox.hitAtWindow(position.x, position.y)) {
             hitTest.ids.push(hitbox.id);
             if (!hitTestHoverSet && hitbox.behavior == BlockMouseExceptScroll) {
                 hitTest.hoverHitboxCount = hitTest.ids.length;
@@ -6682,6 +7256,8 @@ class Window implements WindowInvalidator {
      */
     public function insertHitbox(bounds:Bounds, behavior:HitboxBehavior):Hitbox {
         final hitbox = new Hitbox(nextHitboxId, bounds, contentMask(), behavior);
+        // Port addition: inside an element transformation, the hitbox is hit where it is drawn
+        if (etActive) hitbox.transform = etMatrix;
         nextHitboxId++;
         nextFrame.hitboxes.push(hitbox);
         return hitbox;
@@ -6787,8 +7363,104 @@ class Window implements WindowInvalidator {
     /**
      * The position of the mouse relative to the window.
      */
-    public inline function mousePosition():Point {
+    public function mousePosition():Point {
+        // Port addition: inside an element transformation (while its
+        // elements draw, or in a mouse listener they registered), the
+        // position in the coordinates of those elements
+        final t = etMatrix != null ? etMatrix : listenerTransform;
+        if (t == null)
+            return _mousePosition;
+        return localMousePosition(t);
+    }
+
+    /**
+     * The position of the mouse in window coordinates, whatever element
+     * transformation is active (`mousePosition()` without one).
+     */
+    public inline function windowMousePosition():Point {
         return _mousePosition;
+    }
+
+    /** The element transformation of the mouse listener being called (null: none) */
+    var listenerTransform:Null<TransformationMatrix> = null;
+
+    var localMouseSource:Null<Point> = null;
+
+    var localMouseTransform:Null<TransformationMatrix> = null;
+
+    var localMouse:Null<Point> = null;
+
+    function localMousePosition(t:TransformationMatrix):Point {
+        final source = _mousePosition;
+        if (localMouse != null && localMouseSource == source && localMouseTransform == t)
+            return localMouse;
+        final local = (t.m00 == 0 || t.m11 == 0) ? source : new Point((source.x - t.tx) / t.m00, (source.y - t.ty) / t.m11);
+        localMouseSource = source;
+        localMouseTransform = t;
+        localMouse = local;
+        return local;
+    }
+
+    var mappedEventSource:Null<PlatformInput> = null;
+
+    var mappedEventTransform:Null<TransformationMatrix> = null;
+
+    var mappedEvent:Null<PlatformInput> = null;
+
+    /**
+     * A copy of a mouse event with its positions in the coordinates of the
+     * elements drawn with the transformation `t` (kept for the listeners of
+     * the same transformation during one dispatch).
+     */
+    function mouseEventIn(event:PlatformInput, t:TransformationMatrix):PlatformInput {
+        if (mappedEventSource == event && mappedEventTransform == t && mappedEvent != null)
+            return mappedEvent;
+        if (t.m00 == 0 || t.m11 == 0)
+            return event;
+        inline function local(p:Point):Point return p == null ? null : new Point((p.x - t.tx) / t.m00, (p.y - t.ty) / t.m11);
+        final mapped:PlatformInput = switch event.kind {
+            case MouseDown:
+                final e:MouseDownEvent = cast event;
+                new MouseDownEvent(e.button, local(e.position), e.modifiers, e.clickCount, e.firstMouse);
+            case MouseUp:
+                final e:MouseUpEvent = cast event;
+                new MouseUpEvent(e.button, local(e.position), e.modifiers, e.clickCount);
+            case MouseMove:
+                final e:MouseMoveEvent = cast event;
+                new MouseMoveEvent(local(e.position), e.pressedButton, e.modifiers);
+            case MouseExited:
+                final e:MouseExitEvent = cast event;
+                new MouseExitEvent(local(e.position), e.pressedButton, e.modifiers);
+            case Scroll:
+                final e:ScrollEvent = cast event;
+                new ScrollEvent(local(e.position), e.delta, e.modifiers, e.touchPhase, e.source);
+            case LongPress:
+                final e:LongPressEvent = cast event;
+                new LongPressEvent(e.phase, local(e.startPosition), local(e.position));
+            case TouchDrag:
+                final e:TouchDragEvent = cast event;
+                new TouchDragEvent(e.phase, local(e.startPosition), local(e.position));
+            case _:
+                event;
+        }
+        mappedEventSource = event;
+        mappedEventTransform = t;
+        mappedEvent = mapped;
+        return mapped;
+    }
+
+    /** Calls a mouse listener registered inside an element transformation */
+    function callTransformedMouseListener(entry:MouseListenerEntry, t:TransformationMatrix, event:PlatformInput, phase:DispatchPhase, cx:App):Void {
+        final saved = listenerTransform;
+        listenerTransform = t;
+        try {
+            entry.call(mouseEventIn(event, t), phase, this, cx);
+        }
+        catch (e:haxe.Exception) {
+            listenerTransform = saved;
+            throw glaze.util.Exceptions.rethrow(e);
+        }
+        listenerTransform = saved;
     }
 
     /**
@@ -7172,6 +7844,28 @@ class Window implements WindowInvalidator {
      */
     public function insertWindowControlHitbox(area:WindowControlArea, hitbox:Hitbox):Void {
         nextFrame.windowControlHitboxes.push(new WindowControlHitbox(area, hitbox));
+        // Port addition: a drag area moves the native window, the other
+        // areas (close, maximize, minimize) keep the presses when they are
+        // drawn above one (see `CeramicWindowOperations.hitRegions`)
+        hitbox.windowDragRole = area == WindowControlArea.Drag ? Hitbox.WINDOW_DRAG_AREA : Hitbox.WINDOW_DRAG_HOLE;
+    }
+
+    /**
+     * Keeps the presses on `hitbox` for the app when it is drawn above a
+     * window drag area (`WindowControlArea.Drag`): the native window is not
+     * moved from there. Port addition without GPUI equivalent, for elements
+     * written by hand; `Div` does it for every element with a listener of
+     * the left button, and `div().noWindowDrag()` asks for it explicitly.
+     */
+    public inline function excludeFromWindowDrag(hitbox:Hitbox):Void {
+        if (hitbox.windowDragRole == Hitbox.WINDOW_DRAG_NONE)
+            hitbox.windowDragRole = Hitbox.WINDOW_DRAG_HOLE;
+    }
+
+    /** The hitboxes of the last drawn frame, back to front (for `CeramicWindowOperations.hitRegions`). */
+    @:allow(glaze.platform.CeramicWindowOperations)
+    inline function renderedHitboxes():Array<Hitbox> {
+        return renderedFrame.hitboxes;
     }
 
     /**
@@ -7265,12 +7959,15 @@ class Window implements WindowInvalidator {
      * a specific need to register a global listener.
      */
     public function onMouseEvent(kind:PlatformInputKind, listener:(PlatformInput, DispatchPhase, Window, App) -> Void):Void {
-        nextFrame.mouseListeners.push(new MouseListenerEntry(kind, listener, null, null));
+        final entry = new MouseListenerEntry(kind, listener, null, null);
+        if (etActive) entry.transform = etMatrix;
+        nextFrame.mouseListeners.push(entry);
     }
 
     /** Registers a mouse listener entry for the next frame (internal) */
     @:allow(glaze)
     function addMouseListenerEntry(entry:MouseListenerEntry):Void {
+        if (etActive) entry.transform = etMatrix;
         nextFrame.mouseListeners.push(entry);
     }
 
@@ -7280,7 +7977,9 @@ class Window implements WindowInvalidator {
      */
     @:allow(glaze)
     function onElementHover(hitbox:Hitbox, hoverState:Null<Interactivity.ElementHoverState>, currentView:Int, paintedHovered:Int):Void {
-        nextFrame.mouseListeners.push(new HoverListenerEntry(hitbox, hoverState, currentView, paintedHovered));
+        final entry = new HoverListenerEntry(hitbox, hoverState, currentView, paintedHovered);
+        if (etActive) entry.transform = etMatrix;
+        nextFrame.mouseListeners.push(entry);
     }
 
     /**
@@ -7289,7 +7988,9 @@ class Window implements WindowInvalidator {
      */
     @:allow(glaze)
     function onElementMouseEvent(kind:PlatformInputKind, listener:Interactivity.ElementMouseListener, hitbox:Hitbox):Void {
-        nextFrame.mouseListeners.push(new MouseListenerEntry(kind, null, listener, hitbox));
+        final entry = new MouseListenerEntry(kind, null, listener, hitbox);
+        if (etActive) entry.transform = etMatrix;
+        nextFrame.mouseListeners.push(entry);
     }
 
     /**
@@ -7597,7 +8298,8 @@ class Window implements WindowInvalidator {
         if (elementBounds != null) {
             final visible = elementBounds.intersect(contentMask().bounds);
             if (visible.size.width > 0 && visible.size.height > 0) {
-                nextFrame.textInputRegions.push(new TextInputRegion(visible, inputHandler));
+                // (inside an element transformation: where the input is drawn)
+                nextFrame.textInputRegions.push(new TextInputRegion(etActive ? etBounds(visible) : visible, inputHandler));
             }
         }
         if (focusHandle.isFocused(this)) {
@@ -8046,13 +8748,18 @@ class Window implements WindowInvalidator {
 
         final mouseListeners = renderedFrame.mouseListeners.copy();
         final kind = event.kind;
+        mappedEventSource = null;
+        mappedEvent = null;
 
         // Capture phase, events bubble from back to front. Handlers for this phase are used for
         // special purposes, such as detecting events outside of a given Bounds.
         for (entry in mouseListeners) {
             if (entry.kind != kind)
                 continue;
-            entry.call(event, Capture, this, cx);
+            if (entry.transform == null)
+                entry.call(event, Capture, this, cx);
+            else
+                callTransformedMouseListener(entry, entry.transform, event, Capture, cx);
             if (!cx.propagateEvent) {
                 break;
             }
@@ -8066,7 +8773,10 @@ class Window implements WindowInvalidator {
                 i--;
                 if (entry.kind != kind)
                     continue;
-                entry.call(event, Bubble, this, cx);
+                if (entry.transform == null)
+                    entry.call(event, Bubble, this, cx);
+                else
+                    callTransformedMouseListener(entry, entry.transform, event, Bubble, cx);
                 if (!cx.propagateEvent) {
                     break;
                 }
@@ -8178,12 +8888,12 @@ class Window implements WindowInvalidator {
             final needsTimeout = previousTimeout != null || matchResult.pendingHasBinding || textInputRequiresTimeout;
             if (needsTimeout) {
                 if (previousTimeout != null && previousTimeout.isPaused()) {
-                    previousTimeout.resetDuration(PENDING_INPUT_TIMEOUT);
+                    previousTimeout.resetDuration(cx.pendingInputTimeout());
                     currentlyPending.timeout = previousTimeout;
                 }
                 else {
                     if (previousTimeout != null) previousTimeout.drop();
-                    currentlyPending.timeout = newPendingInputTimeout(PENDING_INPUT_TIMEOUT, cx);
+                    currentlyPending.timeout = newPendingInputTimeout(cx.pendingInputTimeout(), cx);
                 }
             }
             else {
@@ -8233,7 +8943,11 @@ class Window implements WindowInvalidator {
         return acceptsTextInput ? CharacterInput : KeyBindings;
     }
 
-    /** Duration after which pending input is replayed, in seconds (Rust `PENDING_INPUT_TIMEOUT`, 1s) */
+    /**
+     * Duration after which pending input is replayed, in seconds (Rust
+     * `PENDING_INPUT_TIMEOUT`, 1s): the default of `App.pendingInputTimeout()`,
+     * which `App.setPendingInputTimeout(seconds)` changes (port addition).
+     */
     public static inline final PENDING_INPUT_TIMEOUT:Float = 1.0;
 
     function newPendingInputTimeout(duration:Float, cx:App):PendingInputTimeout {

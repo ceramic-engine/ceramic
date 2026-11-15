@@ -435,8 +435,8 @@ class TextSystem {
      * Returns a line wrapper for the given font and font size. Wrappers
      * cache character widths and are reused (one per font id and size).
      */
-    public function lineWrapper(font:Font, fontSize:Pixels):LineWrapper {
-        return lineWrapperOfFontId(resolveFont(font), fontSize);
+    public function lineWrapper(font:Font, fontSize:Pixels, letterSpacing:Float = 0.0):LineWrapper {
+        return lineWrapperOfFontId(resolveFont(font), fontSize, letterSpacing);
     }
 
     /**
@@ -444,8 +444,8 @@ class TextSystem {
      * the style's font was resolved lately (compared like `Font.equals`).
      */
     @:allow(glaze)
-    function lineWrapperOfStyle(style:TextStyle, fontSize:Pixels):LineWrapper {
-        return lineWrapperOfFontId(resolveStyleFont(style), fontSize);
+    function lineWrapperOfStyle(style:TextStyle, fontSize:Pixels, letterSpacing:Float = 0.0):LineWrapper {
+        return lineWrapperOfFontId(resolveStyleFont(style), fontSize, letterSpacing);
     }
 
     /** `resolveFont(style.font())`, without the `Font` when it is one of the recent fonts */
@@ -470,7 +470,7 @@ class TextSystem {
         return resolveFont(style.font());
     }
 
-    function lineWrapperOfFontId(fontId:FontId, fontSize:Pixels):LineWrapper {
+    function lineWrapperOfFontId(fontId:FontId, fontSize:Pixels, letterSpacing:Float = 0.0):LineWrapper {
         var wrappers = wrapperPool.get(fontId);
         if (wrappers == null) {
             wrappers = [];
@@ -479,11 +479,11 @@ class TextSystem {
         final size:Float = fontSize;
         for (i in 0...wrappers.length) {
             final wrapper = wrappers[i];
-            if ((wrapper.fontSize:Float) == size) {
+            if ((wrapper.fontSize:Float) == size && wrapper.letterSpacing == letterSpacing) {
                 return wrapper;
             }
         }
-        final wrapper = new LineWrapper(fontId, fontSize, this);
+        final wrapper = new LineWrapper(fontId, fontSize, this, letterSpacing);
         wrappers.push(wrapper);
         return wrapper;
     }

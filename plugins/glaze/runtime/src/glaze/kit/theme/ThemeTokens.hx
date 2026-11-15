@@ -126,6 +126,10 @@ class ThemeTokens {
     public var tabBar:ThemeToken = ZERO;
     public var tabBarSegmented:ThemeToken = ZERO;
     public var tabForeground:ThemeToken = ZERO;
+    /** Addition without upstream equivalent, see `ThemeColor.tabHover`. */
+    public var tabHover:ThemeToken = ZERO;
+    /** Addition without upstream equivalent, see `ThemeColor.tabHoverForeground`. */
+    public var tabHoverForeground:ThemeToken = ZERO;
     public var table:ThemeToken = ZERO;
     public var tableActive:ThemeToken = ZERO;
     public var tableActiveBorder:ThemeToken = ZERO;
@@ -274,6 +278,8 @@ class ThemeTokens {
         tokens.tabBar = ThemeToken.fromHsla(colors.tabBar);
         tokens.tabBarSegmented = ThemeToken.fromHsla(colors.tabBarSegmented);
         tokens.tabForeground = ThemeToken.fromHsla(colors.tabForeground);
+        tokens.tabHover = ThemeToken.fromHsla(colors.tabHover);
+        tokens.tabHoverForeground = ThemeToken.fromHsla(colors.tabHoverForeground);
         tokens.table = ThemeToken.fromHsla(colors.table);
         tokens.tableActive = ThemeToken.fromHsla(colors.tableActive);
         tokens.tableActiveBorder = ThemeToken.fromHsla(colors.tableActiveBorder);
@@ -423,6 +429,8 @@ class ThemeTokens {
         tokens.tabBar = tabBar;
         tokens.tabBarSegmented = tabBarSegmented;
         tokens.tabForeground = tabForeground;
+        tokens.tabHover = tabHover;
+        tokens.tabHoverForeground = tabHoverForeground;
         tokens.table = table;
         tokens.tableActive = tableActive;
         tokens.tableActiveBorder = tableActiveBorder;
@@ -572,6 +580,8 @@ class ThemeTokens {
             && tabBar.equals(other.tabBar)
             && tabBarSegmented.equals(other.tabBarSegmented)
             && tabForeground.equals(other.tabForeground)
+            && tabHover.equals(other.tabHover)
+            && tabHoverForeground.equals(other.tabHoverForeground)
             && table.equals(other.table)
             && tableActive.equals(other.tableActive)
             && tableActiveBorder.equals(other.tableActiveBorder)
@@ -1477,6 +1487,22 @@ class ThemeTokens {
         }
         else if (!tabForeground.equals(tokensBefore.tabForeground)) {
             colors.tabForeground = tabForeground.color;
+        }
+        if (!colors.tabHover.equals(colorsBefore.tabHover)) {
+            if (!tabHover.color.equals(colors.tabHover)) {
+                tabHover = ThemeToken.fromHsla(colors.tabHover);
+            }
+        }
+        else if (!tabHover.equals(tokensBefore.tabHover)) {
+            colors.tabHover = tabHover.color;
+        }
+        if (!colors.tabHoverForeground.equals(colorsBefore.tabHoverForeground)) {
+            if (!tabHoverForeground.color.equals(colors.tabHoverForeground)) {
+                tabHoverForeground = ThemeToken.fromHsla(colors.tabHoverForeground);
+            }
+        }
+        else if (!tabHoverForeground.equals(tokensBefore.tabHoverForeground)) {
+            colors.tabHoverForeground = tabHoverForeground.color;
         }
         if (!colors.table.equals(colorsBefore.table)) {
             if (!table.color.equals(colors.table)) {

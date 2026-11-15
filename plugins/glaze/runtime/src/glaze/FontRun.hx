@@ -13,13 +13,21 @@ class FontRun {
 
     public var fontId:FontId;
 
-    public inline function new(len:Int, fontId:FontId) {
+    /**
+     * Space added after each character of the run, in pixels (port
+     * addition without GPUI equivalent, see `TextStyle.letterSpacing`).
+     * Zero by default: the run is shaped as GPUI shapes it.
+     */
+    public var letterSpacing:Float;
+
+    public inline function new(len:Int, fontId:FontId, letterSpacing:Float = 0.0) {
         this.len = len;
         this.fontId = fontId;
+        this.letterSpacing = letterSpacing;
     }
 
     public inline function equals(other:FontRun):Bool {
-        return other != null && len == other.len && (fontId:Int) == (other.fontId:Int);
+        return other != null && len == other.len && (fontId:Int) == (other.fontId:Int) && letterSpacing == other.letterSpacing;
     }
 
     public function toString():String {

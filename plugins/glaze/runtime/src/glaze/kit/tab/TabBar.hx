@@ -2,6 +2,7 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified during the initial port: deviation DEV-014 (no indicator under a disabled selected tab). See docs/DEVIATIONS.md.
+// Additions without upstream equivalent (KIT-001, KIT-002 in docs/DEVIATIONS.md): `custom`, `labelMaxWidth`, `revealSelected`.
 package glaze.kit.tab;
 
 import glaze.Anchor;
@@ -123,6 +124,24 @@ class TabBar extends Component implements Styled implements Sizable {
      */
     @prop var maxWidth:Null<Pixels> = null;
 
+    /**
+     * Set the maximum width of the label of each tab, leaving the tab's
+     * prefix, suffix and paddings at their size (`maxWidth` caps the whole
+     * tab). A tab's own `labelMaxWidth` wins. Does not apply to icon-only
+     * tabs.
+     */
+    @prop var labelMaxWidth:Null<Pixels> = null;
+
+    /**
+     * Set whether the bar scrolls the selected tab into view when the
+     * selected index changes without a click (by code: a file opened from a
+     * tree, a tab restored), and on its first frame. Default false: only a
+     * click reveals a tab.
+     */
+    @prop var revealSelected:Bool = false;
+
+    var appearanceValue:Null<TabAppearance> = null;
+
     var onClickHandler:Null<(Int, Window, App) -> Void> = null;
 
     /** Create a new TabBar. */
@@ -163,6 +182,16 @@ class TabBar extends Component implements Styled implements Sizable {
 
     public function folder():TabBar {
         variant = Folder;
+        return this;
+    }
+
+    /**
+     * Set the Tab variant to `TabVariant.Custom`, all children will inherit
+     * the variant, and `appearance` unless they have their own.
+     */
+    public function custom(?appearance:TabAppearance):TabBar {
+        variant = Custom;
+        if (appearance != null) appearanceValue = appearance;
         return this;
     }
 
@@ -403,6 +432,10 @@ class TabBar extends Component implements Styled implements Sizable {
                 bg = theme.tokens.tabBar.background;
                 paddings = new Edges(0., 0., 0., 0.);
                 gap = @:privateAccess FolderTabConstants.FOLDER_TAB_GAP;
+            case Custom:
+                bg = theme.tokens.tabBar.background;
+                paddings = new Edges(0., 0., 0., 0.);
+                gap = appearanceValue != null ? appearanceValue.gapValue : 0.;
         }
         final overhang = variant.overhang(size, cx);
         // Inside the tabs rather than on the bar, so the bar's prefix and
@@ -434,6 +467,25 @@ class TabBar extends Component implements Styled implements Sizable {
             },
             numTabs
         );
+        if (revealSelected) {
+            // A selection changed by code is revealed one frame later, when
+            // the layout knows the tabs of this render (a tab added with the
+            // change has no bounds yet).
+            final pending = window.useKeyedState('$idString-reveal-selected', cx, _ -> new KeyedCell(({last: null, pending: null} : RevealSelected))).read(cx).value;
+            final selected = this.selectedIndex;
+            if (pending.value.pending != null) {
+                final ix = pending.value.pending;
+                pending.value = {last: pending.value.last, pending: null};
+                if (ix < numTabs) reveal.reveal(ix, null);
+            }
+            if (selected != pending.value.last) {
+                pending.value = {last: selected, pending: selected};
+                if (selected != null) {
+                    final view = window.currentView();
+                    window.onNextFrame((_, cx) -> cx.notify(view));
+                }
+            }
+        }
         reveal.advance(window, cx);
 
         final paddingX = paddings.left;
@@ -471,6 +523,8 @@ class TabBar extends Component implements Styled implements Sizable {
                 .maxWidth(maxWidth)
                 .withVariant(variant)
                 .withSize(size);
+            if (tab.appearanceValue == null) tab.appearanceValue = appearanceValue;
+            if (tab.labelMaxWidthValue == null) tab.labelMaxWidthValue = labelMaxWidth;
             tab.indicatorActive = hasIndicator;
             tab.indicatorReady = indicatorReady;
             tab.indicatorEpoch = indicatorEpoch;
@@ -557,7 +611,7 @@ class TabBar extends Component implements Styled implements Sizable {
             .itemsCenter()
             .bg(bg)
             .textColor(theme.tabForeground);
-        if (variant == Underline || variant == Tab) {
+        if (variant == Underline || variant == Tab || (variant == Custom && (appearanceValue == null || appearanceValue.bottomBorderValue))) {
             tabs.child(div()
                 .id('border-b')
                 .absolute()
@@ -645,6 +699,12 @@ class TabBar extends Component implements Styled implements Sizable {
 
 }
 
+/** The selected index `revealSelected` last saw, and the one it has yet to reveal. */
+private typedef RevealSelected = {
+    last:Null<Int>,
+    pending:Null<Int>,
+};
+
 /** The offset a reveal is travelling to, while one is. */
 private typedef RevealTarget = {
     to:Float,
@@ -683,7 +743,7 @@ private class TabReveal {
         this.numTabs = numTabs;
     }
 
-    public function reveal(ix:Int, cx:App):Void {
+    public function reveal(ix:Int, cx:Null<App>):Void {
         final to = offsetRevealing(ix);
         if (to == null) {
             return;
@@ -695,7 +755,9 @@ private class TabReveal {
         final current = target.value;
         // Retargeting keeps the spring's velocity.
         target.value = current != null ? {to: to, last: current.last} : {to: to, last: null};
-        cx.notify(view);
+        // Without a context the call comes from the render that steps the
+        // reveal right after.
+        if (cx != null) cx.notify(view);
     }
 
     /**

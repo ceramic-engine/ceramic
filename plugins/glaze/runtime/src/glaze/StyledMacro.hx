@@ -431,6 +431,13 @@ class StyledMacro {
             ['textEllipsis', '', 'style.textStyle().textOverflow = glaze.TextOverflow.Truncate(glaze.StyledValues.ELLIPSIS);'],
             ['textEllipsisStart', '', 'style.textStyle().textOverflow = glaze.TextOverflow.TruncateStart(glaze.StyledValues.ELLIPSIS);'],
             ['textEllipsisMiddle', '', 'style.textStyle().textOverflow = glaze.TextOverflow.TruncateMiddle(glaze.StyledValues.ELLIPSIS);'],
+            // Port additions without GPUI equivalent: Tailwind's letter spacings (`TextStyle.letterSpacing`)
+            ['trackingTighter', '', 'style.textStyle().letterSpacing = glaze.StyledValues.TRACKING_TIGHTER;'],
+            ['trackingTight', '', 'style.textStyle().letterSpacing = glaze.StyledValues.TRACKING_TIGHT;'],
+            ['trackingNormal', '', 'style.textStyle().letterSpacing = glaze.StyledValues.TRACKING_NORMAL;'],
+            ['trackingWide', '', 'style.textStyle().letterSpacing = glaze.StyledValues.TRACKING_WIDE;'],
+            ['trackingWider', '', 'style.textStyle().letterSpacing = glaze.StyledValues.TRACKING_WIDER;'],
+            ['trackingWidest', '', 'style.textStyle().letterSpacing = glaze.StyledValues.TRACKING_WIDEST;'],
             ['textLeft', '', 'style.textStyle().textAlign = glaze.TextAlign.Left;'],
             ['textCenter', '', 'style.textStyle().textAlign = glaze.TextAlign.Center;'],
             ['textRight', '', 'style.textStyle().textAlign = glaze.TextAlign.Right;'],
@@ -527,6 +534,8 @@ class StyledMacro {
             {name: 'textDecorationColor', args: [arg('color', macro :glaze.IntoHsla)], body: 'glaze.StyledValues.underlineOf(style).color = color;'},
             {name: 'fontFamily', args: [arg('familyName', macro :String)], body: 'style.textStyle().fontFamily = familyName;'},
             {name: 'lineHeight', args: [arg('lineHeight', macro :glaze.IntoDefiniteLength)], body: 'style.textStyle().lineHeight = lineHeight;'},
+            // Port addition: pixels, rems, or `relative(em)` of the font size
+            {name: 'letterSpacing', args: [arg('spacing', macro :glaze.IntoDefiniteLength)], body: 'style.textStyle().letterSpacing = spacing;'},
             {name: 'opacity', args: [arg('opacity', macro :Float)], body: 'style.opacity = opacity;'},
             {name: 'gridCols', args: [arg('cols', macro :Int)], body: 'style.gridCols = new glaze.GridTemplate(cols, glaze.GridTemplateMinSize.Zero);'},
             {name: 'gridColsMinContent', args: [arg('cols', macro :Int)], body: 'style.gridCols = new glaze.GridTemplate(cols, glaze.GridTemplateMinSize.MinContent);'},
@@ -534,6 +543,11 @@ class StyledMacro {
             {name: 'gridRows', args: [arg('rows', macro :Int)], body: 'style.gridRows = new glaze.GridTemplate(rows, glaze.GridTemplateMinSize.Zero);'},
             {name: 'gridRowsMinContent', args: [arg('rows', macro :Int)], body: 'style.gridRows = new glaze.GridTemplate(rows, glaze.GridTemplateMinSize.MinContent);'},
             {name: 'gridRowsMaxContent', args: [arg('rows', macro :Int)], body: 'style.gridRows = new glaze.GridTemplate(rows, glaze.GridTemplateMinSize.MaxContent);'},
+            // Port addition without GPUI equivalent: the element and its children drawn moved and scaled
+            {name: 'transformation', args: [arg('transformation', macro :glaze.Transformation)], body: 'style.transformation = transformation;'},
+            // Port additions without GPUI equivalent: explicit track lists (`GridTrack`)
+            {name: 'gridTemplateCols', args: [arg('tracks', macro :Array<glaze.GridTrack>)], body: 'style.gridCols = glaze.GridTemplate.ofTracks(tracks);'},
+            {name: 'gridTemplateRows', args: [arg('tracks', macro :Array<glaze.GridTrack>)], body: 'style.gridRows = glaze.GridTemplate.ofTracks(tracks);'},
             {name: 'colStart', args: [arg('start', macro :Int)], body: 'style.gridLocationMut().columnStart = glaze.GridPlacement.Line(start);'},
             {name: 'colEnd', args: [arg('end', macro :Int)], body: 'style.gridLocationMut().columnEnd = glaze.GridPlacement.Line(end);'},
             {name: 'colSpan', args: [arg('span', macro :Int)], body: 'final location = style.gridLocationMut(); location.columnStart = glaze.GridPlacement.Span(span); location.columnEnd = glaze.GridPlacement.Span(span);'},

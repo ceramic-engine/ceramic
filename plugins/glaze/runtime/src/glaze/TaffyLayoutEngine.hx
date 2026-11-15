@@ -1648,9 +1648,45 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         return LengthPercentage.length(roundStrokeToDevicePixel(width.toPixels(remSize), scaleFactor));
     }
 
-    static function toGridRepeat(template:Null<GridTemplate>):Array<GridTemplateComponent> {
+    /** The minimum of a track of an explicit template (port addition, see `GridTrack`) */
+    static function toMinTrack(track:GridTrack.GridTrackSize, remSize:Pixels, scaleFactor:Float):MinTrackSizingFunction {
+        return switch track {
+            case Fixed(length): MinTrackSizingFunction.length(absoluteToTaffy(length, remSize, scaleFactor));
+            case Percent(fraction): MinTrackSizingFunction.percent(fraction);
+            // CSS: a flexible length is not a valid minimum, `1fr` alone is `minmax(auto, 1fr)`
+            case Fr(_) | Auto: MinTrackSizingFunction.AUTO;
+            case MinContent: MinTrackSizingFunction.MIN_CONTENT;
+            case MaxContent: MinTrackSizingFunction.MAX_CONTENT;
+            case MinMax(min, _): toMinTrack(min, remSize, scaleFactor);
+        }
+    }
+
+    /** The maximum of a track of an explicit template */
+    static function toMaxTrack(track:GridTrack.GridTrackSize, remSize:Pixels, scaleFactor:Float):MaxTrackSizingFunction {
+        return switch track {
+            case Fixed(length): MaxTrackSizingFunction.length(absoluteToTaffy(length, remSize, scaleFactor));
+            case Percent(fraction): MaxTrackSizingFunction.percent(fraction);
+            case Fr(flex): MaxTrackSizingFunction.fr(flex);
+            case Auto: MaxTrackSizingFunction.AUTO;
+            case MinContent: MaxTrackSizingFunction.MIN_CONTENT;
+            case MaxContent: MaxTrackSizingFunction.MAX_CONTENT;
+            case MinMax(_, max): toMaxTrack(max, remSize, scaleFactor);
+        }
+    }
+
+    static function toGridRepeat(template:Null<GridTemplate>, remSize:Pixels, scaleFactor:Float):Array<GridTemplateComponent> {
         if (template == null) {
             return [];
+        }
+        final tracks = template.tracks;
+        if (tracks != null) {
+            // Port addition: one component per listed track
+            final components:Array<GridTemplateComponent> = [];
+            for (i in 0...tracks.length) {
+                final track:GridTrack.GridTrackSize = tracks[i];
+                components.push(GridTemplateComponent.Single(new TrackSizingFunction(toMinTrack(track, remSize, scaleFactor), toMaxTrack(track, remSize, scaleFactor))));
+            }
+            return components;
         }
         final track = switch template.minSize {
             // grid-template-*: repeat(<number>, minmax(0, 1fr));
@@ -1851,8 +1887,8 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         result.flexGrow = style.flexGrow;
         result.flexShrink = style.flexShrink;
         // Without a grid template, taffy's default (shared, empty) stays
-        if (style.gridRows != null) result.gridTemplateRows = toGridRepeat(style.gridRows);
-        if (style.gridCols != null) result.gridTemplateColumns = toGridRepeat(style.gridCols);
+        if (style.gridRows != null) result.gridTemplateRows = toGridRepeat(style.gridRows, remSize, scaleFactor);
+        if (style.gridCols != null) result.gridTemplateColumns = toGridRepeat(style.gridCols, remSize, scaleFactor);
         final location = style.gridLocation;
         if (location != null) {
             result.gridRow = new LineOf<taffy.style.GridPlacement>(toGridPlacement(location.rowStart), toGridPlacement(location.rowEnd));

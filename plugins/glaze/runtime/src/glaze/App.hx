@@ -1096,6 +1096,30 @@ class App {
         }
     }
 
+    var _pendingInputTimeout:Float = Window.PENDING_INPUT_TIMEOUT;
+
+    /**
+     * How long a pending key sequence waits for its next keystroke before
+     * the keys typed so far are replayed, in seconds (after the first key of
+     * a chord like `cmd-k cmd-s`). 1 second by default, GPUI's
+     * `PENDING_INPUT_TIMEOUT`.
+     */
+    public inline function pendingInputTimeout():Float {
+        return _pendingInputTimeout;
+    }
+
+    /**
+     * Sets `pendingInputTimeout()` for the key sequences that start or
+     * advance from now on, in every window of the app (a countdown already
+     * running keeps its duration). Port addition without GPUI equivalent,
+     * where the duration is a constant.
+     */
+    public function setPendingInputTimeout(seconds:Float):Void {
+        if (!(seconds > 0) || !Math.isFinite(seconds))
+            throw 'The pending input timeout must be a positive number of seconds, got $seconds';
+        _pendingInputTimeout = seconds;
+    }
+
     /**
      * Group hitboxes of the elements being painted (Rust global `GroupHitboxes`).
      */

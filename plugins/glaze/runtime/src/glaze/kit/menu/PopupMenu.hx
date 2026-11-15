@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/menu/popup_menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Additions without upstream equivalent (KIT-007 in docs/DEVIATIONS.md): a public `withMenuItems`, `withAppMenus`.
 package glaze.kit.menu;
 
 import glaze.Action;
@@ -759,8 +760,34 @@ class PopupMenu extends Model implements Render {
         return this;
     }
 
-    @:allow(glaze.kit)
-    function withMenuItems(items:Array<OwnedMenuItem>, window:Window, cx:Context<PopupMenu>):PopupMenu {
+    /**
+     * Adds every menu the application declared with `cx.setMenus` as a
+     * submenu named like it: the whole menu bar as one popup menu, for a
+     * button that opens the app menu where the system shows no menu bar
+     * (see `DropdownMenu.appMenu`). The items dispatch their actions like
+     * those of the menu bar. `skip` leaves menus out by name.
+     */
+    public function withAppMenus(window:Window, cx:Context<PopupMenu>, ?skip:Array<String>):PopupMenu {
+        var self = this;
+        final menus = cx.app.getMenus();
+        if (menus == null) {
+            return self;
+        }
+        for (menu in menus) {
+            if (skip != null && skip.indexOf(menu.name) != -1) continue;
+            final items = [for (item in menu.items) item.clone()];
+            self = self.submenu(menu.name, window, cx, (popup, window, cx) -> popup.withMenuItems(items, window, cx));
+        }
+        return self;
+    }
+
+    /**
+     * Adds the items of an application menu (those of an `OwnedMenu` from
+     * `cx.getMenus()`): actions with their checked and disabled states,
+     * separators and submenus. System menus have no drawn equivalent and
+     * are left out. Public since KIT-007 (gpui-kit keeps it to the crate).
+     */
+    public function withMenuItems(items:Array<OwnedMenuItem>, window:Window, cx:Context<PopupMenu>):PopupMenu {
         var self = this;
         for (item in items) {
             switch item {

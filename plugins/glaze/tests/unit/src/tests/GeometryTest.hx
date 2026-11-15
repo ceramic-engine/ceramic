@@ -420,7 +420,7 @@ class GeometryTest extends TestCase {
         // `impl Into<Radians>` arguments take a percentage of a full circle
         final quarter:glaze.Radians = percentage(0.25);
         assertFloatEquals(Math.PI / 2, (quarter:Float));
-        assertFloatEquals(Math.PI, (glaze.Svg.Transformation.rotated(percentage(0.5)).rotate:Float));
+        assertFloatEquals(Math.PI, (glaze.Transformation.rotated(percentage(0.5)).rotate:Float));
         assertEquals(1.5, (radians(1.5):Float));
 
         assertEquals(12.5, (Pixels.parse('12.5px'):Float));
