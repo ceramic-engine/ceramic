@@ -520,7 +520,7 @@ class Project extends Entity {
                 return true;
             },
             () -> {
-                equals('1 sdl', runtime.windowTitleBarCanMoveAt(25, 15), 'overlay without regions: the answer of SDL');
+                equals('1 system', runtime.windowTitleBarCanMoveAt(25, 15), 'overlay without regions: movable by the system');
                 runtime.setWindowHitRegions([
                     0, 0, 100, 40, WindowHitKind.DRAGGABLE,
                     20, 10, 30, 20, WindowHitKind.NORMAL
@@ -530,7 +530,7 @@ class Project extends Entity {
             },
             () -> {
                 if (describe().indexOf('style=0') != 0) return false;
-                equals('1 sdl', runtime.windowTitleBarCanMoveAt(25, 15), 'default title bar: the answer of SDL, unchanged');
+                equals('1 system', runtime.windowTitleBarCanMoveAt(25, 15), 'default title bar: movable by the system, unchanged');
                 runtime.setWindowHitRegions([]);
                 return true;
             }
