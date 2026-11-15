@@ -129,16 +129,13 @@ class HslaSliders {
  */
 class ColorPickerState extends Model implements Render {
 
-    static inline final CONTEXT:String = "ColorPicker";
+    static inline final CONTEXT:String = ColorPickerKeys.CONTEXT;
 
     /** The hex values this picker's text field accepts while being typed. */
     static inline final HEX_PATTERN:String = '^#[0-9a-fA-F]{0,8}$';
 
     public static function init(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding("enter", new Confirm(false), CONTEXT),
-            new KeyBinding("escape", new Cancel(), CONTEXT),
-        ]);
+        ColorPickerKeys.init(cx);
     }
 
     public final focusHandle:FocusHandle;

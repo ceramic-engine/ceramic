@@ -50,13 +50,10 @@ enum NumberInputEvent {
  */
 class NumberInput extends Component implements Styled implements ParentElement {
 
-    static inline final CONTEXT:String = "NumberInput";
+    static inline final CONTEXT:String = NumberInputKeys.CONTEXT;
 
     public static function bindKeys(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding("up", new Increment(), CONTEXT),
-            new KeyBinding("down", new Decrement(), CONTEXT),
-        ]);
+        NumberInputKeys.bindKeys(cx);
     }
 
     final numberStyle:StyleRefinement = new StyleRefinement();

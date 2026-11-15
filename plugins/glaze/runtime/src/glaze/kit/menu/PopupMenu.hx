@@ -308,17 +308,10 @@ private class RenderOptions {
  */
 class PopupMenu extends Model implements Render {
 
-    static inline final CONTEXT = 'PopupMenu';
+    static inline final CONTEXT = PopupMenuKeys.CONTEXT;
 
     public static function init(cx:AppContext):Void {
-        (cx:App).bindKeys([
-            new KeyBinding('enter', new Confirm(false), CONTEXT),
-            new KeyBinding('escape', new Cancel(), CONTEXT),
-            new KeyBinding('up', new SelectUp(), CONTEXT),
-            new KeyBinding('down', new SelectDown(), CONTEXT),
-            new KeyBinding('left', new SelectLeft(), CONTEXT),
-            new KeyBinding('right', new SelectRight(), CONTEXT),
-        ]);
+        PopupMenuKeys.init(cx);
     }
 
     public final focusHandle:FocusHandle;

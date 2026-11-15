@@ -195,22 +195,12 @@ class PopoverState extends Model implements Render {
  */
 class Popover extends Component implements Styled {
 
-    static inline final CONTEXT = 'Popover';
+    static inline final CONTEXT = PopoverKeys.CONTEXT;
 
-    static inline final CONTENT_CONTEXT = 'PopoverContent';
+    static inline final CONTENT_CONTEXT = PopoverKeys.CONTENT_CONTEXT;
 
     public static function bindKeys(cx:AppContext):Void {
-        (cx:App).bindKeys([
-            new KeyBinding('escape', new Cancel(), CONTEXT),
-            new KeyBinding('enter', new Confirm(false), CONTEXT),
-            new KeyBinding('space', new Confirm(false), CONTEXT),
-            new KeyBinding('escape', new Cancel(), CONTENT_CONTEXT),
-            // The content is still a descendant of the trigger's dispatch node.
-            // Leave activation to its controls, not the trigger or an outer dialog.
-            // More deeply scoped input bindings retain precedence.
-            new KeyBinding('enter', new NoAction(), CONTENT_CONTEXT),
-            new KeyBinding('space', new NoAction(), CONTENT_CONTEXT)
-        ]);
+        PopoverKeys.bindKeys(cx);
     }
 
     final id:ElementId;

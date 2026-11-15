@@ -18,6 +18,10 @@ class Base {
      * Ported so far: the Base theme global, `GlobalState`, the focus trap
      * manager, the dialog, popover, sheet, input and root key bindings. The other modules register their
      * globals and bindings here as they are ported.
+     *
+     * The key bindings are registered here in the Rust order, from classes
+     * that do not refer to their component (`SelectKeys`, `TreeKeys`...), so
+     * that `-dce full` removes a component the app never uses (see `Kit`).
      */
     public static function init(cx:AppContext):Void {
         // Once per app: the kit's initialization runs it too, after an app
@@ -29,17 +33,21 @@ class Base {
         GlobalState.init(cx);
         Dialog.DialogKeys.init(cx);
         FocusTrap.init(cx);
-        Popover.bindKeys(cx);
-        Sheet.bindKeys(cx);
+        PopoverKeys.bindKeys(cx);
+        SheetKeys.bindKeys(cx);
         // Rust order: sheet, combobox, color_picker, select, number_input
-        Combobox.bindKeys(cx);
-        ColorPicker.ColorPickerState.init(cx);
-        Select.bindKeys(cx);
-        NumberInput.bindKeys(cx);
-        TimeField.TimeFieldState.init(cx);
+        ComboboxKeys.bindKeys(cx);
+        // `ColorPickerState.init`
+        ColorPickerKeys.init(cx);
+        SelectKeys.bindKeys(cx);
+        NumberInputKeys.bindKeys(cx);
+        // `TimeFieldState.init`
+        TimeFieldKeys.init(cx);
         glaze.kit.base.input.InputKeyBindings.init(cx);
-        Tree.TreeState.init(cx);
-        glaze.kit.base.text.Text.bindKeys(cx);
+        // `TreeState.init`
+        TreeKeys.init(cx);
+        // `Text.bindKeys`: `Inline.init` (empty), then `TextViewState.init`
+        glaze.kit.base.text.TextViewKeys.init(cx);
         Root.bindKeys(cx);
     }
 

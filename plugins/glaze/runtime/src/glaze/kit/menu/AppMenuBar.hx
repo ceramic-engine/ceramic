@@ -39,14 +39,10 @@ using glaze.kit.base.InteractiveElementExt;
  */
 class AppMenuBar extends Model implements Render {
 
-    static inline final CONTEXT = 'AppMenuBar';
+    static inline final CONTEXT = AppMenuBarKeys.CONTEXT;
 
     public static function init(cx:AppContext):Void {
-        (cx:App).bindKeys([
-            new KeyBinding('escape', new Cancel(), CONTEXT),
-            new KeyBinding('left', new SelectLeft(), CONTEXT),
-            new KeyBinding('right', new SelectRight(), CONTEXT),
-        ]);
+        AppMenuBarKeys.init(cx);
     }
 
     @:allow(glaze.kit, tests)

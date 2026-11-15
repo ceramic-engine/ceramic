@@ -13,6 +13,12 @@ import glaze.kit.base.GlobalState;
 import glaze.kit.base.Root;
 import glaze.kit.base.RootContent;
 import glaze.kit.theme.Theme;
+// Not used here: the dock's actions are modules of their own that only the
+// dock refers to. Importing them keeps them registered (`ActionRegistry`, built
+// by name from a keymap) in an app that does not use the dock, as when the
+// kit's initialization loaded the dock.
+import glaze.kit.dock.ClosePanel;
+import glaze.kit.dock.ToggleZoom;
 
 /**
  * The styled component library of GPUI Kit (the `gpui-component` crate).
@@ -78,6 +84,13 @@ class Kit {
      * Ported so far: the theme, the global state, the root plugin
      * (`WindowState`) and the Base layer. The other modules register their
      * globals and key bindings here as they are ported.
+     *
+     * Every key binding is registered here, in the Rust order, whether the
+     * app uses the component or not (the order decides which binding wins).
+     * The bindings live in small classes of their own (`DataTableKeys`,
+     * `CommandKeys`...) that do not refer to their component, so that a
+     * component the app never uses is removed by `-dce full`. Keep it that
+     * way: calling a component class from here keeps it in every app.
      */
     static function initApp(cx:AppContext):Void {
         // The icons are embedded in the code (`IconName`): no file to load
@@ -99,16 +112,25 @@ class Kit {
         // language service of gpui-kit's code editor, `input::init`, is not
         // part of Glaze: its code editor is Cityscape)
         glaze.kit.diff.DiffActions.init(cx);
-        glaze.kit.time.DatePicker.DatePickerState.init(cx);
-        glaze.kit.dock.DockSkin.init(cx);
+        // `DatePickerState.init`
+        glaze.kit.time.DatePickerKeys.init(cx);
+        // `DockSkin.init` (Rust `dock::init`): the panel registry global
+        @:privateAccess glaze.kit.base.dock.PanelRegistry.init(cx);
         glaze.kit.sheet.Sheet.bindKeys(cx);
-        glaze.kit.list.ListState.init(cx);
-        glaze.kit.command.CommandState.init(cx);
-        glaze.kit.carousel.Carousel.bindKeys(cx);
+        // `ListState.init`
+        glaze.kit.list.ListKeys.init(cx);
+        // `CommandState.init`
+        glaze.kit.command.CommandKeys.init(cx);
+        // `Carousel.bindKeys`
+        glaze.kit.carousel.CarouselKeys.bindKeys(cx);
+        // Kept as is: `WindowState`, registered above, uses the notification list
         glaze.kit.notification.Notification.NotificationList.init(cx);
         // Rust order: ... popover, questionnaire, menu, table, tooltip
-        glaze.kit.menu.Menus.init(cx);
-        glaze.kit.table.DataTable.bindKeys(cx);
+        // `Menus.init`: `AppMenuBar.init`, then `PopupMenu.init`
+        glaze.kit.menu.AppMenuBarKeys.init(cx);
+        glaze.kit.menu.PopupMenuKeys.init(cx);
+        // `DataTable.bindKeys`
+        glaze.kit.table.DataTableKeys.bindKeys(cx);
     }
 
     /**

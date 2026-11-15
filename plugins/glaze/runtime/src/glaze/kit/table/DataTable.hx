@@ -72,23 +72,11 @@ class TableOptions {
  */
 class DataTable<D:TableDelegate> extends Component implements Sizable implements FocusableExt {
 
-    static inline final CONTEXT:String = "DataTable";
+    static inline final CONTEXT:String = DataTableKeys.CONTEXT;
 
     /** Rust `table::init` (`data_table::init`): binds the table keys. */
     public static function bindKeys(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding("escape", new Cancel(), CONTEXT),
-            new KeyBinding("up", new SelectUp(), CONTEXT),
-            new KeyBinding("down", new SelectDown(), CONTEXT),
-            new KeyBinding("left", new SelectPrevColumn(), CONTEXT),
-            new KeyBinding("right", new SelectNextColumn(), CONTEXT),
-            new KeyBinding("home", new SelectFirst(), CONTEXT),
-            new KeyBinding("end", new SelectLast(), CONTEXT),
-            new KeyBinding("pageup", new SelectPageUp(), CONTEXT),
-            new KeyBinding("pagedown", new SelectPageDown(), CONTEXT),
-            new KeyBinding("tab", new SelectNextColumn(), CONTEXT),
-            new KeyBinding("shift-tab", new SelectPrevColumn(), CONTEXT),
-        ]);
+        DataTableKeys.bindKeys(cx);
     }
 
     final state:Entity<TableState<D>>;

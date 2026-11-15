@@ -55,18 +55,11 @@ using glaze.kit.ThemeStyled;
 class Carousel extends Component implements Styled implements ParentElement implements FocusableExt {
 
     @:allow(glaze.kit.carousel)
-    static inline final CONTEXT:String = 'Carousel';
+    static inline final CONTEXT:String = CarouselKeys.CONTEXT;
 
     /** Rust `carousel::init`: the navigation keys of the `Carousel` context. */
     public static function bindKeys(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding('left', new SelectLeft(), CONTEXT),
-            new KeyBinding('right', new SelectRight(), CONTEXT),
-            new KeyBinding('up', new SelectUp(), CONTEXT),
-            new KeyBinding('down', new SelectDown(), CONTEXT),
-            new KeyBinding('home', new SelectFirst(), CONTEXT),
-            new KeyBinding('end', new SelectLast(), CONTEXT),
-        ]);
+        CarouselKeys.bindKeys(cx);
     }
 
     final id:ElementId;

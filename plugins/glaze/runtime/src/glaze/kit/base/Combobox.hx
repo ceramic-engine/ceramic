@@ -32,19 +32,13 @@ using glaze.kit.base.StyledExt;
  */
 class Combobox extends Component implements Styled implements ParentElement {
 
-    static inline final CONTEXT:String = "Combobox";
+    static inline final CONTEXT:String = ComboboxKeys.CONTEXT;
 
     /**
      * Rust `combobox::init`: binds the combobox keys.
      */
     public static function bindKeys(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding("up", new SelectUp(), CONTEXT),
-            new KeyBinding("down", new SelectDown(), CONTEXT),
-            new KeyBinding("enter", new Confirm(false), CONTEXT),
-            new KeyBinding(OperatingSystem.current.isMac() ? "cmd-enter" : "ctrl-enter", new Confirm(true), CONTEXT),
-            new KeyBinding("escape", new Cancel(), CONTEXT),
-        ]);
+        ComboboxKeys.bindKeys(cx);
     }
 
     final id:ElementIdArg;

@@ -361,19 +361,10 @@ class SegmentEditor {
 class TimeFieldState extends Model implements Render {
 
     @:allow(glaze.kit.base)
-    static inline final CONTEXT:String = "TimeField";
+    static inline final CONTEXT:String = TimeFieldKeys.CONTEXT;
 
     public static function init(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding("up", new Increment(), CONTEXT),
-            new KeyBinding("down", new Decrement(), CONTEXT),
-            new KeyBinding("left", new SelectLeft(), CONTEXT),
-            new KeyBinding("right", new SelectRight(), CONTEXT),
-            new KeyBinding("tab", new SelectNextColumn(), CONTEXT),
-            new KeyBinding("shift-tab", new SelectPrevColumn(), CONTEXT),
-            new KeyBinding("backspace", new Delete(), CONTEXT),
-            new KeyBinding("delete", new Delete(), CONTEXT),
-        ]);
+        TimeFieldKeys.init(cx);
     }
 
     public final focusHandle:FocusHandle;

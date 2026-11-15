@@ -188,7 +188,7 @@ private class MatchedItem {
 @:allow(glaze.kit.command, tests)
 class CommandState extends Model implements Render {
 
-    public static inline final CONTEXT:String = "Command";
+    public static inline final CONTEXT:String = CommandKeys.CONTEXT;
 
     /**
      * The row a separator occupies: a one-pixel rule with a little air on
@@ -200,13 +200,7 @@ class CommandState extends Model implements Render {
      * Rust `command::init`: binds the palette keys.
      */
     public static function init(cx:AppContext):Void {
-        final context = CONTEXT;
-        (cx : App).bindKeys([
-            new KeyBinding("escape", new Cancel(), context),
-            new KeyBinding("enter", new Confirm(false), context),
-            new KeyBinding("up", new SelectUp(), context),
-            new KeyBinding("down", new SelectDown(), context),
-        ]);
+        CommandKeys.init(cx);
     }
 
     final focusHandleValue:FocusHandle;

@@ -37,7 +37,7 @@ private typedef CloseRequest = (Window, App) -> Void;
  */
 class Sheet extends Component implements Styled {
 
-    static inline final CONTEXT = 'Sheet';
+    static inline final CONTEXT = SheetKeys.CONTEXT;
 
     final base:Div = div();
 
@@ -63,7 +63,7 @@ class Sheet extends Component implements Styled {
     @prop var onClose:CloseHandler = (_, _, _) -> {};
 
     public static function bindKeys(cx:AppContext):Void {
-        (cx:App).bindKeys([new KeyBinding('escape', new Cancel(), CONTEXT)]);
+        SheetKeys.bindKeys(cx);
     }
 
     static function close(request:CloseRequest, notify:CloseHandler, window:Window, cx:App):Void {

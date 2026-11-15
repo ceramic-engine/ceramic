@@ -46,20 +46,13 @@ using glaze.kit.base.StyledExt;
  */
 class Select extends Component implements Styled implements ParentElement {
 
-    static inline final CONTEXT:String = "Select";
+    static inline final CONTEXT:String = SelectKeys.CONTEXT;
 
     /**
      * Rust `select::init`: binds the select keys.
      */
     public static function bindKeys(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding("space", new Confirm(false), "Select && !Input"),
-            new KeyBinding("up", new SelectUp(), CONTEXT),
-            new KeyBinding("down", new SelectDown(), CONTEXT),
-            new KeyBinding("enter", new Confirm(false), CONTEXT),
-            new KeyBinding(OperatingSystem.current.isMac() ? "cmd-enter" : "ctrl-enter", new Confirm(true), CONTEXT),
-            new KeyBinding("escape", new Cancel(), CONTEXT),
-        ]);
+        SelectKeys.bindKeys(cx);
     }
 
     /** The stateful element the root renders. */

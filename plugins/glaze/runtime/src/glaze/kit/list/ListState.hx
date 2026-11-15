@@ -102,20 +102,13 @@ class ListOptions {
 class ListState<D:ListDelegate> extends Model implements Render {
 
     /** The key context of the list. */
-    public static inline final CONTEXT:String = "List";
+    public static inline final CONTEXT:String = ListKeys.CONTEXT;
 
     /**
      * Rust `list::init`: binds the list keys.
      */
     public static function init(cx:AppContext):Void {
-        final context = CONTEXT;
-        (cx : App).bindKeys([
-            new KeyBinding("escape", new CancelAction(), context),
-            new KeyBinding("enter", new ConfirmAction(false), context),
-            new KeyBinding(OperatingSystem.current.isMac() ? "cmd-enter" : "ctrl-enter", new ConfirmAction(true), context),
-            new KeyBinding("up", new SelectUp(), context),
-            new KeyBinding("down", new SelectDown(), context),
-        ]);
+        ListKeys.init(cx);
     }
 
     public final focusHandleValue:FocusHandle;

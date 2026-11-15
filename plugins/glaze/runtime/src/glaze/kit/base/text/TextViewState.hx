@@ -63,7 +63,7 @@ class ParsedContent {
  */
 class TextViewState extends Model implements Render {
 
-    static inline final CONTEXT = 'TextView';
+    static inline final CONTEXT = TextViewKeys.CONTEXT;
     /** Keep coalescing bounded so sustained streams still render intermediate updates. */
     static inline final MAX_COALESCED_UPDATES_PER_PARSE = 64;
     /**
@@ -75,11 +75,7 @@ class TextViewState extends Model implements Render {
     static inline final STREAM_FADE_TICK = 0.033;
 
     public static function init(cx:App):Void {
-        final macos = OperatingSystem.current == Mac;
-        cx.bindKeys([
-            new KeyBinding(macos ? 'cmd-c' : 'ctrl-c', new Copy(), CONTEXT),
-            new KeyBinding(macos ? 'cmd-a' : 'ctrl-a', new SelectAll(), CONTEXT),
-        ]);
+        TextViewKeys.init(cx);
     }
 
     final _entityId:Int;

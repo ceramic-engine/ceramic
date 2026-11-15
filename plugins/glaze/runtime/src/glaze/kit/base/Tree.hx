@@ -244,16 +244,11 @@ typedef TreeRenderItem = (Int, TreeEntry, TreeEntryState, Window, App) -> AnyEle
 @:allow(glaze.kit.base, glaze.kit, tests)
 class TreeState extends Model implements Render {
 
-    static inline final CONTEXT:String = "Tree";
+    static inline final CONTEXT:String = TreeKeys.CONTEXT;
 
     /** Rust `tree::init`: binds the tree keys. */
     public static function init(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding("up", new SelectUp(), CONTEXT),
-            new KeyBinding("down", new SelectDown(), CONTEXT),
-            new KeyBinding("left", new SelectLeft(), CONTEXT),
-            new KeyBinding("right", new SelectRight(), CONTEXT),
-        ]);
+        TreeKeys.init(cx);
     }
 
     /** Rust `tree::key_context`. */

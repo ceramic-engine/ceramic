@@ -192,15 +192,10 @@ class DateRangePreset {
  */
 class DatePickerState extends Model implements Render {
 
-    static inline final CONTEXT:String = "DatePicker";
+    static inline final CONTEXT:String = DatePickerKeys.CONTEXT;
 
     public static function init(cx:AppContext):Void {
-        (cx : App).bindKeys([
-            new KeyBinding("enter", new Confirm(false), CONTEXT),
-            new KeyBinding("escape", new Cancel(), CONTEXT),
-            new KeyBinding("delete", new Delete(), CONTEXT),
-            new KeyBinding("backspace", new Delete(), CONTEXT),
-        ]);
+        DatePickerKeys.init(cx);
     }
 
     public final focusHandle:FocusHandle;
@@ -606,7 +601,7 @@ class DatePicker extends Component implements Styled implements Sizable implemen
 
     @prop var disabled:Bool = false;
 
-    static inline final CONTEXT:String = "DatePicker";
+    static inline final CONTEXT:String = DatePickerKeys.CONTEXT;
 
     /** Create a new DatePicker with the given `DatePickerState`. */
     public function new(state:Entity<DatePickerState>) {
