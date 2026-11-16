@@ -6,6 +6,7 @@ import glaze.LineLayout;
 import glaze.RenderGlyphParams;
 import glaze.platform.CeramicTextSystem;
 import glaze.platform.SystemFontFallback;
+import glaze.platform.SystemFontFile;
 import glaze.util.Utf8;
 import testing.TestCase;
 
@@ -126,6 +127,79 @@ class SystemFontFallbackTest extends TestCase {
             assertTrue(path.indexOf('Hiragino') == -1 && path.indexOf('Heiti') == -1, path);
         trace('System fallback for symbols: ${p.systemFallback.loadedPaths.join(', ')}: '
             + '${Math.round(p.systemFallback.loadedBytes / 1048576)} MB read in ${Math.round(p.systemFallback.loadTime * 1000)} ms');
+    }
+
+    function testTrueTypeSystemFilesReadOnDemand() {
+        if (!hasMacFonts())
+            return;
+        // TrueType files of the system are read piece by piece
+        // (`SystemFontFile`): the same outlines, advances and variable
+        // instances as the whole file, for a fraction of its bytes
+        final paths = ['/System/Library/Fonts/Apple Symbols.ttf', '/System/Library/Fonts/SFNS.ttf', '/System/Library/Fonts/Menlo.ttc',
+            '/Library/Fonts/Arial Unicode.ttf'];
+        final text = 'Snow \u2603 chess \u265E\u2654 \u03B1\u03B2 \u0416 \u05D0 \u4E16 \u21C4 \u2713 mw0';
+        final d = new glaze.util.Utf8.Utf8Text(text);
+        for (path in paths) {
+            if (!ceramic.Files.exists(path))
+                continue;
+            final file = SystemFontFile.open(path);
+            assertNotNull(file, path);
+            assertTrue(file.onDemand, path);
+            final bytes = ceramic.Files.getBytes(path);
+            for (index in 0...file.faceCount) {
+                final whole = ttf.Font.fromBytes(bytes, index);
+                final partial = file.face(index);
+                final fonts = [[whole, partial]];
+                if (whole.isVariable)
+                    fonts.push([whole.instanceForWeight(700), partial.instanceForWeight(700)]);
+                for (pair in fonts) {
+                    for (k in 0...d.count) {
+                        final gid = pair[0].glyphForChar(d.codePoints[k]);
+                        final label = '$path #$index U+${StringTools.hex(d.codePoints[k], 4)}';
+                        assertEquals(gid, pair[1].glyphForChar(d.codePoints[k]), label);
+                        assertEquals(pair[0].advance(gid), pair[1].advance(gid), 'advance of $label');
+                        assertEquals(outlineOf(pair[0], gid), outlineOf(pair[1], gid), 'outline of $label');
+                    }
+                }
+            }
+            assertTrue(file.bytesRead < bytes.length / 2, '$path: ${file.bytesRead} bytes read of ${bytes.length}');
+            // First use of a glyph (outline of a glyph never drawn): fresh
+            // faces, the same glyphs, whole file in memory against on demand
+            final gids = [];
+            final firstWhole = ttf.Font.fromBytes(bytes, 0);
+            var gid = 1;
+            final step = Std.int(Math.max(1, firstWhole.numGlyphs / 200));
+            while (gid < firstWhole.numGlyphs) {
+                gids.push(gid);
+                gid += step;
+            }
+            final freshFile = SystemFontFile.open(path);
+            final firstPartial = freshFile.face(0);
+            final readAtLoad = freshFile.bytesRead;
+            final sink = new RecordingSink(new StringBuf());
+            var t0 = haxe.Timer.stamp();
+            for (g in gids)
+                firstWhole.outlineScaled(g, 13, sink);
+            final wholeTime = haxe.Timer.stamp() - t0;
+            t0 = haxe.Timer.stamp();
+            for (g in gids)
+                firstPartial.outlineScaled(g, 13, sink);
+            final partialTime = haxe.Timer.stamp() - t0;
+            trace('$path: ${Math.round(file.bytesRead / 1024)} KB read of ${Math.round(bytes.length / 1024)} KB after ${d.count} characters'
+                + ' (face 0: ${Math.round(readAtLoad / 1024)} KB at load, ${Math.round(freshFile.bytesRead / 1024)} KB after ${gids.length} more glyphs);'
+                + ' first outline of a glyph: ${Math.round(wholeTime / gids.length * 1e7) / 10} us whole, ${Math.round(partialTime / gids.length * 1e7) / 10} us on demand');
+        }
+        // CFF files are read whole, shared by the faces of the collection
+        final hiragino = SystemFontFile.open('/System/Library/Fonts/Hiragino Sans GB.ttc');
+        assertFalse(hiragino.onDemand);
+    }
+
+    static function outlineOf(font:ttf.Font, gid:Int):String {
+        final out = new StringBuf();
+        font.outline(gid, new RecordingSink(out));
+        final scaled = new StringBuf();
+        font.outlineScaled(gid, 13, new RecordingSink(scaled));
+        return out.toString() + '|' + scaled.toString();
     }
 
     function testUnmappedCharacterReadsNoFontFile() {
@@ -404,4 +478,34 @@ class SystemFontFallbackTest extends TestCase {
         final q = platform(false);
         assertEquals('JetBrains Mono', q.ttfFont(q.fontId(Font.of('monospace'))).familyName);
     }
+}
+
+private class RecordingSink implements ttf.OutlineSink {
+
+    final out:StringBuf;
+
+    public function new(out:StringBuf) {
+        this.out = out;
+    }
+
+    public function moveTo(x:Float, y:Float):Void {
+        out.add('M$x,$y');
+    }
+
+    public function lineTo(x:Float, y:Float):Void {
+        out.add('L$x,$y');
+    }
+
+    public function quadTo(cx:Float, cy:Float, x:Float, y:Float):Void {
+        out.add('Q$cx,$cy,$x,$y');
+    }
+
+    public function cubicTo(c1x:Float, c1y:Float, c2x:Float, c2y:Float, x:Float, y:Float):Void {
+        out.add('C$c1x,$c1y,$c2x,$c2y,$x,$y');
+    }
+
+    public function close():Void {
+        out.add('Z');
+    }
+
 }

@@ -66,8 +66,9 @@ class SystemFontFallback {
     public var loadTime(default, null):Float = 0;
 
     /**
-     * Total size of the font data read so far, in bytes (for emoji fonts,
-     * the tables read when they were loaded, not the images read since).
+     * Total size of the font data read so far, in bytes (for emoji fonts
+     * and TrueType files, the tables read when they were loaded, not the
+     * images and outlines read since, see `SystemFontFile`).
      */
     public var loadedBytes(default, null):Float = 0;
 
@@ -422,29 +423,21 @@ class SystemFontFallback {
 
     function loadFile(path:String, codePoint:Int):Bool {
         final start = haxe.Timer.stamp();
-        var bytes:Null<Bytes> = null;
-        try {
-            if (!ceramic.Files.exists(path))
-                return false;
-            bytes = ceramic.Files.getBytes(path);
-        }
-        catch (e:Dynamic) {
-            bytes = null;
-        }
-        if (bytes == null)
+        // TrueType files are read piece by piece (see `SystemFontFile`)
+        final file = SystemFontFile.open(path);
+        if (file == null)
             return false;
         final fileFaces:Array<ttf.Font> = [];
         try {
-            final count = ttf.Font.faceCount(bytes);
-            for (i in 0...count)
-                fileFaces.push(ttf.Font.fromBytes(bytes, i));
+            for (i in 0...file.faceCount)
+                fileFaces.push(file.face(i));
         }
         catch (e:Dynamic) {
             loadTime += haxe.Timer.stamp() - start;
             return false;
         }
         loadTime += haxe.Timer.stamp() - start;
-        loadedBytes += bytes.length;
+        loadedBytes += file.bytesRead;
         loadedPaths.push(path);
 
         // Hidden faces (names starting with a dot: UI variants of the

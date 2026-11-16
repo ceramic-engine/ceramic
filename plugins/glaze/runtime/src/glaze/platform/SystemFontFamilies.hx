@@ -194,17 +194,18 @@ class SystemFontFamilies {
             return [];
         loaded.set(key, true);
         final result:Array<ttf.Font> = [];
-        final files:Map<String, Bytes> = new Map();
+        final files:Map<String, SystemFontFile> = new Map();
         for (location in locations) {
             try {
-                var bytes = files.get(location.path);
-                if (bytes == null) {
-                    bytes = ceramic.Files.getBytes(location.path);
-                    if (bytes == null)
+                // TrueType files are read piece by piece (see `SystemFontFile`)
+                var file = files.get(location.path);
+                if (file == null) {
+                    file = SystemFontFile.open(location.path);
+                    if (file == null)
                         continue;
-                    files.set(location.path, bytes);
+                    files.set(location.path, file);
                 }
-                final face = ttf.Font.fromBytes(bytes, location.faceIndex);
+                final face = file.face(location.faceIndex);
                 if (face.glyphForChar('m'.code) == 0 && face.glyphForChar(0x6C34) == 0)
                     continue;
                 result.push(face);
