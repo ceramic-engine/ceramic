@@ -507,6 +507,23 @@ class Settings implements Observable {
     @observe public var webWheelResampling:Bool = Utils.isSafari();
 
     /**
+     * macOS native builds: deliver precise scrolling (trackpads, Magic Mouse) on the beat
+     * of the frames when the system sends it unevenly against them.
+     *
+     * macOS sends these scroll events about once per frame, but on a clock of its own: now
+     * and then a frame receives two events and the next one none, so content that follows
+     * the deltas stops for a frame and then jumps twice as far. When this is enabled, the
+     * pixel deltas are resampled at each frame from the event times, like
+     * `webWheelResampling` does for Safari, so each frame gets an even step, a little behind
+     * the newest event (about one frame). The total distance stays exactly the sum of the
+     * deltas. Notched mouse wheels are never changed. While the events come evenly, they go
+     * through as they come and no latency is added. See `clay.WheelResampler`.
+     *
+     * Default: false
+     */
+    @observe public var nativeWheelResampling:Bool = false;
+
+    /**
      * Supported screen orientations for mobile devices.
      *
      * Controls which orientations the app supports on mobile platforms.

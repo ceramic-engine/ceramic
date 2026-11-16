@@ -375,6 +375,11 @@ class Main {
         #if clay_sdl
         // Read when SDL starts (SDL_HINT_MAC_SCROLL_MOMENTUM, macOS)
         config.runtime.scrollMomentum = app.settings.scrollMomentum;
+        // Precise scrolling on the beat of the frames (see Settings.nativeWheelResampling)
+        config.runtime.wheelResampling = app.settings.nativeWheelResampling;
+        app.settings.onNativeWheelResamplingChange(app, (nativeWheelResampling, _) -> {
+            config.runtime.wheelResampling = nativeWheelResampling;
+        });
         #end
         config.window.titleBarStyle = (app.settings.titleBarStyle:Int);
         config.window.titleBarButtonsX = app.settings.trafficLightX;

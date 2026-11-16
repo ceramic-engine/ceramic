@@ -327,6 +327,18 @@ class InitSettings {
     }
 
     /**
+     * macOS native builds: deliver precise scrolling on the beat of the frames when the
+     * system sends it unevenly. See `Settings.nativeWheelResampling`.
+     */
+    public var nativeWheelResampling(get,set):Bool;
+    inline function get_nativeWheelResampling():Bool {
+        return settings.nativeWheelResampling;
+    }
+    inline function set_nativeWheelResampling(nativeWheelResampling:Bool):Bool {
+        return settings.nativeWheelResampling = nativeWheelResampling;
+    }
+
+    /**
      * If set to `true` (default). Default touch events
      * will be prevented. This is relevant when running the ceramic
      * app from an `iframe` inside a page that can scroll,
