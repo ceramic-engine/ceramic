@@ -309,6 +309,11 @@ public class HttpRequest {
             return false;
         }
 
+        // XML and JSON in any of their forms (application/xml, application/vast+xml, application/ld+json...)
+        if (type.equals("application/xml") || type.endsWith("+xml") || type.endsWith("+json")) {
+            return false;
+        }
+
         switch (type) {
             case "text/html":
             case "text/css":
