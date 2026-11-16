@@ -298,6 +298,11 @@
         return NO;
     }
 
+    // XML and JSON in any of their forms (application/xml, application/vast+xml, application/ld+json...)
+    if ([type isEqualToString:@"application/xml"] || [type hasSuffix:@"+xml"] || [type hasSuffix:@"+json"]) {
+        return NO;
+    }
+
     if ([nonBinaryTypes containsObject:type]) {
         return NO;
     }
