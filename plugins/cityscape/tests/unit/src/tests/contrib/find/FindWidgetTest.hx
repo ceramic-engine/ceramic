@@ -211,6 +211,31 @@ class FindWidgetTest extends TestCase {
         draw();
     }
 
+    /**
+     * The find widget paints over the sticky lines, as in Monaco (CSS
+     * `z-index` 35 against 4), even when the sticky lines were added after
+     * it (sticky scroll turned off and on again).
+     */
+    function testFindWidgetPaintsOverStickyLines() {
+        final model = createModel(TEXT);
+        final views = open(model);
+        final a = views.a;
+        focusEditor(a);
+        key('primary-f');
+        a.updateOptions({stickyScroll: {enabled: false}});
+        draw();
+        a.updateOptions({stickyScroll: {enabled: true}});
+        draw();
+        @:privateAccess final editorWidget = a.widget;
+        final added = [for (o in editorWidget.getOverlayWidgets()) o.getId()];
+        final sticky = added.indexOf('editor.contrib.stickyScrollWidget');
+        final find = added.indexOf('editor.contrib.findWidget');
+        assertTrue(sticky >= 0 && find >= 0, 'both widgets are listed: $added');
+        assertTrue(sticky > find, 'the sticky lines were added after the find widget: $added');
+        @:privateAccess final painted = [for (o in a.overlaysByDepth(editorWidget.getOverlayWidgets())) o.getId()];
+        assertTrue(painted.indexOf('editor.contrib.findWidget') > painted.indexOf('editor.contrib.stickyScrollWidget'), 'the find widget paints last: $painted');
+    }
+
     function testReplaceOneAndAll() {
         final model = createModel(TEXT);
         final views = open(model);

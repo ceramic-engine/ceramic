@@ -663,7 +663,7 @@ class CityscapeEditor extends Component implements Styled {
                     .child(styledHorizontalScrollbar(Scrollbar.horizontal(view.horizontalScrollHandle), widget, view))
             );
         }
-        for (overlay in widget.getOverlayWidgets()) {
+        for (overlay in overlaysByDepth(widget.getOverlayWidgets())) {
             final element = overlay.render(window, cx);
             if (element == null) {
                 continue;
@@ -693,6 +693,34 @@ class CityscapeEditor extends Component implements Styled {
             root.refineStyle(s);
         }
         return root;
+    }
+
+    /** Reused by `overlaysByDepth`. */
+    final sortedOverlays:Array<IOverlayWidget> = [];
+
+    /**
+     * The overlay widgets in paint order: by depth (`IOverlayWidgetZIndex`,
+     * Monaco's CSS `z-index`), then in the order they were added. Without
+     * it, the sticky lines, added again when the option changes, painted
+     * over the find widget.
+     */
+    function overlaysByDepth(overlays:Array<IOverlayWidget>):Array<IOverlayWidget> {
+        final sorted = sortedOverlays;
+        sorted.resize(0);
+        for (overlay in overlays) {
+            // Insertion after the last widget of a lower or equal depth: stable
+            final depth = overlayDepth(overlay);
+            var i = sorted.length;
+            while (i > 0 && overlayDepth(sorted[i - 1]) > depth) {
+                i--;
+            }
+            sorted.insert(i, overlay);
+        }
+        return sorted;
+    }
+
+    static function overlayDepth(overlay:IOverlayWidget):Int {
+        return Std.isOfType(overlay, IOverlayWidgetZIndex) ? (cast overlay : IOverlayWidgetZIndex).getZIndex() : 0;
     }
 
     //#region IStandaloneCodeEditor

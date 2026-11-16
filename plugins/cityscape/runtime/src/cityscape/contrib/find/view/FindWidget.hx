@@ -650,7 +650,7 @@ class FindWidget extends Model implements Render implements IFindWidget {
  * with the find controller, and its Glaze view (`FindWidget`) is created
  * the first time the editor renders it (its inputs need the window).
  */
-class FindWidgetOverlay implements IOverlayWidget implements IFindWidget implements IDisposable {
+class FindWidgetOverlay implements IOverlayWidget implements IOverlayWidgetZIndex implements IFindWidget implements IDisposable {
 
     public static inline final ID = 'editor.contrib.findWidget';
 
@@ -700,6 +700,11 @@ class FindWidgetOverlay implements IOverlayWidget implements IFindWidget impleme
 
     public function getId():String {
         return ID;
+    }
+
+    /** Monaco's `.monaco-editor .find-widget { z-index: 35 }` (findWidget.css). */
+    public function getZIndex():Int {
+        return 35;
     }
 
     public function getPosition():Null<IOverlayWidgetPosition> {

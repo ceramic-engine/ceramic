@@ -143,7 +143,7 @@ class StickyScrollHit {
 
 }
 
-class StickyScrollWidget extends Disposable implements IOverlayWidget {
+class StickyScrollWidget extends Disposable implements IOverlayWidget implements IOverlayWidgetZIndex {
 
     public static inline final ID = 'editor.contrib.stickyScrollWidget';
 
@@ -386,6 +386,11 @@ class StickyScrollWidget extends Disposable implements IOverlayWidget {
 
     public function getId():String {
         return ID;
+    }
+
+    /** Monaco's `.monaco-editor .sticky-widget { z-index: 4 }` (stickyScroll.css). */
+    public function getZIndex():Int {
+        return 4;
     }
 
     public function getPosition():Null<IOverlayWidgetPosition> {

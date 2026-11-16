@@ -219,6 +219,19 @@ interface IOverlayWidget {
 }
 
 /**
+ * An overlay widget that paints at a given depth among the overlay widgets
+ * painted in place (Monaco sets it with the CSS `z-index` of each widget:
+ * `.sticky-widget` 4, `.find-widget` 35). The editor paints these widgets
+ * from the lowest depth to the highest, in the order they were added when
+ * the depths are equal; a widget without this interface is at depth 0.
+ * Widgets drawn in a `deferred` element (suggest, hover, rename...) paint
+ * over all of them anyway.
+ */
+interface IOverlayWidgetZIndex {
+    function getZIndex():Int;
+}
+
+/**
  * Type of hit element with the mouse in the editor.
  */
 enum abstract MouseTargetType(Int) from Int to Int {
