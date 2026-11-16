@@ -244,9 +244,23 @@ class ClayEvents extends clay.Events {
     /**
      * Called when a frame needs to be rendered.
      */
+    /**
+     * Frames still to draw after a change of the window's size (see `windowEvent`).
+     */
+    var framesAfterResize:Int = 0;
+
     override function render() {
 
         backend.emitRender();
+
+        // The frames right after a size change: the drawable of the window may only
+        // take its new size one frame late (ANGLE over Metal checks the layer when it
+        // gets a drawable), and with render on demand the first frame at the new size
+        // would be the last one until something else asks for a frame
+        if (framesAfterResize > 0) {
+            framesAfterResize--;
+            ceramic.App.app.requestRender();
+        }
 
         // Nothing was drawn (`settings.renderOnDemand`): nothing to swap or present
         if (ceramic.App.app.renderSkipped) {
@@ -1189,6 +1203,11 @@ class ClayEvents extends clay.Events {
         // restored, focus...
         if (ceramic.App.app != null) {
             ceramic.App.app.requestRender();
+        }
+        switch type {
+            case RESIZED | SIZE_CHANGED | MAXIMIZED | RESTORED | EXPOSED | ENTER_FULLSCREEN | EXIT_FULLSCREEN:
+                framesAfterResize = 2;
+            case _:
         }
 
         // Visible or not (hidden, minimized, occluded), as tracked by clay
