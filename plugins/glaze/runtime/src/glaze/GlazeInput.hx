@@ -139,6 +139,11 @@ class GlazeInput extends ceramic.Entity {
 
     var hoveredWindow:Null<Window> = null;
 
+    /** Screen position of the last mouse move, for the exit sent when the mouse leaves the app window */
+    var lastMouseX:Float = 0;
+
+    var lastMouseY:Float = 0;
+
     var pressedWindow:Null<Window> = null;
 
     var pressedButton:Null<MouseButton> = null;
@@ -209,6 +214,13 @@ class GlazeInput extends ceramic.Entity {
         // The app window losing the system focus deactivates the windows,
         // like a native window resigning key; gaining it back reactivates
         // the active one
+        // The mouse leaving the app window: no move comes after it, so the
+        // window under it gets its MouseExitEvent now (GPUI's macOS
+        // platform sends MouseExited), unless a button is held, in which
+        // case the events keep going to the pressed window
+        screen.onWindowMouseLeave(this, () -> {
+            if (pressedWindow == null && hoveredWindow != null) updateHovered(null, lastMouseX, lastMouseY);
+        });
         screen.onWindowFocusChange(this, focused -> {
             if (focused) {
                 if (activeWindow != null && !activeWindow.isDestroyed()) activeWindow.setActive(true);
@@ -264,6 +276,8 @@ class GlazeInput extends ceramic.Entity {
     }
 
     function handleMouseMove(x:Float, y:Float):Void {
+        lastMouseX = x;
+        lastMouseY = y;
         final under = windowAt(x, y);
         updateHovered(under, x, y);
         final target = pressedWindow != null ? pressedWindow : under;
