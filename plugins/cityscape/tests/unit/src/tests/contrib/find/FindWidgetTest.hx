@@ -236,6 +236,41 @@ class FindWidgetTest extends TestCase {
         assertTrue(painted.indexOf('editor.contrib.findWidget') > painted.indexOf('editor.contrib.stickyScrollWidget'), 'the find widget paints last: $painted');
     }
 
+    /**
+     * The current match is the editor's selection too: as in Monaco, the
+     * find decoration paints over the selection (view.ts: the decorations
+     * overlay comes after the selections overlay), not under it, where an
+     * opaque selection hid it but at its rounded corners.
+     */
+    function testTheCurrentMatchPaintsOverTheSelection() {
+        final model = createModel(TEXT);
+        final views = open(model);
+        final a = views.a;
+        focusEditor(a);
+        key('primary-f');
+        type('say');
+        draw();
+        assertEquals('[2,1 -> 2,4]', selection(a));
+        // The selection: rounded corners; the find match: the same box, square
+        final quads = window.renderedScene().quads;
+        var rounded:glaze.scene.Quad = null;
+        var square:glaze.scene.Quad = null;
+        for (q in quads) {
+            if (q.cornerRadiusTopLeft <= 0) continue;
+            for (o in quads) {
+                if (o != q && o.cornerRadiusTopLeft == 0 && Math.abs(o.boundsX - q.boundsX) < 1
+                    && Math.abs(o.boundsY - q.boundsY) < 1 && Math.abs(o.boundsWidth - q.boundsWidth) < 1
+                    && Math.abs(o.boundsHeight - q.boundsHeight) < 1) {
+                    rounded = q;
+                    square = o;
+                }
+            }
+        }
+        assertNotNull(rounded, 'the selection and the match are painted on the same box');
+        assertTrue(square.order > rounded.order || (square.order == rounded.order && square.seq > rounded.seq),
+            'the find match is painted after the selection');
+    }
+
     function testReplaceOneAndAll() {
         final model = createModel(TEXT);
         final views = open(model);

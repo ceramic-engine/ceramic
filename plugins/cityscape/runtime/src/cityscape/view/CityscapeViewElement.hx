@@ -427,6 +427,109 @@ class CityscapeViewElement extends Element {
             }
         }
 
+        // Monaco's order: the overlays of the content (current line,
+        // selections, indent guides, then the decorations) are under the
+        // view lines, which draw the backgrounds of the inline decorations
+        // and the text (view.ts, the `addDynamicOverlay` calls). The
+        // decorations painted before the selections used to hide under an
+        // opaque selection (the current find match showed its corners only)
+        // Selections (Monaco's selections view part, rounded corners)
+        final selectionColor = theme.getColor(focused ? 'editor.selectionBackground' : 'editor.inactiveSelectionBackground');
+        final rounded = options.get(EditorOption.roundedSelection);
+        if (selectionColor != null) {
+            final xs = state.selectionStarts;
+            final xe = state.selectionEnds;
+            for (i in 0...selections.length) {
+                final s = selections[i];
+                if (s.isEmpty()) {
+                    continue;
+                }
+                final from = Std.int(Math.max(startLine, s.startLineNumber));
+                final to = Std.int(Math.min(endLine, s.endLineNumber));
+                xs.resize(0);
+                xe.resize(0);
+                for (ln in from...to + 1) {
+                    final line = lines[ln - startLine];
+                    final startColumn = (ln == s.startLineNumber ? s.startColumn : line.minColumn);
+                    final endColumn = (ln == s.endLineNumber ? s.endColumn : line.maxColumn);
+                    var x1 = line.columnToX(startColumn);
+                    var x2 = line.columnToX(endColumn);
+                    if (ln != s.endLineNumber) {
+                        // the line break is selected
+                        x2 += fontInfo.typicalHalfwidthCharacterWidth;
+                    }
+                    xs.push(x1);
+                    xe.push(x2);
+                }
+                for (k in 0...xs.length) {
+                    final ln = from + k;
+                    final radius = rounded ? 3.0 : 0.0;
+                    final hasPrev = k > 0;
+                    final hasNext = k + 1 < xs.length;
+                    final tl = (!hasPrev || xs[k - 1] > xs[k]) ? radius : 0;
+                    final tr = (!hasPrev || xe[k - 1] < xe[k]) ? radius : 0;
+                    final bl = (!hasNext || xs[k + 1] > xs[k]) ? radius : 0;
+                    final br = (!hasNext || xe[k + 1] < xe[k]) ? radius : 0;
+                    fillRect(window, contentX + xs[k], lineTop(ln), xe[k] - xs[k], lineHeight, selectionColor, state.corners(tl, tr, br, bl));
+                }
+            }
+        }
+
+        // Indent guides and bracket pair guides (Monaco's IndentGuidesOverlay)
+        final guidesOptions = options.get(EditorOption.guides);
+        if (guidesOptions.indentation || !cityscape.base.common.JsValues.strictEquals(guidesOptions.bracketPairs, false)) {
+            final wrappingInfo = options.get(EditorOption.wrappingInfo);
+            final maxIndentLeft = wrappingInfo.wrappingColumn == -1 ? -1 : (wrappingInfo.wrappingColumn * fontInfo.typicalHalfwidthCharacterWidth);
+            final scrollWidth = viewLayout.getScrollWidth();
+            final guides = state.guides(viewModel, guidesOptions, v.paintGeneration, startLine, Std.int(Math.min(endLine + 1, viewModel.getLineCount())));
+            final guideColors = v.guideColors;
+            final spaceWidth = fontInfo.spaceWidth;
+            for (i in 0...lines.length) {
+                final lineGuides = guides[i];
+                if (lineGuides == null || lineGuides.length == 0) {
+                    continue;
+                }
+                final line = lines[i];
+                final y = lineTop(startLine + i);
+                final leftOffset = line.columnToX(1);
+                for (g in 0...lineGuides.length) {
+                    final guide = lineGuides[g];
+                    final left = guide.column == -1
+                        ? leftOffset + (guide.visibleColumn - 1) * spaceWidth
+                        : line.columnToX(guide.column);
+                    if (left > scrollWidth || (maxIndentLeft > 0 && left > maxIndentLeft)) {
+                        break;
+                    }
+                    final color = guideColors.colorOf(guideColors.styleOf(guide.className));
+                    if (color == null) {
+                        continue;
+                    }
+                    final x = Math.round(contentX + left);
+                    if (guide.horizontalLine != null) {
+                        final right = guide.horizontalLine.endColumn <= line.maxColumn ? line.columnToX(guide.horizontalLine.endColumn) : left + spaceWidth;
+                        final width = right - left;
+                        // `horizontal-top` (border-top) or `horizontal-bottom` (border-bottom)
+                        fillRect(window, x, guide.horizontalLine.top ? y : y + lineHeight - 1, width, 1, color);
+                    }
+                    else {
+                        // `vertical`: `box-shadow: 1px 0 0 0 color inset`
+                        fillRect(window, x, y, 1, lineHeight, color);
+                    }
+                }
+            }
+        }
+
+        // Rulers
+        final rulerColor = theme.getColor('editorRuler.foreground');
+        final rulers = options.get(EditorOption.rulers);
+        for (r in 0...rulers.length) {
+            final ruler = rulers[r];
+            final color = ruler.color != null ? state.parsedColor(ruler.color) : rulerColor;
+            if (color != null) {
+                fillRect(window, Math.round(contentX + ruler.column * fontInfo.typicalHalfwidthCharacterWidth), originY, 1, bounds.size.height, color);
+            }
+        }
+
         // Decorations painted behind the text: whole line styles and `className` / `style` boxes
         for (i in 0...decorations.length) {
             final d = decorations[i];
@@ -523,103 +626,6 @@ class CityscapeViewElement extends Element {
                 final x2 = line.partBoxEnds != null ? line.partBoxEnds[q - 1] : line.layout.xForIndex(line.offsets.utf16ToByte(line.runs.partEnds[q - 1]));
                 paintBox(window, state, box, contentX + x1, y, x2 - x1, lineHeight, line, true, true);
                 p = q;
-            }
-        }
-
-        // Selections (Monaco's selections view part, rounded corners)
-        final selectionColor = theme.getColor(focused ? 'editor.selectionBackground' : 'editor.inactiveSelectionBackground');
-        final rounded = options.get(EditorOption.roundedSelection);
-        if (selectionColor != null) {
-            final xs = state.selectionStarts;
-            final xe = state.selectionEnds;
-            for (i in 0...selections.length) {
-                final s = selections[i];
-                if (s.isEmpty()) {
-                    continue;
-                }
-                final from = Std.int(Math.max(startLine, s.startLineNumber));
-                final to = Std.int(Math.min(endLine, s.endLineNumber));
-                xs.resize(0);
-                xe.resize(0);
-                for (ln in from...to + 1) {
-                    final line = lines[ln - startLine];
-                    final startColumn = (ln == s.startLineNumber ? s.startColumn : line.minColumn);
-                    final endColumn = (ln == s.endLineNumber ? s.endColumn : line.maxColumn);
-                    var x1 = line.columnToX(startColumn);
-                    var x2 = line.columnToX(endColumn);
-                    if (ln != s.endLineNumber) {
-                        // the line break is selected
-                        x2 += fontInfo.typicalHalfwidthCharacterWidth;
-                    }
-                    xs.push(x1);
-                    xe.push(x2);
-                }
-                for (k in 0...xs.length) {
-                    final ln = from + k;
-                    final radius = rounded ? 3.0 : 0.0;
-                    final hasPrev = k > 0;
-                    final hasNext = k + 1 < xs.length;
-                    final tl = (!hasPrev || xs[k - 1] > xs[k]) ? radius : 0;
-                    final tr = (!hasPrev || xe[k - 1] < xe[k]) ? radius : 0;
-                    final bl = (!hasNext || xs[k + 1] > xs[k]) ? radius : 0;
-                    final br = (!hasNext || xe[k + 1] < xe[k]) ? radius : 0;
-                    fillRect(window, contentX + xs[k], lineTop(ln), xe[k] - xs[k], lineHeight, selectionColor, state.corners(tl, tr, br, bl));
-                }
-            }
-        }
-
-        // Indent guides and bracket pair guides (Monaco's IndentGuidesOverlay)
-        final guidesOptions = options.get(EditorOption.guides);
-        if (guidesOptions.indentation || !cityscape.base.common.JsValues.strictEquals(guidesOptions.bracketPairs, false)) {
-            final wrappingInfo = options.get(EditorOption.wrappingInfo);
-            final maxIndentLeft = wrappingInfo.wrappingColumn == -1 ? -1 : (wrappingInfo.wrappingColumn * fontInfo.typicalHalfwidthCharacterWidth);
-            final scrollWidth = viewLayout.getScrollWidth();
-            final guides = state.guides(viewModel, guidesOptions, v.paintGeneration, startLine, Std.int(Math.min(endLine + 1, viewModel.getLineCount())));
-            final guideColors = v.guideColors;
-            final spaceWidth = fontInfo.spaceWidth;
-            for (i in 0...lines.length) {
-                final lineGuides = guides[i];
-                if (lineGuides == null || lineGuides.length == 0) {
-                    continue;
-                }
-                final line = lines[i];
-                final y = lineTop(startLine + i);
-                final leftOffset = line.columnToX(1);
-                for (g in 0...lineGuides.length) {
-                    final guide = lineGuides[g];
-                    final left = guide.column == -1
-                        ? leftOffset + (guide.visibleColumn - 1) * spaceWidth
-                        : line.columnToX(guide.column);
-                    if (left > scrollWidth || (maxIndentLeft > 0 && left > maxIndentLeft)) {
-                        break;
-                    }
-                    final color = guideColors.colorOf(guideColors.styleOf(guide.className));
-                    if (color == null) {
-                        continue;
-                    }
-                    final x = Math.round(contentX + left);
-                    if (guide.horizontalLine != null) {
-                        final right = guide.horizontalLine.endColumn <= line.maxColumn ? line.columnToX(guide.horizontalLine.endColumn) : left + spaceWidth;
-                        final width = right - left;
-                        // `horizontal-top` (border-top) or `horizontal-bottom` (border-bottom)
-                        fillRect(window, x, guide.horizontalLine.top ? y : y + lineHeight - 1, width, 1, color);
-                    }
-                    else {
-                        // `vertical`: `box-shadow: 1px 0 0 0 color inset`
-                        fillRect(window, x, y, 1, lineHeight, color);
-                    }
-                }
-            }
-        }
-
-        // Rulers
-        final rulerColor = theme.getColor('editorRuler.foreground');
-        final rulers = options.get(EditorOption.rulers);
-        for (r in 0...rulers.length) {
-            final ruler = rulers[r];
-            final color = ruler.color != null ? state.parsedColor(ruler.color) : rulerColor;
-            if (color != null) {
-                fillRect(window, Math.round(contentX + ruler.column * fontInfo.typicalHalfwidthCharacterWidth), originY, 1, bounds.size.height, color);
             }
         }
 
