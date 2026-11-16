@@ -227,6 +227,12 @@ class Project extends Entity {
         check(ScrollPhase.GESTURE_ENDED.isGesture() && !ScrollPhase.GESTURE_ENDED.isMomentum(), 'GESTURE_ENDED is a gesture phase');
         check(ScrollPhase.MOMENTUM.isMomentum() && !ScrollPhase.NONE.isGesture() && !ScrollPhase.NONE.isMomentum(), 'MOMENTUM is a momentum phase, NONE neither');
 
+        // Sleep while hidden: off by default, the window counts as visible
+        check(app.settings.hiddenSleepDelay < 0, 'hiddenSleepDelay is off by default');
+        check(@:privateAccess new Settings().hiddenSleepDelay < 0, 'hiddenSleepDelay default of a new Settings');
+        check(app.screen.windowVisible, 'the window is visible by default');
+        check(app.backend.screen.isWindowVisible(), 'the backend tells a visible window');
+
         // Tracker: the terminate event serializes the pending changes at once
         final before = changesets;
         model.value = 'changed';
@@ -373,6 +379,10 @@ class Project extends Entity {
                 // Scroll phases: events posted to this process only, with the
                 // phase fields of CoreGraphics, handed to the hidden window
                 check(clay.Clay.app.config.runtime.scrollMomentum, 'scrollMomentum given to clay');
+                // Sleep while hidden: off, given to clay as is, never asleep
+                check(clay.Clay.app.config.hiddenSleepDelay < 0, 'hiddenSleepDelay off in clay');
+                check(clay.Clay.app.windowVisible, 'clay: hidden test window not reported as not visible');
+                check(!clay.Clay.app.throttle.asleep, 'clay: not asleep');
                 final hint:String = untyped __cpp__('::String(SDL_GetHint("SDL_MAC_SCROLL_MOMENTUM"))');
                 equals('1', hint, 'momentum hint set from settings.scrollMomentum');
                 final window = @:privateAccess runtime.window;

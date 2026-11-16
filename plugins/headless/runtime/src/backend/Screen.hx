@@ -135,6 +135,9 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function windowFocusChange(focused:Bool);
 
+    /** Window visible or not. Never emitted by itself: tests emit it to force a state. */
+    @event function windowVisibleChange(visible:Bool);
+
     /**
      * Fired when the window moved. Never fired by the headless backend:
      * tests emit it to simulate a window moved by the user.
@@ -385,6 +388,17 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     function willEmitWindowFocusChange(focused:Bool):Void {
         windowFocused = focused;
+    }
+
+    var windowVisible:Bool = true;
+
+    /** True unless a test emitted `windowVisibleChange(false)`. */
+    public function isWindowVisible():Bool {
+        return windowVisible;
+    }
+
+    function willEmitWindowVisibleChange(visible:Bool):Void {
+        windowVisible = visible;
     }
 
     /** The menus last installed (nothing is shown). */

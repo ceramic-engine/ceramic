@@ -414,6 +414,27 @@ class Settings implements Observable {
     public var idleDelay:Float = 0.5;
 
     /**
+     * Seconds after the app window stops being visible (hidden, minimized, fully covered by
+     * other windows, on another space) before the app sleeps (default `-1`: never, the
+     * loop runs as without it).
+     *
+     * While asleep, the native loop makes no update at all: it waits for an event of the
+     * system without a timeout. Work posted from another thread (`Runner.runInMain`) wakes
+     * it for one update, then it sleeps again. Timers and tweens are frozen: none fires
+     * while asleep (a timer due during the sleep fires once the window is visible again).
+     * When the window is visible again, the normal rhythm (or `idleUpdateRate`) resumes at
+     * once. The first update after a sleep gets `maxDelta` as its delta, like any long
+     * pause: app time (`Timer.now`) does not jump, so no burst of stale timers and no
+     * animation skips to its end. `Timer.timestamp` follows the real time.
+     *
+     * Visibility comes from the window events of the system (`screen.windowVisible`). Works
+     * with or without `renderOnDemand`. Web: no effect, the browser already stops the
+     * animation frames of a hidden page (`ceramic_web_update_in_background` keeps its
+     * background updates). Can be changed at any time.
+     */
+    public var hiddenSleepDelay:Float = -1;
+
+    /**
      * With `renderOnDemand`: handle a discrete input event (key, text, mouse button,
      * touch down or up) at once while nothing renders continuously, instead of at the
      * next frame (default `true`).

@@ -125,6 +125,13 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @event function windowFocusChange(focused:Bool);
 
     /**
+     * Fired when the app window becomes visible or stops being visible (hidden, minimized,
+     * fully covered by other windows, on another space).
+     * @param visible Whether the window is now visible
+     */
+    @event function windowVisibleChange(visible:Bool);
+
+    /**
      * Fired when the window moved (native desktop builds).
      * @param x Horizontal position of the window in desktop coordinates
      * @param y Vertical position of the window in desktop coordinates
@@ -394,6 +401,23 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     public function isWindowFocused():Bool {
 
         return Clay.app.runtime.isWindowFocused();
+
+    }
+
+    var windowVisible:Bool = true;
+
+    public function isWindowVisible():Bool {
+
+        return windowVisible;
+
+    }
+
+    @:noCompletion public function emitWindowVisibleChangeIfNeeded(visible:Bool):Void {
+
+        if (visible != windowVisible) {
+            windowVisible = visible;
+            emitWindowVisibleChange(visible);
+        }
 
     }
 

@@ -276,6 +276,18 @@ class InitSettings {
     }
 
     /**
+     * Seconds after the window stops being visible before the app sleeps (default `-1`:
+     * never). See `Settings.hiddenSleepDelay`.
+     */
+    public var hiddenSleepDelay(get,set):Float;
+    inline function get_hiddenSleepDelay():Float {
+        return settings.hiddenSleepDelay;
+    }
+    inline function set_hiddenSleepDelay(hiddenSleepDelay:Float):Float {
+        return settings.hiddenSleepDelay = hiddenSleepDelay;
+    }
+
+    /**
      * With `renderOnDemand`: handle a discrete input event at once while nothing renders
      * continuously (default `true`). Web; the native loop already ticks at once for a
      * discrete event while idle. See `Settings.earlyTickOnInput`.

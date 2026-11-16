@@ -202,6 +202,12 @@ interface Screen {
     function isWindowFocused():Bool;
 
     /**
+     * Whether the app window is visible: not hidden, minimized or fully covered (true where
+     * the platform does not tell). Backends emit `windowVisibleChange` when it changes.
+     */
+    function isWindowVisible():Bool;
+
+    /**
      * Installs the application menu bar (macOS native builds), replacing the
      * current one. Every item has its `id` set. Backends emit `menuAction(id)`
      * when an item is chosen, `menuKeyEquivalent(id)` right after the key

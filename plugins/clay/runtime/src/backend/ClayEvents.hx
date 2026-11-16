@@ -223,6 +223,12 @@ class ClayEvents extends clay.Events {
             config.idleDelay = settings.idleDelay;
             Clay.app.nextWorkDelay = ceramic.App.app.nextTimerDelay();
         }
+        // Asleep while the window is not visible (see `Settings.hiddenSleepDelay`), native only
+        #if web
+        config.hiddenSleepDelay = -1;
+        #else
+        config.hiddenSleepDelay = settings.hiddenSleepDelay;
+        #end
 
     }
 
@@ -1185,10 +1191,14 @@ class ClayEvents extends clay.Events {
             ceramic.App.app.requestRender();
         }
 
+        // Visible or not (hidden, minimized, occluded), as tracked by clay
+        backend.screen.emitWindowVisibleChangeIfNeeded(Clay.app.windowVisible);
+
         switch type {
             case UNKNOWN:
             case SHOWN:
             case HIDDEN:
+            case OCCLUDED:
             case EXPOSED:
             case MOVED:
                 #if !web

@@ -337,6 +337,9 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function windowFocusChange(focused:Bool);
 
+    /** Window visible or not. Not fired by the Unity backend for now. */
+    @event function windowVisibleChange(visible:Bool);
+
     /**
      * Fired when the window moved. Not fired by the Unity backend for now.
      * @param x Horizontal position of the window in desktop coordinates
@@ -568,6 +571,11 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     public function isWindowFocused():Bool {
         return focusTracker.focused;
+    }
+
+    /** Always true: the Unity backend does not tell the visibility of the window. */
+    public function isWindowVisible():Bool {
+        return true;
     }
 
 /// Application focus and pause

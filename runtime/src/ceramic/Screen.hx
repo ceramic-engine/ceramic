@@ -400,6 +400,14 @@ class Screen extends Entity implements Observable implements RenderTarget {
     @event function windowFocusChange(focused:Bool);
 
     /**
+     * The app window became visible (`visible` true) or stopped being visible: hidden,
+     * minimized, fully covered by other windows or on another space (where the system
+     * tells it: macOS does). Emitted at the start of a frame. See `windowVisible` and
+     * `Settings.hiddenSleepDelay`.
+     */
+    @event function windowVisibleChange(visible:Bool);
+
+    /**
      * An item of the menu bar (`setMenuBar`) or of the dock menu
      * (`setDockMenu`) was chosen: clicked in the menu, or its shortcut was
      * pressed and no `keyDown` listener handled the key
@@ -818,6 +826,17 @@ class Screen extends Entity implements Observable implements RenderTarget {
                 if (windowFocused != focused) {
                     windowFocused = focused;
                     emitWindowFocusChange(focused);
+                }
+            });
+        });
+
+        // Window visibility
+        windowVisible = app.backend.screen.isWindowVisible();
+        app.backend.screen.onWindowVisibleChange(this, function(visible) {
+            app.beginUpdateCallbacks.push(function() {
+                if (windowVisible != visible) {
+                    windowVisible = visible;
+                    emitWindowVisibleChange(visible);
                 }
             });
         });
@@ -2390,6 +2409,13 @@ class Screen extends Entity implements Observable implements RenderTarget {
      * right before `windowFocusChange` is emitted.
      */
     public var windowFocused(default, null):Bool = true;
+
+    /**
+     * Whether the app window is visible: not hidden, not minimized, not fully covered by
+     * other windows (true where the platform does not tell). Updated at the start of a
+     * frame, right before `windowVisibleChange` is emitted.
+     */
+    public var windowVisible(default, null):Bool = true;
 
     /**
      * Brings the app window to the front and gives it the keyboard focus,
