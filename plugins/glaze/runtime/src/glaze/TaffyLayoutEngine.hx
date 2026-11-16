@@ -779,7 +779,8 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         for (i in 1...ids.length) {
             final a = layouts[i];
             final b = nodes[ids[i]].unroundedLayout;
-            if (!sameLayout(a, b)) {
+            // See `verifyLayout`: the order of a hidden node is not compared
+            if (!sameLayout(a, b, nodes[ids[i]].style.display == taffy.style.Display.None)) {
                 verifyLayoutErrors++;
                 ceramic.Shortcuts.log.error('glaze_verify_layout: node ${ids[i]} (view root $root) has layout ${layoutString(a)} instead of ${layoutString(b)}');
             }
@@ -1374,7 +1375,14 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         for (i in 0...ids.length) {
             final a = layouts[i];
             final b = nodes[ids[i]].unroundedLayout;
-            if (!sameLayout(a, b)) {
+            // The order of a hidden child is the one its flex or grid parent
+            // wrote, or 0 when its own hidden layout ran again (cache miss):
+            // taffy does the same (flexbox.rs `Layout::with_order(order)`,
+            // then `compute_hidden_layout` writes `with_order(0)` only when
+            // the child is not cached). Nothing reads it, so it is not
+            // compared for hidden nodes.
+            final hidden = nodes[ids[i]].style.display == taffy.style.Display.None;
+            if (!sameLayout(a, b, hidden)) {
                 verifyLayoutErrors++;
                 ceramic.Shortcuts.log.error('glaze_verify_layout: node ${ids[i]} (root $root) has layout ${layoutString(a)} instead of ${layoutString(b)}');
             }
@@ -1384,14 +1392,14 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
     /** Number of differences found by `glaze_verify_layout` */
     public static var verifyLayoutErrors:Int = 0;
 
-    static function sameLayout(a:taffy.tree.Layout, b:taffy.tree.Layout):Bool {
+    static function sameLayout(a:taffy.tree.Layout, b:taffy.tree.Layout, ignoreOrder:Bool):Bool {
         inline function same(x:Float, y:Float):Bool {
             return x == y ? (x != 0.0 || 1.0 / x == 1.0 / y) : (x != x && y != y);
         }
         inline function sameRect(x:taffy.geometry.Rect, y:taffy.geometry.Rect):Bool {
             return same(x.left, y.left) && same(x.right, y.right) && same(x.top, y.top) && same(x.bottom, y.bottom);
         }
-        return a == b || (a.order == b.order
+        return a == b || ((ignoreOrder || a.order == b.order)
             && same(a.location.x, b.location.x) && same(a.location.y, b.location.y)
             && same(a.size.width, b.size.width) && same(a.size.height, b.size.height)
             && sameRect(a.scrollableOverflowRect, b.scrollableOverflowRect)
