@@ -125,6 +125,11 @@ while (i < argv.length) {
 // the default persistent session, so a developer's own zoom stays as it is.
 const automatedRun = keepHidden || screenshotPath != null || forcedDeviceScaleFactor;
 
+// The window options kept between launches (title bar, frame) are not used by
+// automated runs, unless CERAMIC_RUNNER_WINDOW_OPTIONS is set (to check them
+// in a hidden run, with a home folder of its own)
+const keepWindowOptions = !automatedRun || !!process.env.CERAMIC_RUNNER_WINDOW_OPTIONS;
+
 if (appFiles == null) {
     console.error('Missing app files path (use --app-files /your/files/dir)');
     process.exit(0);
@@ -163,6 +168,46 @@ exports.appFiles = appFiles;
 let mainWindow;
 exports.mainWindow = null;
 
+// The options of the window that only apply when it is created (the title bar
+// and the frame): the app gives them with its settings once its page is loaded,
+// so they are kept for the next launch, and a window created with other ones
+// is created again before it is shown (see ceramicSettings)
+const windowOptionsPath = function() {
+    return path.join(app.getPath('userData'), 'ceramic-window.json');
+};
+
+function readWindowOptions() {
+    try {
+        return JSON.parse(fs.readFileSync(windowOptionsPath(), 'utf8'));
+    }
+    catch (e) {
+        return {};
+    }
+}
+
+function writeWindowOptions(options) {
+    try {
+        fs.writeFileSync(windowOptionsPath(), JSON.stringify(options), 'utf8');
+    }
+    catch (e) {
+        console.error('Failed to save the window options: ' + e);
+    }
+}
+
+function sameWindowOptions(a, b) {
+    return !!a.overlay == !!b.overlay && !!a.borderless == !!b.borderless
+        && (a.buttonsX|0) == (b.buttonsX|0) && (a.buttonsY|0) == (b.buttonsY|0);
+}
+
+// The options the current window was created with
+let createdWindowOptions = null;
+
+// Whether the window was created again for its options (once per launch)
+let windowRecreated = false;
+
+// Whether the window was shown (ceramicReady)
+let windowShown = false;
+
 function createWindow() {
 
     if (appUrl == null) {
@@ -197,6 +242,16 @@ function createWindow() {
         windowOptions.webPreferences.partition = 'ceramic-automated-run';
         windowOptions.webPreferences.zoomFactor = 1.0;
     }
+
+    // Title bar and frame (kept from the app's last settings)
+    if (!keepWindowOptions) {
+        // An automated run does not depend on what earlier runs left behind
+        createdWindowOptions = {};
+    }
+    else if (createdWindowOptions == null) {
+        createdWindowOptions = readWindowOptions();
+    }
+    applyCreationOptions(windowOptions, createdWindowOptions);
 
     if (keepHidden) {
         // Window stays offscreen (`--hidden`): keep painting so capturePage()
@@ -236,13 +291,31 @@ function createWindow() {
     });
 
     // Emitted when the window is closed.
+    const createdWindow = mainWindow;
     mainWindow.on('closed', function() {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
-        mainWindow = null
-        exports.mainWindow = null;
+        // Dereference the window object (unless another window replaced it:
+        // see ceramicSettings)
+        if (mainWindow === createdWindow) {
+            mainWindow = null;
+            exports.mainWindow = null;
+        }
     });
+}
+
+// The options of `options` (see readWindowOptions) in the options of a new BrowserWindow
+function applyCreationOptions(windowOptions, options) {
+    if (options.overlay && process.platform == 'darwin') {
+        // The content goes under the title bar, which has no title and keeps
+        // the traffic lights (the overlay title bar of native builds)
+        windowOptions.titleBarStyle = 'hidden';
+        if (options.buttonsX >= 0 && options.buttonsY >= 0) {
+            windowOptions.trafficLightPosition = { x: options.buttonsX, y: options.buttonsY };
+        }
+    }
+    else if (options.borderless) {
+        // No system frame (the app draws its own window buttons)
+        windowOptions.frame = false;
+    }
 }
 
 // This method will be called when Electron has finished
@@ -280,6 +353,36 @@ exports.ceramicSettings = function(settings) {
 
     windowResizable = !!settings.resizable;
 
+    // The title bar and the frame are options of the window's creation: the
+    // window is created again (still hidden) when it was made with other ones,
+    // and they are kept for the next launch
+    var wanted = {
+        overlay: settings.titleBarStyle == 1,
+        buttonsX: settings.trafficLightX,
+        buttonsY: settings.trafficLightY,
+        borderless: !!settings.borderless
+    };
+    if (keepWindowOptions) {
+        writeWindowOptions(wanted);
+    }
+    if (keepWindowOptions && !windowShown && !windowRecreated && !sameWindowOptions(wanted, createdWindowOptions)) {
+        windowRecreated = true;
+        if (process.env.CERAMIC_RUNNER_DEBUG) {
+            console.log('runner window created again: ' + JSON.stringify(createdWindowOptions) + ' -> ' + JSON.stringify(wanted));
+        }
+        createdWindowOptions = wanted;
+        var previous = mainWindow;
+        mainWindow = null;
+        exports.mainWindow = null;
+        // The page of the new window gives its settings again. The former
+        // window goes once this call (made by its page) has returned
+        createWindow();
+        setTimeout(function() {
+            if (!previous.isDestroyed()) previous.destroy();
+        }, 0);
+        return;
+    }
+
     mainWindow.setTitle(settings.title);
     mainWindow.setResizable(windowResizable);
     mainWindow.setFullScreenable(windowResizable);
@@ -309,15 +412,72 @@ exports.ceramicSettings = function(settings) {
         mainWindow.setContentSize(targetWidth, targetHeight, false);
     // }
 
-    //var prevPos = mainWindow.getPosition();
-    //var prevSize = mainWindow.getContentSize();
-    mainWindow.center();
+    if (settings.minWidth > 0 || settings.minHeight > 0) {
+        mainWindow.setMinimumSize(Math.max(64, settings.minWidth|0), Math.max(64, settings.minHeight|0));
+    }
+
+    if (settings.windowX != null && settings.windowY != null && settings.windowX >= 0 && settings.windowY >= 0) {
+        // The position the app restores (kept inside the work area of its display)
+        var area = electron.screen.getDisplayMatching({ x: settings.windowX, y: settings.windowY, width: targetWidth, height: targetHeight }).workArea;
+        var x = Math.min(Math.max(settings.windowX, area.x), Math.max(area.x, area.x + area.width - targetWidth));
+        var y = Math.min(Math.max(settings.windowY, area.y), Math.max(area.y, area.y + area.height - targetHeight));
+        mainWindow.setPosition(Math.round(x), Math.round(y), false);
+    }
+    else {
+        mainWindow.center();
+    }
 };
 
 // Capture the window (webContents.capturePage) to the configured screenshot path,
 // then quit if requested. Exported so the ceramic app can trigger it on demand
 // (deterministic timing), via the @electron/remote bridge: electronRunner.takeScreenshot().
+// CERAMIC_RUNNER_DEBUG set: prints what the app gave the window (its menu bar,
+// its drag regions) when the screenshot is taken, for automated checks
+function printWindowDebug(done) {
+    if (!process.env.CERAMIC_RUNNER_DEBUG || mainWindow == null) {
+        done();
+        return;
+    }
+    function describe(menu, depth) {
+        var lines = [];
+        for (var i = 0; i < menu.items.length; i++) {
+            var item = menu.items[i];
+            var text = new Array(depth + 1).join('  ') + (item.type == 'separator' ? '-' : item.label);
+            if (item.accelerator) text += ' [' + item.accelerator + ']';
+            if (item.role) text += ' role=' + item.role;
+            if (item.enabled === false) text += ' disabled';
+            lines.push(text);
+            if (item.submenu != null) lines = lines.concat(describe(item.submenu, depth + 1));
+        }
+        return lines;
+    }
+    var menu = Menu.getApplicationMenu();
+    console.log('runner menu:\n' + (menu != null ? describe(menu, 1).join('\n') : '  (none)'));
+    console.log('runner window: ' + JSON.stringify(createdWindowOptions) + ' minimum=' + JSON.stringify(mainWindow.getMinimumSize()));
+    mainWindow.webContents.executeJavaScript(
+        "(function() { var el = document.getElementById('ceramic-drag-regions'); if (el == null) return '(none)';" +
+        " var out = []; for (var i = 0; i < el.children.length; i++) { var c = el.children[i];" +
+        " out.push(c.style.getPropertyValue('-webkit-app-region') + ' ' + c.style.left + ',' + c.style.top + ' ' + c.style.width + 'x' + c.style.height); }" +
+        " var canvas = document.getElementById('app'); for (var j = 0; j < el.children.length; j++) { var h = el.children[j];" +
+        " if (h.style.getPropertyValue('-webkit-app-region') != 'no-drag') continue;" +
+        " var x = parseFloat(h.style.left) + parseFloat(h.style.width) / 2, y = parseFloat(h.style.top) + parseFloat(h.style.height) / 2;" +
+        " out.push('click at ' + x + ',' + y + ' reaches ' + (document.elementFromPoint(x, y) == canvas ? 'the canvas' : 'another element')); }" +
+        " return out.join('\\n'); })()"
+    ).then(function(regions) {
+        console.log('runner drag regions:\n' + regions);
+        done();
+    }).catch(function(e) {
+        console.log('runner drag regions: ' + e);
+        done();
+    });
+}
+
 function takeScreenshot() {
+    if (screenshotPath == null || mainWindow == null) return;
+    printWindowDebug(captureWindow);
+}
+
+function captureWindow() {
     if (screenshotPath == null || mainWindow == null) return;
     console.log("Take screenshot at path: " + screenshotPath);
     mainWindow.webContents.capturePage().then(function(image) {
@@ -333,6 +493,7 @@ function takeScreenshot() {
 exports.takeScreenshot = takeScreenshot;
 
 exports.ceramicReady = function() {
+    windowShown = true;
     if (!keepHidden) {
         mainWindow.show();
     }
@@ -404,6 +565,196 @@ exports.listenFullscreen = function(enterFullscreen, leaveFullscreen) {
     mainWindow.on('enter-full-screen', enterFullscreen);
     mainWindow.on('leave-full-screen', leaveFullscreen);
 };
+
+// Window buttons drawn by the app (borderless windows)
+//
+
+exports.minimizeWindow = function() {
+    if (mainWindow != null) mainWindow.minimize();
+};
+
+exports.maximizeWindow = function() {
+    if (mainWindow != null) mainWindow.maximize();
+};
+
+exports.restoreWindow = function() {
+    if (mainWindow != null) {
+        if (mainWindow.isMaximized()) mainWindow.unmaximize();
+        else if (mainWindow.isMinimized()) mainWindow.restore();
+    }
+};
+
+exports.isWindowMaximized = function() {
+    return mainWindow != null && mainWindow.isMaximized();
+};
+
+exports.getWindowPosition = function() {
+    return mainWindow != null ? mainWindow.getPosition() : [0, 0];
+};
+
+// Moves the window (desktop coordinates), kept inside the work area of its
+// display. Returns true when the window moved.
+exports.setWindowPosition = function(x, y) {
+    if (mainWindow == null) return false;
+    var size = mainWindow.getSize();
+    var area = electron.screen.getDisplayMatching({ x: x, y: y, width: size[0], height: size[1] }).workArea;
+    x = Math.round(Math.min(Math.max(x, area.x), Math.max(area.x, area.x + area.width - size[0])));
+    y = Math.round(Math.min(Math.max(y, area.y), Math.max(area.y, area.y + area.height - size[1])));
+    var current = mainWindow.getPosition();
+    if (current[0] == x && current[1] == y) return false;
+    mainWindow.setPosition(x, y, false);
+    return true;
+};
+
+// Called with the position of the window when it moves
+exports.listenMove = function(callback) {
+    if (mainWindow == null) return;
+    mainWindow.on('move', function() {
+        var position = mainWindow.getPosition();
+        callback(position[0], position[1]);
+    });
+};
+
+exports.setMinimumSize = function(width, height) {
+    if (mainWindow != null && (width > 0 || height > 0)) {
+        mainWindow.setMinimumSize(Math.max(64, width|0), Math.max(64, height|0));
+    }
+};
+
+exports.closeWindow = function() {
+    if (mainWindow != null) mainWindow.close();
+};
+
+// Called with true or false when the window is maximized or restored
+exports.listenMaximize = function(callback) {
+    if (mainWindow == null) return;
+    mainWindow.on('maximize', function() { callback(true); });
+    mainWindow.on('unmaximize', function() { callback(false); });
+};
+
+// Moves the traffic lights of an overlay title bar (macOS): left of the close
+// button and top of the buttons, from the top left corner of the window
+exports.setTrafficLightPosition = function(x, y) {
+    if (mainWindow != null && process.platform == 'darwin' && mainWindow.setWindowButtonPosition != null && x >= 0 && y >= 0) {
+        mainWindow.setWindowButtonPosition({ x: x, y: y });
+    }
+};
+
+// Keeps the title bar and frame options for the next launch (they only apply
+// when the window is created)
+exports.setCreationOptions = function(options) {
+    if (keepWindowOptions) writeWindowOptions(options);
+};
+
+// Native menu bar (macOS)
+//
+
+let menuItemsById = {};
+
+// Builds the application menu from `menus` (Ceramic menu items as plain
+// objects: id, kind, title, key, modifiers, role, enabled, checked, items).
+// `onAction(id)` runs an item chosen with the mouse. An item chosen with its
+// shortcut is not run here: the page got the key first and the app decides
+// whether the item runs (as on native builds, where the keystroke is delivered
+// to the app before the menu). Items with a role of the system (hide, minimize,
+// zoom, full screen...) are done by the system.
+exports.setMenuBar = function(menus, onAction, onWillOpen) {
+    if (process.platform != 'darwin') return;
+    menuItemsById = {};
+    var template = [];
+    // The first menu is the application menu
+    for (var i = 0; i < menus.length; i++) {
+        template.push(menuTemplate(menus[i], onAction, onWillOpen, true));
+    }
+    var menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+    collectMenuItems(menu);
+    // Opening a menu: the app tells which items are enabled now
+    for (var m = 0; m < menu.items.length; m++) {
+        var submenu = menu.items[m].submenu;
+        if (submenu != null && onWillOpen != null) {
+            submenu.on('menu-will-show', function() { onWillOpen(); });
+        }
+    }
+};
+
+// Enables or disables items: `states` maps item ids to booleans
+exports.setMenuItemsEnabled = function(states) {
+    for (var id in states) {
+        var item = menuItemsById[id];
+        if (item != null) item.enabled = !!states[id];
+    }
+};
+
+function collectMenuItems(menu) {
+    for (var i = 0; i < menu.items.length; i++) {
+        var item = menu.items[i];
+        if (item.id != null && item.id !== '') menuItemsById[item.id] = item;
+        if (item.submenu != null) collectMenuItems(item.submenu);
+    }
+}
+
+function menuAccelerator(key, modifiers) {
+    if (key == null || key === '') return undefined;
+    var names = {
+        space: 'Space', backspace: 'Backspace', escape: 'Escape', tab: 'Tab', enter: 'Return',
+        up: 'Up', down: 'Down', left: 'Left', right: 'Right', pageup: 'PageUp', pagedown: 'PageDown',
+        home: 'Home', end: 'End', 'delete': 'Delete', insert: 'Insert', '+': 'Plus'
+    };
+    var name = names[key];
+    if (name == null) name = /^f[0-9]+$/.test(key) ? key.toUpperCase() : key.toUpperCase();
+    var parts = [];
+    // Ceramic's KeyModifiers: 1 shift, 2 control, 4 alt, 8 meta
+    if (modifiers & 8) parts.push('Command');
+    if (modifiers & 2) parts.push('Control');
+    if (modifiers & 4) parts.push('Alt');
+    if (modifiers & 1) parts.push('Shift');
+    parts.push(name);
+    return parts.join('+');
+}
+
+// Ceramic's MenuItemRole values done by the system, as Electron roles
+var systemRoles = { 8: 'hide', 9: 'hideOthers', 10: 'unhide', 11: 'minimize', 12: 'zoom', 13: 'togglefullscreen' };
+
+function menuTemplate(item, onAction, onWillOpen, topLevel) {
+    // kind: 0 action, 1 separator, 2 submenu, 3 services
+    if (item.kind == 1) return { type: 'separator' };
+    if (item.kind == 3) return { label: item.title, role: 'services' };
+    if (item.kind == 2) {
+        var entry = { id: String(item.id), label: item.title, submenu: [] };
+        if (item.role == 7 && topLevel) entry.role = 'windowMenu';
+        var children = item.items != null ? item.items : [];
+        for (var i = 0; i < children.length; i++) {
+            entry.submenu.push(menuTemplate(children[i], onAction, onWillOpen, false));
+        }
+        if (entry.role == 'windowMenu') {
+            // Electron's window menu fills its own items: keep the app's
+            delete entry.role;
+        }
+        return entry;
+    }
+    var result = {
+        id: String(item.id),
+        label: item.title,
+        enabled: item.enabled !== false,
+        accelerator: menuAccelerator(item.key, item.modifiers)
+    };
+    if (item.checked) {
+        result.type = 'checkbox';
+        result.checked = true;
+    }
+    var role = systemRoles[item.role];
+    if (role != null) {
+        result.role = role;
+        return result;
+    }
+    result.click = function(menuItem, browserWindow, event) {
+        // A shortcut reached the page first, which decides (see setMenuBar)
+        if (event != null && event.triggeredByAccelerator) return;
+        if (onAction != null) onAction(item.id);
+    };
+    return result;
+}
 
 // Create http server
 //

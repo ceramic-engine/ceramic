@@ -667,6 +667,11 @@ class ClayEvents extends clay.Events {
         if (backend.textInput.textEditing) {
             backend.textInput.handleWebKeyDown(char);
         }
+        if (ElectronRunner.electronRunner != null) {
+            // The shortcut of an item of Electron's menu bar: after the key
+            // down, as on native builds (see Screen.electronMenuKeyDown)
+            backend.screen.electronMenuKeyDown((keyCode:Int), (modifiers:Int));
+        }
         #end
 
         backend.textInput.handleKeyDown(keyCode, scanCode);

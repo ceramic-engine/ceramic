@@ -312,18 +312,38 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     public function getWindowX():Int {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.getWindowPosition != null) {
+            final position:Array<Int> = runner.getWindowPosition();
+            return position != null ? position[0] : 0;
+        }
+        #end
         return Clay.app.runtime.windowPositionX();
 
     }
 
     public function getWindowY():Int {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.getWindowPosition != null) {
+            final position:Array<Int> = runner.getWindowPosition();
+            return position != null ? position[1] : 0;
+        }
+        #end
         return Clay.app.runtime.windowPositionY();
 
     }
 
     public function setWindowPosition(x:Int, y:Int):Bool {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.setWindowPosition != null) {
+            return runner.setWindowPosition(x, y) == true;
+        }
+        #end
         return Clay.app.runtime.setWindowPosition(x, y);
 
     }
@@ -342,46 +362,286 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     public function setWindowMinSize(width:Int, height:Int):Void {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.setMinimumSize != null) {
+            runner.setMinimumSize(width, height);
+            return;
+        }
+        #end
         Clay.app.runtime.setWindowMinimumSize(width, height);
 
     }
 
+    /**
+     * No system border. With the Electron runner the frame of the window is
+     * an option of its creation: the change is kept for the next launch (the
+     * runner creates the window with it).
+     */
     public function setWindowBorderless(borderless:Bool):Void {
 
+        #if web
+        if (ElectronRunner.electronRunner != null) {
+            electronWindowOptions().borderless = borderless;
+            saveElectronWindowOptions();
+            return;
+        }
+        #end
         Clay.app.runtime.setWindowBorderless(borderless);
 
     }
 
-    /** Overlay title bar on macOS (`Clay.app.runtime.setWindowTitleBarStyle`); nothing elsewhere. */
+    /**
+     * Overlay title bar on macOS (`Clay.app.runtime.setWindowTitleBarStyle`,
+     * or the Electron runner: `titleBarStyle: 'hidden'`, given when the
+     * window is created, and the traffic lights moved at once); nothing
+     * elsewhere.
+     */
     public function setWindowTitleBarStyle(style:ceramic.TitleBarStyle, buttonsX:Float, buttonsY:Float):Void {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null) {
+            final options = electronWindowOptions();
+            options.overlay = (style:Int) == 1;
+            options.buttonsX = buttonsX;
+            options.buttonsY = buttonsY;
+            saveElectronWindowOptions();
+            if (options.overlay && runner.setTrafficLightPosition != null) {
+                runner.setTrafficLightPosition(buttonsX, buttonsY);
+            }
+            return;
+        }
+        #end
         Clay.app.runtime.setWindowTitleBarStyle((style:Int), buttonsX, buttonsY);
 
     }
 
     public function minimizeWindow():Void {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.minimizeWindow != null) {
+            runner.minimizeWindow();
+            return;
+        }
+        #end
         Clay.app.runtime.minimizeWindow();
 
     }
 
     public function maximizeWindow():Void {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.maximizeWindow != null) {
+            runner.maximizeWindow();
+            return;
+        }
+        #end
         Clay.app.runtime.maximizeWindow();
 
     }
 
     public function restoreWindow():Void {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.restoreWindow != null) {
+            runner.restoreWindow();
+            return;
+        }
+        #end
         Clay.app.runtime.restoreWindow();
 
     }
 
     public function isWindowMaximized():Bool {
 
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.isWindowMaximized != null) {
+            return runner.isWindowMaximized() == true;
+        }
+        #end
         return Clay.app.runtime.isWindowMaximized();
 
     }
+
+    #if web
+    /** The options of the Electron window's creation (title bar, frame), from the settings. */
+    var electronOptions:Dynamic = null;
+
+    function electronWindowOptions():Dynamic {
+
+        if (electronOptions == null) {
+            final settings = ceramic.App.app.settings;
+            electronOptions = {
+                overlay: (settings.titleBarStyle:Int) == 1,
+                buttonsX: settings.trafficLightX,
+                buttonsY: settings.trafficLightY,
+                borderless: settings.windowBorderless
+            };
+        }
+        return electronOptions;
+
+    }
+
+    function saveElectronWindowOptions():Void {
+
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.setCreationOptions != null) {
+            runner.setCreationOptions(electronWindowOptions());
+        }
+
+    }
+
+    /** The elements of the drag regions over the canvas (Electron: `-webkit-app-region`). */
+    var dragRegionsElement:js.html.DivElement = null;
+
+    /**
+     * The regions of the window that move it, as elements over the canvas
+     * that Electron reads (`-webkit-app-region: drag`, and `no-drag` for the
+     * regions that take the clicks, later ones over earlier ones like the
+     * native hit test: the last matching region wins). The drags, and the
+     * double click that zooms on macOS, are done by Electron. Resize regions
+     * are left to the system (a frameless window keeps its resize borders).
+     */
+    function setElectronDragRegions(regions:Array<Float>):Void {
+
+        final document = js.Browser.document;
+        if (dragRegionsElement == null) {
+            if (regions.length == 0) return;
+            dragRegionsElement = document.createDivElement();
+            dragRegionsElement.id = 'ceramic-drag-regions';
+            dragRegionsElement.style.position = 'fixed';
+            dragRegionsElement.style.left = '0';
+            dragRegionsElement.style.top = '0';
+            dragRegionsElement.style.width = '0';
+            dragRegionsElement.style.height = '0';
+            dragRegionsElement.style.pointerEvents = 'none';
+            dragRegionsElement.style.zIndex = '10';
+            document.body.appendChild(dragRegionsElement);
+        }
+
+        // The regions are in the coordinates of the canvas
+        var originX = 0.0;
+        var originY = 0.0;
+        final canvas = document.getElementById('app');
+        if (canvas != null) {
+            final rect = canvas.getBoundingClientRect();
+            originX = rect.left;
+            originY = rect.top;
+        }
+
+        final children = dragRegionsElement.children;
+        var count = 0;
+        var i = 0;
+        while (i + 4 < regions.length) {
+            final kind = Std.int(regions[i + 4]);
+            // Draggable, or a region that takes its clicks over a draggable one
+            final region = kind == 1 ? 'drag' : 'no-drag';
+            var element:js.html.DivElement = count < children.length ? cast children[count] : null;
+            if (element == null) {
+                element = document.createDivElement();
+                element.style.position = 'absolute';
+                dragRegionsElement.appendChild(element);
+            }
+            element.style.left = (originX + regions[i]) + 'px';
+            element.style.top = (originY + regions[i + 1]) + 'px';
+            element.style.width = regions[i + 2] + 'px';
+            element.style.height = regions[i + 3] + 'px';
+            // No element takes the mouse in the page: Electron reads the
+            // regions from their style, the system moves the window from a
+            // draggable one, and elsewhere the canvas gets the events
+            element.style.pointerEvents = 'none';
+            untyped element.style.webkitAppRegion = region;
+            untyped element.style.setProperty('-webkit-app-region', region);
+            count++;
+            i += 5;
+        }
+        while (children.length > count) {
+            dragRegionsElement.removeChild(children[children.length - 1]);
+        }
+
+    }
+
+    /** The shortcuts of the native menu bar: item id, key code and modifiers (Electron). */
+    var menuShortcuts:Array<Int> = [];
+
+    /**
+     * A key down with the Electron runner: when it is the shortcut of an
+     * item of the native menu bar, Ceramic runs the item unless the app
+     * handled the key (`menuKeyEquivalent`), as on native builds. Electron's
+     * menu ignores the shortcuts of these items (see the runner's
+     * `setMenuBar`).
+     */
+    @:allow(backend.ClayEvents)
+    function electronMenuKeyDown(keyCode:Int, modifiers:Int):Void {
+
+        if (menuShortcuts.length == 0) return;
+        final mods = modifiers & (ceramic.KeyModifiers.SHIFT | ceramic.KeyModifiers.CTRL | ceramic.KeyModifiers.ALT | ceramic.KeyModifiers.META);
+        var i = 0;
+        while (i + 2 < menuShortcuts.length) {
+            if (menuShortcuts[i + 1] == keyCode && menuShortcuts[i + 2] == mods) {
+                emitMenuKeyEquivalent(menuShortcuts[i]);
+                return;
+            }
+            i += 3;
+        }
+
+    }
+
+    function collectMenuShortcuts(item:ceramic.MenuItem):Void {
+
+        if (item.items != null) {
+            for (child in item.items) collectMenuShortcuts(child);
+            return;
+        }
+        // Items done by the system (hide, minimize, zoom, full screen) are left to Electron
+        final role = (item.role:Int);
+        if (role >= 8 && role <= 13) return;
+        final keyCode = menuKeyCode(item.key);
+        if (keyCode == 0) return;
+        menuShortcuts.push(item.id);
+        menuShortcuts.push(keyCode);
+        menuShortcuts.push((item.modifiers:Int) & (ceramic.KeyModifiers.SHIFT | ceramic.KeyModifiers.CTRL | ceramic.KeyModifiers.ALT | ceramic.KeyModifiers.META));
+
+    }
+
+    /** clay's key code of a menu item key (a character or a key name, see `clay.MenuItemSpec`), 0 for none. */
+    static function menuKeyCode(key:Null<String>):Int {
+
+        if (key == null || key == '') return 0;
+        return switch key {
+            case 'space': clay.KeyCode.SPACE;
+            case 'backspace': clay.KeyCode.BACKSPACE;
+            case 'escape': clay.KeyCode.ESCAPE;
+            case 'tab': clay.KeyCode.TAB;
+            case 'enter': clay.KeyCode.ENTER;
+            case 'up': clay.KeyCode.UP;
+            case 'down': clay.KeyCode.DOWN;
+            case 'left': clay.KeyCode.LEFT;
+            case 'right': clay.KeyCode.RIGHT;
+            case 'pageup': clay.KeyCode.PAGEUP;
+            case 'pagedown': clay.KeyCode.PAGEDOWN;
+            case 'home': clay.KeyCode.HOME;
+            case 'end': clay.KeyCode.END;
+            case 'delete': clay.KeyCode.DELETE;
+            case 'insert': clay.KeyCode.INSERT;
+            case _:
+                if (key.length > 1 && key.charAt(0) == 'f') {
+                    final n = Std.parseInt(key.substr(1));
+                    n != null && n >= 1 && n <= 12 ? (clay.KeyCode.F1:Int) + n - 1 : 0;
+                }
+                else if (key.length == 1) {
+                    key.toLowerCase().charCodeAt(0);
+                }
+                else 0;
+        }
+
+    }
+    #end
 
     public function showWindowMenu(x:Float, y:Float):Void {
 
@@ -391,6 +651,12 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     public function setWindowHitRegions(regions:Array<Float>):Void {
 
+        #if web
+        if (ElectronRunner.electronRunner != null) {
+            setElectronDragRegions(regions);
+            return;
+        }
+        #end
         Clay.app.runtime.setWindowHitRegions(regions);
 
     }
@@ -433,7 +699,37 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     public function setMenuBar(menus:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {
 
         menuItemEnabled = isEnabled;
+        #if web
+        final runner = ElectronRunner.electronRunner;
+        if (runner != null && runner.setMenuBar != null) {
+            // Electron's application menu (macOS): chosen items come back as
+            // `menuAction`, their shortcuts as `menuKeyEquivalent` (see
+            // electronMenuKeyDown)
+            menuShortcuts = [];
+            for (menu in menus) collectMenuShortcuts(menu);
+            final specs = [for (menu in menus) toClayMenuItem(menu)];
+            final ids:Array<Int> = [];
+            for (spec in specs) collectMenuIds(spec, ids);
+            runner.setMenuBar(specs, function(id:Int) {
+                emitMenuAction(id);
+            }, function() {
+                // The items enabled now, before the menu shows
+                final states:haxe.DynamicAccess<Bool> = {};
+                for (id in ids) states.set(Std.string(id), isMenuItemEnabled(id));
+                if (runner.setMenuItemsEnabled != null) runner.setMenuItemsEnabled(states);
+                emitMenuWillOpen();
+            });
+            return;
+        }
+        #end
         Clay.app.runtime.setMenuBar([for (menu in menus) toClayMenuItem(menu)]);
+
+    }
+
+    static function collectMenuIds(spec:clay.MenuItemSpec, ids:Array<Int>):Void {
+
+        if (spec.kind == 0) ids.push(spec.id);
+        if (spec.items != null) for (child in spec.items) collectMenuIds(child, ids);
 
     }
 

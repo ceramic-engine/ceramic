@@ -45,13 +45,6 @@ class ExportElectron extends tools.Task {
                 Files.copyDirectory(context.ceramicRunnerPath, electronProjectPath, true);
             }
 
-            print('Patch app.js');
-            var appJs = File.getContent(electronProjectFilePath);
-            appJs = appJs.replace(
-                "var argv = process.argv.slice();",
-                "var argv = ['--app-files', path.join(__dirname, 'html')];"
-            );
-            File.saveContent(electronProjectFilePath, appJs);
 
             print('Configure package.json');
             var packageJson = Json.parse(File.getContent(electronProjectPackageJsonPath));
@@ -61,6 +54,18 @@ class ExportElectron extends tools.Task {
                 "asar": false
             });
             File.saveContent(electronProjectPackageJsonPath, Json.stringify(packageJson, null, '  '));
+        }
+
+        // The runner's app.js at every export, so that an existing project
+        // follows the changes of the runner (its other files are kept)
+        print('Update app.js');
+        var appJs = File.getContent(Path.join([context.ceramicRunnerPath, 'app.js']));
+        appJs = appJs.replace(
+            "var argv = process.argv.slice();",
+            "var argv = ['--app-files', path.join(__dirname, 'html')];"
+        );
+        if (!FileSystem.exists(electronProjectFilePath) || File.getContent(electronProjectFilePath) != appJs) {
+            File.saveContent(electronProjectFilePath, appJs);
         }
 
         if (!FileSystem.exists(webProjectIndexPath)) {

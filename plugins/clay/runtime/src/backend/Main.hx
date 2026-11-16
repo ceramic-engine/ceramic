@@ -448,12 +448,28 @@ class Main {
                     title: app.settings.title,
                     fullscreen: app.settings.fullscreen,
                     resizable: app.settings.resizable,
+                    // Options of the window's creation (the runner creates it
+                    // again with them if needed, and keeps them for the next
+                    // launch), size and position limits
+                    titleBarStyle: (app.settings.titleBarStyle:Int),
+                    trafficLightX: app.settings.trafficLightX,
+                    trafficLightY: app.settings.trafficLightY,
+                    borderless: app.settings.windowBorderless,
+                    minWidth: app.settings.windowMinWidth,
+                    minHeight: app.settings.windowMinHeight,
+                    windowX: app.settings.windowX != ceramic.Settings.WINDOW_POSITION_UNDEFINED ? app.settings.windowX : -1,
+                    windowY: app.settings.windowY != ceramic.Settings.WINDOW_POSITION_UNDEFINED ? app.settings.windowY : -1,
                     targetWidth: app.settings.windowWidth > 0 ? app.settings.windowWidth : app.settings.targetWidth,
                     targetHeight: app.settings.windowHeight > 0 ? app.settings.windowHeight : app.settings.targetHeight
                 });
             }
 
             // Bind some events
+            if (ElectronRunner.electronRunner.listenMove != null) {
+                ElectronRunner.electronRunner.listenMove(function(x:Int, y:Int) {
+                    @:privateAccess app.backend.screen.emitWindowMove(x, y);
+                });
+            }
             if (ElectronRunner.electronRunner.listenFullscreen != null) {
                 // Fullscreen events
                 ElectronRunner.electronRunner.listenFullscreen(
