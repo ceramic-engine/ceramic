@@ -315,27 +315,15 @@ class InitSettings {
     }
 
     /**
-     * Web only: deliver smooth scrolling on the beat of the frames when the browser
-     * dispatches it unevenly (Safari). See `Settings.webWheelResampling`.
+     * Deliver smooth scrolling on the beat of the frames when the platform dispatches
+     * it unevenly (Safari, macOS native). See `Settings.wheelResampling`.
      */
-    public var webWheelResampling(get,set):Bool;
-    inline function get_webWheelResampling():Bool {
-        return settings.webWheelResampling;
+    public var wheelResampling(get,set):Bool;
+    inline function get_wheelResampling():Bool {
+        return settings.wheelResampling;
     }
-    inline function set_webWheelResampling(webWheelResampling:Bool):Bool {
-        return settings.webWheelResampling = webWheelResampling;
-    }
-
-    /**
-     * macOS native builds: deliver precise scrolling on the beat of the frames when the
-     * system sends it unevenly. See `Settings.nativeWheelResampling`.
-     */
-    public var nativeWheelResampling(get,set):Bool;
-    inline function get_nativeWheelResampling():Bool {
-        return settings.nativeWheelResampling;
-    }
-    inline function set_nativeWheelResampling(nativeWheelResampling:Bool):Bool {
-        return settings.nativeWheelResampling = nativeWheelResampling;
+    inline function set_wheelResampling(wheelResampling:Bool):Bool {
+        return settings.wheelResampling = wheelResampling;
     }
 
     /**

@@ -485,43 +485,27 @@ class Settings implements Observable {
     @observe public var preventDefaultTouches:Bool = #if ceramic_allow_default_mouse_wheel false #else true #end;
 
     /**
-     * Web only: deliver smooth scrolling on the beat of the frames when the browser
-     * dispatches it unevenly.
+     * Deliver smooth scrolling (pixel deltas: trackpads, smooth wheels, Magic Mouse) on
+     * the beat of the frames when the platform dispatches it unevenly against them.
      *
-     * Some browsers (Safari) dispatch wheel events on a clock of their own instead of
-     * aligning them with the animation frames: a frame now and then receives no
-     * `mouseScroll` / `mouseWheel` event and the next one receives two, so content that
-     * follows the deltas stops for a frame and then jumps twice as far. When this is
-     * enabled, pixel deltas (trackpads, smooth wheels) of such browsers are resampled at
-     * each frame from the event times, a little behind the newest event (about one event
-     * interval plus the delivery delay of the browser, measured: about one frame), so each
-     * frame gets an even step. The total distance stays exactly the sum of the deltas.
-     * Line and page deltas (notched mouse wheels) are never changed. While the browser
-     * delivers wheel input aligned with the frames (Chromium), events go through as they
+     * Some platforms dispatch scroll events on a clock of their own instead of aligning
+     * them with the frames: Safari on the web, and macOS for native apps (about one event
+     * per frame, but out of phase). Now and then a frame receives no `mouseScroll` /
+     * `mouseWheel` event and the next one receives two, so content that follows the
+     * deltas stops for a frame and then jumps twice as far. When this is enabled, pixel
+     * deltas are resampled at each frame from the event times, a little behind the newest
+     * event (about one event interval plus the delivery delay, measured: about one frame),
+     * so each frame gets an even step. The total distance stays exactly the sum of the
+     * deltas. Line and page deltas (notched mouse wheels) are never changed. While the
+     * events come evenly (Chromium aligns them with the frames), they go through as they
      * come and no latency is added. See `clay.WheelResampler`.
      *
+     * Applies on the web and on macOS native builds; other platforms ignore it.
+     *
      * Default: `true` in Safari and the other WebKit browsers of iOS (see
-     * `Utils.isSafari()`), whose wheel events have this issue, `false` elsewhere.
-     * An app can still set it either way.
+     * `Utils.isSafari()`), `false` elsewhere. An app can still set it either way.
      */
-    @observe public var webWheelResampling:Bool = Utils.isSafari();
-
-    /**
-     * macOS native builds: deliver precise scrolling (trackpads, Magic Mouse) on the beat
-     * of the frames when the system sends it unevenly against them.
-     *
-     * macOS sends these scroll events about once per frame, but on a clock of its own: now
-     * and then a frame receives two events and the next one none, so content that follows
-     * the deltas stops for a frame and then jumps twice as far. When this is enabled, the
-     * pixel deltas are resampled at each frame from the event times, like
-     * `webWheelResampling` does for Safari, so each frame gets an even step, a little behind
-     * the newest event (about one frame). The total distance stays exactly the sum of the
-     * deltas. Notched mouse wheels are never changed. While the events come evenly, they go
-     * through as they come and no latency is added. See `clay.WheelResampler`.
-     *
-     * Default: false
-     */
-    @observe public var nativeWheelResampling:Bool = false;
+    @observe public var wheelResampling:Bool = Utils.isSafari();
 
     /**
      * Supported screen orientations for mobile devices.

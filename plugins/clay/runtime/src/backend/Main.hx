@@ -301,10 +301,10 @@ class Main {
         app.settings.onPreventDefaultMouseWheelChange(app, (preventDefaultMouseWheel, _) -> {
             config.runtime.preventDefaultMouseWheel = preventDefaultMouseWheel || app.numBlockingDefaultScroll > 0;
         });
-        // Smooth scrolling on the beat of the frames (see Settings.webWheelResampling)
-        config.runtime.wheelResampling = settings.webWheelResampling;
-        app.settings.onWebWheelResamplingChange(app, (webWheelResampling, _) -> {
-            config.runtime.wheelResampling = webWheelResampling;
+        // Smooth scrolling on the beat of the frames (see Settings.wheelResampling)
+        config.runtime.wheelResampling = settings.wheelResampling;
+        app.settings.onWheelResamplingChange(app, (wheelResampling, _) -> {
+            config.runtime.wheelResampling = wheelResampling;
         });
         // A discrete input event handled at once while idle (see Settings.earlyTickOnInput)
         config.runtime.earlyTickOnInput = settings.earlyTickOnInput;
@@ -375,10 +375,10 @@ class Main {
         #if clay_sdl
         // Read when SDL starts (SDL_HINT_MAC_SCROLL_MOMENTUM, macOS)
         config.runtime.scrollMomentum = app.settings.scrollMomentum;
-        // Precise scrolling on the beat of the frames (see Settings.nativeWheelResampling)
-        config.runtime.wheelResampling = app.settings.nativeWheelResampling;
-        app.settings.onNativeWheelResamplingChange(app, (nativeWheelResampling, _) -> {
-            config.runtime.wheelResampling = nativeWheelResampling;
+        // Precise scrolling on the beat of the frames (see Settings.wheelResampling)
+        config.runtime.wheelResampling = app.settings.wheelResampling;
+        app.settings.onWheelResamplingChange(app, (wheelResampling, _) -> {
+            config.runtime.wheelResampling = wheelResampling;
         });
         #end
         config.window.titleBarStyle = (app.settings.titleBarStyle:Int);
