@@ -216,6 +216,39 @@ class MouseCursorTest extends TestCase {
     }
 
     /**
+     * The hover background of a sticky line follows the mouse: set over the
+     * line, gone once the mouse is over the text below, also after the
+     * sticky lines changed while the mouse was over them.
+     */
+    function testStickyLineHoverEnds() {
+        final e = open(INDENTED, {stickyScroll: {enabled: true}});
+        final controller = StickyScrollController.get(e.getEditor());
+        final provider:StickyLineCandidateProvider = cast controller.stickyScrollCandidateProvider;
+        provider.update();
+        controller._flushPendingUpdate();
+        final lh = lineHeight(e);
+        e.getEditor().setScrollTop(3 * lh);
+        controller._flushPendingUpdate();
+        app.update(_ -> window.draw());
+        final widget = controller.stickyScrollWidget;
+        final layout = e.getLayoutInfo();
+        cursorAt(layout.contentLeft + 40, lh * 1.5);
+        assertEquals(1, widget.hoveredLineIndex, 'over the second sticky line');
+        cursorAt(layout.contentLeft + 40, lh * 6.5);
+        assertEquals(-1, widget.hoveredLineIndex, 'over the text below');
+        cursorAt(layout.contentLeft + 40, lh * 1.5);
+        assertEquals(1, widget.hoveredLineIndex);
+        // The sticky lines change under the mouse (a scroll), then the mouse goes down
+        e.getEditor().setScrollTop(1 * lh);
+        controller._flushPendingUpdate();
+        app.update(_ -> window.draw());
+        app.update(_ -> window.draw());
+        cursorAt(layout.contentLeft + 40, lh * 6.5);
+        assertEquals(-1, widget.hoveredLineIndex, 'over the text after a scroll');
+        close();
+    }
+
+    /**
      * The box of the digits of a sticky line number is Monaco's: the DOM
      * range of the digits, measured on the real Monaco 0.52.2 with font
      * size 14 and line height 18 (glaze-golden scratchpad cs-cursor probe
