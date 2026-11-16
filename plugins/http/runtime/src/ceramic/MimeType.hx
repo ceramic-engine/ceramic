@@ -37,8 +37,8 @@ class MimeType {
      * 
      * Text-based MIME types include:
      * - All types starting with "text/" (e.g., text/plain, text/html)
-     * - JavaScript and JSON (application/javascript, application/json)
-     * - XML-based formats (application/xml, image/svg+xml, etc.)
+     * - JavaScript and JSON (application/javascript, application/json, any +json type)
+     * - XML-based formats (application/xml and any +xml type, like image/svg+xml)
      * - Rich Text Format (application/rtf)
      * - Perl scripts (application/x-perl)
      * - Various specialized text formats
@@ -56,6 +56,10 @@ class MimeType {
         type = type.trim().toLowerCase();
 
         if (type.startsWith('text/'))
+            return false;
+
+        // XML and JSON in any of their forms (application/xml, application/vast+xml, application/ld+json...)
+        if (type == 'application/xml' || type.endsWith('+xml') || type.endsWith('+json'))
             return false;
 
         return switch type {
