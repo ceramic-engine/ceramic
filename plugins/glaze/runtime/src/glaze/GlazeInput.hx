@@ -179,8 +179,8 @@ class GlazeInput extends ceramic.Entity {
         screen.onMouseDown(this, handleMouseDown);
         screen.onMouseUp(this, handleMouseUp);
         screen.onMouseScroll(this, handleMouseScroll);
-        // Web: Ceramic resamples smooth scrolling on the beat of the frames in Safari by
-        // default (ceramic.Settings.webWheelResampling). The scroll logic of GPUI is
+        // Ceramic resamples smooth scrolling on the beat of the frames in Safari by
+        // default, and on macOS native when the app asks (ceramic.Settings.wheelResampling). The scroll logic of GPUI is
         // unchanged: it receives the same total distance, in even steps.
         screen.onTouchDown(this, handleTouchDown);
         screen.onTouchMove(this, handleTouchMove);
