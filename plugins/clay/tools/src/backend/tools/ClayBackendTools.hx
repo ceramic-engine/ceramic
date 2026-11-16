@@ -328,7 +328,11 @@ class ClayBackendTools implements tools.spec.BackendTools {
 
         switch (target.name) {
             case 'mac':
-                // Icon needs to be generated manually for now
+                // The bundle's app.icns, made in project/mac (the mac plugin
+                // copies it into the bundle at every build)
+                if (transformMacIcon(cwd, appIcon)) {
+                    iconsChanged = true;
+                }
 
             case 'linux':
                 // Icon needs to be generated manually for now
@@ -615,6 +619,76 @@ class ClayBackendTools implements tools.spec.BackendTools {
         if (iconsChanged) {
             context.iconsChanged = true;
         }
+
+    }
+
+    /**
+     * Makes `project/mac/app.icns` from `app.iconMac`, or without it from
+     * the first file that exists of `resources/AppIcon-mac.icns`,
+     * `resources/AppIcon-mac.png` and `app.icon`: an `.icns` file is copied
+     * as is, a PNG is made into the icon sizes of macOS (16 to 1024 pixels)
+     * with `iconutil`. The PNG is used as given,
+     * so a macOS icon drawn on Apple's grid (the shape within 824 of 1024
+     * pixels, with its margin) gives the look of the other icons of the
+     * Dock. Returns whether the file changed.
+     */
+    function transformMacIcon(cwd:String, appIcon:String):Bool {
+
+        var source:String = Reflect.field(context.project.app, 'iconMac');
+        if (source != null) {
+            if (!Path.isAbsolute(source)) {
+                source = Path.join([cwd, source]);
+            }
+            if (!FileSystem.exists(source)) {
+                fail('Invalid mac icon: $source');
+            }
+        }
+        else {
+            source = appIcon;
+            for (candidate in ['resources/AppIcon-mac.icns', 'resources/AppIcon-mac.png']) {
+                var path = Path.join([cwd, candidate]);
+                if (FileSystem.exists(path)) {
+                    source = path;
+                    break;
+                }
+            }
+        }
+
+        var macProjectPath = Path.join([cwd, 'project/mac']);
+        var target = Path.join([macProjectPath, 'app.icns']);
+        if (FileSystem.exists(target) && Files.haveSameLastModified(source, target)) {
+            return false;
+        }
+        if (!FileSystem.exists(macProjectPath)) {
+            FileSystem.createDirectory(macProjectPath);
+        }
+
+        if (source.toLowerCase().endsWith('.icns')) {
+            File.saveBytes(target, File.getBytes(source));
+        }
+        else {
+            if (Sys.systemName() != 'Mac') {
+                warning('The mac icon is made with iconutil, on macOS only: $target not updated');
+                return false;
+            }
+            var iconsetPath = Path.join([cwd, 'project/mac-tmp-icon.iconset']);
+            if (FileSystem.exists(iconsetPath)) {
+                Files.deleteRecursive(iconsetPath);
+            }
+            FileSystem.createDirectory(iconsetPath);
+            for (size in [16, 32, 128, 256, 512]) {
+                Images.resizeFile(source, Path.join([iconsetPath, 'icon_${size}x${size}.png']), size, size);
+                Images.resizeFile(source, Path.join([iconsetPath, 'icon_${size}x${size}@2x.png']), size * 2, size * 2);
+            }
+            var status = command('iconutil', ['-c', 'icns', '-o', target, iconsetPath], { mute: true }).status;
+            Files.deleteRecursive(iconsetPath);
+            if (status != 0) {
+                fail('Failed to make the mac icon $target from $source');
+            }
+        }
+
+        Files.setToSameLastModified(source, target);
+        return true;
 
     }
 

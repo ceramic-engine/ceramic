@@ -115,24 +115,16 @@ class MacApp {
     }
 
     /**
-     * Copies `app.macIcon` of `ceramic.yml` (an `.icns` file, relative to
-     * the project) to the bundle's `Contents/Resources/app.icns`, the icon
-     * the template's Info.plist names, at every build so that an existing
-     * project follows a change. Without it the template's icon (Ceramic's)
-     * stays. When the icon changes, the bundle is touched so that the Dock
-     * and the Finder read it again.
+     * Copies `project/mac/app.icns` (made from `app.iconMac` by the icons
+     * task) to the bundle's `Contents/Resources/app.icns`, the icon the
+     * template's Info.plist names, at every build. When it changes, the
+     * bundle is touched so that the Dock and the Finder read it again.
      */
     static function applyIcon(cwd:String, macAppPath:String, project:Project):Void {
 
-        var icon:Null<String> = Reflect.field(project.app, 'macIcon');
-        if (icon == null || StringTools.trim(icon) == '') return;
-        if (!Path.isAbsolute(icon)) icon = Path.join([cwd, icon]);
-        if (!FileSystem.exists(icon)) {
-            fail('Invalid mac icon: $icon');
-        }
-
+        var icon = Path.join([cwd, 'project', 'mac', 'app.icns']);
         var resourcesPath = Path.join([macAppPath, 'Contents', 'Resources']);
-        if (!FileSystem.exists(resourcesPath)) return;
+        if (!FileSystem.exists(icon) || !FileSystem.exists(resourcesPath)) return;
         var target = Path.join([resourcesPath, 'app.icns']);
         var bytes = sys.io.File.getBytes(icon);
         if (FileSystem.exists(target) && sys.io.File.getBytes(target).compare(bytes) == 0) return;
