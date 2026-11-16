@@ -2,7 +2,7 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Additions without upstream equivalent (KIT-006 in docs/DEVIATIONS.md): `maxH`, `maxHRatio`, `overlayCloseOnClick`,
-// a public `header`. KIT-026: `bodyGap`. KIT-028: `entranceTravel`, `entranceDuration`.
+// a public `header`. KIT-026: `bodyGap`. KIT-028: `entranceTravel`, `entranceDuration`. KIT-029: `layerOffset`.
 // Modified for Glaze (DEV-024 in docs/DEVIATIONS.md): the `SlideDown` entrance slides the surface's top edge to its
 // resting place instead of moving the positioner's anchor.
 // Modified for Glaze (DEV-025 in docs/DEVIATIONS.md): the 16 px step of a stacked dialog counts only the dialogs below
@@ -235,6 +235,7 @@ class DialogProps {
     var bodyGap:Null<Pixels> = null;
     var entranceTravel:Null<Pixels> = null;
     var entranceDuration:Null<Float> = null;
+    var layerOffset:Null<Pixels> = null;
 
     public function new() {}
 
@@ -256,6 +257,7 @@ class DialogProps {
         props.bodyGap = bodyGap;
         props.entranceTravel = entranceTravel;
         props.entranceDuration = entranceDuration;
+        props.layerOffset = layerOffset;
         return props;
     }
 
@@ -602,6 +604,17 @@ class Dialog extends Component implements Styled implements ParentElement {
     }
 
     /**
+     * Set how far this dialog is moved down for each dialog still open
+     * below it (addition, KIT-029). 16 px by default, as in gpui-kit;
+     * `layerOffset(px(0.))` places a stacked dialog where it would be
+     * alone, so a dialog over another one is centered like it.
+     */
+    public function layerOffset(offset:Pixels):Dialog {
+        props.layerOffset = offset;
+        return this;
+    }
+
+    /**
      * Set how far a `FadeSlide` entrance moves the surface down (addition,
      * KIT-028). The theme's short motion distance by default; the space
      * above the surface inside the window still limits it.
@@ -808,7 +821,9 @@ class Dialog extends Component implements Styled implements ParentElement {
         // open step this one down. gpui-kit counts the dialogs playing their
         // exit too, so a dialog opened while another one leaves sat 16 px
         // lower, then jumped up when the leaving one unmounted.
-        final layerOffset:Float = f32(openDialogsBelow(window) * 16.);
+        // Addition (KIT-029): the caller's step instead of 16 px.
+        final layerStep:Float = props.layerOffset != null ? props.layerOffset : 16.;
+        final layerOffset:Float = f32(openDialogsBelow(window) * layerStep);
         var anchor:Anchor;
         var y:Float;
         if (props.centered) {

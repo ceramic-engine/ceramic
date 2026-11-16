@@ -220,6 +220,57 @@ class KitTitleBarAdditionsTest extends KitAdditionsTestCase {
         assertEquals(2, others);
     }
 
+    // KIT-030
+
+    function cursorAt(cx:VisualTestContext, at:Point):glaze.CursorStyle {
+        cx.simulateMouseMove(at);
+        cx.runUntilParked();
+        cx.update((window, _) -> {
+            window.refresh();
+            window.draw();
+        });
+        return cx.update((window, _) -> window.cursorStyle());
+    }
+
+    function testControlCursorIsTheCursorOverTheButtons() {
+        OperatingSystem.current = OperatingSystem.Mac;
+        // none by default, as in gpui-kit: the arrow
+        final plain = titleBar(bar -> bar.platform(TitleBarPlatform.Windows));
+        assertEquals(sceneSignature(plain), sceneSignature(titleBar(bar -> bar.platform(TitleBarPlatform.Windows).controlCursor(null))));
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(plain, new Point(515., 17.)));
+        final ops = new TitleBarOperations();
+        final cx = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).controlCursor(PointingHand), ops);
+        for (x in [515., 549., 583.]) assertEquals(glaze.CursorStyle.PointingHand, cursorAt(cx, new Point(x, 17.)));
+        // not over the rest of the bar
+        assertEquals(glaze.CursorStyle.Arrow, cursorAt(cx, new Point(300., 17.)));
+        // the buttons still act
+        cx.simulateClick(new Point(515., 17.));
+        assertEquals('minimize', ops.calls.join(','));
+    }
+
+    // KIT-031
+
+    /** A row wider than the window: a part that can shrink, then 50 px that cannot. */
+    static function wideRow():glaze.IntoElement {
+        return div().flex().flex1().minW0()
+            .child(div().flex1().minW0().overflowHidden().child(div().flexShrink0().w(px(1000.)).h(px(10.))))
+            .child(div().flexShrink0().child(new tests.kit.KitAdditionsTestCase.AdditionsProbe('right', div().w(px(50.)).h(px(10.)))));
+    }
+
+    function testShrinkContentKeepsTheButtonsInTheWindow() {
+        OperatingSystem.current = OperatingSystem.Mac;
+        // gpui-kit: the content keeps the width of what it holds and pushes
+        // the buttons out of the 600 px window
+        final plain = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).child(wideRow()));
+        assertTrue(controlLefts(plain)[0] > 600., 'buttons at ${controlLefts(plain).join(',')}');
+        // with nothing too wide, the option draws the same frame
+        assertEquals(sceneSignature(titleBar(bar -> bar.platform(TitleBarPlatform.Windows))),
+            sceneSignature(titleBar(bar -> bar.platform(TitleBarPlatform.Windows).shrinkContent(true))));
+        final cx = titleBar(bar -> bar.platform(TitleBarPlatform.Windows).shrinkContent(true).child(wideRow()));
+        assertEquals('498,532,566', controlLefts(cx).join(','));
+        assertEquals(498., boundsOf(cx, 'right').right());
+    }
+
     static function sameColor(a:glaze.Hsla, b:glaze.Hsla):Bool {
         return Math.abs(a.h - b.h) < 0.0001 && Math.abs(a.s - b.s) < 0.0001 && Math.abs(a.l - b.l) < 0.0001 && Math.abs(a.a - b.a) < 0.0001;
     }

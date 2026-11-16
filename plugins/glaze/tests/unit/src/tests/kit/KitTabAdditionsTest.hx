@@ -20,6 +20,7 @@ import glaze.kit.menu.PopupMenu.PopupMenuItem;
 import glaze.kit.tab.Tab;
 import glaze.kit.tab.TabAppearance;
 import glaze.kit.tab.TabBar;
+import glaze.kit.tab.TabBar.TabRevealMode;
 import glaze.kit.tab.TabVariant;
 import glaze.kit.theme.Theme;
 import glaze.kit.theme.ThemeConfigColors;
@@ -441,6 +442,78 @@ class KitTabAdditionsTest extends KitAdditionsTestCase {
         rerender(cx);
         for (_ in 0...3) nextFrame(cx);
         assertEquals(0., handle.offset().x);
+    }
+
+/// KIT-033
+
+    /** Five tabs of 60 px in a 200 px bar, then 30 px of `lastEmptySpace`. */
+    function nearestHarness(mode:Null<TabRevealMode>, selected:Array<Int>, handle:ScrollHandle):VisualTestContext {
+        app.update(cx -> cx.setReduceMotion(true));
+        return open((_, _) -> {
+            final bar = TabBar.component('nearest-tabs')
+                .wFull()
+                .trackScroll(handle)
+                .revealSelected(true)
+                .selectedIndex(selected[0])
+                .lastEmptySpace(div().flexShrink0().w(px(30.)).h(px(10.)))
+                .onClick((_, _, _) -> {})
+                .children([for (ix in 0...5) new ProbedAdditionTab('tab-$ix').w(px(60.)).label('Tab $ix')]);
+            if (mode != null) bar.revealMode(mode);
+            return probe('bar', div().w(px(200.)).child(bar));
+        });
+    }
+
+    function select(cx:VisualTestContext, selected:Array<Int>, ix:Int):Void {
+        selected[0] = ix;
+        rerender(cx);
+        for (_ in 0...3) nextFrame(cx);
+    }
+
+    function testRevealModePeekIsTheDefault() {
+        final selected = [0];
+        final handle = new ScrollHandle();
+        final cx = nearestHarness(null, selected, handle);
+        for (_ in 0...3) nextFrame(cx);
+        select(cx, selected, 4);
+        // The last tab shows the end of the strip, its empty space included.
+        assertEquals(-handle.maxOffset().x, handle.offset().x);
+        final explicitHandle = new ScrollHandle();
+        final explicitSelected = [0];
+        final explicit = nearestHarness(Peek, explicitSelected, explicitHandle);
+        for (_ in 0...3) nextFrame(explicit);
+        select(explicit, explicitSelected, 4);
+        assertEquals(handle.offset().x, explicitHandle.offset().x);
+    }
+
+    function testRevealModeNearestScrollsOnlyWhenTheTabIsCut() {
+        final selected = [0];
+        final handle = new ScrollHandle();
+        final cx = nearestHarness(Nearest, selected, handle);
+        for (_ in 0...3) nextFrame(cx);
+        assertEquals(0., handle.offset().x);
+        final viewport = handle.bounds();
+
+        // The last tab: its right edge at the end of the view, the empty
+        // space after it left out.
+        select(cx, selected, 4);
+        final offset = handle.offset().x;
+        assertTrue(offset > -handle.maxOffset().x, 'offset $offset, max ${handle.maxOffset().x}');
+        assertEquals(viewport.right(), boundsOf(cx, 'tab-4').right());
+
+        // A tab already in view: nothing moves.
+        select(cx, selected, 3);
+        assertEquals(offset, handle.offset().x);
+
+        // The first tab, cut on the left: its left edge at the start of the view.
+        select(cx, selected, 0);
+        assertEquals(viewport.left(), boundsOf(cx, 'tab-0').left());
+
+        // A click on a cut tab shows it whole, without its neighbour.
+        final before = boundsOf(cx, 'tab-3');
+        assertTrue(before.right() > viewport.right());
+        cx.simulateClick(new Point(viewport.right() - 5., before.center().y));
+        for (_ in 0...3) nextFrame(cx);
+        assertEquals(viewport.right(), boundsOf(cx, 'tab-3').right());
     }
 
 }

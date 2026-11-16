@@ -206,6 +206,7 @@ class Tests {
         runner.add(new tests.kit.ComponentWindowTest());
         runner.add(new tests.kit.KitTitleBarAdditionsTest());
         runner.add(new tests.kit.KitButtonAdditionsTest());
+        runner.add(new tests.kit.KitSwitchAdditionsTest());
         // gpui-kit (wave 7: resizable panels)
         runner.add(new tests.kit.BaseResizableTest());
         runner.add(new tests.kit.KitResizableAdditionsTest());

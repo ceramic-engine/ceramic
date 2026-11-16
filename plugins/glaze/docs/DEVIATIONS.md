@@ -715,6 +715,56 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** `ComponentModalsTest.testFadeSlideTravelAndDurationCanBeSet`: starts 32 px above its place, moves at 30 ms, rests exactly at its place after the 240 ms set.
 - **Upstream.** Not proposed.
 
+### KIT-029: Dialog, the offset of a stacked dialog
+
+- **Component.** gpui-kit `Dialog` (`crates/component/src/dialog/dialog.rs`). Port: `runtime/src/glaze/kit/dialog/Dialog.hx`.
+- **Behaviour of the original.** Each dialog is placed 16 px lower per dialog below it (`layer_offset`, `layer_ix * 16`, dialog.rs:668; the port counts only the dialogs below that are still open, DEV-025). An application whose windows are centered over each other cannot place a dialog over another one where it would be alone.
+- **Addition.** `Dialog.layerOffset(px)` sets that step for the dialog it is called on; `layerOffset(px(0.))` places it where it would be alone, so a centered dialog over another one is centered like it. The room taken from its maximum height follows the same step. The count of DEV-025 is kept.
+- **Default.** Null: 16 px, as before.
+- **Scope.** None in the golden (no scene sets it).
+- **Tests.** `KitDialogAdditionsTest.testLayerOffsetSetsTheStepOfAStackedDialog`: 16 px by default and when given, none with 0, 24 px when given, at the top and centered; a dialog alone does not move.
+- **Upstream.** Not proposed.
+
+### KIT-030: TitleBar, a cursor for the window buttons
+
+- **Component.** gpui-kit `TitleBar` (`crates/component/src/title_bar.rs`, `ControlIcon`). Port: `runtime/src/glaze/kit/TitleBar.hx`.
+- **Behaviour of the original.** The window control buttons ask for no cursor: the arrow.
+- **Addition.** `TitleBar.controlCursor(style)` is the cursor over each of the buttons (minimize, maximize or restore, close).
+- **Default.** Null: no cursor asked, as before.
+- **Scope.** None.
+- **Tests.** `KitTitleBarAdditionsTest.testControlCursorIsTheCursorOverTheButtons`: the arrow and the same frame by default, the pointing hand over the three buttons with the option and the arrow over the rest of the bar, the buttons still act.
+- **Upstream.** Not proposed.
+
+### KIT-031: TitleBar, content that can shrink
+
+- **Component.** gpui-kit `TitleBar` (`crates/component/src/title_bar.rs`, the `bar` box). Port: `runtime/src/glaze/kit/TitleBar.hx`.
+- **Behaviour of the original.** The box that holds the children is `flex_1` with the automatic minimum width of a flex item: it is never narrower than its content, so content wider than the window pushes the window control buttons out of it, even when a child of the content could shrink (`flex_1().min_w_0()`).
+- **Addition.** `TitleBar.shrinkContent(true)` gives that box a minimum width of zero: it takes the room the buttons leave, and a child that can shrink gives way.
+- **Default.** False: the box of gpui-kit.
+- **Scope.** None.
+- **Tests.** `KitTitleBarAdditionsTest.testShrinkContentKeepsTheButtonsInTheWindow`: the buttons pushed out of a 600 px window by a 1000 px row by default; with the option, the buttons at their place and the end of the row against them; the same frame when nothing is too wide.
+- **Upstream.** Not proposed.
+
+### KIT-032: Switch, a focus ring of its own
+
+- **Component.** gpui-kit `Switch` (`crates/component/src/switch.rs`). Port: `runtime/src/glaze/kit/switch_/Switch.hx`.
+- **Behaviour of the original.** A focused switch takes the theme's focus appearance (`focus_ring`): with `Theme.focusRing` on, the track's border tinted with `ring` and a 3 px halo of `ring` at 50 %; with it off, the tinted border only. An application that turns the theme's ring off for its fields cannot give its switches another one.
+- **Addition.** `Switch.ownFocusRing(width, color, ?offset)` draws, around the focused track, a line `width` px wide of `color` (alpha included), `offset` px (0 by default) outside the track's border box, its corners following the track's (CSS `ring-2 ring-color/40`). The track's border keeps its color. It does not depend on `Theme.focusRing`; the switch's own `focusRing(false)` still turns it off.
+- **Default.** Null: the theme's focus appearance, as before.
+- **Scope.** None.
+- **Tests.** `KitSwitchAdditionsTest`: one ring of the color 2 px around the 44 x 24 track, with the theme's ring on and off, the track's border not tinted, an offset of 3 px, none when not focused or with `focusRing(false)`, the track not moved; the theme's appearance without the option.
+- **Upstream.** Not proposed.
+
+### KIT-033: TabBar, a reveal of the tab alone
+
+- **Component.** gpui-kit `TabBar` (`crates/component/src/tab/tab_bar.rs`) and the reveal of KIT-002. Port: `runtime/src/glaze/kit/tab/TabBar.hx` (`TabRevealMode`, `TabReveal`).
+- **Behaviour of the original.** A clicked tab (and with `revealSelected` a tab selected by code) is scrolled into view with part of each neighbour; for the last tab, the strip goes to its end, `lastEmptySpace` included.
+- **Addition.** `TabBar.revealMode(TabRevealMode.Nearest)`: the strip scrolls only when the tab itself is cut, by the least distance that shows it whole; the neighbours and what follows the last tab are left where they are. The spring of the reveal is the same.
+- **Default.** `Peek`: the reveal of before.
+- **Scope.** None.
+- **Tests.** `KitTabAdditionsTest`: `Peek` by default (the end of the strip for the last tab, the same offset when given); with `Nearest`, the last tab against the end of the view without the empty space after it, no move for a tab in view, the first tab against the start, a clicked cut tab shown whole.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.

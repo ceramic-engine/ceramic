@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/switch.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Addition without upstream equivalent (KIT-032 in docs/DEVIATIONS.md): `ownFocusRing`.
 package glaze.kit.switch_;
 
 import glaze.App;
@@ -100,6 +101,13 @@ class Switch extends Component implements Styled implements Sizable implements D
 
     @prop var focusRing:Bool = true;
 
+    /** The ring of `ownFocusRing`, null for the theme's (KIT-032). */
+    var ownRingWidth:Null<Pixels> = null;
+
+    var ownRingColor:Null<Hsla> = null;
+
+    var ownRingOffset:Pixels = 0.;
+
     /**
      * Create a new Switch element.
      */
@@ -155,6 +163,21 @@ class Switch extends Component implements Styled implements Sizable implements D
 
     public function isFocusRingEnabled():Bool {
         return focusRing;
+    }
+
+    /**
+     * Draw this focus ring around the focused track instead of the theme's
+     * focus appearance (addition, KIT-032): a line `width` pixels wide of
+     * `color` (its alpha included), `offset` pixels outside the track's
+     * edge, following its corners. The track's border keeps its color. It
+     * is drawn whatever `Theme.focusRing` says, and not at all when the
+     * switch's own `focusRing` is false.
+     */
+    public function ownFocusRing(width:Pixels, color:IntoHsla, ?offset:Pixels):Switch {
+        ownRingWidth = width;
+        ownRingColor = color;
+        ownRingOffset = offset != null ? offset : 0.;
+        return this;
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -232,7 +255,26 @@ class Switch extends Component implements Styled implements Sizable implements D
         if (!checked) track.bg(uncheckedBg);
         track.styles(styles -> styles.checked(s -> s.bg(checkedBg)).disabled(s -> s.bg(disabledBg)));
         // The ring hugs the track, not the row, so the label stays outside it.
-        if (isFocused && focusRing) track.focusRingStyle(window, cx);
+        if (isFocused && focusRing) {
+            if (ownRingWidth != null) {
+                // Addition (KIT-032): the caller's ring, outside the border box.
+                final outside:Float = f32(f32(ownRingWidth + ownRingOffset) + 1.);
+                final ringRadius:Float = f32(f32(radius + ownRingOffset) + ownRingWidth);
+                track.child(div()
+                    .flexNone()
+                    .absolute()
+                    .top(glaze.Prelude.px(-outside))
+                    .left(glaze.Prelude.px(-outside))
+                    .right(glaze.Prelude.px(-outside))
+                    .bottom(glaze.Prelude.px(-outside))
+                    .border(ownRingWidth)
+                    .borderColor(ownRingColor)
+                    .rounded(glaze.Prelude.px(ringRadius)));
+            }
+            else {
+                track.focusRingStyle(window, cx);
+            }
+        }
         ComponentTooltip.of(tooltip, tooltipShowDelay).apply(track, @:privateAccess track.base);
         // Switch Toggle
         track.child(SwitchThumb.component(checked).rounded(radius).size(barWidth).left(glaze.Prelude.px(thumbX)).bg(toggleBg));
@@ -248,6 +290,10 @@ class Switch extends Component implements Styled implements Sizable implements D
         }
 
         return div().refineStyle(switchStyle).child(base);
+    }
+
+    static inline function f32(value:Float):Float {
+        return glaze.SpringMath.f32(value);
     }
 
 }

@@ -586,6 +586,35 @@ class RichTextTest extends TestCase {
         assertEquals(2, clicked.length);
     }
 
+    /**
+     * The pointer over a link of a `RichText` shows the pointing hand, as
+     * gpui-kit's inline text does (`Inline::paint`, base/src/text/inline.rs);
+     * over the rest of the text, not.
+     */
+    function testThePointerOverALinkShowsThePointingHand() {
+        final spans = () -> [
+            RichSpan.text('Open the documentation', new RichTextStyle().link('https://example.org/docs')),
+            RichSpan.text(' or '),
+            RichSpan.box('the forum', new RichTextStyle().link('https://example.org/forum').box(StyleBuilder.build(s -> s.px(px(4.))))),
+            RichSpan.text(' and plain text that is not a link at all'),
+        ];
+        final cx = open((_, _) -> div().p(px(20.)).child(RichText.component('t').spans(spans()).onLinkClick((_, _, _) -> {})));
+        final parts = texts(layout(RichText.component('t').spans(spans()), null));
+        final center = (ix:Int) -> new Point(20. + parts[ix].origin.x + parts[ix].size.width / 2., 20. + parts[ix].origin.y + parts[ix].size.height / 2.);
+        final cursorAt = (ix:Int) -> {
+            cx.simulateMouseMove(center(ix));
+            draw(cx);
+            return cx.update((window, _) -> window.cursorStyle());
+        };
+        assertEquals(glaze.CursorStyle.PointingHand, cursorAt(0));
+        var boxIx = -1;
+        for (ix in 0...parts.length) if (parts[ix].text == 'the forum') boxIx = ix;
+        assertTrue(boxIx > 0);
+        assertEquals(glaze.CursorStyle.PointingHand, cursorAt(boxIx));
+        assertFalse(cursorAt(parts.length - 1) == glaze.CursorStyle.PointingHand);
+        assertEquals(glaze.CursorStyle.PointingHand, cursorAt(0));
+    }
+
     // Baseline shift, line height of a span, vertical margins of a box
 
     function testABaselineShiftMovesTheSpanAndGrowsTheLine() {

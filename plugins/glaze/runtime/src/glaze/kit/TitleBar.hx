@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Additions without upstream equivalent (KIT-005 in docs/DEVIATIONS.md): `TitleBar.platform`, click handlers on the
 // window control buttons of the Windows look. KIT-023: `controlHeight`, `controlColor`, `controlIconSize`.
+// KIT-030: `controlCursor`. KIT-031: `shrinkContent`.
 package glaze.kit;
 
 import glaze.AnyElement;
@@ -10,6 +11,7 @@ import glaze.App;
 import glaze.Background;
 import glaze.ClickEvent;
 import glaze.Component;
+import glaze.CursorStyle;
 import glaze.Decorations;
 import glaze.Hsla;
 import glaze.IntoElement;
@@ -169,6 +171,22 @@ class TitleBar extends Component implements Styled implements ParentElement {
     @prop var controlIconSize:Null<Pixels> = null;
 
     /**
+     * The mouse cursor over the window control buttons. Null by default:
+     * the buttons ask for none, as in gpui-kit (addition, KIT-030).
+     */
+    @prop var controlCursor:Null<CursorStyle> = null;
+
+    /**
+     * Whether the content of the bar can be narrower than what it holds
+     * (addition, KIT-031). False by default, as in gpui-kit: the content
+     * box keeps at least the width of its content, so content wider than
+     * the window pushes the window control buttons out of it. True lets
+     * the content box shrink to the room left by the buttons, so a child
+     * that can shrink (`flex1().minW0()`) gives way instead.
+     */
+    @prop var shrinkContent:Bool = false;
+
+    /**
      * Create a new TitleBar.
      */
     public function new() {
@@ -281,6 +299,8 @@ class TitleBar extends Component implements Styled implements ParentElement {
             .justifyBetween()
             .flexShrink0()
             .flex1();
+        // Addition (KIT-031): no automatic minimum width, the content gives way.
+        if (shrinkContent) inner.minW0();
         if (!isWeb) {
             inner.windowControlArea(Drag);
             // Addition (KIT-009): the 12px of a fullscreen window (no traffic
@@ -302,7 +322,7 @@ class TitleBar extends Component implements Styled implements ParentElement {
         inner.extend(childElements);
         bar.child(inner)
             .child(windowControls
-                ? WindowControls.component(onCloseWindowHandler, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize)
+                ? WindowControls.component(onCloseWindowHandler, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize, controlCursor)
                 : div().id('window-controls'));
 
         return div().flexShrink0().child(bar);
@@ -406,8 +426,10 @@ private class ControlIconElement extends Component {
 
     final controlIconSize:Null<Pixels>;
 
+    final controlCursor:Null<CursorStyle>;
+
     public function new(icon:ControlIcon, ?platform:TitleBarPlatform, controlClicks:Bool = true, ?controlWidth:Pixels, ?controlHeight:Pixels, ?controlColor:Hsla,
-            ?controlIconSize:Pixels) {
+            ?controlIconSize:Pixels, ?controlCursor:CursorStyle) {
         super();
         this.icon = icon;
         this.platform = platform;
@@ -416,6 +438,7 @@ private class ControlIconElement extends Component {
         this.controlHeight = controlHeight;
         this.controlColor = controlColor;
         this.controlIconSize = controlIconSize;
+        this.controlCursor = controlCursor;
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -444,6 +467,8 @@ private class ControlIconElement extends Component {
             .textColor(controlColor != null ? controlColor : Theme.global(cx).foreground)
             .hover(style -> style.bg(hoverBg).textColor(hoverFg))
             .active(style -> style.bg(activeBg).textColor(hoverFg));
+        // Addition (KIT-030): the caller's cursor over the button
+        if (controlCursor != null) root.cursor(controlCursor);
         if (isWindows) {
             root.windowControlArea(ControlIconTools.windowControlArea(icon));
         }
@@ -501,8 +526,10 @@ private class WindowControls extends Component {
 
     final controlIconSize:Null<Pixels>;
 
+    final controlCursor:Null<CursorStyle>;
+
     public function new(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>, ?platform:TitleBarPlatform, controlClicks:Bool = true, ?controlWidth:Pixels,
-            ?controlHeight:Pixels, ?controlColor:Hsla, ?controlIconSize:Pixels) {
+            ?controlHeight:Pixels, ?controlColor:Hsla, ?controlIconSize:Pixels, ?controlCursor:CursorStyle) {
         super();
         this.onCloseWindow = onCloseWindow;
         this.platform = platform;
@@ -511,6 +538,7 @@ private class WindowControls extends Component {
         this.controlHeight = controlHeight;
         this.controlColor = controlColor;
         this.controlIconSize = controlIconSize;
+        this.controlCursor = controlCursor;
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -520,6 +548,7 @@ private class WindowControls extends Component {
         final controlHeight = this.controlHeight;
         final controlColor = this.controlColor;
         final controlIconSize = this.controlIconSize;
+        final controlCursor = this.controlCursor;
         if (@:privateAccess TitleBar.isMacos(platform) || @:privateAccess TitleBar.isWebLook(platform)) {
             return div().id('window-controls');
         }
@@ -552,12 +581,12 @@ private class WindowControls extends Component {
             .flexShrink0()
             .hFull();
         if (supported.minimize) {
-            controls.child(ControlIconElement.component(Minimize, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize));
+            controls.child(ControlIconElement.component(Minimize, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize, controlCursor));
         }
         if (supported.maximize) {
-            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize));
+            controls.child(ControlIconElement.component(window.isMaximized() ? Restore : Maximize, platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize, controlCursor));
         }
-        return controls.child(ControlIconElement.component(Close(onCloseWindow), platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize));
+        return controls.child(ControlIconElement.component(Close(onCloseWindow), platform, controlClicks, controlWidth, controlHeight, controlColor, controlIconSize, controlCursor));
     }
 
 }

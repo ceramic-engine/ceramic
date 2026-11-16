@@ -193,4 +193,42 @@ class KitDialogAdditionsTest extends KitAdditionsTestCase {
         assertEquals(plainSignature, sceneSignature(build(8.)));
     }
 
+    // KIT-029
+
+    /** Two centered dialogs of the same size, the second built by `build`: the top of each one's content. */
+    function stackedTops(build:(Dialog) -> Dialog, centered:Bool):Array<Float> {
+        final cx = dialog(d -> {
+            d.title('First').child(probe('first', div().h(px(80.)).wFull()));
+            return centered ? d.centered() : d;
+        });
+        cx.update((window, app) -> window.openDialog(app, (d, _, _) -> {
+            d.title('First').child(probe('second', div().h(px(80.)).wFull()));
+            return build(centered ? d.centered() : d);
+        }));
+        cx.runUntilParked();
+        draw(cx);
+        draw(cx);
+        return [boundsOf(cx, 'first').top(), boundsOf(cx, 'second').top()];
+    }
+
+    /** KIT-029: `layerOffset` sets the step of a dialog over another one; 16 px by default. */
+    function testLayerOffsetSetsTheStepOfAStackedDialog() {
+        for (centered in [false, true]) {
+            final plain = stackedTops(d -> d, centered);
+            assertEquals(16., plain[1] - plain[0]);
+            final explicit = stackedTops(d -> d.layerOffset(px(16.)), centered);
+            assertEquals(plain[0], explicit[0]);
+            assertEquals(plain[1], explicit[1]);
+            final none = stackedTops(d -> d.layerOffset(px(0.)), centered);
+            assertEquals(plain[0], none[0]);
+            assertEquals(none[0], none[1]);
+            final wide = stackedTops(d -> d.layerOffset(px(24.)), centered);
+            assertEquals(24., wide[1] - wide[0]);
+        }
+        // A dialog alone does not move.
+        final alone = dialog(d -> d.title('First').child(probe('first', div().h(px(80.)).wFull())).layerOffset(px(40.)));
+        final reference = dialog(d -> d.title('First').child(probe('first', div().h(px(80.)).wFull())));
+        assertEquals(boundsOf(reference, 'first').top(), boundsOf(alone, 'first').top());
+    }
+
 }

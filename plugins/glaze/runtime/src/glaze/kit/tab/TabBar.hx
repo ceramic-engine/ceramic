@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified during the initial port: deviation DEV-014 (no indicator under a disabled selected tab). See docs/DEVIATIONS.md.
 // Additions without upstream equivalent (KIT-001, KIT-002 in docs/DEVIATIONS.md): `custom`, `labelMaxWidth`, `revealSelected`.
+// KIT-033: `revealMode`.
 package glaze.kit.tab;
 
 import glaze.Anchor;
@@ -142,6 +143,16 @@ class TabBar extends Component implements Styled implements Sizable {
      * click reveals a tab.
      */
     @prop var revealSelected:Bool = false;
+
+    /**
+     * Set how a clicked tab, or a selected one with `revealSelected`, is
+     * scrolled into view (addition, KIT-033). `Peek` by default, as in
+     * gpui-kit: part of the neighbouring tabs stays visible, and the last
+     * tab scrolls the strip to its end (`lastEmptySpace` included).
+     * `Nearest` scrolls only when the tab itself is cut, by the least
+     * distance that shows it whole.
+     */
+    @prop var revealMode:TabRevealMode = Peek;
 
     var appearanceValue:Null<TabAppearance> = null;
 
@@ -485,7 +496,8 @@ class TabBar extends Component implements Styled implements Sizable {
                 case Large: 40.;
                 case _: 32.;
             },
-            numTabs
+            numTabs,
+            revealMode == Nearest
         );
         if (revealSelected) {
             // A selection changed by code is revealed one frame later, when
@@ -754,13 +766,17 @@ private class TabReveal {
 
     final numTabs:Int;
 
-    public function new(springId:String, target:KeyedCell<Null<RevealTarget>>, scrollHandle:ScrollHandle, view:Int, peek:Float, numTabs:Int) {
+    /** Only the tab itself is shown, and only when it is cut (KIT-033). */
+    final nearest:Bool;
+
+    public function new(springId:String, target:KeyedCell<Null<RevealTarget>>, scrollHandle:ScrollHandle, view:Int, peek:Float, numTabs:Int, nearest:Bool) {
         this.springId = springId;
         this.target = target;
         this.scrollHandle = scrollHandle;
         this.view = view;
         this.peek = peek;
         this.numTabs = numTabs;
+        this.nearest = nearest;
     }
 
     public function reveal(ix:Int, cx:Null<App>):Void {
@@ -809,13 +825,17 @@ private class TabReveal {
             }
         }
         // Whichever is applied last wins: the neighbour the click heads
-        // toward over the one behind it, and the tab over both.
-        if (f32(tab.center().x + offset) > viewport.center().x) {
-            showLeft(wantLeft);
-            showRight(wantRight);
-        } else {
-            showRight(wantRight);
-            showLeft(wantLeft);
+        // toward over the one behind it, and the tab over both. Addition
+        // (KIT-033): `nearest` shows the tab alone, leaving the neighbours
+        // and the end of the strip where they are.
+        if (!nearest) {
+            if (f32(tab.center().x + offset) > viewport.center().x) {
+                showLeft(wantLeft);
+                showRight(wantRight);
+            } else {
+                showRight(wantRight);
+                showLeft(wantLeft);
+            }
         }
         showRight(tab.right());
         showLeft(tab.left());
@@ -863,5 +883,18 @@ private class KeyedCell<T> {
     public function new(value:T) {
         this.value = value;
     }
+
+}
+
+/**
+ * How `TabBar` scrolls a tab into view (addition, KIT-033).
+ */
+enum abstract TabRevealMode(Int) {
+
+    /** The tab and part of each neighbour; the last tab shows the end of the strip (gpui-kit). */
+    var Peek = 0;
+
+    /** Only when the tab is cut, by the least distance that shows it whole. */
+    var Nearest = 1;
 
 }
