@@ -2,9 +2,11 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Additions without upstream equivalent (KIT-006 in docs/DEVIATIONS.md): `maxH`, `maxHRatio`, `overlayCloseOnClick`,
-// a public `header`. KIT-026: `bodyGap`.
+// a public `header`. KIT-026: `bodyGap`. KIT-028: `entranceTravel`, `entranceDuration`.
 // Modified for Glaze (DEV-024 in docs/DEVIATIONS.md): the `SlideDown` entrance slides the surface's top edge to its
 // resting place instead of moving the positioner's anchor.
+// Modified for Glaze (DEV-025 in docs/DEVIATIONS.md): the 16 px step of a stacked dialog counts only the dialogs below
+// that are still open, not the ones playing their exit.
 package glaze.kit.dialog;
 
 import glaze.Action;
@@ -231,6 +233,8 @@ class DialogProps {
     var maxHeightRatio:Null<Float> = null;
     var overlayCloseOnClick:Bool = false;
     var bodyGap:Null<Pixels> = null;
+    var entranceTravel:Null<Pixels> = null;
+    var entranceDuration:Null<Float> = null;
 
     public function new() {}
 
@@ -250,6 +254,8 @@ class DialogProps {
         props.maxHeightRatio = maxHeightRatio;
         props.overlayCloseOnClick = overlayCloseOnClick;
         props.bodyGap = bodyGap;
+        props.entranceTravel = entranceTravel;
+        props.entranceDuration = entranceDuration;
         return props;
     }
 
@@ -596,6 +602,27 @@ class Dialog extends Component implements Styled implements ParentElement {
     }
 
     /**
+     * Set how far a `FadeSlide` entrance moves the surface down (addition,
+     * KIT-028). The theme's short motion distance by default; the space
+     * above the surface inside the window still limits it.
+     */
+    public function entranceTravel(travel:Pixels):Dialog {
+        props.entranceTravel = travel;
+        return this;
+    }
+
+    /**
+     * Set how long the entrance and the exit of a `FadeSlide` or `Fade`
+     * dialog take, in seconds (addition, KIT-028). The theme's normal
+     * duration by default. Reduced motion still shows the final state at
+     * once.
+     */
+    public function entranceDuration(seconds:Float):Dialog {
+        props.entranceDuration = seconds;
+        return this;
+    }
+
+    /**
      * Set the maximum height of the dialog as a part of the viewport height
      * (`0.85` for 85 %), under the same limit as `maxH`. With both, the
      * smaller wins.
@@ -664,7 +691,7 @@ class Dialog extends Component implements Styled implements ParentElement {
         return switch props.entrance {
             case None: 0.;
             case SlideDown: ANIMATION_DURATION;
-            case _: Theme.global(cx).motionTokens().durationNormal;
+            case _: props.entranceDuration != null ? Math.max(props.entranceDuration, 0.) : Theme.global(cx).motionTokens().durationNormal;
         }
     }
 
@@ -682,6 +709,17 @@ class Dialog extends Component implements Styled implements ParentElement {
                 return value < 0. ? 0. : value > 1. ? 1. : value;
             });
         }
+    }
+
+    /** How many dialogs below this one are still open (not playing their exit). */
+    function openDialogsBelow(window:Window):Int {
+        final activeDialogs = WindowState.read(window).activeDialogs;
+        var count = 0;
+        final end = layerIx < activeDialogs.length ? layerIx : activeDialogs.length;
+        for (index in 0...end) {
+            if (!activeDialogs[index].closing) count++;
+        }
+        return count;
     }
 
     function hasOverlay():Bool {
@@ -766,7 +804,11 @@ class Dialog extends Component implements Styled implements ParentElement {
         // viewport by default); an overflowing one is snapped up to this edge
         // margin so that the preferred offset does not waste usable height.
         final margin:Float = theme.spacingTokens().lg;
-        final layerOffset:Float = f32(layerIx * 16.);
+        // Modified for Glaze (DEV-025): only the dialogs below that are still
+        // open step this one down. gpui-kit counts the dialogs playing their
+        // exit too, so a dialog opened while another one leaves sat 16 px
+        // lower, then jumped up when the leaving one unmounted.
+        final layerOffset:Float = f32(openDialogsBelow(window) * 16.);
         var anchor:Anchor;
         var y:Float;
         if (props.centered) {
@@ -783,7 +825,7 @@ class Dialog extends Component implements Styled implements ParentElement {
         final closing = motion != null && motion.closing;
         final visibility:Float = motion != null ? (motion.visibility < 0. ? 0. : motion.visibility > 1. ? 1. : motion.visibility) : 1.0;
         final fadeOverlay = closing && props.overlayVisible;
-        final travel:Float = motionTokens.distanceShort.toPixels(window.remSize());
+        final travel:Float = props.entranceTravel != null ? props.entranceTravel : motionTokens.distanceShort.toPixels(window.remSize());
         final width:Float = Math.min(props.width, Math.max(f32(viewWidth - f32(margin * 2.)), 0.));
         final x:Float = f32(f32(viewWidth - width) / 2.);
         var maxHeight:Float = Math.max(f32(f32(viewHeight - f32(margin * 2.)) - layerOffset), 0.);

@@ -391,6 +391,16 @@ A patch of the original must never bring another change that would then be taken
 - **Tests.** Port: `ComponentModalsTest.testSlideDownMovesTheTopEdgeAlongTheWholeCurve` (`tests/unit/src/tests/kit/`): for a short and a tall dialog, centered and with a top offset, and a window smaller than the dialog, the surface starts at the top limit, ends exactly at the place it has without an entrance, never moves up, moves on every frame until it rests (no frame waiting against the margin), and its first frame is on the entrance curve. It fails without the fix for the tall centered dialog (17 frames at the margin), the tall dialog at the default offset, and the first frame of every movable case.
 - **Upstream.** Worth reporting to gpui-kit; not reported yet.
 
+### DEV-025: a dialog opened while another one plays its exit does not step down, then jump up
+
+- **Component.** gpui-kit dialog (`crates/component/src/dialog/dialog.rs`, `Dialog::render`, `layer_offset`; `crates/component/src/root.rs`, `dialog_layer`, which gives each dialog its index in `active_dialogs` as `layer_ix`). Port: `runtime/src/glaze/kit/dialog/Dialog.hx` (`render`, `openDialogsBelow`).
+- **Defect.** A stacked dialog sits `layer_ix * 16` px lower than a first dialog (`dialog.rs:668`), and `layer_ix` is the dialog's index in `active_dialogs`, which keeps a closed dialog until its exit transition ends. Closing a dialog and opening another one in the same frame (an application switching from one window to another) gives the new dialog `layer_ix` 1: it enters 16 px lower than its place, with 16 px less height allowed, and when the leaving dialog unmounts (after the exit, 180 ms with `FadeSlide`) the new one jumps up 16 px in one frame. Measured in Loreline Writer (1280 by 800, 16 ms frames, surface top in px): switching from Settings to Text styles, the new window enters at 72, settles at 76 and stays there for 11 frames, then jumps to 60 when Settings unmounts; switching from Settings to About, 294.5 then 278.5.
+- **Fix.** The 16 px step counts only the dialogs below that are still open (`!closing`). A dialog stacked over an open one keeps its step; a dialog opened while the one below leaves sits at the place of a first dialog for the whole switch. The leaving dialog keeps its own place (nothing open below it).
+- **Reference patch.** `reference/deviations/DEV-025.patch` (gpui-kit, 1 file, `dialog.rs`: the step counts the dialogs below whose `closing` is false, read from `WindowState::read(window, cx).active_dialogs`), declaration `reference/deviations/DEV-025.json`.
+- **Scope.** Only frames where a dialog is open above a dialog playing its exit. The golden scenes capture dialogs once they settled: no render, scene dump or behaviour log changes expected (not run).
+- **Tests.** Port: `ComponentModalsTest.testADialogOpenedWhileAnotherLeavesDoesNotStepDown` (`tests/unit/src/tests/kit/`): a dialog opened in the frame where another one closes is drawn at the place of a first dialog on every frame of the switch and after. It fails without the fix (368 instead of 352 from the first frame).
+- **Upstream.** Worth reporting to gpui-kit; not reported yet.
+
 ## Kit additions without upstream equivalent
 
 Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit does not have. They are not fixes of the original, so they have no reference patch and no declaration: each one keeps the behaviour and the rendering of gpui-kit by default, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly what the original draws. `reference/verify-deviations.js` reads the `DEV-nnn` entries only. The port files changed by an addition say so in their header.
@@ -693,6 +703,16 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Default.** Unchanged: `colorTransition` is null and no transition is passed, so `update` and `setMode` install the new theme at once, as before.
 - **Scope.** None in the golden (no scene sets a transition).
 - **Tests.** `ThemeTest`: no change without the option (and with a zero duration), the start (the old colors, the new mode), the middle (Oklab mix of the colors, the tokens and the Base projection, linear and Tailwind's `cubic-bezier(0.4, 0, 0.2, 1)`), the end (exactly the new theme), `colorTransition` applied to later changes, an interrupted fade starting from the colors shown, an edit of other fields during a fade, a color edited during a fade, `globalMut` and `finishColorTransition`, reduced motion before and during a fade, a view reading the theme invalidated on each frame, gradient tokens mixed stop by stop.
+- **Upstream.** Not proposed.
+
+### KIT-028: travel and duration of a dialog's entrance
+
+- **Component.** gpui-kit `Dialog` (`crates/component/src/dialog/dialog.rs`, the `FadeSlide` and `Fade` entrances, `exit_duration`). Port: `runtime/src/glaze/kit/dialog/Dialog.hx` (`entranceTravel`, `entranceDuration`, `DialogProps`).
+- **Behaviour of the original.** `FadeSlide` moves the surface by the theme's short motion distance (`distance_short`, a quarter of a rem) and `FadeSlide` and `Fade` last the theme's normal duration (180 ms): a caller can change them only for every component of the theme.
+- **Addition.** `Dialog.entranceTravel(px)`: how far a `FadeSlide` surface starts above its place (still limited by the room above it inside the window). `Dialog.entranceDuration(seconds)`: how long the entrance and the exit of a `FadeSlide` or `Fade` dialog take. The curve stays the theme's `easing_enter`; reduced motion and `None` still show the final state at once; `SlideDown` keeps its own 250 ms.
+- **Default.** Unchanged: both are null, so the theme's values apply.
+- **Scope.** None in the golden.
+- **Tests.** `ComponentModalsTest.testFadeSlideTravelAndDurationCanBeSet`: starts 32 px above its place, moves at 30 ms, rests exactly at its place after the 240 ms set.
 - **Upstream.** Not proposed.
 
 ## Engine deviations (internals, no change of output)

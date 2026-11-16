@@ -666,6 +666,58 @@ class ComponentModalsTest extends TestCase {
         }
     }
 
+    /**
+     * DEV-025: a dialog opened while the previous one plays its exit sits at
+     * the place of a first dialog for the whole switch, and does not move
+     * when the leaving one unmounts.
+     */
+    function testADialogOpenedWhileAnotherLeavesDoesNotStepDown() {
+        final cx = window(1000, 800).cx;
+        open(cx, (dialog, _, _) -> dialog.title('Rest').centered().entrance(None).child('body'));
+        final rest = surface(cx, 0).top();
+        cx.update((window, cx) -> window.closeDialog(cx));
+        cx.update((_, cx) -> cx.setReduceMotion(false));
+        open(cx, (dialog, _, _) -> dialog.title('First').centered().entrance(Fade).child('body'));
+        advance(cx, 1.);
+        frame(cx);
+        cx.update((window, cx) -> window.closeDialog(cx));
+        open(cx, (dialog, _, _) -> dialog.title('Second').centered().entrance(Fade).child('body'));
+        var frames = 0;
+        var elapsed = 0.;
+        while (elapsed < 0.5) {
+            advance(cx, 0.01);
+            frame(cx);
+            elapsed += 0.01;
+            final all = surfaces(cx);
+            assertTrue(all.length >= 1);
+            // The newest surface is painted last
+            assertEquals(rest, all[all.length - 1].top(), 'frame $frames');
+            frames++;
+        }
+        assertEquals(1, surfaces(cx).length);
+    }
+
+    /** KIT-028: the travel and the duration of a `FadeSlide` entrance can be set on the dialog. */
+    function testFadeSlideTravelAndDurationCanBeSet() {
+        final cx = window(1000, 800).cx;
+        open(cx, (dialog, _, _) -> dialog.title('Rest').centered().entrance(None).child('body'));
+        final rest = surface(cx, 0).top();
+        cx.update((window, cx) -> window.closeDialog(cx));
+        cx.update((_, cx) -> cx.setReduceMotion(false));
+        open(cx, (dialog, _, _) -> dialog.title('Slide').centered().entrance(FadeSlide).entranceTravel(px(32.)).entranceDuration(0.24).child('body'));
+        assertTrue(Math.abs(surface(cx, 0).top() - (rest - 32.)) < 0.75, 'starts 32 px higher: ${surface(cx, 0).top()}');
+        advance(cx, 0.03);
+        frame(cx);
+        final early = surface(cx, 0).top();
+        assertTrue(early > rest - 32. && early < rest, 'moving at 30 ms: $early');
+        advance(cx, 0.19);
+        frame(cx);
+        assertTrue(surface(cx, 0).top() <= rest, 'not past its place at 220 ms');
+        advance(cx, 0.03);
+        frame(cx);
+        assertEquals(rest, surface(cx, 0).top());
+    }
+
     function testFadeSlideUsesResolvedBoundsAndKeepsTheSurfaceInsideTheWindow() {
         final probe = new SurfaceProbe();
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> probe, 400, 400);
