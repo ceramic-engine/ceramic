@@ -1303,6 +1303,32 @@ class Interactivity {
         if (paintHasOpacity) window.popElementOpacity(paintPreviousOpacity);
     }
 
+    #if (debug || glaze_warn_missing_id)
+    /** The listeners already reported by `warnMissingElementId`, by kinds and place (one warning each). */
+    static var missingIdWarnings:Map<String, Bool> = new Map();
+
+    /**
+     * Debug builds: a hover, click, drag or tooltip listener on an element
+     * without an id is ignored, since it keeps its state in the element's
+     * state (GPUI only offers them on elements with an id: a compile error
+     * there). The end of a hover was then never told.
+     */
+    function warnMissingElementId(hitbox:Hitbox):Void {
+        final kinds:Array<String> = [];
+        if (hoverListener != null) kinds.push('onHover');
+        if (tooltipBuilder != null) kinds.push('tooltip');
+        if (dragListener != null) kinds.push('onDrag');
+        if (clickListeners != null && clickListeners.length > 0) kinds.push('onClick');
+        if (auxClickListeners != null && auxClickListeners.length > 0) kinds.push('onAuxClick');
+        final b = hitbox.bounds;
+        final place = Math.round(b.origin.x) + ',' + Math.round(b.origin.y) + ' ' + Math.round(b.size.width) + 'x' + Math.round(b.size.height);
+        final key = kinds.join(', ') + ' at ' + place;
+        if (missingIdWarnings.exists(key)) return;
+        missingIdWarnings.set(key, true);
+        ceramic.Shortcuts.log.warning('glaze: ' + kinds.join(', ') + ' on an element without an id is ignored (element at ' + place + '): give the element an id');
+    }
+    #end
+
     function paintMouseListeners(hitbox:Hitbox, elementState:Null<InteractiveElementState>, window:Window, cx:App):Void {
         final isFocused = trackedFocusHandle != null && trackedFocusHandle.isFocused(window);
 
@@ -1433,6 +1459,13 @@ class Interactivity {
                 }
             });
         }
+
+        #if (debug || glaze_warn_missing_id)
+        if (elementState == null && (hoverListener != null || tooltipBuilder != null || dragListener != null
+            || (clickListeners != null && clickListeners.length > 0) || (auxClickListeners != null && auxClickListeners.length > 0))) {
+            warnMissingElementId(hitbox);
+        }
+        #end
 
         if (elementState != null) {
             if (clickListeners.length > 0 || auxClickListeners.length > 0 || dragListener != null) {

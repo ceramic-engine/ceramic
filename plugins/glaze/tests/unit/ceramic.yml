@@ -93,6 +93,9 @@ app:
         - glaze_verify_cache
         # Debug counters read by the tests (Window.inPlaceReplayedPrimitives)
         - glaze_debug_counters
+        # Warns of a hover, click, drag or tooltip listener on an element
+        # without an id (ignored: GPUI only offers them with an id)
+        - glaze_warn_missing_id
         # Debug check of render on demand (`settings.renderOnDemand`, turned on by
         # RenderOnDemandTest only): a skipped frame whose visuals changed without a
         # render request is reported and drawn
