@@ -12,8 +12,10 @@ package ceramic;
  * in). `WINDOW` makes a top level submenu the Window menu, which the system
  * completes with the list of windows. `HIDE`, `HIDE_OTHERS` and `SHOW_ALL`
  * items send `hide:`, `hideOtherApplications:` and `unhideAllApplications:`
- * to the application object: the system does the work, as in every macOS
- * application.
+ * to the application object, and `MINIMIZE`, `ZOOM` and
+ * `TOGGLE_FULL_SCREEN` items send `performMiniaturize:`, `performZoom:` and
+ * `toggleFullScreen:` to the key window: the system does the work, as in
+ * every macOS application.
  *
  * @see Screen.setMenuBar
  */
@@ -55,5 +57,21 @@ enum abstract MenuItemRole(Int) from Int to Int {
 
     /** The "show all" item (see `HIDE`). */
     var SHOW_ALL = 10;
+
+    /**
+     * The "minimize" item of the Window menu. On macOS the system minimizes
+     * the key window itself (`performMiniaturize:`, the app gets no
+     * `screen.menuAction`); elsewhere it is a regular item.
+     */
+    var MINIMIZE = 11;
+
+    /** The "zoom" item of the Window menu (`performZoom:`, see `MINIMIZE`). */
+    var ZOOM = 12;
+
+    /**
+     * The full screen item (`toggleFullScreen:`, see `MINIMIZE`). On macOS
+     * the system titles it Enter Full Screen or Exit Full Screen.
+     */
+    var TOGGLE_FULL_SCREEN = 13;
 
 }
