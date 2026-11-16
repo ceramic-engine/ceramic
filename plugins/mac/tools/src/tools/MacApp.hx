@@ -109,6 +109,34 @@ class MacApp {
             }
         }
 
+        applyCategory(macAppInfoFile, project);
+
+    }
+
+    /**
+     * Writes `app.macCategory` of `ceramic.yml` (a value of
+     * `LSApplicationCategoryType`, like `public.app-category.productivity`)
+     * in the bundle's Info.plist, at every build so that an existing project
+     * follows a change. Without it the template's value stays
+     * (`public.app-category.games`, which lets macOS turn Game Mode on for
+     * the app).
+     */
+    static function applyCategory(infoPlistPath:String, project:Project):Void {
+
+        var category:Null<String> = Reflect.field(project.app, 'macCategory');
+        if (category == null || StringTools.trim(category) == '' || !FileSystem.exists(infoPlistPath)) return;
+
+        var content = sys.io.File.getContent(infoPlistPath);
+        var re = ~/(<key>LSApplicationCategoryType<\/key>\s*<string>)([^<]*)(<\/string>)/;
+        var updated = if (re.match(content)) {
+            if (re.matched(2) == category) return;
+            re.matchedLeft() + re.matched(1) + category + re.matched(3) + re.matchedRight();
+        }
+        else {
+            StringTools.replace(content, '<dict>', '<dict>\n    <key>LSApplicationCategoryType</key>\n    <string>' + category + '</string>');
+        }
+        sys.io.File.saveContent(infoPlistPath, updated);
+
     }
 
 }
