@@ -8,16 +8,17 @@ import haxe.io.Bytes;
  * A font file of the operating system opened for `SystemFontFamilies` and
  * `SystemFontFallback`, without reading it whole when that can be avoided.
  *
- * TrueType files (`glyf` outlines) are read piece by piece
- * (`ttf.Font.fromSource()` over `ceramic.Files.getBytesRange()`): each face
- * loads its small tables, and the outlines (`glyf`) and outline variations
- * (`gvar`) of a glyph are read the first time the glyph is drawn. A
- * fallback face such as Arial Unicode (23 MB) then holds about 1 MB, the
- * system font (SFNS, 8 MB) about 1 MB.
+ * TrueType and CFF files (`glyf` or `CFF ` outlines) are read piece by
+ * piece (`ttf.Font.fromSource()` over `ceramic.Files.getBytesRange()`):
+ * each face loads its small tables, and the outlines (`glyf`, or the
+ * charstrings of `CFF `) and outline variations (`gvar`) of a glyph are
+ * read the first time the glyph is drawn. A fallback face such as Arial
+ * Unicode (23 MB) then holds about 1 MB, the system font (SFNS, 8 MB)
+ * about 1 MB, a face of Hiragino Sans GB (23 MB, 4 faces with an 11 MB
+ * `CFF ` table each) about 1.5 MB.
  *
- * CFF files (Hiragino) are read whole, as before: their outlines are one
- * table that `ttf` reads in memory, and the faces of a collection share
- * the bytes of the file instead of a copy each.
+ * Other files (CFF2 outlines) are read whole, and the faces of a
+ * collection share the bytes of the file instead of a copy each.
  *
  * Each read opens the file, reads the range and closes it
  * (`ceramic.Files.getBytesRange()`), so a face keeps no file handle. A
@@ -25,8 +26,8 @@ import haxe.io.Bytes;
  */
 class SystemFontFile {
 
-    /** Tables left in the file for TrueType faces: the outlines and their variations, read glyph by glyph. */
-    public static final ON_DEMAND_TABLES:Array<String> = ttf.Font.LARGE_TABLES.concat(['glyf', 'gvar']);
+    /** Tables left in the file: the outlines and their variations, read glyph by glyph. */
+    public static final ON_DEMAND_TABLES:Array<String> = ttf.Font.LARGE_TABLES.concat(['glyf', 'gvar', 'CFF ']);
 
     /** Path of the file. */
     public final path:String;
@@ -37,7 +38,7 @@ class SystemFontFile {
     /** Bytes read from the file so far (at load, then as glyphs are drawn). */
     public var bytesRead(default, null):Float = 0;
 
-    /** Whether the faces read their outlines on demand (TrueType), or the file was read whole (CFF). */
+    /** Whether the faces read their outlines on demand (TrueType, CFF), or the file was read whole (CFF2). */
     public final onDemand:Bool;
 
     var source:Null<ttf.FontSource> = null;
@@ -68,7 +69,7 @@ class SystemFontFile {
             if (count <= 0)
                 return null;
             var file:SystemFontFile;
-            if (hasGlyf(path, header)) {
+            if (hasOnDemandOutlines(path, header)) {
                 file = new SystemFontFile(path, count, true);
                 file.bytesRead = 12;
                 file.source = new ttf.FontSource.FunctionFontSource(Std.int(size), (offset, length) -> {
@@ -100,8 +101,8 @@ class SystemFontFile {
         return ttf.Font.fromBytes(bytes, index);
     }
 
-    /** Whether the first face of the file has TrueType outlines (a `glyf` table). */
-    static function hasGlyf(path:String, header:Bytes):Bool {
+    /** Whether the first face of the file has outlines read on demand (a `glyf` or `CFF ` table). */
+    static function hasOnDemandOutlines(path:String, header:Bytes):Bool {
         var directory = 0;
         if (ttf.Bin.u32(header, 0) == 0x74746366) {
             final entry = ceramic.Files.getBytesRange(path, 12, 4);
@@ -117,8 +118,10 @@ class SystemFontFile {
         if (records == null || records.length < numTables * 16)
             return false;
         final glyf = ttf.Bin.tagToInt('glyf');
+        final cff = ttf.Bin.tagToInt('CFF ');
         for (i in 0...numTables) {
-            if (ttf.Bin.u32(records, i * 16) == glyf)
+            final tag = ttf.Bin.u32(records, i * 16);
+            if (tag == glyf || tag == cff)
                 return true;
         }
         return false;

@@ -197,7 +197,7 @@ class SystemFontFamilies {
         final files:Map<String, SystemFontFile> = new Map();
         for (location in locations) {
             try {
-                // TrueType files are read piece by piece (see `SystemFontFile`)
+                // TrueType and CFF files are read piece by piece (see `SystemFontFile`)
                 var file = files.get(location.path);
                 if (file == null) {
                     file = SystemFontFile.open(location.path);

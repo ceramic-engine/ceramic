@@ -129,15 +129,28 @@ class SystemFontFallbackTest extends TestCase {
             + '${Math.round(p.systemFallback.loadedBytes / 1048576)} MB read in ${Math.round(p.systemFallback.loadTime * 1000)} ms');
     }
 
+    function testHalfwidthArrowsFromAppleSymbols() {
+        if (!hasMacFonts())
+            return;
+        // U+FFEB (halfwidth rightwards arrow, measured by code editors for
+        // their rendering of control characters) and its neighbours are in
+        // no CJK font of macOS: CoreText draws them with Apple Symbols, which
+        // comes before Arial Unicode in the list of Han fallbacks
+        final p = platform(true);
+        assertSystemGlyphs(p, 'a\uFFE9\uFFEA\uFFEB\uFFEC\uFFED\uFFEEb');
+        assertEquals(1, p.systemFallback.loadedPaths.length);
+        assertEquals('/System/Library/Fonts/Apple Symbols.ttf', p.systemFallback.loadedPaths[0]);
+    }
+
     function testTrueTypeSystemFilesReadOnDemand() {
         if (!hasMacFonts())
             return;
-        // TrueType files of the system are read piece by piece
+        // TrueType and CFF files of the system are read piece by piece
         // (`SystemFontFile`): the same outlines, advances and variable
         // instances as the whole file, for a fraction of its bytes
         final paths = ['/System/Library/Fonts/Apple Symbols.ttf', '/System/Library/Fonts/SFNS.ttf', '/System/Library/Fonts/Menlo.ttc',
-            '/Library/Fonts/Arial Unicode.ttf'];
-        final text = 'Snow \u2603 chess \u265E\u2654 \u03B1\u03B2 \u0416 \u05D0 \u4E16 \u21C4 \u2713 mw0';
+            '/Library/Fonts/Arial Unicode.ttf', '/System/Library/Fonts/Hiragino Sans GB.ttc', '/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc'];
+        final text = 'Snow \u2603 chess \u265E\u2654 \u03B1\u03B2 \u0416 \u05D0 \u4E16 \u21C4 \u2713 mw0 \uFF4D \u3042\u30A4 \u4E2D\u6587';
         final d = new glaze.util.Utf8.Utf8Text(text);
         for (path in paths) {
             if (!ceramic.Files.exists(path))
@@ -189,9 +202,6 @@ class SystemFontFallbackTest extends TestCase {
                 + ' (face 0: ${Math.round(readAtLoad / 1024)} KB at load, ${Math.round(freshFile.bytesRead / 1024)} KB after ${gids.length} more glyphs);'
                 + ' first outline of a glyph: ${Math.round(wholeTime / gids.length * 1e7) / 10} us whole, ${Math.round(partialTime / gids.length * 1e7) / 10} us on demand');
         }
-        // CFF files are read whole, shared by the faces of the collection
-        final hiragino = SystemFontFile.open('/System/Library/Fonts/Hiragino Sans GB.ttc');
-        assertFalse(hiragino.onDemand);
     }
 
     static function outlineOf(font:ttf.Font, gid:Int):String {

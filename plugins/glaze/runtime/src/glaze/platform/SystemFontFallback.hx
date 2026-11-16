@@ -67,7 +67,7 @@ class SystemFontFallback {
 
     /**
      * Total size of the font data read so far, in bytes (for emoji fonts
-     * and TrueType files, the tables read when they were loaded, not the
+     * and TrueType and CFF files, the tables read when they were loaded, not the
      * images and outlines read since, see `SystemFontFile`).
      */
     public var loadedBytes(default, null):Float = 0;
@@ -423,7 +423,7 @@ class SystemFontFallback {
 
     function loadFile(path:String, codePoint:Int):Bool {
         final start = haxe.Timer.stamp();
-        // TrueType files are read piece by piece (see `SystemFontFile`)
+        // TrueType and CFF files are read piece by piece (see `SystemFontFile`)
         final file = SystemFontFile.open(path);
         if (file == null)
             return false;
@@ -564,7 +564,10 @@ class SystemFontFallback {
             case _: [hiraginoGb, heiti, hiragino, gothic];
         }
         return {
-            han: han.concat(arialUnicode),
+            // Apple Symbols before Arial Unicode, as in CoreText's cascade:
+            // the halfwidth arrows and shapes (U+FFE9 to U+FFEE, which a code
+            // editor measures) are in no CJK font of macOS
+            han: han.concat(['$s/Apple Symbols.ttf']).concat(arialUnicode),
             kana: [hiragino, hiraginoGb].concat(arialUnicode),
             hangul: [gothic].concat(arialUnicode),
             // cosmic-text's common fallbacks on macOS (".SF NS", Menlo,
