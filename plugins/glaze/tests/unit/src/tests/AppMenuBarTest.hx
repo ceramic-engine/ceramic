@@ -173,6 +173,30 @@ class AppMenuBarTest extends TestCase {
         assertEquals((ceramic.KeyModifiers.META | ceramic.KeyModifiers.SHIFT:Int), (bound[0].items[0].modifiers:Int));
     }
 
+    function testWindowRolesOfTheWindowMenu() {
+        final items = CeramicPlatformOperations.menuBarItems([
+            new Menu('Window').withItems([
+                MenuItemTools.osAction('Minimize', new Save(), Minimize),
+                MenuItemTools.osAction('Zoom', new Save(), Zoom),
+                MenuItemTools.osAction('Enter Full Screen', new Save(), ToggleFullScreen),
+            ]),
+        ], app.keyBindings());
+        final window = items[0].items;
+        assertEquals(ceramic.MenuItemRole.MINIMIZE, window[0].role);
+        assertEquals(ceramic.MenuItemRole.ZOOM, window[1].role);
+        assertEquals(ceramic.MenuItemRole.TOGGLE_FULL_SCREEN, window[2].role);
+        // The system's shortcuts when the action has no binding
+        assertEquals('m', window[0].key);
+        assertEquals((ceramic.KeyModifiers.META:Int), (window[0].modifiers:Int));
+        assertNull(window[1].key);
+        assertEquals('f', window[2].key);
+        assertEquals((ceramic.KeyModifiers.META | ceramic.KeyModifiers.CTRL:Int), (window[2].modifiers:Int));
+        // The values the native layer reads
+        assertEquals(11, (ceramic.MenuItemRole.MINIMIZE:Int));
+        assertEquals(12, (ceramic.MenuItemRole.ZOOM:Int));
+        assertEquals(13, (ceramic.MenuItemRole.TOGGLE_FULL_SCREEN:Int));
+    }
+
     function testShortcutIsTheEarliestBindingMatchingTheDefaultContext() {
         app.bindKeys([
             new KeyBinding('cmd-1', new Save(), 'Terminal'),
@@ -392,6 +416,37 @@ class AppMenuBarTest extends TestCase {
         // Nothing ran
         assertEquals('Save', menuActions.join(','));
         assertEquals('Editor Save', log.join(','));
+    }
+
+    function testNativeWindowRoles() {
+        app.bindKeys([new KeyBinding('cmd-enter', new Quit(), null), new KeyBinding('ctrl-tab', new Save(), null)]);
+        app.setMenus([
+            new Menu('View').withItems([
+                MenuItemTools.action('Save', new Save()),
+                MenuItemTools.osAction('Full Screen', new Export(), ToggleFullScreen),
+                MenuItemTools.action('Run', new Quit()),
+            ]),
+            new Menu('Window').withItems([
+                MenuItemTools.osAction('Minimize', new CopyText(), Minimize),
+                MenuItemTools.osAction('Zoom', new CopyText(), Zoom),
+            ]),
+        ]);
+        final description = clay.sdl.SDL.menuBarDescribe();
+        // Sent to the key window along the responder chain, with the system's shortcuts
+        assertTrue(description.indexOf('Minimize key=m mods=cmd- action=performMiniaturize:') != -1, description);
+        assertTrue(description.indexOf('Zoom key= ') != -1 && description.indexOf('action=performZoom:') != -1, description);
+        assertTrue(description.indexOf('key=f mods=cmd-ctrl- action=toggleFullScreen:') != -1, description);
+        for (line in description.split('\n')) {
+            if (line.indexOf('performMiniaturize:') != -1 || line.indexOf('performZoom:') != -1 || line.indexOf('toggleFullScreen:') != -1) {
+                assertTrue(line.indexOf('target=chain') != -1, line);
+            }
+        }
+        // AppKit knows the full screen item as its own: it adds its hidden
+        // Globe-F alternate (a second line, the fn modifier is not printed)
+        assertTrue(description.split('action=toggleFullScreen:').length >= 2, description);
+        // Key names the native menu writes as their character
+        assertTrue(description.indexOf('Run key=U+000D mods=cmd-') != -1, description);
+        assertTrue(description.indexOf('Save key=U+0009 mods=ctrl-') != -1, description);
     }
 
     #end

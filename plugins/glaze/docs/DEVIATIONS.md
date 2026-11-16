@@ -900,6 +900,13 @@ Features Glaze adds to GPUI's API. Each one is off or neutral by default: an int
 - **Default.** `requestAnimationFrame` is unchanged. The only change of behaviour is in the kit: the ancestors of the view drawing an animated `RichText` span no longer render on each of its frames.
 - **Tests.** `InPlaceRenderingTest.testAViewAnimatedInPlaceRendersAlone`, `testBothAnimationFramesDrawTheAncestors`, `RichTextTest.testAnAnimatedSpanRendersOnlyItsView`.
 
+### ADD-017: Minimize, Zoom and Full Screen menu items
+
+- **Component.** Port only: `Menu.hx` (`OsAction.Minimize`, `Zoom`, `ToggleFullScreen`), `platform/CeramicPlatformOperations.hx`; Ceramic `ceramic.MenuItemRole` (`MINIMIZE`, `ZOOM`, `TOGGLE_FULL_SCREEN`); clay `linc_sdl_menu_mac.mm`, `MenuItemSpec`.
+- **What it does.** Like ADD-012 for the Window menu: on macOS the native item sends `performMiniaturize:`, `performZoom:` or `toggleFullScreen:` along the responder chain to the key window, so the system does it and the action is not dispatched. AppKit titles the full screen item Enter Full Screen or Exit Full Screen and adds no full screen item of its own. Without a binding of the action, Minimize shows `cmd-m` and Full Screen `ctrl-cmd-f`. On the other platforms, and in the kit's popup of the app menus, they are regular items: the action is dispatched.
+- **Default.** The roles are only used when a menu asks for them.
+- **Tests.** `AppMenuBarTest.testWindowRolesOfTheWindowMenu` (roles, default shortcuts). The native part is checked by the native build of the suite.
+
 ## Decision policy
 
 Decided by the owner on 2026-10-29:

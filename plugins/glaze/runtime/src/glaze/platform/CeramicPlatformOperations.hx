@@ -368,9 +368,13 @@ class CeramicPlatformOperations implements PlatformOperations {
                     case Hide: ceramic.MenuItemRole.HIDE;
                     case HideOthers: ceramic.MenuItemRole.HIDE_OTHERS;
                     case ShowAll: ceramic.MenuItemRole.SHOW_ALL;
+                    case Minimize: ceramic.MenuItemRole.MINIMIZE;
+                    case Zoom: ceramic.MenuItemRole.ZOOM;
+                    case ToggleFullScreen: ceramic.MenuItemRole.TOGGLE_FULL_SCREEN;
                 };
-                // Port addition (ADD-012): the system's own shortcuts for
-                // Hide and Hide Others when the action has no binding
+                // Port additions (ADD-012, ADD-017): the system's own
+                // shortcuts for Hide, Hide Others, Minimize and Full Screen
+                // when the action has no binding
                 if (result.key == null && osAction != null) {
                     switch osAction {
                         case Hide:
@@ -379,6 +383,12 @@ class CeramicPlatformOperations implements PlatformOperations {
                         case HideOthers:
                             result.key = 'h';
                             result.modifiers = (ceramic.KeyModifiers.META : Int) | (ceramic.KeyModifiers.ALT : Int);
+                        case Minimize:
+                            result.key = 'm';
+                            result.modifiers = ceramic.KeyModifiers.META;
+                        case ToggleFullScreen:
+                            result.key = 'f';
+                            result.modifiers = (ceramic.KeyModifiers.META : Int) | (ceramic.KeyModifiers.CTRL : Int);
                         case _:
                     }
                 }

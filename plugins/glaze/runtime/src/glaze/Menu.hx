@@ -308,4 +308,22 @@ enum abstract OsAction(Int) {
     /** Show every application again (port addition, ADD-012; see `Hide`). */
     var ShowAll;
 
+    /**
+     * Minimize the window (port addition, ADD-017: GPUI has no such
+     * action). On macOS the system handles the item itself, like the
+     * Minimize item of the Window menu of every application; elsewhere it
+     * is a regular item.
+     */
+    var Minimize;
+
+    /** Zoom the window (port addition, ADD-017; see `Minimize`). */
+    var Zoom;
+
+    /**
+     * Enter or leave full screen (port addition, ADD-017; see `Minimize`).
+     * On macOS the system titles the item Enter Full Screen or Exit Full
+     * Screen.
+     */
+    var ToggleFullScreen;
+
 }
