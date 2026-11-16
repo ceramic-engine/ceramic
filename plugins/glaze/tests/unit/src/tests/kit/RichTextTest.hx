@@ -371,6 +371,44 @@ class RichTextTest extends TestCase {
         for (sample in last) assertTrue(sample.translation.y <= 0. && sample.translation.y >= -4.);
     }
 
+    /**
+     * The frames of an animated span render only the view it is drawn in
+     * (`requestAnimationFrameInPlace`, ADD-016): the view around it comes
+     * from the cache, and nothing is laid out again.
+     */
+    function testAnAnimatedSpanRendersOnlyItsView() {
+        countsRenders();
+        var parentRenders = 0;
+        final child = app.newEntity((_:Context<tests.InPlaceRenderingTest.InPlaceView>) -> new tests.InPlaceRenderingTest.InPlaceView((_, _) ->
+            div().w(px(400.)).child(RichText.component('animated').spans([
+                RichSpan.text('before '),
+                RichSpan.text('wave', new RichTextStyle().animation(wave().perCharacter(new Stagger(0.1, First)))),
+                RichSpan.text(' after'),
+            ]))));
+        final cx = open((_, _) -> {
+            parentRenders++;
+            return div().flex().flexCol().child(div().h(px(20.)).child('title')).child((child : glaze.AnyView))
+                .child(div().h(px(20.)).child('footer'));
+        });
+        final layouts = InlineFlow.FLOW_LAYOUTS;
+        final parentBefore = parentRenders;
+        final childBefore = child.read(app).renders;
+        var inPlace = 0;
+        for (_ in 0...5) {
+            cx.advanceClock(0.05);
+            assertTrue(cx.update((window, app) -> window.simulateNextFrame(app)) > 0, 'the animated span asks for the next frame');
+            cx.runUntilParked();
+            inPlace += cx.update((window, _) -> {
+                window.drawIfDirty();
+                return window.inPlaceViewCount;
+            });
+        }
+        assertEquals(5, inPlace, 'each frame renders the view in place');
+        assertEquals(parentBefore, parentRenders, 'the parent view comes from the cache');
+        assertTrue(child.read(app).renders >= childBefore + 5);
+        assertEquals(layouts, InlineFlow.FLOW_LAYOUTS);
+    }
+
     function testARunAnimatedAsAWholeTakesOneTransform() {
         final cx = animatedWindow(wave());
         draw(cx);

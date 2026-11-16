@@ -329,6 +329,65 @@ class InPlaceRenderingTest extends TestCase {
         }
     }
 
+    /**
+     * `requestAnimationFrameInPlace` (ADD-016): the animation frames of the
+     * view render it alone, its ancestors come from the cache, and the
+     * frames are those of a full render.
+     */
+    function testAViewAnimatedInPlaceRendersAlone() {
+        countsRenders();
+        final r = rows(5);
+        r.models[2].read(app).animatingInPlace = true;
+        frame();
+        assertEquals(1, r.cached.inPlaceViewCount, 'notified by a tracked change');
+        final listRenders = r.list.read(app).renders;
+        final rootRenders = r.root.read(app).renders;
+        final rowRenders = r.rowViews[2].read(app).renders;
+        final otherRenders = r.rowViews[3].read(app).renders;
+        #if glaze_verify_cache
+        final failures = Window.inPlaceVerificationFailures;
+        #end
+        for (step in 0...3) {
+            r.cached.runNextFrameCallbacks();
+            r.reference.runNextFrameCallbacks();
+            frame();
+            assertEquals(1, r.cached.inPlaceViewCount, 'animation frame $step: in place');
+            assertSameFrames(r.cached, r.reference, 'animation frame $step');
+        }
+        // The list and the root rendered only in the reference window, the
+        // animated row in both, the other rows only in the reference window
+        assertEquals(listRenders + 3, r.list.read(app).renders);
+        assertEquals(rootRenders + 3, r.root.read(app).renders);
+        assertEquals(rowRenders + 6, r.rowViews[2].read(app).renders);
+        assertEquals(otherRenders + 3, r.rowViews[3].read(app).renders);
+        #if glaze_verify_cache
+        assertEquals(failures, Window.inPlaceVerificationFailures);
+        #end
+        // Stopped: no more frame asked
+        r.models[2].read(app).animatingInPlace = false;
+        frame();
+        r.cached.runNextFrameCallbacks();
+        r.reference.runNextFrameCallbacks();
+        frame();
+        assertFalse(r.cached.hasNextFrameCallbacks());
+    }
+
+    /** A view asking for both kinds of animation frame is drawn with its ancestors */
+    function testBothAnimationFramesDrawTheAncestors() {
+        countsRenders();
+        final r = rows(5);
+        r.models[1].read(app).animating = true;
+        r.models[1].read(app).animatingInPlace = true;
+        frame();
+        for (step in 0...2) {
+            r.cached.runNextFrameCallbacks();
+            r.reference.runNextFrameCallbacks();
+            frame();
+            assertEquals(0, r.cached.inPlaceViewCount, 'animation frame $step');
+            assertSameFrames(r.cached, r.reference, 'animation frame $step');
+        }
+    }
+
 /// The frame after: hit test, hover, focus, keys, tooltips, deferred draws
 
     function testInteractionAfterInPlaceRendering() {
@@ -1221,6 +1280,9 @@ class InPlaceRowModel extends Model {
     /** Requests an animation frame on each render */
     @observe public var animating:Bool = false;
 
+    /** Requests an animation frame in place on each render */
+    @observe public var animatingInPlace:Bool = false;
+
     public function new(label:String) {
         super();
         this.label = label;
@@ -1320,6 +1382,9 @@ class InPlaceRows {
         final model = models[index].read(cx);
         if (model.animating) {
             window.requestAnimationFrame();
+        }
+        if (model.animatingInPlace) {
+            window.requestAnimationFrameInPlace();
         }
         final row = div().id('row').flexNone().h(px(model.tall ? 34 : 20)).flex().gap1().px1().itemsCenter()
             .hover(s -> s.bg(hsla(0.1, 0.3, 0.9, 1)))

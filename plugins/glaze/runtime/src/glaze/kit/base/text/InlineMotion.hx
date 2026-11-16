@@ -324,7 +324,9 @@ class InlineMotionFragment extends glaze.Element {
             if (clock.startedAt == null) clock.startedAt = now;
             elapsed = now - clock.startedAt;
             if (animation.isRunning(elapsed, count)) {
-                window.requestAnimationFrame();
+                // Paint only: the frame changes no layout and nothing the
+                // ancestors of the view render, so the view renders alone
+                window.requestAnimationFrameInPlace();
             }
         }
 

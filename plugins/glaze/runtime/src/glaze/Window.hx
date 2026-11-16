@@ -9571,6 +9571,21 @@ class Window implements WindowInvalidator {
     }
 
     /**
+     * Like `requestAnimationFrame`, for a view whose animation frames change
+     * only what the view itself draws, never what its ancestors render (port
+     * addition, not in GPUI, see ADD-016). On the next frame the view is
+     * notified as by `cx.notify()`: when it can render alone, in place (see
+     * `renderInPlace`), its ancestors are taken from the cache, otherwise the
+     * whole frame is drawn as for any notified view. The frames drawn are the
+     * same either way. A view that also calls `requestAnimationFrame` in the
+     * same frame is drawn with its ancestors.
+     */
+    public function requestAnimationFrameInPlace():Void {
+        final entity = currentView();
+        onNextFrame((_, cx) -> cx.notify(entity));
+    }
+
+    /**
      * Whether callbacks were scheduled with `onNextFrame`.
      */
     public inline function hasNextFrameCallbacks():Bool {

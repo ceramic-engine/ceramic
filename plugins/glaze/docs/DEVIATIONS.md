@@ -871,6 +871,15 @@ Features Glaze adds to GPUI's API. Each one is off or neutral by default: an int
   (`InlineFlow` never rounded its fragments to whole pixels), text inputs.
 - **Tests.** `TextElementTest.testTextWidthSnap`.
 
+### ADD-016: an animation frame that renders only the animated view
+
+- **Component.** Port only: `Window.hx` (`requestAnimationFrameInPlace`), used by the kit's `InlineMotion.hx` (the animated spans of `RichText`, ADD-008).
+- **Behaviour of GPUI.** `window.request_animation_frame()` notifies the current view on the next frame, and the port draws that view with its ancestors (`animationViews`, see `Window.renderInPlace`): code written for GPUI often animates a parent from what an animated child does.
+- **What it does.** `window.requestAnimationFrameInPlace()` notifies the current view on the next frame like `cx.notify()`: when the view can render alone (in place rendering, the rules of `renderInPlace`), its ancestors come from the cache; otherwise the whole frame is drawn as for any notified view. It is for animations that change only what the view paints. A view that asks for both kinds in one frame is drawn with its ancestors. The frames drawn are the same as with `requestAnimationFrame` (checked by `glaze_verify_cache`, which compares each frame drawn in place with a full frame).
+- **Kit.** An animated span of `RichText` changes only its paint (it never lays the paragraph out again), so `InlineMotionFragment.paint` asks for its frames this way: the view the paragraph is drawn in renders alone at each frame of the animation, not the window around it. For this to apply, the paragraph must be in a view or persistent component of its own, laid out by a flex or grid parent (a block parent cannot be laid out again alone).
+- **Default.** `requestAnimationFrame` is unchanged. The only change of behaviour is in the kit: the ancestors of the view drawing an animated `RichText` span no longer render on each of its frames.
+- **Tests.** `InPlaceRenderingTest.testAViewAnimatedInPlaceRendersAlone`, `testBothAnimationFramesDrawTheAncestors`, `RichTextTest.testAnAnimatedSpanRendersOnlyItsView`.
+
 ## Decision policy
 
 Decided by the owner on 2026-10-29:
