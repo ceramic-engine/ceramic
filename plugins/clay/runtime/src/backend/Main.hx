@@ -383,8 +383,16 @@ class Main {
         config.window.fullscreen = app.settings.fullscreen;
         config.window.resizable = app.settings.resizable;
         config.window.title = app.settings.title;
-        config.render.stencil = 2;
-        config.render.depth = 16;
+        // Window depth and stencil buffers, both by default
+        config.render.stencil = app.settings.windowStencilBuffer ? 2 : 0;
+        config.render.depth = app.settings.windowDepthBuffer ? 16 : 0;
+        #if web
+        // The WebGL context attributes default to true: ask for none explicitly
+        if (!app.settings.windowStencilBuffer)
+            config.render.webgl.stencil = false;
+        if (!app.settings.windowDepthBuffer)
+            config.render.webgl.depth = false;
+        #end
 
         #if ios
         // By default, audio is muted by device mute switch

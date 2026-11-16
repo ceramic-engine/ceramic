@@ -363,6 +363,28 @@ class InitSettings {
         return @:privateAccess settings.antialiasing = antialiasing;
     }
 
+    /**
+     * Whether the window has a depth buffer (clay backend). Default: true. See `Settings.windowDepthBuffer`.
+     */
+    public var windowDepthBuffer(get,set):Bool;
+    inline function get_windowDepthBuffer():Bool {
+        return settings.windowDepthBuffer;
+    }
+    inline function set_windowDepthBuffer(windowDepthBuffer:Bool):Bool {
+        return @:privateAccess settings.windowDepthBuffer = windowDepthBuffer;
+    }
+
+    /**
+     * Whether the window has a stencil buffer (clay backend). Default: true. See `Settings.windowStencilBuffer`.
+     */
+    public var windowStencilBuffer(get,set):Bool;
+    inline function get_windowStencilBuffer():Bool {
+        return settings.windowStencilBuffer;
+    }
+    inline function set_windowStencilBuffer(windowStencilBuffer:Bool):Bool {
+        return @:privateAccess settings.windowStencilBuffer = windowStencilBuffer;
+    }
+
     // Native loop (clay backend, macOS): drawables, wait for the drawable first, frame pacing
 
     /**

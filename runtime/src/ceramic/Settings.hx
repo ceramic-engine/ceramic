@@ -556,6 +556,38 @@ class Settings implements Observable {
      */
     public var antialiasing(default,null):Int = 0;
 
+    /**
+     * Whether the window has a depth buffer (clay backend).
+     *
+     * Ceramic's 2D renderer never tests depth on the window: visuals are ordered by
+     * `depth` on the CPU. Set to `false` to create the window without a depth buffer
+     * and save its memory (about 4 bytes per pixel when it is packed with the stencil,
+     * 19 MB for a 2560 x 1898 window). Render textures keep their own `depth` setting.
+     * Native: asks the GL or EGL context for a depth size of 0. Web: WebGL context
+     * attribute `depth: false`. Unity: ignored (Unity owns the camera target).
+     * Read once, when the window is created.
+     *
+     * Default: true
+     */
+    public var windowDepthBuffer(default,null):Bool = true;
+
+    /**
+     * Whether the window has a stencil buffer (clay backend).
+     *
+     * The stencil buffer is used by `Visual.clip` when the clip is not a regular
+     * rectangle (rotated, skewed or a mesh) and the clipped visual draws directly on
+     * the window. Clips into a `RenderTexture` or a `Filter` use the stencil of that
+     * texture instead, and regular rectangle clips use the scissor. Set to `false` to
+     * create the window without a stencil buffer and save its memory: such clips then
+     * draw unclipped on the window (a warning is logged once).
+     * Native: asks the GL or EGL context for a stencil size of 0. Web: WebGL context
+     * attribute `stencil: false`. Unity: ignored (Unity owns the camera target).
+     * Read once, when the window is created.
+     *
+     * Default: true
+     */
+    public var windowStencilBuffer(default,null):Bool = true;
+
     // Native loop (clay backend, macOS): drawables, wait for the drawable first, frame pacing
 
     /**

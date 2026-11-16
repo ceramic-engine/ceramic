@@ -79,6 +79,11 @@ class Renderer extends Entity {
     var stencilClip:Bool = false;
 
     /**
+     * Whether the missing window stencil buffer was already reported.
+     */
+    var warnedNoWindowStencil:Bool = false;
+
+    /**
      * Last used texture to detect state changes.
      */
     var lastTexture:ceramic.Texture = null;
@@ -421,6 +426,11 @@ class Renderer extends Entity {
                                 #end
                                     // Update stencil buffer
                                     lastClipIsRegular = false;
+
+                                    if (lastRenderTarget == null && !warnedNoWindowStencil && !app.settings.windowStencilBuffer) {
+                                        warnedNoWindowStencil = true;
+                                        log.warning('Non rectangular clip drawn on a window without stencil buffer (settings.windowStencilBuffer is false): drawn unclipped');
+                                    }
 
                                     draw.beginDrawingInStencilBuffer();
 

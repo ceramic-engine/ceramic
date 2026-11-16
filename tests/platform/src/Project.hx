@@ -44,6 +44,9 @@ class Project extends Entity {
     /** Second native run: only reads back what the first one saved when it quit. */
     var readBackToken:String = null;
 
+    /** The window is created without depth and stencil buffer (`CERAMIC_PLATFORM_NO_DEPTH_STENCIL=1`). */
+    var noDepthStencil = false;
+
     function new(settings:InitSettings) {
 
         super();
@@ -59,6 +62,15 @@ class Project extends Entity {
         settings.trafficLightPosition(12, 10);
         settings.windowStartsHidden = true;
 
+        // Third native run of check.sh: the window without depth and stencil buffer
+        #if sys
+        noDepthStencil = Sys.getEnv('CERAMIC_PLATFORM_NO_DEPTH_STENCIL') == '1';
+        #end
+        if (noDepthStencil) {
+            settings.windowDepthBuffer = false;
+            settings.windowStencilBuffer = false;
+        }
+
         App.app.onceReady(this, ready);
 
     }
@@ -67,7 +79,8 @@ class Project extends Entity {
 
         #if (clay && cpp && mac && !ios)
         final path = tokenPath();
-        if (path != null && sys.FileSystem.exists(path)) {
+        // The run without depth and stencil never reads back (nor leaves) a token
+        if (path != null && !noDepthStencil && sys.FileSystem.exists(path)) {
             readBackToken = sys.io.File.getContent(path);
             sys.FileSystem.deleteFile(path);
             steps = readBackSteps();
@@ -125,7 +138,8 @@ class Project extends Entity {
         #if (headless && nodejs)
         js.Node.process.exit(code);
         #elseif (clay && cpp && mac && !ios)
-        if (code == 0 && readBackToken == null) {
+        // The run without depth and stencil leaves no token for a read back run
+        if (code == 0 && readBackToken == null && !noDepthStencil) {
             // Change the model and quit in the same frame: nothing but the
             // save made when the app terminates can write this value
             final token = 'token-' + Std.int(Sys.time() * 1000);
@@ -226,6 +240,25 @@ class Project extends Entity {
         check(@:privateAccess new Settings().scrollMomentum, 'scrollMomentum default of a new Settings');
         check(ScrollPhase.GESTURE_ENDED.isGesture() && !ScrollPhase.GESTURE_ENDED.isMomentum(), 'GESTURE_ENDED is a gesture phase');
         check(ScrollPhase.MOMENTUM.isMomentum() && !ScrollPhase.NONE.isGesture() && !ScrollPhase.NONE.isMomentum(), 'MOMENTUM is a momentum phase, NONE neither');
+
+        // Window depth and stencil buffers: both by default, none when asked
+        check(@:privateAccess new Settings().windowDepthBuffer, 'windowDepthBuffer default of a new Settings');
+        check(@:privateAccess new Settings().windowStencilBuffer, 'windowStencilBuffer default of a new Settings');
+        equals(!noDepthStencil, app.settings.windowDepthBuffer, 'windowDepthBuffer given at init');
+        equals(!noDepthStencil, app.settings.windowStencilBuffer, 'windowStencilBuffer given at init');
+        #if (clay && cpp)
+        // What the context really has on the window's framebuffer
+        final depthBits:Int = clay.opengl.GL.getParameter(0x0D56); // DEPTH_BITS
+        final stencilBits:Int = clay.opengl.GL.getParameter(0x0D57); // STENCIL_BITS
+        if (noDepthStencil) {
+            equals(0, depthBits, 'window depth bits without depth buffer');
+            equals(0, stencilBits, 'window stencil bits without stencil buffer');
+        }
+        else {
+            check(depthBits >= 16, 'window depth bits by default: $depthBits');
+            check(stencilBits >= 2, 'window stencil bits by default: $stencilBits');
+        }
+        #end
 
         // Sleep while hidden: off by default, the window counts as visible
         check(app.settings.hiddenSleepDelay < 0, 'hiddenSleepDelay is off by default');

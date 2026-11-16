@@ -9,7 +9,8 @@
 #   what it is given, run;
 # - clay native on macOS: the real SDL window, hidden (clay_sdl_headless),
 #   run twice: the first run changes an auto saved model and quits in the
-#   same frame, the second one reads the model back from the disk;
+#   same frame, the second one reads the model back from the disk; a third
+#   run creates the window without depth and stencil buffer;
 # - clay web: built only.
 #
 # Usage: tests/platform/check.sh [extra ceramic options, e.g. --allow-multiple]
@@ -33,6 +34,13 @@ if [ "$(uname -s)" = Darwin ]; then
             exit 1
         fi
     done
+    # Window created without depth and stencil buffer
+    CERAMIC_PLATFORM_NO_DEPTH_STENCIL=1 "$BIN" > "$LOG" 2>&1 || true
+    grep -E "platform:|FAILED" "$LOG" || true
+    if ! grep -q "checks, 0 failed" "$LOG"; then
+        echo "clay mac: FAILED (no depth and stencil, log: $LOG)"
+        exit 1
+    fi
 fi
 
 echo "==> clay web"

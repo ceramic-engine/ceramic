@@ -428,6 +428,22 @@ arrays of a `Mesh`, shader uniforms) calls `app.requestRender()`, or holds
 `app.requestContinuousRender(owner)` while it animates. In debug, the define
 `ceramic_verify_render_on_demand` reports such a change made without a request.
 
+## Window depth and stencil buffers
+
+Glaze never uses the depth or the stencil buffer of the window: a window draws its scene
+into its own texture (no depth, no stencil), and a `visual(v)` element renders into a
+`Filter` texture that has its own buffers. An app whose window only shows Glaze can create
+it without them and save their memory (about 4 bytes per pixel, 19 MB for a 2560 x 1898
+window), in `Project.hx`:
+
+```haxe
+settings.windowDepthBuffer = false;
+settings.windowStencilBuffer = false;
+```
+
+Both are on by default (see `ceramic.Settings.windowStencilBuffer`): Ceramic visuals drawn
+directly on the window with a clip that is not a regular rectangle need the stencil.
+
 ## Text and fonts
 
 Glaze draws text with its own text system: fonts are TTF, OTF or TTC files added to the text system (Inter and JetBrains Mono are bundled). Two choices of Glaze go beyond the real GPUI and are deliberate:
