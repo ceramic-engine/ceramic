@@ -408,6 +408,15 @@ class Screen extends Entity implements Observable implements RenderTarget {
     @event function windowVisibleChange(visible:Bool);
 
     /**
+     * The mouse left the app window (where the platform tells it: native
+     * desktop windows, and the canvas on the web). No mouse move comes
+     * after it until the mouse is back, so hover states that follow the
+     * mouse should end here. Emitted at the start of a frame, in order with
+     * the input events.
+     */
+    @event function windowMouseLeave();
+
+    /**
      * An item of the menu bar (`setMenuBar`) or of the dock menu
      * (`setDockMenu`) was chosen: clicked in the menu, or its shortcut was
      * pressed and no `keyDown` listener handled the key
@@ -828,6 +837,11 @@ class Screen extends Entity implements Observable implements RenderTarget {
                     emitWindowFocusChange(focused);
                 }
             });
+        });
+
+        // Mouse leaving the window
+        app.backend.screen.onWindowMouseLeave(this, function() {
+            app.beginUpdateCallbacks.push(emitWindowMouseLeave);
         });
 
         // Window visibility

@@ -337,6 +337,9 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function windowFocusChange(focused:Bool);
 
+    /** The mouse left the window (see `ceramic.Screen.windowMouseLeave`). */
+    @event function windowMouseLeave();
+
     /** Window visible or not. Not fired by the Unity backend for now. */
     @event function windowVisibleChange(visible:Bool);
 

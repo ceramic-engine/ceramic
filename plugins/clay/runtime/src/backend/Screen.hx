@@ -124,6 +124,9 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function windowFocusChange(focused:Bool);
 
+    /** The mouse left the window (see `ceramic.Screen.windowMouseLeave`). */
+    @event function windowMouseLeave();
+
     /**
      * Fired when the app window becomes visible or stops being visible (hidden, minimized,
      * fully covered by other windows, on another space).

@@ -1212,6 +1212,7 @@ class ClayEvents extends clay.Events {
             case RESTORED:
             case ENTER:
             case LEAVE:
+                backend.screen.emitWindowMouseLeave();
             case FOCUS_GAINED:
                 backend.screen.emitWindowFocusChange(true);
             case FOCUS_LOST:
