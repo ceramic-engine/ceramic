@@ -249,6 +249,21 @@ class ClayEvents extends clay.Events {
      */
     var framesAfterResize:Int = 0;
 
+    /**
+     * Frames are drawn until this time (`haxe.Timer.stamp()`) after a change
+     * of the window's size: macOS animates a zoom (the double click on the
+     * title bar, the green button) after reporting the final size, at its
+     * default pace of 0.2 seconds for each 150 points of height
+     * (`NSWindowResizeTime`), and what a frame shows during the animation
+     * may not stay: the frames drawn right after the event were the last
+     * ones, and the window kept a picture of the former size (bottom left)
+     * until a click or a blink of the caret asked for a frame.
+     */
+    var renderAfterResizeUntil:Float = -1;
+
+    /** The height of the window in points at the last size change, -1 before any. */
+    var lastWindowHeight:Float = -1;
+
     override function render() {
 
         backend.emitRender();
@@ -260,6 +275,10 @@ class ClayEvents extends clay.Events {
         if (framesAfterResize > 0) {
             framesAfterResize--;
             ceramic.App.app.requestRender();
+        }
+        else if (renderAfterResizeUntil > 0) {
+            if (haxe.Timer.stamp() < renderAfterResizeUntil) ceramic.App.app.requestRender();
+            else renderAfterResizeUntil = -1;
         }
 
         // Nothing was drawn (`settings.renderOnDemand`): nothing to swap or present
@@ -1207,6 +1226,15 @@ class ClayEvents extends clay.Events {
         switch type {
             case RESIZED | SIZE_CHANGED | MAXIMIZED | RESTORED | EXPOSED | ENTER_FULLSCREEN | EXIT_FULLSCREEN:
                 framesAfterResize = 2;
+                // As long as the system may animate the change (see renderAfterResizeUntil)
+                final density = Clay.app.runtime.windowDevicePixelRatio();
+                final height = density > 0 ? Clay.app.runtime.windowHeight() / density : Clay.app.runtime.windowHeight();
+                final change = lastWindowHeight >= 0 ? Math.abs(height - lastWindowHeight) : 0.0;
+                lastWindowHeight = height;
+                var duration = 0.25 + 0.2 * change / 150;
+                if (duration > 3.0) duration = 3.0;
+                final until = haxe.Timer.stamp() + duration;
+                if (until > renderAfterResizeUntil) renderAfterResizeUntil = until;
             case _:
         }
 
