@@ -418,11 +418,11 @@ class SpineMontage<T> extends Entity implements Component {
                 );
 
                 // Apply track time and time scale if needed
-                var track = spine.state.getCurrent(trackIndex);
+                var track = SpineRuntime.currentTrack(spine.state, trackIndex);
                 if (currentAnimationInstance.time > 0) {
-                    track.setTrackTime(track.animation.duration * currentAnimationInstance.time);
+                    track.trackTime = track.animation.duration * currentAnimationInstance.time;
                 }
-                track.setTimeScale(speed);
+                track.timeScale = speed;
             }
             else {
                 // No animation to apply, hide spine

@@ -1,6 +1,8 @@
 package ceramic;
 
+#if spine_legacy
 import spine.support.files.FileHandle;
+#end
 
 /**
  * Implementation of Spine's FileHandle interface for Ceramic.
@@ -21,7 +23,7 @@ import spine.support.files.FileHandle;
  * var atlas = new TextureAtlas(spineFile, ...);
  * ```
  */
-class SpineFile implements FileHandle {
+class SpineFile #if spine_legacy implements FileHandle #end {
 
     /**
      * The path or identifier of this file.

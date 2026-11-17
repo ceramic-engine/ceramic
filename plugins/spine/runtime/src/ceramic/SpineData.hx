@@ -2,10 +2,17 @@ package ceramic;
 
 import ceramic.Entity;
 
+#if spine_legacy
 import spine.support.graphics.TextureAtlas;
 import spine.support.utils.JsonValue;
-import spine.attachments.*;
 import spine.*;
+#else
+import spine.SkeletonBinary;
+import spine.SkeletonData;
+import spine.SkeletonJson;
+#end
+import spine.attachments.*;
+import ceramic.SpineRuntime;
 
 import ceramic.SpinePlugin;
 
@@ -56,7 +63,7 @@ class SpineData extends Entity {
      * The atlas maps region names to texture coordinates, allowing the animation
      * to reference specific parts of texture pages.
      */
-    public var atlas(default,null):TextureAtlas;
+    public var atlas(default,null):SpineAtlas;
 
     /**
      * Optional reference to the SpineAsset that created this data.
@@ -69,20 +76,24 @@ class SpineData extends Entity {
      * Creates a new SpineData instance from a texture atlas and JSON data.
      * 
      * @param atlas The texture atlas containing all images for the animation
-     * @param json The parsed JSON data exported from Spine
+     * @param json The JSON data exported from Spine (parsed JSON value with the legacy runtime, JSON text otherwise)
      * @param scale Optional scale factor to apply to the skeleton data (default: 1.0).
      *              This affects the size of the animation when rendered.
+     * @param binary Binary skeleton data (`.skel` export), read instead of `json` when provided.
+     *               Not available with the legacy runtime (`spine_legacy`).
      */
     public function new(
-        atlas:TextureAtlas,
-        json:JsonValue,
+        atlas:SpineAtlas,
+        #if spine_legacy json:JsonValue #else json:String #end,
         scale:Float = 1.0
+        #if !spine_legacy , ?binary:haxe.io.Bytes #end
     ) {
 
         super();
 
         this.atlas = atlas;
 
+        #if spine_legacy
         var spineJson:SkeletonJson = new SkeletonJson(
             new AtlasAttachmentLoader(atlas)
         );
@@ -91,6 +102,18 @@ class SpineData extends Entity {
         skeletonData = spineJson.readSkeletonData(
             json
         );
+        #else
+        if (binary != null) {
+            var spineBinary = new SkeletonBinary(new AtlasAttachmentLoader(atlas));
+            spineBinary.scale = scale;
+            skeletonData = spineBinary.readSkeletonData(binary);
+        }
+        else {
+            var spineJson = new SkeletonJson(new AtlasAttachmentLoader(atlas));
+            spineJson.scale = scale;
+            skeletonData = spineJson.readSkeletonData(json);
+        }
+        #end
 
     }
 

@@ -9,9 +9,12 @@ import ceramic.Path;
 import ceramic.Quad;
 import ceramic.Shortcuts.*;
 import ceramic.TextAsset;
+import ceramic.SpineRuntime;
 import haxe.Json;
+#if spine_legacy
 import spine.support.graphics.TextureAtlas;
 import spine.support.utils.JsonValue;
+#end
 
 using StringTools;
 
@@ -70,7 +73,7 @@ class SpineAsset extends Asset {
      * The parsed texture atlas containing all texture regions.
      * Maps skeleton attachments to texture coordinates.
      */
-    public var atlas:TextureAtlas = null;
+    public var atlas:SpineAtlas = null;
 
     /**
      * The fully loaded Spine data ready for use in animations.
@@ -89,7 +92,7 @@ class SpineAsset extends Asset {
      * Map of atlas pages to their corresponding image assets.
      * Used internally to manage texture loading and lifecycle.
      */
-    public var pages:Map<AtlasPage,ImageAsset> = new Map();
+    public var pages:Map<SpineAtlasPage,ImageAsset> = new Map();
 
 /// Internal
 
@@ -234,7 +237,7 @@ class SpineAsset extends Asset {
                 pages = new Map();
 
                 // Create atlas, which will trigger page loads
-                var spineAtlas = new TextureAtlas(
+                var spineAtlas = new SpineAtlas(
                     atlas,
                     new SpineTextureLoader(this, Path.directory(atlasAsset.path))
                 );
@@ -247,20 +250,53 @@ class SpineAsset extends Asset {
                         // Fill page info
                         for (page in pages.keys()) {
                             var asset = pages.get(page);
+                            #if spine_legacy
                             page.rendererObject = asset.texture;
+                            #else
+                            page.texture = asset.texture;
+                            for (region in page.regions) {
+                                region.texture = asset.texture;
+                            }
+                            #end
                             page.width = Std.int(asset.texture.width);
                             page.height = Std.int(asset.texture.height);
+                        }
+
+                        // Check that the data was exported for the spine runtime in use
+                        var dataVersion = jsonDataVersion(json.getContent());
+                        if (!checkDataVersion(dataVersion)) {
+                            status = BROKEN;
+                            emitComplete(false);
+                            return;
                         }
 
                         // Keep prev spine data to update it
                         var prevSpineData = spineData;
 
                         // Create final spine data with all info
+                        #if spine_legacy
                         spineData = new SpineData(
                             spineAtlas,
                             new JsonDynamic(Json.parse(json.getContent())),
                             scale
                         );
+                        #else
+                        try {
+                            spineData = new SpineData(
+                                spineAtlas,
+                                json.getContent(),
+                                scale
+                            );
+                        }
+                        catch (e:Dynamic) {
+                            spineData = prevSpineData;
+                            status = BROKEN;
+                            ceramic.App.app.logger.error('Failed to read spine data at path: $path ($e)');
+                            emitComplete(false);
+                            return;
+                        }
+                        #end
+                        spineData.skeletonData.name = baseName;
                         spineData.asset = this;
 
                         // Destroy previous pages
@@ -345,7 +381,50 @@ class SpineAsset extends Asset {
      * @param path The texture file path
      * @param basePath Optional base directory path
      */
-    function loadPage(page:AtlasPage, path:String, ?basePath:String):Void {
+    /**
+     * Spine version (major.minor) of JSON skeleton data, or `null` if not found.
+     */
+    static function jsonDataVersion(json:String):String {
+
+        var re = ~/"spine"\s*:\s*"([0-9]+)\.([0-9]+)/;
+        if (json != null && re.match(json)) {
+            return re.matched(1) + '.' + re.matched(2);
+        }
+        return null;
+
+    }
+
+    /**
+     * Check that skeleton data of the given spine version (major.minor) can be read by the
+     * spine runtime in use, and explain what to do when it can't.
+     * @return `false` if the data cannot be loaded
+     */
+    function checkDataVersion(dataVersion:String):Bool {
+
+        if (dataVersion == null) {
+            ceramic.App.app.logger.warning('Unknown Spine version for spine data at path: $path');
+            return true;
+        }
+
+        #if spine_legacy
+        var parts = dataVersion.split('.');
+        var major = Std.parseInt(parts[0]);
+        var minor = Std.parseInt(parts[1]);
+        if (major > 4 || (major == 4 && minor > 0)) {
+            ceramic.App.app.logger.warning('Spine data at path: $path was exported for Spine $dataVersion, but the legacy spine runtime (spine_legacy define) reads Spine 4.0 data: remove the spine_legacy define to use the Spine 4.3 runtime');
+        }
+        return true;
+        #else
+        if (dataVersion != SpineRuntime.DATA_VERSION) {
+            ceramic.App.app.logger.error('Spine data at path: $path was exported for Spine $dataVersion, but the spine runtime reads Spine ${SpineRuntime.DATA_VERSION} data: export it again with Spine ${SpineRuntime.DATA_VERSION}, or add the spine_legacy define to use the legacy runtime (Spine 4.0 data)');
+            return false;
+        }
+        return true;
+        #end
+
+    }
+
+    function loadPage(page:SpineAtlasPage, path:String, ?basePath:String):Void {
 
         log.info('Load atlas page ${page.name} / $path / $basePath');
 
@@ -373,7 +452,7 @@ class SpineAsset extends Asset {
      * 
      * @param page The atlas page to unload
      */
-    function unloadPage(page:AtlasPage):Void {
+    function unloadPage(page:SpineAtlasPage):Void {
 
         var asset = pages.get(page);
 

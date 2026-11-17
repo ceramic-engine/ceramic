@@ -141,11 +141,12 @@ class SpineBindVisual {
 
                     if (options.compensateRegionRotation) {
                         var region:RegionAttachment = null;
-                        if (Std.isOfType(info.slot.attachment, RegionAttachment)) {
-                            region = cast info.slot.attachment;
+                        var attachment = SpineRuntime.slotAttachment(info.slot);
+                        if (Std.isOfType(attachment, RegionAttachment)) {
+                            region = cast attachment;
                         }
                         if (region != null) {
-                            transform.rotate(-Utils.degToRad(region.getRotation()));
+                            transform.rotate(-Utils.degToRad(SpineRuntime.regionRotation(region)));
                         }
                     }
 
@@ -159,33 +160,35 @@ class SpineBindVisual {
                     transform.scale(spineScale, spineScale);
                 }
 
+                var slotColor = SpineRuntime.slotColor(info.slot);
+
                 if (options.bindColor) {
                     if (options.textVisual != null) {
                         options.textVisual.color = Color.fromRGBFloat(
-                            info.slot.color.r,
-                            info.slot.color.g,
-                            info.slot.color.b
+                            slotColor.r,
+                            slotColor.g,
+                            slotColor.b
                         );
                     }
                     else if (visual.asQuad != null) {
                         visual.asQuad.color = Color.fromRGBFloat(
-                            info.slot.color.r,
-                            info.slot.color.g,
-                            info.slot.color.b
+                            slotColor.r,
+                            slotColor.g,
+                            slotColor.b
                         );
                     }
                     else if (visual.asMesh != null) {
                         visual.asMesh.color = Color.fromRGBFloat(
-                            info.slot.color.r,
-                            info.slot.color.g,
-                            info.slot.color.b
+                            slotColor.r,
+                            slotColor.g,
+                            slotColor.b
                         );
                     }
                     else {
                         visual.setProperty('color', Color.fromRGBFloat(
-                            info.slot.color.r,
-                            info.slot.color.g,
-                            info.slot.color.b
+                            slotColor.r,
+                            slotColor.g,
+                            slotColor.b
                         ));
                     }
                 }
@@ -195,7 +198,7 @@ class SpineBindVisual {
                 }
 
                 if (options.bindAlpha) {
-                    options.visual.alpha = info.slot.color.a;
+                    options.visual.alpha = slotColor.a;
                 }
 
                 if (options.bindDepth) {

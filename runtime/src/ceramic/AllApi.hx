@@ -425,6 +425,7 @@ import ceramic.SpineAsset;
 import ceramic.SpineBindVisual;
 import ceramic.SpineBindVisualOptions;
 import ceramic.SpineBounds;
+import ceramic.SpineClipping;
 import ceramic.SpineColors;
 import ceramic.SpineData;
 import ceramic.SpineFile;
@@ -434,6 +435,7 @@ import ceramic.SpineMontageDefaults;
 import ceramic.SpineMontageSettings;
 import ceramic.SpineMontageSpineSettings;
 import ceramic.SpinePlugin;
+import ceramic.SpineRuntime;
 import ceramic.SpineSystem;
 import ceramic.SpineTextureLoader;
 #end

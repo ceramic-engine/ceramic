@@ -52,9 +52,9 @@ class SpineColors {
 
                 funcs.push(info -> {
                     result[i] = Color.fromRGBFloat(
-                        info.slot.color.r,
-                        info.slot.color.g,
-                        info.slot.color.b
+                        SpineRuntime.slotColor(info.slot).r,
+                        SpineRuntime.slotColor(info.slot).g,
+                        SpineRuntime.slotColor(info.slot).b
                     );
                 });
 
@@ -117,11 +117,15 @@ class SpineColors {
             (i -> {
 
                 funcs.push(info -> {
-                    result[i] = Color.fromRGBFloat(
-                        info.slot.darkColor.r,
-                        info.slot.darkColor.g,
-                        info.slot.darkColor.b
-                    );
+                    // Slots without tint black have no dark color: keep Color.NONE
+                    var darkColor = SpineRuntime.slotDarkColor(info.slot);
+                    if (darkColor != null) {
+                        result[i] = Color.fromRGBFloat(
+                            darkColor.r,
+                            darkColor.g,
+                            darkColor.b
+                        );
+                    }
                 });
 
                 var slot = slots[i];

@@ -1,7 +1,6 @@
 package ceramic;
 
-import spine.support.graphics.TextureAtlas;
-import spine.support.graphics.TextureLoader;
+import ceramic.SpineRuntime;
 
 /**
  * Custom texture loader implementation for integrating Spine with Ceramic's asset system.
@@ -23,7 +22,7 @@ import spine.support.graphics.TextureLoader;
  * @see SpineAsset for the actual texture loading implementation
  */
 @:access(ceramic.SpineAsset)
-class SpineTextureLoader implements TextureLoader
+class SpineTextureLoader implements SpineAtlasTextureLoader
 {
     /**
      * The SpineAsset instance that handles the actual texture loading.
@@ -65,7 +64,7 @@ class SpineTextureLoader implements TextureLoader
      *             the page's rendererObject to the loaded texture.
      * @param path The path to the texture file as specified in the atlas
      */
-    public function loadPage(page:AtlasPage, path:String):Void {
+    public function loadPage(page:SpineAtlasPage, path:String):Void {
 
         asset.loadPage(page, path, basePath);
 
@@ -80,7 +79,7 @@ class SpineTextureLoader implements TextureLoader
      * 
      * @param region The atlas region that was just loaded
      */
-    public function loadRegion(region:AtlasRegion):Void {
+    public function loadRegion(region:SpineAtlasRegion):Void {
 
         // Nothing to do here
 
@@ -95,7 +94,7 @@ class SpineTextureLoader implements TextureLoader
      * 
      * @param page The AtlasPage whose texture should be unloaded
      */
-    public function unloadPage(page:AtlasPage):Void {
+    public function unloadPage(page:SpineAtlasPage):Void {
 
         asset.unloadPage(page);
 
