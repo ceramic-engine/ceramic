@@ -266,6 +266,17 @@ class SpineAsset extends Asset {
                     new SpineTextureLoader(this, Path.directory(atlasAsset.path))
                 );
 
+                #if !spine_legacy
+                // Ceramic premultiplies the alpha of every image itself (asset pipeline on native
+                // targets, loading on web): a page exported with premultiplied alpha would be
+                // premultiplied twice
+                for (page in pages.keys()) {
+                    if (page.pma) {
+                        log.warning('Atlas page ${page.name} of spine $path was exported with premultiplied alpha: Ceramic premultiplies images itself, export the atlas without premultiplied alpha (dark edges otherwise)');
+                    }
+                }
+                #end
+
                 // Load pages
                 assets.onceComplete(this, function(success) {
 
