@@ -1753,7 +1753,10 @@ class Spine extends Visual {
                                                 r = skeleton.color.r * slotDarkColor.r * attachmentColor.r * a;
                                                 g = skeleton.color.g * slotDarkColor.g * attachmentColor.g * a;
                                                 b = skeleton.color.b * slotDarkColor.b * attachmentColor.b * a;
-                                                a = slotDarkColor.a;
+                                                // Last float: the tint black shader expects 1 for premultiplied
+                                                // textures (always the case in Ceramic), not the alpha of the dark
+                                                // color (which binary data leaves at 0)
+                                                a = #if spine_legacy slotDarkColor.a #else 1.0 #end;
                                             }
                                             else {
                                                 r = 0;
@@ -1841,7 +1844,10 @@ class Spine extends Visual {
                                                 r = skeleton.color.r * slotDarkColor.r * attachmentColor.r * a;
                                                 g = skeleton.color.g * slotDarkColor.g * attachmentColor.g * a;
                                                 b = skeleton.color.b * slotDarkColor.b * attachmentColor.b * a;
-                                                a = slotDarkColor.a;
+                                                // Last float: the tint black shader expects 1 for premultiplied
+                                                // textures (always the case in Ceramic), not the alpha of the dark
+                                                // color (which binary data leaves at 0)
+                                                a = #if spine_legacy slotDarkColor.a #else 1.0 #end;
                                             }
                                             else {
                                                 r = 0;

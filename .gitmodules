@@ -160,6 +160,6 @@
 	url = https://github.com/jeremyfa/similar.git
 [submodule "git/spine-runtimes"]
 	path = git/spine-runtimes
-	url = https://github.com/EsotericSoftware/spine-runtimes.git
-	branch = 4.3
+	url = https://github.com/ceramic-engine/spine-runtimes.git
+	branch = ceramic
 	shallow = true

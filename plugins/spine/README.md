@@ -70,9 +70,11 @@ Code that uses the spine runtime directly (`spine.skeleton`, `spine.state`, `Slo
 
 `ceramic.SpineRuntime` gives the same access with both runtimes (`SpineRuntime.slotColor(slot)`, `SpineRuntime.boneWorldX(bone)`, `SpineRuntime.currentTrack(state, 0)`...), with no runtime cost (inline).
 
-## Known limitations of spine-haxe 4.3.1
+## Spine runtime used
+
+The default runtime comes from the `ceramic` branch of [ceramic-engine/spine-runtimes](https://github.com/ceramic-engine/spine-runtimes), a fork of the official repository with fixes of spine-haxe (performance and correctness), meant to be proposed upstream.
+
+## Known limitations
 
 - Unity (C# target): spine-haxe does not compile for C#, use `spine_legacy`.
-- A JSON export animating a slider fails to load: use the binary export.
-- Concave clipping polygons may draw outside of the clipping area (`SOFTWARE` clipping): use convex clipping attachments, or `STENCIL` clipping.
-- Binary exports: physics constraints are simulated with a wrong time step, and dark colors (tint black) have a wrong alpha.
+- Concave clipping polygons may draw outside of the clipping area with `SOFTWARE` clipping: use convex clipping attachments, or `STENCIL` clipping.
