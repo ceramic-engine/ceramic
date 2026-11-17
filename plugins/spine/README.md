@@ -77,4 +77,3 @@ The default runtime comes from the `ceramic` branch of [ceramic-engine/spine-run
 ## Known limitations
 
 - Unity (C# target): spine-haxe does not compile for C#, use `spine_legacy`.
-- Concave clipping polygons may draw outside of the clipping area with `SOFTWARE` clipping: use convex clipping attachments, or `STENCIL` clipping.
