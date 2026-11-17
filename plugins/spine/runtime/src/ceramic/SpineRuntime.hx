@@ -108,6 +108,20 @@ class SpineRuntime {
         return #if spine_legacy slotData.darkColor != null #else slotData.setupPose.darkColor != null #end;
     }
 
+    /**
+     * Ceramic blending matching the blend mode of the slot.
+     * With the legacy runtime, multiply and screen are rendered with normal blending.
+     */
+    public static inline function blendingForSlot(slot:Slot):Blending {
+        var blendMode = slot.data.blendMode;
+        return if (blendMode == spine.BlendMode.additive) Blending.ADD
+            #if !spine_legacy
+            else if (blendMode == spine.BlendMode.multiply) Blending.MULTIPLY
+            else if (blendMode == spine.BlendMode.screen) Blending.SCREEN
+            #end
+            else Blending.AUTO;
+    }
+
     /** Whether the slot uses additive blending */
     public static inline function slotIsAdditive(slot:Slot):Bool {
         return slot.data.blendMode == spine.BlendMode.additive;

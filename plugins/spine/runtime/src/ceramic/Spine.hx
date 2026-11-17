@@ -235,12 +235,6 @@ class Spine extends Visual {
      */
     var clipWorldVertices:Array<Float> = [];
 
-    /**
-     * Whether the `inverse` flag of a clipping attachment rendered with
-     * `STENCIL` clipping was already reported.
-     */
-    var warnedInverseStencilClip:Bool = false;
-
     #end
 
     /**
@@ -621,7 +615,7 @@ class Spine extends Visual {
      *   break draw batching and supports inverse clipping.
      * - `STENCIL`: the geometry is clipped by the GPU with the stencil buffer. No CPU cost
      *   per clipped triangle, but a clipped slot ignores the `clip` of its parents, and
-     *   each clipped slot breaks draw batching.
+     *   each clipped slot breaks draw batching. Inverse clipping uses `Visual.clipInverted`.
      *
      * With the legacy runtime (`spine_legacy`), only `STENCIL` is available.
      */
@@ -1903,7 +1897,11 @@ class Spine extends Visual {
                                         mesh.clip = null;
                                     }
 
+                                    #if spine_legacy
                                     mesh.blending = isAdditive ? Blending.ADD : Blending.AUTO;
+                                    #else
+                                    mesh.blending = SpineRuntime.blendingForSlot(slot);
+                                    #end
                                     mesh.depth = slotInfo.depth;
                                     mesh.scaleY = -1;
 
@@ -2042,11 +2040,6 @@ class Spine extends Visual {
 
                     if (!softwareClipping && clipper.isClipping()) {
 
-                        if (clipAttachment.inverse && !warnedInverseStencilClip) {
-                            warnedInverseStencilClip = true;
-                            log.warning('Inverse clipping is not supported with STENCIL clipping, use SOFTWARE clipping instead (skeleton: ' + skeletonData.name + ', slot: ' + slot.data.name + ')');
-                        }
-
                         clipShape = slotClips.getInline(slot.data.index);
 
                         if (clipShape == null) {
@@ -2074,6 +2067,7 @@ class Spine extends Visual {
                         clipShape.points = points;
                         clipShape.scaleX = skeletonScale;
                         clipShape.scaleY = -skeletonScale;
+                        clipShape.clipInverted = clipAttachment.inverse;
                         clipShape.computeContent();
                     }
                     #end

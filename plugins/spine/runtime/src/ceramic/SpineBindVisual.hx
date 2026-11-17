@@ -194,7 +194,7 @@ class SpineBindVisual {
                 }
 
                 if (options.bindBlending) {
-                    visual.blending = (info.slot.data.blendMode == SpineBlendMode.additive) ? Blending.ADD : Blending.AUTO;
+                    visual.blending = SpineRuntime.blendingForSlot(info.slot);
                 }
 
                 if (options.bindAlpha) {

@@ -18,7 +18,8 @@ enum SpineClipping {
     /**
      * The geometry is clipped by the GPU with the stencil buffer. No CPU cost per
      * clipped triangle, but a clipped slot ignores the `clip` of its parents,
-     * and each clipped slot breaks draw batching.
+     * and each clipped slot breaks draw batching. Inverse clipping attachments
+     * use an inverted clip (`Visual.clipInverted`).
      */
     STENCIL;
 

@@ -154,6 +154,7 @@ class SpineAsset extends Asset {
         //
         var prefix = path + '/';
         var jsonPath = null;
+        var skelPath = null;
         var rawAtlasPaths:Array<String> = [];
         for (entry in Assets.all) {
             if (entry.startsWith(prefix)) {
@@ -161,24 +162,39 @@ class SpineAsset extends Asset {
                 if (jsonPath == null && lowerCaseEntry.endsWith('.json')) {
                     jsonPath = entry;
                 }
+                if (skelPath == null && lowerCaseEntry.endsWith('.skel')) {
+                    skelPath = entry;
+                }
                 if (lowerCaseEntry.endsWith('.atlas')) {
                     rawAtlasPaths.push(entry);
                 }
             }
         }
 
-        if (jsonPath == null) {
+        // Binary skeleton data (.skel) is read when there is no JSON export
+        // (spine-haxe runtime only: the legacy runtime only reads JSON)
+        var useBinary = #if spine_legacy false #else jsonPath == null && skelPath != null #end;
+
+        if (jsonPath == null && !useBinary) {
             status = BROKEN;
             ceramic.App.app.logger.error('Failed to retrieve json path for spine: $path');
             emitComplete(false);
             return;
         }
 
-        var jsonPathInfo = Assets.decodePath(jsonPath);
-        var baseName = jsonPathInfo.name;
+        var dataPathInfo = Assets.decodePath(useBinary ? skelPath : jsonPath);
+        var baseName = dataPathInfo.name;
 
-        var jsonAsset = new TextAsset(baseName + '.json');
-        jsonAsset.handleTexturesDensityChange = false;
+        var jsonAsset:TextAsset = null;
+        var binaryAsset:BinaryAsset = null;
+        if (useBinary) {
+            binaryAsset = new BinaryAsset(baseName + '.skel');
+            binaryAsset.handleTexturesDensityChange = false;
+        }
+        else {
+            jsonAsset = new TextAsset(baseName + '.json');
+            jsonAsset.handleTexturesDensityChange = false;
+        }
 
         // Retrieve atlas asset
         //
@@ -202,10 +218,17 @@ class SpineAsset extends Asset {
             atlasAsset.computePath(['atlas'], false, runtimeAssets);
         }
 
-        // Load json and atlas assets
+        // Load skeleton data and atlas assets
         //
-        var prevAsset = assets.addAsset(jsonAsset);
-        jsonAsset.computePath(['json'], false, runtimeAssets);
+        var prevAsset:Asset;
+        if (useBinary) {
+            prevAsset = assets.addAsset(binaryAsset);
+            binaryAsset.computePath(['skel'], false, runtimeAssets);
+        }
+        else {
+            prevAsset = assets.addAsset(jsonAsset);
+            jsonAsset.computePath(['json'], false, runtimeAssets);
+        }
 
         // Remove previous json asset if different
         if (prevAsset != null) prevAsset.destroy();
@@ -213,7 +236,8 @@ class SpineAsset extends Asset {
         var handleAssetsComplete:Bool->Void = null;
         handleAssetsComplete = function(success) {
 
-            var json = new SpineFile(jsonAsset.path, jsonAsset.text);
+            var json = useBinary ? null : new SpineFile(jsonAsset.path, jsonAsset.text);
+            var binary = useBinary ? binaryAsset.bytes : null;
             var atlas = atlasAsset.text;
 
             if (atlas != null && atlas.trim().startsWith('alias:')) {
@@ -230,7 +254,7 @@ class SpineAsset extends Asset {
                 return;
             }
 
-            if (json != null && atlas != null) {
+            if ((json != null || binary != null) && atlas != null) {
 
                 // Keep prev pages
                 var prevPages = pages;
@@ -263,8 +287,8 @@ class SpineAsset extends Asset {
                         }
 
                         // Check that the data was exported for the spine runtime in use
-                        var dataVersion = jsonDataVersion(json.getContent());
-                        if (!checkDataVersion(dataVersion)) {
+                        // (binary data is checked once read)
+                        if (!useBinary && !checkDataVersion(jsonDataVersion(json.getContent()))) {
                             status = BROKEN;
                             emitComplete(false);
                             return;
@@ -281,20 +305,28 @@ class SpineAsset extends Asset {
                             scale
                         );
                         #else
+                        var newSpineData:SpineData = null;
                         try {
-                            spineData = new SpineData(
+                            newSpineData = new SpineData(
                                 spineAtlas,
-                                json.getContent(),
-                                scale
+                                useBinary ? null : json.getContent(),
+                                scale,
+                                binary
                             );
                         }
                         catch (e:Dynamic) {
-                            spineData = prevSpineData;
                             status = BROKEN;
-                            ceramic.App.app.logger.error('Failed to read spine data at path: $path ($e)');
+                            ceramic.App.app.logger.error('Failed to read spine data at path: $path ($e)' + (useBinary ? ' (binary data must be exported with Spine ${SpineRuntime.DATA_VERSION})' : ''));
                             emitComplete(false);
                             return;
                         }
+                        if (useBinary && !checkDataVersion(majorMinor(newSpineData.skeletonData.version))) {
+                            newSpineData.destroy();
+                            status = BROKEN;
+                            emitComplete(false);
+                            return;
+                        }
+                        spineData = newSpineData;
                         #end
                         spineData.skeletonData.name = baseName;
                         spineData.asset = this;
@@ -381,6 +413,17 @@ class SpineAsset extends Asset {
      * @param path The texture file path
      * @param basePath Optional base directory path
      */
+    /**
+     * Major and minor parts of a Spine version (`4.3.39` gives `4.3`), or `null`.
+     */
+    static function majorMinor(version:String):String {
+
+        if (version == null) return null;
+        var parts = version.split('.');
+        return parts.length >= 2 ? parts[0] + '.' + parts[1] : null;
+
+    }
+
     /**
      * Spine version (major.minor) of JSON skeleton data, or `null` if not found.
      */
