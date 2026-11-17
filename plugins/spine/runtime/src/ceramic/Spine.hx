@@ -179,6 +179,19 @@ class Spine extends Visual {
     var slotClips:IntMap<Shape> = new IntMap(16, 0.5, true);
 
     /**
+     * Polygon of each stencil clipping attachment (indexed by slot data index).
+     * The clip shape uses this array directly as its vertices.
+     */
+    var slotClipPoints:Array<Array<Float>> = [];
+
+    /**
+     * Indices of each bounding box mesh (indexed by slot data index). A slot mesh used
+     * before by a region or mesh attachment holds the triangles of the spine runtime,
+     * which must never be modified.
+     */
+    var slotBoundingBoxIndices:Array<Array<Int>> = [];
+
+    /**
      * When true, suppresses animation events from being fired.
      * Used during forced rendering to prevent unwanted event callbacks.
      */
@@ -1525,8 +1538,6 @@ class Spine extends Visual {
                                 mesh.shader = null;
                                 mesh.customFloatAttributesSize = 0;
                                 boundingBoxAttachment.computeWorldVertices(slot, 0, count, mesh.vertices, 0, 2);
-                                Triangulate.triangulate(mesh.vertices, mesh.indices);
-
                                 if (mesh.vertices.length > verticesLength) {
                                     #if cpp
                                     untyped mesh.vertices.__SetSize(verticesLength);
@@ -1534,6 +1545,14 @@ class Spine extends Visual {
                                     mesh.vertices.splice(verticesLength, mesh.vertices.length - verticesLength);
                                     #end
                                 }
+
+                                var boundingBoxIndices = slotBoundingBoxIndices[slot.data.index];
+                                if (boundingBoxIndices == null) {
+                                    boundingBoxIndices = [];
+                                    slotBoundingBoxIndices[slot.data.index] = boundingBoxIndices;
+                                }
+                                mesh.indices = boundingBoxIndices;
+                                Triangulate.triangulate(mesh.vertices, mesh.indices);
                             }
                             else {
                                 if (slotInfo.drawDefault) {
@@ -1610,7 +1629,6 @@ class Spine extends Visual {
                                         }
 
                                     } else {
-                                        var tmpVertices = [];
                                         regionAttachment.computeWorldVertices(slot.bone, mesh.vertices, 0, vertexSize);
                                         mesh.uvs = regionAttachment.getUVs();
                                         mesh.indices = _quadTriangles;
@@ -1794,8 +1812,18 @@ class Spine extends Visual {
                         slotClips.set(slot.data.index, clipShape);
                     }
 
-                    @:privateAccess var points:Array<Float> = cast clipper.clippingPolygon;
-                    clipShape.points = points.slice(0);
+                    @:privateAccess var polygon:Array<Float> = cast clipper.clippingPolygon;
+                    var points = slotClipPoints[slot.data.index];
+                    if (points == null) {
+                        points = [];
+                        slotClipPoints[slot.data.index] = points;
+                    }
+                    var polygonLength = polygon.length;
+                    if (points.length != polygonLength) points.resize(polygonLength);
+                    for (p in 0...polygonLength) {
+                        points.unsafeSet(p, polygon.unsafeGet(p));
+                    }
+                    clipShape.points = points;
                     clipShape.scaleX = skeletonScale;
                     clipShape.scaleY = -skeletonScale;
                     clipShape.computeContent();
