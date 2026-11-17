@@ -704,7 +704,10 @@ class ViewCacheTest extends TestCase {
         var reused = 0;
         var rendered = 0;
         for (i in 0...count) {
-            seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+            // 32-bit wrapping product on every target: a plain Int product
+            // is a double on JS, which loses the low bits past 2^53 (only
+            // even steps were drawn on node)
+            seed = (((seed : haxe.Int32) * 1103515245 : Int) + 12345) & 0x7FFFFFFF;
             final name = dashboard.step(seed % Dashboard.STEP_COUNT, windows);
             frame();
             reused += cached.reusedViewCount;
@@ -905,7 +908,7 @@ class Dashboard {
             rowViews.push(app.newEntity((_:Context<CountingView>) -> new CountingView((_, cx) -> {
                 final card = cards[row % cards.length].read(cx);
                 return div().id('row').h(px(18)).flex().gap1().px1().hover(s -> s.bg(hsla(0.1, 0.3, 0.9, 1)))
-                    .child(svg().path('dashboard/icon.svg').data(ICON).size(px(10)).textColor(hsla(row / 40, 0.5, 0.4, 1)))
+                    .child(svg().path('dashboard/icon.svg').data(ICON).size(px(10)).flexShrink0().textColor(hsla(row / 40, 0.5, 0.4, 1)))
                     .child('Row $row ${card.title} ${card.value}');
             })));
         }
@@ -960,7 +963,7 @@ class Dashboard {
             .onClick((_, _, _) -> clicks++)
             .tooltip((_, cx) -> cx.newEntity((_:Context<CountingView>) -> new CountingView((_, _) -> div().p1().bg(black()).textColor(white()).child('Tooltip $index'))))
             .child(div().flex().gap1()
-                .child(svg().path('dashboard/icon.svg').data(ICON).size(px(12)).textColor(hsla(index / 8, 0.6, 0.4, 1)))
+                .child(svg().path('dashboard/icon.svg').data(ICON).size(px(12)).flexShrink0().textColor(hsla(index / 8, 0.6, 0.4, 1)))
                 .child(div().textSm().child(card.title))
                 .child((badgeViews[index] : AnyView)))
             .child(div().textXs().textColor(hsla(0, 0, 0.4, 1)).child('A description long enough to wrap on two lines in the card ${card.value}'))
