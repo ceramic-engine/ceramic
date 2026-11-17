@@ -847,7 +847,14 @@ class Helpers {
 
     }
 
-    public static function ensureHaxelibDevToCeramicGit(libName:String, cwd:String, ?intermediateDir:String) {
+    /**
+     * Point the project's local haxelib entry `libName` to a folder inside ceramic's `git/` directory.
+     * @param libName The haxelib name, as listed in `libs`
+     * @param cwd The project directory
+     * @param intermediateDir (optional) A sub folder inside the git dependency holding the library
+     * @param gitDir (optional) The folder name inside `git/`, when it differs from `libName`
+     */
+    public static function ensureHaxelibDevToCeramicGit(libName:String, cwd:String, ?intermediateDir:String, ?gitDir:String) {
 
         var haxelibRepoPath = Path.join([cwd, '.haxelib']);
 
@@ -855,7 +862,7 @@ class Helpers {
         var devPath = Path.join([projectLibPath, '.dev']);
         var currentPath = Path.join([projectLibPath, '.current']);
 
-        var ceramicHaxelibGitPath = Path.join([context.ceramicGitDepsPath, libName]);
+        var ceramicHaxelibGitPath = Path.join([context.ceramicGitDepsPath, gitDir != null ? gitDir : libName]);
 
         if (intermediateDir != null)
             ceramicHaxelibGitPath = Path.join([ceramicHaxelibGitPath, intermediateDir]);
@@ -940,6 +947,7 @@ class Helpers {
         ensureHaxelibDevToCeramicGit('differ', cwd);
         ensureHaxelibDevToCeramicGit('hsluv', cwd, 'haxe');
         ensureHaxelibDevToCeramicGit('spine-hx', cwd);
+        ensureHaxelibDevToCeramicGit('spine-haxe', cwd, 'spine-haxe', 'spine-runtimes');
         ensureHaxelibDevToCeramicGit('clipper', cwd, 'Haxe/src');
         ensureHaxelibDevToCeramicGit('generate', cwd);
         ensureHaxelibDevToCeramicGit('format-tiled', cwd);

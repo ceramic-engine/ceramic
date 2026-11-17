@@ -158,3 +158,8 @@
 [submodule "git/similar"]
 	path = git/similar
 	url = https://github.com/jeremyfa/similar.git
+[submodule "git/spine-runtimes"]
+	path = git/spine-runtimes
+	url = https://github.com/EsotericSoftware/spine-runtimes.git
+	branch = 4.3
+	shallow = true

@@ -6,10 +6,15 @@ plugin:
         - generate
 
     runtime:
-        if plugin_spine:
+        # Official spine-haxe runtime (Spine 4.3) by default.
+        # The `spine_legacy` define switches back to spine-hx (Spine 4.0, converted from libGDX).
+        if plugin_spine && !spine_legacy:
+            +libs:
+                - spine-haxe
+        if plugin_spine && spine_legacy:
             +libs:
                 - spine-hx
-        # Haxe inlining is counter-productive when targeting js
-        if web:
+        # Haxe inlining is counter-productive when targeting js (spine-hx only)
+        if web && spine_legacy:
             +defines:
                 - spine_no_inline

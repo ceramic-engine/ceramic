@@ -69,4 +69,6 @@ app:
         #- some_define
         #- some_define: 'some value'
         - ceramic_no_skip
+        # FX.spine is a Spine 3.4 export: use the legacy spine runtime
+        - spine_legacy
 

@@ -52,6 +52,18 @@ jobs:
           Remove-Item 'git/haxe-binary/linux-x86_64' -Recurse
           Remove-Item 'git/haxe-binary/linux-arm64' -Recurse
           Remove-Item 'git/haxe-binary/mac' -Recurse
+          # Keep only the core spine-haxe runtime (no other runtimes, examples or Starling/Flixel backends)
+          $spineDir = 'git/spine-runtimes'
+          $spineKeep = 'git/spine-runtimes-keep'
+          if (Test-Path "$spineDir/spine-haxe/spine-haxe/spine") {
+            New-Item -ItemType Directory -Path "$spineKeep/spine-haxe/spine-haxe" -Force | Out-Null
+            Copy-Item "$spineDir/LICENSE" "$spineKeep/"
+            Copy-Item "$spineDir/spine-haxe/haxelib.json","$spineDir/spine-haxe/LICENSE","$spineDir/spine-haxe/README.md" "$spineKeep/spine-haxe/"
+            Copy-Item "$spineDir/spine-haxe/spine-haxe/spine" "$spineKeep/spine-haxe/spine-haxe/" -Recurse
+            Remove-Item "$spineKeep/spine-haxe/spine-haxe/spine/starling","$spineKeep/spine-haxe/spine-haxe/spine/flixel" -Recurse -Force
+            Remove-Item $spineDir -Recurse -Force
+            Move-Item $spineKeep $spineDir
+          }
           cd tools
           Remove-Item './haxe'
           Remove-Item './haxelib'
@@ -371,6 +383,18 @@ jobs:
           rm -rf git/haxe-binary/linux-arm64
           rm -rf git/haxe-binary/windows
           rm -rf git/loreline/git
+          # Keep only the core spine-haxe runtime (no other runtimes, examples or Starling/Flixel backends)
+          SPINE_DIR="git/spine-runtimes"
+          SPINE_KEEP="git/spine-runtimes-keep"
+          if [ -d "$SPINE_DIR/spine-haxe/spine-haxe/spine" ]; then
+            mkdir -p "$SPINE_KEEP/spine-haxe/spine-haxe"
+            cp "$SPINE_DIR/LICENSE" "$SPINE_KEEP/"
+            cp "$SPINE_DIR/spine-haxe/haxelib.json" "$SPINE_DIR/spine-haxe/LICENSE" "$SPINE_DIR/spine-haxe/README.md" "$SPINE_KEEP/spine-haxe/"
+            cp -R "$SPINE_DIR/spine-haxe/spine-haxe/spine" "$SPINE_KEEP/spine-haxe/spine-haxe/"
+            rm -rf "${SPINE_KEEP:?}/spine-haxe/spine-haxe/spine/starling" "${SPINE_KEEP:?}/spine-haxe/spine-haxe/spine/flixel"
+            rm -rf "${SPINE_DIR:?}"
+            mv "$SPINE_KEEP" "$SPINE_DIR"
+          fi
           cd tools
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
@@ -773,6 +797,18 @@ jobs:
           fi
           rm -rf git/haxe-binary/windows
           rm -rf git/loreline/git
+          # Keep only the core spine-haxe runtime (no other runtimes, examples or Starling/Flixel backends)
+          SPINE_DIR="git/spine-runtimes"
+          SPINE_KEEP="git/spine-runtimes-keep"
+          if [ -d "$SPINE_DIR/spine-haxe/spine-haxe/spine" ]; then
+            mkdir -p "$SPINE_KEEP/spine-haxe/spine-haxe"
+            cp "$SPINE_DIR/LICENSE" "$SPINE_KEEP/"
+            cp "$SPINE_DIR/spine-haxe/haxelib.json" "$SPINE_DIR/spine-haxe/LICENSE" "$SPINE_DIR/spine-haxe/README.md" "$SPINE_KEEP/spine-haxe/"
+            cp -R "$SPINE_DIR/spine-haxe/spine-haxe/spine" "$SPINE_KEEP/spine-haxe/spine-haxe/"
+            rm -rf "${SPINE_KEEP:?}/spine-haxe/spine-haxe/spine/starling" "${SPINE_KEEP:?}/spine-haxe/spine-haxe/spine/flixel"
+            rm -rf "${SPINE_DIR:?}"
+            mv "$SPINE_KEEP" "$SPINE_DIR"
+          fi
           cd tools
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
