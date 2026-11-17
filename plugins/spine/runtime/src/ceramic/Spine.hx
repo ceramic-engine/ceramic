@@ -20,6 +20,7 @@ import spine.SkeletonClipping;
 import spine.SkeletonData;
 import spine.Skin;
 import spine.Slot;
+import spine.SlotData;
 import spine.SlotPose;
 import spine.TextureRegion;
 import spine.animation.AnimationState;
@@ -1480,10 +1481,11 @@ class Spine extends Visual {
         var sequence:Sequence = null;
         var sequenceIndex:Int = 0;
         var textureRegion:TextureRegion = null;
-        var slotIndex:Int = 0;
         var clippedInSoftware:Bool = false;
         var softwareClipping:Bool = (clipping != null ? clipping : defaultClipping) == SOFTWARE;
         #end
+        var slotIndex:Int = 0;
+        var currentSlotData:SlotData = null;
         var slotAttachment:Attachment;
         var slotColor:SpineColor;
         var slotDarkColor:SpineColor;
@@ -1542,16 +1544,19 @@ class Spine extends Visual {
         for (i in 0...numElements)
         {
             slot = drawOrder[i];
+            // Read once per slot: with spine-haxe, `slot.data` is a generic field and each read is a checked cast in C++
+            currentSlotData = slot.data;
+            slotIndex = currentSlotData.index;
             bone = slot.bone;
-            slotName = slot.data.name;
-            slotGlobalIndex = globalSlotIndexFromSkeletonSlotIndex.unsafeGet(slot.data.index);
+            slotName = currentSlotData.name;
+            slotGlobalIndex = globalSlotIndexFromSkeletonSlotIndex.unsafeGet(slotIndex);
 
             if (disabledSlots != null && disabledSlots.getInline(slotGlobalIndex)) {
                 continue;
             }
 
             boundSlot = null;
-            tintBlack = SpineRuntime.slotDataHasDarkColor(slot.data) || useTintBlack;
+            tintBlack = SpineRuntime.slotDataHasDarkColor(currentSlotData) || useTintBlack;
             vertexSize = 2;
             if (tintBlack) vertexSize += 4;
 
@@ -1637,7 +1642,7 @@ class Spine extends Visual {
                         if (destroyed)
                             return;
 
-                        mesh = slotMeshes.getInline(slot.data.index);
+                        mesh = slotMeshes.getInline(slotIndex);
 
                         if (boundSlot == null || boundSlot.parentVisible) {
 
@@ -1645,7 +1650,7 @@ class Spine extends Visual {
 
                             if (boundingBoxAttachment != null) {
                                 if (firstBoundingBoxSlotIndex == -1) {
-                                    firstBoundingBoxSlotIndex = slot.data.index;
+                                    firstBoundingBoxSlotIndex = slotIndex;
                                 }
                                 #if spine_legacy
                                 atlasRegion = null;
@@ -1660,7 +1665,6 @@ class Spine extends Visual {
                                 sequence = meshAttachment != null ? meshAttachment.sequence : regionAttachment.sequence;
                                 sequenceIndex = sequence.resolveIndex(pose);
                                 textureRegion = sequenceIndex >= 0 ? sequence.regions[sequenceIndex] : null;
-                                slotIndex = slot.data.index;
                                 if (slotRegions[slotIndex] != textureRegion) {
                                     // Region changed (first render, sequence frame, attachment change...)
                                     slotRegions[slotIndex] = textureRegion;
@@ -1684,7 +1688,7 @@ class Spine extends Visual {
                                 mesh.touchable = false;
                                 mesh.transform = new Transform();
                                 add(mesh);
-                                slotMeshes.set(slot.data.index, mesh);
+                                slotMeshes.set(slotIndex, mesh);
                             }
 
                             mesh.texture = texture;
@@ -1729,10 +1733,10 @@ class Spine extends Visual {
                                     #end
                                 }
 
-                                var boundingBoxIndices = slotBoundingBoxIndices[slot.data.index];
+                                var boundingBoxIndices = slotBoundingBoxIndices[slotIndex];
                                 if (boundingBoxIndices == null) {
                                     boundingBoxIndices = [];
-                                    slotBoundingBoxIndices[slot.data.index] = boundingBoxIndices;
+                                    slotBoundingBoxIndices[slotIndex] = boundingBoxIndices;
                                 }
                                 mesh.indices = boundingBoxIndices;
                                 Triangulate.triangulate(mesh.vertices, mesh.indices);
@@ -1917,7 +1921,7 @@ class Spine extends Visual {
 
                                     }
 
-                                    isAdditive = slot.data.blendMode == BlendMode.additive;
+                                    isAdditive = currentSlotData.blendMode == BlendMode.additive;
 
                                     alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
                                     if (mesh.colors == null) mesh.colors = [alphaColor];
@@ -1932,7 +1936,7 @@ class Spine extends Visual {
                                     #if spine_legacy
                                     mesh.blending = isAdditive ? Blending.ADD : Blending.AUTO;
                                     #else
-                                    mesh.blending = SpineRuntime.blendingForSlot(slot);
+                                    mesh.blending = SpineRuntime.blendingForSlotData(currentSlotData);
                                     #end
                                     mesh.depth = slotInfo.depth;
                                     mesh.scaleY = -1;
@@ -2043,20 +2047,20 @@ class Spine extends Visual {
                     #if spine_legacy
                     clipper.clipStart(slot, clipAttachment);
 
-                    clipShape = slotClips.getInline(slot.data.index);
+                    clipShape = slotClips.getInline(slotIndex);
 
                     if (clipShape == null) {
                         clipShape = new Shape();
                         clipShape.visible = false;
                         add(clipShape);
-                        slotClips.set(slot.data.index, clipShape);
+                        slotClips.set(slotIndex, clipShape);
                     }
 
                     @:privateAccess var polygon:Array<Float> = cast clipper.clippingPolygon;
-                    var points = slotClipPoints[slot.data.index];
+                    var points = slotClipPoints[slotIndex];
                     if (points == null) {
                         points = [];
-                        slotClipPoints[slot.data.index] = points;
+                        slotClipPoints[slotIndex] = points;
                     }
                     var polygonLength = polygon.length;
                     if (points.length != polygonLength) points.resize(polygonLength);
@@ -2072,20 +2076,20 @@ class Spine extends Visual {
 
                     if (!softwareClipping && clipper.isClipping()) {
 
-                        clipShape = slotClips.getInline(slot.data.index);
+                        clipShape = slotClips.getInline(slotIndex);
 
                         if (clipShape == null) {
                             clipShape = new Shape();
                             clipShape.visible = false;
                             add(clipShape);
-                            slotClips.set(slot.data.index, clipShape);
+                            slotClips.set(slotIndex, clipShape);
                         }
 
                         // The clip shape uses this array directly as its vertices
-                        var points = slotClipPoints[slot.data.index];
+                        var points = slotClipPoints[slotIndex];
                         if (points == null) {
                             points = [];
-                            slotClipPoints[slot.data.index] = points;
+                            slotClipPoints[slotIndex] = points;
                         }
                         var clipVerticesLength = clipAttachment.worldVerticesLength;
                         clipAttachment.computeWorldVertices(skeleton, slot, 0, clipVerticesLength, points, 0, 2);
@@ -2112,7 +2116,7 @@ class Spine extends Visual {
 
             if (regularRender) {
                 if (emptySlotMesh) {
-                    mesh = slotMeshes.getInline(slot.data.index);
+                    mesh = slotMeshes.getInline(slotIndex);
                     if (mesh != null) {
                         mesh.visible = false;
                     }

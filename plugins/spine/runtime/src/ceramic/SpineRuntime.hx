@@ -113,7 +113,12 @@ class SpineRuntime {
      * With the legacy runtime, multiply and screen are rendered with normal blending.
      */
     public static inline function blendingForSlot(slot:Slot):Blending {
-        var blendMode = slot.data.blendMode;
+        return blendingForSlotData(slot.data);
+    }
+
+    /** Ceramic blending to use for the slot data */
+    public static inline function blendingForSlotData(slotData:SlotData):Blending {
+        var blendMode = slotData.blendMode;
         return if (blendMode == spine.BlendMode.additive) Blending.ADD
             #if !spine_legacy
             else if (blendMode == spine.BlendMode.multiply) Blending.MULTIPLY
