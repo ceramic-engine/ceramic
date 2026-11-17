@@ -11,6 +11,7 @@ import spine.utils.SkeletonClipping;
 import spine.BlendMode;
 import spine.Bone;
 import spine.BoneData;
+import spine.BonePose;
 import spine.Event;
 import spine.Physics;
 import spine.Sequence;
@@ -1471,6 +1472,11 @@ class Spine extends Visual {
         var atlasRegion:AtlasRegion;
         #else
         var pose:SlotPose;
+        #if !spine_legacy
+        // Applied pose of the bone of the current slot, read once per slot (reading
+        // a pose through its generic field costs a type check each time)
+        var bonePose:BonePose;
+        #end
         var sequence:Sequence = null;
         var sequenceIndex:Int = 0;
         var textureRegion:TextureRegion = null;
@@ -1564,8 +1570,13 @@ class Spine extends Visual {
             // and is handled like a slot without attachment
             slotAttachment = bone.active ? pose.attachment : null;
             #end
+            #if spine_legacy
             slotColor = SpineRuntime.slotColor(slot);
             slotDarkColor = SpineRuntime.slotDarkColor(slot);
+            #else
+            slotColor = pose.color;
+            slotDarkColor = pose.darkColor;
+            #end
 
             offsetX = 0;
             offsetY = 0;
@@ -1584,6 +1595,7 @@ class Spine extends Visual {
                 boundingBoxAttachment = regionAttachment == null && meshAttachment == null && Std.isOfType(slotAttachment, BoundingBoxAttachment) ? cast slotAttachment : null;
                 if (regionAttachment != null || meshAttachment != null || boundingBoxAttachment != null) {
 
+                    #if spine_legacy
                     tx = skeleton.x + SpineRuntime.boneWorldX(bone);
                     ty = skeleton.y - SpineRuntime.boneWorldY(bone);
 
@@ -1595,6 +1607,20 @@ class Spine extends Visual {
                         tx,
                         ty
                     );
+                    #else
+                    bonePose = bone.appliedPose;
+                    tx = skeleton.x + bonePose.worldX;
+                    ty = skeleton.y - bonePose.worldY;
+
+                    slotInfo.transform.setTo(
+                        bonePose.a,
+                        bonePose.c * flip * -1,
+                        bonePose.b * flip * -1,
+                        bonePose.d,
+                        tx,
+                        ty
+                    );
+                    #end
 
                     if (setup && setupBoneTransforms.getInline(bone.data.index) == null) {
                         boneSetupTransform = TransformPool.get();
