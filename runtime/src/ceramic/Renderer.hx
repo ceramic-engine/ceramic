@@ -417,7 +417,7 @@ class Renderer extends Entity {
                                 #if !ceramic_no_scissor
                                 // If we clip with a regular rectangle quad, we can use scissor(),
                                 // but in every other cases we need to use stencil buffer
-                                if (lastClip.asQuad != null && lastClip.asQuad.isRegular()) {
+                                if (lastClip.asQuad != null && lastClip.asQuad.isRegular() && !lastClip.clipInverted) {
                                     // Use scissor
                                     lastClipIsRegular = true;
                                     scissorWithQuad(draw, lastClip.asQuad);
@@ -457,7 +457,12 @@ class Renderer extends Entity {
                                     stateDirty = true;
 
                                     draw.endDrawingInStencilBuffer();
-                                    draw.drawWithStencilTest();
+                                    if (lastClip.clipInverted) {
+                                        draw.drawWithInverseStencilTest();
+                                    }
+                                    else {
+                                        draw.drawWithStencilTest();
+                                    }
                                 #if !ceramic_no_scissor
                                 }
                                 #end
@@ -2287,6 +2292,7 @@ class Renderer extends Entity {
      * - PREMULTIPLIED_ALPHA: Standard alpha blending
      * - ADD: Additive blending for light effects
      * - ALPHA: Non-premultiplied alpha
+     * - MULTIPLY, SCREEN: Multiply and screen (premultiplied alpha)
      * - RENDER_TO_TEXTURE: Special mode for render targets
      *
      * @param draw Backend draw interface
@@ -2347,6 +2353,21 @@ class Renderer extends Entity {
                 draw.setBlendFuncSeparate(
                     backend.BlendMode.SRC_ALPHA,
                     backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA
+                );
+            case MULTIPLY:
+                // Alpha of the destination is kept: nothing is drawn on transparent areas
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.DST_COLOR,
+                    backend.BlendMode.ONE_MINUS_SRC_ALPHA,
+                    backend.BlendMode.ZERO,
+                    backend.BlendMode.ONE
+                );
+            case SCREEN:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ONE_MINUS_SRC_COLOR,
                     backend.BlendMode.ONE,
                     backend.BlendMode.ONE_MINUS_SRC_ALPHA
                 );

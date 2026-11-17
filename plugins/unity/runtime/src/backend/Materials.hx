@@ -164,6 +164,10 @@ class Materials {
                 untyped __cs__('material.SetInt("_StencilRef", (int){0})', 1);
                 untyped __cs__('material.SetInt("_StencilOp", (int){0})', unityengine.rendering.StencilOp.Keep);
                 untyped __cs__('material.SetInt("_StencilComp", (int){0})', unityengine.rendering.CompareFunction.Equal);
+            case TEST_INVERSE:
+                untyped __cs__('material.SetInt("_StencilRef", (int){0})', 1);
+                untyped __cs__('material.SetInt("_StencilOp", (int){0})', unityengine.rendering.StencilOp.Keep);
+                untyped __cs__('material.SetInt("_StencilComp", (int){0})', unityengine.rendering.CompareFunction.NotEqual);
             case WRITE:
                 untyped __cs__('material.SetInt("_StencilRef", (int){0})', 1);
                 untyped __cs__('material.SetInt("_StencilOp", (int){0})', unityengine.rendering.StencilOp.Replace);

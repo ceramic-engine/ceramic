@@ -40,4 +40,11 @@ enum abstract StencilState(Int) from Int to Int {
     #end
     var CLEAR = 3;
 
+    #if !no_backend_docs
+    /**
+     * Inverted stencil test: only pixels outside of the stencil mask are drawn.
+     */
+    #end
+    var TEST_INVERSE = 4;
+
 }

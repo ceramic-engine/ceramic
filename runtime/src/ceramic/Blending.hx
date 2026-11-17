@@ -129,4 +129,29 @@ enum abstract Blending(Int) from Int to Int {
      */
     var ALPHA = 3;
 
+    /**
+     * Multiply blending (premultiplied alpha).
+     *
+     * Multiplies destination colors by source colors: the result is always darker
+     * (or equal), white leaves the destination unchanged. Used for shadows, tinting,
+     * and by Spine slots using the multiply blend mode.
+     *
+     * The alpha of the destination is kept: drawing on a transparent area of a
+     * render texture draws nothing (instead of a semi opaque black area).
+     *
+     * Formula: result.rgb = source.rgb * dest.rgb + dest.rgb * (1 - source.alpha), result.alpha = dest.alpha
+     */
+    var MULTIPLY = 8;
+
+    /**
+     * Screen blending (premultiplied alpha).
+     *
+     * The inverse of multiply: the result is always lighter (or equal), black leaves
+     * the destination unchanged. Used for glows and highlights, and by Spine slots
+     * using the screen blend mode.
+     *
+     * Formula: result.rgb = source.rgb + dest.rgb * (1 - source.rgb), result.alpha = source.alpha + dest.alpha * (1 - source.alpha)
+     */
+    var SCREEN = 9;
+
 }

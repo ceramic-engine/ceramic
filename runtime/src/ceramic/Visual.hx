@@ -1104,6 +1104,28 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 #end
     }
 
+    /**
+     * When this visual is used as a clip (the `clip` of another visual), invert it:
+     * visuals clipped by it are drawn everywhere **except** inside its shape.
+     *
+     * Set it on the visual used as clip, not on the clipped visuals:
+     * ```haxe
+     * content.clip = mask;
+     * mask.clipInverted = true;
+     * ```
+     * An inverted clip always uses the stencil buffer, even for a regular rectangle.
+     */
+    public var clipInverted(get,set):Bool;
+    inline function get_clipInverted():Bool {
+        return flags & FLAG_CLIP_INVERTED == FLAG_CLIP_INVERTED;
+    }
+    function set_clipInverted(clipInverted:Bool):Bool {
+        if (clipInverted == (flags & FLAG_CLIP_INVERTED == FLAG_CLIP_INVERTED)) return clipInverted;
+        flags = clipInverted ? flags | FLAG_CLIP_INVERTED : flags & ~FLAG_CLIP_INVERTED;
+        ceramic.App.app.requestRender();
+        return clipInverted;
+    }
+
 #if ceramic_wireframe
 
     /**
@@ -1676,7 +1698,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     // `flags` bit allocation: bits 0..15 belong to ceramic (internal), bits 16..31 to
     // user code through `flag(index)`. Within the internal half, bits are shared with
     // subclasses: Quad uses 1 << 4 (FLAG_TRANSPARENT) and 1 << 5 (FLAG_ROTATE_FRAME).
-    // Check every subclass before claiming a bit here; 1 << 8 .. 1 << 15 are free.
+    // Check every subclass before claiming a bit here; 1 << 11 .. 1 << 15 are free.
     private inline static final FLAG_NOT_ACTIVE:Int = 1; // 1 << 0
     private inline static final FLAG_VISIBLE_WHEN_ACTIVE:Int = 2; // 1 << 1
     private inline static final FLAG_TOUCHABLE_WHEN_ACTIVE:Int = 4; // 1 << 2
@@ -1684,6 +1706,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     // 1 << 4 and 1 << 5 are used by Quad (see above)
     private inline static final FLAG_MOUNTED:Int = 256; // 1 << 8
     private inline static final FLAG_IN_VISUALS_LIST:Int = 512; // 1 << 9
+    private inline static final FLAG_CLIP_INVERTED:Int = 1024; // 1 << 10
 
     #if plugin_arcade
     private inline static final FLAG_ARCADE_BODY_ENABLE:Int = 64; // 1 << 6

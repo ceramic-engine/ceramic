@@ -232,6 +232,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _materialSrcAlpha:backend.BlendMode = ONE;
     static var _materialDstAlpha:backend.BlendMode = ONE_MINUS_SRC_ALPHA;
     static var _materialStencilTest:Bool = false;
+    static var _materialStencilTestInverse:Bool = false;
     static var _materialStencilWrite:Int = 0;
 
     static var _viewportDensity:Float = 1.0;
@@ -1692,6 +1693,22 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function drawWithStencilTest():Void {
 
         _materialStencilTest = true;
+        _materialStencilTestInverse = false;
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Enables inverted stencil testing for subsequent draws.
+     *
+     * When enabled, pixels will only be drawn where the stencil
+     * buffer has not been written to.
+     */
+    #end
+    #if !ceramic_debug_draw_backend inline #end public function drawWithInverseStencilTest():Void {
+
+        _materialStencilTest = true;
+        _materialStencilTestInverse = true;
 
     }
 
@@ -1706,6 +1723,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function drawWithoutStencilTest():Void {
 
         _materialStencilTest = false;
+        _materialStencilTestInverse = false;
 
     }
 
@@ -1807,7 +1825,7 @@ class Draw #if !completion implements spec.Draw #end {
             stencil = _materialStencilWrite == 2 ? CLEAR : WRITE;
         }
         else if (_materialStencilTest) {
-            stencil = TEST;
+            stencil = _materialStencilTestInverse ? TEST_INVERSE : TEST;
         }
 
         // final shaderImpl:backend.ShaderImpl = shader;

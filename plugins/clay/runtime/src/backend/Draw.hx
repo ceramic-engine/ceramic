@@ -567,6 +567,18 @@ class Draw #if !completion implements spec.Draw #end {
     }
 
     /**
+     * Enables inverted stencil testing for masked rendering.
+     *
+     * Only pixels where the stencil buffer is not 1 are rendered:
+     * content is drawn everywhere except inside the stenciled area.
+     */
+    #if !ceramic_debug_draw_backend inline #end public function drawWithInverseStencilTest():Void {
+
+        batcher.enableInverseStencilTest();
+
+    }
+
+    /**
      * Disables stencil testing for normal rendering.
      *
      * Resets stencil configuration to default values where all pixels

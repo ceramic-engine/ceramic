@@ -433,6 +433,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    inline public function drawWithInverseStencilTest():Void {
+
+        // Unused in headless
+
+    }
+
     inline public function drawWithoutStencilTest():Void {
 
         // Unused in headless

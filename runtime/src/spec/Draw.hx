@@ -192,6 +192,12 @@ interface Draw {
     function drawWithStencilTest():Void;
 
     /**
+     * Enables inverted stencil testing for subsequent draw operations.
+     * Only pixels outside of what was drawn in the stencil buffer will be rendered.
+     */
+    function drawWithInverseStencilTest():Void;
+
+    /**
      * Disables stencil testing for subsequent draw operations.
      * All pixels will be rendered regardless of stencil buffer contents.
      */
