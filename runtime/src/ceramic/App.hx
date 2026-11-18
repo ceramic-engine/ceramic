@@ -269,11 +269,9 @@ class App extends Entity {
 
     function _onceImmediateWithOwner(owner:tracker.Owner, handleImmediate:Void->Void #if ceramic_debug_immediate , ?pos:haxe.PosInfos #end):Void {
 
-        _onceImmediate(function() {
-            if (owner == null || !owner.destroyed) {
-                handleImmediate();
-            }
-        } #if ceramic_debug_immediate , pos #end);
+        // Same as scheduling `() -> if (owner == null || !owner.destroyed) handleImmediate()`,
+        // without allocating a closure on every call
+        _onceImmediate(ImmediateCall.get(owner, handleImmediate).callDyn #if ceramic_debug_immediate , pos #end);
 
     }
 
@@ -326,11 +324,15 @@ class App extends Entity {
 
     function _oncePostFlushImmediateWithOwner(owner:tracker.Owner, handlePostFlushImmediate:Void->Void, defer:Bool):Void {
 
-        _oncePostFlushImmediate(function() {
-            if (owner == null || !owner.destroyed) {
-                handlePostFlushImmediate();
-            }
-        }, defer);
+        // Same as `_oncePostFlushImmediate(() -> if (owner == null || !owner.destroyed) handlePostFlushImmediate(), defer)`,
+        // without allocating a closure on every call
+        var call = ImmediateCall.get(owner, handlePostFlushImmediate);
+        if (defer) {
+            app.onceImmediate(call.deferDyn);
+        }
+        else {
+            _oncePostFlushImmediate(call.callDyn, false);
+        }
 
     }
 
@@ -360,15 +362,10 @@ class App extends Entity {
         else {
             // Same as scheduling `() -> oncePostFlushImmediate(handlePostFlushImmediate, false)`
             // as an immediate callback, without allocating a closure on every call
-            var deferred = deferredPostFlushPool.length > 0 ? deferredPostFlushPool.pop() : new DeferredPostFlushImmediate();
-            deferred.handle = handlePostFlushImmediate;
-            app.onceImmediate(deferred.runDyn);
+            app.onceImmediate(ImmediateCall.get(null, handlePostFlushImmediate).deferDyn);
         }
 
     }
-
-    /** Reusable deferrals of `oncePostFlushImmediate()` calls */
-    var deferredPostFlushPool:Array<DeferredPostFlushImmediate> = [];
 
     /**
      * Execute and flush every awaiting immediate callback, including the ones that
@@ -2370,26 +2367,63 @@ class App extends Entity {
 }
 
 /**
- * A deferred `oncePostFlushImmediate()` call: run as an immediate callback, it registers its
- * handler as a post flush immediate callback, then goes back to the pool of the app.
+ * A reusable immediate callback, used instead of a closure for the calls of `onceImmediate()`
+ * with an owner and of `oncePostFlushImmediate()` that need one. It goes back to the pool
+ * before calling the handler, so it can be reused by the handler itself.
  */
 @:allow(ceramic.App)
-private class DeferredPostFlushImmediate {
+private class ImmediateCall {
+
+    static var pool:Array<ImmediateCall> = [];
+
+    static function get(owner:tracker.Owner, handle:Void->Void):ImmediateCall {
+        var call = pool.length > 0 ? pool.pop() : new ImmediateCall();
+        call.owner = owner;
+        call.handle = handle;
+        return call;
+    }
+
+    var owner:tracker.Owner = null;
 
     var handle:Void->Void = null;
 
-    /** The `run` method as a function value, made once (taking it would allocate a closure each time) */
-    var runDyn:Void->Void;
+    /** The `call` method as a function value, made once (taking it would allocate a closure each time) */
+    var callDyn:Void->Void;
+
+    /** The `defer` method as a function value, made once */
+    var deferDyn:Void->Void;
 
     function new() {
-        runDyn = run;
+        callDyn = call;
+        deferDyn = defer;
     }
 
-    function run():Void {
+    /** Calls the handler, unless the owner is destroyed */
+    function call():Void {
+        var owner = this.owner;
         var handle = this.handle;
-        this.handle = null;
-        @:privateAccess App.app.deferredPostFlushPool.push(this);
-        App.app.oncePostFlushImmediate(handle, false);
+        release();
+        if (owner == null || !owner.destroyed) {
+            handle();
+        }
+    }
+
+    /** Run as an immediate callback: registers the call as a post flush immediate callback */
+    function defer():Void {
+        if (owner == null) {
+            var handle = this.handle;
+            release();
+            App.app.oncePostFlushImmediate(handle, false);
+        }
+        else {
+            @:privateAccess App.app._oncePostFlushImmediate(callDyn, false);
+        }
+    }
+
+    inline function release():Void {
+        owner = null;
+        handle = null;
+        pool.push(this);
     }
 
 }
