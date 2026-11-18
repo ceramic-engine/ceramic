@@ -358,12 +358,17 @@ class App extends Entity {
             }
         }
         else {
-            app.onceImmediate(function() {
-                oncePostFlushImmediate(handlePostFlushImmediate, false);
-            });
+            // Same as scheduling `() -> oncePostFlushImmediate(handlePostFlushImmediate, false)`
+            // as an immediate callback, without allocating a closure on every call
+            var deferred = deferredPostFlushPool.length > 0 ? deferredPostFlushPool.pop() : new DeferredPostFlushImmediate();
+            deferred.handle = handlePostFlushImmediate;
+            app.onceImmediate(deferred.runDyn);
         }
 
     }
+
+    /** Reusable deferrals of `oncePostFlushImmediate()` calls */
+    var deferredPostFlushPool:Array<DeferredPostFlushImmediate> = [];
 
     /**
      * Execute and flush every awaiting immediate callback, including the ones that
@@ -783,6 +788,24 @@ class App extends Entity {
     var hierarchyDirty:Bool = false;
 
     var visualsContentDirty:Bool = false;
+
+    #if sys
+    /** Event loop of the main thread, and the arrays it uses to run due events, kept between frames */
+    var threadEvents:sys.thread.EventLoop = null;
+    var threadEventsRegular:Array<Dynamic> = [];
+    var threadEventsOneTime:Array<Dynamic> = [];
+
+    /**
+     * Runs the due events of the main thread event loop (`sys.thread.Thread.current().events`),
+     * like `EventLoop.progress()`, which allocates two arrays and a result object on every call.
+     * The arrays are emptied by the event loop after use.
+     */
+    inline function progressThreadEvents():Void {
+        if (threadEvents == null)
+            threadEvents = sys.thread.Thread.current().events;
+        @:privateAccess threadEvents.__progress(Sys.time(), cast threadEventsRegular, cast threadEventsOneTime);
+    }
+    #end
 
     /**
      * List of functions that will be called and purged when update iteration begins.
@@ -1606,7 +1629,7 @@ class App extends Entity {
     function updatePreReady(delta:Float):Void {
 
         #if sys
-        sys.thread.Thread.current().events.progress();
+        progressThreadEvents();
         #end
 
         Assets.flushAllInstancesImmediate();
@@ -1676,7 +1699,7 @@ class App extends Entity {
         Runner.tick();
 
         #if sys
-        sys.thread.Thread.current().events.progress();
+        progressThreadEvents();
         #end
 
         // Screen pointer over/out events detection
@@ -2342,6 +2365,31 @@ class App extends Entity {
 
         return null;
 
+    }
+
+}
+
+/**
+ * A deferred `oncePostFlushImmediate()` call: run as an immediate callback, it registers its
+ * handler as a post flush immediate callback, then goes back to the pool of the app.
+ */
+@:allow(ceramic.App)
+private class DeferredPostFlushImmediate {
+
+    var handle:Void->Void = null;
+
+    /** The `run` method as a function value, made once (taking it would allocate a closure each time) */
+    var runDyn:Void->Void;
+
+    function new() {
+        runDyn = run;
+    }
+
+    function run():Void {
+        var handle = this.handle;
+        this.handle = null;
+        @:privateAccess App.app.deferredPostFlushPool.push(this);
+        App.app.oncePostFlushImmediate(handle, false);
     }
 
 }
