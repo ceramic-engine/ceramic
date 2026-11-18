@@ -26,7 +26,18 @@ class ShaderImpl extends clay.graphics.Shader {
      * These allow passing additional per-vertex data beyond
      * the standard position, color, and texture coordinates.
      */
-    public var customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute> = null;
+    public var customAttributes(default, set):ceramic.ReadOnlyArray<ceramic.ShaderAttribute> = null;
+    function set_customAttributes(customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):ceramic.ReadOnlyArray<ceramic.ShaderAttribute> {
+        this.customAttributes = customAttributes;
+        batcherCustomAttributes = customAttributes != null ? cast customAttributes : null;
+        return customAttributes;
+    }
+
+    /**
+     * The custom attributes, as given to the batcher. On C++, an `Array<Dynamic>` is a wrapper
+     * around the typed array: it is made once here, not on every shader use.
+     */
+    public var batcherCustomAttributes(default, null):Array<Dynamic> = null;
 
     /**
      * Whether this shader supports multi-texture batching.

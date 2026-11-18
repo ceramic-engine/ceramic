@@ -448,7 +448,9 @@ class Draw #if !completion implements spec.Draw #end {
         var floatAttributesSize = shadersBackend.customFloatAttributesSize(_activeShader);
         var batchMultiTexture = shadersBackend.canBatchWithMultipleTextures(_activeShader);
 
-        batcher.setCustomAttributes(_activeShader != null ? _activeShader.customAttributes : null);
+        // Attributes already converted by the shader: converting them here would allocate
+        // a wrapper (VirtualArray on C++) on every shader use
+        batcher.setCustomAttributes(_activeShader != null ? _activeShader.batcherCustomAttributes : null);
         batcher.setVertexLayout(batchMultiTexture, floatAttributesSize);
 
         (shader:ShaderImpl).activate();
