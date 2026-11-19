@@ -550,8 +550,7 @@ class StyleJson {
     }
 
     static function deEdges<T>(r:SerdeReader, name:String, value:() -> T, done:(Null<T>, Null<T>, Null<T>, Null<T>) -> Void):Void {
-        // Typed T, not Null<T>: Haxe's C# output cannot read a captured Null<T> of a type parameter
-        var top:T = null, right:T = null, bottom:T = null, left:T = null;
+        var top:Null<T> = null, right:Null<T> = null, bottom:Null<T> = null, left:Null<T> = null;
         deStruct(r, name, ['top', 'right', 'bottom', 'left'], [], [], (f) -> {
             option(r, () -> {
                 final v = value();
@@ -567,8 +566,7 @@ class StyleJson {
     }
 
     static function deSize<T>(r:SerdeReader, value:() -> T, done:(Null<T>, Null<T>) -> Void):Void {
-        // Typed T, not Null<T>: Haxe's C# output cannot read a captured Null<T> of a type parameter
-        var width:T = null, height:T = null;
+        var width:Null<T> = null, height:Null<T> = null;
         deStruct(r, 'struct SizeRefinement', ['width', 'height'], [], [], (f) -> {
             option(r, () -> {
                 final v = value();

@@ -30,9 +30,9 @@ class App {
      */
     public static function typeIdOf(type:Class<Dynamic>):Int {
         #if cs
-        // On C#, `Type.getClassName` reads the full name by reflection and
-        // allocates strings at each call (2 % of a frame of the story on
-        // Unity, through `globalCell`): keep the id of each class object
+        // On C#, `Type.getClassName` allocates (about 18 bytes a call on
+        // average, measured with the new C# target), and this runs many times
+        // a frame through `globalCell`: keep the id of each class object
         final key:{} = cast type;
         var id = typeIdsByClass.get(key);
         if (id == null) {

@@ -788,15 +788,13 @@ class TableState<D:TableDelegate> extends Model implements Render {
         return count > 1 ? count : 1;
     }
 
-    // Never two parameters named `_` in this class: it is generic, and Haxe's C#
-    // output declares its methods in an interface where duplicate names do not compile.
-    function onRowRightClick(_1:MouseDownEvent, rowIx:Null<Int>, _2:Window, cx:Context<Dynamic>):Void {
+    function onRowRightClick(_:MouseDownEvent, rowIx:Null<Int>, _:Window, cx:Context<Dynamic>):Void {
         rightClickedRowValue = rowIx;
         rightClickedCellValue = null;
         cx.emit(TableEvent.RightClickedRow(rowIx));
     }
 
-    function onCellRightClick(_1:MouseDownEvent, rowIx:Int, colIx:Int, _2:Window, cx:Context<Dynamic>):Void {
+    function onCellRightClick(_:MouseDownEvent, rowIx:Int, colIx:Int, _:Window, cx:Context<Dynamic>):Void {
         if (!cellSelectableValue) {
             return;
         }
@@ -881,7 +879,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         return selection() != TableSelection.None;
     }
 
-    function actionCancel(_1:Cancel, _2:Window, cx:Context<Dynamic>):Void {
+    function actionCancel(_:Cancel, _:Window, cx:Context<Dynamic>):Void {
         if (hasSelection()) {
             clearSelection(cx);
             return;
@@ -889,7 +887,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         cx.propagate();
     }
 
-    function actionSelectPrev(_1:SelectUp, _2:Window, cx:Context<Dynamic>):Void {
+    function actionSelectPrev(_:SelectUp, _:Window, cx:Context<Dynamic>):Void {
         final rowsCount = delegateValue.rowsCount(cx.app);
         if (rowsCount < 1) {
             return;
@@ -930,7 +928,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         setSelectedRow(selectedRow, cx);
     }
 
-    function actionSelectNext(_1:SelectDown, _2:Window, cx:Context<Dynamic>):Void {
+    function actionSelectNext(_:SelectDown, _:Window, cx:Context<Dynamic>):Void {
         final rowsCount = delegateValue.rowsCount(cx.app);
         if (rowsCount < 1) {
             return;
@@ -971,7 +969,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         setSelectedRow(selectedRow, cx);
     }
 
-    function actionSelectFirstColumn(_1:SelectFirst, _2:Window, cx:Context<Dynamic>):Void {
+    function actionSelectFirstColumn(_:SelectFirst, _:Window, cx:Context<Dynamic>):Void {
         // Cell selection mode: move to first cell in current row
         if (selectionMode.isCell()) {
             final cell = selectedCellValue;
@@ -996,7 +994,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         setSelectedCol(0, cx);
     }
 
-    function actionSelectLastColumn(_1:SelectLast, _2:Window, cx:Context<Dynamic>):Void {
+    function actionSelectLastColumn(_:SelectLast, _:Window, cx:Context<Dynamic>):Void {
         final columnsCount = delegateValue.columnsCount(cx.app);
 
         // Cell selection mode: move to last cell in current row
@@ -1024,7 +1022,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         setSelectedCol(sat(columnsCount - 1), cx);
     }
 
-    function actionSelectPageUp(_1:SelectPageUp, _2:Window, cx:Context<Dynamic>):Void {
+    function actionSelectPageUp(_:SelectPageUp, _:Window, cx:Context<Dynamic>):Void {
         final step = pageItemCount();
 
         // Cell selection mode: move up by page within the same column
@@ -1049,7 +1047,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         setSelectedRow(target, cx);
     }
 
-    function actionSelectPageDown(_1:SelectPageDown, _2:Window, cx:Context<Dynamic>):Void {
+    function actionSelectPageDown(_:SelectPageDown, _:Window, cx:Context<Dynamic>):Void {
         final rowsCount = delegateValue.rowsCount(cx.app);
         if (rowsCount == 0) {
             return;
@@ -1081,7 +1079,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         setSelectedRow(target, cx);
     }
 
-    function actionSelectPrevCol(_1:SelectPrevColumn, _2:Window, cx:Context<Dynamic>):Void {
+    function actionSelectPrevCol(_:SelectPrevColumn, _:Window, cx:Context<Dynamic>):Void {
         final columnsCount = delegateValue.columnsCount(cx.app);
 
         // Cell selection mode: move left within the same row
@@ -1115,7 +1113,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         setSelectedCol(selectedCol, cx);
     }
 
-    function actionSelectNextCol(_1:SelectNextColumn, _2:Window, cx:Context<Dynamic>):Void {
+    function actionSelectNextCol(_:SelectNextColumn, _:Window, cx:Context<Dynamic>):Void {
         final columnsCount = delegateValue.columnsCount(cx.app);
 
         // Cell selection mode: move right within the same row
@@ -1356,11 +1354,6 @@ class TableState<D:TableDelegate> extends Model implements Render {
 
             final ctx:Context<TableState<D>> = cast cx;
             loadMoreTask = ctx.spawn((view, acx) -> {
-                #if cs
-                // Names D in this closure's own body: Haxe's C# output makes a closure generic
-                // only then, and its nested closure below needs D (the output does not compile otherwise)
-                final _csTypeParam:Null<D> = null;
-                #end
                 if (!window.isDestroyed()) {
                     view.tryUpdate(acx, (view, cx) -> {
                         view.delegateValue.loadMore(window, cast cx);
@@ -1401,7 +1394,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         }
     }
 
-    function renderCell(_rowIx:Null<Int>, colIx:Int, _1:Window, _2:Context<Dynamic>):Div {
+    function renderCell(_rowIx:Null<Int>, colIx:Int, _:Window, _:Context<Dynamic>):Div {
         if (colIx < 0 || colIx >= colGroups.length) {
             return div();
         }
@@ -2155,7 +2148,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         return el;
     }
 
-    function measure(_1:Window, _2:Context<Dynamic>):Void {
+    function measure(_:Window, _:Context<Dynamic>):Void {
         if (!Measure.measurementEnabled()) {
             return;
         }
@@ -2170,7 +2163,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         measures.resize(0);
     }
 
-    function renderVerticalScrollbar(_1:Window, _2:Context<Dynamic>):Null<IntoElement> {
+    function renderVerticalScrollbar(_:Window, _:Context<Dynamic>):Null<IntoElement> {
         return div()
             .absolute()
             .top(px(headerBandHeight()))
@@ -2182,7 +2175,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
                 .maxFps(60));
     }
 
-    function renderHorizontalScrollbar(_1:Window, _2:Context<Dynamic>):IntoElement {
+    function renderHorizontalScrollbar(_:Window, _:Context<Dynamic>):IntoElement {
         return div()
             .absolute()
             .left(px(fixedHeadColsBounds.size.width))

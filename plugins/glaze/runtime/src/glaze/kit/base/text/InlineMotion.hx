@@ -178,7 +178,7 @@ class InlineMotion {
     }
 
     static function unicodeString(c:Int):String {
-        #if (js || cs || java)
+        #if (js || java)
         if (c >= 0x10000) {
             final v = c - 0x10000;
             return String.fromCharCode(0xD800 + (v >> 10)) + String.fromCharCode(0xDC00 + (v & 0x3FF));

@@ -521,14 +521,11 @@ private class Harness extends Model implements Render {
 }
 
 /** Delegate that vetoes all selections via `onWillChange` by ignoring the changes. */
-private class VetoDelegate<I> extends SearchableListDelegateBase<I> {
+private class VetoDelegate extends SearchableListDelegateBase<String> {
 
-    // Generic over the item type (used with String): on C#, Haxe cannot override the
-    // base `item(ix):Null<I>` with a concrete `Null<String>` (the output does not compile).
+    final inner:SearchableVec<String>;
 
-    final inner:SearchableVec<I>;
-
-    public function new(inner:SearchableVec<I>) {
+    public function new(inner:SearchableVec<String>) {
         this.inner = inner;
     }
 
@@ -536,7 +533,7 @@ private class VetoDelegate<I> extends SearchableListDelegateBase<I> {
         return inner.itemsCount(section);
     }
 
-    public function item(ix:IndexPath):Null<I> {
+    public function item(ix:IndexPath):Null<String> {
         return inner.item(ix);
     }
 
@@ -544,7 +541,7 @@ private class VetoDelegate<I> extends SearchableListDelegateBase<I> {
         return inner.position(value);
     }
 
-    override public function onWillChange(selection:Array<SelectedItem<I>>, changes:Array<SearchableListChange>):Void {
+    override public function onWillChange(selection:Array<SelectedItem<String>>, changes:Array<SearchableListChange>):Void {
         // Leave selection unchanged: acts as a veto.
     }
 

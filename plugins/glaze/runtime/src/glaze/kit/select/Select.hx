@@ -173,11 +173,6 @@ class Select<I> extends Component implements Styled implements Sizable implement
         final key:ElementIdArg = keyedId != null ? keyedId : ElementId.CodeLocation(keyedPos.fileName, keyedPos.lineNumber);
         final initialItems:Array<I> = options != null ? options : [];
         final keyed:KeyedEntity<SelectState<I>, (Null<Any>) -> Void> = window.useKeyedState(key, cx, w -> {
-            #if cs
-            // Names I in this closure's own body: Haxe's C# output makes a closure generic
-            // only then (see `SelectState`)
-            final _csTypeParam:Null<I> = null;
-            #end
             final holder = new KeyedEntity(cx.newEntity((c:Context<SelectState<I>>) -> new SelectState<I>(new SearchableVec<I>(initialItems), null, w, c)));
             holder.memo = initialItems;
             return holder;
