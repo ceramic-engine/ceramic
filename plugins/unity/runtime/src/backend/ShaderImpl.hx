@@ -215,8 +215,8 @@ class ShaderImpl {
             return null;
         var result = new Map<String,cs.NativeArray<Single>>();
         for (name => arr in params) {
-            var copy = new cs.NativeArray<Single>(arr.Length);
-            for (i in 0...arr.Length) {
+            var copy = new cs.NativeArray<Single>(arr.length);
+            for (i in 0...arr.length) {
                 copy[i] = arr[i];
             }
             result.set(name, copy);

@@ -101,6 +101,13 @@ class Main {
      */
     @:keep public static function main():Void {
 
+        // Haxe resources (`--resource file@name`) are text assets of the Unity
+        // project (`Assets/Ceramic/Resources/haxe_resources`, see `UnityCSharp`)
+        cs.ResourceFiles.loader = function(fileName:String):haxe.io.Bytes {
+            final asset:unityengine.TextAsset = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.TextAsset>({0})', 'haxe_resources/' + fileName);
+            return asset != null ? haxe.io.Bytes.ofData(asset.bytes) : null;
+        };
+
         // Force to sync app fps with screen fps
         var isEditor:Bool = untyped __cs__('UnityEngine.Application.isEditor');
         untyped __cs__('UnityEngine.QualitySettings.vSyncCount = 1');

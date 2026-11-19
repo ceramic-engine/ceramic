@@ -3,8 +3,8 @@ package backend;
 import ceramic.Float32;
 import ceramic.Transform;
 import cs.NativeArray;
-import cs.StdTypes.Int16;
-import cs.types.UInt16;
+import cs.Int16;
+import cs.UInt16;
 import unityengine.Color;
 import unityengine.Mesh;
 import unityengine.MeshTopology;
@@ -589,16 +589,15 @@ class Draw #if !completion implements spec.Draw #end {
         }
 
         // Haxe arrays wrap native arrays on the C# target: hand the
-        // underlying storage to the kernels directly (same pattern as
-        // ceramic.Extensions.unsafeGet)
-        var idxRaw:cs.NativeArray<Int> = untyped __cs__('{0}.__a', indices);
+        // underlying storage to the kernels directly
+        var idxRaw:cs.NativeArray<Int> = cs.ArrayData.ints(indices);
         var packedRaw:cs.NativeArray<Int> = null;
         if (colorMode >= 3) {
-            packedRaw = untyped __cs__('{0}.__a', colors);
+            packedRaw = cs.ArrayData.ints(cast colors);
         }
         var uvsRaw:cs.NativeArray<Float> = null;
         if (hasUvs) {
-            uvsRaw = untyped __cs__('{0}.__a', uvs);
+            uvsRaw = cs.ArrayData.floats(uvs);
         }
 
         if (vertices32 != null) {
@@ -617,7 +616,7 @@ class Draw #if !completion implements spec.Draw #end {
             );
         }
         else {
-            var vertsRaw:cs.NativeArray<Float> = untyped __cs__('{0}.__a', vertices);
+            var vertsRaw:cs.NativeArray<Float> = cs.ArrayData.floats(vertices);
             CeramicSimdKernels.MeshPartF64(
                 _meshVertices, _posIndex, _vertexSize, writeSlot,
                 _meshIndices, _numIndices, _numPos,

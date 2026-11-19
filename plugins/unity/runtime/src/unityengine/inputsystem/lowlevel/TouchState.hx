@@ -2,7 +2,7 @@ package unityengine.inputsystem.lowlevel;
 
 import unityengine.Vector2;
 
-@:native('UnityEngine.InputSystem.LowLevel')
+@:native('UnityEngine.InputSystem.LowLevel.TouchState')
 extern class TouchState {
 
     var position(default, null):Vector2;

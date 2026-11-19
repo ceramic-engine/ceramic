@@ -75,8 +75,6 @@ class Extensions<T> {
         #else
         return untyped array.__unsafe_get(index);
         #end
-#elseif cs
-        return cast untyped __cs__('{0}.__a[{1}]', array, index);
 #else
         return array[index];
 #end
@@ -108,8 +106,6 @@ class Extensions<T> {
         #else
         untyped array.__unsafe_set(index, value);
         #end
-#elseif cs
-        return cast untyped __cs__('{0}.__a[{1}] = {2}', array, index, value);
 #else
         array[index] = value;
 #end

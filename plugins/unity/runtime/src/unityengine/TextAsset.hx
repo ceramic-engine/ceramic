@@ -1,6 +1,6 @@
 package unityengine;
 
-import cs.types.UInt8;
+import cs.UInt8;
 
 /**
  * Represents a text file asset in Unity.

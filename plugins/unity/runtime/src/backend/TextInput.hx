@@ -3,7 +3,7 @@ package backend;
 import ceramic.KeyCode;
 import ceramic.ScanCode;
 import ceramic.VirtualKeyboardType;
-import cs.types.Char16;
+import cs.Char16;
 import unityengine.inputsystem.Keyboard;
 
 using StringTools;

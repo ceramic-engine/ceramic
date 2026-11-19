@@ -23,7 +23,7 @@ class Exceptions {
         cpp.Lib.rethrow(e);
         #elseif cs
         // `throw;`: .NET keeps the stack trace of the original exception
-        cs.Lib.rethrow(e);
+        untyped __cs__('throw');
         #end
         return e;
     }

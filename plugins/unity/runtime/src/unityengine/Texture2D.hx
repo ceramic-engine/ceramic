@@ -1,7 +1,7 @@
 package unityengine;
 
 import cs.NativeArray;
-import cs.types.UInt8;
+import cs.UInt8;
 
 /**
  * Unity Texture2D class extern binding for Ceramic.

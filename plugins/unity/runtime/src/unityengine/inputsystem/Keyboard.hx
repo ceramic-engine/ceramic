@@ -3,7 +3,7 @@ package unityengine.inputsystem;
 import unityengine.inputsystem.controls.KeyControl;
 import unityengine.inputsystem.controls.AnyKeyControl;
 
-import cs.types.Char16;
+import cs.Char16;
 
 @:native('UnityEngine.InputSystem.Keyboard')
 extern class Keyboard extends InputDevice {

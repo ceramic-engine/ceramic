@@ -6,7 +6,7 @@ import unityengine.rendering.IndexFormat;
 import unityengine.rendering.SubMeshDescriptor;
 
 import cs.NativeArray;
-import cs.types.UInt16;
+import cs.UInt16;
 
 /**
  * Represents 3D geometry data for rendering.

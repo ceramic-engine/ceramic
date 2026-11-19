@@ -5,7 +5,6 @@ import sys.FileSystem;
 import sys.io.File;
 import tools.Files;
 import tools.Helpers.*;
-import tools.UnityEditor;
 
 using StringTools;
 
@@ -78,10 +77,6 @@ class UnitySetup extends tools.Task {
         }
 
         var libs = [];
-
-        if (target.name == 'unity') {
-            //libs.push('-lib hxcs');
-        }
 
         var appLibs:Array<Dynamic> = project.app.libs;
         for (lib in appLibs) {
@@ -190,32 +185,23 @@ class UnitySetup extends tools.Task {
 
         if (target.name == 'unity') {
             finalHxml.push('-cs bin');
-            finalHxml.push('-D dll');
-            finalHxml.push('-D no-root');
+
+            // .NET API that the C# target types against (.NET Standard 2.1, the same
+            // assembly as the one Unity compiles the scripts with)
+            finalHxml.push('-lib hxcs');
+
+            // Unity runs the code itself: no entry point of our own
+            finalHxml.push('-D cs.library');
+            // Fields and methods reached by name without .NET reflection (required
+            // by IL2CPP and code stripping)
+            finalHxml.push('-D cs.aot');
+            // A method closure is created once per object
+            finalHxml.push('-D cs.closure-cache');
+            // Haxe resources as files, exported as text assets
+            finalHxml.push('-D cs.resource-files');
+
             finalHxml.push('-D ceramic_pending_finish_draw');
 
-            var unityVersion:String = null;
-            if (project.app.unity != null &&
-                project.app.unity.version != null) {
-                unityVersion = '' + project.app.unity.version;
-            }
-
-            if (context.defines.exists('ceramic_unity_default_net_std')) {
-                // No explicit net-std define, stick to defaults
-            }
-            else if (Sys.systemName() == 'Mac') {
-                var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project, true);
-                finalHxml.push('-D net-std=$unityEditorPath/Contents/Mono/lib/mono/unity');
-            }
-            else if (Sys.systemName() == 'Windows') {
-                var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project, true);
-                finalHxml.push('-D net-std=$unityEditorPath/Data/MonoBleedingEdge/lib/mono/unity');
-            }
-            else {
-                fail('Building for Unity is not yet supported on system: ' + Sys.systemName());
-            }
-
-            finalHxml.push('-D net-ver=20');
             if (variant == 'tasks') {
                 finalHxml.push('--macro include("tasks", true)');
             }

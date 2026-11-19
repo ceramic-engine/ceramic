@@ -1,6 +1,6 @@
 package backend;
 
-import cs.types.UInt8;
+import cs.UInt8;
 
 #if !no_backend_docs
 /**

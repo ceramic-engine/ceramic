@@ -1,7 +1,6 @@
 package backend;
 
 // Import needed to make reflection work as expected
-import backend.FieldLookup;
 
 using ceramic.Extensions;
 
@@ -157,16 +156,11 @@ class Backend implements tracker.Events implements spec.Backend {
     #if !no_backend_docs
     /**
      * Initializes the backend with the Ceramic application.
-     * Ensures reflection data is preserved for dynamic field access.
      * 
      * @param app The main Ceramic application instance
      */
     #end
-    public function init(app:ceramic.App) {
-
-        FieldLookup.keep();
-
-    }
+    public function init(app:ceramic.App) {}
 
     #if !no_backend_docs
     /**
