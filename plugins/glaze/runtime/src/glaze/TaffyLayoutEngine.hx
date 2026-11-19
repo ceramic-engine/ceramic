@@ -1428,7 +1428,7 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
     }
 
     @:noCompletion
-    public function measureLeafNode(input:taffy.tree.LayoutInput, nodeId:NodeId, nodeContext:NodeContext, style:taffy.style.Style):taffy.tree.LayoutOutput {
+    public function measureLeafNode(input:taffy.tree.LayoutInput, nodeId:NodeId, nodeContext:Null<NodeContext>, style:taffy.style.Style):taffy.tree.LayoutOutput {
         return measureNode(input, nodeId, nodeContext, style);
     }
 
