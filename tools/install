@@ -121,7 +121,7 @@ async function install() {
     await command(haxelib, ['dev', 'reflaxe', '../git/reflaxe', '--quiet'], { cwd: __dirname });
     await command(haxelib, ['dev', 'reflaxe.CPP', '../git/reflaxe.CPP', '--quiet'], { cwd: __dirname });
     await command(haxelib, ['dev', 'shade', '../git/shade', '--quiet'], { cwd: __dirname });
-    await command(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'hxcs', '../git/hxcs', '--quiet'], { cwd: __dirname });
 
     // Patch hxcpp android clang toolchain until a newer hxcpp lib is published
     var hxcppPath = execSync('haxelib path hxcpp').toString().split("\n")[0].trim();

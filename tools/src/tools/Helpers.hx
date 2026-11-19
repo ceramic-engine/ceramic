@@ -930,7 +930,7 @@ class Helpers {
         if (!FileSystem.exists(haxelibRepoPath))
             FileSystem.createDirectory(haxelibRepoPath);
 
-        ensureHaxelibDevToCeramicHaxelib('hxcs', '4,2,0', cwd);
+        ensureHaxelibDevToCeramicGit('hxcs', cwd);
         ensureHaxelibDevToCeramicGit('hxcpp', cwd);
         ensureHaxelibDevToCeramicGit('hxnodejs-ws', cwd);
         ensureHaxelibDevToCeramicGit('hscript', cwd);

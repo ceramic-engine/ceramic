@@ -163,3 +163,6 @@
 	url = https://github.com/ceramic-engine/spine-runtimes.git
 	branch = ceramic
 	shallow = true
+[submodule "git/hxcs"]
+	path = git/hxcs
+	url = https://github.com/jeremyfa/hxcs.git
