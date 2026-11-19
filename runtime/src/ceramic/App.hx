@@ -838,10 +838,6 @@ class App extends Entity {
      */
     var continuousRenderOwners:Array<Entity> = [];
 
-    #if unity
-    var didWarnRenderOnDemandUnity:Bool = false;
-    #end
-
     #if ceramic_verify_render_on_demand
     /**
      * Debug check of the skipped frames (define `ceramic_verify_render_on_demand`).
@@ -1810,17 +1806,9 @@ class App extends Entity {
      */
     function render():Void {
 
-        #if unity
-        // Unity draws every frame by itself: the setting is ignored
-        if (settings.renderOnDemand) {
-            settings.renderOnDemand = false;
-            if (!didWarnRenderOnDemandUnity) {
-                didWarnRenderOnDemandUnity = true;
-                log.warning('settings.renderOnDemand is ignored by the Unity backend: every frame is drawn');
-            }
-        }
-        #else
-        if (settings.renderOnDemand && !shouldRenderOnDemand()) {
+        // On Unity, the engine renders by itself: the frame is only skipped when Unity
+        // can be told not to render it (see `backend.Draw.skipFrame()`)
+        if (settings.renderOnDemand && !shouldRenderOnDemand() #if unity && backend.draw.skipFrame() #end) {
 
             // Nothing asked for this frame: no draw event, nothing drawn or presented
             renderSkipped = true;
@@ -1830,7 +1818,6 @@ class App extends Entity {
 
             return;
         }
-        #end
 
         // Requests made from now on (by a draw event listener, for instance) are for the next frame
         renderSkipped = false;
@@ -1852,7 +1839,7 @@ class App extends Entity {
         // Tween end frame
         Tween.endFrame();
 
-        #if (ceramic_verify_render_on_demand && !unity)
+        #if ceramic_verify_render_on_demand
         if (settings.renderOnDemand) {
             renderOnDemandVerifier.capture(visuals);
         }

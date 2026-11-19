@@ -127,6 +127,12 @@ class Draw #if !completion implements spec.Draw #end {
     #end
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
+        // This frame is drawn: Unity renders it (see `skipFrame()`)
+        if (frameSkipped) {
+            frameSkipped = false;
+            untyped __cs__('UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1');
+        }
+
         var isEditor:Bool = untyped __cs__('UnityEngine.Application.isEditor');
         if (isEditor) {
             try {
@@ -181,6 +187,35 @@ class Draw #if !completion implements spec.Draw #end {
     public function swap():Void {
 
         // Unused in unity
+
+    }
+
+    /** `true` after `skipFrame()` asked Unity not to render, until a frame is drawn again. */
+    var frameSkipped:Bool = false;
+
+    /**
+     * Render on demand: asks Unity not to render the current frame, which Ceramic
+     * does not draw. The screen keeps its image and the update loop keeps running
+     * (`UnityEngine.Rendering.OnDemandRendering`).
+     *
+     * The render passes of the last drawn frame are gone once executed, so a frame
+     * that Unity renders must be drawn by Ceramic too: when Unity is going to render
+     * this frame anyway, this returns `false` and the frame is drawn as usual.
+     *
+     * @return `true` if the frame is skipped
+     */
+    public function skipFrame():Bool {
+
+        untyped __cs__('UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = int.MaxValue');
+        var skipped:Bool = untyped __cs__('!UnityEngine.Rendering.OnDemandRendering.willCurrentFrameRender');
+        if (skipped) {
+            frameSkipped = true;
+        }
+        else {
+            frameSkipped = false;
+            untyped __cs__('UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1');
+        }
+        return skipped;
 
     }
 

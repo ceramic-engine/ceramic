@@ -345,8 +345,8 @@ class Settings implements Observable {
      * drawn. The check does not see the content of a custom `Renderable`, shader
      * uniforms or texture pixels.
      *
-     * Verified on macOS and web. Ignored by the Unity backend (every frame is drawn
-     * there). Can be changed at any time.
+     * Verified on macOS and web. On Unity, a skipped frame is a frame Unity is asked
+     * not to render (`OnDemandRendering`). Can be changed at any time.
      */
     public var renderOnDemand:Bool = false;
 

@@ -96,6 +96,14 @@ class Main {
     }
 
     /**
+     * Seconds since the app started, from Unity's own clock. `Sys.cpuTime()`
+     * steps by a millisecond or more: frames shorter than that had a delta of zero.
+     */
+    inline static function now():Float {
+        return untyped __cs__('UnityEngine.Time.realtimeSinceStartupAsDouble');
+    }
+
+    /**
      * Main initialization function for the Ceramic Unity backend.
      * Sets up project settings, initializes the app, and starts the update loop.
      */
@@ -134,7 +142,7 @@ class Main {
         }
 
         // Init last update time
-        _lastUpdateTime = Sys.cpuTime();
+        _lastUpdateTime = now();
 
         // The screen takes the window size the project asks for (screen
         // size override `window`) before the app reads it
@@ -156,7 +164,7 @@ class Main {
         if (_hasCriticalError)
             return;
 
-        var time:Float = Sys.cpuTime();
+        var time:Float = now();
         var delta = (time - _lastRegularUpdateTime);
         _lastRegularUpdateTime = time;
 
@@ -252,7 +260,7 @@ class Main {
         try {
         #end
 
-            var time:Float = Sys.cpuTime();
+            var time:Float = now();
             var delta = (time - _lastUpdateTime);
             _lastUpdateTime = time;
 
