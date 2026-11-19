@@ -905,8 +905,7 @@ class PixelArt extends Filter {
         assets.ensureShader(shaderClass, null, asset -> {
             if (destroyed || mode != bindMode || asset == null) return;
             shaderAutorun = autorun(() -> {
-                // Explicit type: the generic lookup is erased to a plain object on C#
-                final loaded:Shader = cast assets.shader(shaderClass);
+                final loaded = assets.shader(shaderClass);
                 Autorun.unobserve();
                 if (loaded == null) return;
                 if (shader != null) {

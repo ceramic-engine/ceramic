@@ -62,7 +62,10 @@ class IntMap<V> {
      * Can be used to iterate on values directly,
      * but can contain null values.
      */
-    #if (cs && unity)
+    #if cs
+    // C# stores the values of any V in an `object[]`, which is not the `V[]` that
+    // typed code would read this field as (a C# array of objects is not an array
+    // of a more specific class)
     public var values(default,null):Vector<Any>;
     #else
     public var values(default,null):Vector<V>;
@@ -275,9 +278,8 @@ class IntMap<V> {
     function resizeValues(targetSize:Int) {
 
         var prevValues = values;
-        #if (cs && unity)
-        var valuesDyn:Dynamic = new Vector<V>(targetSize);
-        values = valuesDyn;
+        #if cs
+        values = new Vector<Any>(targetSize);
         #else
         values = new Vector<V>(targetSize);
         #end

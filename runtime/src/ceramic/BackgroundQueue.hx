@@ -199,7 +199,6 @@ class BackgroundQueue extends Entity {
      * 
      * Platform-specific initialization:
      * - Android: Attaches thread to JNI for Java calls
-     * - C#: Sets thread culture for consistent formatting
      */
     private function internalRunInBackground():Void {
 
@@ -207,10 +206,6 @@ class BackgroundQueue extends Entity {
         // This lets us attach thread to JNI.
         // Required because some JNI calls could be done in background
         untyped __cpp__('SDL_GetAndroidJNIEnv()');
-        #end
-
-        #if cs
-        untyped __cs__('global::System.Threading.Thread.CurrentThread.CurrentCulture = global::System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")');
         #end
 
         while (!stop) {

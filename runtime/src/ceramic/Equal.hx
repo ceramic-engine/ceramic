@@ -148,18 +148,6 @@ class Equal {
         return true;
     }
 
-    #if cs
-    /**
-     * Specialized array comparison for C# string arrays.
-     * Works around C# type system limitations.
-     */
-    public extern inline static overload function arrayEqual(a:Array<String>, b:Array<String>, deepEquality:Bool = false):Bool {
-        var aDyn:Any = a;
-        var bDyn:Any = b;
-        return _arrayEqual(cast aDyn, cast bDyn, deepEquality);
-    }
-    #end
-
     /**
      * Compares two arrays element by element.
      *
