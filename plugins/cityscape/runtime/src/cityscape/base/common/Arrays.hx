@@ -454,34 +454,26 @@ class CallbackIterable<T> {
     }
 
     public function findFirst(predicate:(item:T) -> Bool):Null<T> {
-        // Typed `T`, not `Null<T>`: a captured `Null<T>` is read as `object` on C#
-        // (and `found`, since a value type T starts at 0 there, not null)
-        var result:T = null;
-        var found = false;
+        var result:Null<T> = null;
         iterate(item -> {
             if (predicate(item)) {
                 result = item;
-                found = true;
                 return false;
             }
             return true;
         });
-        return found ? result : null;
+        return result;
     }
 
     public function findLast(predicate:(item:T) -> Bool):Null<T> {
-        // Typed `T`, not `Null<T>`: a captured `Null<T>` is read as `object` on C#
-        // (and `found`, since a value type T starts at 0 there, not null)
-        var result:T = null;
-        var found = false;
+        var result:Null<T> = null;
         iterate(item -> {
             if (predicate(item)) {
                 result = item;
-                found = true;
             }
             return true;
         });
-        return found ? result : null;
+        return result;
     }
 
     /**
@@ -489,8 +481,7 @@ class CallbackIterable<T> {
      * (Monaco's `Comparator` and `CompareResult.isGreaterThan`).
      */
     public function findLastMaxBy(comparator:(a:T, b:T) -> Int):Null<T> {
-        // Typed `T`, not `Null<T>`: a captured `Null<T>` is read as `object` on C#
-        var result:T = null;
+        var result:Null<T> = null;
         var first = true;
         iterate(item -> {
             if (first || comparator(item, result) > 0) {

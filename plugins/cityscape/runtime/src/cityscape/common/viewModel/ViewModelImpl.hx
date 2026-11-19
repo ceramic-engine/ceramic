@@ -381,7 +381,7 @@ class ViewModel implements IViewModel {
                         case _:
                     }
                 }
-                final lineBreaks = lineBreaksComputer.finalizeResult();
+                final lineBreaks = lineBreaksComputer.finalize();
                 var lineBreakIndex = 0;
 
                 for (change in changes) {
@@ -1316,7 +1316,7 @@ class ViewModel implements IViewModel {
             final injected = [for (t in modelInjected) if (t.lineNumber == line) t];
             lineBreaksComputer.addRequest(this.model.getLineContent(line), lines.mergeViewInjectedText(line, injected.length > 0 ? injected : null), null);
         }
-        final lineBreaks = lineBreaksComputer.finalizeResult();
+        final lineBreaks = lineBreaksComputer.finalize();
 
         var lineMappingChanged = false;
         for (i in 0...changedLines.length) {

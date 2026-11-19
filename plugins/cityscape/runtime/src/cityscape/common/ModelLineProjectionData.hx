@@ -398,7 +398,5 @@ interface ILineBreaksComputer {
      * Pass in `previousLineBreakData` if the only difference is in breaking columns!!!
      */
     function addRequest(lineText:String, injectedText:Null<Array<LineInjectedText>>, previousLineBreakData:Null<ModelLineProjectionData>):Void;
-    // Monaco's `finalize()`: named `finalizeResult` because the C# target (Unity)
-    // reserves `finalize` for a `Void->Void` finalizer.
-    function finalizeResult():Array<Null<ModelLineProjectionData>>;
+    function finalize():Array<Null<ModelLineProjectionData>>;
 }

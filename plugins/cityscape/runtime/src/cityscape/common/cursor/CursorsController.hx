@@ -29,9 +29,7 @@ import haxe.extern.EitherType;
  * model of an editor (one per editor; several editors on a shared model
  * each have their own).
  */
-// This module is named after its main type (Monaco's cursor.ts holds it): a
-// module named `Cursor` and the class `Cursor` of `OneCursor` share one C#
-// file name on the Unity target, and one of them was lost.
+// This module is named after its main type (Monaco's cursor.ts holds it)
 class CursorsController extends Disposable {
 
     final _model:ITextModel;

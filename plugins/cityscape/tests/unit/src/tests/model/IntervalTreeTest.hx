@@ -115,7 +115,7 @@ class IntervalTree1GeneratedTest extends TestCase {
             state.oracleNodes[nodeId] = state.oracle.insert(new Interval(op.begin, op.end));
         }
         else if (op.type == 'delete') {
-            final id:Int = op.id; // an Int index: `Null<Int>` cannot index an array on C#
+            final id:Int = op.id;
             state.tree.delete(state.treeNodes[id]);
             state.oracle.delete(state.oracleNodes[id]);
 

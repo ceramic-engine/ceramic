@@ -620,7 +620,7 @@ class GrammarTokens extends AbstractTokens {
 
         final builder = new ContiguousMultilineTokensBuilder();
         final heuristicTokens = _tokenizer.tokenizeHeuristically(builder, startLineNumber, endLineNumber);
-        final changedTokens = setTokens(builder.finalizeResult());
+        final changedTokens = setTokens(builder.finalize());
 
         if (heuristicTokens) {
             // We overrode tokens with heuristically computed ones.
@@ -644,7 +644,7 @@ class GrammarTokens extends AbstractTokens {
         if (_tokenizer != null) {
             _tokenizer.updateTokensUntilLine(builder, lineNumber);
         }
-        setTokens(builder.finalizeResult());
+        setTokens(builder.finalize());
         if (_defaultBackgroundTokenizer != null) {
             _defaultBackgroundTokenizer.checkFinished();
         }

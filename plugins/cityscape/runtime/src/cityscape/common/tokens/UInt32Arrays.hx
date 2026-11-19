@@ -15,15 +15,7 @@ import haxe.io.UInt32Array;
 class UInt32Arrays {
 
     public static function fromInts(a:Array<Int>):UInt32Array {
-        #if cs
-        final result = new UInt32Array(a.length);
-        for (i in 0...a.length) {
-            result[i] = a[i];
-        }
-        return result;
-        #else
         return UInt32Array.fromArray(a);
-        #end
     }
 
 }

@@ -753,13 +753,9 @@ class ComputeOptionsMemory {
 }
 
 /**
- * An option of the registry, whatever its value type. On C# (Unity) a
- * generic interface instantiation cannot be stored as `IEditorOption<Any>`
- * (`IEditorOption<string>` is not an `IEditorOption<object>` for the CLR),
- * so the registry holds `Dynamic` entries there and the readers go through
- * reflection (the registry is only walked when options are validated).
+ * An option of the registry, whatever its value type.
  */
-typedef AnyEditorOption = #if cs Dynamic #else IEditorOption<Any> #end;
+typedef AnyEditorOption = IEditorOption<Any>;
 
 interface IEditorOption<V> {
     final id:Int;
@@ -3562,9 +3558,7 @@ class EditorOptions {
                 didChange = true;
             }
         }
-        // The type argument is explicit: inferred from `value:Null<T>`, C# got `ApplyUpdateResult<object>`
-        final merged:T = value;
-        return new ApplyUpdateResult<T>(merged, didChange);
+        return new ApplyUpdateResult(value, didChange);
     }
 
     /**
