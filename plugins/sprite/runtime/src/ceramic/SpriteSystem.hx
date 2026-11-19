@@ -22,17 +22,10 @@ class SpriteSystem extends System {
 
     /**
      * Internal array of all active sprites.
-     * Uses Dynamic type on C# target for compatibility.
      */
-    #if cs
-    var sprites:Array<Dynamic> = [];
-
-    var _updatingSprites:Array<Dynamic> = [];
-    #else
     var sprites:Array<Sprite<Any>> = [];
 
     var _updatingSprites:Array<Sprite<Any>> = [];
-    #end
 
     override function new() {
 
@@ -55,33 +48,20 @@ class SpriteSystem extends System {
         // if a new item is created or destroyed during iteration
         var len = sprites.length;
         for (i in 0...len) {
-            #if cs
-            _updatingSprites[i] = sprites[i];
-            #else
             _updatingSprites[i] = sprites.unsafeGet(i);
-            #end
         }
 
         // Call
         for (i in 0...len) {
-            #if cs
-            var sprite:Sprite<Dynamic> = _updatingSprites.unsafeGet(i);
-            @:privateAccess sprite._updateIfNotPausedAndAutoUpdating(delta);
-            #else
             var sprite = _updatingSprites.unsafeGet(i);
             if (!sprite.paused && sprite.autoUpdate) {
                 sprite.update(delta);
             }
-            #end
         }
 
         // Cleanup array
         for (i in 0...len) {
-            #if cs
-            _updatingSprites[i] = null;
-            #else
             _updatingSprites.unsafeSet(i, null);
-            #end
         }
 
     }

@@ -278,17 +278,6 @@ class Sprite<T=String> extends Visual {
 
     }
 
-    #if cs
-    /**
-     * Internal method for C# target compatibility.
-     */
-    function _updateIfNotPausedAndAutoUpdating(delta:Float) {
-        if (!paused && autoUpdate) {
-            update(delta);
-        }
-    }
-    #end
-
     /**
      * Update the sprite animation.
      * This is called automatically each frame if autoUpdate is true.
