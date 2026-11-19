@@ -4445,41 +4445,22 @@ class Im {
 
     macro public static function bool(?value:ExprOf<Bool>):Expr {
 
-        if (Context.defined('cs')) {
-            // C# target and its quirks...
-            return switch value.expr {
-                case EConst(CIdent('null')):
-                    var pos = Context.getPosInfos(Context.currentPos());
-                    var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
-                    macro {
-                        var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
-                        function(?_val:Dynamic):Bool {
-                            return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
-                        };
-                    }
-                case _:
-                    macro function(?_val:Dynamic):Bool {
-                        return _val != null ? $value = _val : $value;
+        return switch value.expr {
+            case EConst(CIdent('null')):
+                var pos = Context.getPosInfos(Context.currentPos());
+                var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
+                macro {
+                    var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
+                    function(?_val:Bool):Bool {
+                        return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
                     };
-            }
+                }
+            case _:
+                macro function(?_val:Bool):Bool {
+                    return _val != null ? $value = _val : $value;
+                };
         }
-        else {
-            return switch value.expr {
-                case EConst(CIdent('null')):
-                    var pos = Context.getPosInfos(Context.currentPos());
-                    var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
-                    macro {
-                        var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
-                        function(?_val:Bool):Bool {
-                            return _val != null ? elements.Im.setBoolAtHandle(handle, _val) : elements.Im.boolAtHandle(handle);
-                        };
-                    }
-                case _:
-                    macro function(?_val:Bool):Bool {
-                        return _val != null ? $value = _val : $value;
-                    };
-            }
-        }
+    
 
     }
 
@@ -4540,41 +4521,22 @@ class Im {
 
     macro public static function string(?value:ExprOf<String>):Expr {
 
-        if (Context.defined('cs')) {
-            // C# target and its quirks...
-            return switch value.expr {
-                case EConst(CIdent('null')):
-                    var pos = Context.getPosInfos(Context.currentPos());
-                    var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
-                    macro {
-                        var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
-                        function(?_val:String, ?erase:Dynamic):String {
-                            return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
-                        };
-                    }
-                case _:
-                    macro function(?_val:String, ?erase:Dynamic):String {
-                        return _val != null || erase ? $value = _val : $value;
+        return switch value.expr {
+            case EConst(CIdent('null')):
+                var pos = Context.getPosInfos(Context.currentPos());
+                var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
+                macro {
+                    var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
+                    function(?_val:String, ?erase:Bool):String {
+                        return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
                     };
-            }
+                }
+            case _:
+                macro function(?_val:String, ?erase:Bool):String {
+                    return _val != null || erase ? $value = _val : $value;
+                };
         }
-        else {
-            return switch value.expr {
-                case EConst(CIdent('null')):
-                    var pos = Context.getPosInfos(Context.currentPos());
-                    var posInfos = _posInfosFromFileAndChar(pos.file, pos.min);
-                    macro {
-                        var handle = elements.Im.handle(#if !completion $v{posInfos} #end);
-                        function(?_val:String, ?erase:Bool):String {
-                            return _val != null || erase ? elements.Im.setStringAtHandle(handle, _val) : elements.Im.stringAtHandle(handle);
-                        };
-                    }
-                case _:
-                    macro function(?_val:String, ?erase:Bool):String {
-                        return _val != null || erase ? $value = _val : $value;
-                    };
-            }
-        }
+    
 
     }
 
@@ -4620,45 +4582,24 @@ class Im {
 
     macro public static function enumValue<T>(value:Expr):ExprOf<EnumValuePointer> {
 
-        if (Context.defined('cs')) {
-            // C# target and its quirks...
-            switch value.expr {
-                case _:
-                    var enumType = Context.typeExpr(value).t.follow();
-                    switch enumType {
-                        case TEnum(t, params):
-                            return macro function(?_val:Dynamic, ?erase:Dynamic):Dynamic {
-                                return _val != null || erase ? $value = _val : $value;
-                            };
-                        case TAbstract(t, params):
-                            return macro function(?_val:Dynamic, ?erase:Dynamic):Dynamic {
-                                return _val != null || erase ? $value = _val : $value;
-                            };
-                        case _:
-                            return macro null;
-                    }
-                    return macro null;
-            }
+        switch value.expr {
+            case _:
+                var enumType = Context.typeExpr(value).t.follow();
+                switch enumType {
+                    case TEnum(t, params):
+                        return macro function(?_val:Dynamic, ?erase:Bool):Dynamic {
+                            return _val != null || erase ? $value = _val : $value;
+                        };
+                    case TAbstract(t, params):
+                        return macro function(?_val:Dynamic, ?erase:Bool):Dynamic {
+                            return _val != null || erase ? $value = _val : $value;
+                        };
+                    case _:
+                        return macro null;
+                }
+                return macro null;
         }
-        else {
-            switch value.expr {
-                case _:
-                    var enumType = Context.typeExpr(value).t.follow();
-                    switch enumType {
-                        case TEnum(t, params):
-                            return macro function(?_val:Dynamic, ?erase:Bool):Dynamic {
-                                return _val != null || erase ? $value = _val : $value;
-                            };
-                        case TAbstract(t, params):
-                            return macro function(?_val:Dynamic, ?erase:Bool):Dynamic {
-                                return _val != null || erase ? $value = _val : $value;
-                            };
-                        case _:
-                            return macro null;
-                    }
-                    return macro null;
-            }
-        }
+    
 
     }
 

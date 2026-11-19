@@ -111,9 +111,6 @@ class ScrollingLayout<T:View> extends ScrollView implements Observable {
         scroller.pos(0, 0);
         scroller.size(width, height);
 
-        // Needed on C# target
-        var layoutView:View = cast this.layoutView;
-
         if (direction == VERTICAL) {
             layoutView.computeSize(width, height, ViewLayoutMask.INCREASE_HEIGHT, true);
             layoutView.size(layoutView.computedSize.computedWidth, Math.max(layoutView.computedSize.computedHeight, height));
