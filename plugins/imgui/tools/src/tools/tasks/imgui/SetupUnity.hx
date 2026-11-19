@@ -1,5 +1,6 @@
 package tools.tasks.imgui;
 
+import haxe.crypto.Md5;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
@@ -93,12 +94,94 @@ class SetupUnity extends tools.Task {
                 Path.join([pluginsPath, 'Android/$abi/libdcimgui.so'])
             );
         }
+        // Each library is for its own platform. Without these settings Unity takes
+        // every library for every platform, and a player build stops on the four
+        // libdcimgui.so that would go to the same place.
+        writePluginMeta(Path.join([pluginsPath, 'dcimgui.dylib']), [
+            {platform: 'Editor: Editor', settings: ['CPU: AnyCPU', 'DefaultValueInitialized: true', 'OS: OSX']},
+            {platform: 'Standalone: OSXUniversal', settings: ['CPU: AnyCPU']}
+        ]);
+        writePluginMeta(Path.join([pluginsPath, 'dcimgui.dll']), [
+            {platform: 'Editor: Editor', settings: ['CPU: x86_64', 'DefaultValueInitialized: true', 'OS: Windows']},
+            {platform: 'Standalone: Win64', settings: ['CPU: x86_64']}
+        ]);
+        writePluginMeta(Path.join([pluginsPath, 'libdcimgui.so']), [
+            {platform: 'Editor: Editor', settings: ['CPU: x86_64', 'DefaultValueInitialized: true', 'OS: Linux']},
+            {platform: 'Standalone: Linux64', settings: ['CPU: x86_64']}
+        ]);
+        final androidCpus = ['arm64-v8a' => 'ARM64', 'armeabi-v7a' => 'ARMv7', 'x86_64' => 'X86_64'];
+        for (abi in ['arm64-v8a', 'armeabi-v7a', 'x86_64']) {
+            writePluginMeta(Path.join([pluginsPath, 'Android/$abi/libdcimgui.so']), [
+                {platform: 'Android: Android', settings: ['CPU: ' + androidCpus.get(abi)]}
+            ]);
+        }
+
         var xcframework = Path.join([imguiHxPath, 'lib/prebuilt/ios/dcimgui.xcframework']);
         if (FileSystem.exists(xcframework)) {
             var dest = Path.join([pluginsPath, 'iOS/dcimgui.xcframework']);
             Files.deleteRecursive(dest);
             Files.copyDirectory(xcframework, dest);
             success('Copy dcimgui.xcframework');
+        }
+
+    }
+
+    /**
+     * Writes the import settings of a native library: enabled for the given
+     * platforms only. The guid of an existing .meta file is kept.
+     */
+    static function writePluginMeta(file:String, platforms:Array<{platform:String, settings:Array<String>}>):Void {
+
+        if (!FileSystem.exists(file)) return;
+        var metaPath = file + '.meta';
+        var guid:String = null;
+        if (FileSystem.exists(metaPath)) {
+            var guidLine = ~/^guid: ([0-9a-f]{32})/m;
+            if (guidLine.match(File.getContent(metaPath))) {
+                guid = guidLine.matched(1);
+            }
+        }
+        if (guid == null) {
+            guid = Md5.encode('ceramic-imgui:' + Path.withoutDirectory(Path.directory(file)) + '/' + Path.withoutDirectory(file));
+        }
+
+        var meta = new StringBuf();
+        meta.add('fileFormatVersion: 2\n');
+        meta.add('guid: ' + guid + '\n');
+        meta.add('PluginImporter:\n');
+        meta.add('  externalObjects: {}\n');
+        meta.add('  serializedVersion: 2\n');
+        meta.add('  iconMap: {}\n');
+        meta.add('  executionOrder: {}\n');
+        meta.add('  defineConstraints: []\n');
+        meta.add('  isPreloaded: 0\n');
+        meta.add('  isOverridable: 0\n');
+        meta.add('  isExplicitlyReferenced: 0\n');
+        meta.add('  validateReferences: 1\n');
+        meta.add('  platformData:\n');
+        meta.add('  - first:\n');
+        meta.add('      Any: \n');
+        meta.add('    second:\n');
+        meta.add('      enabled: 0\n');
+        meta.add('      settings: {}\n');
+        for (entry in platforms) {
+            meta.add('  - first:\n');
+            meta.add('      ' + entry.platform + '\n');
+            meta.add('    second:\n');
+            meta.add('      enabled: 1\n');
+            meta.add('      settings:\n');
+            for (setting in entry.settings) {
+                meta.add('        ' + setting + '\n');
+            }
+        }
+        meta.add('  userData: \n');
+        meta.add('  assetBundleName: \n');
+        meta.add('  assetBundleVariant: \n');
+
+        var content = meta.toString();
+        if (!FileSystem.exists(metaPath) || File.getContent(metaPath) != content) {
+            success('Write ' + Path.withoutDirectory(metaPath));
+            File.saveContent(metaPath, content);
         }
 
     }
