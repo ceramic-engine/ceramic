@@ -139,7 +139,9 @@ public static class CeramicBatchMode
     /// macOS, the executable elsewhere), -ceramicScriptingBackend mono|il2cpp
     /// (default mono), -ceramicDevelopment 1 (a development player),
     /// -ceramicIncrementalGc 0|1 (sets the incremental garbage collector of the
-    /// player settings; the project's setting is kept when omitted).
+    /// player settings; the project's setting is kept when omitted),
+    /// -ceramicBuildTarget ios (an Xcode project instead of a desktop player,
+    /// always IL2CPP; -ceramicIosSimulator 1 for the simulator SDK).
     /// The player runs without any window with -batchmode, for example
     /// &lt;path&gt;.app/Contents/MacOS/&lt;name&gt; -batchmode -logFile &lt;log&gt;.
     /// </summary>
@@ -156,13 +158,22 @@ public static class CeramicBatchMode
         var development = ReadArg("-ceramicDevelopment") == "1";
 
         BuildTarget target;
-        switch (Application.platform)
+        var namedTarget = UnityEditor.Build.NamedBuildTarget.Standalone;
+        if (ReadArg("-ceramicBuildTarget") == "ios")
+        {
+            // An Xcode project at -ceramicBuildPath. iOS players are always IL2CPP.
+            target = BuildTarget.iOS;
+            namedTarget = UnityEditor.Build.NamedBuildTarget.iOS;
+            il2cpp = true;
+            if (ReadArg("-ceramicIosSimulator") == "1")
+                PlayerSettings.iOS.sdkVersion = iOSSdkVersion.SimulatorSDK;
+        }
+        else switch (Application.platform)
         {
             case RuntimePlatform.OSXEditor: target = BuildTarget.StandaloneOSX; break;
             case RuntimePlatform.WindowsEditor: target = BuildTarget.StandaloneWindows64; break;
             default: target = BuildTarget.StandaloneLinux64; break;
         }
-        var namedTarget = UnityEditor.Build.NamedBuildTarget.Standalone;
         PlayerSettings.SetScriptingBackend(namedTarget, il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
         if (il2cpp)
             PlayerSettings.SetIl2CppCompilerConfiguration(namedTarget, development ? Il2CppCompilerConfiguration.Debug : Il2CppCompilerConfiguration.Release);
