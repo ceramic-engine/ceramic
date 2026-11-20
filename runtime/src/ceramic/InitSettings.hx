@@ -598,6 +598,18 @@ class InitSettings {
     }
 
     /**
+     * Whether a borderless window keeps the shadow of the system and, from
+     * Windows 11, its rounded corners and thin border (Windows native builds).
+     */
+    public var windowBorderlessShadow(get,set):Bool;
+    inline function get_windowBorderlessShadow():Bool {
+        return settings.windowBorderlessShadow;
+    }
+    inline function set_windowBorderlessShadow(windowBorderlessShadow:Bool):Bool {
+        return @:privateAccess settings.windowBorderlessShadow = windowBorderlessShadow;
+    }
+
+    /**
      * Whether the window is created hidden and shown after the first frame
      * presented once the app is ready.
      */

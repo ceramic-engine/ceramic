@@ -369,6 +369,7 @@ class Main {
         config.window.minHeight = app.settings.windowMinHeight;
         if (app.settings.windowBorderless)
             config.window.borderless = true;
+        config.window.borderlessShadow = app.settings.windowBorderlessShadow;
         config.window.startsHidden = app.settings.windowStartsHidden;
         // Read once, when clay starts its audio
         config.audio = app.settings.audio;

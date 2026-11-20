@@ -188,6 +188,16 @@ class Settings implements Observable {
     @observe public var windowBorderless:Bool = false;
 
     /**
+     * Whether a borderless window (`windowBorderless`) keeps the shadow of
+     * the system around it and, from Windows 11, its rounded corners and
+     * thin border, like the window of an app that draws its own title bar
+     * (default: false, a bare rectangle). Read when the app starts.
+     * Windows native builds only: ignored elsewhere (a borderless window of
+     * macOS keeps its shadow anyway).
+     */
+    public var windowBorderlessShadow(default,null):Bool = false;
+
+    /**
      * How the title bar of the window is shown (default: `DEFAULT`, the
      * title bar of the system). `OVERLAY` extends the content under a
      * transparent title bar with a hidden title, keeping the window buttons.
