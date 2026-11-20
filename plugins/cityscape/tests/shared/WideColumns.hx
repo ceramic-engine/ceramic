@@ -107,6 +107,13 @@ class WideColumns {
      * - Web: half width katakana and full width Latin letters and digits are
      *   not eligible for the Canvas fallback of gpui-pre-web (its CJK ranges)
      *   and show the primary font's notdef (8.4 px) instead of 7 px and 14 px.
+     * - Windows, native: the truth was recorded on macOS, and the characters
+     *   the primary font does not have take the fonts of the system, whose
+     *   advances are others: emoji take Segoe UI Emoji (19.22 px for a face,
+     *   17.54 px for a family, 12.2 px and 10.64 px for flags, instead of
+     *   14 px with Apple Color Emoji), Hangul syllables 14 px (12.11 px with
+     *   Apple SD Gothic Neo), `☺`, `❤` and `✌` the widths of another text
+     *   font. Monaco itself was not recorded on Windows.
      */
     public static function knownDifferences(os:String, web:Bool):Array<String> {
         final known = ['☺\u{FE0F}', '❤\u{FE0F}', '✌\u{FE0F}'];
@@ -116,6 +123,18 @@ class WideColumns {
             }
         } else if (os == 'mac') {
             for (t in ['한', '국', '어', '❤']) {
+                known.push(t);
+            }
+        } else if (os == 'windows') {
+            // Hangul, text symbols, then every code point of the emoji of the
+            // text (faces, hands and their skin tone, the members of a family
+            // and their joiner, regional indicators, keycaps)
+            for (t in [
+                '한', '국', '어', '☺', '❤', '✌',
+                '😀', '😃', '👍', '\u{1F3FD}', '👨', '👩', '👧', '👦', '\u{200D}',
+                '\u{1F1EB}', '\u{1F1F7}', '\u{1F1EF}', '\u{1F1F5}',
+                '1\u{FE0F}\u{20E3}', '#\u{FE0F}\u{20E3}'
+            ]) {
                 known.push(t);
             }
         }

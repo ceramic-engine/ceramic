@@ -33,3 +33,8 @@ app:
         # from the cache renders for real and is compared with its cached
         # rendering; a difference fails the test (testing.TestRunner)
         - glaze_verify_cache
+        # The references come from Monaco on macOS (default font, key
+        # bindings, paths of file URIs): the suite runs as on a Mac whatever
+        # the host; tests of another system set OperatingSystem.current
+        # themselves
+        - glaze_operating_system: mac

@@ -144,7 +144,10 @@ class TextMateTruthTest extends TestCase {
         final grammars:Array<Dynamic> = data().grammars;
         assertEquals(7, grammars.length);
         for (grammar in grammars) {
-            assertEquals(grammar.sha256, haxe.crypto.Sha256.make(haxe.io.Bytes.ofString(grammarText(grammar.file))).toHex(), grammar.file + ' changed: run reference/cityscape/textmate-tokens-truth.mjs again');
+            // With `\n` line endings, as the truth read them: a checkout on
+            // Windows may give `\r\n` (git's core.autocrlf)
+            final text = StringTools.replace(grammarText(grammar.file), '\r\n', '\n');
+            assertEquals(grammar.sha256, haxe.crypto.Sha256.make(haxe.io.Bytes.ofString(text)).toHex(), grammar.file + ' changed: run reference/cityscape/textmate-tokens-truth.mjs again');
         }
     }
 
