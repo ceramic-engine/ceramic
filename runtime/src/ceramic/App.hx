@@ -1587,9 +1587,12 @@ class App extends Entity {
 
         // A listener registered with `onceBeginDraw()` or `onceFinishDraw()` waits for
         // a frame to be drawn (a screenshot, a pixel read, a stamp, a filter render)
+        // (the events macro does not create these fields for completion)
+        #if (!display && !completion)
         if ((this.__cbOnceBeginDraw != null && this.__cbOnceBeginDraw.length > 0)
             || (this.__cbOnceFinishDraw != null && this.__cbOnceFinishDraw.length > 0))
             return true;
+        #end
 
         // A render texture marked to be rendered (`renderDirty`, `stamp()`, `Filter.render()`)
         for (i in 0...renderTextures.length) {
