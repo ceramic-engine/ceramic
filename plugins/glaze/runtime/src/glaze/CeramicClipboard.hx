@@ -25,10 +25,18 @@ class CeramicClipboard implements PlatformClipboard {
         final app = ceramic.App.app;
         if (app == null || app.backend == null)
             return null;
-        final text = app.backend.clipboard.getText();
+        var text = app.backend.clipboard.getText();
         if (text == null || text.length == 0)
             return null;
-        if (lastWritten != null && text == lastWrittenText) {
+        // Windows gives the lines of the clipboard with `\r\n`, even for a
+        // text written with `\n` (and the apps of Windows copy with `\r\n`):
+        // the text read has `\n` only, so a text copied here is read back as
+        // it was written (with its metadata, below), and a paste never
+        // inserts `\r` characters
+        if (text.indexOf('\r\n') != -1) {
+            text = StringTools.replace(text, '\r\n', '\n');
+        }
+        if (lastWritten != null && lastWrittenText != null && text == StringTools.replace(lastWrittenText, '\r\n', '\n')) {
             return lastWritten;
         }
         return ClipboardItem.newString(text);
