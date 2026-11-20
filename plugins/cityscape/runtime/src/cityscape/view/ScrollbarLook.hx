@@ -13,6 +13,12 @@ import glaze.kit.base.Scrollbar.ScrollbarTrackStyle;
 
 import glaze.Prelude.*;
 
+#if (cpp && windows)
+@:headerCode('
+// Windows headers define these names as macros
+#undef TRANSPARENT
+')
+#end
 /**
  * The styles (`Scrollbar.styles`) of the kit scrollbars of an editor, one
  * shape across Glaze (owner decision 2026-11-11, DEVIATIONS.md): the kit's
