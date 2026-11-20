@@ -174,14 +174,22 @@ class TextMateBackend {
             final last = end < 0;
             if (last)
                 end = length;
-            final line = text.substring(start, end);
+            var line = text.substring(start, end);
             if (last && line.length == 0)
                 break;
+            // A line ending with `\r\n` (files of Windows): the `\r` belongs to
+            // the line ending, not to the text the grammar reads (`$` and the
+            // lookaheads of an end of line would not match before it)
+            var newlineBytes = last ? 0 : 1;
+            if (!last && line.length > 0 && StringTools.fastCodeAt(line, line.length - 1) == '\r'.code) {
+                line = line.substring(0, line.length - 1);
+                newlineBytes = 2;
+            }
             final lineBytes = utf8Length(line);
-            final result = tokenizeLine(syntax.grammar, line, lineBytes, last ? 0 : 1, state);
+            final result = tokenizeLine(syntax.grammar, line, lineBytes, newlineBytes, state);
             appendHighlights(highlights, result.highlights, offset);
             state = result.endState;
-            offset += lineBytes + (last ? 0 : 1);
+            offset += lineBytes + newlineBytes;
             if (last)
                 break;
             start = end + 1;
