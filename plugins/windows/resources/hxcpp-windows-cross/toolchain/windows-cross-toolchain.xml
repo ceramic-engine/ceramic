@@ -81,6 +81,7 @@
   <flag value="-isystem${XWIN_DIR}/sdk/include/ucrt"/>
   <flag value="-isystem${XWIN_DIR}/sdk/include/um"/>
   <flag value="-isystem${XWIN_DIR}/sdk/include/shared"/>
+  <flag value="-isystem${XWIN_DIR}/sdk/include/winrt"/>
 
   <!-- HXCPP include path -->
   <flag value="-I${HXCPP}/include"/>

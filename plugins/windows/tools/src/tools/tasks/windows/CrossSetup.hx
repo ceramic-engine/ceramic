@@ -89,6 +89,7 @@ class CrossSetup extends tools.Task {
             Path.join([xwinDir, 'sdk', 'include', 'ucrt']),
             Path.join([xwinDir, 'sdk', 'include', 'um']),
             Path.join([xwinDir, 'sdk', 'include', 'shared']),
+            Path.join([xwinDir, 'sdk', 'include', 'winrt']),
             Path.join([xwinDir, 'sdk', 'lib', 'ucrt', 'x86_64']),
             Path.join([xwinDir, 'sdk', 'lib', 'um', 'x86_64']),
         ];
