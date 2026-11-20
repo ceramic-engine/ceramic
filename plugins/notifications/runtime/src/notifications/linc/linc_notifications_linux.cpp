@@ -19,6 +19,9 @@
 // dismiss closes it (CloseNotification): the ids the service assigns are
 // kept per tag.
 
+// First, as in every source of the haxe files: MSVC builds them with the
+// precompiled header of hxcpp
+#include <hxcpp.h>
 #include "linc_notifications.h"
 
 #include <dlfcn.h>

@@ -26,6 +26,9 @@
 //
 // The test procedure for the owner is in docs/CERAMIC_APIS.md of glaze-golden.
 
+// First, as in every source of the haxe files: MSVC builds them with the
+// precompiled header of hxcpp
+#include <hxcpp.h>
 #include "linc_notifications.h"
 
 #ifndef NOMINMAX

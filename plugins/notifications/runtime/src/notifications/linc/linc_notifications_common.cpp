@@ -2,6 +2,9 @@
 // the platform pushes responses and authorization answers from any thread,
 // the Haxe side pops them on the main thread at the start of a frame.
 
+// First, as in every source of the haxe files: MSVC builds them with the
+// precompiled header of hxcpp
+#include <hxcpp.h>
 #include "linc_notifications.h"
 
 #include <deque>
