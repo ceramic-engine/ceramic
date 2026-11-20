@@ -100,6 +100,10 @@ app:
         # RenderOnDemandTest only): a skipped frame whose visuals changed without a
         # render request is reported and drawn
         - ceramic_verify_render_on_demand
+        # The references come from GPUI on macOS (key bindings, keystroke
+        # matching): the suite runs as on a Mac whatever the host; tests of
+        # another system set OperatingSystem.current themselves
+        - glaze_operating_system: mac
         #- some_define
         #- some_define: 'some value'
 

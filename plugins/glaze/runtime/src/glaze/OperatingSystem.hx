@@ -75,6 +75,14 @@ enum abstract OperatingSystem(Int) {
     }
 
     static function detect():OperatingSystem {
+        // `glaze_operating_system` (a define, `mac`, `windows`, `linux`...) names
+        // the system instead of the host: test suites whose references were
+        // recorded on one system give the same results on every host, from the
+        // first read (static initializers included)
+        final forced:Null<String> = haxe.macro.Compiler.getDefine('glaze_operating_system');
+        if (forced != null && forced.length > 0) {
+            return fromName(forced);
+        }
         #if (ios || tvos)
         return Ios;
         #elseif android
