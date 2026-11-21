@@ -109,8 +109,48 @@ class MacApp {
             }
         }
 
+        applyDisplayName(macAppInfoFile, project);
         applyCategory(macAppInfoFile, project);
         applyIcon(cwd, macAppPath, project);
+
+    }
+
+    /**
+     * Writes `app.displayName` of `ceramic.yml` in `CFBundleName` (the title
+     * of the app's menu in the menu bar) and `CFBundleDisplayName` of the
+     * bundle's Info.plist, at every build so that an existing project follows
+     * a change. Projects made from an older template had the lowercased app
+     * name in `CFBundleName`.
+     */
+    static function applyDisplayName(infoPlistPath:String, project:Project):Void {
+
+        var displayName:Null<String> = project.app.displayName;
+        if (displayName == null || StringTools.trim(displayName) == '' || !FileSystem.exists(infoPlistPath)) return;
+
+        var value = StringTools.replace(displayName, '&', '&amp;');
+        value = StringTools.replace(value, '<', '&lt;');
+        value = StringTools.replace(value, '>', '&gt;');
+
+        var content = sys.io.File.getContent(infoPlistPath);
+        var updated = content;
+        for (key in ['CFBundleName', 'CFBundleDisplayName']) {
+            var re = new EReg('(<key>' + key + '</key>\\s*<string>)([^<]*)(</string>)', '');
+            if (re.match(updated)) {
+                if (re.matched(2) != value) {
+                    updated = re.matchedLeft() + re.matched(1) + value + re.matched(3) + re.matchedRight();
+                }
+            }
+            else {
+                // Only the first <dict>, the root one
+                var at = updated.indexOf('<dict>');
+                if (at == -1) continue;
+                at += '<dict>'.length;
+                updated = updated.substring(0, at) + '\n    <key>' + key + '</key>\n    <string>' + value + '</string>' + updated.substring(at);
+            }
+        }
+        if (updated != content) {
+            sys.io.File.saveContent(infoPlistPath, updated);
+        }
 
     }
 
