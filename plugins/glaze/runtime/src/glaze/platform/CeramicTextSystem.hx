@@ -232,7 +232,7 @@ class CeramicTextSystem implements PlatformTextSystem {
      * added font has the family asked for (null: only the added fonts,
      * like GPUI's `new_without_system_fonts`). `App.defaultTextSystem()`
      * sets it on native desktop targets unless `glaze_no_system_fonts` is
-     * defined (macOS only for now, see `SystemFontFamilies`).
+     * defined (macOS and Windows, see `SystemFontFamilies`).
      */
     public var systemFamilies:Null<SystemFontFamilies> = null;
 

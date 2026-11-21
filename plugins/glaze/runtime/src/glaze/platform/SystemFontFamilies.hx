@@ -23,10 +23,12 @@ using StringTools;
  *
  * - macOS: `/System/Library/Fonts` (and `Supplemental`), `/Library/Fonts`,
  *   `~/Library/Fonts`, the folders CoreText reads.
- * - Windows and Linux: TODO (`C:\Windows\Fonts` and the user fonts folder;
- *   the fontconfig folders `/usr/share/fonts`, `~/.local/share/fonts`):
- *   no folder is listed yet, so the families are not found and the well
- *   known names keep their substitutes (`CeramicTextSystem.substituteFamily`).
+ * - Windows: `%WINDIR%\Fonts` and the fonts installed for the user alone
+ *   (`%LOCALAPPDATA%\Microsoft\Windows\Fonts`). `system-ui` is Segoe UI.
+ * - Linux: TODO (the fontconfig folders `/usr/share/fonts`,
+ *   `~/.local/share/fonts`): no folder is listed yet, so the families are
+ *   not found and the well known names keep their substitutes
+ *   (`CeramicTextSystem.substituteFamily`).
  * - Web: the browser cannot list the fonts of the system (the Local Font
  *   Access API needs a permission prompt): families must be added as font
  *   files. The browser's own fonts only draw the graphemes no added font
@@ -75,8 +77,12 @@ class SystemFontFamilies {
     /** Names (lowercase) of the monospace interface font of the system */
     static final SYSTEM_MONOSPACE_NAMES = ['ui-monospace'];
 
-    /** Installed families behind the interface font names, first found (macOS: `SFNS.ttf` and `SFNSItalic.ttf`) */
-    static final SYSTEM_UI_FAMILIES = ['System Font'];
+    /**
+     * Installed families behind the interface font names, first found
+     * (macOS: `SFNS.ttf` and `SFNSItalic.ttf`; Windows: Segoe UI, what
+     * Chromium gives `system-ui` there)
+     */
+    static final SYSTEM_UI_FAMILIES = ['System Font', 'Segoe UI'];
 
     /** Installed families behind the monospace interface font names (macOS: `SFNSMono.ttf` and `SFNSMonoItalic.ttf`) */
     static final SYSTEM_MONOSPACE_FAMILIES = ['.SF NS Mono'];
@@ -140,34 +146,37 @@ class SystemFontFamilies {
      * The font directories of this platform.
      */
     public static function platformDirectories():Array<String> {
-        #if (sys && (mac || macos))
-        final result = ['/System/Library/Fonts', '/System/Library/Fonts/Supplemental', '/Library/Fonts'];
-        final home = Sys.getEnv('HOME');
-        if (home != null && home.length > 0)
-            result.push(home + '/Library/Fonts');
-        return result;
-        #elseif sys
-        if (Sys.systemName() == 'Mac') {
-            final result = ['/System/Library/Fonts', '/System/Library/Fonts/Supplemental', '/Library/Fonts'];
-            final home = Sys.getEnv('HOME');
-            if (home != null && home.length > 0)
-                result.push(home + '/Library/Fonts');
-            return result;
-        }
-        // TODO: Windows (C:\Windows\Fonts, %LOCALAPPDATA%\Microsoft\Windows\Fonts)
-        // and Linux (fontconfig directories)
-        return [];
-        #elseif (web && ceramic_use_electron)
+        #if (sys || (web && ceramic_use_electron))
+        var os = '';
+        #if sys
+        os = Sys.systemName();
+        #else
         // Inside Electron: the host's directories, read through node
         final nodeProcess:Dynamic = js.Syntax.code("(typeof process !== 'undefined') ? process : null");
-        if (nodeProcess != null && nodeProcess.platform == 'darwin') {
-            final result = ['/System/Library/Fonts', '/System/Library/Fonts/Supplemental', '/Library/Fonts'];
-            final home = ceramic.Platform.getEnv('HOME');
-            if (home != null && home.length > 0)
-                result.push(home + '/Library/Fonts');
-            return result;
+        if (nodeProcess != null)
+            os = nodeProcess.platform == 'darwin' ? 'Mac' : (nodeProcess.platform == 'win32' ? 'Windows' : '');
+        #end
+        switch os {
+            case 'Mac':
+                final result = ['/System/Library/Fonts', '/System/Library/Fonts/Supplemental', '/Library/Fonts'];
+                final home = ceramic.Platform.getEnv('HOME');
+                if (home != null && home.length > 0)
+                    result.push(home + '/Library/Fonts');
+                return result;
+            case 'Windows':
+                // The fonts of the system, then those installed for the user alone
+                var windir = ceramic.Platform.getEnv('WINDIR');
+                if (windir == null || windir.length == 0)
+                    windir = 'C:/Windows';
+                final result = [windir.replace('\\', '/') + '/Fonts'];
+                final local = ceramic.Platform.getEnv('LOCALAPPDATA');
+                if (local != null && local.length > 0)
+                    result.push(local.replace('\\', '/') + '/Microsoft/Windows/Fonts');
+                return result;
+            case _:
+                // TODO: Linux (fontconfig directories, listed with their subfolders)
+                return [];
         }
-        return [];
         #else
         return [];
         #end

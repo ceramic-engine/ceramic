@@ -127,7 +127,7 @@ class App {
      * (`glaze.platform.SystemFontFallback`, loaded on first use; define
      * `glaze_no_system_fonts` to skip), and families that no added font
      * provides are loaded from the installed fonts by name
-     * (`glaze.platform.SystemFontFamilies`, macOS for now; inside Electron
+     * (`glaze.platform.SystemFontFamilies`, macOS and Windows; inside Electron
      * too when `glaze_electron_system_fonts` is defined). In browsers (clay web, Electron),
      * graphemes missing from the added fonts are drawn by the browser,
      * emoji and CJK text included (`CanvasFontFallback.EmojiAndCjk`; change it with
