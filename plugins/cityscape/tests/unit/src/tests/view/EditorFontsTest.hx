@@ -402,8 +402,10 @@ class EditorFontsTest extends TestCase {
         assertTrue(colorFont.preferColorEmoji);
         assertEquals('monospace', colorFont.fallbacks.fallbackList().join(','));
         final ts = app.textSystem();
-        if (!ts.isFamilyAvailable('Menlo')) {
-            // no system fonts (node, the web): nothing more to check
+        if (glaze.platform.SystemFontFamilies.genericMonospaceFamilies()[0] != 'Menlo' || !ts.isFamilyAvailable('Menlo')) {
+            // no system fonts (node, the web), or a system whose generic
+            // `monospace` is another font (Consolas on Windows, which has
+            // no `☕`, even with Menlo installed): nothing more to check
             return;
         }
         final menlo = ts.resolveFont(glaze.Font.of('Menlo'));
