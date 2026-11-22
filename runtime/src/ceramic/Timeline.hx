@@ -372,6 +372,7 @@ class Timeline extends Entity implements Component {
 
         // Continue only if target position is different than current position
         var prevPosition = position;
+        var reachedEnd = false;
         if (forceSeek || targetPosition != position) {
 
             // Check that targetPosition is within startPosition and endPosition (if applicable)
@@ -387,6 +388,9 @@ class Timeline extends Entity implements Component {
             }
 
             if (size > 0) {
+                if (targetPosition >= size && prevPosition < size) {
+                    reachedEnd = true;
+                }
                 if (targetPosition > size) {
                     if (loop) {
                         targetPosition = targetPosition % size;
@@ -415,6 +419,15 @@ class Timeline extends Entity implements Component {
                         track.inlineSeek(position, forceSeek, forceChange);
                     }
                 }
+            }
+        }
+
+        // The last label ends when the timeline reaches its end
+        // (unless a label sits at the very end: it is handled below)
+        if (reachedEnd && position != prevPosition && labelIndexes != null && labelAtIndex(size) == null) {
+            var lastLabelIndex = indexOfLabelBeforeIndex(size);
+            if (lastLabelIndex != -1) {
+                emitEndLabel(lastLabelIndex, labelAtIndex(lastLabelIndex));
             }
         }
 
@@ -720,38 +733,21 @@ class Timeline extends Entity implements Component {
 
     function sortLabels():Void {
 
-        // Maybe this could be better,
-        // but it is only needed when changing labels so that should be fine.
-        labelIndexes.sort(compareLabelIndexes);
-        labels.original.sort(compareLabelNames);
-
-    }
-
-    function compareLabelIndexes(a:Int, b:Int):Int {
-
-        if (a > b)
-            return 1;
-        else if (a < b)
-            return -1;
-        else
-            return 0;
-
-    }
-
-    function compareLabelNames(nameA:String, nameB:String):Int {
-
-        var iA = labels.indexOf(nameA);
-        var a = labelIndexes.unsafeGet(iA);
-
-        var iB = labels.indexOf(nameB);
-        var b = labelIndexes.unsafeGet(iB);
-
-        if (a > b)
-            return 1;
-        else if (a < b)
-            return -1;
-        else
-            return 0;
+        // Insertion sort of both arrays at once, so that each name
+        // keeps its own index (labels are only sorted when they change).
+        final names = labels.original;
+        for (i in 1...labelIndexes.length) {
+            final index = labelIndexes[i];
+            final name = names[i];
+            var j = i - 1;
+            while (j >= 0 && labelIndexes[j] > index) {
+                labelIndexes[j + 1] = labelIndexes[j];
+                names[j + 1] = names[j];
+                j--;
+            }
+            labelIndexes[j + 1] = index;
+            names[j + 1] = name;
+        }
 
     }
 

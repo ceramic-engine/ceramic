@@ -356,23 +356,16 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
      */
     public function findKeyframeAfter(position:Float):Null<K> {
 
-        var result:K = null;
-
-        var index = -1;
         var len = keyframes.length;
-        while (index + 1 < len) {
-            var keyframe = keyframes[index + 1];
+        for (i in 0...len) {
+            var keyframe = keyframes[i];
             if (keyframe.index > position) {
-                // Not valid, stop
-                break;
+                // Keyframes are sorted: the first one that is later is the one
+                return keyframe;
             }
-
-            // That one is valid
-            result = keyframe;
-            index++;
         }
 
-        return result;
+        return null;
 
     }
 
