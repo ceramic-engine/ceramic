@@ -5,7 +5,7 @@ import haxe.DynamicAccess;
 import haxe.Json;
 
 /**
- * An asset that loads and manages fragment data from `.fragment` files.
+ * An asset that loads and manages fragment data from `.fragments` files.
  * 
  * Fragments in Ceramic are reusable groups of visuals and entities that can be
  * instantiated from data files. They support:
@@ -14,14 +14,21 @@ import haxe.Json;
  * - Components that can be attached to fragment items
  * - Hot-reloading for development
  * 
- * Fragment files can be in two formats:
- * 1. Legacy format: Direct JSON representation of FragmentData objects
- * 2. Version 1 format: Structured format with schema support that gets converted at load time
+ * A fragments file is a JSON object that maps fragment ids to `FragmentData`:
+ * ```json
+ * {
+ *   "mainMenu": { "width": 800, "height": 600, "items": [...] },
+ *   "settings": { "width": 800, "height": 600, "items": [...] }
+ * }
+ * ```
+ * 
+ * A `Fragment` created with `Fragment.loadFromAsset()` (or `Scene.loadFragment()`)
+ * follows the asset: it is updated when the file is reloaded.
  * 
  * Example usage:
  * ```haxe
  * // Load a fragments asset
- * var fragmentsAsset = new FragmentsAsset('myFragments.fragment');
+ * var fragmentsAsset = new FragmentsAsset('myFragments');
  * fragmentsAsset.onComplete(this, success -> {
  *     if (success) {
  *         // Access fragment data
@@ -73,8 +80,6 @@ class FragmentsAsset extends Asset {
      * The loading process:
      * 1. Loads the JSON file as text
      * 2. Parses the JSON data
-     * 3. Detects the format version (legacy or version 1)
-     * 4. Converts version 1 format to runtime format if needed
      * 
      * Supports hot-reload on platforms that allow it - the file will be
      * automatically reloaded when it changes on disk.
@@ -110,13 +115,15 @@ class FragmentsAsset extends Asset {
 
             if (text != null) {
                 try {
-                    var rawFragments = Json.parse(text);
-                    if (Reflect.hasField(rawFragments, 'version')) {
-                        this.fragments = fromRawFragments(rawFragments);
+                    var rawFragments:DynamicAccess<FragmentData> = Json.parse(text);
+                    for (id in rawFragments.keys()) {
+                        // The id of a fragment is its key in the file
+                        var fragmentData = rawFragments.get(id);
+                        if (fragmentData != null && fragmentData.id == null) {
+                            fragmentData.id = id;
+                        }
                     }
-                    else {
-                        this.fragments = rawFragments;
-                    }
+                    this.fragments = rawFragments;
                 } catch (e:Dynamic) {
                     status = BROKEN;
                     log.error('Failed to parse fragments at path: $path');
@@ -133,142 +140,6 @@ class FragmentsAsset extends Asset {
             }
 
         });
-
-    }
-
-    /**
-     * Converts raw fragment data from the version 1 format into the runtime FragmentData format.
-     * 
-     * The version 1 format separates visuals and entities into different arrays and includes
-     * schema information for type checking. This method:
-     * - Processes the visuals and entities arrays into a unified items array
-     * - Attaches schema information to each item for runtime type validation
-     * - Converts color strings to Color objects
-     * - Ensures all required fields have default values
-     * 
-     * @param rawFragments The raw fragment data loaded from a version 1 format file
-     * @return A map of fragment IDs to their processed FragmentData objects
-     */
-    /**
-     * Converts version 1 fragment format to the runtime format.
-     * 
-     * This method handles the transformation of the newer fragment file format
-     * that includes additional metadata and schema information. It processes:
-     * - Fragment metadata (id, dimensions, color, transparency)
-     * - Visual and entity items with their properties
-     * - Component configurations
-     * - Schema references for entity types
-     * 
-     * @param rawFragments The raw parsed JSON data with version field
-     * @return Map of fragment IDs to FragmentData objects
-     */
-    static function fromRawFragments(rawFragments:Dynamic):DynamicAccess<FragmentData> {
-
-        var fragments:DynamicAccess<FragmentData> = {};
-
-        var version = Std.int(rawFragments.version);
-        if (version == 1) {
-            // This is a newer fragments file format that needs to be processed
-            // in order to be compatible with runtime format.
-            var rawFragmentsList:Array<Dynamic> = rawFragments.fragments;
-            if (rawFragmentsList != null) {
-                for (rawFragment in rawFragmentsList) {
-
-                    var fragmentData:FragmentData = {
-                        id: rawFragment.id,
-                        data: rawFragment.data ?? {},
-                        width: rawFragment.width,
-                        height: rawFragment.height,
-                        components: rawFragment.components ?? {}
-                    };
-
-                    if (Reflect.hasField(rawFragment, 'color')) {
-                        fragmentData.color = Color.fromString(rawFragment.color);
-                    }
-
-                    if (Reflect.hasField(rawFragment, 'transparent')) {
-                        fragmentData.transparent = (rawFragment.transparent == true);
-                    }
-
-                    var schema:Dynamic = rawFragments.schema;
-                    var items:Array<FragmentItem> = [];
-
-                    if (Reflect.hasField(rawFragment, 'visuals')) {
-                        var rawVisuals:Array<Dynamic> = rawFragment.visuals;
-                        for (rawVisual in rawVisuals) {
-
-                            var visualData:FragmentItem = {
-                                id: rawVisual.id,
-                                data: rawVisual.data ?? {},
-                                entity: rawVisual.entity,
-                                components: rawVisual.components ?? {},
-                                props: {}
-                            }
-
-                            for (key in Reflect.fields(rawVisual)) {
-                                switch key {
-                                    case 'entity':
-                                        final entity:String = Reflect.field(rawVisual, key);
-                                        if (schema != null && entity != null && Reflect.hasField(schema, entity)) {
-                                            visualData.schema = Reflect.field(schema, entity);
-                                        }
-                                    case 'kind' | 'id' | 'locked' | 'components' | 'data':
-                                    case _:
-                                        Reflect.setField(
-                                            visualData.props,
-                                            key,
-                                            Reflect.field(rawVisual, key)
-                                        );
-                                }
-                            }
-
-                            items.push(visualData);
-                        }
-                    }
-
-                    if (Reflect.hasField(rawFragment, 'entities')) {
-                        var rawEntities:Array<Dynamic> = rawFragment.entities;
-                        for (rawEntity in rawEntities) {
-
-                            var entityData:FragmentItem = {
-                                id: rawEntity.id,
-                                data: rawEntity.data ?? {},
-                                entity: rawEntity.entity,
-                                components: rawEntity.components ?? {},
-                                props: {}
-                            }
-
-                            for (key in Reflect.fields(rawEntity)) {
-                                switch key {
-                                    case 'entity':
-                                        final entity:String = Reflect.field(rawEntity, key);
-                                        if (schema != null && entity != null && Reflect.hasField(schema, entity)) {
-                                            entityData.schema = Reflect.field(schema, entity);
-                                        }
-                                    case 'kind' | 'id' | 'locked' | 'components' | 'data':
-                                    case _:
-                                        Reflect.setField(
-                                            entityData.props,
-                                            key,
-                                            Reflect.field(rawEntity, key)
-                                        );
-                                }
-                            }
-
-                            items.push(entityData);
-                        }
-                    }
-
-                    fragmentData.items = items;
-                    fragments.set(fragmentData.id, fragmentData);
-                }
-            }
-        }
-        else {
-            log.warning('Unsupported fragments file version: $version');
-        }
-
-        return fragments;
 
     }
 

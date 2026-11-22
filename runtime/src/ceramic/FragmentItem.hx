@@ -32,6 +32,14 @@ typedef FragmentItem = {
     var id:String;
 
     /**
+     * Optional id of another item of the same fragment. When both items
+     * are visuals, this one is displayed inside the other one
+     * (it becomes one of its children) instead of the fragment itself.
+     * Items can be listed in any order.
+     */
+    @:optional var parent:String;
+
+    /**
      * Components to attach to this entity after creation.
      * Keys are component names, values are component type names or data.
      * Components are processed after all other properties are set.
@@ -47,7 +55,10 @@ typedef FragmentItem = {
     /**
      * Property values to set on the entity after instantiation.
      * Keys are property names, values are the property values.
-     * Properties are set in the order defined by the entity class.
+     * `width` and `height` are always set last.
+     *
+     * For an item of class `ceramic.Fragment`, `fragmentData` is either
+     * the data of the fragment or the id of another fragment.
      */
     var props:Dynamic<Dynamic>;
 
@@ -62,7 +73,8 @@ typedef FragmentItem = {
      * Optional type information for entity properties.
      * Maps property names to their type strings.
      * Used by the fragment system to properly convert values.
-     * If not provided, types are resolved via reflection.
+     * If not provided, types come from the `schema` of the fragment,
+     * then from reflection (`ceramic_entity_field_info`).
      */
     @:optional var schema:Dynamic<String>;
 

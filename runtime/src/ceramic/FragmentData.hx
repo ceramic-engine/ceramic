@@ -4,8 +4,11 @@ import haxe.DynamicAccess;
 
 /**
  * Data structure that defines a fragment's content and properties.
- * This is typically loaded from .fragment files and used to instantiate
+ * This is typically loaded from .fragments files and used to instantiate
  * Fragment objects with their entities, animations, and components.
+ * 
+ * Keys that are not listed here are ignored: a tool can keep its own
+ * data next to the fields of a fragment or of an item.
  * 
  * A FragmentData contains:
  * - Basic properties like dimensions and appearance
@@ -100,6 +103,22 @@ typedef FragmentData = {
      * Items can be visuals (Quad, Text, etc.) or any other Entity type.
      */
     @:optional public var items:Array<FragmentItem>;
+
+    /**
+     * Types of the properties used by the items of this fragment:
+     * for each entity class name, the type of each property.
+     *
+     * ```json
+     * "schema": {
+     *   "ceramic.Quad": { "x": "Float", "color": "ceramic.Color", "texture": "ceramic.Texture" }
+     * }
+     * ```
+     *
+     * With a schema, a fragment can be loaded in an app that was not
+     * compiled with `ceramic_entity_field_info`. A class that is listed
+     * must list every property its items and tracks use.
+     */
+    @:optional public var schema:Dynamic<Dynamic<String>>;
 
 }
 

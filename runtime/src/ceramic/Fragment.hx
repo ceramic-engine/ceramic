@@ -70,6 +70,22 @@ class Fragment extends Layer {
     public var fragmentData(default,set):FragmentData = null;
 
     /**
+     * The fragments asset this fragment takes its data from, if any.
+     * Set with `loadFromAsset()`.
+     */
+    public var fragmentsAsset(default,null):FragmentsAsset = null;
+
+    /**
+     * The id of the fragment taken from `fragmentsAsset`.
+     */
+    public var fragmentsAssetId(default,null):String = null;
+
+    /**
+     * When this fragment is an item of another fragment, the fragment that owns it.
+     */
+    var ownerFragment:Fragment = null;
+
+    /**
      * Whether this fragment can be resized.
      * When true, the fragment dimensions can be changed after initialization.
      */
@@ -191,7 +207,7 @@ class Fragment extends Layer {
 
         super();
 
-        this.assets = assets;
+        this.assets = assets != null ? assets : app.assets;
 
         entities = [];
         items = [];
@@ -247,21 +263,20 @@ class Fragment extends Layer {
 
         }
 
-        // Keep items if fragmentData is provided with no property 'items'
-        if (fragmentData == null || Reflect.hasField(fragmentData, 'items')) {
-            // Remove unused items
-            var toRemove = null;
-            for (entity in entities) {
-                if (!usedIds.exists(entity.id)) {
-                    if (toRemove == null)
-                        toRemove = [];
-                    toRemove.push(entity.id);
-                }
+        // Remove unused items
+        var toRemove = null;
+        for (entity in entities) {
+            if (!usedIds.exists(entity.id)) {
+                if (toRemove == null)
+                    toRemove = [];
+                toRemove.push(entity.id);
             }
-            if (toRemove != null) {
-                for (id in toRemove) {
-                    removeItem(id);
-                }
+        }
+        if (toRemove != null) {
+            for (id in toRemove) {
+                // Items that are still used are kept, even if
+                // they were displayed inside a removed one
+                destroyItem(id);
             }
         }
 
@@ -292,50 +307,40 @@ class Fragment extends Layer {
             fps = fragmentData.fps;
         }
 
-        // Add tracks (if any)
-        var usedTrackIds:Map<String,Bool> = null;
+        // Add/Update tracks (if any)
+        var usedTrackIds = new Map<String,Bool>();
         if (fragmentData != null && fragmentData.tracks != null) {
             for (track in fragmentData.tracks) {
-                if (usedTrackIds == null)
-                    usedTrackIds = new Map();
                 usedTrackIds.set(track.entity + '#' + track.field, true);
                 putTrack(track);
             }
+        }
 
-            // Remove unused tracks
-            if (timeline != null && timeline.tracks.length > 0) {
-                for (existingTrack in [].concat(timeline.tracks.original)) {
-                    if (usedTrackIds == null || !usedTrackIds.exists(existingTrack.id)) {
-                        var parts = existingTrack.id.split('#');
-                        if (parts.length == 2) {
-                            removeTrack(parts[0], parts[1]);
-                        }
-                        else {
-                            log.warning('Cannot remove track with unhandled id: ${existingTrack.id}');
-                        }
-                    }
+        // Remove unused tracks
+        if (tracks != null && tracks.length > 0) {
+            for (existingTrack in [].concat(tracks)) {
+                if (!usedTrackIds.exists(existingTrack.entity + '#' + existingTrack.field)) {
+                    removeTrack(existingTrack.entity, existingTrack.field);
                 }
             }
         }
 
-        // Add labels (if any)
-        var usedLabels:Map<String,Bool> = null;
+        // Add/Update labels (if any)
+        var usedLabels = new Map<String,Bool>();
         if (fragmentData != null && fragmentData.labels != null) {
             var rawLabels = fragmentData.labels;
             for (name in rawLabels.keys()) {
-                if (usedLabels == null)
-                    usedLabels = new Map();
                 usedLabels.set(name, true);
                 var index = rawLabels.get(name);
                 putLabel(index, name);
             }
+        }
 
-            // Remove unused labels
-            if (timeline != null && timeline.labels != null) {
-                for (existingLabel in [].concat(timeline.labels.original)) {
-                    if (usedLabels == null || !usedLabels.exists(existingLabel)) {
-                        timeline.removeLabel(existingLabel);
-                    }
+        // Remove unused labels
+        if (timeline != null && timeline.labels != null) {
+            for (existingLabel in [].concat(timeline.labels.original)) {
+                if (!usedLabels.exists(existingLabel)) {
+                    timeline.removeLabel(existingLabel);
                 }
             }
         }
@@ -344,6 +349,59 @@ class Fragment extends Layer {
         if (pendingLoads == 0) emitReady();
 
         return fragmentData;
+
+    }
+
+    /**
+     * Take the data of this fragment from a fragments asset.
+     *
+     * The fragment is updated again every time the asset reloads, which is
+     * what happens when its file changes and hot reload is active
+     * (see `Assets.watchDirectory()`). Entities that stay in the data are
+     * kept, so what was bound to them from code stays bound.
+     *
+     * Fragment items that reference another fragment by id look for it
+     * in the same asset first.
+     *
+     * @param asset The fragments asset (already loaded or not)
+     * @param fragmentId The id of the fragment to use in that asset
+     */
+    public function loadFromAsset(asset:FragmentsAsset, fragmentId:String):Void {
+
+        if (fragmentsAsset != null) {
+            fragmentsAsset.offFragmentsChange(handleAssetFragmentsChange);
+            fragmentsAsset.offDestroy(handleFragmentsAssetDestroy);
+        }
+
+        fragmentsAsset = asset;
+        fragmentsAssetId = fragmentId;
+
+        if (asset != null) {
+            asset.onFragmentsChange(this, handleAssetFragmentsChange);
+            asset.onDestroy(this, handleFragmentsAssetDestroy);
+            handleAssetFragmentsChange(asset.fragments, null);
+        }
+
+    }
+
+    function handleAssetFragmentsChange(fragments:DynamicAccess<FragmentData>, prevFragments:DynamicAccess<FragmentData>):Void {
+
+        // Nothing loaded (yet, or anymore): keep what is displayed
+        if (fragments == null) return;
+
+        var data = fragments.get(fragmentsAssetId);
+        if (data != null) {
+            fragmentData = data;
+        }
+        else {
+            log.warning('No fragment with id $fragmentsAssetId in ${fragmentsAsset.name}');
+        }
+
+    }
+
+    function handleFragmentsAssetDestroy(_):Void {
+
+        fragmentsAsset = null;
 
     }
 
@@ -369,49 +427,45 @@ class Fragment extends Layer {
      * Create or update an entity from a fragment item definition.
      * If an entity with the same ID already exists, it will be updated.
      * Otherwise, a new entity is created and added to the fragment.
+     *
+     * A visual is displayed inside the visual named by `item.parent`,
+     * or directly inside the fragment when the item has no parent.
      * 
      * @param item The fragment item definition
-     * @return The created or updated entity instance
+     * @return The created or updated entity instance,
+     *         or null if the class of the item is not available
      */
     public function putItem(item:FragmentItem):Entity {
 
         var existing = get(item.id);
-        var existingWasVisual = false;
+        var prevItem = getItem(item.id);
 
         // Remove previous object if entity class is different
-        if (existing != null) {
-            existingWasVisual = Std.isOfType(existing, Visual);
-            if (item.entity != Type.getClassName(Type.getClass(existing))) {
-                removeItem(item.id);
-                existing = null;
-            }
-        }
-        else {
-            items.push(item);
+        if (existing != null && item.entity != Type.getClassName(Type.getClass(existing))) {
+            destroyItem(item.id);
+            existing = null;
+            prevItem = null;
         }
 
-        var entityClass = Type.resolveClass(item.entity);
-        var instance:Entity = existing != null ? existing : null;
         var isFragment = item.entity == 'ceramic.Fragment';
+        var instance:Entity = existing;
         if (instance == null) {
-            var newArgs:Array<Dynamic> = [];
-            if (isFragment) {
-                newArgs.push(assets);
-                newArgs.push(false);
-                #if ceramic_debug_fragments
-                if (isFragment) log.info('load item (fragment) ${item.id}');
-                #end
+            instance = createItemInstance(item);
+            if (instance == null) {
+                log.error('Cannot create fragment item ${item.id}: class ${item.entity} is not available');
+                if (prevItem != null) items.remove(prevItem);
+                return null;
             }
-            instance = cast Type.createInstance(entityClass, newArgs);
-        }
-        if (instance == null) {
-            throw 'Failed to create instance of ${item.entity}';
         }
         instance.id = item.id;
 
-        if (isFragment) {
-            var frag:ceramic.Fragment = cast instance;
-            frag.depthRange = 1;
+        // Keep the list of items up to date
+        var itemIndex = prevItem != null ? items.indexOf(prevItem) : -1;
+        if (itemIndex != -1) {
+            items[itemIndex] = item;
+        }
+        else {
+            items.push(item);
         }
 
         #if ceramic_entity_data
@@ -426,72 +480,76 @@ class Fragment extends Layer {
         }
         #end
 
-        // Copy item properties
-        if (item.props != null) {
-            var orderedProps = Reflect.fields(item.props);
-
-            // TODO sort by order of properties in underlying class
-            // For now we just ensure components is the last property being instanced
-            haxe.ds.ArraySort.sort(orderedProps, function(a:String, b:String):Int {
-
-                var nA = 0;
-                var nB = 0;
-
-                return nA - nB;
-
-            });
-
-            for (field in orderedProps) {
-                var fieldType = typeOfItemField(item, field);
-                var value:Dynamic = Reflect.field(item.props, field);
-                var converter = fieldType != null ? app.converters.get(fieldType) : null;
-                if (converter != null) {
-                    putItemField(isFragment, item, instance, field, value, converter);
-                }
-                else {
-                    if (!basicTypes.exists(fieldType)) {
-                        var resolvedEnum = Type.resolveEnum(fieldType);
-                        if (resolvedEnum != null) {
-                            for (name in Type.getEnumConstructs(resolvedEnum)) {
-                                if (name.toLowerCase() == value.toLowerCase()) {
-                                    value = Type.createEnum(resolvedEnum, name);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    instance.setProperty(field, value);
+        // Properties the item had before and doesn't have anymore get their default value back
+        if (prevItem != null && prevItem.props != null) {
+            for (field in Reflect.fields(prevItem.props)) {
+                if (item.props == null || !Reflect.hasField(item.props, field)) {
+                    resetItemField(isFragment, item, instance, field);
                 }
             }
+        }
 
-            // Components
+        // Copy item properties
+        if (item.props != null) {
+            // Size is applied last: some properties change it
+            // when they are assigned (the texture of a quad).
+            var hasWidth = false;
+            var hasHeight = false;
+            for (field in Reflect.fields(item.props)) {
+                if (field == 'width') {
+                    hasWidth = true;
+                }
+                else if (field == 'height') {
+                    hasHeight = true;
+                }
+                else {
+                    applyItemField(isFragment, item, instance, field, Reflect.field(item.props, field));
+                }
+            }
+            if (hasWidth) applyItemField(isFragment, item, instance, 'width', Reflect.field(item.props, 'width'));
+            if (hasHeight) applyItemField(isFragment, item, instance, 'height', Reflect.field(item.props, 'height'));
+        }
+
+        // Components
+        if (item.components != null && Reflect.fields(item.components).length > 0) {
             var fieldType = typeOfItemField(item, 'components');
-            var value:Dynamic = item.components;
             var converter = fieldType != null ? app.converters.get(fieldType) : null;
             if (converter != null) {
-                putItemField(isFragment, item, instance, 'components', value, converter);
+                putItemField(item, instance, 'components', item.components, converter);
             }
             else {
                 log.warning('No converter found for field: components (type: $fieldType)');
             }
-
         }
 
         // A few more stuff to do if item is new
         if (existing == null) {
 
             // If instance has an assets property, set it from our fragment context
-            if (typeOfItemField(item, 'assets') == 'ceramic.Assets') {
+            if (!isFragment && typeOfItemField(item, 'assets') == 'ceramic.Assets') {
                 instance.setProperty('assets', assets);
             }
 
             // Add instance (if new)
             entities.push(instance);
         }
-        var isVisual = Std.isOfType(instance, Visual);
-        // Add it to display tree if it is a visual
-        if (isVisual && !existingWasVisual) {
-            add(cast instance);
+
+        // Add it to display tree if it is a visual (new, or moved to another parent)
+        if (existing == null || prevItem == null || prevItem.parent != item.parent) {
+            attachItem(item, instance);
+        }
+
+        // A new instance takes the items that name it as their parent
+        if (existing == null) {
+            for (i in 0...items.length) {
+                var other = items[i];
+                if (other.parent == item.id && other.id != item.id) {
+                    var otherInstance = get(other.id);
+                    if (otherInstance != null) {
+                        attachItem(other, otherInstance);
+                    }
+                }
+            }
         }
 
         #if plugin_script
@@ -517,21 +575,233 @@ class Fragment extends Layer {
 
     }
 
-    private function typeOfItemField(item:FragmentItem, field:String):String {
+    function createItemInstance(item:FragmentItem):Entity {
 
-        return if (item.schema != null) {
-            // Use type provided by fragment data
-            Reflect.field(item.schema, field);
+        var entityClass = Type.resolveClass(item.entity);
+        if (entityClass == null)
+            return null;
+
+        var newArgs:Array<Dynamic> = [];
+        if (item.entity == 'ceramic.Fragment') {
+            newArgs.push(assets);
+            #if ceramic_debug_fragments
+            log.info('load item (fragment) ${item.id}');
+            #end
         }
-        else {
-            // Try to resolve type from reflection if we
-            // don't have the info from the fragment data
-            FieldInfo.typeOf(item.entity, field);
+
+        var instance:Entity = cast Type.createInstance(entityClass, newArgs);
+        if (instance == null) {
+            throw 'Failed to create instance of ${item.entity}';
+        }
+
+        if (item.entity == 'ceramic.Fragment') {
+            var frag:ceramic.Fragment = cast instance;
+            frag.depthRange = 1;
+            frag.ownerFragment = this;
+        }
+
+        return instance;
+
+    }
+
+    /**
+     * Display the visual of an item inside the visual of its parent item,
+     * or inside the fragment itself if it has no (valid) parent.
+     */
+    function attachItem(item:FragmentItem, instance:Entity):Void {
+
+        if (!Std.isOfType(instance, Visual))
+            return;
+
+        var visual:Visual = cast instance;
+        var target:Visual = this;
+
+        if (item.parent != null) {
+            var parentEntity = get(item.parent);
+            if (parentEntity != null && parentEntity != instance && Std.isOfType(parentEntity, Visual)) {
+                target = cast parentEntity;
+
+                // An item cannot be displayed inside itself
+                var up:Visual = target;
+                while (up != null && up != this) {
+                    if (up == visual) {
+                        log.warning('Item ${item.id} cannot be inside ${item.parent}: that would make a loop');
+                        target = this;
+                        break;
+                    }
+                    up = up.parent;
+                }
+            }
+        }
+
+        if (visual.parent != target) {
+            target.add(visual);
         }
 
     }
 
-    private function putItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String, value:Dynamic, converter:ConvertField<Dynamic,Dynamic>) {
+    static var defaultValues:Map<String,Map<String,Dynamic>> = new Map();
+
+    /**
+     * Give its default value back to a property an item doesn't provide anymore.
+     */
+    function resetItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String):Void {
+
+        if (isFragment && field == 'fragmentData') {
+            putNestedFragmentData(item, cast instance, null);
+            return;
+        }
+
+        var forClass = defaultValues.get(item.entity);
+        if (forClass == null) {
+            forClass = new Map();
+            defaultValues.set(item.entity, forClass);
+        }
+
+        if (!forClass.exists(field)) {
+            // The default value is the one a new instance has
+            var value:Dynamic = null;
+            var fresh = createItemInstance(item);
+            if (fresh != null) {
+                value = fresh.getProperty(field);
+                // Only plain values are kept: anything else belongs to that instance
+                if (!(Std.isOfType(value, Bool) || Std.isOfType(value, Float) || Std.isOfType(value, String) || Reflect.isEnumValue(value))) {
+                    value = null;
+                }
+                fresh.destroy();
+            }
+            forClass.set(field, value);
+        }
+
+        instance.setProperty(field, forClass.get(field));
+
+    }
+
+    function applyItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String, value:Dynamic):Void {
+
+        if (isFragment && field == 'fragmentData') {
+            putNestedFragmentData(item, cast instance, value);
+            return;
+        }
+
+        var fieldType = typeOfItemField(item, field);
+        var converter = fieldType != null ? app.converters.get(fieldType) : null;
+        if (converter != null) {
+            putItemField(item, instance, field, value, converter);
+        }
+        else {
+            if (fieldType != null && !basicTypes.exists(fieldType) && Std.isOfType(value, String)) {
+                var resolvedEnum = Type.resolveEnum(fieldType);
+                if (resolvedEnum != null) {
+                    var valueStr:String = value;
+                    for (name in Type.getEnumConstructs(resolvedEnum)) {
+                        if (name.toLowerCase() == valueStr.toLowerCase()) {
+                            value = Type.createEnum(resolvedEnum, name);
+                            break;
+                        }
+                    }
+                }
+            }
+            instance.setProperty(field, value);
+        }
+
+    }
+
+    /**
+     * Assign the data of a fragment that is an item of this fragment.
+     * `value` is either fragment data or the id of another fragment.
+     */
+    function putNestedFragmentData(item:FragmentItem, nested:Fragment, value:Dynamic):Void {
+
+        var data:FragmentData = null;
+        if (value != null && Std.isOfType(value, String)) {
+            data = resolveFragmentData(value);
+            if (data == null) {
+                log.warning('Item ${item.id}: no fragment with id $value');
+            }
+        }
+        else {
+            data = value;
+        }
+
+        // A fragment cannot contain itself
+        if (data != null) {
+            var owner = this;
+            while (owner != null) {
+                if (owner.fragmentData != null && owner.fragmentData.id == data.id) {
+                    log.error('Item ${item.id}: fragment ${data.id} cannot contain itself');
+                    data = null;
+                    break;
+                }
+                owner = owner.ownerFragment;
+            }
+        }
+
+        pendingLoads++;
+        nested.onceReady(this, function() {
+            pendingLoads--;
+            if (destroyed) return;
+            if (pendingLoads == 0) emitReady();
+        });
+        nested.fragmentData = data;
+
+    }
+
+    /**
+     * Find the data of another fragment from its id: in the fragments asset
+     * this fragment (or the fragment it is an item of) was loaded from,
+     * then in the data cached with `cacheData()`.
+     */
+    function resolveFragmentData(fragmentId:String):Null<FragmentData> {
+
+        var owner = this;
+        while (owner != null) {
+            var asset = owner.fragmentsAsset;
+            if (asset != null && asset.fragments != null) {
+                var data = asset.fragments.get(fragmentId);
+                if (data != null)
+                    return data;
+            }
+            owner = owner.ownerFragment;
+        }
+
+        return getData(fragmentId);
+
+    }
+
+    private function typeOfItemField(item:FragmentItem, field:String):String {
+
+        return if (item.schema != null) {
+            // Use type provided by the item
+            Reflect.field(item.schema, field);
+        }
+        else {
+            typeOfClassField(item.entity, field);
+        }
+
+    }
+
+    private function typeOfClassField(entityType:String, field:String):String {
+
+        // Use type provided by fragment data
+        if (fragmentData != null && fragmentData.schema != null) {
+            var classSchema:Dynamic = Reflect.field(fragmentData.schema, entityType);
+            if (classSchema != null) {
+                return Reflect.field(classSchema, field);
+            }
+        }
+
+        // Try to resolve type from reflection if we
+        // don't have the info from the fragment data
+        #if ceramic_entity_field_info
+        return FieldInfo.typeOf(entityType, field);
+        #else
+        return null;
+        #end
+
+    }
+
+    private function putItemField(item:FragmentItem, instance:Entity, field:String, value:Dynamic, converter:ConvertField<Dynamic,Dynamic>) {
 
         pendingLoads++;
         converter.basicToField(
@@ -545,18 +815,20 @@ class Fragment extends Layer {
                 if (destroyed) return;
 
                 if (!instance.destroyed) {
-                    if (isFragment && field == 'fragmentData') {
-                        var fragment:Fragment = cast instance;
-                        pendingLoads++;
-                        fragment.onceReady(this, function() {
-                            pendingLoads--;
-                            if (destroyed) return;
-                            if (pendingLoads == 0) emitReady();
-                        });
-                        fragment.fragmentData = value;
-                    }
-                    else if (field != 'components') {
+                    if (field != 'components') {
                         instance.setProperty(field, value);
+
+                        // The size given by the item wins over the one
+                        // a property brings when it is assigned
+                        var currentItem = getItem(item.id);
+                        if (currentItem != null && currentItem.props != null && field != 'width' && field != 'height') {
+                            if (Reflect.hasField(currentItem.props, 'width') && typeOfItemField(currentItem, 'width') == 'Float') {
+                                instance.setProperty('width', Reflect.field(currentItem.props, 'width'));
+                            }
+                            if (Reflect.hasField(currentItem.props, 'height') && typeOfItemField(currentItem, 'height') == 'Float') {
+                                instance.setProperty('height', Reflect.field(currentItem.props, 'height'));
+                            }
+                        }
                     }
                     else {
                         onceReady(this, function() {
@@ -572,18 +844,6 @@ class Fragment extends Layer {
                                     }
                                 }
                             }
-                            /*
-                            // For now don't remove any component, may change this later
-                            if (instance.components != null) {
-                                for (k in instance.components.keys()) {
-                                    if (k != 'script') {
-                                        if (map == null || map.get(k) == null) {
-                                            instance.removeComponent(k);
-                                        }
-                                    }
-                                }
-                            }
-                            */
                         });
                     }
                 }
@@ -716,14 +976,55 @@ class Fragment extends Layer {
 
     /**
      * Remove an entity and its item definition from the fragment.
-     * The entity will be destroyed.
+     * The entity will be destroyed, as well as the items
+     * that have it as their parent.
      * 
      * @param itemId The ID of the item to remove
      */
     public function removeItem(itemId:String):Void {
 
+        // Remove the items inside this one first
+        var children:Array<String> = null;
+        for (item in items) {
+            if (item.parent == itemId && item.id != itemId) {
+                if (children == null)
+                    children = [];
+                children.push(item.id);
+            }
+        }
+        if (children != null) {
+            for (childId in children) {
+                // Could have been removed already by another child
+                if (getItem(childId) != null) {
+                    removeItem(childId);
+                }
+            }
+        }
+
+        destroyItem(itemId);
+
+    }
+
+    /**
+     * Remove a single item. The visuals of other items that
+     * are displayed inside it are moved to the fragment.
+     */
+    function destroyItem(itemId:String):Void {
+
         for (entity in entities) {
             if (entity.id == itemId) {
+
+                if (Std.isOfType(entity, Visual)) {
+                    var visual:Visual = cast entity;
+                    for (other in entities) {
+                        if (other != entity && Std.isOfType(other, Visual)) {
+                            var otherVisual:Visual = cast other;
+                            if (otherVisual.parent == visual) {
+                                add(otherVisual);
+                            }
+                        }
+                    }
+                }
 
                 entities.remove(entity);
                 entity.destroy();
@@ -940,9 +1241,10 @@ class Fragment extends Layer {
                 log.warning('Cannot update timeline track $trackId: failed to resolve entity type');
                 return;
             }
-            // TODO avoid using FieldInfo for new format
-            var entityInfo = FieldInfo.types(entityType);
-            var entityFieldType = entityInfo != null ? entityInfo.get(field) : null;
+            var trackItem = getItem(track.entity);
+            var entityFieldType = trackItem != null && trackItem.entity == entityType
+                ? typeOfItemField(trackItem, field)
+                : typeOfClassField(entityType, field);
             if (entityFieldType == null) {
                 log.warning('Cannot update timeline track $trackId: failed to resolve info for $field of entity type $entityType');
                 return;
@@ -1017,7 +1319,7 @@ class Fragment extends Layer {
                     }
                 }
                 else {
-                    log.warning('Failed to create or update keyframe #$frame of track $trackId for field $field of entity type $entityType');
+                    log.warning('Failed to create or update keyframe #$index of track $trackId for field $field of entity type $entityType');
                     return;
                 }
             }
@@ -1079,6 +1381,14 @@ class Fragment extends Layer {
 
             // Apply timeline track changes to entity
             timelineTrack.apply();
+        }
+        else if (timeline != null) {
+            // No keyframe (anymore): nothing to play for that field
+            var timelineTrack = timeline.get(entityId + '#' + track.field);
+            if (timelineTrack != null) {
+                timeline.remove(timelineTrack);
+                timelineTrack.destroy();
+            }
         }
 
     }
