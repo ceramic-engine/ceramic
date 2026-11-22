@@ -163,7 +163,7 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
         }
         else {
             // No asset, can call load() directly
-            load(internalCreate);
+            internalLoad();
         }
 
     }
@@ -200,7 +200,150 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
 
     function internalLoad() {
 
-        load(internalCreate);
+        if (_preloadedFragments != null) {
+            _createPreloadedFragments();
+        }
+        else {
+            load(internalCreate);
+        }
+
+    }
+
+/// Fragments
+
+    /**
+     * Fragments asked with `preloadFragment()` and not given yet by `loadFragment()`:
+     * fragments asset name, fragment id and instance (once created) of each.
+     */
+    var _preloadedFragmentAssets:Array<String> = null;
+
+    var _preloadedFragmentIds:Array<String> = null;
+
+    var _preloadedFragments:Array<Fragment> = null;
+
+    /**
+     * Preload a fragment of a fragments file, along with everything it
+     * displays (textures, fonts...). To be called from `preload()`.
+     *
+     * The fragment is then available from `create()` with `loadFragment()`.
+     *
+     * ```haxe
+     * override function preload() {
+     *     preloadFragment(Fragments.MENUS, 'main-menu');
+     * }
+     *
+     * override function create() {
+     *     var menu = loadFragment('main-menu');
+     * }
+     * ```
+     *
+     * @param fragments The fragments asset (name or asset id)
+     * @param fragmentId The id of the fragment in that asset
+     */
+    public function preloadFragment(fragments:Either<String,AssetId<String>>, fragmentId:String):Void {
+
+        var name:String = cast fragments;
+        if (StringTools.startsWith(name, 'fragments:')) name = name.substr(10);
+
+        if (assets.fragmentsAsset(name) == null) {
+            assets.addFragments(name);
+        }
+
+        if (_preloadedFragments == null) {
+            _preloadedFragmentAssets = [];
+            _preloadedFragmentIds = [];
+            _preloadedFragments = [];
+        }
+        _preloadedFragmentAssets.push(name);
+        _preloadedFragmentIds.push(fragmentId);
+        _preloadedFragments.push(null);
+
+    }
+
+    /**
+     * Create a fragment from a fragments file and add it to this scene.
+     *
+     * A fragment preloaded with `preloadFragment()` is ready to be displayed.
+     * Otherwise, `fragments` is required and what the fragment displays
+     * is loaded on the fly (see `Fragment.ready`).
+     *
+     * When the app reloads its assets as files change (see
+     * `Assets.watchDirectory()`), the fragment follows its file.
+     *
+     * @param fragmentId The id of the fragment
+     * @param fragments The fragments asset (name or asset id) the fragment is in.
+     *                  Can be omitted if the fragment has been preloaded.
+     * @return The fragment, or null if it could not be found
+     */
+    public function loadFragment(fragmentId:String, ?fragments:Either<String,AssetId<String>>):Null<Fragment> {
+
+        var name:String = fragments != null ? cast fragments : null;
+        if (name != null && StringTools.startsWith(name, 'fragments:')) name = name.substr(10);
+
+        // Preloaded?
+        if (_preloadedFragments != null) {
+            for (i in 0..._preloadedFragments.length) {
+                if (_preloadedFragmentIds[i] == fragmentId && (name == null || name == _preloadedFragmentAssets[i])) {
+                    var fragment = _preloadedFragments[i];
+                    if (fragment != null) {
+                        _preloadedFragmentAssets.splice(i, 1);
+                        _preloadedFragmentIds.splice(i, 1);
+                        _preloadedFragments.splice(i, 1);
+                        fragment.active = true;
+                        add(fragment);
+                        return fragment;
+                    }
+                    else if (name == null) {
+                        name = _preloadedFragmentAssets[i];
+                    }
+                }
+            }
+        }
+
+        if (name == null) {
+            log.error('Cannot load fragment $fragmentId: it was not preloaded and no fragments asset is given');
+            return null;
+        }
+
+        var asset = assets.fragmentsAsset(name);
+        if (asset == null) {
+            log.error('Cannot load fragment $fragmentId: fragments asset $name was not added to the assets of the scene');
+            return null;
+        }
+
+        var fragment = new Fragment(assets);
+        fragment.loadFromAsset(asset, fragmentId);
+        add(fragment);
+        return fragment;
+
+    }
+
+    function _createPreloadedFragments():Void {
+
+        var pending = 1;
+        var done = function() {
+            pending--;
+            if (pending == 0 && !destroyed) {
+                load(internalCreate);
+            }
+        };
+
+        for (i in 0..._preloadedFragments.length) {
+            if (_preloadedFragments[i] == null) {
+                var asset = assets.fragmentsAsset(_preloadedFragmentAssets[i]);
+                if (asset != null) {
+                    // Created now, displayed when `loadFragment()` asks for it
+                    var fragment = new Fragment(assets);
+                    fragment.active = false;
+                    _preloadedFragments[i] = fragment;
+                    pending++;
+                    fragment.loadFromAsset(asset, _preloadedFragmentIds[i]);
+                    fragment.scheduleWhenReady(this, done);
+                }
+            }
+        }
+
+        done();
 
     }
 
@@ -417,6 +560,16 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     override function destroy() {
 
         SceneSystem.shared.all.original.remove(cast this);
+
+        if (_preloadedFragments != null) {
+            // Preloaded fragments that were never displayed
+            for (fragment in _preloadedFragments) {
+                if (fragment != null) {
+                    fragment.destroy();
+                }
+            }
+            _preloadedFragments = null;
+        }
 
         if (_assets != null) {
             _assets.destroy();
