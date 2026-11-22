@@ -24,7 +24,7 @@ package ceramic;
  * 
  * ## Limitations
  * 
- * - BEZIER and CUSTOM easings are not yet supported for serialization
+ * - CUSTOM easings are functions: they cannot be converted to a string
  * - Invalid string names will throw an exception
  * 
  * @see ceramic.Easing For the easing enumeration
@@ -56,11 +56,26 @@ class EasingUtils {
      * // EasingUtils.easingFromString("INVALID"); // Doesn't exist
      * ```
      * 
-     * TODO: Add support for BEZIER easing serialization
+     * A cubic bezier easing is written with its four control values:
+     * `BEZIER(x1,y1,x2,y2)`. A null or empty string gives `NONE`.
      */
     public static function easingFromString(str:String):Easing {
 
-        // TODO BEZIER
+        if (str == null || str.length == 0)
+            return NONE;
+
+        if (StringTools.startsWith(str, 'BEZIER(') && StringTools.endsWith(str, ')')) {
+            var parts = str.substring(7, str.length - 1).split(',');
+            if (parts.length != 4)
+                throw 'Invalid bezier easing: ' + str;
+            var x1 = Std.parseFloat(StringTools.trim(parts[0]));
+            var y1 = Std.parseFloat(StringTools.trim(parts[1]));
+            var x2 = Std.parseFloat(StringTools.trim(parts[2]));
+            var y2 = Std.parseFloat(StringTools.trim(parts[3]));
+            if (Math.isNaN(x1) || Math.isNaN(y1) || Math.isNaN(x2) || Math.isNaN(y2))
+                throw 'Invalid bezier easing: ' + str;
+            return BEZIER(x1, y1, x2, y2);
+        }
 
         return Type.createEnum(Easing, str, _emptyArray);
 
@@ -86,13 +101,19 @@ class EasingUtils {
      * // original == restored
      * ```
      * 
-     * TODO: Add support for BEZIER easing serialization
+     * A cubic bezier easing gives `BEZIER(x1,y1,x2,y2)`.
+     * A `CUSTOM` easing is a function and cannot be written as a string.
      */
     public static function easingToString(easing:Easing):String {
 
-        // TODO BEZIER
-
-        return easing.getName();
+        return switch easing {
+            case BEZIER(x1, y1, x2, y2):
+                'BEZIER(' + x1 + ',' + y1 + ',' + x2 + ',' + y2 + ')';
+            case CUSTOM(_):
+                throw 'A custom easing cannot be converted to a string';
+            case _:
+                easing.getName();
+        }
 
     }
 
