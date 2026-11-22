@@ -69,23 +69,11 @@ class TimelineBoolTrack extends TimelineTrack<TimelineBoolKeyframe> {
         if (before != null && after != null) {
             // Between two keyframes - use the "before" keyframe value
             // until we reach or pass the "after" keyframe
-            var ratio = (position - before.index) / (after.index - before.index);
-
-            // Clamp ratio to 0-1 range
-            if (ratio > 1) {
-                ratio = 1;
-            }
-            else if (ratio < 0) {
-                ratio = 0;
-            }
-
-            // For boolean values, we switch at ratio >= 1 (at or past the keyframe)
-            if (ratio >= 1) {
-                value = after.value;
-            }
-            else {
-                value = before.value;
-            }
+            value = TimelineInterpolation.bool(
+                before.value,
+                after.value,
+                TimelineInterpolation.ratio(position, before.index, after.index)
+            );
         }
         else if (after != null) {
             // Before first keyframe - use first keyframe's value

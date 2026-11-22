@@ -82,40 +82,13 @@ class TimelineDegreesTrack extends TimelineTrack<TimelineFloatKeyframe> {
         var newValue:Float = value;
 
         if (before != null && after != null) {
-            // Interpolate between two keyframes
-            var ratio = (position - before.index) / (after.index - before.index);
-
-            // Clamp ratio to 0-1 range
-            if (ratio > 1) {
-                ratio = 1;
-            }
-            else if (ratio < 0) {
-                ratio = 0;
-            }
-
-            // Normalize angles to 0-360 range
-            var beforeValue = GeometryUtils.clampDegrees(before.value);
-            var afterValue = GeometryUtils.clampDegrees(after.value);
-
-            // Calculate shortest path (never more than 180 degrees)
-            var delta = afterValue - beforeValue;
-            if (delta > 180) {
-                afterValue -= 360;
-            }
-            else if (delta < -180) {
-                afterValue += 360;
-            }
-
-            // Interpolate with easing
-            newValue =
-                beforeValue
-                + (afterValue - beforeValue) * Tween.ease(
-                    after.easing,
-                    ratio
-                );
-
-            // Normalize result back to 0-360 range
-            newValue = GeometryUtils.clampDegrees(newValue);
+            // Interpolate between two keyframes, following the shortest path
+            newValue = TimelineInterpolation.degrees(
+                before.value,
+                after.value,
+                after.easing,
+                TimelineInterpolation.ratio(position, before.index, after.index)
+            );
         }
         else if (after != null) {
             // Before first keyframe - use first keyframe's angle

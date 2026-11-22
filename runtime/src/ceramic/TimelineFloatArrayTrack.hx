@@ -79,112 +79,26 @@ class TimelineFloatArrayTrack extends TimelineTrack<TimelineFloatArrayKeyframe> 
      */
     override function apply(forceChange:Bool = false):Void {
 
-        var didChange = false;
-
         // Track if any value in the array has changed
-
-        /**
-         * Interpolate between two float arrays element by element.
-         * Uses the minimum length of both arrays to avoid index errors.
-         */
-        inline function interpolateArray(result:Array<Float>, from:Array<Float>, to:Array<Float>, ratio:Float) {
-
-            var toLen = to.length;
-            var fromLen = from.length;
-            var maxLen = toLen > fromLen ? fromLen : toLen; // Use minimum length
-            if (result.length > maxLen) {
-                result.setArrayLength(maxLen);
-            }
-            var resLen = result.length;
-            for (i in 0...maxLen) {
-                var prev:Float = 0.0;
-                if (i < resLen) {
-                    prev = result.unsafeGet(i);
-                }
-                else {
-                    // Array is growing - this is a change
-                    didChange = true;
-                }
-                var fromVal = from.unsafeGet(i);
-                var toVal = to.unsafeGet(i);
-                var newVal = fromVal + (toVal - fromVal) * ratio;
-                result[i] = newVal;
-                if (newVal != prev) {
-                    didChange = true;
-                }
-            }
-
-        }
-
-        /**
-         * Copy values from source array to result array.
-         * Tracks changes for each element.
-         */
-        inline function applyArray(result:Array<Float>, array:Array<Float>) {
-
-            var maxLen = array.length;
-            if (result.length > maxLen) {
-                result.setArrayLength(maxLen);
-            }
-            var resLen = result.length;
-            for (i in 0...maxLen) {
-                var prev:Float = 0.0;
-                if (i < resLen) {
-                    prev = result.unsafeGet(i);
-                }
-                else {
-                    // Array is growing - this is a change
-                    didChange = true;
-                }
-                var newVal = array.unsafeGet(i);
-                result[i] = newVal;
-                if (newVal != prev) {
-                    didChange = true;
-                }
-            }
-
-        }
+        var didChange = false;
 
         if (before != null && after != null) {
             // Interpolate between two keyframes
-            var ratio = (position - before.index) / (after.index - before.index);
-
-            // Clamp ratio to 0-1 range
-            if (ratio > 1) {
-                ratio = 1;
-            }
-            else if (ratio < 0) {
-                ratio = 0;
-            }
-
-            // Apply interpolation based on ratio
-            if (ratio >= 1) {
-                // At or past the after keyframe
-                applyArray(value, after.value);
-            }
-            else if (ratio <= 0) {
-                // At or before the before keyframe
-                applyArray(value, before.value);
-            }
-            else {
-                // Between keyframes - interpolate with easing
-                interpolateArray(value,
-                    before.value,
-                    after.value,
-                    Tween.ease(
-                        after.easing,
-                        ratio
-                    )
-                );
-            }
+            didChange = TimelineInterpolation.floatArray(
+                value,
+                before.value,
+                after.value,
+                after.easing,
+                TimelineInterpolation.ratio(position, before.index, after.index)
+            );
         }
         else if (after != null) {
             // Before first keyframe - use first keyframe's values
-            applyArray(value, after.value);
+            didChange = TimelineInterpolation.copyFloatArray(value, after.value);
         }
         else if (before != null) {
             // After last keyframe - use last keyframe's values
-            applyArray(value, before.value);
+            didChange = TimelineInterpolation.copyFloatArray(value, before.value);
         }
 
         // Emit change event if any value has changed

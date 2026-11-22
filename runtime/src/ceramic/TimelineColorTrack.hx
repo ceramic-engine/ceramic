@@ -76,24 +76,11 @@ class TimelineColorTrack extends TimelineTrack<TimelineColorKeyframe> {
 
         if (before != null && after != null) {
             // Interpolate between two keyframes
-            var ratio = (position - before.index) / (after.index - before.index);
-
-            // Clamp ratio to 0-1 range
-            if (ratio > 1) {
-                ratio = 1;
-            }
-            else if (ratio < 0) {
-                ratio = 0;
-            }
-
-            // Interpolate color using the after keyframe's easing function
-            value = Color.interpolate(
+            value = TimelineInterpolation.color(
                 before.value,
                 after.value,
-                Tween.ease(
-                    after.easing,
-                    ratio
-                )
+                after.easing,
+                TimelineInterpolation.ratio(position, before.index, after.index)
             );
         }
         else if (after != null) {

@@ -81,23 +81,12 @@ class TimelineFloatTrack extends TimelineTrack<TimelineFloatKeyframe> {
 
         if (before != null && after != null) {
             // Interpolate between two keyframes
-            var ratio = (position - before.index) / (after.index - before.index);
-
-            // Clamp ratio to 0-1 range
-            if (ratio > 1) {
-                ratio = 1;
-            }
-            else if (ratio < 0) {
-                ratio = 0;
-            }
-
-            // Linear interpolation with easing applied to the ratio
-            value = 
-                before.value
-                + (after.value - before.value) * Tween.ease(
-                    after.easing,
-                    ratio
-                );
+            value = TimelineInterpolation.float(
+                before.value,
+                after.value,
+                after.easing,
+                TimelineInterpolation.ratio(position, before.index, after.index)
+            );
         }
         else if (after != null) {
             // Before first keyframe - use first keyframe's value
