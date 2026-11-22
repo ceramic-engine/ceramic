@@ -1,0 +1,6 @@
+app:
+    package: ceramic.tests.fragments
+    name: fragments
+    displayName: fragments
+    author: Ceramic
+    version: '1.0'
