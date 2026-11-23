@@ -246,7 +246,7 @@ class Filter extends Layer implements Observable {
      * When true:
      * - Children don't render automatically
      * - Use render() method to trigger rendering
-     * - Filter manages children's active state
+     * - The content is hidden between two renders, and stays touchable
      * - Useful for performance optimization
      * 
      * Default is false (automatic rendering).
@@ -255,7 +255,7 @@ class Filter extends Layer implements Observable {
     function set_explicitRender(explicitRender:Bool):Bool {
         if (this.explicitRender == explicitRender) return explicitRender;
         this.explicitRender = explicitRender;
-        content.active = !explicitRender;
+        updateContentVisibility();
         return explicitRender;
     }
 
@@ -386,19 +386,15 @@ class Filter extends Layer implements Observable {
      * visible (for instance created with a zero alpha): until then, the content would be
      * drawn straight to its parent's target, at its own alpha. A disabled filter draws
      * its content directly, so it stays visible.
+     *
+     * With `explicitRender`, the content is also hidden between two renders, so that
+     * it is not drawn again. Only its visibility changes: it stays touchable, and the
+     * pointer events of the filter keep reaching it.
      */
     function updateContentVisibility():Void {
 
-        final shown = !enabled || renderTexture != null;
-        if (content.active) {
-            content.visible = shown;
-        }
-        else {
-            // Deactivated by `explicitRender`: update the visibility that
-            // reactivating the content gives back (see `Visual.active`),
-            // so the order of setup doesn't matter
-            content.flags = shown ? content.flags | Visual.FLAG_VISIBLE_WHEN_ACTIVE : content.flags & ~Visual.FLAG_VISIBLE_WHEN_ACTIVE;
-        }
+        content.visible = (!enabled || renderTexture != null)
+            && !(explicitRender && explicitRenderState == 0);
 
     }
 
@@ -579,6 +575,7 @@ class Filter extends Layer implements Observable {
 
         if (renderTexture == null) {
             explicitRenderState = 0;
+            updateContentVisibility();
             var callbacks = explicitRenderPendingResultCallbacks;
             explicitRenderPendingResultCallbacks = null;
             if (done != null) {
@@ -596,7 +593,7 @@ class Filter extends Layer implements Observable {
             return;
         }
 
-        content.active = true;
+        updateContentVisibility();
 
         app.onceUpdate(null, function(_) {
             if (destroyed) {
@@ -611,8 +608,8 @@ class Filter extends Layer implements Observable {
             }
 
             if (renderTexture == null) {
-                content.active = false;
                 explicitRenderState = 0;
+                updateContentVisibility();
                 var callbacks = explicitRenderPendingResultCallbacks;
                 explicitRenderPendingResultCallbacks = null;
                 if (done != null) {
@@ -638,8 +635,8 @@ class Filter extends Layer implements Observable {
                     return;
                 }
 
-                content.active = false;
                 explicitRenderState = 0;
+                updateContentVisibility();
                 var callbacks = explicitRenderPendingResultCallbacks;
                 explicitRenderPendingResultCallbacks = null;
                 if (done != null) {

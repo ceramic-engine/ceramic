@@ -520,7 +520,7 @@ class VisualElementTest extends TestCase {
         assertTrue(filter.textureTilePacker == null);
         assertTrue(filter.explicitRender);
         // Inactive content at rest (nothing rendered)
-        assertTrue(@:privateAccess filter.explicitRenderState != 0 || !filter.content.active);
+        assertTrue(@:privateAccess filter.explicitRenderState != 0 || !filter.content.visible);
     }
 
     function testDrawnInOrderUnderAPopover() {
@@ -590,13 +590,13 @@ class VisualElementTest extends TestCase {
         ceramic.App.app.flushImmediate();
         filter.renderTexture.renderDirty = false;
         @:privateAccess filter.explicitRenderState = 0;
-        filter.content.active = false;
+        @:privateAccess filter.updateContentVisibility();
         finishCeramicDraw();
         @:privateAccess window.renderable.recordExternalVersions();
         assertFalse(window.renderable.checkExternalTextures());
         // renderNow(): drawn when the filter's texture is marked for this frame
         VisualElement.renderNow(content);
-        assertTrue(filter.content.active);
+        assertTrue(filter.content.visible);
         filter.renderTexture.renderDirty = true;
         assertTrue(window.renderable.checkExternalTextures());
     }
@@ -906,12 +906,11 @@ class VisualElementTest extends TestCase {
         filter.size(10, 10);
         filter.computeContent();
         assertTrue(filter.renderTexture != null);
-        // At rest: deactivated, nothing rendered
-        assertFalse(filter.content.active);
+        // At rest: hidden, nothing rendered, and still touchable
         assertFalse(filter.content.visible);
-        // Activated by render() until the frame is drawn: visible, so it renders
+        assertTrue(filter.content.touchable);
+        // Shown by render() until the frame is drawn, so it renders
         filter.render();
-        assertTrue(filter.content.active);
         assertTrue(filter.content.visible);
 
         // Turning explicit render off shows it too
@@ -922,7 +921,6 @@ class VisualElementTest extends TestCase {
         other.size(10, 10);
         other.computeContent();
         other.explicitRender = false;
-        assertTrue(other.content.active);
         assertTrue(other.content.visible);
     }
 
