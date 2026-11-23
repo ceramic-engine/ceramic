@@ -451,7 +451,9 @@ class IntIntMap {
             x |= x >> 4;
             x |= x >> 8;
             x |= x >> 16;
-            result = (x | x >> 32) + 1;
+            // No shift by 32: x is 32 bits wide, the shifts above already cover
+            // every bit, and shifting an Int by its own width is undefined in C++
+            result = x + 1;
         }
         return result;
 
