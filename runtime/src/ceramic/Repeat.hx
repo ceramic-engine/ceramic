@@ -422,6 +422,9 @@ class Repeat extends Visual {
         else {
             var stepX = repeatX ? texWidth : w;
             var stepY = repeatY ? texHeight : h;
+            // A texture or a tile without a size can't be repeated: no step would ever fill the area
+            if (stepX <= 0) stepX = w;
+            if (stepY <= 0) stepY = h;
             var x = 0.0;
             var y = 0.0;
             var col:Int = 0;
