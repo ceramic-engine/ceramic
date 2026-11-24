@@ -13,6 +13,7 @@ import glaze.Entity;
 import glaze.FocusHandle;
 import glaze.Hsla;
 import glaze.IntoElement;
+import glaze.Pixels;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -103,6 +104,15 @@ class ColorPicker extends Component implements Styled implements Sizable {
     @:allow(glaze.kit.colorpicker)
     @:allow(tests)
     var field:Bool = false;
+
+    @:allow(glaze.kit.colorpicker)
+    var fieldCaret:Bool = true;
+
+    @:allow(glaze.kit.colorpicker)
+    var fieldBordered:Bool = true;
+
+    @:allow(glaze.kit.colorpicker)
+    var fieldSwatch:Null<Pixels> = null;
 
     @:allow(glaze.kit.colorpicker)
     @:allow(tests)
@@ -385,7 +395,7 @@ class ColorPicker extends Component implements Styled implements Sizable {
             field,
             focused,
             placeholderValue
-        ));
+        ).fieldLook(fieldCaret, fieldBordered, fieldSwatch));
         // The popover drops its content while closed, so building the
         // palette swatches or slider tracks then is wasted work.
         if (open) popover.child(renderColors(window, cx));
@@ -429,6 +439,27 @@ class ColorSelect extends Component implements Styled implements Sizable {
      */
     public function placeholder(placeholder:String):ColorSelect {
         picker.placeholderValue = placeholder;
+        return this;
+    }
+
+    /**
+     * Whether the field shows the caret of a select at its end, default:
+     * true (addition, KIT-045).
+     */
+    public function caret(visible:Bool):ColorSelect {
+        picker.fieldCaret = visible;
+        return this;
+    }
+
+    /** Whether the field has a border when it is not focused, default: true (addition, KIT-045). */
+    public function bordered(bordered:Bool):ColorSelect {
+        picker.fieldBordered = bordered;
+        return this;
+    }
+
+    /** The size of the swatch of the field, in pixels, instead of the one of its size (addition, KIT-045). */
+    public function swatchSize(size:Pixels):ColorSelect {
+        picker.fieldSwatch = size;
         return this;
     }
 
@@ -492,6 +523,20 @@ class ColorPickerButton extends Component implements Selectable implements Sizab
         this.placeholder = placeholder;
     }
 
+    var fieldCaret:Bool = true;
+
+    var fieldBordered:Bool = true;
+
+    var fieldSwatch:Null<Pixels> = null;
+
+    /** The options of the field of a `ColorSelect` (KIT-045). */
+    public function fieldLook(caret:Bool, bordered:Bool, swatch:Null<Pixels>):ColorPickerButton {
+        fieldCaret = caret;
+        fieldBordered = bordered;
+        fieldSwatch = swatch;
+        return this;
+    }
+
     public function setSelected(selected:Bool):Void {
         selectedValue = selected;
     }
@@ -533,7 +578,7 @@ class ColorPickerButton extends Component implements Selectable implements Sizab
             .bg(colors.background)
             .textColor(colors.foreground)
             .border1()
-            .borderColor(theme.input)
+            .borderColor(fieldBordered ? theme.input : colors.background)
             .rounded(theme.radius)
             .inputSize(size)
             .inputTextSize(size);
@@ -546,7 +591,8 @@ class ColorPickerButton extends Component implements Selectable implements Sizab
             .border1()
             .borderColor(theme.input)
             .rounded(theme.radius / 2.);
-        switch size {
+        if (fieldSwatch != null) swatch.w(fieldSwatch).h(fieldSwatch);
+        else switch size {
             case XSmall: swatch.size3();
             case Small: swatch.size3p5();
             case Large: swatch.size5();
@@ -565,10 +611,9 @@ class ColorPickerButton extends Component implements Selectable implements Sizab
         } else {
             text.textColor(theme.mutedForeground).child(placeholder != null ? placeholder : I18n.t('Select.placeholder'));
         }
-        return row.child(swatch)
-            .child(text)
-            .child(Caret.component(size).textColor(theme.mutedForeground))
-            .intoAnyElement();
+        row.child(swatch).child(text);
+        if (fieldCaret) row.child(Caret.component(size).textColor(theme.mutedForeground));
+        return row.intoAnyElement();
     }
 
     public function render(window:Window, cx:App):IntoElement {

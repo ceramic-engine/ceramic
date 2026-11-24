@@ -78,6 +78,10 @@ class Switch extends Component implements Styled implements Sizable implements D
 
     @prop var color:Null<Hsla> = null;
 
+    var thumbOff:Null<Hsla> = null;
+
+    var thumbOn:Null<Hsla> = null;
+
     /**
      * Set tooltip text for the switch.
      */
@@ -148,6 +152,16 @@ class Switch extends Component implements Styled implements Sizable implements D
         return this;
     }
 
+    /**
+     * The color of the thumb while the switch is off, and optionally while
+     * it is on, instead of the one of the theme for both (addition, KIT-044).
+     */
+    public function thumbColor(off:IntoHsla, ?on:IntoHsla):Switch {
+        thumbOff = off;
+        if (on != null) thumbOn = on;
+        return this;
+    }
+
     public function withSize(size:IntoSize):Switch {
         this.sizeValue = size;
         return this;
@@ -196,22 +210,27 @@ class Switch extends Component implements Styled implements Sizable implements D
         // would let the track show through the thumb. Fading the track alone
         // lands on the pixels a grouped fade would: the thumb is `background`.
         final disabledBg = (checked ? checkedBg : uncheckedBg).opacity(0.5);
-        final toggleBg:Background = theme.tokens.switchThumb.background;
+        final ownThumb:Null<Hsla> = checked ? (thumbOn != null ? thumbOn : null) : thumbOff;
+        final toggleBg:Background = ownThumb != null ? Background.fromHsla(ownThumb) : theme.tokens.switchThumb.background;
         final disabledLabelColor = theme.mutedForeground;
 
         final bgWidth:Pixels = switch size {
             case XSmall | Small: 28.;
             case Large: 44.;
+            // A custom size is the height of the track (addition, KIT-044)
+            case Size(height): f32(f32(height * 2.) - 2.);
             case _: 36.;
         }
         final bgHeight:Pixels = switch size {
             case XSmall | Small: 16.;
             case Large: 24.;
+            case Size(height): height;
             case _: 20.;
         }
         final barWidth:Pixels = switch size {
             case XSmall | Small: 12.;
             case Large: 20.;
+            case Size(height): f32(height - 4.);
             case _: 16.;
         }
         final inset:Pixels = 2.;
