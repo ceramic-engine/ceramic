@@ -323,6 +323,30 @@ class KitDockAdditionsTest extends KitAdditionsTestCase {
         assertEquals(570., lines[0]);
     }
 
+/// KIT-058
+
+    function testALoneTabOfADockGoesWithoutItsCloseButton() {
+        final sides = (shown:Bool) -> custom((area, skin, make, window, cx) -> {
+            skin.setPanelStyle(PanelStyle.TabBar, cx);
+            skin.setCloseButtonVisible(true, cx);
+            skin.setCloseButtonOnLoneTab(shown, cx);
+            area.update(cx, (area, acx) -> {
+                area.setCenter(DockLayout.tabs().panelView(make('alpha'), cx).panelView(make('beta'), cx), window, acx);
+                // Two groups of one panel each on the left: the last panel of a dock cannot be closed
+                // anyway, a panel alone in one group of several can
+                area.setDock(DockPlacement.Left, DockLayout.vSplit()
+                    .child(DockLayout.tabs().panelView(make('side'), cx), null)
+                    .child(DockLayout.tabs().panelView(make('under'), cx), null), window, acx);
+                area.setDock(DockPlacement.Right, DockLayout.tabs().panelView(make('one'), cx).panelView(make('two'), cx), window, acx);
+            });
+        });
+        // Every closable tab has its button: two in the centre, the two lone ones, two on the right
+        assertEquals(6, closeButtons(sides(true)).length);
+        // The lone tabs of the left dock lose theirs, nothing else does
+        DockDebugBounds.clear();
+        assertEquals(4, closeButtons(sides(false)).length);
+    }
+
 /// KIT-057
 
     function testTheActiveTabTakesTheGroundOfItsPanel() {

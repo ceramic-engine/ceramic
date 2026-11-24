@@ -413,6 +413,18 @@ class Tab extends Component implements Styled implements ParentElement implement
         return this;
     }
 
+    var firstKeepsLeftBorderValue:Bool = false;
+
+    /**
+     * Keeps the left border of the tab when it is the first of its bar
+     * (addition, KIT-058). A first tab drops it by default: the edge of what
+     * holds the bar is expected to draw that line.
+     */
+    public function firstKeepsLeftBorder(keeps:Bool):Tab {
+        firstKeepsLeftBorderValue = keeps;
+        return this;
+    }
+
     var selectedBackgroundValue:Null<glaze.Hsla> = null;
 
     /**
@@ -446,7 +458,7 @@ class Tab extends Component implements Styled implements ParentElement implement
             }
         }
         if (!tabBarPrefix) {
-            if (ix == 0 && (variant == TabVariant.Tab || custom)) {
+            if (ix == 0 && !firstKeepsLeftBorderValue && (variant == TabVariant.Tab || custom)) {
                 for (style in [normalStyle, selectedStyle, disabledStyle, hoverStyle]) {
                     style.borders = new glaze.Edges(style.borders.top, style.borders.right, style.borders.bottom, 0.);
                 }

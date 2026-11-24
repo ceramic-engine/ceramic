@@ -995,6 +995,16 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** `KitDockAdditionsTest.testTheActiveTabTakesTheGroundOfItsPanel`.
 - **Upstream.** Not proposed.
 
+### KIT-058: Dock, a lone panel of a dock drawn as a tab
+
+- **Component.** `glaze.kit.dock.DockSkin`, `glaze.kit.dock.TabGroupSkin`, `glaze.kit.tab.Tab`.
+- **Behaviour of the original.** With `PanelStyle.TabBar`, a panel alone in its group is a tab with its close button, and the first tab of a bar has no left border: the edge of its container draws that line.
+- **Addition.** `DockSkin.setCloseButtonOnLoneTab(false, cx)` hides the close button of a tab alone in its group outside the centre. With `setDividerTopInset` (KIT-055), the first tab of a group keeps its left border (`Tab.firstKeepsLeftBorder`), except in the left dock: the line between two groups starts under the strips, and meets the border of the tab instead of ending under nothing.
+- **Default.** Close buttons on lone tabs, and no left border on a first tab, as before.
+- **Scope.** None.
+- **Tests.** `KitDockAdditionsTest.testALoneTabOfADockGoesWithoutItsCloseButton`.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.

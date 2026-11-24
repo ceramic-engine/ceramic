@@ -59,6 +59,20 @@ class SkinShared extends ceramic.Entity implements tracker.Observable {
     /** How far from their top the lines between side by side groups start, in pixels (KIT-055). */
     @observe var dividerTopInset:Float = 0.;
 
+    /** A tab alone in its group, outside the centre, shows its close button like any other (KIT-058). */
+    @observe var closeButtonOnLoneTab:Bool = true;
+
+    /** The region the group at `node` is in, or null. */
+    function placementOfNode(node:glaze.kit.base.dock.NodeId):Null<DockPlacement> {
+        final area = liveArea();
+        if (area == null) return null;
+        for (placement in [DockPlacement.Center, DockPlacement.Left, DockPlacement.Right, DockPlacement.Bottom]) {
+            final tree = area.layout(placement);
+            if (tree != null && tree.findNode(node) != null) return placement;
+        }
+        return null;
+    }
+
     /** What an empty centre shows, or null (KIT-051). */
     var emptyCenter:Null<(glaze.Window, App) -> glaze.IntoElement> = null;
 

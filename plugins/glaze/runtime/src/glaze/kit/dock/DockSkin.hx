@@ -231,6 +231,19 @@ class DockSkin extends DockAreaRendererBase {
     }
 
     /**
+     * With close buttons shown, hides the one of a tab that is alone in its
+     * group, outside the centre (port addition, KIT-058): a lone panel of a
+     * dock drawn as a tab (`PanelStyle.TabBar`) then reads as the title it
+     * replaces, and is still closed from its menu. On by default: every
+     * closable tab shows its button.
+     */
+    public function setCloseButtonOnLoneTab(shown:Bool, cx:App):Void {
+        if (shared.closeButtonOnLoneTab == shown) return;
+        shared.closeButtonOnLoneTab = shown;
+        shared.notify(cx);
+    }
+
+    /**
      * What an empty centre shows, when the area lets its centre be emptied
      * (`DockArea.setCenterEmptiable`, port addition, KIT-051). `null`, the
      * default, shows nothing.

@@ -391,6 +391,14 @@ class TabGroupSkin extends TabGroupRendererBase {
             unfocused = area != null && focused != null && focused != group.node() && area.groupNodes(DockPlacement.Center).length > 1;
         }
 
+        final placement = shared.placementOfNode(group.node());
+        // A tab alone in a group of a dock may go without its close button (KIT-058)
+        final loneWithoutClose = !shared.closeButtonOnLoneTab && visible.length == 1 && placement != null && placement != DockPlacement.Center;
+        // When the lines between groups start under the strips (KIT-055), the first tab of a group
+        // draws its own left border, which the line under it meets. Not in the left dock: its
+        // first tab is against the edge of the area.
+        final firstKeepsLeft = shared.dividerTopInset > 0. && placement != DockPlacement.Left;
+
         final bar = TabBar.component('tab-bar').trackScroll(scrollHandle);
         if (hasLeading) {
             final prefix = hFlex()
@@ -416,14 +424,14 @@ class TabGroupSkin extends TabGroupRendererBase {
             final drag = tabDrag(group, ix, cx);
 
             final tab:Tab = DockDebugBounds.enabled ? new DebugSelectorTab(() -> '$TAB_SELECTOR-$ix') : Tab.component();
-            tab.withIx(ix).tabBarPrefix(hasLeading);
+            tab.withIx(ix).tabBarPrefix(hasLeading).firstKeepsLeftBorder(firstKeepsLeft);
             final tabName = handle != null ? handle.tabName(cx) : null;
             tab.child(tabName != null ? (tabName : IntoElement) : DragPanelPreview.panelTitle(panel, window, cx));
             // Per-tab close (X) button. The gate mirrors `TabGroup.closePanel`,
             // plus `!collapsed`, since a collapsed strip is a way back in, not a
             // place to close. Stops propagation so the click closes by id
             // without also selecting the tab.
-            if (!collapsed && shared.closeButtonVisible && group.isPanelClosable(panel.panelId(cx), cx)) {
+            if (!collapsed && shared.closeButtonVisible && !loneWithoutClose && group.isPanelClosable(panel.panelId(cx), cx)) {
                 final panelId = panel.panelId(cx);
                 final close = Button.component(ElementId.NamedInteger('close-tab', ix))
                     .icon(IconName.Close)
