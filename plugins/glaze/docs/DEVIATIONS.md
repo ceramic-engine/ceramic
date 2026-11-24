@@ -905,6 +905,16 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
 - **Upstream.** Not proposed.
 
+### KIT-048: Tree, a drop before, inside or after a row
+
+- **Component.** `glaze.kit.tree.Tree`.
+- **Behaviour of the original.** No drag and drop of the rows. With KIT-004, a row takes a drop on itself, and the tree takes a drop outside every row.
+- **Addition.** `dropAroundEntries(type, onDrop, ?canDrop)`: the top quarter of a row drops before it, the bottom quarter after it, the rest inside it, and `onDrop` gets the place (`TreeDropPlace`: `Before`, `Inside`, `After`). A place `canDrop` refuses is not offered and the nearest accepted one is taken, so a row that takes nothing inside is split in two halves. While the drag is over a row, a line shows at the top or at the bottom of the row (`insertionLineStyle`, 2 pixels of the theme's `drag_border` by default, starting at `insertionInset`), or the row takes the `dropTargetStyle` for a drop inside. The line is drawn over the row: nothing moves. `Tree.dropPlaceAt` gives the place of a height in a row.
+- **Default.** Off: without the call, rows drop as before.
+- **Scope.** Use `dropAroundEntries` or `dropOnEntries` for a type of drag, not both. `dropTargetFor` (KIT-016) applies to `dropOnEntries` only.
+- **Tests.** `KitTreeAdditionsTest`: `testDropPlaceAtSplitsARow`, `testARowIsDroppedBeforeInsideAndAfterAnother`, `testARowThatTakesNothingInsideIsSplitInTwo`, `testARowDoesNotDropAroundItselfAndTheLineLeavesWithThePointer`, `testTheInsertionLineStartsAtItsInset`.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.

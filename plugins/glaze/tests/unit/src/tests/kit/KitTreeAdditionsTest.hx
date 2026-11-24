@@ -349,6 +349,153 @@ class KitTreeAdditionsTest extends KitAdditionsTestCase {
         assertEquals(null, state().selectedIndex());
     }
 
+    // KIT-048: a drop before, inside or after a row
+
+    function aroundTree(drops:Array<String>, ?configure:glaze.kit.tree.Tree->glaze.kit.tree.Tree):VisualTestContext {
+        newTree([
+            new TreeItem('main', 'main.lor'),
+            new TreeItem('docs', 'docs').folder(true),
+            new TreeItem('notes', 'notes.lor'),
+            new TreeItem('todo', 'todo.lor'),
+        ]);
+        return show(tree -> {
+            tree.dragEntries((ix, entry) -> new DraggedFile(entry.item().id),
+                (_, _, _, cx) -> (cx.newEntity((_:Context<DraggedFilePreview>) -> new DraggedFilePreview()) : AnyView))
+                // Only a folder takes a row inside, and nothing drops around itself
+                .dropAroundEntries(DraggedFile, (file, ix, entry, place, _, _) -> drops.push('${file.id} ${placeName(place)} ${entry.item().id} ($ix)'),
+                    (file, _, entry, place, _, _) -> entry.item().id != file.id && (place != glaze.kit.tree.Tree.TreeDropPlace.Inside || entry.isFolder()))
+                .dropTargetStyle(s -> s.bg(hsla(0., 0.75, 0.5, 1.)))
+                .insertionLineStyle(s -> s.h(px(2.)).bg(hsla(0.6, 0.75, 0.5, 1.)));
+            return configure != null ? configure(tree) : tree;
+        });
+    }
+
+    static function placeName(place:glaze.kit.tree.Tree.TreeDropPlace):String {
+        return switch place {
+            case Before: 'before';
+            case Inside: 'inside';
+            case After: 'after';
+        }
+    }
+
+    /** The padding of a `ListItem` around its content: the rows are that much larger than their probe. */
+    static inline final PAD_Y:Float = 4.;
+
+    static inline final PAD_X:Float = 12.;
+
+    /** A point of a row, at a part of the height of its content. */
+    function inRow(cx:VisualTestContext, id:String, ratio:Float):Point {
+        final bounds = boundsOf(cx, 'row-$id');
+        return point(bounds.center().x, px((bounds.origin.y : Float) + (bounds.size.height : Float) * ratio));
+    }
+
+    function testDropPlaceAtSplitsARow() {
+        final place = glaze.kit.tree.Tree.dropPlaceAt;
+        assertEquals('before', placeName(place(1., 0., 20., true, true, true)));
+        assertEquals('inside', placeName(place(10., 0., 20., true, true, true)));
+        assertEquals('after', placeName(place(19., 0., 20., true, true, true)));
+        // Nothing inside: two halves
+        assertEquals('before', placeName(place(9., 0., 20., true, false, true)));
+        assertEquals('after', placeName(place(11., 0., 20., true, false, true)));
+        // Only inside: the whole row
+        assertEquals('inside', placeName(place(1., 0., 20., false, true, false)));
+        assertEquals('inside', placeName(place(19., 0., 20., false, true, false)));
+        assertTrue(place(10., 0., 20., false, false, false) == null);
+    }
+
+    function testARowIsDroppedBeforeInsideAndAfterAnother() {
+        final blue = hsla(0.6, 0.75, 0.5, 1.);
+        final red = hsla(0., 0.75, 0.5, 1.);
+        final drops:Array<String> = [];
+        final cx = aroundTree(drops);
+        assertEquals(0, quadsFilled(cx, blue).length);
+
+        // The top of the folder: a line at the top of its row
+        var at = inRow(cx, 'docs', 0.1);
+        drag(cx, 'todo', at);
+        var lines = quadsFilled(cx, blue);
+        assertEquals(1, lines.length);
+        final docs = boundsOf(cx, 'row-docs');
+        assertEquals(2., (lines[0].bounds.size.height : Float));
+        assertEquals((docs.origin.y : Float) - PAD_Y, (lines[0].bounds.origin.y : Float));
+        assertEquals(0, quadsFilled(cx, red).length);
+        drop(cx, at);
+        assertEquals('todo before docs (1)', drops.join(','));
+        assertEquals(0, quadsFilled(cx, blue).length);
+
+        // The middle of the folder: the row is highlighted, no line
+        at = inRow(cx, 'docs', 0.5);
+        drag(cx, 'todo', at);
+        assertEquals(0, quadsFilled(cx, blue).length);
+        assertEquals(1, [for (entry in quadsFilled(cx, red)) if (entry.bounds.contains(at)) entry].length);
+        drop(cx, at);
+        assertEquals('todo inside docs (1)', drops[1]);
+        assertEquals(0, quadsFilled(cx, red).length);
+
+        // The bottom of the folder: a line at the bottom of its row
+        at = inRow(cx, 'docs', 0.9);
+        drag(cx, 'todo', at);
+        lines = quadsFilled(cx, blue);
+        assertEquals(1, lines.length);
+        assertEquals((docs.origin.y : Float) + (docs.size.height : Float) + PAD_Y - 2., (lines[0].bounds.origin.y : Float));
+        drop(cx, at);
+        assertEquals('todo after docs (1)', drops[2]);
+    }
+
+    function testARowThatTakesNothingInsideIsSplitInTwo() {
+        final blue = hsla(0.6, 0.75, 0.5, 1.);
+        final drops:Array<String> = [];
+        final cx = aroundTree(drops);
+        final notes = boundsOf(cx, 'row-notes');
+        var at = inRow(cx, 'notes', 0.4);
+        drag(cx, 'main', at);
+        var lines = quadsFilled(cx, blue);
+        assertEquals(1, lines.length);
+        assertEquals((notes.origin.y : Float) - PAD_Y, (lines[0].bounds.origin.y : Float));
+        // The line follows the pointer to the other half
+        at = inRow(cx, 'notes', 0.6);
+        cx.simulateMouseMove(at, Left);
+        frame(cx);
+        lines = quadsFilled(cx, blue);
+        assertEquals(1, lines.length);
+        assertEquals((notes.origin.y : Float) + (notes.size.height : Float) + PAD_Y - 2., (lines[0].bounds.origin.y : Float));
+        drop(cx, at);
+        assertEquals('main after notes (2)', drops.join(','));
+    }
+
+    function testARowDoesNotDropAroundItselfAndTheLineLeavesWithThePointer() {
+        final blue = hsla(0.6, 0.75, 0.5, 1.);
+        final drops:Array<String> = [];
+        final cx = aroundTree(drops);
+        // Over itself: nothing
+        var at = inRow(cx, 'notes', 0.9);
+        drag(cx, 'notes', at);
+        assertEquals(0, quadsFilled(cx, blue).length);
+        // Over another row, then away from every row
+        at = inRow(cx, 'todo', 0.9);
+        cx.simulateMouseMove(at, Left);
+        frame(cx);
+        assertEquals(1, quadsFilled(cx, blue).length);
+        final away = point(at.x, px((at.y : Float) + 200.));
+        cx.simulateMouseMove(away, Left);
+        frame(cx);
+        assertEquals(0, quadsFilled(cx, blue).length);
+        drop(cx, away);
+        assertEquals('', drops.join(','));
+    }
+
+    function testTheInsertionLineStartsAtItsInset() {
+        final blue = hsla(0.6, 0.75, 0.5, 1.);
+        final cx = aroundTree([], tree -> tree.insertionInset((ix, entry) -> 30.));
+        final at = inRow(cx, 'notes', 0.9);
+        drag(cx, 'main', at);
+        final lines = quadsFilled(cx, blue);
+        assertEquals(1, lines.length);
+        final notes = boundsOf(cx, 'row-notes');
+        assertEquals((notes.origin.x : Float) - PAD_X + 30., (lines[0].bounds.origin.x : Float));
+        drop(cx, at);
+    }
+
     // KIT-015, KIT-016, KIT-017
 
     /** A folder with two files, a root file: every row takes a drop, the highlight goes to the parent folder. */

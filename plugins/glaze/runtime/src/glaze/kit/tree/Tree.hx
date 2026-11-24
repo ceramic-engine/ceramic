@@ -4,6 +4,7 @@
 // Additions without upstream equivalent (KIT-004 in docs/DEVIATIONS.md): `toggleOnClick`, `navigationKeys`,
 // drag and drop of the rows (`dragEntries`, `dropOnEntries`, `dropOnRoot`, the drop target styles).
 // KIT-022: `rowHeight` (rows of different heights).
+// KIT-048: `dropAroundEntries` (a drop before, inside or after a row, with an insertion line).
 package glaze.kit.tree;
 
 import glaze.App;
@@ -40,6 +41,20 @@ typedef TreeItem = glaze.kit.base.Tree.TreeItem;
 typedef TreeState = glaze.kit.base.Tree.TreeState;
 
 typedef TreeComponentRenderItem = (Int, TreeEntry, Bool, Window, App) -> ListItem;
+
+/** Where a drag is dropped around a row (KIT-048). */
+enum abstract TreeDropPlace(Int) to Int {
+
+    /** Before the row, at the same level. */
+    var Before = -1;
+
+    /** Inside the row. */
+    var Inside = 0;
+
+    /** After the row, at the same level. */
+    var After = 1;
+
+}
 
 typedef TreeContextMenuBuilder = (Int, TreeEntry, PopupMenu, Window, Context<TreeState>) -> PopupMenu;
 
@@ -85,6 +100,12 @@ class Tree extends Component implements Styled {
     final entryDrops:Array<{type:Class<Dynamic>, onDrop:(Dynamic, Int, TreeEntry, Window, App) -> Void, canDrop:Null<(Dynamic, Int, TreeEntry, Window, App) -> Bool>}> = [];
 
     final rootDrops:Array<{type:Class<Dynamic>, onDrop:(Dynamic, Window, App) -> Void, canDrop:Null<(Dynamic, Window, App) -> Bool>}> = [];
+
+    final aroundDrops:Array<{type:Class<Dynamic>, onDrop:(Dynamic, Int, TreeEntry, TreeDropPlace, Window, App) -> Void, canDrop:Null<(Dynamic, Int, TreeEntry, TreeDropPlace, Window, App) -> Bool>}> = [];
+
+    var insertionLineStyleValue:Null<(StyleBuilder) -> StyleBuilder> = null;
+
+    var insertionInsetValue:Null<(Int, TreeEntry) -> Float> = null;
 
     var dropTargetStyleValue:Null<(StyleBuilder) -> StyleBuilder> = null;
 
@@ -137,6 +158,65 @@ class Tree extends Component implements Styled {
     public function dropOnEntries<T>(type:Class<T>, onDrop:(T, Int, TreeEntry, Window, App) -> Void, ?canDrop:(T, Int, TreeEntry, Window, App) -> Bool):Tree {
         entryDrops.push({type: cast type, onDrop: cast onDrop, canDrop: cast canDrop});
         return this;
+    }
+
+    /**
+     * Makes the rows drop targets of drags of type `type`, with a place
+     * (addition, KIT-048): the top quarter of a row drops before it, the
+     * bottom quarter after it, the rest inside it. `onDrop` gets the dragged
+     * value, the row and the place. A place for which `canDrop` returns
+     * false is not offered: the nearest place that is accepted is taken
+     * (a row that takes nothing inside is split in two halves), and a row
+     * that accepts no place neither shows nor takes the drop. While the
+     * drag is over a row, an insertion line shows at the top or at the
+     * bottom of the row (`insertionLineStyle`, `insertionInset`), or the
+     * row takes the `dropTargetStyle` for a drop inside. Use this or
+     * `dropOnEntries` for a type, not both.
+     */
+    public function dropAroundEntries<T>(type:Class<T>, onDrop:(T, Int, TreeEntry, TreeDropPlace, Window, App) -> Void,
+            ?canDrop:(T, Int, TreeEntry, TreeDropPlace, Window, App) -> Bool):Tree {
+        aroundDrops.push({type: cast type, onDrop: cast onDrop, canDrop: cast canDrop});
+        return this;
+    }
+
+    /**
+     * The style of the insertion line of `dropAroundEntries`: a line of 2
+     * pixels in the theme's `drag_border` color by default.
+     */
+    public function insertionLineStyle(style:Null<(StyleBuilder) -> StyleBuilder>):Tree {
+        insertionLineStyleValue = style;
+        return this;
+    }
+
+    /**
+     * Where the insertion line of `dropAroundEntries` starts, in pixels
+     * from the left of the row (the indentation of the row, so that the
+     * line tells the level of the drop). 0 by default.
+     */
+    public function insertionInset(inset:Null<(ix:Int, entry:TreeEntry) -> Float>):Tree {
+        insertionInsetValue = inset;
+        return this;
+    }
+
+    /**
+     * The place a pointer at height `y` drops at, in a row from `top` of
+     * height `height`, among the places accepted. Null when none is.
+     */
+    public static function dropPlaceAt(y:Float, top:Float, height:Float, before:Bool, inside:Bool, after:Bool):Null<TreeDropPlace> {
+        final ratio = height > 0 ? (y - top) / height : 0.5;
+        final order:Array<TreeDropPlace> = if (ratio < 0.25) [Before, Inside, After];
+            else if (ratio > 0.75) [After, Inside, Before];
+            else if (ratio < 0.5) [Inside, Before, After];
+            else [Inside, After, Before];
+        for (place in order) {
+            final accepted = switch place {
+                case Before: before;
+                case Inside: inside;
+                case After: after;
+            }
+            if (accepted) return place;
+        }
+        return null;
     }
 
     /**
@@ -222,7 +302,15 @@ class Tree extends Component implements Styled {
         final dragPreview = this.dragPreview;
         final entryDrops = this.entryDrops;
         final rootDrops = this.rootDrops;
-        final rowDragAndDrop = dragValue != null || entryDrops.length > 0;
+        final aroundDrops = this.aroundDrops;
+        final rowDragAndDrop = dragValue != null || entryDrops.length > 0 || aroundDrops.length > 0;
+        final insertionLineStyle:(StyleBuilder) -> StyleBuilder = insertionLineStyleValue != null ? insertionLineStyleValue : s -> s.h(px(2.)).bg(theme.dragBorder);
+        final insertionInset = insertionInsetValue;
+        // KIT-048: the row and the place an accepted drag points at, kept across frames
+        final around:Null<TreeDropAround> = aroundDrops.length > 0
+            ? window.useKeyedState(ElementId.Name('tree-drop-around-' + state.entityId()), cx, _ -> new TreeDropAround()).read(cx).value
+            : null;
+        if (around != null && !cx.hasActiveDrag()) around.clear();
         final dropTargetStyle:(StyleBuilder) -> StyleBuilder = dropTargetStyleValue != null ? dropTargetStyleValue : s -> s.bg(theme.dropTarget);
         final rootDropTargetStyle:(StyleBuilder) -> StyleBuilder = rootDropTargetStyleValue != null ? rootDropTargetStyleValue : s -> s.bg(theme.dropTarget);
 
@@ -304,11 +392,69 @@ class Tree extends Component implements Styled {
                         }
                     }
                 }
+                if (around != null && !entry.isDisabled()) {
+                    final current = (cx:App) -> {
+                        final found = state.read(cx).entry(ix);
+                        return found != null && found.item().id == id ? found : null;
+                    };
+                    // The place of a pointer at this height, among the ones the drag is accepted at
+                    final placeFor = (value:Dynamic, y:Float, top:Float, height:Float, window:Window, cx:App) -> {
+                        final found = current(cx);
+                        if (found == null) return null;
+                        for (drop in aroundDrops) {
+                            if (Std.isOfType(value, drop.type)) {
+                                final can = drop.canDrop;
+                                return dropPlaceAt(y, top, height,
+                                    can == null || can(value, ix, found, Before, window, cx),
+                                    can == null || can(value, ix, found, Inside, window, cx),
+                                    can == null || can(value, ix, found, After, window, cx));
+                            }
+                        }
+                        return null;
+                    };
+                    row.canDrop((value, window, cx) -> placeFor(value, 0., 0., 0., window, cx) != null);
+                    for (drop in aroundDrops) {
+                        row.onDragMove(drop.type, (event, window, cx) -> {
+                            final bounds = event.bounds;
+                            final position = event.event.position;
+                            final place = bounds.contains(position)
+                                ? placeFor(event.drag(cx), position.y, bounds.origin.y, bounds.size.height, window, cx)
+                                : null;
+                            var changed = false;
+                            if (place != null) {
+                                changed = around.set(ix, place);
+                            } else if (around.active && around.ix == ix) {
+                                around.clear();
+                                changed = true;
+                            }
+                            if (changed) state.update(cx, (_, cx) -> cx.notify());
+                        });
+                        row.onDrop(drop.type, (value, window, cx) -> {
+                            final found = current(cx);
+                            final place:Null<TreeDropPlace> = around.active && around.ix == ix ? around.place : placeFor(value, 0., 0., 0., window, cx);
+                            around.clear();
+                            if (found != null && place != null) drop.onDrop(value, ix, found, place, window, cx);
+                        });
+                    }
+                }
                 if (highlight != null && highlight.active && highlight.target == ix) {
                     row.refineStyle(StyleBuilder.build(dropTargetStyle));
                 }
+                var line:Null<glaze.Div> = null;
+                if (around != null && around.active && around.ix == ix) {
+                    if (around.place == Inside) {
+                        row.refineStyle(StyleBuilder.build(dropTargetStyle));
+                    } else {
+                        // The insertion line, over the row: nothing moves
+                        line = div().absolute().left(px(insertionInset != null ? insertionInset(ix, entry) : 0.)).right0();
+                        if (around.place == Before) line.top0() else line.bottom0();
+                        line.refineStyle(StyleBuilder.build(insertionLineStyle));
+                        row.relative();
+                    }
+                }
+                row.child(item);
+                if (line != null) row.child(line);
                 return row
-                    .child(item)
                     .contextMenu((menu, window, cx) -> {
                         // KIT-017: a row's menu replaces the tree's own
                         if (rootMenuControl != null) rootMenuControl.close(window);
@@ -362,6 +508,33 @@ class Tree extends Component implements Styled {
                 .withControl(rootMenuControl);
         }
         return container.verticalScrollbar(scrollHandle);
+    }
+
+}
+
+/** The row and the place an accepted drag points at in a tree with `dropAroundEntries` (KIT-048). */
+private class TreeDropAround {
+
+    public var active:Bool = false;
+
+    public var ix:Int = -1;
+
+    public var place:TreeDropPlace = Inside;
+
+    public function new() {}
+
+    /** Returns whether something changed. */
+    public function set(ix:Int, place:TreeDropPlace):Bool {
+        if (active && this.ix == ix && this.place == place) return false;
+        active = true;
+        this.ix = ix;
+        this.place = place;
+        return true;
+    }
+
+    public function clear():Void {
+        active = false;
+        ix = -1;
     }
 
 }
