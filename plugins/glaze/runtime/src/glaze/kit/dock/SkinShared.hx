@@ -32,6 +32,15 @@ class SkinShared extends ceramic.Entity implements tracker.Observable {
 
     @observe var closeButtonVisible:Bool = false;
 
+    /** The color of the line drawn at the top of the active tab, or null for none. */
+    @observe var activeTabAccent:Null<glaze.Hsla> = null;
+
+    /** How thick that line is, in pixels. */
+    @observe var activeTabAccentWidth:Float = 2.;
+
+    /** The close button of a tab that is not the active one shows while the pointer is over the tab only. */
+    @observe var closeButtonOnHover:Bool = false;
+
     /**
      * The dock whose resize handle is being dragged, if any. Only one can be.
      */

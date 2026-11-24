@@ -141,6 +141,31 @@ class DockSkin extends DockAreaRendererBase {
         shared.notify(cx);
     }
 
+    /**
+     * Marks the active tab of every group with a line of `color` at its top,
+     * for an application that shows an accent of its own (the color of a
+     * mode). `null`, the default, draws no line. Port addition.
+     */
+    public function setActiveTabAccent(color:Null<glaze.Hsla>, cx:App, width:Float = 2.):Void {
+        final current = shared.activeTabAccent;
+        final same = current == color || (current != null && color != null && current.equals(color));
+        if (same && shared.activeTabAccentWidth == width) return;
+        shared.activeTabAccent = color;
+        shared.activeTabAccentWidth = width;
+        shared.notify(cx);
+    }
+
+    /**
+     * With close buttons shown, keeps the one of a tab that is not the
+     * active one hidden until the pointer is over the tab (addition,
+     * KIT-047). Its room is kept, so the tabs do not move. Off by default.
+     */
+    public function setCloseButtonOnHover(onHover:Bool, cx:App):Void {
+        if (shared.closeButtonOnHover == onHover) return;
+        shared.closeButtonOnHover = onHover;
+        shared.notify(cx);
+    }
+
 /// User toggles (Rust `toggle_dock_by_user` / `report_user_toggle`)
 
     /**

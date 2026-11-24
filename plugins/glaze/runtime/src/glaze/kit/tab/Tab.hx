@@ -384,6 +384,22 @@ class Tab extends Component implements Styled implements ParentElement implement
         this.size = size;
     }
 
+    var topAccentValue:Null<glaze.Hsla> = null;
+
+    var topAccentWidth:Float = 2.;
+
+    /**
+     * Draws a line of `color`, `width` px thick (2 by default), along the
+     * top of the tab while it is selected, over its whole width (addition,
+     * KIT-039): the accent of an application on its active tab, or the edge
+     * of a tab over a strip that has none. Null, the default, draws none.
+     */
+    public function topAccent(color:Null<glaze.Hsla>, width:Float = 2.):Tab {
+        topAccentValue = color;
+        topAccentWidth = width;
+        return this;
+    }
+
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final normalStyle = variant.normal(cx);
@@ -606,6 +622,10 @@ class Tab extends Component implements Styled implements ParentElement implement
         });
         if (folder && this.selected) {
             base.child(folderTabShape(metrics, theme.tokens.tabActive.background));
+        }
+        // Addition (KIT-039): on the tab itself, not on its content, so that it spans the prefix and the suffix too
+        if (topAccentValue != null && this.selected && !this.disabled) {
+            base.child(div().absolute().top0().left0().right0().h(glaze.Prelude.px(topAccentWidth)).bg(topAccentValue));
         }
         if (folder && hovered && !this.selected && !this.disabled) {
             base.child(div()

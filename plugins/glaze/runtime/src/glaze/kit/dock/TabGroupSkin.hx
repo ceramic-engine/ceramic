@@ -338,7 +338,11 @@ class TabGroupSkin extends TabGroupRendererBase {
             .gap1()
             .child(renderToolbar(group, window, cx));
         if (rightButton != null) trailing.child(rightButton);
-        return bar.child(trailing).intoAnyElement();
+        bar.child(trailing);
+        // KIT-039: a panel shown by its title has the line the active tab of a group has
+        final accent = shared.activeTabAccent;
+        if (accent != null) bar.relative().child(div().absolute().top0().left0().right0().h(px(shared.activeTabAccentWidth)).bg(accent));
+        return bar.intoAnyElement();
     }
 
     /**
@@ -435,13 +439,23 @@ class TabGroupSkin extends TabGroupRendererBase {
                         cx.stopPropagation();
                         group.close(panelId, window, cx);
                     });
-                tab.suffix(DockDebugBounds.wrap(() -> CLOSE_BUTTON_SELECTOR, close));
+                final shownClose:IntoElement = DockDebugBounds.wrap(() -> CLOSE_BUTTON_SELECTOR, close);
+                if (shared.closeButtonOnHover && ix != displayedIx) {
+                    // KIT-047: there, but shown while the pointer is over its tab only
+                    final hoverGroup = 'dock-tab-hover-$ix';
+                    tab.group(hoverGroup);
+                    tab.suffix(div().opacity(0.).groupHover(hoverGroup, s -> s.opacity(1.)).child(shownClose));
+                } else {
+                    tab.suffix(shownClose);
+                }
             }
             // A collapsed group shows no tab as active: the strip is a way back
             // in, not a selection. The comparison is against the panel on
             // screen, not the stored index: a hidden displayed tab falls back
             // to the first visible one.
             tab.selected(!collapsed && ix == displayedIx);
+            // The application's accent, as a line along the top of the active tab (KIT-039)
+            tab.topAccent(shared.activeTabAccent, shared.activeTabAccentWidth);
             final area = shared.area();
             final lastActiveIx = this.lastActiveIx;
             tab.onClick((_, window, cx) -> {
