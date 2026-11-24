@@ -1100,6 +1100,7 @@ class App extends Entity {
         converters.set('ceramic.BitmapFont', new ConvertFont());
         converters.set('ceramic.FragmentData', new ConvertFragmentData());
         converters.set('ceramic.Color', new ConvertColor());
+        converters.set('ceramic.Blending', new ConvertBlending());
         converters.set('Map<String,String>', new ConvertMap<String>());
         converters.set('Map<String,Bool>', new ConvertMap<Bool>());
         converters.set('ceramic.ReadOnlyMap<String,String>', new ConvertMap<String>());

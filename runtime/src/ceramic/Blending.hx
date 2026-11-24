@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.macros.EnumAbstractMacro;
+
 /**
  * Blending modes that control how pixels are combined when drawing.
  * 
@@ -153,5 +155,20 @@ enum abstract Blending(Int) from Int to Int {
      * Formula: result.rgb = source.rgb + dest.rgb * (1 - source.rgb), result.alpha = source.alpha + dest.alpha * (1 - source.alpha)
      */
     var SCREEN = 9;
+
+    /**
+     * The name of this blending, as written in the code: `ADD`, `AUTO`...
+     */
+    public function toString():String {
+        return EnumAbstractMacro.toStringSwitch(Blending, abstract);
+    }
+
+    /**
+     * The blending of the given name (`ADD`, `AUTO`...).
+     * Throws when no blending has that name.
+     */
+    public static function fromString(name:String):Blending {
+        return EnumAbstractMacro.fromStringSwitch(Blending, name);
+    }
 
 }

@@ -1,6 +1,7 @@
 package;
 
 import ceramic.App;
+import ceramic.Blending;
 import ceramic.Color;
 import ceramic.Easing;
 import ceramic.EasingUtils;
@@ -313,7 +314,8 @@ class Project extends Entity {
 
     static final SCHEMA:Dynamic = {
         'ceramic.Quad': {
-            x: 'Float', y: 'Float', width: 'Float', height: 'Float', alpha: 'Float', rotation: 'Float', visible: 'Bool', color: 'ceramic.Color'
+            x: 'Float', y: 'Float', width: 'Float', height: 'Float', alpha: 'Float', rotation: 'Float', visible: 'Bool', color: 'ceramic.Color',
+            blending: 'ceramic.Blending'
         },
         'ceramic.Visual': {
             x: 'Float', y: 'Float', width: 'Float', height: 'Float'
@@ -344,6 +346,24 @@ class Project extends Entity {
 
         final q = fragment.get('q', Quad);
         check('schema: item created', q != null && q.width == 10 && q.color == Color.RED);
+
+        // A blending is written by its name, in any case, or by its number
+        check('blending: auto by default', q != null && q.blending == Blending.AUTO);
+        check('blending: names', Blending.ADD.toString() == 'ADD' && Blending.fromString('MULTIPLY') == Blending.MULTIPLY);
+        final blended = new Fragment();
+        var b = data('blended', [
+            { id: 'byName', entity: 'ceramic.Quad', props: { width: 10, height: 10, blending: 'ADD' } },
+            { id: 'lower', entity: 'ceramic.Quad', props: { width: 10, height: 10, blending: 'screen' } },
+            { id: 'byNumber', entity: 'ceramic.Quad', props: { width: 10, height: 10, blending: 8 } },
+            { id: 'unknown', entity: 'ceramic.Quad', props: { width: 10, height: 10, blending: 'NOPE' } }
+        ]);
+        b.schema = SCHEMA;
+        blended.fragmentData = b;
+        check('blending: by name', blended.get('byName', Quad) != null && blended.get('byName', Quad).blending == Blending.ADD);
+        check('blending: name in lower case', blended.get('lower', Quad) != null && blended.get('lower', Quad).blending == Blending.SCREEN);
+        check('blending: by number', blended.get('byNumber', Quad) != null && blended.get('byNumber', Quad).blending == Blending.MULTIPLY);
+        check('blending: unknown name is auto', blended.get('unknown', Quad) != null && blended.get('unknown', Quad).blending == Blending.AUTO);
+        blended.destroy();
         check('tracks: created', fragment.timeline != null && fragment.timeline.tracks.length == 4);
         check('tracks: fps', fragment.fps == 60 && fragment.timeline.fps == 60);
         check('tracks: labels', fragment.indexOfLabel('end') == 10 && fragment.indexOfLabel('start') == 0);
