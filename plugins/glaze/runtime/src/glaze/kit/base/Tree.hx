@@ -210,6 +210,12 @@ class TreeEntry {
 enum TreeEvent {
     Expanded(id:String);
     Collapsed(id:String);
+    /**
+     * A click or a key changed the selection of a tree with `multiSelect`
+     * (addition, KIT-046): the ids of the selected items, in the order of
+     * the rows.
+     */
+    SelectionChanged(ids:Array<String>);
 }
 
 /** The interaction state supplied while rendering a visible tree entry. */
@@ -276,6 +282,16 @@ class TreeState extends Model implements Render {
     /** See `Tree.navigationKeys`. */
     var navigationKeys:Bool = false;
 
+    /** See `Tree.multiSelect`. */
+    var multiSelect:Bool = false;
+
+    /**
+     * The selected rows of a tree with `multiSelect`, in the order of the
+     * rows. `selectedIx` is the one among them the keyboard starts from and
+     * a Shift click extends from.
+     */
+    var selectedIxs:Array<Int> = [];
+
     /** See `Tree.rowHeight`. */
     var rowHeight:Null<(ix:Int, entry:TreeEntry) -> Float> = null;
 
@@ -304,9 +320,12 @@ class TreeState extends Model implements Render {
     public function setItems(items:Array<TreeItem>, cx:Context<Dynamic>, keepSelection:Bool = false):Void {
         final selectedId = keepSelection && selectedIx != null && entry(selectedIx) != null ? entry(selectedIx).item().id : null;
         final rightClickedId = keepSelection && rightClickedIx != null && entry(rightClickedIx) != null ? entry(rightClickedIx).item().id : null;
+        final selectedIds = keepSelection ? this.selectedIds() : [];
         replaceItems(items);
         selectedIx = selectedId != null ? indexOf(selectedId) : null;
         rightClickedIx = rightClickedId != null ? indexOf(rightClickedId) : null;
+        selectedIxs = indicesOf(selectedIds);
+        if (selectedIxs.length == 0 && selectedIx != null) selectedIxs = [selectedIx];
         cx.notify();
     }
 
@@ -325,7 +344,49 @@ class TreeState extends Model implements Render {
 
     public function setSelectedIndex(ix:Null<Int>, cx:Context<Dynamic>):Void {
         selectedIx = ix;
+        selectedIxs = ix != null ? [ix] : [];
         cx.notify();
+    }
+
+    /** The selected rows, in the order of the rows: one at most without `multiSelect`. */
+    public function selectedIndices():Array<Int> {
+        if (!multiSelect) return selectedIx != null ? [selectedIx] : [];
+        return selectedIxs.copy();
+    }
+
+    /** The ids of the selected items, in the order of the rows. */
+    public function selectedIds():Array<String> {
+        final ids:Array<String> = [];
+        for (ix in selectedIndices()) {
+            final entry = this.entry(ix);
+            if (entry != null) ids.push(entry.item().id);
+        }
+        return ids;
+    }
+
+    /**
+     * Selects the items of these ids, for a tree whose selection is the
+     * caller's (addition, KIT-046). An id that is not a visible row is left
+     * out. No `SelectionChanged` is emitted: the caller knows.
+     */
+    public function setSelectedIds(ids:Array<String>, cx:Context<Dynamic>):Void {
+        final next = indicesOf(ids);
+        var same = next.length == selectedIxs.length;
+        if (same) for (i in 0...next.length) if (next[i] != selectedIxs[i]) same = false;
+        if (same && (selectedIx == null ? next.length == 0 : next.indexOf(selectedIx) != -1)) return;
+        selectedIxs = next;
+        if (selectedIx == null || next.indexOf(selectedIx) == -1) selectedIx = next.length > 0 ? next[next.length - 1] : null;
+        cx.notify();
+    }
+
+    /** The rows of these ids, sorted. */
+    function indicesOf(ids:Array<String>):Array<Int> {
+        final found:Array<Int> = [];
+        if (ids.length == 0) return found;
+        for (ix in 0...entries.length) {
+            if (ids.indexOf(entries[ix].item().id) != -1) found.push(ix);
+        }
+        return found;
     }
 
     public function setSelectedItem(item:Null<TreeItem>, cx:Context<Dynamic>):Void {
@@ -338,6 +399,7 @@ class TreeState extends Model implements Render {
         } else {
             selectedIx = null;
         }
+        selectedIxs = selectedIx != null ? [selectedIx] : [];
         cx.notify();
     }
 
@@ -474,7 +536,14 @@ class TreeState extends Model implements Render {
         entry.item().state.expanded = expanded;
         cx.emit(expanded ? TreeEvent.Expanded(id) : TreeEvent.Collapsed(id));
         rightClickedIx = null;
+        // The rows after this one move: the selection follows its items
+        final kept = multiSelect ? selectedIds() : null;
+        final primary = multiSelect && selectedIx != null && this.entry(selectedIx) != null ? this.entry(selectedIx).item().id : null;
         rebuildEntries();
+        if (kept != null) {
+            selectedIxs = indicesOf(kept);
+            selectedIx = primary != null ? indexOf(primary) : null;
+        }
     }
 
     function rebuildEntries():Void {
@@ -524,6 +593,8 @@ class TreeState extends Model implements Render {
 
     function select(ix:Int, strategy:ScrollStrategy, cx:Context<Dynamic>):Void {
         selectedIx = ix;
+        selectedIxs = [ix];
+        emitSelection(cx);
         scrollToItem(ix, strategy);
         cx.notify();
     }
@@ -588,6 +659,8 @@ class TreeState extends Model implements Render {
         var ix = selectedIx != null ? selectedIx : 0;
         ix = ix > 0 ? ix - 1 : (entries.length > 0 ? entries.length - 1 : 0);
         selectedIx = ix;
+        selectedIxs = entries.length > 0 ? [ix] : [];
+        emitSelection(cx);
         scrollToItem(ix, ScrollStrategy.Top);
         cx.notify();
     }
@@ -596,14 +669,47 @@ class TreeState extends Model implements Render {
         var ix = selectedIx != null ? selectedIx : 0;
         ix = ix + 1 < entries.length ? ix + 1 : 0;
         selectedIx = ix;
+        selectedIxs = entries.length > 0 ? [ix] : [];
+        emitSelection(cx);
         scrollToItem(ix, ScrollStrategy.Bottom);
         cx.notify();
     }
 
-    function onEntryClick(ix:Int, cx:Context<Dynamic>, clickCount:Int = 1):Void {
+    /** Tells the selection of a tree with `multiSelect` (KIT-046). */
+    function emitSelection(cx:Context<Dynamic>):Void {
+        if (multiSelect) cx.emit(TreeEvent.SelectionChanged(selectedIds()));
+    }
+
+    function onEntryClick(ix:Int, cx:Context<Dynamic>, clickCount:Int = 1, ?modifiers:glaze.Modifiers):Void {
+        if (multiSelect && modifiers != null && (modifiers.platform || modifiers.control)) {
+            // Adds the row to the selection, or takes it out
+            if (selectedIxs.indexOf(ix) != -1) {
+                selectedIxs = [for (other in selectedIxs) if (other != ix) other];
+                if (selectedIx == ix) selectedIx = selectedIxs.length > 0 ? selectedIxs[selectedIxs.length - 1] : null;
+            } else {
+                final next = selectedIxs.concat([ix]);
+                next.sort((a, b) -> a - b);
+                selectedIxs = next;
+                selectedIx = ix;
+            }
+            emitSelection(cx);
+            cx.notify();
+            return;
+        }
+        if (multiSelect && modifiers != null && modifiers.shift && selectedIx != null) {
+            // From the row the selection started at to this one
+            final from = selectedIx < ix ? selectedIx : ix;
+            final to = selectedIx < ix ? ix : selectedIx;
+            selectedIxs = [for (other in from...to + 1) if (!entries[other].isDisabled()) other];
+            emitSelection(cx);
+            cx.notify();
+            return;
+        }
         selectedIx = ix;
+        selectedIxs = [ix];
         // Without the toggle on a single click, a double click toggles.
         if (toggleOnClick || clickCount == 2) toggleExpand(ix, cx);
+        emitSelection(cx);
         cx.notify();
     }
 
@@ -614,7 +720,7 @@ class TreeState extends Model implements Render {
             final items:Array<IntoElement> = [];
             for (ix in range.start...range.end) {
                 final entry = state.entries[ix];
-                final entryState = new TreeEntryState(ix == state.selectedIx, ix == state.rightClickedIx);
+                final entryState = new TreeEntryState(state.multiSelect ? state.selectedIxs.indexOf(ix) != -1 : ix == state.selectedIx, ix == state.rightClickedIx);
                 // Rust `.role(Role::TreeItem)`, `.aria_label(label)`,
                 // `.aria_selected(selected)`, `.aria_expanded(expanded)` for
                 // folders: no accessibility tree in the port.
@@ -626,7 +732,7 @@ class TreeState extends Model implements Render {
                     // Select and toggle on a full click, like `List` and `Table`
                     // rows, so a press that is dragged away leaves the entry alone.
                     element.onClick(cx.listener((state:TreeState, event:glaze.ClickEvent, _, cx) -> {
-                        state.onEntryClick(ix, cx, glaze.ClickEvent.ClickEventTools.clickCount(event));
+                        state.onEntryClick(ix, cx, glaze.ClickEvent.ClickEventTools.clickCount(event), glaze.ClickEvent.ClickEventTools.modifiers(event));
                     }))
                         .onMouseDown(MouseButton.Right, cx.listener((state:TreeState, _, _, cx) -> {
                             state.rightClickedIx = ix;
@@ -700,6 +806,15 @@ class Tree extends Component implements Styled {
     @prop var navigationKeys:Bool = false;
 
     /**
+     * Lets several rows be selected (addition, KIT-046): a click with the
+     * platform key or Control adds a row or takes it out, a click with Shift
+     * selects from the row the selection started at to the clicked one. The
+     * state then emits `TreeEvent.SelectionChanged` when a click or a key
+     * changes the selection. Default is false: one row at most, as before.
+     */
+    @prop var multiSelect:Bool = false;
+
+    /**
      * The height of each row, for rows of different heights (KIT-022). Null
      * by default: every row has the height of the first one, as in gpui-kit
      * (a uniform list). When set, the function gives the height of the row
@@ -726,6 +841,7 @@ class Tree extends Component implements Styled {
         final listStyle = this.listStyle;
         final toggleOnClick = this.toggleOnClick;
         final navigationKeys = this.navigationKeys;
+        final multiSelect = this.multiSelect;
         final rowHeight = this.rowHeight;
         state.update(cx, (state, _) -> {
             state.rowHeight = rowHeight;
@@ -733,6 +849,7 @@ class Tree extends Component implements Styled {
             state.listStyle = listStyle;
             state.toggleOnClick = toggleOnClick;
             state.navigationKeys = navigationKeys;
+            state.multiSelect = multiSelect;
         });
 
         final state = this.state;

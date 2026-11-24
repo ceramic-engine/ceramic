@@ -69,6 +69,9 @@ class Tree extends Component implements Styled {
     /** See `glaze.kit.base.Tree.toggleOnClick`. */
     @prop var toggleOnClick:Bool = true;
 
+    /** See `glaze.kit.base.Tree.multiSelect` (KIT-046). */
+    @prop var multiSelect:Bool = false;
+
     /** See `glaze.kit.base.Tree.navigationKeys`. */
     @prop var navigationKeys:Bool = false;
 
@@ -237,6 +240,7 @@ class Tree extends Component implements Styled {
         final tree = new BaseTree(state)
             .toggleOnClick(toggleOnClick)
             .navigationKeys(navigationKeys)
+            .multiSelect(multiSelect)
             .rowHeight(rowHeight)
             .item((ix, entry, entryState, window, cx) -> {
                 // Capture only the id: cloning the entry would deep-clone

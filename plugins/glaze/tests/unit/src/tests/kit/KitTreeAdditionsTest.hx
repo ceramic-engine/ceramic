@@ -80,6 +80,83 @@ class KitTreeAdditionsTest extends KitAdditionsTestCase {
         ];
     }
 
+    /** A click on a row with modifiers held. */
+    function clickWith(cx:VisualTestContext, id:String, modifiers:Modifiers):Void {
+        final position = boundsOf(cx, 'row-$id').center();
+        cx.simulateMouseMove(position);
+        cx.simulateEvent(new MouseDownEvent(Left, position, modifiers, 1, false));
+        cx.simulateEvent(new MouseUpEvent(Left, position, modifiers, 1));
+        frame(cx);
+    }
+
+    /// KIT-046: several rows selected
+
+    function flat():Array<TreeItem> {
+        return [for (name in ['a', 'b', 'c', 'd', 'e']) new TreeItem(name, name)];
+    }
+
+    function testWithoutMultiSelectAModifierClickSelectsOneRow() {
+        newTree(flat());
+        final cx = show();
+        click(cx, 'a');
+        clickWith(cx, 'c', Modifiers.of(false, false, false, true));
+        assertEquals('[2]', Std.string(state().selectedIndices()));
+        clickWith(cx, 'e', Modifiers.of(false, false, true));
+        assertEquals('[4]', Std.string(state().selectedIndices()));
+    }
+
+    function testMultiSelectAddsRemovesAndExtends() {
+        newTree(flat());
+        final events:Array<String> = [];
+        app.update(cx -> cx.subscribe(tree, TreeEvent, (_, event:TreeEvent, _) -> switch event {
+            case SelectionChanged(ids): events.push(ids.join('+'));
+            case _:
+        }));
+        final cx = show(tree -> tree.multiSelect(true));
+        click(cx, 'b');
+        assertEquals('b', state().selectedIds().join('+'));
+        // The platform key adds a row, then takes it out
+        clickWith(cx, 'd', Modifiers.of(false, false, false, true));
+        assertEquals('b+d', state().selectedIds().join('+'));
+        clickWith(cx, 'b', Modifiers.of(false, false, false, true));
+        assertEquals('d', state().selectedIds().join('+'));
+        // Shift selects from the row the selection is at to the clicked one, in both directions
+        clickWith(cx, 'a', Modifiers.of(false, false, true));
+        assertEquals('a+b+c+d', state().selectedIds().join('+'));
+        clickWith(cx, 'e', Modifiers.of(false, false, true));
+        assertEquals('d+e', state().selectedIds().join('+'));
+        // A plain click selects that row alone
+        click(cx, 'c');
+        assertEquals('c', state().selectedIds().join('+'));
+        assertEquals('b,b+d,d,a+b+c+d,d+e,c', events.join(','));
+    }
+
+    function testTheSelectionCanBeGivenAndFollowsItsItems() {
+        newTree(project());
+        final events:Array<String> = [];
+        app.update(cx -> cx.subscribe(tree, TreeEvent, (_, event:TreeEvent, _) -> switch event {
+            case SelectionChanged(ids): events.push(ids.join('+'));
+            case _:
+        }));
+        final cx = show(tree -> tree.multiSelect(true).toggleOnClick(false));
+        // Given by the caller: no event, an id that is not a row is left out
+        cx.update((_, app) -> tree.update(app, (tree, cx) -> tree.setSelectedIds(['readme', 'empty', 'nowhere'], cx)));
+        frame(cx);
+        assertEquals('empty+readme', state().selectedIds().join('+'));
+        assertEquals(0, events.length);
+        // Expanding a folder above moves the rows: the same items stay selected
+        cx.update((_, app) -> tree.update(app, (tree, cx) -> tree.toggleExpanded(0, cx)));
+        frame(cx);
+        assertEquals('empty+readme', state().selectedIds().join('+'));
+        assertEquals('[3,4]', Std.string(state().selectedIndices()));
+        // And across a new list of items, when asked
+        final rebuilt = project();
+        rebuilt.insert(0, new TreeItem('assets', 'assets').folder(true));
+        cx.update((_, app) -> tree.update(app, (tree, cx) -> tree.setItems(rebuilt, cx, true)));
+        frame(cx);
+        assertEquals('empty+readme', state().selectedIds().join('+'));
+    }
+
     function testAnItemIsAFolderByItsChildrenUnlessToldOtherwise() {
         assertFalse(new TreeItem('a', 'a').isFolder());
         assertTrue(new TreeItem('a', 'a').child(new TreeItem('b', 'b')).isFolder());
