@@ -765,6 +765,146 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** `KitTabAdditionsTest`: `Peek` by default (the end of the strip for the last tab, the same offset when given); with `Nearest`, the last tab against the end of the view without the empty space after it, no move for a tab in view, the first tab against the start, a clicked cut tab shown whole.
 - **Upstream.** Not proposed.
 
+### KIT-034: Slider, a size
+
+- **Component.** gpui-kit `Slider` (`crates/component/src/slider.rs`). Port: `runtime/src/glaze/kit/slider/Slider.hx`.
+- **Behaviour of the original.** One size: a 16 px thumb on a 6 px bar, in a 24 px track. Too large for a dense row of 24 px next to small fields.
+- **Addition.** `Slider` is `Sizable`: `withSize(Small)` (and `XSmall`) gives a 10 px thumb on a 4 px bar, in a 16 px track. Values, events and interactions are unchanged.
+- **Default.** `Medium`: the slider of before.
+- **Scope.** None.
+- **Tests.** `KitValueControlsAdditionsTest`: a slider is 24 px high, a small one 16 px, of the same width.
+- **Upstream.** Not proposed.
+
+### KIT-035: NumberInput, without its buttons, and a prefix to drag
+
+- **Component.** gpui-kit `NumberInput` (`crates/component/src/input/number_input.rs`, `crates/base/src/number_input.rs`). Port: `runtime/src/glaze/kit/input/NumberInput.hx`, `runtime/src/glaze/kit/base/NumberInput.hx`.
+- **Behaviour of the original.** The value is always between a decrement and an increment button, and centered. The prefix is a plain adornment.
+- **Addition.** `stepButtons(false)` leaves the buttons out: the text is aligned to the left like a plain input, and the `up` and `down` keys still step the value. `onScrub(handler)` makes the prefix a handle to drag sideways, with a left-right resize cursor: the handler is told `NumberScrub.Started` once, `Moved(distance)` at each move with the horizontal distance in pixels from where the drag started, then `Ended` when the pointer is released. Changing the value is left to the caller, as it is for steps.
+- **Default.** Buttons shown, no handle: the number input of before.
+- **Scope.** None.
+- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor (its number fields, with real mouse events).
+- **Upstream.** Not proposed.
+
+### KIT-036: NumberInput, expressions
+
+- **Component.** The same as KIT-035, and `runtime/src/glaze/kit/input/NumberExpression.hx` (new).
+- **Behaviour of the original.** A number input installs the number mask on its state: only a number can be typed.
+- **Addition.** `expressions(true)` does not install the mask, so that `136+8` can be typed. `NumberExpression.evaluate(text)` computes such a text (numbers, `+`, `-`, `*`, `/`, parentheses, the usual priorities) and gives null for what is not an expression. The caller computes the text when it validates it.
+- **Default.** False: the mask of before.
+- **Scope.** None.
+- **Tests.** `NumberExpressionTest`: numbers, operations and priorities, what is not an expression.
+- **Upstream.** Not proposed.
+
+### KIT-037: AngleDial, a new component
+
+- **Component.** None in gpui-kit. Port: `runtime/src/glaze/kit/dial/AngleDial.hx` (new).
+- **Behaviour of the original.** The kit has no control for an angle.
+- **Addition.** `AngleDial.component(id)`: a ring with a needle. `value` in degrees (0 to the right, growing clockwise), `step`, `onChange` at each move, `onRelease` when the pointer is released, `color`, `withSize`, `disabled`. A press points the needle at the pointer by the shortest way; a drag turns it, and counts past a full turn in both directions.
+- **Default.** Not applicable.
+- **Scope.** None.
+- **Tests.** `KitValueControlsAdditionsTest`: its size, a press under the center gives 90, the shortest way from 350 gives 360, a drag from the right to the left by the bottom gives 180 through multiples of the step, a disabled dial tells nothing.
+- **Upstream.** Not proposed.
+
+### KIT-038: CurveEditor, a new component
+
+- **Component.** None in gpui-kit. Port: `runtime/src/glaze/kit/curve/CurveEditor.hx` (new).
+- **Behaviour of the original.** The kit has no editor of a timing curve.
+- **Addition.** `CurveEditor.component(id)`: draws a timing curve from (0, 0) to (1, 1) with the points of its pace under it. `bezier` (`[x1, y1, x2, y2]`, as CSS `cubic-bezier()`) shows two handles to drag: `onChange` at each move, `onRelease` when the handle is released; x stays between 0 and 1, y may go past by `overshoot`. `curve` draws any function of time instead, `faded` dims the handles, `color` and `frame` set the colors, `pace(false)` hides the points. The drawing follows the size of the element. `CurveEditor.valueAt(bezier, time)` gives the value of a bezier curve.
+- **Default.** Not applicable.
+- **Scope.** None.
+- **Tests.** `KitValueControlsAdditionsTest`: the value of a bezier curve (the line, an ease, an overshoot), the size, a handle dragged to the middle of the square, a handle stopped at 0 in time and at 1.34 in value, no handle without numbers.
+- **Upstream.** Not proposed.
+
+### KIT-039: Dock, an accent on the active tab
+
+- **Component.** gpui-kit dock skin (`crates/component/src/dock/tab_panel.rs`). Port: `runtime/src/glaze/kit/dock/DockSkin.hx`, `SkinShared.hx`, `TabGroupSkin.hx`.
+- **Behaviour of the original.** The active tab of a group is told by its background and text colors, from the theme.
+- **Addition.** `Tab.topAccent(color, ?width)` draws a line of `color`, 2 px thick by default, along the top of a selected tab, over its whole width (prefix, label and suffix). `DockSkin.setActiveTabAccent(color, cx, ?width)` gives it to the active tab of every group and to the title of a panel shown without tabs: an accent of the application, or with 1 px and the border color the edge of the active surfaces over a strip that has none.
+- **Default.** Null: no line, as before.
+- **Scope.** None.
+- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor (the color of its mode).
+- **Upstream.** Not proposed.
+
+### KIT-040: Tooltip, an arrow, colors and a gap
+
+- **Component.** gpui-kit `Tooltip` (`crates/component/src/tooltip.rs`). Port: `runtime/src/glaze/kit/tooltip/Tooltip.hx`, `runtime/src/glaze/kit/base/Tooltip.hx`, `runtime/src/glaze/kit/theme/Theme.hx`.
+- **Behaviour of the original.** A tooltip is a popup of the colors of popovers, 0.75 rem from what it describes, without an arrow.
+- **Addition.** Theme settings: `tooltipArrow` draws a triangle aimed at what the tooltip describes, on the side the positioner chose (after a flip); `tooltipBackground`, `tooltipForeground`, `tooltipBorder` give tooltips colors of their own; `tooltipGap` sets the distance in pixels.
+- **Default.** No arrow, null colors and gap: the tooltip of before.
+- **Scope.** None.
+- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
+- **Upstream.** Not proposed.
+
+### KIT-041: Tooltip, shown for a gesture
+
+- **Component.** The same as KIT-040.
+- **Behaviour of the original.** A tooltip shows when the pointer rests on its element.
+- **Addition.** `Tooltip.showAt(area, text, window, cx, ?placement)` shows a tooltip for an area of the window at once, without a hover, for a gesture that tells its value while it lasts; `Tooltip.hideShown(window, cx)` hides it.
+- **Default.** Not applicable.
+- **Scope.** None.
+- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor (the frame of a label being dragged).
+- **Upstream.** Not proposed.
+
+### KIT-042: Popover, any element as its trigger
+
+- **Component.** gpui-kit `Popover` (`crates/component/src/popover.rs`). Port: `runtime/src/glaze/kit/popover/Popover.hx`.
+- **Behaviour of the original.** The trigger of a popover is a `Selectable` element (a button).
+- **Addition.** `Popover.triggerElement(build)` takes any element as the trigger (a mark in a drawing, a row of a list); `build` is given whether the popover is open.
+- **Default.** Not applicable.
+- **Scope.** None.
+- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor (the easing editor opened on a keyframe).
+- **Upstream.** Not proposed.
+
+### KIT-043: icons added
+
+- **Component.** The icons of `resources/icons` (`IconName`).
+- **Behaviour of the original.** The 106 icons of gpui-kit, and 5 for the find widget.
+- **Addition.** 14 Lucide icons for the tools of an editor: `bounding-box`, `code`, `diamond`, `grid-3x3`, `hand`, `image`, `link`, `lock`, `magnet`, `move`, `repeat`, `scaling`, `square-dashed`, `type`.
+- **Default.** Not applicable.
+- **Scope.** None.
+- **Tests.** `ComponentFoundationsTest` counts the icons.
+- **Upstream.** Not proposed.
+
+### KIT-044: Switch, a thumb color for each state, and a custom size
+
+- **Component.** gpui-kit `Switch` (`crates/component/src/switch.rs`). Port: `runtime/src/glaze/kit/switch_/Switch.hx`.
+- **Behaviour of the original.** The thumb has one color for both states (`switch.thumb.background`), and a size other than the named ones draws the medium switch.
+- **Addition.** `Switch.thumbColor(off, ?on)` gives the thumb a color while the switch is off, and optionally another while it is on. `withSize(Size(height))` draws a track `height` px high and `2 * height - 2` px wide, with a thumb of `height - 4` px.
+- **Default.** The thumb color of the theme, the named sizes as before.
+- **Scope.** A switch given a custom size was drawn medium before; none in the kit or its gallery.
+- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
+- **Upstream.** Not proposed.
+
+### KIT-045: ColorSelect, a field without its caret or its border
+
+- **Component.** gpui-kit `ColorSelect` (`crates/component/src/color_picker.rs`). Port: `runtime/src/glaze/kit/colorpicker/ColorPicker.hx`.
+- **Behaviour of the original.** The field is framed like a `Select`: a border, a swatch whose size follows the size of the field, the hexadecimal value, a caret.
+- **Addition.** `caret(false)` leaves the caret out, `bordered(false)` gives the border the color of the field until it is focused or open, `swatchSize(pixels)` sets the size of the swatch.
+- **Default.** Caret and border shown, the swatch of the size: the field of before.
+- **Scope.** None.
+- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
+- **Upstream.** Not proposed.
+
+### KIT-046: Tree, several rows selected
+
+- **Component.** gpui-kit `Tree` (`crates/base/src/tree.rs`, `crates/component/src/tree.rs`). Port: `runtime/src/glaze/kit/base/Tree.hx`, `runtime/src/glaze/kit/tree/Tree.hx`.
+- **Behaviour of the original.** One selected row at most. A click selects the row whatever modifier is held.
+- **Addition.** `Tree.multiSelect(true)`: a click with the platform key or Control adds a row to the selection or takes it out, a click with Shift selects from the row the selection is at to the clicked one (disabled rows left out), a plain click or a navigation key selects one row. The state emits `TreeEvent.SelectionChanged(ids)` when a click or a key changes the selection. `TreeState.selectedIndices()`, `selectedIds()` and `setSelectedIds(ids, cx)` read and give the selection (given, it emits nothing). The selection follows its items when a folder is expanded or collapsed, and across `setItems(..., keepSelection)`.
+- **Default.** False: one row, no event, as before.
+- **Scope.** `TreeEvent` has one more case: a `switch` on it that lists every case has to take it.
+- **Tests.** `KitTreeAdditionsTest`: without the option a modifier click selects one row; with it, adding, removing, extending in both directions, the plain click, the events; a given selection, kept across an expansion and a new list of items.
+- **Upstream.** Not proposed.
+
+### KIT-047: Dock, the close button of a tab on hover
+
+- **Component.** The same as KIT-039.
+- **Behaviour of the original.** With close buttons shown, every closable tab shows its button all the time.
+- **Addition.** `DockSkin.setCloseButtonOnHover(true, cx)`: the button of a tab that is not the active one is hidden until the pointer is over the tab. Its room is kept, so the tabs do not move. The active tab always shows its button.
+- **Default.** Off: every button shown, as before.
+- **Scope.** None.
+- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.
