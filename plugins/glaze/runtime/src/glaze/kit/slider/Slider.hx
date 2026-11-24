@@ -9,6 +9,9 @@ import glaze.kit.base.Slider.IntoSliderValue;
 import glaze.kit.base.Slider.SliderValue;
 import glaze.kit.base.Slider.SliderEvent;
 import glaze.kit.KeyedEntity;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
 import glaze.ElementIdArg;
 import glaze.Context;
 import glaze.Axis;
@@ -105,7 +108,7 @@ private class ThumbRing {
  * `SliderState`, `SliderValue`, `SliderEvent` and `SliderScale` are the Base
  * ones (`glaze.kit.base.Slider`).
  */
-class Slider extends Component implements Styled {
+class Slider extends Component implements Styled implements Sizable {
 
     /**
      * The `SliderState` rendered: the one given to `component(state)` or
@@ -155,6 +158,13 @@ class Slider extends Component implements Styled {
     @prop var accessibilityLabel:Null<String> = null;
 
     var reverseValue:Bool = false;
+
+    /**
+     * `Size.Medium` by default: a 16 pixel thumb on a 6 pixel bar. `Small`
+     * and `XSmall` give a 10 pixel thumb on a 4 pixel bar, for a dense row
+     * (port addition, the Rust slider has one size).
+     */
+    var sizeValue:Size = Medium;
 
     /**
      * Create a new `Slider` element bound to the `SliderState`.
@@ -256,6 +266,15 @@ class Slider extends Component implements Styled {
         return sliderStyle;
     }
 
+    public function withSize(size:IntoSize):Slider {
+        this.sizeValue = size;
+        return this;
+    }
+
+    public function setSize(size:Size):Void {
+        this.sizeValue = size;
+    }
+
     /**
      * As a horizontal slider.
      */
@@ -321,13 +340,23 @@ class Slider extends Component implements Styled {
         final endRing = new ThumbRing(entityId, false, ringColor, window, cx);
 
         final disabled = this.disabled;
+        final compact = switch sizeValue {
+            case XSmall | Small: true;
+            case _: false;
+        }
+        // The thumb, the bar it slides on and the track that takes the pointer
+        final thumbSize:Float = compact ? 10. : 16.;
+        final barSize:Float = compact ? 4. : 6.;
+        final trackSize:Float = compact ? 16. : 24.;
+        final thumbOffset:Float = -f32((thumbSize - barSize) / 2.);
         function thumb(position:DefiniteLength, start:Bool, ring:ThumbRing):SliderThumb {
             final thumb = SliderThumb.component(state).axis(axis).start(start).disabled(disabled);
             if (!disabled) {
                 thumb.absolute();
-                if (axis == Axis.Horizontal) thumb.top(glaze.Prelude.px(-5.)).left(position).ml(glaze.Prelude.px(-8.));
-                if (axis == Axis.Vertical) thumb.bottom(position).left(glaze.Prelude.px(-5.)).mb(glaze.Prelude.px(-8.));
-                thumb.flex().itemsCenter().justifyCenter().flexShrink0().roundedFullStyle(cx).bg(barColor.opacity(0.5)).size4().p(glaze.Prelude.px(1.));
+                if (axis == Axis.Horizontal) thumb.top(glaze.Prelude.px(thumbOffset)).left(position).ml(glaze.Prelude.px(-f32(thumbSize / 2.)));
+                if (axis == Axis.Vertical) thumb.bottom(position).left(glaze.Prelude.px(thumbOffset)).mb(glaze.Prelude.px(-f32(thumbSize / 2.)));
+                thumb.flex().itemsCenter().justifyCenter().flexShrink0().roundedFullStyle(cx).bg(barColor.opacity(0.5))
+                    .w(glaze.Prelude.px(thumbSize)).h(glaze.Prelude.px(thumbSize)).p(glaze.Prelude.px(compact ? 0. : 1.));
                 final interaction = ring.interaction;
                 thumb.base
                     .onHover((entered, _, _) -> {
@@ -369,13 +398,13 @@ class Slider extends Component implements Styled {
         root.refineStyle(sliderStyle).bg(theme.transparent).textColor(theme.foreground);
 
         final track = SliderTrack.component(state).axis(axis).disabled(disabled).flex();
-        if (axis == Axis.Horizontal) track.itemsCenter().h6().wFull();
-        if (axis == Axis.Vertical) track.justifyCenter().w6().hFull();
+        if (axis == Axis.Horizontal) track.itemsCenter().h(glaze.Prelude.px(trackSize)).wFull();
+        if (axis == Axis.Vertical) track.justifyCenter().w(glaze.Prelude.px(trackSize)).hFull();
         track.flexShrink0();
 
         final indicator = SliderIndicator.component(state).relative();
-        if (axis == Axis.Horizontal) indicator.wFull().h1p5();
-        if (axis == Axis.Vertical) indicator.hFull().w1p5();
+        if (axis == Axis.Horizontal) indicator.wFull().h(glaze.Prelude.px(barSize));
+        if (axis == Axis.Vertical) indicator.hFull().w(glaze.Prelude.px(barSize));
         indicator.bg(barColor.opacity(0.2)).active(s -> s.bg(barColor.opacity(0.4))).cornerRadii(radius);
         final bar = div().absolute();
         if (axis == Axis.Horizontal) bar.hFull().left(barStart).right(barEnd);
