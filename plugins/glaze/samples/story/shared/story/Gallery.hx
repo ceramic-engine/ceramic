@@ -193,7 +193,9 @@ class Gallery extends Model implements Render {
         add(StoryMeta.optional(story.stories.VirtualListStory));
         // Pages of the Haxe port without a gpui-kit equivalent (story app only)
         if (portStories) {
+            add(StoryMeta.optional(story.stories.AngleDialStory));
             add(StoryMeta.optional(story.stories.CeramicVisualStory));
+            add(StoryMeta.optional(story.stories.CurveEditorStory));
             add(StoryMeta.optional(story.stories.RichTextStory));
         }
 
