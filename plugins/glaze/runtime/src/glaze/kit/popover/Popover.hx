@@ -232,6 +232,16 @@ class Popover extends Component implements Styled implements ParentElement {
     }
 
     /**
+     * Set any element as the trigger of the popover, when it is not a
+     * `Selectable` (a mark in a drawing, a row of a list). `build` is given
+     * whether the popover is open, to show it on the element.
+     */
+    public function triggerElement(build:(open:Bool, window:Window, cx:App) -> IntoElement):Popover {
+        triggerBuilder = (isOpen, window, cx) -> build(isOpen, window, cx);
+        return this;
+    }
+
+    /**
      * Add a callback to be called when the open state changes, with the new
      * open state.
      */
@@ -364,6 +374,7 @@ class Popover extends Component implements Styled implements ParentElement {
         return popover;
     }
 
+    @:allow(glaze.kit)
     static function tryBuild(builder:PathBuilder):Null<glaze.Path> {
         try {
             return builder.build();
@@ -394,6 +405,7 @@ class Popover extends Component implements Styled implements ParentElement {
      * Clamp the arrow base clear of rounded corners while aiming at the trigger.
      */
     @:allow(tests)
+    @:allow(glaze.kit)
     static function arrowPoints(surface:Bounds, trigger:Bounds, side:Placement, depth:Float, radius:Float):Array<Point> {
         final horizontal = side.isHorizontal();
         final start = horizontal ? surface.top() : surface.left();
@@ -427,6 +439,7 @@ class Popover extends Component implements Styled implements ParentElement {
     }
 
     @:allow(tests)
+    @:allow(glaze.kit)
     static function arrowJoinBounds(points:Array<Point>, side:Placement, stroke:Float):Bounds {
         // Inset by the stroke width so the patch remains inside the triangle's
         // slopes at the outer edge of the ring, including on very small surfaces.
