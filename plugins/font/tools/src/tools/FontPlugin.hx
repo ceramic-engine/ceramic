@@ -44,9 +44,14 @@ class FontPlugin {
                 var dstPngPath = Path.join([transformedAssetsPath, pngName]);
 
                 if (!Files.haveSameLastModified(asset.absolutePath, dstFntPath) || !Files.haveSameLastModified(asset.absolutePath, dstPngPath)) {
+                    // A font in a sub directory is written to the same sub directory
+                    var outputPath = Path.directory(dstFntPath);
+                    if (!FileSystem.exists(outputPath)) {
+                        FileSystem.createDirectory(outputPath);
+                    }
                     FontUtils.createBitmapFont({
                         fontPath: asset.absolutePath,
-                        outputPath: transformedAssetsPath,
+                        outputPath: outputPath,
                         msdf: true,
                         quiet: true
                     });
