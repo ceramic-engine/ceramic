@@ -83,6 +83,25 @@ class TabGroup extends Model implements Render {
     }
 
     /**
+     * Whether a dragged panel may land in this group, asked while it is over
+     * the group and when it is dropped (port addition, KIT-050). The
+     * container supplies it: only the container knows where the group is.
+     * `null`, the default, accepts every panel.
+     */
+    var accepts:Null<(PanelId, App) -> Bool> = null;
+
+    @:allow(glaze.kit.base.dock, tests)
+    function withAcceptance(accepts:Null<(PanelId, App) -> Bool>):TabGroup {
+        this.accepts = accepts;
+        return this;
+    }
+
+    /** Whether `panel` may be dropped here (KIT-050). */
+    public function acceptsPanel(panel:PanelId, cx:App):Bool {
+        return accepts == null || accepts(panel, cx);
+    }
+
+    /**
      * The `Tabs` node this group mirrors.
      */
     public inline function node():NodeId {
@@ -382,8 +401,13 @@ class TabGroup extends Model implements Render {
             return;
         }
 
-        final placement = Drag.splitPlacementAt(bounds, drag.event.position);
         final dragged = drag.drag(cx.app);
+        // A panel the container keeps out of this region shows no place to land (KIT-050)
+        if (!acceptsPanel(dragged.panel(), cx.app)) {
+            clearDropIndicator(cx);
+            return;
+        }
+        final placement = Drag.splitPlacementAt(bounds, drag.event.position);
         // The placeholder flies in from wherever the preview currently is.
         final position = drag.event.position;
         final offset = dragged.dragOffset();
@@ -472,6 +496,10 @@ class TabGroup extends Model implements Render {
     function onDrop(drag:DragPanel, ix:Null<Int>, activate:Bool, cx:Context<TabGroup>):Void {
         final indicator = dropIndicator;
         dropIndicator = null;
+        if (!acceptsPanel(drag.panel(), cx.app)) {
+            cx.notify();
+            return;
+        }
         final placement:Null<Placement> = ix != null ? null : (indicator != null ? indicator.placement() : null);
 
         // Dropping a panel back onto its own group is a move only when it

@@ -166,6 +166,103 @@ class DockSkin extends DockAreaRendererBase {
         shared.notify(cx);
     }
 
+/// Port additions for documents shown side by side in the centre
+
+    /**
+     * Always draws the groups of the centre with tabs, even when they hold
+     * one panel (port addition, KIT-054). Elsewhere `PanelStyle.Auto` keeps
+     * drawing a lone panel by its title. Off by default.
+     */
+    public function setCenterTabsAlways(always:Bool, cx:App):Void {
+        if (shared.centerTabsAlways == always) return;
+        shared.centerTabsAlways = always;
+        shared.notify(cx);
+    }
+
+    /**
+     * The group of the centre that has the focus: the last one whose panel
+     * held it, which stays the one when the focus goes to a side dock, or the
+     * first group when none did yet. Null for an empty centre (port addition,
+     * KIT-053). Observable: an `autorun` that reads it runs again when the
+     * focus goes to another group.
+     */
+    public function focusedCenterGroup():Null<NodeId> {
+        return shared.focusedCenterGroup();
+    }
+
+    /** The panel displayed by the group of the centre that has the focus, or null (KIT-053). */
+    public function focusedCenterPanel(cx:App):Null<glaze.kit.base.dock.PanelView> {
+        final node = shared.focusedCenterGroup();
+        final area = shared.liveArea();
+        return node != null && area != null ? area.activePanelOf(node, cx) : null;
+    }
+
+    /** Make the group at `node` the focused one of the centre, without moving the keyboard focus (KIT-053). */
+    public function setFocusedCenterGroup(node:NodeId, cx:App):Void {
+        if (shared.focusedCenterNode == node.asU64()) return;
+        shared.focusedCenterNode = node.asU64();
+        shared.notify(cx);
+    }
+
+    /**
+     * Draws the label of the active tab of the groups of the centre that do
+     * not have the focus in `color`, when the centre shows several groups
+     * (port addition, KIT-053). `null`, the default, draws every active tab
+     * alike.
+     */
+    public function setUnfocusedTabForeground(color:Null<glaze.Hsla>, cx:App):Void {
+        final current = shared.unfocusedTabForeground;
+        if (current == color || (current != null && color != null && current.equals(color))) return;
+        shared.unfocusedTabForeground = color;
+        shared.notify(cx);
+    }
+
+    /**
+     * Starts the lines between side by side groups, and between the side
+     * docks and the centre, `inset` pixels under their top: under the strips
+     * of tabs, which then read as one band (port addition, KIT-055). The line
+     * under the strips is carried across the gap. 0, the default, draws the
+     * lines over their whole height.
+     */
+    public function setDividerTopInset(inset:Float, cx:App):Void {
+        if (shared.dividerTopInset == inset) return;
+        shared.dividerTopInset = inset;
+        shared.notify(cx);
+    }
+
+    /**
+     * What an empty centre shows, when the area lets its centre be emptied
+     * (`DockArea.setCenterEmptiable`, port addition, KIT-051). `null`, the
+     * default, shows nothing.
+     */
+    public function setEmptyCenter(render:Null<(Window, App) -> IntoElement>, cx:App):Void {
+        shared.emptyCenter = render;
+        shared.notify(cx);
+    }
+
+    override public function renderEmptyCenter(window:Window, cx:App):Null<AnyElement> {
+        final render = shared.emptyCenter;
+        return render != null ? render(window, cx).intoAnyElement() : null;
+    }
+
+    /** A vertical line that starts under the strips of tabs (KIT-055). */
+    function insetLine(handle:ResizeHandleContext, window:Window, cx:App):AnyElement {
+        final line = @:privateAccess Resizable.renderResizeHandle(handle, window, cx);
+        final inset = shared.dividerTopInset;
+        if (inset <= 0. || handle.axis() != Axis.Horizontal) return line;
+        final theme = Theme.global(cx);
+        return div()
+            .flexNone()
+            .flex()
+            .flexCol()
+            .hFull()
+            .w(handle.size())
+            // The gap shows the ground of the strips, with their bottom line carried across
+            .child(div().flexNone().wFull().h(px(inset)).borderB1().borderColor(theme.border))
+            .child(div().flex().flex1().minH(px(0.)).child(line))
+            .intoAnyElement();
+    }
+
 /// User toggles (Rust `toggle_dock_by_user` / `report_user_toggle`)
 
     /**
@@ -206,7 +303,7 @@ class DockSkin extends DockAreaRendererBase {
     }
 
     override public function renderSplitHandle(handle:ResizeHandleContext, window:Window, cx:App):Null<AnyElement> {
-        return @:privateAccess Resizable.renderResizeHandle(handle, window, cx);
+        return insetLine(handle, window, cx);
     }
 
     override public function splitFrame(node:NodeId, axis:Axis, window:Window, cx:App):Div {
@@ -271,7 +368,12 @@ class DockSkin extends DockAreaRendererBase {
             case _: Leading;
         }
 
-        return Resizable.resizeHandle(id, placement.axis()).inside(edge).onDrag(new ResizePanel(), (info:ResizePanel, _, _, cx:App) -> {
+        final handle = Resizable.resizeHandle(id, placement.axis()).inside(edge);
+        // The line of a side dock starts under the strips too (KIT-055)
+        if (shared.dividerTopInset > 0. && placement != DockPlacement.Bottom) {
+            handle.withAppearance((context, window, cx) -> insetLine(context, window, cx));
+        }
+        return handle.onDrag(new ResizePanel(), (info:ResizePanel, _, _, cx:App) -> {
             cx.stopPropagation();
             shared.resizingDock = placement;
             shared.resizeStartedOpen = open;

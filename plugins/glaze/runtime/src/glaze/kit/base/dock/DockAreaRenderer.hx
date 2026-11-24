@@ -68,6 +68,12 @@ interface DockAreaRenderer {
      */
     function buildPlaceholder(state:PanelState, window:Window, cx:App):Null<PanelView>;
 
+    /**
+     * What fills a centre that holds no visible panel, or `null` to leave it
+     * blank (port addition, KIT-051).
+     */
+    function renderEmptyCenter(window:Window, cx:App):Null<AnyElement>;
+
     function tabGroupRenderer():TabGroupRenderer;
 
 }

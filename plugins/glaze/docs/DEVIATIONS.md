@@ -915,6 +915,66 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** `KitTreeAdditionsTest`: `testDropPlaceAtSplitsARow`, `testARowIsDroppedBeforeInsideAndAfterAnother`, `testARowThatTakesNothingInsideIsSplitInTwo`, `testARowDoesNotDropAroundItselfAndTheLineLeavesWithThePointer`, `testTheInsertionLineStartsAtItsInset`.
 - **Upstream.** Not proposed.
 
+### KIT-050: Dock, which panel may go where
+
+- **Component.** `glaze.kit.base.dock.DockArea`, `glaze.kit.base.dock.TabGroup`.
+- **Behaviour of the original.** Any panel can be dragged to any region, the centre and the three docks alike.
+- **Addition.** `DockArea.setDropPolicy((panel, placement, cx) -> Bool)`: a move the policy refuses does nothing, by a drag or by `movePanel`, and the group a refused panel is dragged over shows no place to land (`TabGroup.acceptsPanel`). `allowsPanel` and `acceptsPanelAt` answer for a region and for a group. `DockArea.placementOf(panel)` gives the region that holds a panel.
+- **Default.** No policy: any panel goes anywhere, as before.
+- **Scope.** Moves only. `addPanel` and `addPanelView` put a panel where the application says. A tab still takes the hover style of a drag it would refuse.
+- **Tests.** `KitDockAdditionsTest.testAPolicyKeepsAPanelOutOfARegion`.
+- **Upstream.** Not proposed.
+
+### KIT-051: Dock, a centre that can be emptied
+
+- **Component.** `glaze.kit.base.dock.DockArea`, `glaze.kit.base.dock.DockAreaRenderer`, `glaze.kit.dock.DockSkin`.
+- **Behaviour of the original.** The last panel of the centre can be neither closed nor dragged out, so the centre always shows something.
+- **Addition.** `DockArea.setCenterEmptiable(true, window, cx)`: the last panel of the centre closes and drags like any other. `DockAreaRenderer.renderEmptyCenter` fills an empty centre, and `DockSkin.setEmptyCenter((window, cx) -> element, cx)` supplies it.
+- **Default.** Off, and an empty centre shows nothing.
+- **Scope.** The centre only: a dock that loses its last panel goes away as before.
+- **Tests.** `KitDockAdditionsTest.testTheLastPanelOfAnEmptiableCentreCloses`.
+- **Upstream.** Not proposed.
+
+### KIT-052: Dock, a close that asks first
+
+- **Component.** `glaze.kit.base.dock.DockArea`.
+- **Behaviour of the original.** Closing a tab removes its panel at once.
+- **Addition.** `DockArea.setCloseHandler((panel, window, cx) -> Bool)` is asked when a tab is closed by the user: false keeps the panel. `DockArea.closePanel(panelId, window, cx)` closes one whatever its group allows, for an application that answered false and decided later (unsaved changes).
+- **Default.** No handler: a closed tab closes.
+- **Scope.** None.
+- **Tests.** `KitDockAdditionsTest.testAClosedTabAsksItsHandlerFirst`.
+- **Upstream.** Not proposed.
+
+### KIT-053: Dock, the group of the centre that has the focus
+
+- **Component.** `glaze.kit.dock.DockSkin`, `glaze.kit.dock.TabGroupSkin`, `glaze.kit.tab.Tab`, `glaze.kit.base.dock.DockArea`.
+- **Behaviour of the original.** The dock has no notion of a focused group. Every group draws its active tab alike.
+- **Addition.** `DockSkin.focusedCenterGroup()` is the group of the centre whose panel last held the keyboard focus (it stays the one while the focus is in a side dock), the first group before any did, and `focusedCenterPanel(cx)` the panel it displays. Both are observable. `setFocusedCenterGroup(node, cx)` sets it without moving the keyboard focus. `setUnfocusedTabForeground(color, cx)` draws the label of the active tab of the other groups in that color, when the centre shows several groups (`Tab.selectedForeground`). `DockArea.groupNodes(placement)`, `activePanelOf(node, cx)` and `groupOf(panel)` are the lookups this needs.
+- **Default.** No color: every active tab alike.
+- **Scope.** The centre only.
+- **Tests.** `KitDockAdditionsTest.testTheCentreKnowsWhichGroupHasTheFocus`.
+- **Upstream.** Not proposed.
+
+### KIT-054: Dock, tabs for a lone panel of the centre
+
+- **Component.** `glaze.kit.dock.DockSkin`, `glaze.kit.dock.TabGroupSkin`.
+- **Behaviour of the original.** With `PanelStyle.Auto`, a group that holds one panel draws its title, not a tab, wherever it is.
+- **Addition.** `DockSkin.setCenterTabsAlways(true, cx)`: the groups of the centre always draw tabs. The groups of the docks keep `PanelStyle.Auto`.
+- **Default.** Off.
+- **Scope.** None.
+- **Tests.** `KitDockAdditionsTest.testALonePanelOfTheCentreKeepsItsTab`.
+- **Upstream.** Not proposed.
+
+### KIT-055: Dock, lines between groups that start under the tabs
+
+- **Component.** `glaze.kit.dock.DockSkin`.
+- **Behaviour of the original.** The line between two side by side groups, and the one between a side dock and the centre, are drawn over their whole height: they cross the strips of tabs.
+- **Addition.** `DockSkin.setDividerTopInset(inset, cx)`: these lines start `inset` pixels under their top, and the line under the strips is carried across the gap, so the strips read as one band.
+- **Default.** 0: the whole height.
+- **Scope.** Vertical lines only. A group that is not at the top of its column (under a horizontal split) still has the line beside its strip.
+- **Tests.** `KitDockAdditionsTest.testTheLineBetweenTwoGroupsStartsUnderTheTabs`.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.

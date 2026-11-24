@@ -44,6 +44,10 @@ abstract class DockAreaRendererBase implements DockAreaRenderer {
         return null;
     }
 
+    public function renderEmptyCenter(window:Window, cx:App):Null<AnyElement> {
+        return null;
+    }
+
     public abstract function tabGroupRenderer():TabGroupRenderer;
 
 }

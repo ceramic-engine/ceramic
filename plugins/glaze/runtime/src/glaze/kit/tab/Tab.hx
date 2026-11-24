@@ -400,10 +400,24 @@ class Tab extends Component implements Styled implements ParentElement implement
         return this;
     }
 
+    var selectedForegroundValue:Null<glaze.Hsla> = null;
+
+    /**
+     * Draws the label of the tab in `color` while it is selected, instead of
+     * the color of its variant (addition, KIT-053): the active tab of a
+     * group that does not have the focus. Null, the default, keeps the
+     * color of the variant.
+     */
+    public function selectedForeground(color:Null<glaze.Hsla>):Tab {
+        selectedForegroundValue = color;
+        return this;
+    }
+
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final normalStyle = variant.normal(cx);
         final selectedStyle = variant.selected(cx);
+        if (selectedForegroundValue != null) selectedStyle.fg = selectedForegroundValue;
         final disabledStyle = variant.disabled(this.selected, cx);
         var hoverStyle = variant.hovered(this.selected, cx);
         if (this.disabled) {

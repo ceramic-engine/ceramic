@@ -88,6 +88,15 @@ class DockArea extends Model implements Render {
 
     var locked:Bool = false;
 
+    /** The last panel of the centre can be closed or dragged out (KIT-051). */
+    var centerEmptiable:Bool = false;
+
+    /** Which panel may be moved to which region, or null when any may go anywhere (KIT-050). */
+    var dropPolicy:Null<(PanelView, DockPlacement, App) -> Bool> = null;
+
+    /** Asked before a panel is closed from its tab: false keeps it (KIT-052). */
+    var closeHandler:Null<(PanelView, Window, App) -> Bool> = null;
+
     /**
      * What fills the whole area, when something does: always a tab group
      * (Rust `Zoomed::Group(NodeId)`), rendered whole through its own renderer.
@@ -197,6 +206,98 @@ class DockArea extends Model implements Render {
         // The lock is one of the facts every group is told, so it only takes
         // effect once the groups have been re-told.
         reconcile(window, cx);
+    }
+
+/// Port additions: who goes where, an empty centre, a close that asks first.
+
+    /**
+     * Decide which panel may be moved to which region (port addition,
+     * KIT-050). A move the policy refuses does nothing, and the group it was
+     * dragged over shows no place to land. It applies to moves, by a drag or
+     * by `movePanel`, and not to `addPanel`: what the application adds
+     * itself goes where it says. `null`, the default, lets any panel go
+     * anywhere.
+     */
+    public function setDropPolicy(policy:Null<(PanelView, DockPlacement, App) -> Bool>):Void {
+        dropPolicy = policy;
+    }
+
+    /** Whether `panel` may be moved into `placement` (KIT-050). */
+    public function allowsPanel(panel:PanelId, placement:DockPlacement, cx:App):Bool {
+        if (dropPolicy == null) return true;
+        final view = this.panel(panel);
+        return view == null || dropPolicy(view, placement, cx);
+    }
+
+    /** Whether `panel` may be moved into the group at `node` (KIT-050). */
+    public function acceptsPanelAt(panel:PanelId, node:NodeId, cx:App):Bool {
+        final placement = placementOfNode(node);
+        return placement == null || allowsPanel(panel, placement, cx);
+    }
+
+    /**
+     * Let the centre lose its last panel (port addition, KIT-051). The
+     * original keeps the last panel of the centre in place: it can be neither
+     * closed nor dragged out. With this on it can, and the renderer's
+     * `renderEmptyCenter` fills what is left. Off by default.
+     */
+    public function setCenterEmptiable(emptiable:Bool, window:Window, cx:Context<DockArea>):Void {
+        if (centerEmptiable == emptiable) return;
+        centerEmptiable = emptiable;
+        reconcile(window, cx);
+    }
+
+    public inline function isCenterEmptiable():Bool {
+        return centerEmptiable;
+    }
+
+    /**
+     * Ask before a panel is closed from its tab (port addition, KIT-052).
+     * `handler` returns true to let the dock close the panel, false to keep
+     * it: an application that has to ask about unsaved changes answers false,
+     * and calls `closePanel` once it knows. `null`, the default, closes.
+     */
+    public function setCloseHandler(handler:Null<(PanelView, Window, App) -> Bool>):Void {
+        closeHandler = handler;
+    }
+
+    /**
+     * Close a panel by its id, whatever its group allows: the application
+     * decided (port addition, KIT-052). The panel is told it was removed.
+     */
+    public function closePanel(panel:PanelId, window:Window, cx:Context<DockArea>):Void {
+        removePanelId(panel, window, cx);
+    }
+
+    /** The region that holds `panel`, or null (port addition). */
+    public function placementOf(panel:PanelId):Null<DockPlacement> {
+        return placementOfPanel(panel);
+    }
+
+    /** The tab groups of a region, in layout order (port addition, KIT-053). */
+    public function groupNodes(placement:DockPlacement):Array<NodeId> {
+        final nodes:Array<NodeId> = [];
+        final tree = layout(placement);
+        if (tree != null) {
+            tree.root().walk(node -> switch node.kind() {
+                case Tabs(_, _): nodes.push(node.id());
+                case Split(_, _, _):
+            });
+        }
+        return nodes;
+    }
+
+    /** The panel a tab group displays, or null (port addition, KIT-053). */
+    public function activePanelOf(node:NodeId, cx:App):Null<PanelView> {
+        final cached = groups.get(node.asU64());
+        return cached != null ? cached.entity.read(cx).activePanel(cx) : null;
+    }
+
+    /** The tab group that holds `panel`, or null (port addition, KIT-053). */
+    public function groupOf(panel:PanelId):Null<NodeId> {
+        final placement = placementOfPanel(panel);
+        final tree = placement != null ? layout(placement) : null;
+        return tree != null ? tree.findPanelNode(panel) : null;
     }
 
 /// Installing layouts: the center region and the three docks.
@@ -400,6 +501,7 @@ class DockArea extends Model implements Render {
         if (this.panel(panel) == null) return;
         final destination = placementOfNode(targetNode(target));
         if (destination == null) return;
+        if (!allowsPanel(panel, destination, cx.app)) return;
         final source = placementOfPanel(panel);
 
         // A split target divides an existing slot, so the tree needs real
@@ -783,7 +885,7 @@ class DockArea extends Model implements Render {
     function reconcile(window:Window, cx:Context<DockArea>):Void {
         // Planned first, applied second.
         final plans:Array<ContainerPlan> = [];
-        planTree(center, false, locked, plans);
+        planTree(center, false, locked, plans, centerEmptiable);
         for (region in docks) {
             planTree(region.tree, !region.dock.isOpen(), locked, plans);
         }
@@ -887,7 +989,15 @@ class DockArea extends Model implements Render {
         if (cached != null) return cached.entity;
 
         final tabGroupRenderer = renderer.tabGroupRenderer();
-        final entity = cx.newEntity((gcx:Context<TabGroup>) -> new TabGroup(node, window, gcx).withRenderer(tabGroupRenderer));
+        final area = self;
+        // The group asks its container whether a dragged panel may land in it (KIT-050)
+        final accepts = (panel:PanelId, app:App) -> {
+            final upgraded = area.upgrade();
+            if (upgraded == null) return true;
+            final live:DockArea = upgraded;
+            return live.acceptsPanelAt(panel, node, app);
+        };
+        final entity = cx.newEntity((gcx:Context<TabGroup>) -> new TabGroup(node, window, gcx).withRenderer(tabGroupRenderer).withAcceptance(accepts));
         final subscription = cx.subscribeIn(entity, TabGroupEvent, window, (area, group, event, window, cx) -> area.onTabGroupEvent(group, event, window, cx));
         groups.set(node.asU64(), new CachedGroup(entity, subscription));
         return entity;
@@ -952,6 +1062,9 @@ class DockArea extends Model implements Render {
             case DragDrop(item, target):
                 cx.emit(DockEvent.DragDrop(item.clone(), target));
             case ClosePanel(panel):
+                // The application may have to ask first (KIT-052)
+                final view = this.panel(panel);
+                if (closeHandler != null && view != null && !closeHandler(view, window, cx.app)) return;
                 removePanelId(panel, window, cx);
             case ActiveChanged(ix):
                 final node = group.read(cx.app).node();
@@ -1267,8 +1380,15 @@ class DockArea extends Model implements Render {
                 .flex()
                 .flex1()
                 .flexCol()
-                .overflowHidden()
-                .child(renderNode(center.root(), window, app));
+                .overflowHidden();
+            // A centre with nothing to show is the renderer's to fill (KIT-051)
+            final emptyCenter = isEmpty(DockPlacement.Center, app) ? renderer.renderEmptyCenter(window, app) : null;
+            if (emptyCenter != null) {
+                centerColumn.child(div().flex().flexCol().flex1().minH(px(0.)).overflowHidden().child(emptyCenter));
+            }
+            else {
+                centerColumn.child(renderNode(center.root(), window, app));
+            }
             final bottom = renderDock(DockPlacement.Bottom, window, app);
             if (bottom != null) centerColumn.child(bottom);
             frame.child(centerColumn);
@@ -1296,17 +1416,22 @@ class DockArea extends Model implements Render {
 
 /// Plans
 
-    static function planTree(tree:PaneTree, collapsed:Bool, locked:Bool, out:Array<ContainerPlan>):Void {
+    /**
+     * `emptiable` is for a tree that may lose its last panel (KIT-051): none
+     * of its groups is then told it is alone, which is what keeps a last
+     * panel in place.
+     */
+    static function planTree(tree:PaneTree, collapsed:Bool, locked:Bool, out:Array<ContainerPlan>, emptiable:Bool = false):Void {
         // The root has nothing beside it by definition.
-        planNode(tree.root(), true, collapsed, locked, out);
+        planNode(tree.root(), !emptiable, collapsed, locked, out, emptiable);
     }
 
-    static function planNode(node:PaneNode, alone:Bool, collapsed:Bool, locked:Bool, out:Array<ContainerPlan>):Void {
+    static function planNode(node:PaneNode, alone:Bool, collapsed:Bool, locked:Bool, out:Array<ContainerPlan>, emptiable:Bool = false):Void {
         switch node.kind() {
             case Split(axis, children, sizes):
                 out.push(ContainerPlan.Split(node.id(), axis, [for (child in children) child.id()], sizes.copy()));
-                final childrenAlone = children.length <= 1;
-                for (child in children) planNode(child, childrenAlone, collapsed, locked, out);
+                final childrenAlone = !emptiable && children.length <= 1;
+                for (child in children) planNode(child, childrenAlone, collapsed, locked, out, emptiable);
             case Tabs(panels, activeIx):
                 out.push(ContainerPlan.Group(node.id(), panels.copy(), activeIx,
                     TabGroupConstraints.inSplit(alone).dockLocked(locked).collapsed(collapsed)));

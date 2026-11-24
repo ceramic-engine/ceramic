@@ -383,6 +383,14 @@ class TabGroupSkin extends TabGroupRendererBase {
             if (visibleIx != -1) scrollHandle.scrollToItem(visibleIx);
         }
 
+        // Told apart only when the centre shows several groups (KIT-053)
+        var unfocused = false;
+        if (shared.unfocusedTabForeground != null && shared.isCenterNode(group.node())) {
+            final area = shared.liveArea();
+            final focused = shared.focusedCenterGroup();
+            unfocused = area != null && focused != null && focused != group.node() && area.groupNodes(DockPlacement.Center).length > 1;
+        }
+
         final bar = TabBar.component('tab-bar').trackScroll(scrollHandle);
         if (hasLeading) {
             final prefix = hFlex()
@@ -454,6 +462,8 @@ class TabGroupSkin extends TabGroupRendererBase {
             // screen, not the stored index: a hidden displayed tab falls back
             // to the first visible one.
             tab.selected(!collapsed && ix == displayedIx);
+            // The active tab of a group of the centre that does not have the focus (KIT-053)
+            if (unfocused) tab.selectedForeground(shared.unfocusedTabForeground);
             // The application's accent, as a line along the top of the active tab (KIT-039)
             tab.topAccent(shared.activeTabAccent, shared.activeTabAccentWidth);
             final area = shared.area();
@@ -541,6 +551,25 @@ class TabGroupSkin extends TabGroupRendererBase {
     override public function frame(group:TabGroupContext, window:Window, cx:App):Div {
         final control = zoomControl(group, cx);
 
+        // The group of the centre whose panel holds the focus becomes the focused one (KIT-053). Read
+        // here because a change of focus draws the groups again, and written after the frame.
+        final shown = group.activePanel();
+        final key = group.node().asU64();
+        final focusId = window.focusId();
+        // Once for each move of the keyboard focus: a group the application made the focused one
+        // (`setFocusedCenterGroup`) stays it while the keyboard focus stays where it was
+        if (shown != null && focusId != shared.seenFocusId && shared.isCenterNode(group.node())
+            && shown.focusHandle(cx).containsFocused(window, cx)) {
+            shared.seenFocusId = focusId;
+            if (shared.focusedCenterNode != key) {
+                final shared = this.shared;
+                window.defer(cx, (_, cx) -> {
+                    shared.focusedCenterNode = key;
+                    shared.notify(cx);
+                });
+            }
+        }
+
         // The column, the fill and the clip are base's, applied around this.
         // What is left is the background and the two actions.
         return div()
@@ -578,7 +607,9 @@ class TabGroupSkin extends TabGroupRendererBase {
         final visible = visibleIndices(group, cx);
 
         if (visible.length == 0) return new Empty().intoAnyElement();
-        if (visible.length == 1 && shared.panelStyle() == PanelStyle.Auto) {
+        // A lone panel of the centre keeps its tab when the application asked for it (KIT-054)
+        final alwaysTabs = shared.centerTabsAlways && shared.isCenterNode(group.node());
+        if (visible.length == 1 && shared.panelStyle() == PanelStyle.Auto && !alwaysTabs) {
             // A panel that draws its own chrome declines the title bar.
             final ix = visible[0];
             final handle = PanelHandle.of(group.panels()[ix]);
