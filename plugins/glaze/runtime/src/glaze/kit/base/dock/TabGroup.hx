@@ -527,7 +527,11 @@ class TabGroup extends Model implements Render {
         return panel != null ? panel.focusHandle(cx) : ownFocusHandle;
     }
 
+    /** A drop was taken by the layer over the panel since the group was last drawn (KIT-056). */
+    var dropTaken:Bool = false;
+
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
+        dropTaken = false;
         final context = this.context(cx.app);
         final renderer = this.renderer;
         final focusHandle = this.focusHandle(cx.app);
@@ -567,9 +571,14 @@ class TabGroup extends Model implements Render {
             // Both drag kinds hang off `droppable` alone.
             .when(droppable, el -> el
                 .onDragMove(DragPanel, groupCx.listener((group:TabGroup, drag:DragMoveEvent<DragPanel>, window, cx) -> group.onPanelDragMove(drag, window, cx)))
-                .onDrop(DragPanel, groupCx.listener((group:TabGroup, drag:DragPanel, _, cx) -> group.onDrop(drag, null, true, cx)))
+                .onDrop(DragPanel, groupCx.listener((group:TabGroup, drag:DragPanel, _, cx) -> {
+                    // Already taken by the layer over the panel (KIT-056)
+                    if (group.dropTaken) return;
+                    group.onDrop(drag, null, true, cx);
+                }))
                 .onDragMove(AnyDrag, groupCx.listener((group:TabGroup, drag:DragMoveEvent<AnyDrag>, window, cx) -> group.onItemDragMove(drag, window, cx)))
                 .onDrop(AnyDrag, groupCx.listener((group:TabGroup, item:AnyDrag, _, cx) -> {
+                    if (group.dropTaken) return;
                     final placement = group.dropIndicator != null ? group.dropIndicator.placement() : null;
                     group.emitDragDrop(item, placement, cx);
                 })));
@@ -585,6 +594,33 @@ class TabGroup extends Model implements Render {
         if (indicator != null) {
             final drawn = renderer.renderDropIndicator(indicator, window, cx.app);
             if (drawn != null) content.child(drawn);
+            // While a drag is over the group, a layer over the panel takes the drop (port addition,
+            // KIT-056): a panel whose content takes the pointer itself, a native view for one, would
+            // otherwise keep the release from the listeners above, which sit behind it.
+            if (droppable) {
+                final group = self;
+                content.child(div()
+                    .testSupport()
+                    .absolute()
+                    .top0()
+                    .left0()
+                    .sizeFull()
+                    .onDrop(DragPanel, (drag:DragPanel, _, cx) -> {
+                        cx.stopPropagation();
+                        group.tryUpdate(cx, (group, gcx) -> {
+                            group.dropTaken = true;
+                            group.onDrop(drag, null, true, gcx);
+                        });
+                    })
+                    .onDrop(AnyDrag, (item:AnyDrag, _, cx) -> {
+                        cx.stopPropagation();
+                        group.tryUpdate(cx, (group, gcx) -> {
+                            group.dropTaken = true;
+                            final placement = group.dropIndicator != null ? group.dropIndicator.placement() : null;
+                            group.emitDragDrop(item, placement, gcx);
+                        });
+                    }));
+            }
         }
 
         return frame.child(content);

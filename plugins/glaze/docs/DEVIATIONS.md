@@ -975,6 +975,16 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** `KitDockAdditionsTest.testTheLineBetweenTwoGroupsStartsUnderTheTabs`.
 - **Upstream.** Not proposed.
 
+### KIT-056: Dock, a drop over a panel that takes the pointer
+
+- **Component.** `glaze.kit.base.dock.TabGroup`.
+- **Behaviour of the original.** The drop of a dragged panel is listened for on the frame around the panel. A panel whose content takes the pointer itself (a native view) keeps the release from that frame: the place to land is shown, and nothing lands.
+- **Addition.** While a drag is over the group, a transparent layer over the panel takes the drop, for a dragged panel and for a host item alike. The frame still listens, and does nothing for a drop the layer took.
+- **Default.** Always on: without such a panel, a drop lands as before.
+- **Scope.** None.
+- **Tests.** The drop tests of `BaseDockTabGroupTest` and `ComponentDockIntegrationTest` now go through the layer.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.
