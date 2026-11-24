@@ -148,8 +148,9 @@ class ComponentFoundationsTest extends TestCase {
     }
 
     function testIconNameIsGeneratedFromTheDefaultIcons() {
-        // gpui-kit's 106 icons and the 5 of Cityscape's find widget
-        assertEquals(111, IconName.ALL.length);
+        // gpui-kit's 106 icons, the 5 of Cityscape's find widget, and 14 added for editing tools
+        // (bounding-box, code, diamond, grid-3x3, hand, image, link, lock, magnet, move, repeat, scaling, square-dashed, type)
+        assertEquals(125, IconName.ALL.length);
         assertEquals('icons/a-large-small.svg', IconName.ALL[0].path());
         assertEquals('icons/chevron-down.svg', IconName.ChevronDown.path());
         assertEquals('icons/star-fill.svg', IconName.StarFill.path());
