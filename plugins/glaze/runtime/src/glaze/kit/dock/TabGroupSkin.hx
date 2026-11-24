@@ -464,6 +464,9 @@ class TabGroupSkin extends TabGroupRendererBase {
             tab.selected(!collapsed && ix == displayedIx);
             // The active tab of a group of the centre that does not have the focus (KIT-053)
             if (unfocused) tab.selectedForeground(shared.unfocusedTabForeground);
+            // A panel that tells the ground of what it shows gives it to its tab (KIT-057)
+            final ownStyle = handle != null ? handle.titleStyle(cx) : null;
+            if (ownStyle != null) tab.selectedBackground(ownStyle.background);
             // The application's accent, as a line along the top of the active tab (KIT-039)
             tab.topAccent(shared.activeTabAccent, shared.activeTabAccentWidth);
             final area = shared.area();

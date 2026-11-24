@@ -985,6 +985,16 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Tests.** The drop tests of `BaseDockTabGroupTest` and `ComponentDockIntegrationTest` now go through the layer.
 - **Upstream.** Not proposed.
 
+### KIT-057: Dock, an active tab with the ground of its panel
+
+- **Component.** `glaze.kit.dock.TabGroupSkin`, `glaze.kit.tab.Tab`.
+- **Behaviour of the original.** `Panel.titleStyle` colors the title of a panel shown alone. In a strip of tabs, every active tab has the ground of the theme, whatever its panel shows.
+- **Addition.** The active tab of a panel that answers `titleStyle` takes its background (`Tab.selectedBackground`): a panel whose content has a ground of its own (a code editor, a view) keeps its tab and its content one surface. The foreground of the style still applies to the lone title only.
+- **Default.** A panel that answers no `titleStyle` (the default of `PanelBase`) keeps the ground of the theme.
+- **Scope.** The selected tab only.
+- **Tests.** `KitDockAdditionsTest.testTheActiveTabTakesTheGroundOfItsPanel`.
+- **Upstream.** Not proposed.
+
 ## Engine deviations (internals, no change of output)
 
 Deviations of GPUI's internal behaviour that do not change what is drawn. They have no reference patch: the original's output is the truth unchanged, and the golden (pixels, scene dumps, cache equivalence) checks that the port still draws exactly that. `reference/verify-deviations.js` reads the `DEV-nnn` entries only.

@@ -323,6 +323,19 @@ class KitDockAdditionsTest extends KitAdditionsTestCase {
         assertEquals(570., lines[0]);
     }
 
+/// KIT-057
+
+    function testTheActiveTabTakesTheGroundOfItsPanel() {
+        final ground = ACCENT;
+        // No panel tells a ground: none is drawn
+        assertEquals(0, quadsFilled(dock((_, _) -> {}), ground).length);
+        // The first panel tells one: its tab, the active one, takes it
+        AdditionsPanel.ground = ground;
+        final cx = dock((_, _) -> {});
+        AdditionsPanel.ground = null;
+        assertEquals(1, quadsFilled(cx, ground).length);
+    }
+
 /// KIT-039
 
     function testTheActiveTabOfADockHasItsAccent() {
@@ -392,6 +405,15 @@ private class AdditionsPanel extends PanelBase {
 
     public function panelName():String {
         return name;
+    }
+
+    /** The ground the panel named alpha tells, for the test of KIT-057. */
+    public static var ground:Null<Hsla> = null;
+
+    final ownGround:Null<Hsla> = ground;
+
+    override public function titleStyle(cx:App):Null<glaze.kit.dock.TitleStyle> {
+        return name == 'alpha' && ownGround != null ? new glaze.kit.dock.TitleStyle(ownGround, ownGround) : null;
     }
 
     override public function title(window:Window, cx:Context<Dynamic>):IntoElement {

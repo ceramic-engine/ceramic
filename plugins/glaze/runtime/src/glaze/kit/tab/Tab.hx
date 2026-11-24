@@ -413,11 +413,25 @@ class Tab extends Component implements Styled implements ParentElement implement
         return this;
     }
 
+    var selectedBackgroundValue:Null<glaze.Hsla> = null;
+
+    /**
+     * Gives the tab the ground `color` while it is selected, instead of
+     * the one of its variant (addition, KIT-057): a tab that takes the
+     * ground of what it shows. Null, the default, keeps the ground of the
+     * variant.
+     */
+    public function selectedBackground(color:Null<glaze.Hsla>):Tab {
+        selectedBackgroundValue = color;
+        return this;
+    }
+
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final normalStyle = variant.normal(cx);
         final selectedStyle = variant.selected(cx);
         if (selectedForegroundValue != null) selectedStyle.fg = selectedForegroundValue;
+        if (selectedBackgroundValue != null) selectedStyle.bg = selectedBackgroundValue;
         final disabledStyle = variant.disabled(this.selected, cx);
         var hoverStyle = variant.hovered(this.selected, cx);
         if (this.disabled) {
