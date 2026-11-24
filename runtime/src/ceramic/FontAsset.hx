@@ -124,15 +124,26 @@ class FontAsset extends Asset {
         var lowerCasePath = actualPath.toLowerCase();
         if (lowerCasePath.endsWith('.ttf') || lowerCasePath.endsWith('.otf')) {
             actualPath = actualPath.substring(0, actualPath.length - 4) + '.fnt';
+
+            // When assets are read from their source directory, the converted
+            // bitmap font may not exist yet: convert it on the fly, then load it
+            if (transformedPath == null && shouldTransformBeforeLoad(actualPath)) {
+                transformThenLoad(true);
+                return;
+            }
         }
 
         log.info('Load font $actualPath');
-        if (transformedPath != null) {
-            actualPath = Path.join([transformedPath, actualPath]);
-        }
 
-        // Use runtime assets if provided
-        assets.runtimeAssets = runtimeAssets;
+        if (transformedPath != null) {
+            // The font was converted on the fly: its data and pages
+            // are read from the transformed assets directory
+            assets.runtimeAssets = RuntimeAssets.fromPath(transformedPath);
+        }
+        else {
+            // Use runtime assets if provided
+            assets.runtimeAssets = runtimeAssets;
+        }
 
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
@@ -342,34 +353,81 @@ class FontAsset extends Asset {
             log.info('Reload font (file has changed)');
 
             var lowerCasePath = path.toLowerCase();
-            if (owner?.runtimeAssets != null && lowerCasePath.endsWith('.ttf') || lowerCasePath.endsWith('.otf')) {
-                var actualPath = path;
-                owner.runtimeAssets.requestTransformedDir(transformedDir -> {
-                    Platform.runCeramic([
-                        'assets',
-                        '--filter', path,
-                        '--from', owner.runtimeAssets.path,
-                        '--to', transformedDir,
-                        '--list-changed'
-                    ],
-                    (code, out, err) -> {
-                        if (code == 0) {
-                            transformedPath = transformedDir;
-                            var changed:Array<String> = Json.parse(out.trim());
-                            for (absolutePath in changed) {
-                                log.debug('Updated on the fly: $absolutePath');
-                                Assets.incrementReloadCount(absolutePath);
-                            }
-                            load();
-                        }
-                    });
-                });
+            if (owner?.runtimeAssets != null && (lowerCasePath.endsWith('.ttf') || lowerCasePath.endsWith('.otf'))) {
+                transformThenLoad(false);
             }
             else {
                 load();
             }
 
         }
+
+    }
+
+    /**
+     * Whether a TTF/OTF font must be converted before it can be loaded: assets are
+     * read from a source directory that doesn't provide the converted bitmap font.
+     */
+    function shouldTransformBeforeLoad(fntPath:String):Bool {
+
+        if (owner == null || owner.runtimeAssets == null || owner.runtimeAssets.path == null)
+            return false;
+
+        if (!app.backend.texts.supportsHotReloadPath())
+            return false;
+
+        return owner.runtimeAssets.getLists().all.indexOf(fntPath) == -1;
+
+    }
+
+    /**
+     * Convert the TTF/OTF font to a bitmap font in the transformed assets directory, then load it.
+     * @param firstLoad `true` if the font was never loaded: a failed conversion then makes the asset broken
+     */
+    function transformThenLoad(firstLoad:Bool):Void {
+
+        var runtimeAssets = owner.runtimeAssets;
+
+        inline function fail(reason:String) {
+            log.error('Failed to convert font at path: $path ($reason)');
+            if (firstLoad) {
+                status = BROKEN;
+                emitComplete(false);
+            }
+        }
+
+        runtimeAssets.requestTransformedDir(transformedDir -> {
+            if (destroyed) return;
+            if (transformedDir == null) {
+                fail('no directory for transformed assets');
+                return;
+            }
+            Platform.runCeramic([
+                'assets',
+                '--filter', path,
+                '--from', runtimeAssets.path,
+                '--to', transformedDir,
+                '--list-changed'
+            ],
+            (code, out, err) -> {
+                if (destroyed) return;
+                if (code == 0) {
+                    transformedPath = transformedDir;
+                    try {
+                        var changed:Array<String> = Json.parse(out.trim());
+                        for (absolutePath in changed) {
+                            log.debug('Updated on the fly: $absolutePath');
+                            Assets.incrementReloadCount(absolutePath);
+                        }
+                    }
+                    catch (e:Dynamic) {}
+                    load();
+                }
+                else {
+                    fail('code $code');
+                }
+            });
+        });
 
     }
 
