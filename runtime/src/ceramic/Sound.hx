@@ -149,7 +149,7 @@ class Sound extends Entity {
     }
 
     /**
-     * Request the decoded samples of this sound.
+     * Provide the decoded samples of this sound as a buffer.
      *
      * The buffer has the layout audio filter worklets process, on every target:
      * 32 bit float samples in the -1 to 1 range, planar (every sample of the first
@@ -160,7 +160,7 @@ class Sound extends Entity {
      * `Sound.fromSamplesBuffer()` to create a sound from samples.
      *
      * ```haxe
-     * sound.requestSamples((buffer, samples, channels, sampleRate) -> {
+     * sound.toSamplesBuffer((buffer, samples, channels, sampleRate) -> {
      *     if (buffer != null) {
      *         var peaks = AudioPeaks.compute(buffer, samples, channels, 200);
      *     }
@@ -172,7 +172,7 @@ class Sound extends Entity {
      *             (and the other values `0`) when the samples can't be provided:
      *             streamed sounds, or a target without audio data.
      */
-    public function requestSamples(done:(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float)->Void):Void {
+    public function toSamplesBuffer(done:(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float)->Void):Void {
 
         if (backendItem == null) {
             done(null, 0, 0, 0);

@@ -8,11 +8,11 @@ package ceramic;
  * Drawing one vertical bar per slice, from its lowest to its highest value,
  * gives the waveform of the sound at the width of that many bars.
  *
- * It works on the buffers provided by `Sound.requestSamples()`:
+ * It works on the buffers provided by `Sound.toSamplesBuffer()`:
  * 32 bit float planar samples (one channel after another, not interleaved).
  *
  * ```haxe
- * sound.requestSamples((buffer, samples, channels, sampleRate) -> {
+ * sound.toSamplesBuffer((buffer, samples, channels, sampleRate) -> {
  *     if (buffer == null) return;
  *     var peaks = AudioPeaks.compute(buffer, samples, channels, 200);
  *     for (i in 0...200) {
