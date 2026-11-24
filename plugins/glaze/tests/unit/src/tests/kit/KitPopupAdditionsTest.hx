@@ -7,6 +7,7 @@ import glaze.Bounds;
 import glaze.Hsla;
 import glaze.kit.alert.Alert;
 import glaze.kit.dialog.Dialog;
+import glaze.kit.popover.Popover;
 import glaze.kit.separator.Separator;
 import testing.VisualTestContext;
 
@@ -98,6 +99,36 @@ class KitPopupAdditionsTest extends KitAdditionsTestCase {
         final styled:Bounds = filled[0].bounds;
         assertTrue((styled.size.height : Float) < 20.);
         assertTrue((styled.size.width : Float) > 40.);
+    }
+
+
+    // KIT-042: any element as the trigger of a popover
+
+    function testAnyElementOpensAPopover() {
+        final closed = hsla(0.1, 0.9, 0.5, 1.);
+        final opened = hsla(0.4, 0.9, 0.5, 1.);
+        final inside = hsla(0.7, 0.9, 0.5, 1.);
+        final cx = open((_, _) -> div().p(px(40.)).flex()
+            .child(Popover.component('mark')
+                // A mark of a drawing, not a button: it is told whether its popover is open
+                .triggerElement((isOpen, _, _) -> probe('mark', div().w(px(12.)).h(px(12.)).bg(isOpen ? opened : closed)))
+                .content((_, _, _) -> div().w(px(80.)).h(px(30.)).bg(inside))), 800, 600, true);
+        draw(cx);
+        final mark = boundsOf(cx, 'mark');
+        assertEquals(12., (mark.size.width : Float));
+        assertEquals(1, quadsFilled(cx, closed).length);
+        assertEquals(0, quadsFilled(cx, inside).length);
+
+        cx.simulateClick(mark.center());
+        for (_ in 0...20) nextFrame(cx);
+        assertEquals(1, quadsFilled(cx, opened).length, 'the mark is drawn open');
+        assertEquals(0, quadsFilled(cx, closed).length);
+        assertEquals(1, quadsFilled(cx, inside).length, 'the content shows');
+
+        cx.simulateClick(mark.center());
+        for (_ in 0...20) nextFrame(cx);
+        assertEquals(1, quadsFilled(cx, closed).length);
+        assertEquals(0, quadsFilled(cx, inside).length);
     }
 
 }

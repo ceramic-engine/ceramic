@@ -56,6 +56,31 @@ class KitTabAdditionsTest extends KitAdditionsTestCase {
         });
     }
 
+/// KIT-039
+
+    function testTheSelectedTabHasALineAlongItsTop() {
+        final accent = color(0.9);
+        // Nothing without the option
+        assertEquals(0, quadsFilled(bar(b -> b), accent).length);
+        // Given to both tabs: only the selected one draws it, over its whole width
+        var cx = bar(b -> b, (tab, _) -> tab.topAccent(accent));
+        var lines = quadsFilled(cx, accent);
+        assertEquals(1, lines.length);
+        final first = boundsOf(cx, 'tab-0');
+        assertEquals(2., (lines[0].bounds.size.height : Float));
+        // From one border of the tab to the other, right under its top border
+        assertTrue(Math.abs((first.size.width : Float) - (lines[0].bounds.size.width : Float)) <= 2., '${lines[0].bounds}');
+        assertTrue(Math.abs((first.origin.x : Float) - (lines[0].bounds.origin.x : Float)) <= 1.);
+        assertTrue(Math.abs((first.origin.y : Float) - (lines[0].bounds.origin.y : Float)) <= 1.);
+        // A width of its own, and the tab keeps its size
+        cx = bar(b -> b, (tab, _) -> tab.topAccent(accent, 1.));
+        lines = quadsFilled(cx, accent);
+        assertEquals(1, lines.length);
+        assertEquals(1., (lines[0].bounds.size.height : Float));
+        assertTrue(near(first, boundsOf(cx, 'tab-0')));
+        assertTrue(near(first, boundsOf(bar(b -> b), 'tab-0')));
+    }
+
 /// KIT-001
 
     function testDefaultTabGeometryAndFillsAreUnchanged() {

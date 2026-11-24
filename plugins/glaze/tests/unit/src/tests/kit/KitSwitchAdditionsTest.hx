@@ -90,4 +90,45 @@ class KitSwitchAdditionsTest extends KitAdditionsTestCase {
         Theme.update(app, theme -> theme.focusRing = true);
     }
 
+
+    // KIT-044: a thumb color for each state, a custom size
+
+    /** A switch at (20, 20). */
+    function plainSwitch(configure:(Switch) -> Switch):VisualTestContext {
+        final cx = open((_, _) -> div().p(px(20.)).flex().itemsStart().child(probe('switch', configure(Switch.component('switch')))));
+        draw(cx);
+        return cx;
+    }
+
+    function testACustomSizeIsTheHeightOfTheTrack() {
+        // 14 high: 26 wide, a thumb of 10 two pixels inside
+        final custom:glaze.kit.Size = Size(px(14.));
+        final cx = plainSwitch(s -> s.withSize(custom).thumbColor(hsla(0.1, 0.9, 0.5, 1.)));
+        final track = boundsOf(cx, 'switch');
+        assertEquals(26., (track.size.width : Float));
+        assertEquals(14., (track.size.height : Float));
+        final thumbs = quadsFilled(cx, hsla(0.1, 0.9, 0.5, 1.));
+        assertEquals(1, thumbs.length);
+        assertTrue(near(thumbs[0].bounds, new Bounds(new glaze.Point(22., 22.), new glaze.Size(10., 10.))), '${thumbs[0].bounds}');
+        // The named sizes are as before
+        assertEquals(36., (boundsOf(plainSwitch(s -> s), 'switch').size.width : Float));
+        assertEquals(28., (boundsOf(plainSwitch(s -> s.withSize(glaze.kit.Size.Small)), 'switch').size.width : Float));
+    }
+
+    function testTheThumbHasAColorForEachState() {
+        final off = hsla(0.1, 0.9, 0.5, 1.);
+        final on = hsla(0.4, 0.9, 0.5, 1.);
+        // Off: the first color
+        var cx = plainSwitch(s -> s.thumbColor(off, on));
+        assertEquals(1, quadsFilled(cx, off).length);
+        assertEquals(0, quadsFilled(cx, on).length);
+        // On: the second one
+        cx = plainSwitch(s -> s.checked(true).thumbColor(off, on));
+        assertEquals(0, quadsFilled(cx, off).length);
+        assertEquals(1, quadsFilled(cx, on).length);
+        // On, with a color for off only: the color of the theme
+        cx = plainSwitch(s -> s.checked(true).thumbColor(off));
+        assertEquals(0, quadsFilled(cx, off).length);
+    }
+
 }

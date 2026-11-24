@@ -207,6 +207,9 @@ class Tests {
         runner.add(new tests.kit.KitTitleBarAdditionsTest());
         runner.add(new tests.kit.KitButtonAdditionsTest());
         runner.add(new tests.kit.KitSwitchAdditionsTest());
+        runner.add(new tests.kit.KitInputAdditionsTest());
+        runner.add(new tests.kit.KitTooltipAdditionsTest());
+        runner.add(new tests.kit.KitDockAdditionsTest());
         runner.add(new tests.kit.NumberExpressionTest());
         runner.add(new tests.kit.KitValueControlsAdditionsTest());
         // gpui-kit (wave 7: resizable panels)

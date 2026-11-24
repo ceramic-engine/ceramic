@@ -782,7 +782,7 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Addition.** `stepButtons(false)` leaves the buttons out: the text is aligned to the left like a plain input, and the `up` and `down` keys still step the value. `onScrub(handler)` makes the prefix a handle to drag sideways, with a left-right resize cursor: the handler is told `NumberScrub.Started` once, `Moved(distance)` at each move with the horizontal distance in pixels from where the drag started, then `Ended` when the pointer is released. Changing the value is left to the caller, as it is for steps.
 - **Default.** Buttons shown, no handle: the number input of before.
 - **Scope.** None.
-- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor (its number fields, with real mouse events).
+- **Tests.** `KitInputAdditionsTest`: without its buttons the field draws two icons less and keeps its size, a prefix without `onScrub` starts no drag, a drag of the prefix tells `Started` once, the distance to the right and back, then `Ended` once.
 - **Upstream.** Not proposed.
 
 ### KIT-036: NumberInput, expressions
@@ -822,7 +822,7 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Addition.** `Tab.topAccent(color, ?width)` draws a line of `color`, 2 px thick by default, along the top of a selected tab, over its whole width (prefix, label and suffix). `DockSkin.setActiveTabAccent(color, cx, ?width)` gives it to the active tab of every group and to the title of a panel shown without tabs: an accent of the application, or with 1 px and the border color the edge of the active surfaces over a strip that has none.
 - **Default.** Null: no line, as before.
 - **Scope.** None.
-- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor (the color of its mode).
+- **Tests.** `KitTabAdditionsTest`: only the selected tab draws the line, from one border to the other, 2 px or the given width, and the tab keeps its size. `KitDockAdditionsTest`: one line on the active tab of a dock, its width, and none once the accent is taken away.
 - **Upstream.** Not proposed.
 
 ### KIT-040: Tooltip, an arrow, colors and a gap
@@ -832,7 +832,7 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Addition.** Theme settings: `tooltipArrow` draws a triangle aimed at what the tooltip describes, on the side the positioner chose (after a flip); `tooltipBackground`, `tooltipForeground`, `tooltipBorder` give tooltips colors of their own; `tooltipGap` sets the distance in pixels.
 - **Default.** No arrow, null colors and gap: the tooltip of before.
 - **Scope.** None.
-- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
+- **Tests.** `KitTooltipAdditionsTest`: the popup has the given color, 4 px then 14 px from its area with these gaps, and a path is drawn with the arrow only, around a popup of the same size.
 - **Upstream.** Not proposed.
 
 ### KIT-041: Tooltip, shown for a gesture
@@ -842,7 +842,7 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Addition.** `Tooltip.showAt(area, text, window, cx, ?placement)` shows a tooltip for an area of the window at once, without a hover, for a gesture that tells its value while it lasts; `Tooltip.hideShown(window, cx)` hides it.
 - **Default.** Not applicable.
 - **Scope.** None.
-- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor (the frame of a label being dragged).
+- **Tests.** `KitTooltipAdditionsTest`: a tooltip shown for an area without a hover, to the right of the area and at its height, then hidden.
 - **Upstream.** Not proposed.
 
 ### KIT-042: Popover, any element as its trigger
@@ -852,7 +852,7 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Addition.** `Popover.triggerElement(build)` takes any element as the trigger (a mark in a drawing, a row of a list); `build` is given whether the popover is open.
 - **Default.** Not applicable.
 - **Scope.** None.
-- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor (the easing editor opened on a keyframe).
+- **Tests.** `KitPopupAdditionsTest`: a plain element opens its popover on a click and closes it on another, and is told whether it is open.
 - **Upstream.** Not proposed.
 
 ### KIT-043: icons added
@@ -872,7 +872,7 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Addition.** `Switch.thumbColor(off, ?on)` gives the thumb a color while the switch is off, and optionally another while it is on. `withSize(Size(height))` draws a track `height` px high and `2 * height - 2` px wide, with a thumb of `height - 4` px.
 - **Default.** The thumb color of the theme, the named sizes as before.
 - **Scope.** A switch given a custom size was drawn medium before; none in the kit or its gallery.
-- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
+- **Tests.** `KitSwitchAdditionsTest`: a size of 14 draws a 26 x 14 track and a 10 px thumb two pixels inside, the named sizes are as before, the thumb takes the color of its state.
 - **Upstream.** Not proposed.
 
 ### KIT-045: ColorSelect, a field without its caret or its border
@@ -882,7 +882,7 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Addition.** `caret(false)` leaves the caret out, `bordered(false)` gives the border the color of the field until it is focused or open, `swatchSize(pixels)` sets the size of the swatch.
 - **Default.** Caret and border shown, the swatch of the size: the field of before.
 - **Scope.** None.
-- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
+- **Tests.** `KitInputAdditionsTest`: without its caret the field draws one icon less, a swatch of 14 px is 2 px smaller than the default one, without its border the field keeps its size and its quads.
 - **Upstream.** Not proposed.
 
 ### KIT-046: Tree, several rows selected
@@ -902,7 +902,7 @@ Options and components added to the kit (`runtime/src/glaze/kit`) that gpui-kit 
 - **Addition.** `DockSkin.setCloseButtonOnHover(true, cx)`: the button of a tab that is not the active one is hidden until the pointer is over the tab. Its room is kept, so the tabs do not move. The active tab always shows its button.
 - **Default.** Off: every button shown, as before.
 - **Scope.** None.
-- **Tests.** None yet in the kit suite. Exercised by the Ceramic editor.
+- **Tests.** `KitDockAdditionsTest`: the buttons keep their place, only the active tab draws its cross, the pointer over an inactive tab brings its cross back and leaving hides it.
 - **Upstream.** Not proposed.
 
 ### KIT-048: Tree, a drop before, inside or after a row
