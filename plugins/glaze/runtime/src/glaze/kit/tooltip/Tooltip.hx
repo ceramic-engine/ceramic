@@ -128,10 +128,10 @@ class Tooltip extends Model implements Render implements Styled {
             .fontFamily(theme.fontFamily)
             .m3()
             .bg(theme.tokens.popover.background)
-            .textColor(theme.popoverForeground)
+            .textColor(theme.tooltipForeground != null ? theme.tooltipForeground : theme.popoverForeground)
             .bg(theme.tokens.popover.background)
             .border1()
-            .borderColor(theme.border)
+            .borderColor(theme.tooltipBorder != null ? theme.tooltipBorder : theme.border)
             .shadowMd()
             .rounded(theme.radius)
             .justifyBetween()
@@ -140,6 +140,8 @@ class Tooltip extends Model implements Render implements Styled {
             .textSm()
             .gap3()
             .refineStyle(tooltipStyle);
+        if (theme.tooltipBackground != null) popup.bg(theme.tooltipBackground);
+        if (theme.tooltipGap != null) popup.m(px(theme.tooltipGap));
         final inner = div();
         switch content {
             case Text(text):
@@ -158,10 +160,118 @@ class Tooltip extends Model implements Render implements Styled {
             );
         }
         // Wrap in a child, to ensure the left margin is applied to the tooltip
-        return div().child(popup);
+        final wrapper = div().child(popup);
+        if (theme.tooltipArrow) {
+            // The arrow is drawn after the popup, not inside it: a border is painted after the children of its
+            // element, so an arrow inside the popup could not cover the border under its base. The popup tells
+            // where it is: its margins may or may not be part of the wrapper
+            final placed:{bounds:Null<Bounds>} = {bounds: null};
+            popup.child(canvas((inside, _, _) -> {
+                // What fills the popup is inside its 1 px border
+                placed.bounds = new Bounds(new glaze.Point((inside.origin.x : Float) - 1., (inside.origin.y : Float) - 1.),
+                    new glaze.Size(px((inside.size.width : Float) + 2.), px((inside.size.height : Float) + 2.)));
+                return null;
+            }, (_, _, _, _) -> {}).absolute().inset0());
+            wrapper.relative().child(arrow(theme, window, placed));
+        }
+        return wrapper;
+    }
+
+    /**
+     * The arrow of the popup: an element drawn after the popup, that
+     * paints outside of it a triangle aimed at what the tooltip describes.
+     * `placed` holds the bounds of the popup, known once it is laid out.
+     *
+     * The side comes from the positioner of the window's tooltip overlay,
+     * which is the one that chose it (it flips the tooltip when it does not
+     * fit), and is known when the popup paints.
+     */
+    static function arrow(theme:Theme, window:Window, placed:{bounds:Null<Bounds>}):IntoElement {
+        final background = theme.tooltipBackground != null ? theme.tooltipBackground : theme.popover;
+        final border = theme.tooltipBorder != null ? theme.tooltipBorder : theme.border;
+        final radius:Float = theme.radius;
+        return canvas((_, _, _) -> null, (_, _, window, cx) -> {
+            final surface = placed.bounds;
+            if (surface == null) return;
+            final overlay = WindowState.tooltipOverlay(window, cx);
+            if (overlay == null) return;
+            final shown = overlay.read(cx);
+            final trigger = shown.triggerBounds();
+            final position = shown.position();
+            if (trigger == null || position == null || position.placement == null) return;
+            // The arrow never reaches further than the gap the popup keeps from what it describes
+            final gap:Float = theme.tooltipGap != null ? theme.tooltipGap : window.remSize() * 0.75;
+            final depth = Math.min(ARROW_DEPTH, Math.max(0, gap - 1));
+            if (depth <= 0) return;
+            final side = position.placement;
+            final points = glaze.kit.popover.Popover.arrowPoints(surface, trigger, side, depth, radius);
+            // The base of the arrow is on the outer edge of the popup. Its sides are drawn from the middle of
+            // the 1 px border, and go on through it: the border and the sides are then one line that turns,
+            // and what is filled between them hides the border under the arrow
+            final inwardX:Float = switch side {
+                case Right: 1.;
+                case Left: -1.;
+                case _: 0.;
+            }
+            final inwardY:Float = switch side {
+                case Bottom: 1.;
+                case Top: -1.;
+                case _: 0.;
+            }
+            inline function onBorder(point:glaze.Point):glaze.Point {
+                return new glaze.Point((point.x : Float) + inwardX * 0.5, (point.y : Float) + inwardY * 0.5);
+            }
+            final tip = onBorder(points[1]);
+            // A side prolonged past its base point, to the inner edge of the border
+            function foot(point:glaze.Point):glaze.Point {
+                final base = onBorder(point);
+                final along = 0.5 / depth;
+                return new glaze.Point((base.x : Float) + ((base.x : Float) - (tip.x : Float)) * along, (base.y : Float) + ((base.y : Float) - (tip.y : Float)) * along);
+            }
+            final first = foot(points[0]);
+            final last = foot(points[2]);
+            final shape = glaze.PathBuilder.fill();
+            shape.moveTo(first);
+            shape.lineTo(tip);
+            shape.lineTo(last);
+            shape.close();
+            final path = glaze.kit.popover.Popover.tryBuild(shape);
+            if (path != null) window.paintPath(path, background);
+            final outline = glaze.PathBuilder.stroke(px(1.));
+            // The line stops in the middle of the border: further, its end would show under it
+            outline.moveTo(onBorder(points[0]));
+            outline.lineTo(tip);
+            outline.lineTo(onBorder(points[2]));
+            final stroke = glaze.kit.popover.Popover.tryBuild(outline);
+            if (stroke != null) window.paintPath(stroke, border);
+        }).absolute().inset0().sizeFull();
+    }
+
+    /**
+     * Shows a tooltip for an area of the window, at once, without a hover:
+     * for a gesture that tells its value while it lasts (a drag). It stays
+     * until `hideShown` or until another tooltip takes its place.
+     */
+    public static function showAt(area:Bounds, text:String, window:Window, cx:App, ?placement:Placement):Void {
+        final overlay = WindowState.tooltipOverlay(window, cx);
+        if (overlay == null) return;
+        overlay.update(cx, (shown, cx) -> {
+            final request = new BaseTooltipRequest(area, (window, cx) -> new Tooltip(text).build(window, cx)).withShowDelay(0);
+            if (placement != null) request.withPlacement(placement);
+            shown.requestShow(request, window, cx);
+        });
+    }
+
+    /** Hides at once the tooltip of the window, whatever showed it. */
+    public static function hideShown(window:Window, cx:App):Void {
+        final overlay = WindowState.tooltipOverlay(window, cx);
+        if (overlay != null) overlay.update(cx, (shown, cx) -> shown.hide(cx));
     }
 
 /// Managed tooltip system
+
+    /** How far the arrow of a tooltip reaches out of its popup, in pixels. */
+    static inline final ARROW_DEPTH:Float = 5.;
 
     /** Duration of the slide-down enter animation, in seconds. */
     static inline final ENTER_DURATION:Float = 0.15;

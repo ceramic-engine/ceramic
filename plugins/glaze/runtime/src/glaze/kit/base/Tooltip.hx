@@ -20,6 +20,7 @@ import glaze.Styled;
 import glaze.Task;
 import glaze.Unit;
 import glaze.Window;
+import glaze.kit.base.Positioner.ResolvedPosition;
 import glaze.kit.base.Geometry.Placement;
 
 import glaze.Prelude.*;
@@ -262,6 +263,23 @@ class TooltipOverlay extends Model implements Render {
         hideTask = task;
     }
 
+    /** The bounds of what the shown tooltip describes, or null when none is shown. */
+    public function triggerBounds():Null<Bounds> {
+        return content != null ? content.triggerBounds : null;
+    }
+
+    /**
+     * Where the positioner put the shown tooltip, and on which side of what
+     * it describes (after it was flipped or moved to fit the window). Known
+     * from the prepaint of the tooltip on, so a tooltip can read it when it
+     * paints, to draw an arrow. Null when no tooltip is shown.
+     */
+    public function position():Null<ResolvedPosition> {
+        return content != null ? resolved : null;
+    }
+
+    var resolved:Null<ResolvedPosition> = null;
+
     public function requestShow(content:TooltipRequest, window:Window, cx:Context<TooltipOverlay>):Void {
         // Gate both delayed display and the immediate grace-period switch.
         // Keep this in Base so every managed component shares the policy.
@@ -337,6 +355,7 @@ class TooltipOverlay extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final content = this.content;
         if (content == null) {
+            resolved = null;
             return div();
         }
         final view = content.build(window, cx.app);
@@ -345,6 +364,7 @@ class TooltipOverlay extends Model implements Render {
             : TooltipTransition.Enter(animationEpoch);
         final rendered = renderer(view, transition, window, cx.app);
         final positioner = TooltipPositioner.create(content.triggerBounds);
+        positioner.onPosition(position -> resolved = position);
         if (content.preferredPlacement != null) {
             positioner.placement(content.preferredPlacement);
         }

@@ -548,6 +548,7 @@ class WindowState extends RootPlugin {
      */
     @:allow(glaze.kit)
     @:allow(tests)
+    @:allow(glaze.kit)
     static function tooltipOverlay(window:Window, cx:App):Null<Entity<TooltipOverlay>> {
         final state = tryRead(window);
         return state != null ? state.tooltipOverlayEntity : null;

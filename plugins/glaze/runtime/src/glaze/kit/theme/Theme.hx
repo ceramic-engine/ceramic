@@ -217,6 +217,27 @@ class Theme extends ThemeColor {
      */
     public var focusRing:Bool = true;
 
+    /**
+     * Tooltips draw an arrow that points at what they describe. Default is
+     * `false`.
+     */
+    public var tooltipArrow:Bool = false;
+
+    /**
+     * The gap a tooltip keeps from what it describes and from the edges of
+     * the window, in pixels, or null for the default (0.75 rem).
+     */
+    public var tooltipGap:Null<Float> = null;
+
+    /** Background of tooltips, or null for the one of popovers. */
+    public var tooltipBackground:Null<Hsla> = null;
+
+    /** Text color of tooltips, or null for the one of popovers. */
+    public var tooltipForeground:Null<Hsla> = null;
+
+    /** Border color of tooltips, or null for the border color of the theme. */
+    public var tooltipBorder:Null<Hsla> = null;
+
     public var transparent:Hsla = Hsla.transparentBlack();
 
     /**
@@ -300,6 +321,11 @@ class Theme extends ThemeColor {
         theme.darkTheme = darkTheme;
         theme.mode = mode;
         theme.fontFamily = fontFamily;
+        theme.tooltipArrow = tooltipArrow;
+        theme.tooltipGap = tooltipGap;
+        theme.tooltipBackground = tooltipBackground;
+        theme.tooltipForeground = tooltipForeground;
+        theme.tooltipBorder = tooltipBorder;
         theme.fontSize = fontSize;
         theme.monoFontFamily = monoFontFamily;
         theme.monoFontSize = monoFontSize;
