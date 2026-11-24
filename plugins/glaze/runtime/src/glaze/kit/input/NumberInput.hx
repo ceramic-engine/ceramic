@@ -2,14 +2,22 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified during the initial port: deviation DEV-007 (the placeholder is used). See docs/DEVIATIONS.md.
+// Port additions (no Rust origin): `stepButtons`, `expressions`, `onScrub` and `NumberScrub`.
 package glaze.kit.input;
 
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Component;
+import glaze.Context;
+import glaze.CursorStyle;
+import glaze.DragMoveEvent;
+import glaze.ElementId;
 import glaze.Entity;
 import glaze.FocusHandle;
 import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.Render;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -28,6 +36,53 @@ import glaze.Prelude.*;
 using glaze.kit.base.StyledExt;
 using glaze.kit.StyleSized;
 using glaze.kit.ThemeStyled;
+
+/**
+ * What a drag on the prefix of a `NumberInput` tells its `onScrub` handler.
+ * The whole drag is one gesture: `Started` once, `Moved` at each move with
+ * the horizontal distance from where the drag started, in pixels, then
+ * `Ended` when the pointer is released.
+ */
+enum NumberScrub {
+    Started;
+    Moved(distance:Float);
+    Ended;
+}
+
+/** The drag value of a number input prefix. */
+private class DragScrub {
+
+    public final entityId:Int;
+
+    public function new(entityId:Int) {
+        this.entityId = entityId;
+    }
+
+}
+
+/** The (empty) view of a prefix drag: the value itself shows the drag. */
+private class EmptyScrubView extends Model implements Render {
+
+    public function new() {
+        super();
+    }
+
+    public function render(window:Window, cx:Context<Dynamic>):IntoElement {
+        return new glaze.Empty();
+    }
+
+}
+
+/** The drag in progress on a prefix, kept as long as the input is rendered. */
+private class ScrubGesture {
+
+    public var active:Bool = false;
+
+    public var startX:Float = 0.;
+
+    public function new() {}
+
+}
 
 /**
  * A number input element with increment and decrement buttons.
@@ -66,6 +121,27 @@ class NumberInput extends Component implements Styled implements Sizable impleme
      * label. This does not change what is displayed.
      */
     @prop var accessibilityLabel:Null<String> = null;
+
+    /**
+     * Whether the decrement and increment buttons are shown, default: true.
+     * Without them the text is aligned to the left like a plain input, and
+     * the value still steps with the `up` and `down` keys.
+     */
+    @prop var stepButtons:Bool = true;
+
+    /**
+     * Lets the text be an expression (`136+8`), default: false. The caller
+     * computes it when the text is validated, with `NumberExpression.evaluate`.
+     */
+    @prop var expressions:Bool = false;
+
+    /**
+     * Makes the prefix a handle to drag sideways: the handler is told the
+     * start of the drag, each move with its distance in pixels, and its end
+     * (`NumberScrub`). Changing the value is left to the caller, as it is for
+     * steps. Needs a prefix.
+     */
+    @prop var onScrub:Null<(NumberScrub, Window, App) -> Void> = null;
 
     final numberStyle:StyleRefinement = new StyleRefinement();
 
@@ -134,7 +210,7 @@ class NumberInput extends Component implements Styled implements Sizable impleme
             (cast state : Entity<glaze.kit.base.input.InputBaseState>).update(cx, (input, cx) -> input.setPlaceholder(placeholder, window, cx));
         }
         final baseState = state;
-        final content = glaze.kit.base.NumberInput.component(baseState).disabled(disabled);
+        final content = glaze.kit.base.NumberInput.component(baseState).disabled(disabled).stepButtons(stepButtons).expressions(expressions);
         if (accessibilityLabel != null) content.accessibilityLabel(accessibilityLabel);
         content.sizeFull();
         content.decrementButton(button -> {
@@ -156,8 +232,34 @@ class NumberInput extends Component implements Styled implements Sizable impleme
             return button.roundedTl(buttonRadius).roundedBl(buttonRadius).child(Icon.component(IconName.Minus).withSize(buttonSize));
         });
         final input = Input.component(state).appearance(false).withSize(buttonSize).hFull().disabled(disabled);
-        input.gap0().roundedNone().textAlign(glaze.TextAlign.Center);
-        if (prefixElement != null) input.prefix(prefixElement);
+        input.roundedNone();
+        // Between its buttons the value is centered; alone it reads like a plain input
+        if (stepButtons) input.gap0().textAlign(glaze.TextAlign.Center);
+        final scrub = disabled ? null : onScrub;
+        var gesture:Null<ScrubGesture> = null;
+        if (prefixElement != null && scrub != null) {
+            final entityId = state.entityId();
+            final held:ScrubGesture = window.useKeyedState(ElementId.NamedInteger('number-input-scrub', entityId), cx, _ -> new ScrubGesture()).read(cx).value;
+            gesture = held;
+            input.prefix(div()
+                .id(ElementId.NamedInteger('number-input-scrub-handle', entityId))
+                .cursor(CursorStyle.ResizeLeftRight)
+                .child(prefixElement)
+                .onDrag(new DragScrub(entityId), (_, _, _, cx) -> {
+                    cx.stopPropagation();
+                    return cx.newEntity((_:Context<EmptyScrubView>) -> new EmptyScrubView());
+                })
+                .onDragMove(DragScrub, (event:DragMoveEvent<DragScrub>, window, cx) -> {
+                    if (event.drag(cx).entityId != entityId) return;
+                    final x:Float = event.event.position.x;
+                    if (!held.active) {
+                        held.active = true;
+                        held.startX = x;
+                        scrub(Started, window, cx);
+                    }
+                    scrub(Moved(x - held.startX), window, cx);
+                }));
+        } else if (prefixElement != null) input.prefix(prefixElement);
         if (suffixElement != null) input.suffix(suffixElement);
         content.input(input);
         content.incrementButton(button -> {
@@ -180,11 +282,20 @@ class NumberInput extends Component implements Styled implements Sizable impleme
         // application children into its text slot, so putting the ring on that
         // element would incorrectly surround only the editable middle region.
         final frame = div().flex1().inputH(size).rounded(theme.radius);
-        if (appearance) {
-            frame.bg(bg).border1().borderColor(borderColor);
-            if (focused) frame.border1().borderColor(theme.ring);
+        if (gesture != null && scrub != null) {
+            final held = gesture;
+            final release = (window:Window, cx:App) -> {
+                if (!held.active) return;
+                held.active = false;
+                scrub(Ended, window, cx);
+            };
+            frame.onMouseUp(MouseButton.Left, (_, window, cx) -> release(window, cx))
+                .onMouseUpOut(MouseButton.Left, (_, window, cx) -> release(window, cx));
         }
+        if (appearance) frame.bg(bg).border1().borderColor(borderColor);
         frame.refineStyle(numberStyle);
+        // After the caller's style: a border color of its own must not hide the focus (port addition, KIT-035)
+        if (appearance && focused) frame.border1().borderColor(theme.ring);
         if (disabled) frame.opacity(0.5);
         frame.child(content);
         if (focused && appearance && focusRing) frame.focusRingStyle(window, cx);

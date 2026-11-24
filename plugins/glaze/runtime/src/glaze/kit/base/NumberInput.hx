@@ -77,6 +77,21 @@ class NumberInput extends Component implements Styled implements ParentElement {
     var controlsRightValue:Bool = false;
 
     /**
+     * Whether the decrement and increment buttons are shown, default: true.
+     * Without them the value still steps with the `up` and `down` keys
+     * (port addition, the Rust number input always has its buttons).
+     */
+    @prop var stepButtons:Bool = true;
+
+    /**
+     * Lets the text be an expression (`136+8`, `1/3`) instead of a number
+     * only, default: false: the number mask is then not installed on the
+     * state, and the caller computes the text when it is validated, with
+     * `glaze.kit.input.NumberExpression.evaluate` (port addition).
+     */
+    @prop var expressions:Bool = false;
+
+    /**
      * Sets the name exposed to accessibility clients.
      *
      * A number input has no visible text of its own to be named by, so set
@@ -131,7 +146,7 @@ class NumberInput extends Component implements Styled implements ParentElement {
                 });
             };
         }
-        state.read(cx).ensureNumberMask();
+        if (!expressions) state.read(cx).ensureNumberMask();
         final value = parseF64(state.read(cx).value());
         final decrementButton = this.decrementButton != null ? this.decrementButton(glaze.kit.base.Button.component("decrement")) : glaze.kit.base.Button.component("decrement");
         final incrementButton = this.incrementButton != null ? this.incrementButton(glaze.kit.base.Button.component("increment")) : glaze.kit.base.Button.component("increment");
@@ -153,7 +168,13 @@ class NumberInput extends Component implements Styled implements ParentElement {
         });
 
         for (child in childElements) text.child(child);
-        final content:IntoElement = if (controlsRight) {
+        final content:IntoElement = if (!stepButtons) {
+            div()
+                .flex()
+                .itemsCenter()
+                .sizeFull()
+                .child(text);
+        } else if (controlsRight) {
             div()
                 .flex()
                 .itemsCenter()
