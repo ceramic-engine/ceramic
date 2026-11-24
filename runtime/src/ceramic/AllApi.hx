@@ -85,6 +85,7 @@ import ceramic.AudioFilters;
 import ceramic.AudioFilter;
 import ceramic.AudioFilterWorklet;
 import ceramic.AudioFilterBuffer;
+import ceramic.AudioPeaks;
 import ceramic.LowPassFilter;
 import ceramic.HighPassFilter;
 import ceramic.AutoCollections;

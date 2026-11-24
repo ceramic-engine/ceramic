@@ -37,6 +37,25 @@ interface Audio {
     function createFromSamplesBuffer(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float, interleaved:Bool):AudioResource;
 
     /**
+     * Gets the decoded samples of an audio resource.
+     *
+     * The buffer given to `done` has the same layout on every backend, which is also
+     * the one audio filter worklets process: 32 bit float samples in the -1 to 1 range,
+     * planar (every sample of the first channel, then every sample of the second one,
+     * and so on, not interleaved). Its length is `samples * channels`.
+     *
+     * The buffer is a copy: changing it doesn't change the audio resource.
+     *
+     * When the samples can't be provided (streamed audio, a backend without audio data),
+     * `done` is called with a `null` buffer and `0` for the other values.
+     *
+     * @param audio The audio resource to read
+     * @param done Called with the buffer, the number of samples of one channel,
+     *             the number of channels and the sample rate in Hz
+     */
+    function getSamplesBuffer(audio:AudioResource, done:(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float)->Void):Void;
+
+    /**
      * Checks if the backend supports hot-reloading of audio files.
      * When true, the audio system can detect file changes and reload automatically.
      * @return True if hot-reload is supported, false otherwise

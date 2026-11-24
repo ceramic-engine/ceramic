@@ -81,6 +81,20 @@ class Audio implements spec.Audio {
 
     #if !no_backend_docs
     /**
+     * Gets the decoded samples of an audio resource.
+     *
+     * @param audio The audio resource to read
+     * @param done Always called with a `null` buffer in headless mode since no actual audio is loaded
+     */
+    #end
+    public function getSamplesBuffer(audio:AudioResource, done:(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float)->Void):Void {
+
+        done(null, 0, 0, 0);
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Indicates whether this backend supports hot reloading of audio assets.
      * 
      * @return Always false for the headless backend

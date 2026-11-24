@@ -28,6 +28,11 @@ extern class AudioClip extends Object {
     var ambisonic(default, null):Bool;
 
     /**
+     * The length of the audio clip in samples (of one channel).
+     */
+    var samples(default, null):Int;
+
+    /**
      * The number of audio channels in the clip.
      * Common values:
      * - 1: Mono (single channel)
@@ -122,5 +127,15 @@ extern class AudioClip extends Object {
      * and not exceed the remaining samples from offsetSamples.
      */
     function SetData(data:cs.NativeArray<Single>, offsetSamples:Int):Bool;
+
+    /**
+     * Fills an array with the sample data of the clip, interleaved when it has
+     * several channels. Only works with clips decompressed on load.
+     *
+     * @param data Array to fill, of `samples * channels` values
+     * @param offsetSamples Position to start reading from, in samples
+     * @return true if the data was read
+     */
+    function GetData(data:cs.NativeArray<Single>, offsetSamples:Int):Bool;
 
 }

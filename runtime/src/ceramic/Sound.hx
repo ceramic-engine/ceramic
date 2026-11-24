@@ -149,6 +149,41 @@ class Sound extends Entity {
     }
 
     /**
+     * Request the decoded samples of this sound.
+     *
+     * The buffer has the layout audio filter worklets process, on every target:
+     * 32 bit float samples in the -1 to 1 range, planar (every sample of the first
+     * channel, then every sample of the second one, not interleaved), so the sample
+     * at `index` of `channel` is `buffer[channel * samples + index]`.
+     *
+     * The buffer is a copy: changing it doesn't change the sound. Use
+     * `Sound.fromSamplesBuffer()` to create a sound from samples.
+     *
+     * ```haxe
+     * sound.requestSamples((buffer, samples, channels, sampleRate) -> {
+     *     if (buffer != null) {
+     *         var peaks = AudioPeaks.compute(buffer, samples, channels, 200);
+     *     }
+     * });
+     * ```
+     *
+     * @param done Called with the buffer, the number of samples of one channel, the
+     *             number of channels and the sample rate in Hz. The buffer is `null`
+     *             (and the other values `0`) when the samples can't be provided:
+     *             streamed sounds, or a target without audio data.
+     */
+    public function requestSamples(done:(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float)->Void):Void {
+
+        if (backendItem == null) {
+            done(null, 0, 0, 0);
+            return;
+        }
+
+        app.backend.audio.getSamplesBuffer(backendItem, done);
+
+    }
+
+    /**
      * Play the sound with optional parameters.
      * Creates a new SoundPlayer instance for this playback.
      * 

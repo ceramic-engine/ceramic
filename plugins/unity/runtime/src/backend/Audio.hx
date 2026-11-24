@@ -227,6 +227,56 @@ class Audio implements spec.Audio {
 
     #if !no_backend_docs
     /**
+     * Gets the decoded samples of an audio clip, as 32 bit float planar samples
+     * (one channel after another, not interleaved).
+     * Unity provides interleaved samples: they are reordered here.
+     * @param audio The audio resource to read
+     * @param done Called with the buffer, the number of samples of one channel,
+     *             the number of channels and the sample rate in Hz, or with a
+     *             `null` buffer when the clip data can't be read
+     */
+    #end
+    public function getSamplesBuffer(audio:AudioResource, done:(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float)->Void):Void {
+
+        var clip = audio != null ? (audio:AudioResourceImpl).unityResource : null;
+        if (clip == null) {
+            done(null, 0, 0, 0);
+            return;
+        }
+
+        var samples:Int = clip.samples;
+        var channels:Int = clip.channels;
+        if (samples <= 0 || channels <= 0) {
+            done(null, 0, 0, 0);
+            return;
+        }
+
+        var interleaved = new Float32Array(samples * channels);
+        if (!clip.GetData(interleaved, 0)) {
+            done(null, 0, 0, 0);
+            return;
+        }
+
+        var result:Float32Array;
+        if (channels == 1) {
+            result = interleaved;
+        }
+        else {
+            // Convert interleaved to planar
+            result = new Float32Array(samples * channels);
+            for (i in 0...samples) {
+                for (j in 0...channels) {
+                    result[j * samples + i] = interleaved[i * channels + j];
+                }
+            }
+        }
+
+        done(result, samples, channels, clip.frequency);
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Resume the audio context (required for web, no-op for Unity).
      * Unity doesn't have the same audio context restrictions as web browsers,
      * so this always succeeds immediately.

@@ -240,6 +240,74 @@ class Audio implements spec.Audio {
     }
 
     /**
+     * Gets the decoded samples of an audio resource, as 32 bit float planar samples
+     * (one channel after another, not interleaved), the layout audio filter worklets process.
+     *
+     * The buffer is a copy. `done` is called with a `null` buffer when the samples
+     * can't be provided (streamed audio, audio disabled).
+     *
+     * @param resource The audio resource to read
+     * @param done Called with the buffer, the number of samples of one channel,
+     *             the number of channels and the sample rate in Hz
+     */
+    public function getSamplesBuffer(resource:AudioResource, done:(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float)->Void):Void {
+
+        var source:clay.audio.AudioSource = resource;
+        var data = source != null ? source.data : null;
+
+        if (data == null || data.destroyed || data.isStream) {
+            done(null, 0, 0, 0);
+            return;
+        }
+
+        #if web
+
+        // Web Audio keeps decoded audio as one float array per channel
+        var webBuffer:js.html.audio.AudioBuffer = untyped data.buffer;
+        if (webBuffer == null) {
+            done(null, 0, 0, 0);
+            return;
+        }
+
+        var samples:Int = webBuffer.length;
+        var channels:Int = webBuffer.numberOfChannels;
+        var result = new Float32Array(samples * channels);
+        var target:js.lib.Float32Array = cast result;
+        for (channel in 0...channels) {
+            target.set(webBuffer.getChannelData(channel), channel * samples);
+        }
+        done(result, samples, channels, webBuffer.sampleRate);
+
+        #elseif (cpp && !clay_no_audio)
+
+        // SoLoud keeps decoded audio as planar float samples
+        var soloudData:clay.soloud.SoloudAudioData = Std.isOfType(data, clay.soloud.SoloudAudioData) ? cast data : null;
+        var wav = soloudData != null ? soloudData.wav : null;
+        if (wav == null || untyped __cpp__('{0} == NULL', wav) || untyped __cpp__('{0}->mData == NULL', wav)) {
+            done(null, 0, 0, 0);
+            return;
+        }
+
+        var samples:Int = wav.mSampleCount;
+        var channels:Int = wav.mChannels;
+        var sampleRate:Float = wav.mBaseSamplerate;
+        var total = samples * channels;
+        var result = new Float32Array(total);
+        var pointer = wav.mData;
+        for (i in 0...total) {
+            result[i] = pointer.at(i);
+        }
+        done(result, samples, channels, sampleRate);
+
+        #else
+
+        done(null, 0, 0, 0);
+
+        #end
+
+    }
+
+    /**
      * Gets the duration of an audio resource in seconds.
      * 
      * @param resource The audio resource to query
