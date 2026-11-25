@@ -156,7 +156,9 @@ class SpineAsset extends Asset {
         var jsonPath = null;
         var skelPath = null;
         var rawAtlasPaths:Array<String> = [];
-        for (entry in Assets.all) {
+        // With runtime assets, the files are those of the folder that was scanned, not those the app was built with
+        final allEntries = runtimeAssets != null ? runtimeAssets.getLists().all : Assets.all;
+        for (entry in allEntries) {
             if (entry.startsWith(prefix)) {
                 var lowerCaseEntry = entry.toLowerCase();
                 if (jsonPath == null && lowerCaseEntry.endsWith('.json')) {
@@ -201,13 +203,13 @@ class SpineAsset extends Asset {
         if (atlasAsset == null) {
             var atlasPath = null;
             for (rawAtlasPath in rawAtlasPaths) {
-                if (Assets.assetNameFromPath(rawAtlasPath) == baseName) {
+                if (Assets.decodePath(rawAtlasPath).name == baseName) {
                     atlasPath = baseName + '.atlas';
                     break;
                 }
             }
             if (atlasPath == null && rawAtlasPaths.length > 0) {
-                atlasPath = Assets.assetNameFromPath(rawAtlasPaths[0]) + '.atlas';
+                atlasPath = Assets.decodePath(rawAtlasPaths[0]).name + '.atlas';
             }
             else {
                 atlasPath = baseName + '.atlas';
