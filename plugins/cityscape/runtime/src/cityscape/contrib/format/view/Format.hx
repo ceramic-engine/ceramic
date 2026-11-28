@@ -1,13 +1,21 @@
 // Ported from vscode src/vs/editor/contrib/format/browser/formatActions.ts
-// (FormatOnType), format.ts (getOnTypeFormattingEdits) and formattingEdit.ts
+// (FormatOnType, FormatDocumentAction, FormatSelectionAction), format.ts
+// (getOnTypeFormattingEdits, the document and ranges formatting with a
+// provider) and formattingEdit.ts
 // Original code Copyright (c) Microsoft Corporation, licensed under MIT.
 // Modified: translated from TypeScript to Haxe for Ceramic. See NOTICE.md.
 package cityscape.contrib.format.view;
 
+import cityscape.Cityscape;
 import cityscape.base.common.Cancellation;
 import cityscape.base.common.Errors;
+import cityscape.base.common.KeyCodes;
 import cityscape.base.common.Lifecycle;
 import cityscape.common.EditorCommon.IEditorContribution;
+import cityscape.common.EditorCommon.ScrollType;
+import cityscape.common.EditorContextKeys;
+import cityscape.common.Languages.DocumentFormattingEditProvider;
+import cityscape.common.Languages.DocumentRangeFormattingEditProvider;
 import cityscape.common.Languages.FormattingOptions;
 import cityscape.common.Languages.TextEdit;
 import cityscape.common.Model;
@@ -17,6 +25,10 @@ import cityscape.common.core.Position;
 import cityscape.common.core.Range;
 import cityscape.common.services.EditorSimpleWorker;
 import cityscape.common.services.LanguageFeaturesService;
+import cityscape.contrib.rename.view.Rename.CodeEditorStateFlag;
+import cityscape.contrib.rename.view.Rename.EditorStateCancellationTokenSource;
+import cityscape.platform.contextkey.common.ContextKey;
+import cityscape.platform.keybinding.common.KeybindingsRegistry.KeybindingWeight;
 import cityscape.view.EditorBrowser.ICodeEditor;
 import cityscape.view.EditorExtensions;
 import cityscape.view.StableEditorScroll;
@@ -124,6 +136,292 @@ class Format {
                 callback(null);
             }
         }
+    }
+
+}
+
+/**
+ * A range formatter used as a document formatter (format.ts,
+ * `getRealAndSyntheticDocumentFormattersOrdered`): it formats the full
+ * range of the model.
+ */
+private class RangeAsDocumentFormatter implements DocumentFormattingEditProvider {
+
+    public var displayName(default, null):Null<String>;
+
+    final _formatter:DocumentRangeFormattingEditProvider;
+
+    public function new(formatter:DocumentRangeFormattingEditProvider) {
+        this._formatter = formatter;
+        this.displayName = formatter.displayName;
+    }
+
+    public function provideDocumentFormattingEdits(model:ITextModel, options:FormattingOptions, token:CancellationToken, resolve:(edits:Null<Array<TextEdit>>) -> Void):Void {
+        this._formatter.provideDocumentRangeFormattingEdits(model, model.getFullModelRange(), options, token, resolve);
+    }
+
+}
+
+/**
+ * format.ts: formatting a document or ranges of it with a provider, in an
+ * editor. Monaco's selector of a formatter among several
+ * (`FormattingConflicts`, set by the workbench) is not ported: the first
+ * provider is the one, as in Monaco without a selector. The model-only
+ * paths (no editor), the log and the accessibility signal are not ported.
+ */
+class FormatWithProvider {
+
+    /**
+     * `getRealAndSyntheticDocumentFormattersOrdered`: the document
+     * formatters, then the range formatters as document formatters.
+     * Monaco leaves out the range formatter of an extension that already
+     * gave a document formatter; providers have no extension here.
+     */
+    public static function getRealAndSyntheticDocumentFormattersOrdered(languageFeaturesService:LanguageFeaturesService, model:ITextModel):Array<DocumentFormattingEditProvider> {
+        final result:Array<DocumentFormattingEditProvider> = [];
+        // (1) add all document formatter
+        for (formatter in languageFeaturesService.documentFormattingEditProvider.ordered(model)) {
+            result.push(formatter);
+        }
+        // (2) add all range formatter as document formatter
+        for (formatter in languageFeaturesService.documentRangeFormattingEditProvider.ordered(model)) {
+            result.push(new RangeAsDocumentFormatter(formatter));
+        }
+        return result;
+    }
+
+    /** `formatDocumentWithSelectedProvider`, for an editor. */
+    public static function formatDocumentWithSelectedProvider(accessor:Cityscape, editor:ICodeEditor, token:CancellationToken):Void {
+        if (!editor.hasModel()) {
+            return;
+        }
+        final provider = getRealAndSyntheticDocumentFormattersOrdered(accessor.languageFeaturesService, editor.getModel());
+        if (provider.length == 0) {
+            return;
+        }
+        formatDocumentWithProvider(provider[0], editor, token);
+    }
+
+    /** `formatDocumentWithProvider`, for an editor, in the explicit mode (with undo stops and a reveal of the cursor). */
+    public static function formatDocumentWithProvider(provider:DocumentFormattingEditProvider, editor:ICodeEditor, token:CancellationToken):Void {
+        final model = editor.getModel();
+        final cts = new EditorStateCancellationTokenSource(editor, CodeEditorStateFlag.Value | CodeEditorStateFlag.Position, null, token);
+        var called = false;
+        final done = (rawEdits:Null<Array<TextEdit>>) -> {
+            if (called) {
+                return;
+            }
+            called = true;
+            final cancelled = cts.token.isCancellationRequested;
+            cts.dispose();
+            if (cancelled || rawEdits == null || model.isDisposed()) {
+                return;
+            }
+            final edits = EditorSimpleWorker.computeMoreMinimalEdits(model, rawEdits, false);
+            if (edits == null || edits.length == 0) {
+                return;
+            }
+            // use editor to apply edits
+            FormattingEdit.execute(editor, edits, true);
+            editor.revealPositionInCenterIfOutsideViewport(editor.getPosition(), ScrollType.Immediate);
+        };
+        try {
+            provider.provideDocumentFormattingEdits(model, model.getFormattingOptions(), cts.token, done);
+        } catch (e:Dynamic) {
+            Errors.onUnexpectedExternalError(e);
+            done(null);
+        }
+    }
+
+    /** `formatDocumentRangesWithSelectedProvider`, for an editor. */
+    public static function formatDocumentRangesWithSelectedProvider(accessor:Cityscape, editor:ICodeEditor, ranges:Array<Range>, token:CancellationToken):Void {
+        if (!editor.hasModel()) {
+            return;
+        }
+        final provider = accessor.languageFeaturesService.documentRangeFormattingEditProvider.ordered(editor.getModel());
+        if (provider.length == 0) {
+            return;
+        }
+        formatDocumentRangesWithProvider(provider[0], editor, ranges, token);
+    }
+
+    /**
+     * `formatDocumentRangesWithProvider`, for an editor. Monaco merges two
+     * ranges whose edits intersect and asks again for the merged range;
+     * here the edits of each range are asked one after the other and
+     * applied together, and ranges whose edits intersect are left to the
+     * provider that gave them (a provider with
+     * `provideDocumentRangesFormattingEdits` gets all the ranges at once,
+     * as in Monaco).
+     */
+    public static function formatDocumentRangesWithProvider(provider:DocumentRangeFormattingEditProvider, editor:ICodeEditor, rangeOrRanges:Array<Range>, token:CancellationToken):Void {
+        final model = editor.getModel();
+        final cts = new EditorStateCancellationTokenSource(editor, CodeEditorStateFlag.Value | CodeEditorStateFlag.Position, null, token);
+
+        // make sure that ranges don't overlap nor touch each other
+        final sorted = rangeOrRanges.copy();
+        sorted.sort((a, b) -> Range.compareRangesUsingStarts(a, b));
+        final ranges:Array<Range> = [];
+        for (range in sorted) {
+            final len = ranges.length;
+            if (len > 0 && Range.areIntersectingOrTouching(ranges[len - 1], range)) {
+                ranges[len - 1] = Range.fromPositions(ranges[len - 1].getStartPosition(), range.getEndPosition());
+            } else {
+                ranges.push(range);
+            }
+        }
+
+        final allEdits:Array<TextEdit> = [];
+        final finish = () -> {
+            final cancelled = cts.token.isCancellationRequested;
+            cts.dispose();
+            if (cancelled || model.isDisposed() || allEdits.length == 0) {
+                return;
+            }
+            // use editor to apply edits
+            FormattingEdit.execute(editor, allEdits, true);
+            editor.revealPositionInCenterIfOutsideViewport(editor.getPosition(), ScrollType.Immediate);
+        };
+        final collect = (rawEdits:Null<Array<TextEdit>>) -> {
+            if (rawEdits == null || model.isDisposed()) {
+                return;
+            }
+            final minimalEdits = EditorSimpleWorker.computeMoreMinimalEdits(model, rawEdits, false);
+            if (minimalEdits != null) {
+                for (edit in minimalEdits) {
+                    allEdits.push(edit);
+                }
+            }
+        };
+
+        final all = provider.provideDocumentRangesFormattingEdits;
+        if (all != null) {
+            var called = false;
+            try {
+                all(model, ranges, model.getFormattingOptions(), cts.token, rawEdits -> {
+                    if (called) {
+                        return;
+                    }
+                    called = true;
+                    collect(rawEdits);
+                    finish();
+                });
+            } catch (e:Dynamic) {
+                Errors.onUnexpectedExternalError(e);
+                if (!called) {
+                    called = true;
+                    finish();
+                }
+            }
+            return;
+        }
+
+        var index = 0;
+        var next:() -> Void = () -> {};
+        next = () -> {
+            if (index >= ranges.length || cts.token.isCancellationRequested) {
+                finish();
+                return;
+            }
+            final range = ranges[index++];
+            var called = false;
+            try {
+                provider.provideDocumentRangeFormattingEdits(model, range, model.getFormattingOptions(), cts.token, rawEdits -> {
+                    if (called) {
+                        return;
+                    }
+                    called = true;
+                    collect(rawEdits);
+                    next();
+                });
+            } catch (e:Dynamic) {
+                Errors.onUnexpectedExternalError(e);
+                if (!called) {
+                    called = true;
+                    next();
+                }
+            }
+        };
+        next();
+    }
+
+}
+
+/**
+ * `editor.action.formatDocument` (Shift+Alt+F, Ctrl+Shift+I on Linux):
+ * Format Document. Monaco's progress indication is not ported.
+ */
+class FormatDocumentAction extends EditorAction {
+
+    public static inline final ID = 'editor.action.formatDocument';
+
+    public function new(r:EditorExtensionsRegistry) {
+        super({
+            id: ID,
+            label: r.localize('formatDocument.label', "Format Document"),
+            alias: 'Format Document',
+            precondition: ContextKeyExpr.and(EditorContextKeys.notInCompositeEditor, EditorContextKeys.writable, EditorContextKeys.hasDocumentFormattingProvider),
+            kbOpts: {
+                kbExpr: EditorContextKeys.editorTextFocus,
+                primary: KeyMod.Shift | KeyMod.Alt | KeyCode.KeyF,
+                linux: {primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyI},
+                weight: KeybindingWeight.EditorContrib
+            },
+            contextMenuOpts: {
+                group: '1_modification',
+                order: 1.3
+            }
+        });
+    }
+
+    public function run(accessor:Null<Cityscape>, editor:ICodeEditor, args:Any):Void {
+        if (editor.hasModel() && accessor != null) {
+            FormatWithProvider.formatDocumentWithSelectedProvider(accessor, editor, CancellationTokens.None);
+        }
+    }
+
+}
+
+/**
+ * `editor.action.formatSelection` (Ctrl/Cmd+K Ctrl/Cmd+F): Format
+ * Selection. An empty selection formats its line.
+ */
+class FormatSelectionAction extends EditorAction {
+
+    public static inline final ID = 'editor.action.formatSelection';
+
+    public function new(r:EditorExtensionsRegistry) {
+        super({
+            id: ID,
+            label: r.localize('formatSelection.label', "Format Selection"),
+            alias: 'Format Selection',
+            precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasDocumentSelectionFormattingProvider),
+            kbOpts: {
+                kbExpr: EditorContextKeys.editorTextFocus,
+                primary: KeyCodes.KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyF),
+                weight: KeybindingWeight.EditorContrib
+            },
+            contextMenuOpts: {
+                when: EditorContextKeys.hasNonEmptySelection,
+                group: '1_modification',
+                order: 1.31
+            }
+        });
+    }
+
+    public function run(accessor:Null<Cityscape>, editor:ICodeEditor, args:Any):Void {
+        if (!editor.hasModel() || accessor == null) {
+            return;
+        }
+        final model = editor.getModel();
+
+        final ranges:Array<Range> = [for (range in editor.getSelections())
+            range.isEmpty()
+                ? new Range(range.startLineNumber, 1, range.startLineNumber, model.getLineMaxColumn(range.startLineNumber))
+                : (range : Range)
+        ];
+
+        FormatWithProvider.formatDocumentRangesWithSelectedProvider(accessor, editor, ranges, CancellationTokens.None);
     }
 
 }
@@ -316,13 +614,16 @@ private class FormatScrollStateEditor implements IScrollStateEditor {
 
 /**
  * The registration of formatActions.ts (its module level code): the
- * `FormatOnType` contribution. The format document and format selection
- * actions and format on paste are not ported yet.
+ * `FormatOnType` contribution, the format document and format selection
+ * actions. Format on paste and the old `editor.action.format` command are
+ * not ported yet.
  */
 class FormatRegistration {
 
     public static function register(r:EditorExtensionsRegistry):Void {
         r.registerEditorContribution(FormatOnType.ID, editor -> new FormatOnType(editor), EditorContributionInstantiation.BeforeFirstInteraction);
+        r.registerEditorAction(new FormatDocumentAction(r));
+        r.registerEditorAction(new FormatSelectionAction(r));
     }
 
 }

@@ -1053,6 +1053,11 @@ class SuggestWidgetView extends Model implements Render {
         return foreground;
     }
 
+    /** Monaco's `stripNewLines` (suggestWidgetRenderer): the line breaks of a text taken out. */
+    static function stripNewLines(text:String):String {
+        return ~/\r\n|\r|\n/g.replace(text, '');
+    }
+
     /**
      * The UTF-8 byte offset of a UTF-16 offset of `s`.
      */
@@ -1207,12 +1212,16 @@ class SuggestWidgetView extends Model implements Render {
                 if (labelDetail != null && labelDetail.length > 0) {
                     row.child(div().flexNone().textColor(mutedForeground).child(labelDetail));
                 }
-                final right = div().flex1().minW0().flex().flexRow().justifyEnd().overflowHidden().textColor(mutedForeground);
+                // `margin-left: 1.1em` of Monaco's details label keeps it off the label
+                final right = div().flex1().minW0().flex().flexRow().justifyEnd().overflowHidden().pl(px(Math.round(suggestFontSize * 1.1))).textColor(mutedForeground);
+                // One line, whatever the text holds (Monaco's `stripNewLines` on the details label): a detail
+                // of several lines would spread over the rows next to it
+                // What does not fit is cut at its end with an ellipsis (Monaco's `.details-label`), not at its start
                 if (labelDescription != null && labelDescription.length > 0) {
-                    right.child(labelDescription);
+                    right.child(div().minW0().truncate().child(stripNewLines(labelDescription)));
                 }
                 else if (focused && options.showInlineDetails && !widget._isDetailsVisible() && item.completion.detail != null) {
-                    right.child(item.completion.detail);
+                    right.child(div().minW0().truncate().child(stripNewLines(item.completion.detail)));
                 }
                 row.child(right);
                 list.child(row);
