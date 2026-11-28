@@ -10,6 +10,15 @@ using StringTools;
 
 class Hxml extends tools.Task {
 
+    /**
+     * Packages left out of the type suggestions of the completion hxml: the rendering
+     * layer, the backend and its spec, and the native bindings they are built on.
+     */
+    static final COMPLETION_EXCLUDED_PACKAGES:Array<String> = [
+        'clay', 'backend', 'spec',
+        'opengl', 'glew', 'sdl', 'ogg', 'stb', 'soloud', 'timestamp', 'dialogs'
+    ];
+
     override public function info(cwd:String):String {
 
         if (context.backend == null) {
@@ -93,6 +102,15 @@ class Hxml extends tools.Task {
 
             // Add completion flags
             rawHxml += "\n" + '-D completion -D no_inline';
+
+            // Keep the packages that are internals of the framework out of the suggestions made
+            // while typing a type name: `Texture` should offer `ceramic.Texture`, not the one of the
+            // rendering layer. A type of these packages still completes, hovers and resolves once
+            // it is imported or written with its package. A project that defines
+            // `completion-exclude` itself keeps its own list.
+            if (rawHxml.indexOf('completion-exclude=') == -1) {
+                rawHxml += "\n" + '-D completion-exclude=' + COMPLETION_EXCLUDED_PACKAGES.join(',');
+            }
 
             // Add some completion cache optims
             //
