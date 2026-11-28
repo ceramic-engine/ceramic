@@ -367,7 +367,8 @@ class Runner {
     public static function runInMain(_fn:Void->Void) {
 
         #if (cpp || cs)
-        queue.push(_fn);
+        // At the end of the queue (`push` would add at the front): callbacks run in the order they were given
+        queue.add(_fn);
         #if clay_sdl
         // Wakes the main loop at once if it waits while throttled (`settings.idleUpdateRate`)
         clay.Runner.wakeMain();
